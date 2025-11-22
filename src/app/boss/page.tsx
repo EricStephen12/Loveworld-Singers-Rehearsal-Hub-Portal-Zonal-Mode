@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
-import { Users, Eye, Crown, TrendingUp, Activity, BarChart3 } from 'lucide-react'
+import { Users, Eye, Crown, TrendingUp, Activity, BarChart3, CreditCard, CheckCircle, XCircle, Clock, Calendar, DollarSign, Image as ImageIcon } from 'lucide-react'
 import AnalyticsPage from '../pages/admin/analytics/page'
+import { EspeesPaymentService } from '@/lib/espees-payment-service'
 
 interface ZoneStats {
   id: string;
@@ -37,6 +38,12 @@ export default function BossPage() {
   const [selectedRegion, setSelectedRegion] = useState('all')
   const [expandedZone, setExpandedZone] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const [showPayments, setShowPayments] = useState(false)
+  const [pendingPayments, setPendingPayments] = useState<any[]>([])
+  const [selectedPayment, setSelectedPayment] = useState<any | null>(null)
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [approvalDuration, setApprovalDuration] = useState<number>(1)
+  const [rejectionNotes, setRejectionNotes] = useState('')
 
   useEffect(() => {
     // Check if user has boss role or is in boss zone
@@ -47,7 +54,58 @@ export default function BossPage() {
     }
     
     loadZones()
+    loadPendingPayments()
   }, [profile, router])
+
+  const loadPendingPayments = async () => {
+    try {
+      const payments = await EspeesPaymentService.getPendingPayments()
+      setPendingPayments(payments)
+    } catch (error) {
+      console.error('Error loading pending payments:', error)
+    }
+  }
+
+  const handleApprovePayment = async (paymentId: string) => {
+    if (!profile?.email) return
+    
+    const result = await EspeesPaymentService.approvePayment(
+      paymentId,
+      profile.email,
+      approvalDuration
+    )
+    
+    if (result.success) {
+      alert('Payment approved successfully!')
+      setSelectedPayment(null)
+      loadPendingPayments()
+      loadZones()
+    } else {
+      alert(result.error || 'Failed to approve payment')
+    }
+  }
+
+  const handleRejectPayment = async (paymentId: string) => {
+    if (!profile?.email || !rejectionNotes.trim()) {
+      alert('Please provide rejection notes')
+      return
+    }
+    
+    const result = await EspeesPaymentService.rejectPayment(
+      paymentId,
+      profile.email,
+      rejectionNotes
+    )
+    
+    if (result.success) {
+      alert('Payment rejected')
+      setSelectedPayment(null)
+      setRejectionNotes('')
+      loadPendingPayments()
+    } else {
+      alert(result.error || 'Failed to reject payment')
+    }
+  }
 
   const loadZones = async () => {
     setIsLoading(true)
@@ -118,28 +176,43 @@ export default function BossPage() {
                 <Crown className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold">{showAnalytics ? 'Website Analytics' : 'Boss Dashboard'}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold">
+                  {showAnalytics ? 'Website Analytics' : showPayments ? 'Payment Requests' : 'Central Admin'}
+                </h1>
                 <p className="text-xs sm:text-sm text-purple-100 hidden sm:block">
-                  {showAnalytics ? 'Track website performance and user behavior' : 'View all zones, members, and coordinators'}
+                  {showAnalytics ? 'Track website performance and user behavior' : showPayments ? 'Review and approve payment submissions' : 'View all zones, members, and coordinators'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm flex items-center gap-2"
+                onClick={() => {
+                  setShowPayments(!showPayments)
+                  setShowAnalytics(false)
+                }}
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm flex items-center gap-2 relative ${
+                  showPayments ? 'bg-white text-purple-600' : 'bg-white/20 hover:bg-white/30'
+                }`}
               >
-                {showAnalytics ? (
-                  <>
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Zones</span>
-                  </>
-                ) : (
-                  <>
-                    <BarChart3 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Analytics</span>
-                  </>
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Payments</span>
+                {pendingPayments.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {pendingPayments.length}
+                  </span>
                 )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAnalytics(!showAnalytics)
+                  setShowPayments(false)
+                }}
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm flex items-center gap-2 ${
+                  showAnalytics ? 'bg-white text-purple-600' : 'bg-white/20 hover:bg-white/30'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span className="hidden sm:inline">Analytics</span>
               </button>
               <button
                 onClick={() => router.push('/home')}
@@ -150,7 +223,7 @@ export default function BossPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>00
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
