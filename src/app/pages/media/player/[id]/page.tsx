@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMedia } from '../../_context/MediaContext'
 import { ArrowLeft, Heart, Share2, Download } from 'lucide-react'
-import firebaseMediaService, { MediaItem } from '../../_lib'
+import { firebaseMediaService, MediaItem } from '../../_lib'
 
 export default function PlayerPage() {
   const router = useRouter()

@@ -144,7 +144,7 @@ export default function ChatContainer() {
                         {/* Read status for own messages */}
                         {isOwnMessage && (
                           <>
-                            {message.readBy && message.readBy.length > 1 ? (
+                            {(message as any).readBy && (message as any).readBy.length > 1 ? (
                               <CheckCheck className="w-3 h-3" />
                             ) : (
                               <Check className="w-3 h-3" />

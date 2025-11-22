@@ -84,7 +84,7 @@ export class EspeesPaymentService {
         { field: 'status', operator: '==', value: 'pending' }
       ])
       
-      return payments.map(p => p as PaymentRequest).sort((a, b) => 
+      return payments.map((p: any) => p as PaymentRequest).sort((a: PaymentRequest, b: PaymentRequest) => 
         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
       )
     } catch (error) {
@@ -217,7 +217,7 @@ export class EspeesPaymentService {
         { field: 'zoneId', operator: '==', value: zoneId }
       ])
       
-      return payments.map(p => p as PaymentRequest).sort((a, b) => 
+      return payments.map((p: any) => p as PaymentRequest).sort((a: PaymentRequest, b: PaymentRequest) => 
         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
       )
     } catch (error) {

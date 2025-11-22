@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Globe, Check, Loader2, X } from 'lucide-react'
-import { TranslationService, SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/translation-service'
+import { Globe, Loader2, X } from 'lucide-react'
+import { translationService, SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/translation-service'
 
 interface TranslationButtonProps {
   lyrics: string
@@ -11,7 +11,7 @@ interface TranslationButtonProps {
   onTranslate: (translatedLyrics: string, language: string) => void
 }
 
-export default function TranslationButton({ lyrics, songId, userId, onTranslate }: TranslationButtonProps) {
+export default function TranslationButton({ lyrics, onTranslate }: TranslationButtonProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [isTranslating, setIsTranslating] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage | null>(null)
@@ -23,19 +23,9 @@ export default function TranslationButton({ lyrics, songId, userId, onTranslate 
     setSelectedLanguage(language)
 
     try {
-      const result = await TranslationService.translateLyrics(
-        lyrics,
-        language,
-        userId,
-        songId
-      )
-
-      if (result.success && result.translatedText) {
-        onTranslate(result.translatedText, SUPPORTED_LANGUAGES[language].name)
-        setShowMenu(false)
-      } else {
-        setError(result.error || 'Translation failed')
-      }
+      const translatedText = await translationService.translateLyrics(lyrics, language)
+      onTranslate(translatedText, SUPPORTED_LANGUAGES[language].name)
+      setShowMenu(false)
     } catch (err) {
       setError('An error occurred. Please try again.')
     } finally {

@@ -8,6 +8,27 @@ export interface TranslationCache {
   [key: string]: string;
 }
 
+export type SupportedLanguage = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'it' | 'zh' | 'ja' | 'ko' | 'ar' | 'hi' | 'ru' | 'sw' | 'yo' | 'ig' | 'ha';
+
+export const SUPPORTED_LANGUAGES: Record<SupportedLanguage, { name: string; flag: string }> = {
+  en: { name: 'English', flag: '🇬🇧' },
+  es: { name: 'Spanish', flag: '🇪🇸' },
+  fr: { name: 'French', flag: '🇫🇷' },
+  pt: { name: 'Portuguese', flag: '🇵🇹' },
+  de: { name: 'German', flag: '🇩🇪' },
+  it: { name: 'Italian', flag: '🇮🇹' },
+  zh: { name: 'Chinese', flag: '🇨🇳' },
+  ja: { name: 'Japanese', flag: '🇯🇵' },
+  ko: { name: 'Korean', flag: '🇰🇷' },
+  ar: { name: 'Arabic', flag: '🇸🇦' },
+  hi: { name: 'Hindi', flag: '🇮🇳' },
+  ru: { name: 'Russian', flag: '🇷🇺' },
+  sw: { name: 'Swahili', flag: '🇰🇪' },
+  yo: { name: 'Yoruba', flag: '🇳🇬' },
+  ig: { name: 'Igbo', flag: '🇳🇬' },
+  ha: { name: 'Hausa', flag: '🇳🇬' },
+};
+
 class TranslationService {
   private cache: TranslationCache = {};
 

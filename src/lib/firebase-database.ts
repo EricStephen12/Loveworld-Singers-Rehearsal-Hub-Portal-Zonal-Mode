@@ -300,6 +300,26 @@ export class FirebaseDatabaseService {
     }
   }
 
+  static async getDocuments(collectionName: string, filters: Array<{ field: string; operator: any; value: any }>) {
+    try {
+      let q = query(collection(db, collectionName))
+      
+      // Apply filters
+      for (const filter of filters) {
+        q = query(q, where(filter.field, filter.operator, filter.value))
+      }
+      
+      const querySnapshot = await getDocs(q)
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+    } catch (error) {
+      console.error(`Error getting documents from ${collectionName}:`, error)
+      return []
+    }
+  }
+
   // Category methods
   static async createCategory(categoryData: any) {
     try {

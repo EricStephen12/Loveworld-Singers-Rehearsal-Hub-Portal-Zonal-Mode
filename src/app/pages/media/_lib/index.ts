@@ -16,10 +16,8 @@
 export { db, storage } from '@/lib/firebase-setup'
 
 // Media service
-export { 
-  firebaseMediaService as mediaService,
-  default as firebaseMediaService 
-} from './firebase-media-service'
+export { firebaseMediaService, firebaseMediaService as mediaService } from './firebase-media-service'
+export { default } from './firebase-media-service'
 
 // Note: File uploads handled via Cloudinary (see admin section)
 

@@ -37,8 +37,11 @@ export default function BossPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRegion, setSelectedRegion] = useState('all')
   const [expandedZone, setExpandedZone] = useState<string | null>(null)
-  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [activeView, setActiveView] = useState<'zones' | 'analytics' | 'submissions'>('zones')
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false)
   const [showPayments, setShowPayments] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
   const [pendingPayments, setPendingPayments] = useState<any[]>([])
   const [selectedPayment, setSelectedPayment] = useState<any | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
@@ -203,7 +206,7 @@ export default function BossPage() {
                 )}
               </button>
               <button
-                onClick={() => {
+                onClick={() => {0
                   setShowAnalytics(!showAnalytics)
                   setShowPayments(false)
                 }}
