@@ -1,0 +1,324 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { Upload, Film, Image, Loader2 } from 'lucide-react'
+import { mediaService } from '@/app/pages/media/_lib'
+
+export default function AdminMediaUploadPage() {
+  const router = useRouter()
+  const { user } = useAuth()
+  
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'sermon' as 'movie' | 'tvshow' | 'sermon' | 'worship' | 'teaching',
+    genre: [] as string[],
+    videoUrl: '',
+    thumbnail: '',
+    backdropImage: '',
+    duration: 0,
+    releaseYear: new Date().getFullYear(),
+    featured: false
+  })
+
+  // Cloudinary upload widget
+  const openCloudinaryWidget = (type: 'video' | 'image' | 'backdrop') => {
+    // @ts-ignore - Cloudinary widget
+    if (typeof window !== 'undefined' && window.cloudinary) {
+      // @ts-ignore
+      const widget = window.cloudinary.createUploadWidget(
+        {
+          cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+          uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+          folder: type === 'video' ? 'media/videos' : 'media/images',
+          resourceType: type === 'video' ? 'video' : 'image',
+          maxFileSize: type === 'video' ? 500000000 : 10000000, // 500MB for video, 10MB for images
+          sources: ['local', 'url'],
+          showUploadMoreButton: false,
+          styles: {
+            palette: {
+              window: '#000000',
+              windowBorder: '#DC2626',
+              tabIcon: '#DC2626',
+              menuIcons: '#FFFFFF',
+              textDark: '#000000',
+              textLight: '#FFFFFF',
+              link: '#DC2626',
+              action: '#DC2626',
+              inactiveTabIcon: '#555555',
+              error: '#F44235',
+              inProgress: '#DC2626',
+              complete: '#22C55E',
+              sourceBg: '#000000'
+            }
+          }
+        },
+        (error: any, result: any) => {
+          if (!error && result && result.event === 'success') {
+            const url = result.info.secure_url
+            
+            if (type === 'video') {
+              setFormData(prev => ({ 
+                ...prev, 
+                videoUrl: url,
+                duration: Math.round(result.info.duration || 0)
+              }))
+            } else if (type === 'image') {
+              setFormData(prev => ({ ...prev, thumbnail: url }))
+            } else if (type === 'backdrop') {
+              setFormData(prev => ({ ...prev, backdropImage: url }))
+            }
+          }
+        }
+      )
+      widget.open()
+    } else {
+      alert('Cloudinary widget not loaded. Please refresh the page.')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!user) {
+      alert('You must be logged in')
+      return
+    }
+
+    if (!formData.title || !formData.videoUrl || !formData.thumbnail) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90))
+      }, 200)
+
+      // Create media item in Firebase
+      await mediaService.createMedia({
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        genre: formData.genre,
+        videoUrl: formData.videoUrl,
+        thumbnail: formData.thumbnail,
+        backdropImage: formData.backdropImage || formData.thumbnail,
+        duration: formData.duration,
+        releaseYear: formData.releaseYear,
+        featured: formData.featured,
+        views: 0,
+        likes: 0
+      })
+
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      alert('Media uploaded successfully!')
+      
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        type: 'sermon',
+        genre: [],
+        videoUrl: '',
+        thumbnail: '',
+        backdropImage: '',
+        duration: 0,
+        releaseYear: new Date().getFullYear(),
+        featured: false
+      })
+      
+      router.push('/pages/media')
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Failed to upload media')
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Upload Media</h1>
+          <p className="text-gray-400">Add new videos to the media library</p>
+        </div>
+
+        {/* Upload Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-red-600"
+              placeholder="Enter media title"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-red-600 h-32"
+              placeholder="Enter description"
+            />
+          </div>
+
+          {/* Type & Year */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Type</label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-red-600"
+              >
+                <option value="sermon">Sermon</option>
+                <option value="worship">Worship</option>
+                <option value="teaching">Teaching</option>
+                <option value="movie">Movie</option>
+                <option value="tvshow">TV Show</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Year</label>
+              <input
+                type="number"
+                value={formData.releaseYear}
+                onChange={(e) => setFormData({ ...formData, releaseYear: parseInt(e.target.value) })}
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-red-600"
+              />
+            </div>
+          </div>
+
+          {/* Video Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Video <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => openCloudinaryWidget('video')}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                <Film className="w-5 h-5" />
+                Upload Video
+              </button>
+              {formData.videoUrl && (
+                <span className="text-sm text-green-500">✓ Video uploaded</span>
+              )}
+            </div>
+          </div>
+
+          {/* Thumbnail Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Thumbnail <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => openCloudinaryWidget('image')}
+                className="flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+              >
+                <Image className="w-5 h-5" />
+                Upload Thumbnail
+              </button>
+              {formData.thumbnail && (
+                <img src={formData.thumbnail} alt="Thumbnail" className="h-16 rounded" />
+              )}
+            </div>
+          </div>
+
+          {/* Backdrop Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Backdrop Image (Optional)</label>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => openCloudinaryWidget('backdrop')}
+                className="flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+              >
+                <Image className="w-5 h-5" />
+                Upload Backdrop
+              </button>
+              {formData.backdropImage && (
+                <img src={formData.backdropImage} alt="Backdrop" className="h-16 rounded" />
+              )}
+            </div>
+          </div>
+
+          {/* Featured */}
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="featured"
+              checked={formData.featured}
+              onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+              className="w-5 h-5 bg-zinc-900 border-zinc-800 rounded"
+            />
+            <label htmlFor="featured" className="text-sm font-medium">
+              Mark as Featured
+            </label>
+          </div>
+
+          {/* Progress Bar */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="w-full bg-zinc-800 rounded-full h-2">
+                <div
+                  className="bg-red-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-400 text-center">{uploadProgress}%</p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isUploading}
+            className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5" />
+                Upload Media
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+
+    </div>
+  )
+}
