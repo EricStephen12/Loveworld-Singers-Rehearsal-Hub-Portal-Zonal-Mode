@@ -27,7 +27,6 @@ import SimpleNotificationsSection from '../../components/admin/SimpleNotificatio
 import AdminModals from '../../components/admin/AdminModals';
 import PageCategoriesSection from '../../components/admin/PageCategoriesSection';
 import SubmittedSongsPage from '../pages/admin/submitted-songs/page';
-import AnalyticsPage from '../pages/admin/analytics/page';
 import DashboardSection from '../../components/admin/DashboardSection';
 
 export default function AdminPage() {
@@ -1097,12 +1096,24 @@ export default function AdminPage() {
       } else {
         // CREATE new song
         console.log('➕ [FRESH] Creating new song');
+        console.log('🔍 DEBUG - Selected Page:', {
+          selectedPageId: selectedPage?.id,
+          selectedPageFirebaseId: selectedPage?.firebaseId,
+          songDataPraiseNightId: songData.praiseNightId
+        });
 
         // Ensure praiseNightId is set
         const newSongData = {
           ...songData,
           praiseNightId: selectedPage?.firebaseId || selectedPage?.id || songData.praiseNightId
         };
+        
+        console.log('🔍 DEBUG - New Song Data:', {
+          title: newSongData.title,
+          praiseNightId: newSongData.praiseNightId,
+          category: newSongData.category,
+          categories: newSongData.categories
+        });
 
         result = await PraiseNightSongsService.createSong(newSongData);
 
@@ -1471,11 +1482,6 @@ export default function AdminPage() {
         {activeSection === 'Members' && <MembersSection />}
         {activeSection === 'Media' && <MediaSection />}
         {activeSection === 'Notifications' && <SimpleNotificationsSection />}
-        {activeSection === 'Analytics' && (
-          <div className="h-full overflow-auto bg-gray-50">
-            <AnalyticsPage />
-          </div>
-        )}
       </div>
 
       {/* Modals */}

@@ -39,7 +39,6 @@ export default function AdminSidebar({
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
     { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', isLink: true, href: '/admin/media' },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
-    { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics' },
   ];
 
   return (
@@ -95,7 +94,6 @@ export default function AdminSidebar({
                       else if (item.label === 'Members') setActiveSection('Members');
                       else if (item.label === 'Media') setActiveSection('Media');
                       else if (item.label === 'Notifications') setActiveSection('Notifications');
-                      else if (item.label === 'Analytics') setActiveSection('Analytics');
                     }
                     // Auto-close sidebar on mobile after clicking
                     setSidebarCollapsed(true);

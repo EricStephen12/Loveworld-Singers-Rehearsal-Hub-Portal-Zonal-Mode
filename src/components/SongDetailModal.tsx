@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2 } from "lucide-react";
+import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, Languages } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
 import { FirebaseDatabaseService } from "@/lib/firebase-database";
@@ -10,6 +10,7 @@ import { useUltraFastSongHistory } from "@/hooks/useUltraFastSongHistory";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
 import { useRealtimeSongData } from "@/hooks/useRealtimeSongData";
 import { firebaseLowDataService } from "@/lib/firebase-low-data-service";
+import { translationService } from "@/lib/translation-service";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -38,6 +39,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [isFullscreenComments, setIsFullscreenComments] = useState(false);
   const [isFullscreenSolfas, setIsFullscreenSolfas] = useState(false);
 
+  // Translation state
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [translatedLyrics, setTranslatedLyrics] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+
   // Toggle fullscreen functions
   const toggleFullscreenLyrics = () => {
     setIsFullscreenLyrics(!isFullscreenLyrics);
@@ -50,6 +57,36 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const toggleFullscreenSolfas = () => {
     setIsFullscreenSolfas(!isFullscreenSolfas);
   };
+
+  // Handle translation
+  const handleTranslate = async (langCode: string) => {
+    if (!currentSongData?.lyrics) return;
+    
+    setSelectedLanguage(langCode);
+    setShowLanguageMenu(false);
+    
+    if (langCode === 'en') {
+      setTranslatedLyrics('');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const translated = await translationService.translateLyrics(currentSongData.lyrics, langCode);
+      setTranslatedLyrics(translated);
+    } catch (error) {
+      console.error('Translation failed:', error);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Reset translation when song changes
+  useEffect(() => {
+    setSelectedLanguage('en');
+    setTranslatedLyrics('');
+    setShowLanguageMenu(false);
+  }, [selectedSong?.id]);
   
   // State for history audio players
   const [historyAudioStates, setHistoryAudioStates] = useState<{[key: string]: {isPlaying: boolean, currentTime: number, duration: number}}>({});
@@ -472,12 +509,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         // Use real-time comments for latest content
         if (realtimeComments && realtimeComments.length > 0) {
           return realtimeComments
-            .filter(comment => comment.author === 'Pastor')
+            .filter(comment => comment.author === 'Coordinator')
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         }
         // Fallback to current song comments
         return currentSong.comments
-          .filter(comment => comment.author === 'Pastor')
+          .filter(comment => comment.author === 'Coordinator')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
       default:
         return null;
@@ -488,24 +525,24 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const getOlderComments = () => {
     // Use real-time comments if available
     if (realtimeComments && realtimeComments.length > 0) {
-      const pastorComments = realtimeComments
-        .filter(comment => comment.author === 'Pastor')
+      const coordinatorComments = realtimeComments
+        .filter(comment => comment.author === 'Coordinator')
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
       // Return all except the latest (which is shown in main tab)
-      return pastorComments.slice(1);
+      return coordinatorComments.slice(1);
     }
     
     // Fallback to real-time song data or selectedSong comments
     const currentSong = realtimeSongData || selectedSong;
     if (!currentSong || !Array.isArray(currentSong.comments)) return [];
     
-    const pastorComments = currentSong.comments
-      .filter(comment => comment.author === 'Pastor')
+    const coordinatorComments = currentSong.comments
+      .filter(comment => comment.author === 'Coordinator')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     // Return all except the first one (which is the latest)
-    return pastorComments.slice(1);
+    return coordinatorComments.slice(1);
   };
 
   // Get older solfas for history (all except the latest)
@@ -692,6 +729,38 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   <p className="text-sm text-gray-500">{currentSongData?.writer}</p>
                 </div>
               </div>
+              
+              {/* Translation Button in Fullscreen */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                  className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 transition-all duration-200"
+                  disabled={isTranslating}
+                >
+                  <Languages className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {isTranslating ? 'Translating...' : translationService.LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+                  </span>
+                </button>
+
+                {/* Language Menu Dropdown */}
+                {showLanguageMenu && (
+                  <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 max-h-80 overflow-y-auto z-20">
+                    {translationService.LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleTranslate(lang.code)}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-purple-50 transition-colors flex items-center gap-2 ${
+                          selectedLanguage === lang.code ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        <span className="text-lg">{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Fullscreen Lyrics Content - Properly scrollable */}
@@ -700,7 +769,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 <div className="text-gray-900 leading-relaxed space-y-6 text-base text-left font-poppins">
                   {currentSongData?.lyrics ? (
                     <div 
-                      dangerouslySetInnerHTML={{ __html: currentSongData.lyrics }}
+                      dangerouslySetInnerHTML={{ __html: translatedLyrics || currentSongData.lyrics }}
                       className="prose prose-lg max-w-none"
                     />
                   ) : (
@@ -936,11 +1005,45 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         {/* Content Area - Scrollable */}
         <div className="flex-1 px-6 py-4 overflow-y-auto" style={{ paddingBottom: '180px' }}>
           {activeTab === 'lyrics' && (
-            <div className="max-w-none">
+            <div className="max-w-none relative">
+              {/* Translation Button */}
+              <div className="absolute top-0 right-0 z-10">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                    className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 transition-all duration-200"
+                    disabled={isTranslating}
+                  >
+                    <Languages className="w-4 h-4" />
+                    <span className="text-xs font-medium">
+                      {isTranslating ? 'Translating...' : translationService.LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+                    </span>
+                  </button>
+
+                  {/* Language Menu Dropdown */}
+                  {showLanguageMenu && (
+                    <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 max-h-80 overflow-y-auto z-20">
+                      {translationService.LANGUAGES.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => handleTranslate(lang.code)}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-purple-50 transition-colors flex items-center gap-2 ${
+                            selectedLanguage === lang.code ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          <span className="text-lg">{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
                 {currentSongData?.lyrics ? (
                   <div 
-                    dangerouslySetInnerHTML={{ __html: currentSongData.lyrics }}
+                    dangerouslySetInnerHTML={{ __html: translatedLyrics || currentSongData.lyrics }}
                     dir="ltr"
                     style={{
                       lineHeight: '1.8',
@@ -1061,7 +1164,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
                 >
-                  Pastor's Comments
+                  Coordinator's Comments
                 </button>
                 <button
                   onClick={() => setActiveHistoryTab('metadata')}
@@ -1376,7 +1479,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           <div className="px-4 pb-4">
                             <div className="text-sm text-slate-700">
                               <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-slate-200/50">
-                                <p className="font-medium text-slate-800">Pastor</p>
+                                <p className="font-medium text-slate-800">Coordinator</p>
                                 <p className="text-sm text-slate-700 mt-2">{entry.new_value}</p>
                               </div>
                             </div>

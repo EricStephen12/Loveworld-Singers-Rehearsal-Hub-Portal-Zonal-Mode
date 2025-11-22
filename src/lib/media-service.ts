@@ -162,11 +162,11 @@ class MediaService {
   }
 
   // Toggle like
-  async toggleLike(mediaId: string, increment: boolean): Promise<void> {
+  async toggleLike(mediaId: string, shouldIncrement: boolean): Promise<void> {
     try {
       const docRef = doc(this.mediaCollection, mediaId)
       await updateDoc(docRef, {
-        likes: increment ? increment(1) : increment(-1)
+        likes: increment(shouldIncrement ? 1 : -1)
       })
     } catch (error) {
       console.error('Error toggling like:', error)
@@ -189,4 +189,9 @@ class MediaService {
       )
     } catch (error) {
       console.error('Error searching media:', error)
-      
+      throw error
+    }
+  }
+}
+
+export default new MediaService()

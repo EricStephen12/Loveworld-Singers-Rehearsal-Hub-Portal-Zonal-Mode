@@ -136,11 +136,14 @@ export class PraiseNightSongsService {
         solfas: songData.solfas || '',
         audioFile: songData.audioFile || '',
         category: songData.category || '',
+        categories: songData.categories || [], // Multi-category support
         status: songData.status || 'unheard',
         praiseNightId: songData.praiseNightId || '',
         rehearsalCount: songData.rehearsalCount || 1,
         comments: songData.comments || [],
         history: songData.history || [],
+        isActive: songData.isActive || false, // Active status for blinking border
+        mediaId: songData.mediaId || null, // Media library reference
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };

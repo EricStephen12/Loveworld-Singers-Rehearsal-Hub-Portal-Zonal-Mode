@@ -58,7 +58,7 @@ export default function EditSongModal({
   const [songLyrics, setSongLyrics] = useState('');
   const [songComments, setSongComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [pastorComment, setPastorComment] = useState('');
+  const [coordinatorComment, setCoordinatorComment] = useState('');
   
   // History management state
   const [rehearsalCount, setRehearsalCount] = useState(1);
@@ -181,14 +181,14 @@ export default function EditSongModal({
           oldValue = originalValues.audioFile;
           break;
         case 'comments':
-          // Save the current Pastor comment rich-text content
-          currentContent = pastorComment;
-          // Previous value: latest Pastor comment from existing song comments
+          // Save the current Coordinator comment rich-text content
+          currentContent = coordinatorComment;
+          // Previous value: latest Coordinator comment from existing song comments
           try {
-            const latestPastor = (Array.isArray(song?.comments) ? song!.comments : [])
-              .filter((c: any) => c.author === 'Pastor')
+            const latestCoordinator = (Array.isArray(song?.comments) ? song!.comments : [])
+              .filter((c: any) => c.author === 'Coordinator')
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-            oldValue = (latestPastor as any)?.text || (latestPastor as any)?.content || '';
+            oldValue = (latestCoordinator as any)?.text || (latestCoordinator as any)?.content || '';
           } catch {
             oldValue = '';
           }
@@ -460,12 +460,12 @@ export default function EditSongModal({
       
       setSongComments(Array.isArray(song.comments) ? song.comments : []);
       setNewComment('');
-      // Initialize Pastor comment editor from latest Pastor comment
+      // Initialize Coordinator comment editor from latest Coordinator comment
       try {
-        const latestPastor = (Array.isArray(song.comments) ? song.comments : [])
-          .filter(c => c.author === 'Pastor')
+        const latestCoordinator = (Array.isArray(song.comments) ? song.comments : [])
+          .filter(c => c.author === 'Coordinator')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-        setPastorComment((latestPastor as any)?.text || (latestPastor as any)?.content || '');
+        setCoordinatorComment((latestCoordinator as any)?.text || (latestCoordinator as any)?.content || '');
       } catch {}
       
       // Load rehearsal count from song data, default to 1 if not set
@@ -510,7 +510,7 @@ export default function EditSongModal({
       setSongLyrics('');
       setSongComments([]);
       setNewComment('');
-      setPastorComment('');
+      setCoordinatorComment('');
       setRehearsalCount(1);
       
       // Reset original values for new song
@@ -547,6 +547,12 @@ export default function EditSongModal({
       // Find the selected Praise Night ID
       const selectedPraiseNight = praiseNightCategories.find(pn => pn.name === songPraiseNight);
       
+      console.log('🔍 DEBUG - Praise Night Selection:', {
+        songPraiseNight,
+        praiseNightCategories: praiseNightCategories.map(pn => ({ id: pn.id, name: pn.name })),
+        selectedPraiseNight: selectedPraiseNight ? { id: selectedPraiseNight.id, name: selectedPraiseNight.name } : null
+      });
+      
       if (!selectedPraiseNight) {
         alert('Please select a valid Praise Night');
         return;
@@ -554,6 +560,7 @@ export default function EditSongModal({
 
       console.log('💾 SAVING SONG:', {
         songTitle: songTitle,
+        praiseNightId: selectedPraiseNight.id,
         hasSelectedAudio: !!audioFile,
         audioURL: audioFile ? audioFile.url : songAudioFile,
         willSaveAudio: !!(audioFile ? audioFile.url : songAudioFile)
@@ -561,12 +568,12 @@ export default function EditSongModal({
       
       const finalAudioFile = audioFile ? audioFile.url : songAudioFile;
       
-      const finalComments = pastorComment && pastorComment.trim() !== '' ? [
+      const finalComments = coordinatorComment && coordinatorComment.trim() !== '' ? [
         {
           id: `comment-${Date.now()}`,
-          text: pastorComment,
+          text: coordinatorComment,
           date: new Date().toISOString(),
-          author: 'Pastor'
+          author: 'Coordinator'
         }
       ] : [];
       
@@ -669,7 +676,7 @@ export default function EditSongModal({
         id: `comment-${Date.now()}`,
         text: newComment.trim(),
         date: new Date().toISOString(),
-        author: 'Pastor'
+        author: 'Coordinator'
       };
       setSongComments([...(Array.isArray(songComments) ? songComments : []), comment]);
       setNewComment('');
@@ -1192,7 +1199,7 @@ Do Re Mi Fa Sol La Ti Do"
                       <div className="flex items-center justify-between">
                       <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
                         <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                          Pastor Comment
+                          Coordinator Comment
                       </h4>
                         <button
                           onClick={() => handleCreateHistory('comments')}
@@ -1208,10 +1215,10 @@ Do Re Mi Fa Sol La Ti Do"
                         Basic rich text - Bold and Italic supported
                       </div>
                       <BasicTextEditor
-                        id="pastor-comment-editor"
-                        value={pastorComment}
-                        onChange={(value) => setPastorComment(value)}
-                        placeholder="Enter Pastor's comment here..."
+                        id="coordinator-comment-editor"
+                        value={coordinatorComment}
+                        onChange={(value) => setCoordinatorComment(value)}
+                        placeholder="Enter Coordinator's comment here..."
                         className="w-full"
                             />
                           </div>

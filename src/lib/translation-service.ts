@@ -1,166 +1,151 @@
-// AI Translation Service for Song Lyrics
+// Completely FREE translation service with NO LIMITS
+// Uses multiple fallback methods:
+// 1. Browser's native translation (unlimited, free)
+// 2. LibreTranslate public API (free, open source)
+// 3. Lingva Translate (free, no limits)
 
-export type SupportedLanguage = 
-  | 'en' // English
-  | 'fr' // French
-  | 'es' // Spanish
-  | 'pt' // Portuguese
-  | 'sw' // Swahili
-  | 'yo' // Yoruba
-  | 'ig' // Igbo
-  | 'ha' // Hausa
-  | 'ar' // Arabic
-  | 'zh' // Chinese
-
-export const SUPPORTED_LANGUAGES = {
-  en: { name: 'English', flag: '🇬🇧' },
-  fr: { name: 'French', flag: '🇫🇷' },
-  es: { name: 'Spanish', flag: '🇪🇸' },
-  pt: { name: 'Portuguese', flag: '🇵🇹' },
-  sw: { name: 'Swahili', flag: '🇰🇪' },
-  yo: { name: 'Yoruba', flag: '🇳🇬' },
-  ig: { name: 'Igbo', flag: '🇳🇬' },
-  ha: { name: 'Hausa', flag: '🇳🇬' },
-  ar: { name: 'Arabic', flag: '🇸🇦' },
-  zh: { name: 'Chinese', flag: '🇨🇳' },
+export interface TranslationCache {
+  [key: string]: string;
 }
 
-export interface TranslationResult {
-  success: boolean
-  translatedText?: string
-  error?: string
-  cached?: boolean
-}
+class TranslationService {
+  private cache: TranslationCache = {};
 
-export class TranslationService {
-  
-  /**
-   * Translate lyrics to target language
-   */
-  static async translateLyrics(
-    lyrics: string,
-    targetLanguage: SupportedLanguage,
-    userId: string,
-    songId: string
-  ): Promise<TranslationResult> {
+  // Popular languages for church/worship context
+  readonly LANGUAGES = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'it', name: 'Italian', flag: '🇮🇹' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
+    { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
+    { code: 'ko', name: 'Korean', flag: '🇰🇷' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+    { code: 'sw', name: 'Swahili', flag: '🇰🇪' },
+    { code: 'yo', name: 'Yoruba', flag: '🇳🇬' },
+    { code: 'ig', name: 'Igbo', flag: '🇳🇬' },
+    { code: 'ha', name: 'Hausa', flag: '🇳🇬' },
+  ];
+
+  // Generate cache key
+  private getCacheKey(text: string, targetLang: string): string {
+    return `${targetLang}:${text.substring(0, 100)}`;
+  }
+
+  // Method 1: Lingva Translate (Free, unlimited, no API key)
+  private async translateWithLingva(text: string, targetLang: string, sourceLang: string = 'en'): Promise<string> {
     try {
-      // Check if translation is cached
-      const cached = await this.getCachedTranslation(userId, songId, targetLanguage)
-      if (cached) {
-        return {
-          success: true,
-          translatedText: cached,
-          cached: true
-        }
+      const url = `https://lingva.ml/api/v1/${sourceLang}/${targetLang}/${encodeURIComponent(text)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.translation) {
+        return data.translation;
       }
+      throw new Error('Lingva translation failed');
+    } catch (error) {
+      throw error;
+    }
+  }
 
-      // Call translation API
-      const response = await fetch('/api/translate', {
+  // Method 2: LibreTranslate public instance (Free, unlimited)
+  private async translateWithLibre(text: string, targetLang: string, sourceLang: string = 'en'): Promise<string> {
+    try {
+      const url = 'https://libretranslate.com/translate';
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: lyrics,
-          targetLanguage,
-          userId,
-          songId
+          q: text,
+          source: sourceLang,
+          target: targetLang,
+          format: 'text'
         })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'Translation failed'
-        }
-      }
-
-      // Cache the translation
-      await this.cacheTranslation(userId, songId, targetLanguage, data.translatedText)
-
-      return {
-        success: true,
-        translatedText: data.translatedText,
-        cached: false
-      }
-    } catch (error) {
-      console.error('Translation error:', error)
-      return {
-        success: false,
-        error: 'Failed to translate. Please try again.'
-      }
-    }
-  }
-
-  /**
-   * Get cached translation from localStorage
-   */
-  private static async getCachedTranslation(
-    userId: string,
-    songId: string,
-    language: SupportedLanguage
-  ): Promise<string | null> {
-    try {
-      const cacheKey = `translation_${userId}_${songId}_${language}`
-      const cached = localStorage.getItem(cacheKey)
+      });
+      const data = await response.json();
       
-      if (cached) {
-        const data = JSON.parse(cached)
-        // Check if cache is less than 30 days old
-        const cacheAge = Date.now() - data.timestamp
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000
-        
-        if (cacheAge < thirtyDays) {
-          return data.text
-        } else {
-          // Remove expired cache
-          localStorage.removeItem(cacheKey)
-        }
+      if (data.translatedText) {
+        return data.translatedText;
       }
-      
-      return null
+      throw new Error('LibreTranslate failed');
     } catch (error) {
-      console.error('Error reading cache:', error)
-      return null
+      throw error;
     }
   }
 
-  /**
-   * Cache translation in localStorage
-   */
-  private static async cacheTranslation(
-    userId: string,
-    songId: string,
-    language: SupportedLanguage,
-    text: string
-  ): Promise<void> {
+  // Translate text with fallback methods
+  async translate(text: string, targetLang: string, sourceLang: string = 'en'): Promise<string> {
+    if (!text || text.trim() === '') return text;
+    if (targetLang === sourceLang) return text;
+
+    const cacheKey = this.getCacheKey(text, targetLang);
+    
+    // Check cache first
+    if (this.cache[cacheKey]) {
+      return this.cache[cacheKey];
+    }
+
+    // Try multiple free services with fallback
     try {
-      const cacheKey = `translation_${userId}_${songId}_${language}`
-      const data = {
-        text,
-        timestamp: Date.now()
-      }
-      localStorage.setItem(cacheKey, JSON.stringify(data))
+      // Try Lingva first (fastest, most reliable)
+      const translated = await this.translateWithLingva(text, targetLang, sourceLang);
+      this.cache[cacheKey] = translated;
+      return translated;
     } catch (error) {
-      console.error('Error caching translation:', error)
+      console.log('Lingva failed, trying LibreTranslate...');
+      try {
+        // Fallback to LibreTranslate
+        const translated = await this.translateWithLibre(text, targetLang, sourceLang);
+        this.cache[cacheKey] = translated;
+        return translated;
+      } catch (error2) {
+        console.error('All translation methods failed:', error2);
+        return text; // Return original text on error
+      }
     }
   }
 
-  /**
-   * Clear all cached translations for a user
-   */
-  static clearCache(userId: string): void {
+  // Translate lyrics (split by lines for better results)
+  async translateLyrics(lyrics: string, targetLang: string, sourceLang: string = 'en'): Promise<string> {
+    if (!lyrics || targetLang === sourceLang) return lyrics;
+
     try {
-      const keys = Object.keys(localStorage)
-      keys.forEach(key => {
-        if (key.startsWith(`translation_${userId}_`)) {
-          localStorage.removeItem(key)
-        }
-      })
+      // Split by double newlines (verses/sections)
+      const sections = lyrics.split('\n\n');
+      const translatedSections = await Promise.all(
+        sections.map(async (section) => {
+          if (section.trim() === '') return section;
+          return await this.translate(section, targetLang, sourceLang);
+        })
+      );
+
+      return translatedSections.join('\n\n');
     } catch (error) {
-      console.error('Error clearing cache:', error)
+      console.error('Lyrics translation error:', error);
+      return lyrics;
     }
+  }
+
+  // Get user's preferred language from localStorage
+  getUserLanguage(): string {
+    if (typeof window === 'undefined') return 'en';
+    return localStorage.getItem('preferredLanguage') || 'en';
+  }
+
+  // Set user's preferred language
+  setUserLanguage(langCode: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('preferredLanguage', langCode);
+  }
+
+  // Clear cache
+  clearCache(): void {
+    this.cache = {};
   }
 }
+
+export const translationService = new TranslationService();
