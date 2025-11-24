@@ -87,6 +87,16 @@ export default function RehearsalsPage() {
 
   const rehearsalOptions = [
     {
+      id: 'all-ministered-songs',
+      title: 'All Ministered Praise Songs',
+      description: 'Browse all praise songs from past ministrations',
+      icon: Music,
+      href: '/pages/praise-night?category=all-ministered',
+      gradient: 'from-pink-600 via-rose-600 to-red-600',
+      iconBg: 'bg-pink-100',
+      iconColor: 'text-pink-600'
+    },
+    {
       id: 'ongoing-rehearsals',
       title: 'Ongoing Rehearsals',
       description: 'Join active rehearsal sessions',

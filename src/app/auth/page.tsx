@@ -544,48 +544,17 @@ function AuthPageContent() {
           return
         }
         
-        // If exactly one account found, sign them in
+        // If exactly one account found, prompt for password
         if (existingProfiles && existingProfiles.length === 1) {
           const existingProfile = existingProfiles[0] as any
           console.log('✅ Found existing profile:', existingProfile.email || existingProfile.id)
           
-          // Use the profile's actual email for sign in
-          const signInEmail = existingProfile.email || `${kingschatUserId}@kingschat.temp`
-          
-          // Try to sign in with their Firebase Auth credentials
-          const signInResult = await FirebaseAuthService.signInWithEmailAndPassword(
-            signInEmail,
-            kingschatUserId // Use KingsChat ID as password
-          )
-          
-          if (signInResult.error) {
-            // If sign in fails, try the temp email format as fallback
-            const fallbackEmail = `${kingschatUserId}@kingschat.temp`
-            const fallbackResult = await FirebaseAuthService.signInWithEmailAndPassword(
-              fallbackEmail,
-              kingschatUserId
-            )
-            
-            if (fallbackResult.error) {
-              setError(sanitizeError('Could not sign in with your KingsChat account. Please use email/password login or contact support.'))
-              setIsLoading(false)
-              setIsCheckingAccount(false)
-              return
-            }
-          }
-          
-          console.log('✅ Existing user signed in - redirecting to home')
-          
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('userAuthenticated', 'true')
-            localStorage.setItem('hasCompletedProfile', 'true')
-            localStorage.setItem('authProvider', 'kingschat')
-          }
-          
+          // Show password prompt for this account
+          setSelectedAccount(existingProfile)
+          setShowPasswordPrompt(true)
+          setAccountPassword('')
           setIsLoading(false)
           setIsCheckingAccount(false)
-          
-          router.push('/home')
           return
         }
         
