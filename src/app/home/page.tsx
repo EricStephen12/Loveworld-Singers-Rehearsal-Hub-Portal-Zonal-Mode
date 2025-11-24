@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { Music, Settings, Calendar, Users, BarChart3, Download, Search, Menu, X, Home, User, Bell, HelpCircle, FileText, MessageCircle, Newspaper, Flag, Coffee, Play, Heart, Plus, MoreHorizontal, Shuffle, ChevronDown, ChevronUp, Info, Film, Shield } from 'lucide-react'
 import { getMenuItems } from '@/config/menuItems'
 import SharedDrawer from '@/components/SharedDrawer'
+import Tooltip from '@/components/Tooltip'
+
 import { useHomeGlobalSearch, HomeSearchResult } from '@/hooks/useHomeGlobalSearch'
 import { useAuth } from '@/contexts/AuthContext'
 import { useZone } from '@/contexts/ZoneContext'
@@ -164,6 +166,25 @@ function HomePageContent() {
       'Home': Home
     };
     return iconMap[iconName] || Search;
+  }
+
+  // Helper function to get tooltip text
+  const getTooltip = (title: string) => {
+    const tooltips: { [key: string]: string } = {
+      'Central Dashboard': 'Manage all zones',
+      'HQ Admin': 'HQ admin panel',
+      'Dashboard': 'Zone management',
+      'Rehearsals': 'View schedules',
+      'Profile': 'Your info',
+      'Notifications': 'Updates',
+      'Groups': 'Your teams',
+      'Submit Song': 'Add new song',
+      'Media': 'Audio & videos',
+      'Ministry Calendar': 'Events',
+      'Link': 'External link',
+      'Admin Support': 'Get help'
+    }
+    return tooltips[title] || ''
   }
 
   // Central Admin features
@@ -390,7 +411,7 @@ function HomePageContent() {
   }
 
   return (
-     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-gray-50 via-white to-slate-50">
+       <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-gray-50 via-white to-slate-50">
        {/* Responsive Container with Max Width */}
        <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
       {/* Fixed Header - Full Width */}
@@ -420,7 +441,7 @@ function HomePageContent() {
               </Link>
               
               {/* Zone Switcher */}
-              {!zoneLoading && currentZone && <ZoneSwitcher />}
+              {!zoneLoading && currentZone && <div data-tour="zone-switcher"><ZoneSwitcher /></div>}
             </div>
             
             {/* Right Section with iOS-style spacing */}
@@ -670,15 +691,17 @@ function HomePageContent() {
                   ? { href: feature.href, target: '_blank', rel: 'noopener noreferrer' }
                   : { href: feature.href }
                 
+                const tooltip = getTooltip(feature.title)
+                
                 return (
-                  <LinkComponent
-                    key={index}
-                    {...linkProps}
-                    onClick={handleClick}
-                    className={`group flex flex-col items-center p-3 bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 active:scale-[0.97] border-0 hover:bg-white/90 ring-1 ring-black/5 ${
-                      isPremiumFeature && !hasAccess ? 'opacity-75' : ''
-                    }`}
-                  >
+                  <Tooltip key={index} text={tooltip}>
+                    <LinkComponent
+                      {...linkProps}
+                      onClick={handleClick}
+                      className={`group flex flex-col items-center p-3 bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 active:scale-[0.97] border-0 hover:bg-white/90 ring-1 ring-black/5 ${
+                        isPremiumFeature && !hasAccess ? 'opacity-75' : ''
+                      }`}
+                    >
                     <div className="relative mb-2">
                       <div className={`w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm ${
                         isPremiumFeature && !hasAccess
@@ -723,7 +746,8 @@ function HomePageContent() {
                     {isPremiumFeature && !hasAccess && (
                       <span className="text-[10px] text-yellow-600 font-semibold mt-0.5">Premium</span>
                     )}
-                  </LinkComponent>
+                    </LinkComponent>
+                  </Tooltip>
                 )
               })}
             </div>
@@ -822,7 +846,7 @@ function HomePageContent() {
         })()}
       />
       </div> {/* End Desktop Container */}
-    </div>
+      </div>
   )
 }
 

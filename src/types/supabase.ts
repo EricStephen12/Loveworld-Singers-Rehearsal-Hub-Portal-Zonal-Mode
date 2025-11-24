@@ -29,6 +29,9 @@ export interface UserProfile {
   kingschatPassword?: string; // Stored password for auto sign-in
   kingschatLinkedAt?: string;
   authProviders?: string[];
+  // Onboarding tour fields
+  has_seen_onboarding_tour?: boolean;
+  onboarding_completed_at?: string;
 }
 
 export interface UserGroup {

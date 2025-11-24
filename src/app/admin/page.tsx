@@ -1425,23 +1425,14 @@ export default function AdminPage() {
         {/* Mobile Header - Only visible on mobile and when not viewing page details */}
         {!(activeSection === 'Pages' && selectedPage) && (
           <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            {activeSection !== 'Dashboard' ? (
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                aria-label="Back"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                aria-label="Open Menu"
-              >
-                <Menu className="w-5 h-5 text-slate-600" />
-              </button>
-            )}
+            {/* Always show hamburger menu for main sections */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Open Menu"
+            >
+              <Menu className="w-5 h-5 text-slate-600" />
+            </button>
             <h1 className="text-lg font-semibold text-slate-900 truncate flex-1">
               {activeSection}
             </h1>

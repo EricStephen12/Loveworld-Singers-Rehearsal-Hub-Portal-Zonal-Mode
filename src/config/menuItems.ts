@@ -86,16 +86,24 @@ export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCo
   {
     icon: RotateCw,
     title: 'Refresh App',
-    href: '#',
     badge: null,
-    onClick: onRefresh,
+    onClick: onRefresh || (() => {
+      console.log('⚠️ Refresh callback not provided, using fallback');
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }),
   },
   {
     icon: LogOut,
     title: 'Logout',
-    href: '#',
     badge: null,
-    onClick: onLogout,
+    onClick: onLogout || (() => {
+      console.log('⚠️ Logout callback not provided, using fallback');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth';
+      }
+    }),
   },
 ]
 // bro ha laoding program daa is o slow ver slow wh i hough is mean o be insan and a;lso he song card is no showing he rehearsal coun updae i is working bu is no showing he updae check if i is geing he rehearsal coun well from he meadaa spli or rimem

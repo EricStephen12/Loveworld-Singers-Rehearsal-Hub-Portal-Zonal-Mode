@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
 
   const refreshProfile = useCallback(async () => {
     if (!user?.uid) return
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true
     let unsubscribe: (() => void) | null = null
+    let lastUserId: string | null = null
 
     const setupAuthListener = async () => {
       try {
@@ -102,32 +104,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubscribe = FirebaseAuthService.onAuthStateChange((currentUser) => {
           if (!isMounted) return
 
-          console.log('🔄 Auth state changed:', currentUser ? currentUser.email : 'No user')
+          const currentUserId = currentUser?.uid || null
+          
+          // Only process if user actually changed
+          if (currentUserId === lastUserId && hasInitialized) {
+            // User hasn't changed and we've already initialized, skip
+            return
+          }
+          
+          if (currentUserId !== lastUserId) {
+            console.log('🔄 Auth state changed:', currentUser ? currentUser.email : 'No user')
+            lastUserId = currentUserId
+          }
           
           if (currentUser) {
-            console.log('✅ User is authenticated:', currentUser.email)
+            if (!hasInitialized) {
+              console.log('✅ User is authenticated:', currentUser.email)
+            }
             setUser(currentUser)
 
-            // Load user profile
-            FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
-              .then((userProfile) => {
-                if (userProfile && isMounted) {
-                  setProfile(userProfile as any)
-                  console.log('✅ Profile loaded successfully')
-                }
-              })
-              .catch((error) => {
-                console.error('❌ Error loading profile:', error)
-              })
+            // Load user profile only if we don't have it or user changed
+            if (!profile || profile.id !== currentUser.uid) {
+              FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
+                .then((userProfile) => {
+                  if (userProfile && isMounted) {
+                    setProfile(userProfile as any)
+                    if (!hasInitialized) {
+                      console.log('✅ Profile loaded successfully')
+                    }
+                  }
+                })
+                .catch((error) => {
+                  console.error('❌ Error loading profile:', error)
+                })
+            }
           } else {
-            console.log('❌ No authenticated user found')
+            if (user) {
+              console.log('❌ User signed out')
+            }
             setUser(null)
             setProfile(null)
           }
           
           if (isMounted) {
-          setIsLoading(false)
-        }
+            setIsLoading(false)
+            if (!hasInitialized) {
+              setHasInitialized(true)
+            }
+          }
         })
 
       } catch (error) {
@@ -157,11 +181,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
   
-  // Debug logging
-  console.log('AuthContext: Profile state:', {
-    hasProfile: !!profile,
-    userEmail: user?.email
-  })
+  // Debug logging - only on initialization (run once)
+  useEffect(() => {
+    if (hasInitialized && !isLoading) {
+      console.log('AuthContext: Initialized with profile:', {
+        hasProfile: !!profile,
+        userEmail: user?.email
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasInitialized])
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({

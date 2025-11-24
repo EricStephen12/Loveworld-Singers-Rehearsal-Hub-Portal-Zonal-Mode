@@ -12,10 +12,11 @@ export default function AuthCheck({ children }: AuthCheckProps) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [hasChecked, setHasChecked] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
-    // Don't check if already checked
-    if (hasChecked) return
+    // Don't check if already checked or redirecting
+    if (hasChecked || isRedirecting) return
 
     // Wait for auth to finish loading
     if (isLoading) return
@@ -26,13 +27,14 @@ export default function AuthCheck({ children }: AuthCheckProps) {
     // If user is authenticated, redirect to home
     if (user) {
       console.log('✅ AuthCheck: User authenticated, redirecting to home')
+      setIsRedirecting(true)
       router.replace('/home')
     }
     // If no user, stay on auth page (don't redirect)
-  }, [user, isLoading, hasChecked, router])
+  }, [user, isLoading, hasChecked, isRedirecting, router])
 
-  // Show loading while checking
-  if (isLoading || !hasChecked) {
+  // Only show loading on initial check, not on subsequent navigations
+  if (!hasChecked && isLoading) {
     return (
       <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
         <div className="text-center text-white">
@@ -43,6 +45,6 @@ export default function AuthCheck({ children }: AuthCheckProps) {
     )
   }
 
-  // Show auth page content
+  // Show auth page content immediately after first check
   return <>{children}</>
 }

@@ -67,7 +67,10 @@ export default function AdminSidebar({
         {/* Header */}
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
+            <button
+              onClick={() => router.push('/home')}
+              className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'lg:justify-center' : ''}`}
+            >
               <img 
                 src="/logo.png" 
                 alt="Loveworld Singers" 
@@ -77,7 +80,7 @@ export default function AdminSidebar({
                 <h1 className="text-lg font-bold text-slate-900">Admin Panel</h1>
                 <p className="text-sm text-slate-500">Loveworld Singers</p>
               </div>
-            </div>
+            </button>
             {/* Close button for mobile */}
             <button
               onClick={() => setSidebarCollapsed(true)}

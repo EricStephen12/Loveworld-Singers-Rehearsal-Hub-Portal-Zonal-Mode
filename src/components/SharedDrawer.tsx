@@ -78,14 +78,24 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
           }
               const commonProps = item.onClick
             ? {
-                onClick: () => {
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                   console.log('🔗 Menu item clicked (onClick):', item.title);
                   if (isLogout) {
                     // Show confirmation modal for logout
-                    setLogoutCallback(() => item.onClick)
+                    // Store the callback correctly
+                    setLogoutCallback(() => () => {
+                      if (item.onClick) {
+                        item.onClick()
+                      }
+                    })
                     setShowLogoutModal(true)
                   } else {
-                    item.onClick?.()
+                    // Execute immediately for non-logout items
+                    if (item.onClick) {
+                      item.onClick()
+                    }
                     onClose()
                   }
                 }
@@ -285,11 +295,17 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
               </button>
               <button
                 onClick={() => {
+                  console.log('🚪 Logout confirmed, executing callback');
                   setShowLogoutModal(false)
                   onClose()
-                  logoutCallback?.()
+                  // Execute callback immediately
+                  if (logoutCallback) {
+                    logoutCallback()
+                  } else {
+                    console.error('❌ No logout callback available');
+                  }
                 }}
-                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Logout
