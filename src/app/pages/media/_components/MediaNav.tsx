@@ -14,15 +14,6 @@ export default function MediaNav({ isScrolled }: MediaNavProps) {
   const router = useRouter()
   const [showSearch, setShowSearch] = useState(false)
 
-  const navlinks = [
-    { name: 'Home', link: '/pages/media' },
-    { name: 'Movies', link: '/pages/media/movies' },
-    { name: 'TV Shows', link: '/pages/media/tv-shows' },
-    { name: 'Sermons', link: '/pages/media/sermons' },
-    { name: 'Worship', link: '/pages/media/worship' },
-    { name: 'My List', link: '/pages/media/my-list' },
-  ]
-
   return (
     <nav 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -38,20 +29,6 @@ export default function MediaNav({ isScrolled }: MediaNavProps) {
               LWSRH
             </div>
           </Link>
-
-          {/* Nav Links - Hidden on mobile */}
-          <ul className="hidden md:flex items-center gap-6">
-            {navlinks.map(({ name, link }) => (
-              <li key={name}>
-                <Link 
-                  href={link}
-                  className="text-white hover:text-gray-300 transition-colors text-sm font-medium"
-                >
-                  {name}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* Right Side */}
