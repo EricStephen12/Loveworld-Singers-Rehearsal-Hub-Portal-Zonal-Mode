@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-// import { Bold, Italic } from 'lucide-react';
+import { Languages } from 'lucide-react';
 
 interface BasicTextEditorProps {
   value: string;
@@ -188,6 +188,26 @@ export default function BasicTextEditor({
     );
   }
 
+  const handleTranslate = async () => {
+    if (!editorRef.current) return;
+    
+    const textContent = editorRef.current.innerText || editorRef.current.textContent || '';
+    if (!textContent.trim()) {
+      alert('Please enter some text to translate');
+      return;
+    }
+
+    try {
+      // Use Google Translate URL scheme to open in new tab
+      const encodedText = encodeURIComponent(textContent);
+      const translateUrl = `https://translate.google.com/?sl=auto&tl=en&text=${encodedText}&op=translate`;
+      window.open(translateUrl, '_blank');
+    } catch (error) {
+      console.error('Translation error:', error);
+      alert('Failed to open translator. Please try again.');
+    }
+  };
+
   return (
     <div className={`border border-gray-300 rounded-lg ${className}`}>
       {/* Toolbar */}
@@ -207,6 +227,16 @@ export default function BasicTextEditor({
           title="Italic"
         >
           I
+        </button>
+        <div className="flex-1"></div>
+        <button
+          type="button"
+          onClick={handleTranslate}
+          className="flex items-center gap-1 px-3 py-1 rounded hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors"
+          title="Translate text"
+        >
+          <Languages className="w-4 h-4" />
+          <span>Translate</span>
         </button>
       </div>
 

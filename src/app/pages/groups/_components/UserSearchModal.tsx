@@ -107,33 +107,33 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
   const themeColor = currentZone?.themeColor || '#10b981'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
         {/* Header */}
         <div 
-          className="p-6 text-white"
+          className="p-4 sm:p-6 text-white"
           style={{ 
             background: `linear-gradient(135deg, ${themeColor} 0%, ${themeColor}dd 100%)`
           }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Find Users</h2>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-bold">Find Users</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
           
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/70" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
             <input
               type="text"
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50"
+              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-base"
               autoFocus
             />
           </div>
@@ -159,11 +159,11 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
               </p>
             </div>
           ) : (
-            <div className="p-4 space-y-2">
+            <div className="p-3 sm:p-4 space-y-2">
               {searchResults.map((searchUser) => (
-                <div key={searchUser.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={searchUser.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors touch-target">
                   <div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md flex-shrink-0"
                     style={{ backgroundColor: themeColor }}
                   >
                     {searchUser.profilePic ? (
@@ -178,14 +178,14 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate">
+                    <h4 className="font-semibold text-gray-900 truncate text-base">
                       {searchUser.fullName}
                     </h4>
                     <p className="text-sm text-gray-600 truncate">
                       {searchUser.email}
                     </p>
                     {searchUser.zoneName && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 truncate">
                         {searchUser.zoneName}
                       </p>
                     )}
@@ -195,17 +195,15 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
                     <button
                       onClick={() => handleStartChat(searchUser)}
                       disabled={actionLoading === searchUser.id}
-                      className="p-2 text-gray-600 hover:text-white hover:bg-green-500 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2.5 text-gray-600 hover:text-white hover:bg-green-500 rounded-lg transition-colors disabled:opacity-50 touch-target"
                       title="Start Chat"
                     >
                       {actionLoading === searchUser.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        <MessageCircle className="w-4 h-4" />
+                        <MessageCircle className="w-5 h-5" />
                       )}
                     </button>
-                    
-
                   </div>
                 </div>
               ))}

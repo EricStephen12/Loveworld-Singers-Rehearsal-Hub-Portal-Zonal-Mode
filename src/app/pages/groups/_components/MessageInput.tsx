@@ -83,18 +83,18 @@ export default function MessageInput() {
   if (!selectedChat) return null
 
   return (
-    <div className="p-4 bg-white border-t border-gray-200">
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
+    <div className="p-3 sm:p-4 bg-white border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="flex items-end gap-1.5 sm:gap-2">
         {/* Attachment buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           {/* Image upload */}
           <button
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={isLoading}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 touch-target"
           >
-            <Image className="w-5 h-5" />
+            <Image className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           
           {/* File upload */}
@@ -102,9 +102,9 @@ export default function MessageInput() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 touch-target"
           >
-            <Paperclip className="w-5 h-5" />
+            <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
@@ -116,7 +116,7 @@ export default function MessageInput() {
             onKeyPress={handleKeyPress}
             placeholder={`Message ${selectedChat.type === 'group' ? selectedChat.name : 'user'}...`}
             disabled={isLoading}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:border-transparent disabled:opacity-50 max-h-32 min-h-[48px]"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-100 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:border-transparent disabled:opacity-50 max-h-32 min-h-[44px] text-base"
             style={{ 
               ...(currentZone?.themeColor && {
                 '--tw-ring-color': currentZone.themeColor
@@ -125,12 +125,12 @@ export default function MessageInput() {
             rows={1}
           />
           
-          {/* Emoji button */}
+          {/* Emoji button - Hide on small mobile */}
           <button
             type="button"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 transition-colors"
+            className="hidden xs:block absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 transition-colors"
           >
-            <Smile className="w-5 h-5" />
+            <Smile className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
@@ -138,15 +138,15 @@ export default function MessageInput() {
         <button
           type="submit"
           disabled={!text.trim() || isLoading}
-          className="p-3 rounded-full text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg"
+          className="p-2.5 sm:p-3 rounded-full text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg touch-target"
           style={{ 
             backgroundColor: currentZone?.themeColor || '#10b981'
           }}
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </button>
 

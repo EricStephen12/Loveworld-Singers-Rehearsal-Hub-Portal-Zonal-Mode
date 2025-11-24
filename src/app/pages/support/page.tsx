@@ -62,8 +62,25 @@ export default function SupportPage() {
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        {/* Header Skeleton */}
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-40 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="p-4 space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-3"></div>
+              <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
+              <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

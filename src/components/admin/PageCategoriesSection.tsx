@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Toast } from '../Toast';
 import MediaSelectionModal from '../MediaSelectionModal';
+import { useAdminTheme } from './AdminThemeProvider';
 
 interface PageCategory {
   id: string;
@@ -53,6 +54,8 @@ interface PageCategoriesSectionProps {
 }
 
 export default function PageCategoriesSection(props: PageCategoriesSectionProps) {
+  const { theme } = useAdminTheme();
+  
   const {
     pageCategories,
     pages,
@@ -110,7 +113,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
             <p className="text-slate-600 mt-1">
               Manage page categories for better organization
               {filteredCategories.length > 0 && (
-                <span className="ml-2 text-purple-600 font-medium">
+                <span className={`ml-2 ${theme.text} font-medium`}>
                   ({filteredCategories.length} {filteredCategories.length === 1 ? 'category' : 'categories'})
                 </span>
               )}
@@ -124,7 +127,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
               setNewPageCategoryImage('');
               setShowPageCategoryModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+            className={`flex items-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium`}
           >
             <Plus className="w-4 h-4" />
             Add Page Category
@@ -227,9 +230,9 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                     title="Click to view pages in this category"
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <Tag className="w-4 h-4 text-purple-600" />
+                      <Tag className={`w-4 h-4 ${theme.text}`} />
                       <h3 className="font-semibold text-slate-900">{category.name}</h3>
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                      <span className={`px-2 py-0.5 ${theme.primaryLight} ${theme.text} text-xs font-medium rounded-full`}>
                         {pageCount} {pageCount === 1 ? 'page' : 'pages'}
                       </span>
                     </div>
@@ -278,7 +281,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                   setNewPageCategoryDescription('');
                   setShowPageCategoryModal(true);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                className={`inline-flex items-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium`}
               >
                 <Plus className="w-4 h-4" />
                 Add Page Category
@@ -347,7 +350,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                 <button
                   type="button"
                   onClick={() => setShowMediaLibrary(true)}
-                  className="w-full px-4 py-3 bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium rounded-lg border-2 border-purple-300 hover:border-purple-400 transition-all duration-200 flex items-center justify-center gap-2"
+                  className={`w-full px-4 py-3 ${theme.primaryLight} ${theme.bgHover} ${theme.text} font-medium rounded-lg border-2 ${theme.border} hover:border-${theme.border.split('-')[1]}-400 transition-all duration-200 flex items-center justify-center gap-2`}
                 >
                   <FolderOpen className="w-5 h-5" />
                   {newPageCategoryImage ? 'Change Image' : 'Browse Library'}
@@ -401,7 +404,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                     handleAddPageCategory();
                   }
                 }}
-                className="flex-1 px-4 py-2 text-white bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
+                className={`flex-1 px-4 py-2 text-white ${theme.primary} ${theme.primaryHover} rounded-lg font-medium transition-colors`}
               >
                 {editingPageCategory ? 'Update' : 'Add'}
               </button>

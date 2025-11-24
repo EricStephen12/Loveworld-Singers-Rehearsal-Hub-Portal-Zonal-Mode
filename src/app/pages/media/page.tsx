@@ -94,8 +94,17 @@ export default function MediaPage() {
 
       {/* Media Sliders */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-8 px-4 py-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i}>
+              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
+              <div className="flex gap-4 overflow-hidden">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="flex-shrink-0 w-48 h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <SliderContainer media={allMedia} />

@@ -3,6 +3,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import MediaManager from './MediaManager';
+import { useAdminTheme } from './admin/AdminThemeProvider';
 
 interface MediaFile {
   id: string;
@@ -29,6 +30,7 @@ export default function MediaSelectionModal({
   allowedTypes = ['audio'],
   title = "Select Media File"
 }: MediaSelectionModalProps) {
+  const { theme } = useAdminTheme();
   if (!isOpen) return null;
 
   return (

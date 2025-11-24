@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, Languages } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
+import { useZone } from "@/contexts/ZoneContext";
+import { isHQGroup } from "@/config/zones";
 import { FirebaseDatabaseService } from "@/lib/firebase-database";
 import { FirebaseCommentService } from "@/lib/firebase-comment-service";
 import { useUltraFastSongHistory } from "@/hooks/useUltraFastSongHistory";
@@ -44,6 +46,15 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [translatedLyrics, setTranslatedLyrics] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+
+  // Get zone context to determine comment terminology
+  const { currentZone } = useZone();
+  
+  // Helper function to get correct comment terminology based on zone
+  const getCommentLabel = () => {
+    // HQ groups see "Pastor Comments", regular zones see "Coordinator Comments"
+    return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
+  };
 
   // Toggle fullscreen functions
   const toggleFullscreenLyrics = () => {
@@ -507,14 +518,15 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         return currentSong.audioFile;
       case 'comments':
         // Use real-time comments for latest content
+        const commentAuthor = getCommentLabel();
         if (realtimeComments && realtimeComments.length > 0) {
           return realtimeComments
-            .filter(comment => comment.author === 'Coordinator')
+            .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         }
         // Fallback to current song comments
         return currentSong.comments
-          .filter(comment => comment.author === 'Coordinator')
+          .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
       default:
         return null;
@@ -523,10 +535,11 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // Get older comments for history (all except the latest)
   const getOlderComments = () => {
+    const commentAuthor = getCommentLabel();
     // Use real-time comments if available
     if (realtimeComments && realtimeComments.length > 0) {
       const coordinatorComments = realtimeComments
-        .filter(comment => comment.author === 'Coordinator')
+        .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
       // Return all except the latest (which is shown in main tab)
@@ -538,7 +551,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     if (!currentSong || !Array.isArray(currentSong.comments)) return [];
     
     const coordinatorComments = currentSong.comments
-      .filter(comment => comment.author === 'Coordinator')
+      .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
     // Return all except the first one (which is the latest)
@@ -1164,7 +1177,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
                 >
-                  Coordinator's Comments
+                  {getCommentLabel()}'s Comments
                 </button>
                 <button
                   onClick={() => setActiveHistoryTab('metadata')}
@@ -1183,9 +1196,20 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeHistoryTab === 'lyrics' && (
                   <div className="space-y-3">
                     {isLoadingHistory && getHistoryData('lyrics').length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-3"></div>
-                        <p className="text-gray-500 text-sm">Loading lyrics history...</p>
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-5/6 bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-4/6 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : getHistoryData('lyrics').length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12">
@@ -1238,9 +1262,18 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeHistoryTab === 'audio' && (
                   <div className="space-y-3">
                     {isLoadingHistory && getHistoryData('audio').length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-3"></div>
-                        <p className="text-gray-500 text-sm">Loading audio history...</p>
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                              <div className="flex-1">
+                                <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : getHistoryData('audio').length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12">
@@ -1319,9 +1352,19 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeHistoryTab === 'solfas' && (
                   <div className="space-y-3">
                     {isLoadingHistory && getOlderSolfas().length === 0 && getHistoryData('solfas').length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-3"></div>
-                        <p className="text-gray-500 text-sm">Loading solfas history...</p>
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-5/6 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : getOlderSolfas().length === 0 && getHistoryData('solfas').length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12">
@@ -1479,7 +1522,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           <div className="px-4 pb-4">
                             <div className="text-sm text-slate-700">
                               <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-slate-200/50">
-                                <p className="font-medium text-slate-800">Coordinator</p>
+                                <p className="font-medium text-slate-800">{getCommentLabel()}</p>
                                 <p className="text-sm text-slate-700 mt-2">{entry.new_value}</p>
                               </div>
                             </div>
@@ -1496,9 +1539,21 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeHistoryTab === 'metadata' && (
                   <div className="space-y-3">
                     {isLoadingHistory && getHistoryData('metadata').length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-3"></div>
-                        <p className="text-gray-500 text-sm">Loading metadata history...</p>
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                              <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : getHistoryData('metadata').length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12">

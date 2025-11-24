@@ -5,10 +5,10 @@ import { useChat } from '../_context/ChatContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useZone } from '@/contexts/ZoneContext'
 import { FirebaseChatService } from '../_lib/firebase-chat-service'
-import { MoreVertical, Users, Settings, UserPlus, UserMinus, Shield } from 'lucide-react'
+import { MoreVertical, Users, Settings, UserPlus, UserMinus, Shield, ArrowLeft } from 'lucide-react'
 
 export default function ChatHeader() {
-  const { selectedChat } = useChat()
+  const { selectedChat, setSelectedChat } = useChat()
   const { user } = useAuth()
   const { currentZone } = useZone()
   const [showMenu, setShowMenu] = useState(false)
@@ -66,6 +66,15 @@ export default function ChatHeader() {
     >
       {/* Chat Info */}
       <div className="flex items-center gap-3">
+        {/* Mobile Back Button */}
+        <button
+          onClick={() => setSelectedChat(null)}
+          className="md:hidden p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Back to chats"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-600" />
+        </button>
+        
         {/* Avatar */}
         <div 
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md"
@@ -91,7 +100,7 @@ export default function ChatHeader() {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {/* Add Friend button (for direct chats) */}
+        {/* Add Friend button (for direct chats) - Hide text on mobile */}
         {!isGroupChat && (
           <button 
             className="px-3 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors flex items-center gap-1"
@@ -101,7 +110,7 @@ export default function ChatHeader() {
             }}
           >
             <UserPlus className="w-4 h-4" />
-            Add Friend
+            <span className="hidden sm:inline">Add Friend</span>
           </button>
         )}
         

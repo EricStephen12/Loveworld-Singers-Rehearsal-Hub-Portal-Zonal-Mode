@@ -264,6 +264,17 @@ export class FirebaseDatabaseService {
     }
   }
 
+  // Create document with auto-generated ID
+  static async addDocument(collectionName: string, data: any) {
+    try {
+      const docRef = await addDoc(collection(db, collectionName), data)
+      return { success: true, id: docRef.id, ...data }
+    } catch (error) {
+      console.error(`Error adding document to ${collectionName}:`, error)
+      throw error
+    }
+  }
+
   static async updateDocument(collectionName: string, docId: string, data: any) {
     try {
       const docRef = doc(db, collectionName, docId)
@@ -302,20 +313,30 @@ export class FirebaseDatabaseService {
 
   static async getDocuments(collectionName: string, filters: Array<{ field: string; operator: any; value: any }>) {
     try {
+      console.log(`🔍 [getDocuments] Querying ${collectionName} with filters:`, filters)
       let q = query(collection(db, collectionName))
       
       // Apply filters
       for (const filter of filters) {
+        console.log(`  📌 Adding filter: ${filter.field} ${filter.operator} ${filter.value}`)
         q = query(q, where(filter.field, filter.operator, filter.value))
       }
       
       const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
+      console.log(`📊 [getDocuments] Found ${querySnapshot.docs.length} documents in ${collectionName}`)
+      
+      const results = querySnapshot.docs.map(doc => {
+        const data = doc.data()
+        console.log(`  📄 Document ${doc.id}:`, data)
+        return {
+          id: doc.id,
+          ...data
+        }
+      })
+      
+      return results
     } catch (error) {
-      console.error(`Error getting documents from ${collectionName}:`, error)
+      console.error(`❌ [getDocuments] Error getting documents from ${collectionName}:`, error)
       return []
     }
   }

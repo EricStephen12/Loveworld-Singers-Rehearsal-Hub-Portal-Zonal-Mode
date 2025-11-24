@@ -28,7 +28,7 @@ export default function ChatContainer() {
       <ChatHeader />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {isMessagesLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -63,12 +63,12 @@ export default function ChatContainer() {
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  className={`flex gap-1.5 sm:gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
                   {/* Avatar for other users */}
                   {showAvatar && (
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0"
                       style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
                     >
                       {message.senderName?.[0]?.toUpperCase() || '?'}
@@ -76,7 +76,7 @@ export default function ChatContainer() {
                   )}
 
                   {/* Message bubble */}
-                  <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
+                  <div className={`max-w-[75%] sm:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
                     {/* Sender name (for group chats) */}
                     {!isOwnMessage && selectedChat.type === 'group' && (
                       <span className="text-xs text-gray-600 mb-1 px-2">
@@ -86,7 +86,7 @@ export default function ChatContainer() {
 
                     {/* Message content */}
                     <div
-                      className={`rounded-2xl px-4 py-2 ${
+                      className={`rounded-2xl px-3 sm:px-4 py-2 text-sm sm:text-base ${
                         isOwnMessage
                           ? 'text-white rounded-br-none'
                           : 'bg-white text-gray-900 rounded-bl-none shadow-sm'

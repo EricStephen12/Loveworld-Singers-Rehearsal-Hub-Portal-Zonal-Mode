@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Music, Tag, Users } from "lucide-react";
+import { FileText, Music, Tag, Users, Menu, ArrowLeft } from "lucide-react";
 import { PraiseNightSong, Comment, PraiseNight, Category } from '../../types/supabase';
 import { useAdminData } from '../../hooks/useAdminData';
 import { useZone } from '@/contexts/ZoneContext';
@@ -16,6 +16,8 @@ import { versionManager } from '@/utils/versionManager';
 import { uploadBannerImage } from '@/utils/imageUpload';
 import { ToastContainer, Toast } from '../../components/Toast';
 import ZoneSwitcher from '@/components/ZoneSwitcher';
+import { getRoleTerminology, getFullRoleName, getZoneTheme } from '@/utils/zone-theme';
+import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
 
 // Import admin components
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -42,15 +44,16 @@ export default function AdminPage() {
   
   // Initialize admin from user profile
   useEffect(() => {
-    if (user && profile) {
+    if (user && profile && currentZone) {
+      const roleName = getFullRoleName(currentZone.id, profile.first_name, profile.last_name);
       setCurrentAdmin({
         id: user.uid,
-        username: user.email || 'coordinator',
-        fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Zone Coordinator'
+        username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+        fullName: roleName
       });
       setIsAuthenticated(true);
     }
-  }, [user, profile]);
+  }, [user, profile, currentZone]);
 
   // UI state
   const [activeSection, setActiveSection] = useState('Dashboard');
@@ -120,8 +123,17 @@ export default function AdminPage() {
     error,
     getCurrentPage,
     getCurrentSongs,
-    refreshData
+    refreshData,
+    setZoneId
   } = useAdminData();
+
+  // Set zone ID when currentZone changes
+  useEffect(() => {
+    if (currentZone) {
+      console.log('🔄 Admin: Setting zone for data loading:', currentZone.id);
+      setZoneId(currentZone.id);
+    }
+  }, [currentZone, setZoneId]);
 
   // Songs for the selected page (loaded on demand)
   const [loadingSongs, setLoadingSongs] = useState(false);
@@ -235,11 +247,27 @@ export default function AdminPage() {
   // Check if user is zone coordinator
   useEffect(() => {
     if (!user) {
+      console.log('❌ No user, redirecting to auth')
       router.push('/auth')
       return
     }
 
-    if (!zoneLoading && !isZoneCoordinator && !currentZone) {
+    // Wait for zone context to finish loading before checking permissions
+    if (zoneLoading) {
+      console.log('⏳ Zone context still loading...')
+      return
+    }
+
+    // Check if user has admin access (zone coordinator OR HQ admin)
+    const isHQAdmin = profile?.email && [
+      'lliamzelvin@gmail.com',
+      'ihenacho23@gmail.com', 
+      'ephraimloveworld1@gmail.com',
+      'takeshopstores@gmail.com'
+    ].includes(profile.email.toLowerCase())
+    
+    if (!isZoneCoordinator && !isHQAdmin) {
+      console.log('❌ User is not a zone coordinator or HQ admin, redirecting to home')
       router.push('/home')
       return
     }
@@ -249,8 +277,9 @@ export default function AdminPage() {
       return
     }
 
-    console.log('✅ Zone coordinator access granted for:', currentZone.name)
-  }, [user, isZoneCoordinator, currentZone, router]);
+    const role = getRoleTerminology(currentZone.id);
+    console.log(`✅ ${role.title} access granted for:`, currentZone.name)
+  }, [user, isZoneCoordinator, currentZone, zoneLoading, router]);
 
   // Get pages from Firebase (includes unassigned for admin)
   const pages = useMemo(() => {
@@ -351,11 +380,12 @@ export default function AdminPage() {
         refreshData(); // Refresh all data to ensure UI is updated
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.createCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, newCategory.name);
         }
       } else {
@@ -439,11 +469,12 @@ export default function AdminPage() {
         refreshData();
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.updateCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, `Updated category: ${newPageCategoryName.trim()}`);
         }
       } else {
@@ -509,11 +540,12 @@ export default function AdminPage() {
         refreshData();
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.deleteCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, `Deleted category: ${categoryToDelete.name}`);
         }
       } else {
@@ -583,15 +615,16 @@ export default function AdminPage() {
         refreshData();
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.createCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, newPageCategoryName.trim());
         }
       } else {
-        throw new Error('error' in result ? result.error : 'Failed to create page category');
+        throw new Error(('error' in result ? result.error : 'Failed to create page category') as string);
       }
     } catch (error) {
       console.error('❌ Error adding page category:', error);
@@ -657,11 +690,12 @@ export default function AdminPage() {
         refreshData();
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.updateCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, `Updated page category: ${newPageCategoryName.trim()}`);
         }
       } else {
@@ -714,11 +748,12 @@ export default function AdminPage() {
         refreshData();
 
         // Log admin action
-        if (user) {
+        if (user && currentZone) {
+          const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
           logAdminAction.deleteCategory({ 
             id: user.uid, 
-            username: user.email || 'coordinator',
-            fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Zone Coordinator'
+            username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
+            fullName: roleName
           }, `Deleted page category: ${pageCategoryToDelete.name}`);
         }
       } else {
@@ -1225,11 +1260,62 @@ export default function AdminPage() {
   // Show loading state only for initial page load
   if (loading && allPraiseNights.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading admin dashboard...</p>
-          <p className="text-slate-400 text-sm mt-2">This should be much faster now!</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex">
+        {/* Sidebar Skeleton */}
+        <div className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col">
+          <div className="p-6 border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-5 w-24 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 p-4">
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header Skeleton */}
+            <div className="mb-8">
+              <div className="h-9 w-64 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
+              <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="w-5 h-5 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-3 w-28 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse mb-4"></div>
+                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1319,9 +1405,13 @@ export default function AdminPage() {
   //   )
   // }
 
+  // Get zone theme colors
+  const zoneTheme = getZoneTheme(currentZone?.themeColor);
+
   // Add PageCategoriesSection to the active sections
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex flex-col lg:flex-row">
+    <AdminThemeProvider>
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex flex-col lg:flex-row overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar
         sidebarCollapsed={!isSidebarOpen}
@@ -1331,8 +1421,39 @@ export default function AdminPage() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {activeSection === 'Dashboard' && <DashboardSection />}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header - Only visible on mobile and when not viewing page details */}
+        {!(activeSection === 'Pages' && selectedPage) && (
+          <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+            {activeSection !== 'Dashboard' ? (
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5 text-slate-600" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Open Menu"
+              >
+                <Menu className="w-5 h-5 text-slate-600" />
+              </button>
+            )}
+            <h1 className="text-lg font-semibold text-slate-900 truncate flex-1">
+              {activeSection}
+            </h1>
+            {currentZone && (
+              <div className="text-xs text-slate-600 truncate max-w-[120px]">
+                {currentZone.name}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeSection === 'Dashboard' && <DashboardSection onSectionChange={setActiveSection} />}
         
         {activeSection === 'Pages' && (
           <PagesSection
@@ -1562,5 +1683,6 @@ export default function AdminPage() {
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
+    </AdminThemeProvider>
   );
 }

@@ -1,45 +1,39 @@
 import { useEffect, useState } from 'react';
 import { PraiseNight, PraiseNightSong } from '@/types/supabase';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 import { lowDataOptimizer } from '@/utils/low-data-optimizer';
+import { isHQGroup } from '@/config/zones';
 
-// Firebase data fetching function using the service
-async function fetchFirebaseData(): Promise<PraiseNight[]> {
+// Firebase data fetching function using the service - ZONE AWARE!
+async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
   try {
-    console.log('🔍 Fetching pages from Firebase using service...');
+    console.log('🔍 Fetching pages for zone:', zoneId);
     
-    // Use the FirebaseDatabaseService to get pages from praise_nights collection (main collection)
-    let pages = await FirebaseDatabaseService.getCollection('praise_nights');
-    console.log('🔥 Firebase praise_nights fetched:', pages.length, 'pages');
-
-    // If no pages found, try other collections as fallback
-    if (pages.length === 0) {
-      pages = await FirebaseDatabaseService.getCollection('praisenight');
-      console.log('🔥 Firebase praisenight fetched:', pages.length, 'praisenight');
-    }
-
-    if (pages.length === 0) {
-      pages = await FirebaseDatabaseService.getCollection('pages');
-      console.log('🔥 Firebase pages fetched:', pages.length, 'pages');
+    let pages: any[] = [];
+    
+    // Check if HQ group or regular zone
+    if (zoneId && isHQGroup(zoneId)) {
+      console.log('🏢 Loading HQ pages from praise_nights (unfiltered)');
+      pages = await FirebaseDatabaseService.getCollection('praise_nights');
+    } else if (zoneId) {
+      console.log('📍 Loading zone pages from zone_praise_nights (filtered)');
+      pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000);
+    } else {
+      console.log('⚠️ No zone provided, loading from praise_nights');
+      pages = await FirebaseDatabaseService.getCollection('praise_nights');
     }
     
+    console.log('🔥 Pages fetched:', pages.length, 'pages');
+
     console.log('📄 Pages data:', pages);
     console.log('📄 Sample page structure:', pages[0]);
     console.log('📄 Total pages found:', pages.length);
     
     if (pages.length === 0) {
-      console.error('❌ NO PAGES FOUND! This is the problem!');
-      console.log('🔍 Available collections to check:');
-      console.log('- praise_nights');
-      console.log('- praisenight'); 
-      console.log('- pages');
+      console.log('⚠️ No pages found for zone:', zoneId);
     }
-    
-    // Get songs for each page - USING NEW TABLE!
-    const allSongs = await FirebaseDatabaseService.getCollection('praise_night_songs');
-    console.log('🔥 [FRESH] Firebase praise_night_songs fetched:', allSongs.length, 'songs');
-    console.log('🔥 [FRESH] Sample song data:', allSongs[0]);
     
     // Associate songs with their respective pages and map to correct format
     const pagesWithSongs = pages.map((page, index) => {
@@ -105,23 +99,28 @@ async function fetchFirebaseData(): Promise<PraiseNight[]> {
   }
 }
 
-export function useRealtimeData() {
+export function useRealtimeData(zoneId?: string) {
   const [pages, setPages] = useState<PraiseNight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Low-data optimized loading
   useEffect(() => {
+    if (!zoneId) {
+      console.log('⏳ Waiting for zone...');
+      return;
+    }
+    
     async function loadData() {
       try {
         setError(null);
         
-        // Check cache first for instant loading
-        const cacheKey = 'praise-nights-data';
+        // Check cache first for instant loading (zone-specific cache)
+        const cacheKey = `praise-nights-data-${zoneId}`;
         const cachedData = lowDataOptimizer.get(cacheKey);
         
         if (cachedData) {
-          console.log('⚡ Instant load from cache - super fast!');
+          console.log('⚡ Instant load from cache for zone:', zoneId);
           setPages(cachedData);
           setLoading(false);
         } else {
@@ -130,10 +129,10 @@ export function useRealtimeData() {
         
         // Only fetch from Firebase if we don't have cached data or cache is expired
         if (lowDataOptimizer.shouldFetch(cacheKey)) {
-          console.log('🔥 Fetching fresh data from Firebase...');
+          console.log('🔥 Fetching fresh data for zone:', zoneId);
           const startTime = performance.now();
           
-          const firebasePages = await fetchFirebaseData();
+          const firebasePages = await fetchFirebaseData(zoneId);
           setPages(firebasePages);
           
           // Cache the data for future instant loading
@@ -148,7 +147,7 @@ export function useRealtimeData() {
         setError(err instanceof Error ? err.message : 'Failed to load data');
         
         // Try to use cached data as fallback
-        const cacheKey = 'praise-nights-data';
+        const cacheKey = `praise-nights-data-${zoneId}`;
         const cachedData = lowDataOptimizer.get(cacheKey);
         if (cachedData) {
           console.log('🔄 Using cached fallback data');
@@ -160,7 +159,7 @@ export function useRealtimeData() {
     }
 
     loadData();
-  }, []);
+  }, [zoneId]);
 
   // No automatic refresh - data is fetched fresh on each request
   useEffect(() => {
@@ -173,11 +172,11 @@ export function useRealtimeData() {
 
   const getCurrentSongs = async (pageId: number | string): Promise<PraiseNightSong[]> => {
     try {
-      console.log(`🎵 [FRESH] Regular App: Fetching songs for page ${pageId}...`);
+      console.log(`🎵 [FRESH] Regular App: Fetching songs for page ${pageId}, zone:`, zoneId);
       const startTime = performance.now();
 
-      // Use new PraiseNightSongsService - FRESH TABLE!
-      const songs = await PraiseNightSongsService.getSongsByPraiseNight(String(pageId));
+      // Use zone-aware PraiseNightSongsService
+      const songs = await PraiseNightSongsService.getSongsByPraiseNight(String(pageId), zoneId);
 
       console.log(`⚡ [FRESH] Regular App: ${songs.length} songs for page ${pageId} fetched in ${(performance.now() - startTime).toFixed(2)}ms`);
       

@@ -1,9 +1,10 @@
 /**
- * FRESH SONGS SERVICE - NO ID CONFLICTS!
+ * ZONE-AWARE SONGS SERVICE
  * 
- * Uses new table: praise_night_songs
- * Simple Firebase auto-generated IDs only
- * No complex ID management
+ * HQ Groups (zone-001 to zone-005): Uses 'songs' collection (unfiltered)
+ * Regular Zones (zone-006+): Uses 'zone_songs' collection (filtered by zoneId)
+ * 
+ * Automatically routes to correct collection based on zone type
  */
 
 import {
@@ -21,21 +22,52 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase-setup';
 import { PraiseNightSong } from '@/types/supabase';
+import { isHQGroup } from '@/config/zones';
 
-const COLLECTION_NAME = 'praise_night_songs'; // NEW TABLE!
+// Helper to get correct collection name based on zone
+function getCollectionName(zoneId?: string): string {
+  if (zoneId && isHQGroup(zoneId)) {
+    console.log('🏢 Using HQ collection: praise_night_songs');
+    return 'praise_night_songs'; // HQ groups use unfiltered 'praise_night_songs' collection
+  }
+  console.log('📍 Using zone collection: zone_songs');
+  return 'zone_songs'; // Regular zones use 'zone_songs' collection
+}
 
 export class PraiseNightSongsService {
   
   /**
    * Get all songs for a specific praise night
    */
-  static async getSongsByPraiseNight(praiseNightId: string): Promise<PraiseNightSong[]> {
+  static async getSongsByPraiseNight(praiseNightId: string, zoneId?: string): Promise<PraiseNightSong[]> {
     try {
-      console.log('📖 [PraiseNightSongs] Getting songs for praise night:', praiseNightId);
+      console.log('📖 [PraiseNightSongs] Getting songs for praise night:', praiseNightId, 'zone:', zoneId);
       
-      const songsRef = collection(db, COLLECTION_NAME);
-      const q = query(songsRef, where('praiseNightId', '==', praiseNightId));
-      const snapshot = await getDocs(q);
+      const collectionName = getCollectionName(zoneId);
+      const songsRef = collection(db, collectionName);
+      
+      // Try multiple field names for praiseNightId (different collections might use different field names)
+      let q = query(songsRef, where('praiseNightId', '==', praiseNightId));
+      let snapshot = await getDocs(q);
+      
+      // If no results, try alternative field names (especially for HQ groups)
+      if (snapshot.empty && zoneId && isHQGroup(zoneId)) {
+        console.log('🔍 [PraiseNightSongs] No results with praiseNightId, trying praisenightid...');
+        q = query(songsRef, where('praisenightid', '==', praiseNightId));
+        snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          console.log('🔍 [PraiseNightSongs] No results with praisenightid, trying praisenight_id...');
+          q = query(songsRef, where('praisenight_id', '==', praiseNightId));
+          snapshot = await getDocs(q);
+        }
+        
+        if (snapshot.empty) {
+          console.log('🔍 [PraiseNightSongs] No results with praisenight_id, trying pageId...');
+          q = query(songsRef, where('pageId', '==', praiseNightId));
+          snapshot = await getDocs(q);
+        }
+      }
       
       const songs = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -47,7 +79,19 @@ export class PraiseNightSongsService {
         };
       }) as unknown as PraiseNightSong[];
       
-      console.log('✅ [PraiseNightSongs] Found', songs.length, 'songs');
+      console.log('✅ [PraiseNightSongs] Found', songs.length, 'songs from', collectionName);
+      
+      // Debug: Log first few songs to see their structure
+      if (songs.length > 0) {
+        console.log('🔍 [PraiseNightSongs] Sample song data:', {
+          id: songs[0].id,
+          title: songs[0].title,
+          praiseNightId: (songs[0] as any).praiseNightId,
+          praisenightid: (songs[0] as any).praisenightid,
+          pageId: (songs[0] as any).pageId
+        });
+      }
+      
       return songs;
     } catch (error) {
       console.error('❌ [PraiseNightSongs] Error getting songs:', error);
@@ -58,12 +102,23 @@ export class PraiseNightSongsService {
   /**
    * Get all songs (for admin)
    */
-  static async getAllSongs(): Promise<PraiseNightSong[]> {
+  static async getAllSongs(zoneId?: string): Promise<PraiseNightSong[]> {
     try {
-      console.log('📖 [PraiseNightSongs] Getting all songs');
+      console.log('📖 [PraiseNightSongs] Getting all songs for zone:', zoneId);
       
-      const songsRef = collection(db, COLLECTION_NAME);
-      const snapshot = await getDocs(songsRef);
+      const collectionName = getCollectionName(zoneId);
+      const songsRef = collection(db, collectionName);
+      
+      // For regular zones, filter by zoneId
+      let q;
+      if (zoneId && !isHQGroup(zoneId)) {
+        q = query(songsRef, where('zoneId', '==', zoneId));
+      } else {
+        // HQ groups see all songs (no filter)
+        q = query(songsRef);
+      }
+      
+      const snapshot = await getDocs(q);
       
       const songs = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -75,7 +130,7 @@ export class PraiseNightSongsService {
         };
       }) as unknown as PraiseNightSong[];
       
-      console.log('✅ [PraiseNightSongs] Found', songs.length, 'total songs');
+      console.log('✅ [PraiseNightSongs] Found', songs.length, 'total songs from', collectionName);
       return songs;
     } catch (error) {
       console.error('❌ [PraiseNightSongs] Error getting all songs:', error);
@@ -86,15 +141,16 @@ export class PraiseNightSongsService {
   /**
    * Get a single song by ID
    */
-  static async getSongById(songId: string): Promise<PraiseNightSong | null> {
+  static async getSongById(songId: string, zoneId?: string): Promise<PraiseNightSong | null> {
     try {
-      console.log('📖 [PraiseNightSongs] Getting song:', songId);
+      console.log('📖 [PraiseNightSongs] Getting song:', songId, 'zone:', zoneId);
       
-      const songRef = doc(db, COLLECTION_NAME, songId);
+      const collectionName = getCollectionName(zoneId);
+      const songRef = doc(db, collectionName, songId);
       const songDoc = await getDoc(songRef);
       
       if (!songDoc.exists()) {
-        console.log('❌ [PraiseNightSongs] Song not found:', songId);
+        console.log('❌ [PraiseNightSongs] Song not found:', songId, 'in', collectionName);
         return null;
       }
       
@@ -106,7 +162,7 @@ export class PraiseNightSongsService {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
       } as unknown as PraiseNightSong;
       
-      console.log('✅ [PraiseNightSongs] Found song:', song.title);
+      console.log('✅ [PraiseNightSongs] Found song:', song.title, 'from', collectionName);
       return song;
     } catch (error) {
       console.error('❌ [PraiseNightSongs] Error getting song:', error);
@@ -117,9 +173,11 @@ export class PraiseNightSongsService {
   /**
    * Create a new song
    */
-  static async createSong(songData: Partial<PraiseNightSong>): Promise<{ success: boolean; id?: string; error?: string }> {
+  static async createSong(songData: Partial<PraiseNightSong>, zoneId?: string): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-      console.log('➕ [PraiseNightSongs] Creating song:', songData.title);
+      console.log('➕ [PraiseNightSongs] Creating song:', songData.title, 'for zone:', zoneId);
+      
+      const collectionName = getCollectionName(zoneId);
       
       // Prepare clean data
       const cleanData = {
@@ -144,15 +202,16 @@ export class PraiseNightSongsService {
         history: songData.history || [],
         isActive: songData.isActive || false, // Active status for blinking border
         mediaId: songData.mediaId || null, // Media library reference
+        zoneId: zoneId || '', // Add zoneId for regular zones
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
       
       // Add to Firebase (auto-generates ID)
-      const songsRef = collection(db, COLLECTION_NAME);
+      const songsRef = collection(db, collectionName);
       const docRef = await addDoc(songsRef, cleanData);
       
-      console.log('✅ [PraiseNightSongs] Song created with ID:', docRef.id);
+      console.log('✅ [PraiseNightSongs] Song created with ID:', docRef.id, 'in', collectionName);
       
       return {
         success: true,
@@ -170,24 +229,26 @@ export class PraiseNightSongsService {
   /**
    * Update an existing song
    */
-  static async updateSong(songId: string, songData: Partial<PraiseNightSong>): Promise<{ success: boolean; error?: string }> {
+  static async updateSong(songId: string, songData: Partial<PraiseNightSong>, zoneId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔄 [PraiseNightSongs] Updating song:', songId);
+      console.log('🔄 [PraiseNightSongs] Updating song:', songId, 'zone:', zoneId);
+      
+      const collectionName = getCollectionName(zoneId);
       
       // Check if song exists
-      const songRef = doc(db, COLLECTION_NAME, songId);
+      const songRef = doc(db, collectionName, songId);
       const songDoc = await getDoc(songRef);
       
       if (!songDoc.exists()) {
-        console.error('❌ [PraiseNightSongs] Song not found:', songId);
+        console.error('❌ [PraiseNightSongs] Song not found:', songId, 'in', collectionName);
         return {
           success: false,
           error: 'Song not found'
         };
       }
       
-      // Prepare update data (remove id, firebaseId, createdAt fields)
-      const { id, firebaseId, createdAt, ...updateData } = songData as any;
+      // Prepare update data (remove id, firebaseId, createdAt, zoneId fields)
+      const { id, firebaseId, createdAt, zoneId: _, ...updateData } = songData as any;
 
       // Remove any undefined values
       const cleanedData = Object.entries(updateData).reduce((acc, [key, value]) => {
@@ -206,7 +267,7 @@ export class PraiseNightSongsService {
       // Update in Firebase
       await updateDoc(songRef, cleanUpdateData);
       
-      console.log('✅ [PraiseNightSongs] Song updated successfully');
+      console.log('✅ [PraiseNightSongs] Song updated successfully in', collectionName);
       
       return {
         success: true
@@ -223,16 +284,18 @@ export class PraiseNightSongsService {
   /**
    * Delete a song
    */
-  static async deleteSong(songId: string): Promise<{ success: boolean; error?: string }> {
+  static async deleteSong(songId: string, zoneId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🗑️ [PraiseNightSongs] Deleting song:', songId);
+      console.log('🗑️ [PraiseNightSongs] Deleting song:', songId, 'zone:', zoneId);
+      
+      const collectionName = getCollectionName(zoneId);
       
       // Check if song exists
-      const songRef = doc(db, COLLECTION_NAME, songId);
+      const songRef = doc(db, collectionName, songId);
       const songDoc = await getDoc(songRef);
       
       if (!songDoc.exists()) {
-        console.error('❌ [PraiseNightSongs] Song not found:', songId);
+        console.error('❌ [PraiseNightSongs] Song not found:', songId, 'in', collectionName);
         return {
           success: false,
           error: 'Song not found'
@@ -242,7 +305,7 @@ export class PraiseNightSongsService {
       // Delete from Firebase
       await deleteDoc(songRef);
       
-      console.log('✅ [PraiseNightSongs] Song deleted successfully');
+      console.log('✅ [PraiseNightSongs] Song deleted successfully from', collectionName);
       
       return {
         success: true
@@ -259,18 +322,19 @@ export class PraiseNightSongsService {
   /**
    * Update song status (heard/unheard)
    */
-  static async updateSongStatus(songId: string, status: 'heard' | 'unheard'): Promise<{ success: boolean; error?: string }> {
+  static async updateSongStatus(songId: string, status: 'heard' | 'unheard', zoneId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔄 [PraiseNightSongs] Updating song status:', songId, '->', status);
+      console.log('🔄 [PraiseNightSongs] Updating song status:', songId, '->', status, 'zone:', zoneId);
       
-      const songRef = doc(db, COLLECTION_NAME, songId);
+      const collectionName = getCollectionName(zoneId);
+      const songRef = doc(db, collectionName, songId);
       
       await updateDoc(songRef, {
         status,
         updatedAt: serverTimestamp()
       });
       
-      console.log('✅ [PraiseNightSongs] Status updated successfully');
+      console.log('✅ [PraiseNightSongs] Status updated successfully in', collectionName);
       
       return {
         success: true

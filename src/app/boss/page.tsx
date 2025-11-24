@@ -62,10 +62,12 @@ export default function BossPage() {
 
   const loadPendingPayments = async () => {
     try {
+      console.log('🔍 Loading pending payments...')
       const payments = await EspeesPaymentService.getPendingPayments()
+      console.log('✅ Loaded payments:', payments.length, payments)
       setPendingPayments(payments)
     } catch (error) {
-      console.error('Error loading pending payments:', error)
+      console.error('❌ Error loading pending payments:', error)
     }
   }
 
@@ -159,10 +161,41 @@ export default function BossPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading zones...</p>
+      <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-purple-50 overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-40 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-auto p-4">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-3"></div>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Zones List */}
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-10 w-24 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -190,6 +223,18 @@ export default function BossPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
+                  setShowPayments(false)
+                  setShowAnalytics(false)
+                }}
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm flex items-center gap-2 ${
+                  !showPayments && !showAnalytics ? 'bg-white text-purple-600' : 'bg-white/20 hover:bg-white/30'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Zones</span>
+              </button>
+              <button
+                onClick={() => {
                   setShowPayments(!showPayments)
                   setShowAnalytics(false)
                 }}
@@ -206,7 +251,7 @@ export default function BossPage() {
                 )}
               </button>
               <button
-                onClick={() => {0
+                onClick={() => {
                   setShowAnalytics(!showAnalytics)
                   setShowPayments(false)
                 }}
@@ -234,9 +279,18 @@ export default function BossPage() {
           <AnalyticsPage />
         ) : showPayments ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pending Payment Requests</h2>
-              <p className="text-gray-600">Review and approve zone subscription payments</p>
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Pending Payment Requests</h2>
+                <p className="text-gray-600">Review and approve zone subscription payments</p>
+              </div>
+              <button
+                onClick={loadPendingPayments}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center gap-2"
+              >
+                <Activity className="w-4 h-4" />
+                Refresh
+              </button>
             </div>
 
             {pendingPayments.length === 0 ? (

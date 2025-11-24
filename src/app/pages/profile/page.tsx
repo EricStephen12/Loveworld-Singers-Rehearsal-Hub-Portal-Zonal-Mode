@@ -398,19 +398,21 @@ function ProfilePage() {
         return
       }
       
-      const updateData = {
+      const updateData: any = {
         first_name: editForm.firstName.trim(),
         last_name: editForm.lastName.trim(),
-        middle_name: editForm.middleName.trim() || undefined,
         phone_number: editForm.phoneNumber.trim(),
-        gender: editForm.gender as 'Male' | 'Female' | undefined,
-        birthday: editForm.birthday || undefined,
         region: editForm.region.trim(),
-        zone: editForm.zone.trim() || undefined,
         church: editForm.church.trim(),
-        designation: editForm.designation as 'Soprano' | 'Alto' | 'Tenor' | 'Bass' | 'Instrumentalist' | 'Backup Singer' | undefined,
-        administration: editForm.administration as 'Coordinator' | 'Assistant Coordinator' | 'Secretary' | 'Treasurer' | 'Member' | undefined
       }
+      
+      // Only add optional fields if they have values (Firebase doesn't allow undefined)
+      if (editForm.middleName.trim()) updateData.middle_name = editForm.middleName.trim()
+      if (editForm.gender) updateData.gender = editForm.gender as 'Male' | 'Female'
+      if (editForm.birthday) updateData.birthday = editForm.birthday
+      if (editForm.zone.trim()) updateData.zone = editForm.zone.trim()
+      if (editForm.designation) updateData.designation = editForm.designation as 'Soprano' | 'Alto' | 'Tenor' | 'Bass' | 'Instrumentalist' | 'Backup Singer'
+      if (editForm.administration) updateData.administration = editForm.administration as 'Coordinator' | 'Assistant Coordinator' | 'Secretary' | 'Treasurer' | 'Member'
       
       console.log('📤 Sending update data:', updateData)
       

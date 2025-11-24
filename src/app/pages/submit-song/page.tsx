@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Upload, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { submitSong } from '@/lib/song-submission-service'
+import { useZone } from '@/contexts/ZoneContext'
 
 interface SongSubmissionForm {
   title: string
@@ -18,6 +19,10 @@ interface SongSubmissionForm {
 export default function SubmitSongPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
+  const { currentZone } = useZone()
+  
+  // Get zone color for theming
+  const zoneColor = currentZone?.themeColor || '#9333EA'
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   
@@ -238,7 +243,19 @@ export default function SubmitSongPage() {
               type="submit"
           onClick={handleSubmit}
               disabled={isSubmitting || !formData.title.trim() || !formData.lyrics.trim()}
-          className="flex w-full items-center justify-center rounded-2xl bg-purple-600 h-14 px-6 text-base font-bold text-white shadow-lg shadow-purple-600/30 transition-all hover:bg-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center rounded-2xl h-14 px-6 text-base font-bold text-white shadow-lg transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: zoneColor,
+            boxShadow: `0 10px 25px ${zoneColor}30`,
+          }}
+          onMouseEnter={(e) => {
+            if (!e.currentTarget.disabled) {
+              e.currentTarget.style.filter = 'brightness(0.9)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.filter = 'brightness(1)';
+          }}
             >
               {isSubmitting ? (
                 <>

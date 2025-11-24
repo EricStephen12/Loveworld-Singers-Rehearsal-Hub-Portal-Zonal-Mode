@@ -20,7 +20,7 @@ export class EspeesPaymentService {
    */
   static async submitPaymentProof(data: PaymentSubmissionData): Promise<{ success: boolean; error?: string; paymentId?: string }> {
     try {
-      console.log('📤 Submitting payment proof:', data.zoneId)
+      console.log('📤 [submitPaymentProof] Starting submission:', data.zoneId)
       
       const paymentId = `pay_${Date.now()}_${data.zoneId}`
       
@@ -37,8 +37,12 @@ export class EspeesPaymentService {
         submittedAt: new Date()
       }
       
+      console.log('💾 [submitPaymentProof] Saving to payment_requests collection:', paymentRequest)
+      
       // Save payment request to Firebase
       await FirebaseDatabaseService.createDocument('payment_requests', paymentId, paymentRequest)
+      
+      console.log('✅ [submitPaymentProof] Payment request saved to Firebase')
       
       // Update zone status to pending
       await FirebaseDatabaseService.updateDocument('zones', data.zoneId, {
@@ -47,14 +51,14 @@ export class EspeesPaymentService {
         updatedAt: new Date()
       })
       
-      console.log('✅ Payment proof submitted:', paymentId)
+      console.log('✅ [submitPaymentProof] Zone status updated. Payment ID:', paymentId)
       
       return {
         success: true,
         paymentId
       }
     } catch (error) {
-      console.error('❌ Error submitting payment proof:', error)
+      console.error('❌ [submitPaymentProof] Error:', error)
       return {
         success: false,
         error: 'Failed to submit payment proof. Please try again.'
@@ -80,15 +84,32 @@ export class EspeesPaymentService {
    */
   static async getPendingPayments(): Promise<PaymentRequest[]> {
     try {
+      console.log('🔍 [getPendingPayments] Querying payment_requests collection...')
       const payments = await FirebaseDatabaseService.getDocuments('payment_requests', [
         { field: 'status', operator: '==', value: 'pending' }
       ])
       
-      return payments.map((p: any) => p as PaymentRequest).sort((a: PaymentRequest, b: PaymentRequest) => 
+      console.log('📊 [getPendingPayments] Raw payments from Firebase:', payments.length, payments)
+      
+      const mapped = payments.map((p: any) => {
+        console.log('📝 Payment:', {
+          id: p.id,
+          zoneName: p.zoneName,
+          status: p.status,
+          amount: p.amount,
+          submittedAt: p.submittedAt
+        })
+        return p as PaymentRequest
+      })
+      
+      const sorted = mapped.sort((a: PaymentRequest, b: PaymentRequest) => 
         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
       )
+      
+      console.log('✅ [getPendingPayments] Returning', sorted.length, 'pending payments')
+      return sorted
     } catch (error) {
-      console.error('Error getting pending payments:', error)
+      console.error('❌ [getPendingPayments] Error:', error)
       return []
     }
   }

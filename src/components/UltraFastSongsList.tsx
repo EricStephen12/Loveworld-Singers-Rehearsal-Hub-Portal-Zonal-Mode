@@ -41,9 +41,19 @@ export default function UltraFastSongsList() {
 
   if (loading && !songs.length) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-        <span className="ml-2">Loading songs...</span>
+      <div className="space-y-3 p-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-6 w-16 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

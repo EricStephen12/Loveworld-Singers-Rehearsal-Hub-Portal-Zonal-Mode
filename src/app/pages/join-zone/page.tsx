@@ -60,7 +60,7 @@ export default function JoinZonePage() {
 
       if (result.success) {
         setSuccess(true)
-        setZoneName(result.zoneName || zone.name)
+        setZoneName(('zoneName' in result ? result.zoneName : zone.name) || zone.name)
         
         // Refresh zones in context
         await refreshZones()
@@ -70,7 +70,7 @@ export default function JoinZonePage() {
           router.push('/home')
         }, 2000)
       } else {
-        setError(result.error || 'Failed to join zone')
+        setError(('error' in result ? result.error : 'Failed to join zone') || 'Failed to join zone')
       }
     } catch (error) {
       console.error('Error joining zone:', error)

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { PraiseNight, PraiseNightSong } from '@/types/supabase';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
+import { isHQGroup } from '@/config/zones';
 
 interface AdminData {
   pages: PraiseNight[];
@@ -10,6 +12,7 @@ interface AdminData {
   refreshData: () => Promise<void>;
   getCurrentPage: (id: string) => PraiseNight | null;
   getCurrentSongs: (pageId: string, forceRefresh?: boolean) => Promise<PraiseNightSong[]>;
+  setZoneId: (zoneId: string) => void; // NEW: Set zone for filtering
 }
 
 // Cache for admin data
@@ -21,18 +24,30 @@ let adminDataCache: {
 
 const CACHE_DURATION = 30000; // 30 seconds cache
 
-// Fast Firebase data fetching optimized for admin
-async function fetchAdminData(): Promise<PraiseNight[]> {
+// Fast Firebase data fetching optimized for admin - ZONE AWARE!
+async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
   try {
-    console.log('🚀 Admin: Fast fetching pages...');
+    console.log('🚀 Admin: Fast fetching pages for zone:', zoneId);
     const startTime = performance.now();
     
-    // Get pages from the main collection only (no fallbacks for speed)
-    const pages = await FirebaseDatabaseService.getCollection('praise_nights');
+    let pages: any[] = [];
+    
+    // Check if HQ group or regular zone
+    if (zoneId && isHQGroup(zoneId)) {
+      console.log('🏢 Loading HQ pages from praise_nights collection (unfiltered)');
+      pages = await FirebaseDatabaseService.getCollection('praise_nights');
+    } else if (zoneId) {
+      console.log('📍 Loading zone pages from zone_praise_nights collection (filtered)');
+      pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000);
+    } else {
+      console.log('⚠️ No zone provided, loading from praise_nights');
+      pages = await FirebaseDatabaseService.getCollection('praise_nights');
+    }
+    
     console.log(`⚡ Admin: Pages fetched in ${(performance.now() - startTime).toFixed(2)}ms`);
     
     if (pages.length === 0) {
-      console.log('📄 Admin: No pages found in praise_nights collection');
+      console.log('📄 Admin: No pages found');
       return [];
     }
     
@@ -72,14 +87,14 @@ async function fetchAdminData(): Promise<PraiseNight[]> {
   }
 }
 
-// Fast song fetching for a specific page - USING NEW TABLE!
-async function fetchPageSongs(pageId: string): Promise<PraiseNightSong[]> {
+// Fast song fetching for a specific page - ZONE AWARE!
+async function fetchPageSongs(pageId: string, zoneId?: string): Promise<PraiseNightSong[]> {
   try {
-    console.log(`🎵 [FRESH] Admin: Fetching songs for page ${pageId}...`);
+    console.log(`🎵 [FRESH] Admin: Fetching songs for page ${pageId}, zone:`, zoneId);
     const startTime = performance.now();
 
-    // Use new PraiseNightSongsService
-    const songs = await PraiseNightSongsService.getSongsByPraiseNight(pageId);
+    // Use zone-aware PraiseNightSongsService
+    const songs = await PraiseNightSongsService.getSongsByPraiseNight(pageId, zoneId);
 
     console.log(`⚡ [FRESH] Admin: Songs fetched in ${(performance.now() - startTime).toFixed(2)}ms`);
     console.log(`📊 [FRESH] Songs for page ${pageId}: ${songs.length}`);
@@ -170,30 +185,34 @@ export function useAdminData(): AdminData {
   const [pages, setPages] = useState<PraiseNight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentZoneId, setCurrentZoneId] = useState<string | undefined>(undefined);
 
   const loadData = async () => {
     try {
       setError(null);
       
-      // Check cache first
-      if (adminDataCache && (Date.now() - adminDataCache.timestamp) < CACHE_DURATION) {
-        console.log('⚡ Admin: Using cached data');
+      // Check cache first (but only if zone matches)
+      if (adminDataCache && 
+          (Date.now() - adminDataCache.timestamp) < CACHE_DURATION &&
+          (adminDataCache as any).zoneId === currentZoneId) {
+        console.log('⚡ Admin: Using cached data for zone:', currentZoneId);
         setPages(adminDataCache.pages);
         setLoading(false);
         return;
       }
       
-      console.log('🔄 Admin: Loading fresh data...');
+      console.log('🔄 Admin: Loading fresh data for zone:', currentZoneId);
       const startTime = performance.now();
       
-      const freshPages = await fetchAdminData();
+      const freshPages = await fetchAdminData(currentZoneId);
       
-      // Update cache
+      // Update cache with zone info
       adminDataCache = {
         pages: freshPages,
         timestamp: Date.now(),
-        songs: new Map()
-      };
+        songs: new Map(),
+        zoneId: currentZoneId
+      } as any;
       
       setPages(freshPages);
       console.log(`✅ Admin: Data loaded in ${(performance.now() - startTime).toFixed(2)}ms`);
@@ -230,8 +249,8 @@ export function useAdminData(): AdminData {
       adminDataCache.songs.delete(pageId);
     }
 
-    // Fetch and cache songs
-    const songs = await fetchPageSongs(pageId);
+    // Fetch and cache songs with zone awareness
+    const songs = await fetchPageSongs(pageId, currentZoneId);
     if (adminDataCache) {
       adminDataCache.songs.set(pageId, songs);
     }
@@ -239,9 +258,18 @@ export function useAdminData(): AdminData {
     return songs;
   };
 
+  const setZoneId = (zoneId: string) => {
+    console.log('🔄 Admin: Setting zone to:', zoneId);
+    setCurrentZoneId(zoneId);
+    // Clear cache when zone changes
+    adminDataCache = null;
+  };
+
   useEffect(() => {
-    loadData();
-  }, []);
+    if (currentZoneId) {
+      loadData();
+    }
+  }, [currentZoneId]);
 
   return {
     pages,
@@ -249,6 +277,7 @@ export function useAdminData(): AdminData {
     error,
     refreshData,
     getCurrentPage,
-    getCurrentSongs
+    getCurrentSongs,
+    setZoneId
   };
 }

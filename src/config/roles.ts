@@ -1,6 +1,6 @@
 // User Roles Configuration
 
-export type UserRole = 'super_admin' | 'boss' | 'zone_coordinator' | 'zone_member';
+export type UserRole = 'super_admin' | 'boss' | 'zone_coordinator' | 'zone_member' | 'hq_admin' | 'hq_member';
 
 export interface RolePermissions {
   // Zone Management
@@ -164,6 +164,72 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canViewAllZones: false,
     canAccessSuperAdmin: false,
     canAccessBoss: false
+  },
+  
+  // HQ Admin - Headquarters administrator
+  // Can manage ALL HQ groups and their members (like super admin but for HQ only)
+  hq_admin: {
+    // Zone Management - FULL ACCESS for HQ groups
+    canManageZone: true,
+    canViewZoneSettings: true,
+    canUpgradeSubscription: false, // HQ doesn't need subscriptions
+    canCancelSubscription: false,
+    canViewPaymentHistory: false,
+    
+    // Member Management - FULL ACCESS (can manage HQ group members)
+    canAddMembers: true,
+    canRemoveMembers: true,
+    canViewMembers: true,
+    canShareInviteLink: true,
+    
+    // Content Management - FULL ACCESS for HQ groups
+    canCreatePraiseNight: true,
+    canEditPraiseNight: true,
+    canDeletePraiseNight: true,
+    canCreateSong: true,
+    canEditSong: true,
+    canDeleteSong: true,
+    canCreateCategory: true,
+    canEditCategory: true,
+    canDeleteCategory: true,
+    
+    // HQ Admin Access - Can view all HQ groups and access admin features
+    canViewAllZones: true, // Can view all HQ groups
+    canAccessSuperAdmin: true, // Can access HQ admin panel
+    canAccessBoss: false
+  },
+  
+  // HQ Member - Headquarters group member
+  // Full access like coordinator but for HQ groups (no subscription needed)
+  hq_member: {
+    // Zone Management - FULL ACCESS (no subscription needed)
+    canManageZone: true,
+    canViewZoneSettings: true,
+    canUpgradeSubscription: false, // HQ doesn't need subscriptions
+    canCancelSubscription: false,
+    canViewPaymentHistory: false,
+    
+    // Member Management - FULL ACCESS
+    canAddMembers: true,
+    canRemoveMembers: true,
+    canViewMembers: true,
+    canShareInviteLink: true,
+    
+    // Content Management - FULL ACCESS
+    canCreatePraiseNight: true,
+    canEditPraiseNight: true,
+    canDeletePraiseNight: true,
+    canCreateSong: true,
+    canEditSong: true,
+    canDeleteSong: true,
+    canCreateCategory: true,
+    canEditCategory: true,
+    canDeleteCategory: true,
+    
+    // Super Admin Only
+    canViewAllZones: false,
+    canAccessSuperAdmin: false,
+    canAccessBoss: false
   }
 };
 
@@ -179,11 +245,32 @@ export function hasPermission(
 export function getUserRoleInZone(
   userId: string,
   zoneId: string,
-  zoneMembership: any
+  zoneMembership: any,
+  userEmail?: string
 ): UserRole {
   // Check if super admin
   if (zoneMembership?.isSuperAdmin) {
     return 'super_admin';
+  }
+  
+  // Check if boss
+  if (zoneMembership?.role === 'boss' || zoneId === 'zone-boss') {
+    return 'boss';
+  }
+  
+  // Check if HQ admin by email (for HQ groups)
+  if (isHQGroup(zoneId) && userEmail && isHQAdminEmail(userEmail)) {
+    return 'hq_admin';
+  }
+  
+  // Check if HQ admin (specific role for HQ group administrators)
+  if (isHQGroup(zoneId) && zoneMembership?.role === 'hq_admin') {
+    return 'hq_admin';
+  }
+  
+  // Check if HQ group member (zones 001-005)
+  if (isHQGroup(zoneId)) {
+    return 'hq_member';
   }
   
   // Check if zone coordinator (the one who created/pays for the zone)
@@ -193,4 +280,72 @@ export function getUserRoleInZone(
   
   // Default to member
   return 'zone_member';
+}
+
+// Helper function to get user's global role based on email (for detecting HQ admins)
+export function getUserGlobalRole(userEmail: string | null | undefined): UserRole | null {
+  if (!userEmail) return null;
+  
+  // Check if HQ admin by email
+  if (isHQAdminEmail(userEmail)) {
+    return 'hq_admin';
+  }
+  
+  return null;
+}
+
+// Helper to check if zone is HQ group
+function isHQGroup(zoneId: string | undefined): boolean {
+  if (!zoneId) return false;
+  const HQ_GROUP_IDS = ['zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005'];
+  return HQ_GROUP_IDS.includes(zoneId);
+}
+
+// Helper to check if user can access all HQ groups
+export function canAccessAllHQGroups(role: UserRole): boolean {
+  return role === 'super_admin' || role === 'boss' || role === 'hq_admin';
+}
+
+// Helper to check if user is an HQ administrator
+export function isHQAdministrator(role: UserRole): boolean {
+  return role === 'hq_admin';
+}
+
+// HQ Admin email list - Add emails of people who should be HQ admins
+export const HQ_ADMIN_EMAILS = [
+  'lliamzelvin@gmail.com',      // Lliamz Elvin - HQ Admin
+  'ihenacho23@gmail.com',       // Ihenacho Uche - HQ Admin  
+  'ephraimloveworld1@gmail.com', // Ephraim Udoji - HQ Admin
+  'takeshopstores@gmail.com', // Eric Stephen - HQ Admin
+];
+
+// Helper to check if email should be HQ admin
+export function isHQAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return HQ_ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+// Helper to check if user should see admin button on home page
+export function shouldShowAdminButton(
+  userEmail: string | null | undefined,
+  currentRole?: UserRole
+): boolean {
+  if (!userEmail) return false;
+  
+  // Show admin button for HQ admins
+  if (isHQAdminEmail(userEmail)) {
+    return true;
+  }
+  
+  // Show admin button for other admin roles
+  if (currentRole && (
+    currentRole === 'super_admin' || 
+    currentRole === 'boss' || 
+    currentRole === 'zone_coordinator' ||
+    currentRole === 'hq_admin'
+  )) {
+    return true;
+  }
+  
+  return false;
 }

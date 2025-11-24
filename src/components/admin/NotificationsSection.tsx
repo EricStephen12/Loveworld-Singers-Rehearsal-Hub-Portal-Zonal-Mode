@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 import { Bell, Search, X, Clock, Megaphone, Trash2 } from 'lucide-react';
 import { useRealtimeNotifications, useNotificationActions } from '@/hooks/useRealtimeNotifications';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import { useAdminTheme } from './AdminThemeProvider';
 
 export default function NotificationsSection() {
+  const { theme } = useAdminTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'all' | 'group'>('all');
@@ -74,15 +76,15 @@ export default function NotificationsSection() {
   const getCategoryStyle = (category: string) => {
     switch (category) {
       case 'rehearsal':
-        return { bg: 'bg-purple-100', text: 'text-purple-600', icon: '📅' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '📅' };
       case 'song':
-        return { bg: 'bg-purple-100', text: 'text-purple-600', icon: '🎵' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '🎵' };
       case 'praise_night':
-        return { bg: 'bg-purple-100', text: 'text-purple-600', icon: '✨' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '✨' };
       case 'announcement':
-        return { bg: 'bg-purple-100', text: 'text-purple-600', icon: '📢' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '📢' };
       case 'admin':
-        return { bg: 'bg-purple-100', text: 'text-purple-600', icon: '👤' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '👤' };
       default:
         return { bg: 'bg-gray-100', text: 'text-gray-600', icon: 'ℹ️' };
     }
@@ -171,10 +173,46 @@ export default function NotificationsSection() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading notifications...</p>
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="h-7 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="h-6 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+        </div>
+
+        {/* Admin Controls Skeleton */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Search Bar Skeleton */}
+        <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+
+        {/* Notifications List Skeleton */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="divide-y divide-gray-200">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
+                  <div className="flex-1">
+                    <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -189,50 +227,48 @@ export default function NotificationsSection() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-purple-600" />
-            Notifications
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Send messages to users and manage notifications
-          </p>
+      <div className="flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <Bell className={`w-5 h-5 ${theme.text} flex-shrink-0`} />
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 flex-1">Notifications</h2>
+          {unreadCount > 0 && (
+            <span className={`${theme.primary} text-white text-xs px-2.5 py-1 rounded-full font-medium`}>
+              {unreadCount}
+            </span>
+          )}
         </div>
-        {unreadCount > 0 && (
-          <span className="bg-purple-600 text-white text-xs px-2.5 py-1 rounded-full font-medium">
-            {unreadCount} unread
-          </span>
-        )}
+        <p className="text-xs lg:text-sm text-gray-600 mt-1 ml-8">
+          Send messages to users
+        </p>
       </div>
 
       {/* Admin Controls */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-gray-900 font-semibold text-base mb-4 flex items-center gap-2">
-          <Megaphone className="w-5 h-5 text-purple-600" />
+      <div className="flex-shrink-0 bg-white border border-gray-200 rounded-lg p-4 lg:p-6">
+        <h3 className="text-gray-900 font-semibold text-sm lg:text-base mb-3 lg:mb-4 flex items-center gap-2">
+          <Megaphone className={`w-4 h-4 lg:w-5 lg:h-5 ${theme.text}`} />
           Send Notification
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
           <button
             onClick={() => openModal('all')}
-            className="bg-purple-600 text-white py-2.5 px-4 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
+            className={`${theme.primary} text-white py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg ${theme.primaryHover} transition-colors font-medium flex items-center justify-center gap-2 text-sm`}
           >
-            📢 Send to All Users
+            <span className="hidden sm:inline">📢</span> All
           </button>
           <button
             onClick={() => openModal('group')}
-            className="bg-purple-600 text-white py-2.5 px-4 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2"
+            className={`${theme.primary} text-white py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg ${theme.primaryHover} transition-colors font-medium flex items-center justify-center gap-2 text-sm`}
           >
-            👥 Send to Group
+            <span className="hidden sm:inline">👥</span> Group
           </button>
           <button
             onClick={handleDeleteAll}
-            className="bg-white border border-red-300 text-red-600 py-2.5 px-4 rounded-lg hover:bg-red-50 transition-colors font-medium flex items-center justify-center gap-2"
+            className="bg-white border border-red-300 text-red-600 py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg hover:bg-red-50 transition-colors font-medium flex items-center justify-center gap-2 text-sm"
           >
-            <Trash2 className="w-4 h-4" />
-            Delete All
+            <Trash2 className="w-3 h-3 lg:w-4 lg:h-4" />
+            <span className="hidden sm:inline">Delete</span>
           </button>
         </div>
       </div>
@@ -255,7 +291,7 @@ export default function NotificationsSection() {
           <span className="text-sm text-gray-600">{unreadCount} unread notifications</span>
           <button
             onClick={markAllAsRead}
-            className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+            className={`${theme.text} hover:${theme.text.replace('600', '700')} font-medium text-sm`}
           >
             Mark all as read
           </button>
@@ -263,7 +299,7 @@ export default function NotificationsSection() {
       )}
 
       {/* Notifications List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-auto">
         {filteredNotifications.length === 0 ? (
           <div className="text-center py-12">
             <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -294,7 +330,7 @@ export default function NotificationsSection() {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-gray-900 text-sm">{notification.title}</h4>
                             {!notification.is_read && (
-                              <div className="w-2 h-2 bg-purple-600 rounded-full flex-shrink-0" />
+                              <div className={`w-2 h-2 ${theme.primary} rounded-full flex-shrink-0`} />
                             )}
                           </div>
                           <p className="text-gray-600 text-sm mb-2">{notification.message}</p>
@@ -410,7 +446,7 @@ export default function NotificationsSection() {
               <button
                 onClick={handleSendNotification}
                 disabled={sending}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+                className={`px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium disabled:opacity-50 flex items-center gap-2`}
               >
                 {sending ? (
                   <>

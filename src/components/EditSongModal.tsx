@@ -6,8 +6,11 @@ import { X, Save, Trash2, FolderOpen, Clock, Plus, History } from 'lucide-react'
 import { PraiseNightSong, Comment, Category } from '../types/supabase';
 import MediaSelectionModal from './MediaSelectionModal';
 import BasicTextEditor from './BasicTextEditor';
+import { useZone } from '@/contexts/ZoneContext';
+import { isHQGroup } from '@/config/zones';
 // import { createHistoryEntry, deleteHistoryEntry } from '@/lib/firebase-database-service';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import { useAdminTheme } from './admin/AdminThemeProvider';
 
 interface MediaFile {
   id: string;
@@ -37,6 +40,13 @@ export default function EditSongModal({
   praiseNightCategories,
   onUpdate 
 }: EditSongModalProps) {
+  const { theme } = useAdminTheme();
+  
+  // Theme-based CSS classes
+  const inputClasses = `w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 ${theme.focusRing} ${theme.focusBorder} focus:shadow-xl ${theme.focusBg}`;
+  const buttonClasses = `flex items-center gap-2 px-4 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors text-sm font-medium`;
+  const historyButtonClasses = `flex items-center gap-1 px-3 py-1.5 text-xs font-medium ${theme.text} ${theme.primaryLight} ${theme.bgHover} border ${theme.border} rounded-md transition-colors`;
+  
   // Form state
   const [songTitle, setSongTitle] = useState('');
   const [songCategory, setSongCategory] = useState('');
@@ -63,6 +73,15 @@ export default function EditSongModal({
   // History management state
   const [rehearsalCount, setRehearsalCount] = useState(1);
   const [showMediaManager, setShowMediaManager] = useState(false);
+
+  // Get zone context to determine comment terminology
+  const { currentZone } = useZone();
+  
+  // Helper function to get correct comment terminology based on zone
+  const getCommentLabel = () => {
+    // HQ groups see "Pastor Comment", regular zones see "Coordinator Comment"
+    return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
+  };
   
   // Smart change detection - track original values
   const [originalValues, setOriginalValues] = useState({
@@ -181,14 +200,15 @@ export default function EditSongModal({
           oldValue = originalValues.audioFile;
           break;
         case 'comments':
-          // Save the current Coordinator comment rich-text content
+          // Save the current comment rich-text content (Pastor or Coordinator)
           currentContent = coordinatorComment;
-          // Previous value: latest Coordinator comment from existing song comments
+          // Previous value: latest comment from existing song comments
+          const commentAuthor = getCommentLabel();
           try {
-            const latestCoordinator = (Array.isArray(song?.comments) ? song!.comments : [])
-              .filter((c: any) => c.author === 'Coordinator')
+            const latestComment = (Array.isArray(song?.comments) ? song!.comments : [])
+              .filter((c: any) => c.author === commentAuthor || c.author === 'Coordinator' || c.author === 'Pastor')
               .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-            oldValue = (latestCoordinator as any)?.text || (latestCoordinator as any)?.content || '';
+            oldValue = (latestComment as any)?.text || (latestComment as any)?.content || '';
           } catch {
             oldValue = '';
           }
@@ -460,12 +480,13 @@ export default function EditSongModal({
       
       setSongComments(Array.isArray(song.comments) ? song.comments : []);
       setNewComment('');
-      // Initialize Coordinator comment editor from latest Coordinator comment
+      // Initialize comment editor from latest comment (Pastor or Coordinator)
       try {
-        const latestCoordinator = (Array.isArray(song.comments) ? song.comments : [])
-          .filter(c => c.author === 'Coordinator')
+        const commentAuthor = getCommentLabel();
+        const latestComment = (Array.isArray(song.comments) ? song.comments : [])
+          .filter(c => c.author === commentAuthor || c.author === 'Coordinator' || c.author === 'Pastor')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-        setCoordinatorComment((latestCoordinator as any)?.text || (latestCoordinator as any)?.content || '');
+        setCoordinatorComment((latestComment as any)?.text || (latestComment as any)?.content || '');
       } catch {}
       
       // Load rehearsal count from song data, default to 1 if not set
@@ -573,7 +594,7 @@ export default function EditSongModal({
           id: `comment-${Date.now()}`,
           text: coordinatorComment,
           date: new Date().toISOString(),
-          author: 'Coordinator'
+          author: getCommentLabel() // Dynamic: "Pastor" for HQ groups, "Coordinator" for zones
         }
       ] : [];
       
@@ -759,7 +780,7 @@ export default function EditSongModal({
                           onPaste={(e) => handlePaste(e, songTitle, setSongTitle)}
                           dir="ltr"
                           style={{ textAlign: 'left', direction: 'ltr' }}
-                          className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200 text-lg font-medium"
+                          className={`${inputClasses} text-lg font-medium`}
                           placeholder="Enter song title"
                         />
                       </div>
@@ -805,7 +826,7 @@ export default function EditSongModal({
                           <select
                             value={songStatus}
                             onChange={(e) => setSongStatus(e.target.value as 'heard' | 'unheard')}
-                            className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                            className={inputClasses}
                           >
                             <option value="heard">Heard</option>
                             <option value="unheard">Unheard</option>
@@ -895,7 +916,7 @@ export default function EditSongModal({
                       </label>
                         <button
                           onClick={() => handleCreateHistory('audio')}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-md transition-colors"
+                          className={historyButtonClasses}
                         >
                           <History className="w-3 h-3" />
                           Add History
@@ -904,7 +925,7 @@ export default function EditSongModal({
                       <button
                         type="button"
                         onClick={() => setShowMediaManager(true)}
-                        className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors text-sm font-medium"
+                        className={buttonClasses}
                       >
                         <FolderOpen className="w-4 h-4" />
                         Browse Media Library
@@ -1105,7 +1126,7 @@ export default function EditSongModal({
                       </h4>
                         <button
                           onClick={() => handleCreateHistory('lyrics')}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          className={historyButtonClasses}
                         >
                           <History className="w-3 h-3" />
                           Add History
@@ -1156,7 +1177,7 @@ Bridge:
                       </h4>
                         <button
                           onClick={() => handleCreateHistory('solfas')}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-md transition-colors"
+                          className={historyButtonClasses}
                         >
                           <History className="w-3 h-3" />
                           Add History
@@ -1199,11 +1220,11 @@ Do Re Mi Fa Sol La Ti Do"
                       <div className="flex items-center justify-between">
                       <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
                         <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                          Coordinator Comment
+                          {getCommentLabel()} Comment
                       </h4>
                         <button
                           onClick={() => handleCreateHistory('comments')}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-md transition-colors"
+                          className={historyButtonClasses}
                         >
                           <History className="w-3 h-3" />
                           Save Version
@@ -1218,7 +1239,7 @@ Do Re Mi Fa Sol La Ti Do"
                         id="coordinator-comment-editor"
                         value={coordinatorComment}
                         onChange={(value) => setCoordinatorComment(value)}
-                        placeholder="Enter Coordinator's comment here..."
+                        placeholder={`Enter ${getCommentLabel()}'s comment here...`}
                         className="w-full"
                             />
                           </div>
@@ -1232,7 +1253,7 @@ Do Re Mi Fa Sol La Ti Do"
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 border-t border-slate-200 flex-shrink-0">
             <button
               onClick={handleUpdate}
-              className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors font-medium"
+              className={`flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors font-medium`}
             >
               <Save className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">{song ? 'Update Song' : 'Add Song'}</span>
@@ -1251,7 +1272,7 @@ Do Re Mi Fa Sol La Ti Do"
               className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium relative ${
                 !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
                   ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  : `${theme.primary} text-white ${theme.primaryHover}`
               }`}
               disabled={!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}
               >

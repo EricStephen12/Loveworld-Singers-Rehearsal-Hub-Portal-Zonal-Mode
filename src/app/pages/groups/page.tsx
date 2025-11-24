@@ -79,7 +79,7 @@ export default function GroupsPage() {
 
       {/* Header */}
       <div 
-        className="flex-shrink-0 p-4 text-white shadow-lg"
+        className="flex-shrink-0 p-3 sm:p-4 text-white shadow-lg"
         style={{ 
           background: currentZone?.themeColor 
             ? `linear-gradient(135deg, ${currentZone.themeColor} 0%, ${adjustColor(currentZone.themeColor, -20)} 100%)`
@@ -87,26 +87,28 @@ export default function GroupsPage() {
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target flex-shrink-0"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-xl font-bold">Messages</h1>
-              <p className="text-sm opacity-90">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold truncate">Messages</h1>
+              <p className="text-xs sm:text-sm opacity-90 truncate">
                 {currentZone ? `${currentZone.name}` : 'Chat with zone members'}
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Search Users */}
             <button
               onClick={() => setShowUserSearch(true)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
+              aria-label="Search users"
             >
               <Search className="w-5 h-5" />
             </button>
@@ -114,7 +116,8 @@ export default function GroupsPage() {
             {/* Create Group */}
             <button
               onClick={() => setShowCreateGroup(true)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
+              aria-label="Create group"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -124,13 +127,13 @@ export default function GroupsPage() {
 
       {/* Chat Interface */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-full md:w-80 flex-shrink-0 border-r border-gray-200 bg-white">
+        {/* Sidebar - Hide on mobile when chat is selected */}
+        <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-gray-200 bg-white ${selectedChat ? 'hidden md:block' : 'block'}`}>
           <ChatSidebar />
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 hidden md:flex">
+        {/* Chat Area - Show on mobile when chat is selected, full width on mobile */}
+        <div className={`flex-1 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
           {selectedChat ? <ChatContainer /> : <NoChatSelected />}
         </div>
       </div>

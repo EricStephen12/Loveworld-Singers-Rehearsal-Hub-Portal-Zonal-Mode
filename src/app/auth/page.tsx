@@ -239,19 +239,25 @@ function AuthPageContent() {
         }
         
         // Sign up with Firebase and create profile in one step
+        const profileData: any = {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          kingschat_id: formData.kingschatId,
+          birthday: formData.birthday || null,
+          profile_image: profileImageUrl || null,
+          role: isBoss ? 'boss' : 'user', // Set boss role during creation
+        }
+        
+        // Only add administration field if user is Boss (Firebase doesn't allow undefined)
+        if (isBoss) {
+          profileData.administration = 'Boss'
+        }
+        
         const result = await FirebaseAuthService.createUserWithEmailAndPassword(
           formData.email,
           formData.password,
-          {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            email: formData.email,
-            kingschat_id: formData.kingschatId,
-            birthday: formData.birthday || null,
-            profile_image: profileImageUrl || null,
-            role: isBoss ? 'boss' : 'user', // Set boss role during creation
-            administration: isBoss ? 'Boss' : undefined
-          }
+          profileData
         )
         
         if (result.error) {
@@ -277,9 +283,9 @@ function AuthPageContent() {
           )
           
           if (joinResult.success) {
-            setSuccess(`Welcome to ${joinResult.zoneName}! Redirecting...`)
+            setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
           } else {
-            setError(sanitizeError(joinResult.error || 'Failed to join zone'))
+            setError(sanitizeError(('error' in joinResult ? joinResult.error : 'Failed to join zone') || 'Failed to join zone'))
             setIsLoading(false)
             setIsCheckingAccount(false)
             return

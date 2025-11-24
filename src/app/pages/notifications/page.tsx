@@ -60,9 +60,19 @@ export default function NotificationsPage() {
         <div className="max-w-2xl mx-auto">
           <div className="space-y-3">
             {loading ? (
-              <div className="bg-white rounded-lg p-12 text-center">
-                <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-sm text-slate-600 mt-4">Loading messages...</p>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : messages.length === 0 ? (
               <div className="bg-white rounded-lg p-12 text-center">

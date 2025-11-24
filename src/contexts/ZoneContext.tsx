@@ -4,7 +4,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { useAuth } from './AuthContext'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
-import { ZONES, Zone, isSuperAdmin } from '@/config/zones'
+import { HQMembersService } from '@/lib/hq-members-service'
+import { ZONES, Zone, isSuperAdmin, isHQGroup } from '@/config/zones'
 import { UserRole, hasPermission } from '@/config/roles'
 
 interface ZoneContextType {
@@ -33,7 +34,7 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
   const [currentZoneMembership, setCurrentZoneMembership] = useState<any>(null)
 
   // Load user's zones from Firebase
-  const loadUserZones = async () => {
+  const loadUserZones = async (retryCount = 0) => {
     if (!user?.uid) {
       setUserZones([])
       setCurrentZone(null)
@@ -42,7 +43,7 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      console.log('🔍 Loading zones for user:', user.email)
+      console.log('🔍 Loading zones for user:', user.email, retryCount > 0 ? `(Retry ${retryCount})` : '')
       
       // Check if super admin
       const superAdmin = isSuperAdmin(user.email, user.uid)
@@ -87,21 +88,44 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
         
         setCurrentZone(selectedZone)
       } else {
-        // Get user's zone memberships from Firebase
-        const memberships = await FirebaseDatabaseService.getCollectionWhere(
+        // Get user's zone memberships from Firebase (regular zones)
+        const zoneMemberships = await FirebaseDatabaseService.getCollectionWhere(
           'zone_members',
           'userId',
           '==',
           user.uid
         )
         
-        console.log('📊 Found', memberships.length, 'zone memberships')
+        // Get user's HQ group memberships (separate collection)
+        const hqMemberships = await HQMembersService.getUserHQGroups(user.uid)
+        
+        // Combine both memberships
+        const memberships = [
+          ...zoneMemberships,
+          ...hqMemberships.map((hq: any) => ({
+            ...hq,
+            zoneId: hq.hqGroupId, // Map hqGroupId to zoneId for consistency
+            isHQMember: true
+          }))
+        ]
+        
+        console.log('📊 Found', zoneMemberships.length, 'zone memberships +', hqMemberships.length, 'HQ memberships')
         
         if (memberships.length === 0) {
           console.log('⚠️ User has no zone memberships')
+          
+          // Retry up to 3 times with delay (for new signups where data might not be ready)
+          if (retryCount < 3) {
+            console.log(`🔄 Retrying in 2 seconds... (attempt ${retryCount + 1}/3)`)
+            setTimeout(() => loadUserZones(retryCount + 1), 2000)
+            return
+          }
+          
+          console.log('💡 User has no zones after retries - they need to join a zone')
           setUserZones([])
           setCurrentZone(null)
           setUserRole('zone_member')
+          setIsLoading(false) // Important: Stop loading even if no zones
         } else {
           console.log('📊 Processing memberships:', memberships)
           
@@ -160,10 +184,13 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
           setCurrentZone(selectedZone || null)
           setCurrentZoneMembership(selectedMembership)
           
-          // Set user role based on membership
+          // Set user role based on membership and zone type
           if (selectedMembership?.role === 'coordinator') {
             setUserRole('zone_coordinator')
             console.log('👔 User is Zone Coordinator')
+          } else if (selectedZone && isHQGroup(selectedZone.id)) {
+            setUserRole('hq_member')
+            console.log('🏢 User is HQ Member (full access, no subscription needed)')
           } else {
             setUserRole('zone_member')
             console.log('👤 User is Zone Member')
@@ -194,18 +221,35 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
       
       // Update user role for new zone
       if (!isSuperAdminUser) {
-        const memberships = await FirebaseDatabaseService.getCollectionWhere(
-          'zone_members',
-          'userId',
-          '==',
-          user.uid
-        )
-        const membership = memberships.find((m: any) => m.zoneId === zoneId)
+        let membership: any = null
+        
+        // Check if it's an HQ group
+        if (isHQGroup(zoneId)) {
+          // Check hq_members collection
+          membership = await HQMembersService.getMemberByUserId(user.uid, zoneId)
+          if (membership) {
+            membership.zoneId = membership.hqGroupId // Map for consistency
+            membership.isHQMember = true
+          }
+        } else {
+          // Check zone_members collection
+          const zoneMemberships = await FirebaseDatabaseService.getCollectionWhere(
+            'zone_members',
+            'userId',
+            '==',
+            user.uid
+          )
+          membership = zoneMemberships.find((m: any) => m.zoneId === zoneId)
+        }
+        
         setCurrentZoneMembership(membership)
         
         if (membership?.role === 'coordinator') {
           setUserRole('zone_coordinator')
           console.log('👔 Switched to Coordinator role')
+        } else if (membership?.isHQMember || isHQGroup(zoneId)) {
+          setUserRole('hq_member')
+          console.log('🏢 Switched to HQ Member role (full access)')
         } else {
           setUserRole('zone_member')
           console.log('👤 Switched to Member role')

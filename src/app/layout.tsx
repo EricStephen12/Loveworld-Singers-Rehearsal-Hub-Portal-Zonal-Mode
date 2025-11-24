@@ -166,15 +166,19 @@ export default function RootLayout({
       <body className="font-sans">
         <script dangerouslySetInnerHTML={{
           __html: `
-            // Register Service Worker for instant loading
+            // Register Optimized Service Worker for fast first load
             if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
               window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw-optimized.js')
                   .then((registration) => {
-                    console.log('🚀 Service Worker registered:', registration);
+                    console.log('⚡ Optimized Service Worker registered:', registration);
+                    // Update service worker when new version available
+                    registration.addEventListener('updatefound', () => {
+                      console.log('🔄 New service worker version found');
+                    });
                   })
                   .catch((error) => {
-                    console.log('Service Worker registration failed:', error);
+                    console.warn('⚠️ Service Worker registration failed:', error);
                   });
               });
             }

@@ -11,8 +11,11 @@ import {
   Bell,
   BarChart3,
   FolderOpen,
-  Upload
+  Upload,
+  Menu,
+  X
 } from "lucide-react";
+import { useAdminTheme } from './AdminThemeProvider';
 
 interface AdminSidebarProps {
   sidebarCollapsed: boolean;
@@ -28,6 +31,7 @@ export default function AdminSidebar({
   setActiveSection
 }: AdminSidebarProps) {
   const router = useRouter();
+  const { theme } = useAdminTheme();
   
   const sidebarItems = [
     { icon: BarChart3, label: 'Dashboard', active: activeSection === 'Dashboard' },
@@ -43,16 +47,6 @@ export default function AdminSidebar({
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="w-10 h-10 rounded-lg bg-white/90 backdrop-blur-xl border border-slate-200 shadow-sm flex items-center justify-center"
-        >
-          <ChevronRight className={`w-5 h-5 text-purple-600 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-
       {/* Sidebar */}
       <div className={`
         fixed lg:relative inset-y-0 left-0 z-40
@@ -63,14 +57,25 @@ export default function AdminSidebar({
       `}>
         {/* Header */}
         <div className="p-6 border-b border-slate-200">
-          <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Music className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
+              <img 
+                src="/logo.png" 
+                alt="Loveworld Singers" 
+                className="w-10 h-10 object-contain"
+              />
+              <div className={`${sidebarCollapsed ? 'lg:hidden' : ''}`}>
+                <h1 className="text-lg font-bold text-slate-900">Admin Panel</h1>
+                <p className="text-sm text-slate-500">Loveworld Singers</p>
+              </div>
             </div>
-            <div className={`${sidebarCollapsed ? 'lg:hidden' : ''}`}>
-              <h1 className="text-lg font-bold text-slate-900">Admin Panel</h1>
-              <p className="text-sm text-slate-500">Loveworld Singers</p>
-            </div>
+            {/* Close button for mobile */}
+            <button
+              onClick={() => setSidebarCollapsed(true)}
+              className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-600" />
+            </button>
           </div>
         </div>
 
@@ -101,7 +106,7 @@ export default function AdminSidebar({
                   className={`
                     w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
                     ${item.active
-                      ? 'bg-purple-50 text-purple-700 border border-purple-200 shadow-sm'
+                      ? `${theme.bg} ${theme.text} border ${theme.border} shadow-sm`
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }
                     ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''}
@@ -112,7 +117,7 @@ export default function AdminSidebar({
                     {item.label}
                   </span>
                   {item.active && (
-                    <div className={`w-2 h-2 bg-purple-500 rounded-full ml-auto ${sidebarCollapsed ? 'lg:hidden' : ''}`} />
+                    <div className={`w-2 h-2 ${theme.primary.replace('bg-', 'bg-').replace('-600', '-500')} rounded-full ml-auto ${sidebarCollapsed ? 'lg:hidden' : ''}`} />
                   )}
                 </button>
               );

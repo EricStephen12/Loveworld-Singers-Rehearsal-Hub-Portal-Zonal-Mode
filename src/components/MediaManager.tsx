@@ -30,8 +30,10 @@ import {
   deleteCloudinaryMedia,
   CloudinaryMediaFile
 } from '@/lib/cloudinary-media-service';
+import { useZone } from '@/contexts/ZoneContext';
 import { Toast } from './Toast';
-import { runMediaDiagnostics, printDiagnostics } from '@/utils/media-diagnostics';
+import { runMediaDiagnostics, printDiagnostics, DiagnosticResult } from '@/utils/media-diagnostics';
+
 
 interface MediaFile {
   id: string;
@@ -59,6 +61,23 @@ export default function MediaManager({
   selectionMode = false,
   allowedTypes = ['image', 'audio', 'video', 'document']
 }: MediaManagerProps) {
+  const { currentZone } = useZone();
+  
+  // Import admin theme if available, fallback to default colors
+  let theme;
+  try {
+    const { useAdminTheme } = require('./admin/AdminThemeProvider');
+    theme = useAdminTheme().theme;
+  } catch {
+    // Fallback theme for when not in admin context
+    theme = {
+      primary: 'bg-purple-600',
+      primaryHover: 'hover:bg-purple-700',
+      primaryLight: 'bg-purple-100',
+      text: 'text-purple-600',
+      border: 'border-purple-200'
+    };
+  }
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -74,14 +93,18 @@ export default function MediaManager({
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
   const [runningDiagnostics, setRunningDiagnostics] = useState(false);
 
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Load files from database with optimized caching
   useEffect(() => {
-    loadFilesFromDatabase();
-  }, []);
+    if (currentZone) {
+      console.log('🔄 MediaManager: Loading media for zone:', currentZone.id);
+      loadFilesFromDatabase();
+    }
+  }, [currentZone?.id]); // Reload when zone changes
 
   const loadFilesFromDatabase = async (showLoading = true) => {
     try {
@@ -89,8 +112,8 @@ export default function MediaManager({
       console.log('🚀 [Cloudinary] Loading media files from Firebase...');
       const startTime = performance.now();
 
-      // Load from NEW Firebase collection: cloudinary_media
-      const mediaFiles = await getAllCloudinaryMedia();
+      // Load from zone-aware collection
+      const mediaFiles = await getAllCloudinaryMedia(currentZone?.id);
 
       const loadTime = performance.now() - startTime;
       console.log(`⚡ [Cloudinary] Media loaded in ${loadTime.toFixed(2)}ms`);
@@ -158,8 +181,8 @@ export default function MediaManager({
   const getFileTypeColor = (type: string) => {
     switch (type) {
       case 'image': return 'text-green-600 bg-green-100';
-      case 'audio': return 'text-purple-600 bg-purple-100';
-      case 'video': return 'text-blue-600 bg-blue-100';
+      case 'audio': return `${theme.text} ${theme.primaryLight}`;
+      case 'video': return `${theme.text} ${theme.primaryLight}`;
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -219,7 +242,7 @@ export default function MediaManager({
           if (uploadResult) {
             console.log(`✅ [Cloudinary] File uploaded: ${uploadResult.url}`);
 
-            // Save to Firebase: cloudinary_media collection
+            // Save to zone-aware collection
             const result = await createCloudinaryMedia({
               name: file.name,
               url: uploadResult.url,
@@ -229,7 +252,7 @@ export default function MediaManager({
               size: file.size,
               folder: fileType,
               format: file.name.split('.').pop() || ''
-            });
+            }, currentZone?.id);
 
             if (result.success) {
               console.log(`✅ [Cloudinary] File saved to Firebase with ID: ${result.id}`);
@@ -320,7 +343,7 @@ export default function MediaManager({
       try {
         // Delete from Firebase first
         console.log(`🗑️ [Cloudinary] Deleting from Firebase: ${file.id}`);
-        const dbDeleteResult = await deleteCloudinaryMedia(file.id);
+        const dbDeleteResult = await deleteCloudinaryMedia(file.id, currentZone?.id);
 
         if (dbDeleteResult.success) {
           // Delete from Cloudinary using stored publicId
@@ -389,8 +412,8 @@ export default function MediaManager({
       const results = await runMediaDiagnostics();
       printDiagnostics(results);
 
-      const failed = results.filter(r => r.status === 'fail').length;
-      const warnings = results.filter(r => r.status === 'warning').length;
+      const failed = results.filter((r: DiagnosticResult) => r.status === 'fail').length;
+      const warnings = results.filter((r: DiagnosticResult) => r.status === 'warning').length;
 
       if (failed > 0) {
         addToast({
@@ -511,59 +534,86 @@ export default function MediaManager({
 
   return (
     <div className="h-full w-full flex flex-col bg-white relative overflow-hidden">
-      {/* Loading Overlay */}
+      {/* Loading Skeleton */}
       {loading && files.length === 0 && (
-        <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-          <div className="text-center">
-            <RefreshCw className="w-12 h-12 mx-auto mb-4 text-purple-600 animate-spin" />
-            <p className="text-gray-600 font-medium">Loading media files...</p>
-            <p className="text-gray-400 text-sm mt-2">This may take a moment</p>
+        <div className="absolute inset-0 bg-white z-50 flex flex-col">
+          {/* Header Skeleton */}
+          <div className="flex-shrink-0 p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Filters Skeleton */}
+          <div className="flex-shrink-0 p-6 border-b border-gray-200">
+            <div className="flex items-center gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid Skeleton */}
+          <div className="flex-1 overflow-auto p-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                <div key={i} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="aspect-square bg-gray-200 animate-pulse"></div>
+                  <div className="p-3">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">
+      <div className="flex-shrink-0 p-3 sm:p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
               {selectionMode ? 'Select Media' : 'Media Library'}
             </h2>
             {selectionMode && selectedFile && (
               <div className="mt-2 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-gray-600">
+                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-gray-600 truncate">
                   Selected: <span className="font-medium">{selectedFile.name}</span>
                 </span>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {!selectionMode && (
               <>
-                <button
-                  onClick={handleRunDiagnostics}
-                  disabled={runningDiagnostics}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 text-sm"
-                  title="Run system diagnostics"
-                >
-                  <Settings className={`w-4 h-4 ${runningDiagnostics ? 'animate-spin' : ''}`} />
-                  Diagnose
-                </button>
+
                 <button
                   onClick={() => loadFilesFromDatabase(true)}
                   disabled={loading}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                  className={`flex items-center gap-2 px-3 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium disabled:opacity-50`}
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
+                  <span className="hidden sm:inline">Refresh</span>
                 </button>
               </>
             )}
             {selectionMode && selectedFile && (
               <button
                 onClick={handleConfirmSelection}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                className={`px-3 sm:px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium text-sm sm:text-base`}
               >
                 Select
               </button>
@@ -580,7 +630,7 @@ export default function MediaManager({
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-2 sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -588,7 +638,7 @@ export default function MediaManager({
               placeholder="Search files..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           
@@ -596,7 +646,7 @@ export default function MediaManager({
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Types</option>
               <option value="image">Images</option>
@@ -608,7 +658,7 @@ export default function MediaManager({
             <select
               value={selectedFolder}
               onChange={(e) => setSelectedFolder(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               {folders.map(folder => (
                 <option key={folder} value={folder}>
@@ -621,29 +671,29 @@ export default function MediaManager({
       </div>
 
       {/* Upload Area */}
-      <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-gray-50">
+      <div className="flex-shrink-0 p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
         <div
           ref={dropZoneRef}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors ${
             dragOver 
-              ? 'border-purple-500 bg-purple-50' 
+              ? `${theme.border} ${theme.primaryLight}` 
               : 'border-gray-300 hover:border-gray-400'
           }`}
         >
-          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-600 mb-2">
-            Drag and drop files here, or{' '}
+          <Upload className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-400" />
+          <p className="text-sm sm:text-base text-gray-600 mb-2">
+            <span className="hidden sm:inline">Drag and drop files here, or </span>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="text-purple-600 hover:text-purple-700 font-medium"
+              className={`${theme.text} hover:opacity-80 font-medium`}
             >
-              browse files
+              <span className="sm:hidden">Tap to </span>browse files
             </button>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             Supports {allowedTypes.join(', ')}
           </p>
           
@@ -667,12 +717,12 @@ export default function MediaManager({
       </div>
 
       {/* View Controls */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-        <div className="flex items-center gap-2">
+      <div className="flex-shrink-0 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'grid' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:text-gray-600'
+              viewMode === 'grid' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Grid className="w-4 h-4" />
@@ -680,27 +730,27 @@ export default function MediaManager({
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'list' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:text-gray-600'
+              viewMode === 'list' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <List className="w-4 h-4" />
           </button>
         </div>
         
-        <p className="text-sm text-gray-500">
+        <p className="text-xs sm:text-sm text-gray-500">
           {filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Files Grid/List - Scrollable Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-6">
         {uploading && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-blue-700 text-sm font-medium">
+              <p className="text-blue-700 text-xs sm:text-sm font-medium truncate flex-1 mr-2">
                 Uploading {uploadingFile}...
               </p>
-              <span className="text-blue-600 text-sm font-medium">
+              <span className="text-blue-600 text-xs sm:text-sm font-medium flex-shrink-0">
                 {Math.round(uploadProgress)}%
               </span>
             </div>
@@ -714,14 +764,14 @@ export default function MediaManager({
         )}
 
         {filteredFiles.length === 0 ? (
-          <div className="text-center py-12">
-            <File className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">No files found</p>
-            <p className="text-sm text-gray-400">Upload some files to get started</p>
+          <div className="text-center py-8 sm:py-12">
+            <File className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-300" />
+            <p className="text-sm sm:text-base text-gray-500">No files found</p>
+            <p className="text-xs sm:text-sm text-gray-400">Upload some files to get started</p>
           </div>
         ) : (
           <div className={viewMode === 'grid' 
-            ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4'
+            ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4'
             : 'space-y-2'
           }>
             {filteredFiles.map((file) => (
@@ -733,7 +783,7 @@ export default function MediaManager({
                     : 'border-gray-200'
                 } ${
                   selectedFile?.id === file.id 
-                    ? 'border-purple-500 bg-purple-50 shadow-md' 
+                    ? `${theme.border} ${theme.primaryLight} shadow-md` 
                     : 'border-gray-200'
                 }`}
                 onClick={() => handleFileSelect(file)}
@@ -771,29 +821,29 @@ export default function MediaManager({
                   
                   {/* Selection check mark */}
                   {selectionMode && selectedFile?.id === file.id && (
-                    <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                    <div className={`absolute top-2 right-2 ${theme.primary} text-white rounded-full p-1`}>
                       <Check className="w-4 h-4" />
                     </div>
                   )}
                 </div>
 
                 {/* File Info */}
-                <div className="p-3">
-                  <h3 className="font-medium text-sm text-gray-900 truncate" title={file.name}>
+                <div className="p-2 sm:p-3">
+                  <h3 className="font-medium text-xs sm:text-sm text-gray-900 truncate" title={file.name}>
                     {file.name}
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
                     {formatFileSize(file.size)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1 hidden sm:block">
                     {formatDate(file.uploadedAt)}
                   </p>
                   {selectionMode && (
                     <div className="mt-2 text-xs font-medium">
                       {selectedFile?.id === file.id ? (
-                        <span className="text-purple-600">Selected</span>
+                        <span className={theme.text}>Selected</span>
                       ) : (
-                        <span className="text-gray-500">Click to select</span>
+                        <span className="text-gray-500">Tap to select</span>
                       )}
                     </div>
                   )}

@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Category, PraiseNightSong } from '../../types/supabase';
 import { Toast } from '../Toast';
+import { useAdminTheme } from './AdminThemeProvider';
 
 interface CategoriesSectionProps {
   allCategories: Category[];
@@ -67,6 +68,8 @@ interface CategoriesSectionProps {
 }
 
 export default function CategoriesSection(props: CategoriesSectionProps) {
+  const { theme } = useAdminTheme();
+  
   const {
     allCategories,
     allSongs,
@@ -208,46 +211,43 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
   const startIndex = (currentPage - 1) * itemsPerPage;
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      <div className="max-w-6xl mx-auto">
+    <div className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6">
+      <div className="max-w-6xl mx-auto w-full flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
-            <p className="text-slate-600 mt-1">
-              Manage song categories and organization
-              {filteredCategories.length > 0 && (
-                <span className="ml-2 text-purple-600 font-medium">
-                  ({filteredCategories.length} {filteredCategories.length === 1 ? 'category' : 'categories'})
-                </span>
-              )}
-            </p>
+        <div className="flex-shrink-0 mb-4 lg:mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl lg:text-2xl font-bold text-slate-900 flex-1">Categories</h1>
+            {filteredCategories.length > 0 && (
+              <span className="text-sm text-slate-600">
+                {filteredCategories.length}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setEditingCategory(null);
+                setNewPageCategoryName('');
+                setShowCategoryModal(true);
+              }}
+              className={`flex items-center gap-2 px-3 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium text-sm`}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add</span>
+            </button>
           </div>
-          <button
-            onClick={() => {
-              setEditingCategory(null);
-              setNewPageCategoryName('');
-              setShowCategoryModal(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            Add Category
-          </button>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-shrink-0 mb-4 space-y-3">
+          <div className="flex flex-col gap-3">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search categories and songs..."
+                  placeholder="Search categories..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 {searchTerm && (
                   <button
@@ -260,11 +260,11 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'heard' | 'unheard')}
-                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="heard">Heard</option>
@@ -274,7 +274,7 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="all">All Categories</option>
                 {combinedCategories.map(category => (
@@ -301,8 +301,9 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
         </div>
 
         {/* Categories Grid */}
+        <div className="flex-1 overflow-auto">
         {filteredCategories.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 pb-4">
             {filteredCategories.map((category) => {
               const categorySongs = getCategorySongs(category.name);
               const heardSongs = categorySongs.filter(song => song.status === 'heard').length;
@@ -321,7 +322,7 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         isFromDb ? 'bg-purple-100' : 'bg-amber-100'
                       }`}>
-                        <Tag className={`w-5 h-5 ${isFromDb ? 'text-purple-600' : 'text-amber-600'}`} />
+                        <Tag className={`w-5 h-5 ${isFromDb ? theme.text : 'text-amber-600'}`} />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -432,6 +433,7 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
             })}
           </div>
         ) : (
+          <div className="flex items-center justify-center h-full">
           <div className="text-center py-12">
             <Tag className="w-16 h-16 mx-auto mb-4 text-gray-300" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">No Categories Found</h3>
@@ -445,14 +447,16 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
                   setNewPageCategoryName('');
                   setShowCategoryModal(true);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                className={`inline-flex items-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium`}
               >
                 <Plus className="w-4 h-4" />
                 Add Category
               </button>
             )}
           </div>
+          </div>
         )}
+        </div>
       </div>
     </div>
   );

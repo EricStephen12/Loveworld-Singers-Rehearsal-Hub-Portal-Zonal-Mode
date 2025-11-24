@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { useAuth } from '@/contexts/AuthContext';
+import { useZone } from '@/contexts/ZoneContext';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
+import { isHQGroup } from '@/config/zones';
 
 export interface NotificationData {
   id: string;
@@ -20,6 +22,17 @@ export interface NotificationData {
   target_audience: 'all' | 'group' | 'individual';
   target_group?: string;
   target_user_id?: string;
+  zoneId?: string; // Zone ID for filtering (regular zones only)
+}
+
+// Helper to get correct collection name based on zone
+function getNotificationCollectionName(zoneId?: string): string {
+  if (zoneId && isHQGroup(zoneId)) {
+    console.log('🏢 Using HQ notification collection: notifications');
+    return 'notifications';
+  }
+  console.log('📍 Using zone notification collection: zone_notifications');
+  return 'zone_notifications';
 }
 
 export function useRealtimeNotifications() {
@@ -27,39 +40,53 @@ export function useRealtimeNotifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, profile } = useAuth();
+  const { currentZone } = useZone();
 
   // Load notifications with real-time updates
   useEffect(() => {
-    if (!user?.uid) {
+    if (!user?.uid || !currentZone) {
       setNotifications([]);
       setLoading(false);
       return;
     }
 
-    console.log('🔔 Setting up Firebase notifications listener for user:', user.uid);
+    console.log('🔔 Setting up Firebase notifications listener for user:', user.uid, 'zone:', currentZone.id);
+    console.log('🔔 Is HQ Group?', isHQGroup(currentZone.id));
     setLoading(true);
 
-    // Query notifications for this user
-    // Get notifications where:
-    // 1. target_audience = 'all' OR
-    // 2. target_audience = 'individual' AND target_user_id = user.uid OR
-    // 3. target_audience = 'group' AND target_group matches user's group
+    // Get zone-aware collection name
+    const collectionName = getNotificationCollectionName(currentZone.id);
+    const notificationsRef = collection(db, collectionName);
 
-    const notificationsRef = collection(db, 'notifications');
-    const q = query(
-      notificationsRef,
-      orderBy('created_at', 'desc')
-    );
+    // Build query based on zone type
+    let q;
+    if (currentZone.id && !isHQGroup(currentZone.id)) {
+      // Regular zone: filter by zoneId
+      console.log('📍 Filtering notifications by zoneId:', currentZone.id);
+      q = query(
+        notificationsRef,
+        where('zoneId', '==', currentZone.id)
+      );
+    } else {
+      // HQ group: no filter (see all)
+      console.log('🏢 Loading all notifications (HQ)');
+      q = query(notificationsRef);
+    }
 
     // Set up real-time listener
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
-        console.log('📬 Received notifications update:', snapshot.size, 'notifications');
+        console.log('📬 Received notifications update:', snapshot.size, 'notifications from', collectionName);
 
         const allNotifications = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         } as NotificationData));
+
+        // Sort by created_at in JavaScript (to avoid index requirement)
+        allNotifications.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
 
         // Filter notifications for current user
         const userNotifications = allNotifications.filter(notif => {
@@ -78,6 +105,8 @@ export function useRealtimeNotifications() {
           return false;
         });
 
+        console.log('📊 Filtered to', userNotifications.length, 'notifications for user');
+
         // Load read status for each notification
         loadReadStatus(userNotifications);
       },
@@ -92,7 +121,7 @@ export function useRealtimeNotifications() {
       console.log('🔕 Cleaning up notifications listener');
       unsubscribe();
     };
-  }, [user?.uid, profile]);
+  }, [user?.uid, profile, currentZone?.id]);
 
   // Check if user is in a specific group
   const checkUserInGroup = async (groupName: string): Promise<boolean> => {
@@ -225,6 +254,7 @@ export function useRealtimeNotifications() {
 // Hook for admins to create notifications
 export function useNotificationActions() {
   const { user } = useAuth();
+  const { currentZone } = useZone();
 
   const createNotificationForAll = async (data: {
     title: string;
@@ -236,7 +266,9 @@ export function useNotificationActions() {
     expiresAt?: string;
   }) => {
     try {
-      console.log('📢 Creating notification for all users:', data.title);
+      console.log('📢 Creating notification for all users in zone:', currentZone?.id, data.title);
+
+      const collectionName = getNotificationCollectionName(currentZone?.id);
 
       const notificationData = {
         title: data.title,
@@ -248,15 +280,16 @@ export function useNotificationActions() {
         sender_name: user?.email || 'System',
         action_url: data.actionUrl || null,
         target_audience: 'all',
+        zoneId: currentZone?.id || '', // Add zoneId for regular zones
         created_at: new Date().toISOString(),
         is_read: false
       };
 
       // Create notification in Firebase
       const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument('notifications', notificationId, notificationData);
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
 
-      console.log('✅ Notification created successfully:', notificationId);
+      console.log('✅ Notification created successfully in', collectionName, ':', notificationId);
       return { success: true, notificationId };
     } catch (err) {
       console.error('❌ Error creating notification:', err);
@@ -275,7 +308,9 @@ export function useNotificationActions() {
     expiresAt?: string;
   }) => {
     try {
-      console.log('📢 Creating notification for group:', data.groupName);
+      console.log('📢 Creating notification for group:', data.groupName, 'in zone:', currentZone?.id);
+
+      const collectionName = getNotificationCollectionName(currentZone?.id);
 
       const notificationData = {
         title: data.title,
@@ -288,15 +323,16 @@ export function useNotificationActions() {
         action_url: data.actionUrl || null,
         target_audience: 'group',
         target_group: data.groupName,
+        zoneId: currentZone?.id || '', // Add zoneId for regular zones
         created_at: new Date().toISOString(),
         is_read: false
       };
 
       // Create notification in Firebase
       const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument('notifications', notificationId, notificationData);
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
 
-      console.log('✅ Group notification created successfully:', notificationId);
+      console.log('✅ Group notification created successfully in', collectionName, ':', notificationId);
       return { success: true, notificationId };
     } catch (err) {
       console.error('❌ Error creating group notification:', err);
@@ -314,7 +350,9 @@ export function useNotificationActions() {
     actionUrl?: string;
   }) => {
     try {
-      console.log('📢 Creating notification for user:', data.targetUserId);
+      console.log('📢 Creating notification for user:', data.targetUserId, 'in zone:', currentZone?.id);
+
+      const collectionName = getNotificationCollectionName(currentZone?.id);
 
       const notificationData = {
         title: data.title,
@@ -327,15 +365,16 @@ export function useNotificationActions() {
         action_url: data.actionUrl || null,
         target_audience: 'individual',
         target_user_id: data.targetUserId,
+        zoneId: currentZone?.id || '', // Add zoneId for regular zones
         created_at: new Date().toISOString(),
         is_read: false
       };
 
       // Create notification in Firebase
       const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument('notifications', notificationId, notificationData);
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
 
-      console.log('✅ User notification created successfully:', notificationId);
+      console.log('✅ User notification created successfully in', collectionName, ':', notificationId);
       return { success: true, notificationId };
     } catch (err) {
       console.error('❌ Error creating user notification:', err);

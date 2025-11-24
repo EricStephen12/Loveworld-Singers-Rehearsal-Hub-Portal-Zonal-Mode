@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Send, Trash2, MessageSquare, X } from 'lucide-react';
 import { sendMessageToAllUsers, getAllMessages, deleteMessage, AdminMessage } from '@/lib/simple-notifications-service';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminTheme } from './AdminThemeProvider';
 
 export default function SimpleNotificationsSection() {
   const { user } = useAuth();
+  const { theme } = useAdminTheme();
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -84,18 +86,18 @@ export default function SimpleNotificationsSection() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Messages to Users</h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Messages to Users</h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
             Send messages that all users will see in their notifications
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium whitespace-nowrap w-full sm:w-auto`}
         >
           <Send className="w-4 h-4" />
           Send Message
@@ -105,9 +107,22 @@ export default function SimpleNotificationsSection() {
       {/* Messages List */}
       <div className="bg-white rounded-lg border border-slate-200">
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-sm text-slate-600 mt-4">Loading messages...</p>
+          <div className="divide-y divide-slate-200">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-3 w-64 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : messages.length === 0 ? (
           <div className="p-12 text-center">
@@ -120,23 +135,23 @@ export default function SimpleNotificationsSection() {
         ) : (
           <div className="divide-y divide-slate-200">
             {messages.map((msg) => (
-              <div key={msg.id} className="p-4 hover:bg-slate-50 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+              <div key={msg.id} className="p-3 sm:p-4 hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Bell className="w-4 h-4 text-purple-600" />
-                      <h3 className="font-semibold text-slate-900">{msg.title}</h3>
+                      <Bell className={`w-4 h-4 ${theme.text} flex-shrink-0`} />
+                      <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate">{msg.title}</h3>
                     </div>
-                    <p className="text-sm text-slate-700 mb-2">{msg.message}</p>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
-                      <span>Sent by: {msg.sentBy}</span>
-                      <span>•</span>
-                      <span>{formatDate(msg.sentAt)}</span>
+                    <p className="text-xs sm:text-sm text-slate-700 mb-2 break-words">{msg.message}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-slate-500">
+                      <span className="truncate">Sent by: {msg.sentBy}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="truncate">{formatDate(msg.sentAt)}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => handleDeleteMessage(msg.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
                     title="Delete message"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -204,7 +219,7 @@ export default function SimpleNotificationsSection() {
                 <button
                   onClick={handleSendMessage}
                   disabled={sending || !title.trim() || !message.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {sending ? (
                     <>

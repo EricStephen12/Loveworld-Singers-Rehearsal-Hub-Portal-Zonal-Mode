@@ -132,6 +132,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     const isBoss = profile?.role === 'boss'
     if (isBoss) return true
     
+    // HQ members bypass all feature checks (unlimited access)
+    const { bypassesFeatureGates } = require('@/config/zones')
+    if (currentZone && bypassesFeatureGates(currentZone.id)) {
+      console.log('🏢 HQ Group detected - bypassing feature gate for:', feature)
+      return true
+    }
+    
     if (!subscription) return false
     return hasFeatureAccess(subscription.tier, feature as any)
   }
@@ -158,16 +165,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     await loadSubscription()
   }
 
-  const contextValue = useMemo(() => ({
-    subscription,
-    isLoading,
-    hasFeature,
-    canAddMember,
-    memberLimit: subscription ? getMemberLimit(subscription.tier) : 20,
-    isFreeTier: subscription?.tier === 'free',
-    isPremiumTier: subscription?.tier === 'premium',
-    refreshSubscription
-  }), [subscription, isLoading])
+  const contextValue = useMemo(() => {
+    // Check if HQ group (unlimited access, no subscription needed)
+    const { bypassesFeatureGates } = require('@/config/zones')
+    const isHQGroup = currentZone && bypassesFeatureGates(currentZone.id)
+    
+    return {
+      subscription,
+      isLoading,
+      hasFeature,
+      canAddMember,
+      memberLimit: isHQGroup ? 999999 : (subscription ? getMemberLimit(subscription.tier) : 20),
+      isFreeTier: isHQGroup ? false : subscription?.tier === 'free', // HQ groups are not "free tier"
+      isPremiumTier: isHQGroup ? true : subscription?.tier === 'premium', // HQ groups act like premium
+      refreshSubscription
+    }
+  }, [subscription, isLoading, currentZone])
 
   return (
     <SubscriptionContext.Provider value={contextValue}>

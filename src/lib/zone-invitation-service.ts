@@ -2,13 +2,16 @@
 // Zone Invitation Service - Simplified with unique codes per zone
 
 import { FirebaseDatabaseService } from './firebase-database'
-import { ZONES, getZoneByInvitationCode } from '@/config/zones'
+import { HQMembersService } from './hq-members-service'
+import { HQInvitationService } from './hq-invitation-service'
+import { ZONES, getZoneByInvitationCode, isHQGroup } from '@/config/zones'
 
 export class ZoneInvitationService {
   
   /**
    * Join a zone using invitation code
    * This is called when user signs up with a zone link
+   * Routes to HQ or Zone collection based on zone type
    */
   static async joinZoneWithCode(
     userId: string,
@@ -31,6 +34,19 @@ export class ZoneInvitationService {
       }
       
       console.log('✅ Valid zone found:', zone.name)
+      
+      // ⭐ CHECK IF HQ GROUP - Route to HQ service
+      if (isHQGroup(zone.id)) {
+        console.log('🏢 This is an HQ group - routing to HQ service')
+        return await HQInvitationService.joinHQGroup(
+          invitationCode,
+          userId,
+          userEmail,
+          userName
+        )
+      }
+      
+      console.log('📍 This is a regular zone - continuing with zone service')
       
       // Check if user is already a member
       const existingMembers = await FirebaseDatabaseService.getCollectionWhere(
@@ -157,26 +173,37 @@ export class ZoneInvitationService {
   
   /**
    * Get all zones (for super admin)
+   * Checks both hq_members and zone_members collections
    */
   static async getAllZonesWithStats() {
     try {
       const zonesWithStats = await Promise.all(
         ZONES.map(async (zone) => {
           const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id)
-          const members = await FirebaseDatabaseService.getCollectionWhere(
-            'zone_members',
-            'zoneId',
-            '==',
-            zone.id
-          )
+          
+          // Check correct collection based on zone type
+          let members = []
+          if (isHQGroup(zone.id)) {
+            // HQ groups use hq_members collection
+            members = await HQMembersService.getHQGroupMembers(zone.id)
+          } else {
+            // Regular zones use zone_members collection
+            members = await FirebaseDatabaseService.getCollectionWhere(
+              'zone_members',
+              'zoneId',
+              '==',
+              zone.id
+            )
+          }
           
           return {
             ...zone,
             memberCount: members.length,
-            maxMembers: zoneData?.maxMembers || 20,
-            subscriptionTier: zoneData?.subscriptionTier || 'free',
-            subscriptionStatus: zoneData?.subscriptionStatus || 'active',
-            signupLink: this.getZoneSignupLink(zone.invitationCode)
+            maxMembers: zoneData?.maxMembers || (isHQGroup(zone.id) ? 999999 : 20), // HQ has unlimited
+            subscriptionTier: isHQGroup(zone.id) ? 'unlimited' : (zoneData?.subscriptionTier || 'free'),
+            subscriptionStatus: isHQGroup(zone.id) ? 'active' : (zoneData?.subscriptionStatus || 'active'),
+            signupLink: this.getZoneSignupLink(zone.invitationCode),
+            isHQGroup: isHQGroup(zone.id)
           }
         })
       )
@@ -190,15 +217,25 @@ export class ZoneInvitationService {
   
   /**
    * Get zone members (for coordinators and super admin)
+   * Checks correct collection based on zone type
    */
   static async getZoneMembers(zoneId: string) {
     try {
-      const members = await FirebaseDatabaseService.getCollectionWhere(
-        'zone_members',
-        'zoneId',
-        '==',
-        zoneId
-      )
+      let members = []
+      
+      // Check correct collection based on zone type
+      if (isHQGroup(zoneId)) {
+        // HQ groups use hq_members collection
+        members = await HQMembersService.getHQGroupMembers(zoneId)
+      } else {
+        // Regular zones use zone_members collection
+        members = await FirebaseDatabaseService.getCollectionWhere(
+          'zone_members',
+          'zoneId',
+          '==',
+          zoneId
+        )
+      }
       
       // Get user profiles for each member
       const membersWithProfiles = await Promise.all(
@@ -220,18 +257,29 @@ export class ZoneInvitationService {
   
   /**
    * Remove member from zone (for coordinators and super admin)
+   * Removes from correct collection based on zone type
    */
   static async removeMember(memberId: string, zoneId: string) {
     try {
-      await FirebaseDatabaseService.deleteDocument('zone_members', memberId)
-      
-      // Update zone member count
-      const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId)
-      if (zoneData) {
-        await FirebaseDatabaseService.updateDocument('zones', zoneId, {
-          memberCount: Math.max(0, (zoneData.memberCount || 1) - 1),
-          updatedAt: new Date()
-        })
+      // Check correct collection based on zone type
+      if (isHQGroup(zoneId)) {
+        // HQ groups use hq_members collection
+        // memberId format for HQ: userId_hqGroupId
+        const parts = memberId.split('_')
+        const userId = parts.slice(0, -1).join('_') // Handle userId with underscores
+        await HQMembersService.removeMember(userId, zoneId)
+      } else {
+        // Regular zones use zone_members collection
+        await FirebaseDatabaseService.deleteDocument('zone_members', memberId)
+        
+        // Update zone member count
+        const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId)
+        if (zoneData) {
+          await FirebaseDatabaseService.updateDocument('zones', zoneId, {
+            memberCount: Math.max(0, (zoneData.memberCount || 1) - 1),
+            updatedAt: new Date()
+          })
+        }
       }
       
       return { success: true }

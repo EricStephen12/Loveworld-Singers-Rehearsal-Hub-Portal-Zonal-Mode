@@ -16,6 +16,7 @@ import {
   SongSubmission 
 } from '@/lib/song-submission-service'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAdminTheme } from '@/components/admin/AdminThemeProvider'
 
 interface SubmittedSongsPageProps {
   embedded?: boolean
@@ -24,6 +25,7 @@ interface SubmittedSongsPageProps {
 export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsPageProps = { embedded: false }) {
   const router = useRouter()
   const { user, profile } = useAuth()
+  const { theme } = useAdminTheme()
   const [songs, setSongs] = useState<SongSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
@@ -234,11 +236,11 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
                 filter === 'all' 
                   ? 'bg-purple-500 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -248,34 +250,40 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
                 filter === 'pending' 
                   ? 'bg-purple-500 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <Clock className="w-4 h-4" />
-              Pending {pendingCount > 0 && `(${pendingCount})`}
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Pending</span>
+              <span className="sm:hidden">Pend.</span>
+              {pendingCount > 0 && ` (${pendingCount})`}
             </button>
             <button
               onClick={() => setFilter('approved')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
                 filter === 'approved' 
                   ? 'bg-green-500 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Approved ({songs.filter(s => s.status === 'approved').length})
+              <span className="hidden sm:inline">Approved</span>
+              <span className="sm:hidden">Appr.</span>
+              ({songs.filter(s => s.status === 'approved').length})
             </button>
             <button
               onClick={() => setFilter('rejected')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
                 filter === 'rejected' 
                   ? 'bg-red-500 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Rejected ({songs.filter(s => s.status === 'rejected').length})
+              <span className="hidden sm:inline">Rejected</span>
+              <span className="sm:hidden">Rej.</span>
+              ({songs.filter(s => s.status === 'rejected').length})
             </button>
           </div>
         </div>
@@ -283,7 +291,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         {/* Songs List */}
         {loading ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <RefreshCw className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-4" />
+            <RefreshCw className={`w-8 h-8 ${theme.text} animate-spin mx-auto mb-4`} />
             <p className="text-gray-600">Loading submitted songs...</p>
           </div>
         ) : filteredSongs.length === 0 ? (
@@ -296,14 +304,14 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
             {filteredSongs.map((song) => (
               <div
                 key={song.id}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
+                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-bold text-gray-900">{song.title}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{song.title}</h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium w-fit ${
                           song.status === 'pending'
                             ? 'bg-purple-100 text-purple-800'
                             : song.status === 'approved'
@@ -315,46 +323,46 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 text-xs sm:text-sm">
                       <div className="flex items-center gap-2 text-gray-600">
-                        <User className="w-4 h-4" />
+                        <User className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">Writer:</span>
-                        <span>{song.writer || 'N/A'}</span>
+                        <span className="truncate">{song.writer || 'N/A'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
-                        <FileText className="w-4 h-4" />
+                        <FileText className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">Category:</span>
-                        <span>{song.category || 'N/A'}</span>
+                        <span className="truncate">{song.category || 'N/A'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">Submitted:</span>
-                        <span>{new Date(song.createdAt).toLocaleDateString()}</span>
+                        <span className="truncate">{new Date(song.createdAt).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
-                        <User className="w-4 h-4" />
+                        <User className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">By:</span>
-                        <span>{song.submittedBy.userName}</span>
+                        <span className="truncate">{song.submittedBy.userName}</span>
                       </div>
                     </div>
 
                     {/* Quick Preview */}
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2 font-medium">Preview:</p>
-                      <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
-                        <p className="text-sm text-gray-700 line-clamp-4 whitespace-pre-wrap">
+                    <div className="mb-3 sm:mb-4">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Preview:</p>
+                      <div className="bg-gray-50 rounded-lg p-2 sm:p-3 max-h-24 sm:max-h-32 overflow-y-auto">
+                        <p className="text-xs sm:text-sm text-gray-700 line-clamp-3 sm:line-clamp-4 whitespace-pre-wrap">
                           {song.lyrics.substring(0, 200)}...
                         </p>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${song.adminSeen ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700'}`}>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${song.adminSeen ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700'}`}>
                         {song.adminSeen ? 'Seen' : 'Unseen'}
                       </span>
                       {song.replyMessage && (
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                           Replied
                         </span>
                       )}
@@ -362,22 +370,24 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                         <>
                         <button
                           onClick={() => setSelectedSong(song)}
-                          className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-2"
+                          className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-2 text-xs sm:text-sm"
                         >
                           <Eye className="w-4 h-4" />
-                          View Details
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
                         </button>
                           <button
                             onClick={() => handleSeen(song)}
                             disabled={processing === song.id || song.adminSeen}
-                            className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50"
+                            className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 text-xs sm:text-sm"
                           >
-                            Mark as Seen
+                            <span className="hidden sm:inline">Mark as Seen</span>
+                            <span className="sm:hidden">Seen</span>
                           </button>
                         <button
                           onClick={() => handleApprove(song)}
                           disabled={processing === song.id}
-                          className="px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                          className="px-3 sm:px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
                         >
                           <CheckCircle className="w-4 h-4" />
                           Approve
@@ -388,7 +398,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                             setShowRejectModal(true)
                           }}
                           disabled={processing === song.id}
-                          className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                          className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
                         >
                           <XCircle className="w-4 h-4" />
                           Reject
@@ -396,10 +406,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                           <button
                             onClick={() => { setSelectedSong(song); setShowReplyModal(true); }}
                             disabled={processing === song.id}
-                            className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50"
+                            className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 flex items-center gap-2 text-xs sm:text-sm"
                           >
                             <MessageSquare className="w-4 h-4" />
-                            Reply
+                            <span className="hidden sm:inline">Reply</span>
                           </button>
                         </>
                       )}

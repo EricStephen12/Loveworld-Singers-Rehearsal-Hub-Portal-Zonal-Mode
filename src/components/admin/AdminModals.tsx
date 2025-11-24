@@ -10,6 +10,7 @@ import {
 import { PraiseNight, Category, PraiseNightSong } from '../../types/supabase';
 import EditSongModal from '../EditSongModal';
 import MediaSelectionModal from '../MediaSelectionModal';
+import { useAdminTheme } from './AdminThemeProvider';
 
 interface AdminModalsProps {
   // Page Modal
@@ -97,6 +98,13 @@ interface AdminModalsProps {
 }
 
 export default function AdminModals(props: AdminModalsProps) {
+  const { theme } = useAdminTheme();
+  
+  // Theme-based CSS classes
+  const inputClasses = `w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 ${theme.focusRing} ${theme.focusBorder} focus:shadow-xl ${theme.focusBg}`;
+  const buttonClasses = `flex-1 flex items-center justify-center gap-2 px-4 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors font-medium`;
+  const selectButtonClasses = `w-full px-4 py-3 ${theme.primaryLight} ${theme.bgHover} ${theme.text} font-medium rounded-lg border-2 ${theme.border} ${theme.borderHover} transition-all duration-200 flex items-center justify-center gap-2`;
+  
   // Media Library Modal State
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
@@ -234,7 +242,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
                   <button
                     onClick={(editingPageCategory || editingCategory) ? (editingPageCategory ? handleUpdatePageCategory : handleUpdateCategory) : (activeSection === 'Categories' ? handleAddCategory : handleAddPageCategory)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors font-medium"
+                    className={buttonClasses}
                   >
                     <Save className="w-4 h-4" />
                     <span className="text-sm sm:text-base">{(editingPageCategory || editingCategory) ? 'Update' : 'Add'} Category</span>
@@ -374,7 +382,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <button
                   type="button"
                   onClick={() => setShowMediaLibrary(true)}
-                  className="w-full px-4 py-3 bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium rounded-lg border-2 border-purple-300 hover:border-purple-400 transition-all duration-200 flex items-center justify-center gap-2"
+                  className={selectButtonClasses}
                 >
                   <FolderOpen className="w-5 h-5" />
                   {newPageBannerImage ? 'Change Image' : 'Browse Library'}
@@ -528,7 +536,7 @@ export default function AdminModals(props: AdminModalsProps) {
                     handleAddPage();
                   }
                 }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-lg transition-colors font-medium"
+                className={buttonClasses}
               >
                 <Save className="w-4 h-4" />
                 <span className="text-sm sm:text-base">{editingPage ? 'Update' : 'Add'} Page</span>

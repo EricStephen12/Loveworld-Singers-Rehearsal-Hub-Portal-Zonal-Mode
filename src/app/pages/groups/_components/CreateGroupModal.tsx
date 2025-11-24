@@ -109,24 +109,24 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
         {/* Header */}
         <div 
-          className="p-6 text-white"
+          className="p-4 sm:p-6 text-white"
           style={{ 
             background: currentZone?.themeColor 
               ? `linear-gradient(135deg, ${currentZone.themeColor} 0%, ${adjustColor(currentZone.themeColor, -20)} 100%)`
               : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
           }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-bold">
               {step === 'details' ? 'Create Group' : 'Add Members'}
             </h2>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
             >
               <X className="w-5 h-5" />
             </button>
@@ -143,7 +143,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
         {/* Content */}
         <div className="max-h-96 overflow-y-auto">
           {step === 'details' ? (
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Group Name *
@@ -153,8 +153,14 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   placeholder="Enter group name..."
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent"
+                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent text-base"
+                  style={{ 
+                    ...(currentZone?.themeColor && {
+                      '--tw-ring-color': currentZone.themeColor
+                    } as any)
+                  }}
                   maxLength={50}
+                  autoFocus
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   {groupName.length}/50 characters
@@ -169,7 +175,12 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                   value={groupDescription}
                   onChange={(e) => setGroupDescription(e.target.value)}
                   placeholder="What's this group about?"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent resize-none"
+                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent resize-none text-base"
+                  style={{ 
+                    ...(currentZone?.themeColor && {
+                      '--tw-ring-color': currentZone.themeColor
+                    } as any)
+                  }}
                   rows={3}
                   maxLength={200}
                 />
@@ -181,22 +192,27 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
               <button
                 onClick={() => setStep('members')}
                 disabled={!groupName.trim()}
-                className="w-full py-3 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 sm:py-3.5 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-target text-base"
                 style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
               >
                 Next: Add Members
               </button>
             </div>
           ) : (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search users to add..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent"
+                  className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent text-base"
+                  style={{ 
+                    ...(currentZone?.themeColor && {
+                      '--tw-ring-color': currentZone.themeColor
+                    } as any)
+                  }}
                 />
               </div>
 
@@ -241,12 +257,12 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                       <button
                         key={user.id}
                         onClick={() => toggleMember(user)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors touch-target ${
                           isSelected ? 'bg-green-50 border-2 border-green-200' : 'hover:bg-gray-50 border-2 border-transparent'
                         }`}
                       >
                         <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+                          className="w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-base"
                           style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
                         >
                           {user.profilePic ? (
@@ -260,17 +276,17 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
                           )}
                         </div>
 
-                        <div className="flex-1 text-left">
-                          <h4 className="font-semibold text-gray-900">
+                        <div className="flex-1 text-left min-w-0">
+                          <h4 className="font-semibold text-gray-900 truncate text-base">
                             {user.fullName}
                           </h4>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 truncate">
                             {user.email}
                           </p>
                         </div>
 
                         {isSelected && (
-                          <Check className="w-5 h-5 text-green-600" />
+                          <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
                         )}
                       </button>
                     )
@@ -281,20 +297,20 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setStep('details')}
-                  className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                  className="flex-1 py-3 sm:py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors touch-target text-base"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleCreateGroup}
                   disabled={selectedMembers.length === 0 || isCreating}
-                  className="flex-1 py-3 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 sm:py-3.5 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-target text-base"
                   style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
                 >
                   {isCreating ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating...
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <span className="hidden xs:inline">Creating...</span>
                     </>
                   ) : (
                     'Create Group'

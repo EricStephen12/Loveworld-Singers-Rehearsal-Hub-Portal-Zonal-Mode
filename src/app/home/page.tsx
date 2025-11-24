@@ -10,6 +10,7 @@ import { useHomeGlobalSearch, HomeSearchResult } from '@/hooks/useHomeGlobalSear
 import { useAuth } from '@/contexts/AuthContext'
 import { useZone } from '@/contexts/ZoneContext'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+
 import AuthGuard from '@/components/AuthGuard'
 import ZoneSwitcher from '@/components/ZoneSwitcher'
 import { handleAppRefresh } from '@/utils/refresh-utils'
@@ -24,13 +25,37 @@ function HomePageContent() {
   // Check if user is Boss (declare early for use in features array)
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
   
+  // Simple HQ Admin check
+  const isHQAdmin = profile?.email && [
+    'lliamzelvin@gmail.com',
+    'ihenacho23@gmail.com', 
+    'ephraimloveworld1@gmail.com',
+    'takeshopstores@gmail.com'
+  ].includes(profile.email.toLowerCase())
+  
   // Check if user can see upgrade prompts (only Zone Leaders with ZNL prefix)
   const canShowUpgrade = canSeeUpgradePrompts(profile)
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature, isFreeTier } = useSubscription()
   
   // Use minimum loading time to prevent flashing empty states
+  // But add a maximum timeout to prevent infinite loading
   const shouldShowLoading = useMinimumLoadingTime(zoneLoading || !profile, 1000)
+  
+  // Debug logging for HQ groups
+  useEffect(() => {
+    if (currentZone) {
+      console.log('🏠 Home: Current zone loaded:', {
+        id: currentZone.id,
+        name: currentZone.name,
+        color: currentZone.themeColor,
+        isHQ: currentZone.themeColor === '#9333EA'
+      })
+    }
+    if (!zoneLoading && !currentZone && profile) {
+      console.log('⚠️ Home: No zone found for user:', profile.email)
+    }
+  }, [currentZone, zoneLoading, profile])
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)  
@@ -166,8 +191,16 @@ function HomePageContent() {
   ]
 
   const features = [
-    ...(isBoss ? bossFeatures : []), // Add Boss features first if Boss user
-    ...(!isBoss && isZoneCoordinator ? coordinatorFeatures : []), // Add Coordinator features ONLY if Zone Coordinator and NOT Boss
+    // Admin buttons - simple logic
+    ...(isBoss ? bossFeatures : []),
+    ...(isHQAdmin ? [{
+      icon: Shield,
+      title: 'HQ Admin',
+      href: '/admin',
+      badge: null,
+      premium: false,
+    }] : []),
+    ...(isZoneCoordinator && !isBoss && !isHQAdmin ? coordinatorFeatures : []),
     {
       icon: Calendar,
       title: 'Rehearsals',
@@ -236,13 +269,54 @@ function HomePageContent() {
 
  
 
-  // Show loading state while checking zone OR if profile is still loading
-  if (shouldShowLoading) {
+  // Add timeout to prevent infinite loading (max 10 seconds)
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
+  useEffect(() => {
+    if (shouldShowLoading) {
+      const timer = setTimeout(() => {
+        console.log('⏰ Loading timeout reached - forcing display')
+        setLoadingTimeout(true)
+      }, 10000) // 10 second max
+      return () => clearTimeout(timer)
+    }
+  }, [shouldShowLoading])
+
+  // Show loading state while checking zone OR if profile is still loading OR if zones are loading
+  if (shouldShowLoading && !loadingTimeout) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your zone...</p>
+      <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
+        {/* Skeleton Loading */}
+        <div className="h-full flex flex-col">
+          {/* Header Skeleton */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="flex-1 overflow-auto p-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Programs List */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -251,10 +325,49 @@ function HomePageContent() {
   // Check if in Boss zone
   const isBossZone = currentZone?.id === 'zone-boss'
   
+  // Show loading if still loading zones (prevent "No Zone" flash)
+  if (zoneLoading) {
+    return (
+      <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
+        {/* Skeleton Loading */}
+        <div className="h-full flex flex-col">
+          {/* Header Skeleton */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+          </div>
 
+          {/* Content Skeleton */}
+          <div className="flex-1 overflow-auto p-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Programs List */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   
-  // Show message if user has no zone (but wait for profile to load first)
-  if (!currentZone && profile) {
+  // Show message if user has no zone (ONLY after loading is complete)
+  if (!currentZone && profile && !zoneLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-6">
         <div className="max-w-md text-center">

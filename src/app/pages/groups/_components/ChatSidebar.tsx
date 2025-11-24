@@ -93,10 +93,10 @@ export default function ChatSidebar() {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="p-3 sm:p-4 border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <MessageCircle className="w-5 h-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Chats</span>
+          <span className="font-medium text-gray-900 text-base sm:text-lg">Chats</span>
           <span className="text-sm text-gray-500">({chats.length})</span>
         </div>
         
@@ -108,7 +108,7 @@ export default function ChatSidebar() {
             placeholder="Search chats..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
           />
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function ChatSidebar() {
               <button
                 key={chat.id}
                 onClick={() => setSelectedChat(chat)}
-                className={`w-full p-3 rounded-lg transition-all hover:bg-gray-50 ${
+                className={`w-full p-3 sm:p-3 rounded-lg transition-all hover:bg-gray-50 touch-target ${
                   selectedChat?.id === chat.id 
                     ? 'bg-green-50 border-l-4 border-green-500' 
                     : ''
