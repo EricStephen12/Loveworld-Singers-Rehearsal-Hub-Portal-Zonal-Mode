@@ -233,13 +233,13 @@ export function hasBossAccess(role: string | undefined, zoneId: string | undefin
 }
 
 // Check if user should bypass feature gates and subscription checks
-// HQ groups get free unlimited access without subscription requirements
+// HQ groups and India zone get free unlimited access without subscription requirements
 export function bypassesFeatureGates(zoneId: string | undefined): boolean {
-  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID
+  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID || zoneId === 'zone-013' // India zone gets premium access
 }
 
 // Check if zone requires subscription payment
-// HQ groups are free and don't need subscriptions
+// HQ groups and India zone are free and don't need subscriptions
 export function requiresSubscription(zoneId: string | undefined): boolean {
   return !bypassesFeatureGates(zoneId)
 }
