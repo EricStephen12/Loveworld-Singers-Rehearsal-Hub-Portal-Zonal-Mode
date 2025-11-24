@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhookSignature } from '@/lib/kingspay-service';
+import { verifyKingsPayWebhookSignature } from '@/lib/kingspay-service';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       ? process.env.NEXT_PUBLIC_KINGSPAY_PRODUCTION_SECRET_KEY || ''
       : process.env.NEXT_PUBLIC_KINGSPAY_TEST_SECRET_KEY || '';
       
-    if (signature && !verifyWebhookSignature(body, signature, secretKey)) {
+    if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
       console.error('❌ Invalid webhook signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }

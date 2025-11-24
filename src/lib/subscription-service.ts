@@ -4,7 +4,7 @@
  */
 
 import { FirebaseDatabaseService } from './firebase-database';
-import { initializeEspeesPayment, getPaymentUrl } from './kingspay-service';
+import { initializeKingsPayPayment, getKingsPayPaymentUrl } from './kingspay-service';
 import { calculateSubscriptionPrice, calculateIndividualPrice } from './subscription-pricing';
 
 export interface ZoneSubscription {
@@ -58,11 +58,13 @@ export async function initializeZoneSubscription(
     });
 
     // Initialize payment
-    const result = await initializeEspeesPayment({
+    const result = await initializeKingsPayPayment({
       amount: pricing.priceInKobe,
+      currency: 'ESP',
       description: `Premium Subscription - ${memberCount} members`,
-      merchantCallbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/callback`,
-      merchantWebhookUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhook`,
+      merchant_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/callback`,
+      merchant_webhook_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhook`,
+      payment_type: 'espees',
       metadata: {
         type: 'zone_subscription',
         zoneId,
@@ -90,7 +92,7 @@ export async function initializeZoneSubscription(
 
       return {
         success: true,
-        payment_url: getPaymentUrl(result.payment_id),
+        payment_url: getKingsPayPaymentUrl(result.payment_id),
       };
     } else {
       return {
@@ -126,11 +128,13 @@ export async function initializeIndividualSubscription(
     });
 
     // Initialize payment
-    const result = await initializeEspeesPayment({
+    const result = await initializeKingsPayPayment({
       amount: pricing.priceInKobe,
+      currency: 'ESP',
       description: 'Premium Subscription - Individual',
-      merchantCallbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/callback`,
-      merchantWebhookUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhook`,
+      merchant_callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription/callback`,
+      merchant_webhook_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhook`,
+      payment_type: 'espees',
       metadata: {
         type: 'individual_subscription',
         userId,
@@ -154,7 +158,7 @@ export async function initializeIndividualSubscription(
 
       return {
         success: true,
-        payment_url: getPaymentUrl(result.payment_id),
+        payment_url: getKingsPayPaymentUrl(result.payment_id),
       };
     } else {
       return {

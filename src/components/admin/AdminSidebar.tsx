@@ -16,6 +16,8 @@ import {
   X
 } from "lucide-react";
 import { useAdminTheme } from './AdminThemeProvider';
+import { useZone } from '@/contexts/ZoneContext';
+import { isHQGroup } from '@/config/zones';
 
 interface AdminSidebarProps {
   sidebarCollapsed: boolean;
@@ -32,8 +34,12 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const router = useRouter();
   const { theme } = useAdminTheme();
+  const { currentZone } = useZone();
   
-  const sidebarItems = [
+  // Check if current zone is HQ
+  const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
+  
+  const allSidebarItems = [
     { icon: BarChart3, label: 'Dashboard', active: activeSection === 'Dashboard' },
     { icon: FileText, label: 'Pages', active: activeSection === 'Pages' },
     { icon: Tag, label: 'Categories', active: activeSection === 'Categories' },
@@ -41,9 +47,12 @@ export default function AdminSidebar({
     { icon: Upload, label: 'Submitted Songs', active: activeSection === 'Submitted Songs' },
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
-    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', isLink: true, href: '/admin/media' },
+    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', isLink: true, href: '/admin/media', hqOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
   ];
+  
+  // Filter sidebar items based on HQ status
+  const sidebarItems = allSidebarItems.filter(item => !item.hqOnly || isHQ);
 
   return (
     <>

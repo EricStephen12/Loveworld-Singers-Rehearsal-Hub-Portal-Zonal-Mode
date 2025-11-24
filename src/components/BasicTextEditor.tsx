@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Languages } from 'lucide-react';
+import { translationService } from '@/lib/translation-service';
 
 interface BasicTextEditorProps {
   value: string;
@@ -21,6 +22,12 @@ export default function BasicTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Translation state
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [originalContent, setOriginalContent] = useState('');
 
   useEffect(() => {
     setIsMounted(true);
@@ -38,6 +45,46 @@ export default function BasicTextEditor({
     if (editorRef.current) {
       const content = editorRef.current.innerHTML;
       onChange(content);
+    }
+  };
+
+  // Handle translation
+  const handleTranslate = async (langCode: string) => {
+    if (!editorRef.current) return;
+    
+    const currentContent = editorRef.current.innerHTML;
+    if (!currentContent || currentContent.trim() === '') return;
+    
+    setSelectedLanguage(langCode);
+    setShowLanguageMenu(false);
+    
+    // If switching back to English, restore original content
+    if (langCode === 'en') {
+      if (originalContent) {
+        editorRef.current.innerHTML = originalContent;
+        onChange(originalContent);
+        setOriginalContent('');
+      }
+      return;
+    }
+
+    // Save original content before translating
+    if (!originalContent) {
+      setOriginalContent(currentContent);
+    }
+
+    setIsTranslating(true);
+    try {
+      const translated = await translationService.translateLyrics(currentContent, langCode);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = translated;
+        onChange(translated);
+      }
+    } catch (error) {
+      console.error('Translation failed:', error);
+      alert('Translation failed. Please try again.');
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -188,26 +235,6 @@ export default function BasicTextEditor({
     );
   }
 
-  const handleTranslate = async () => {
-    if (!editorRef.current) return;
-    
-    const textContent = editorRef.current.innerText || editorRef.current.textContent || '';
-    if (!textContent.trim()) {
-      alert('Please enter some text to translate');
-      return;
-    }
-
-    try {
-      // Use Google Translate URL scheme to open in new tab
-      const encodedText = encodeURIComponent(textContent);
-      const translateUrl = `https://translate.google.com/?sl=auto&tl=en&text=${encodedText}&op=translate`;
-      window.open(translateUrl, '_blank');
-    } catch (error) {
-      console.error('Translation error:', error);
-      alert('Failed to open translator. Please try again.');
-    }
-  };
-
   return (
     <div className={`border border-gray-300 rounded-lg ${className}`}>
       {/* Toolbar */}
@@ -229,15 +256,41 @@ export default function BasicTextEditor({
           I
         </button>
         <div className="flex-1"></div>
-        <button
-          type="button"
-          onClick={handleTranslate}
-          className="flex items-center gap-1 px-3 py-1 rounded hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors"
-          title="Translate text"
-        >
-          <Languages className="w-4 h-4" />
-          <span>Translate</span>
-        </button>
+        
+        {/* Translation Button with Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+            className="flex items-center gap-2 px-3 py-1 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors text-sm font-medium"
+            disabled={isTranslating}
+            title="Translate text"
+          >
+            <Languages className="w-4 h-4" />
+            <span className="text-xs">
+              {isTranslating ? 'Translating...' : translationService.LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+            </span>
+          </button>
+
+          {/* Language Menu Dropdown */}
+          {showLanguageMenu && (
+            <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 max-h-80 overflow-y-auto z-20">
+              {translationService.LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => handleTranslate(lang.code)}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-purple-50 transition-colors flex items-center gap-2 ${
+                    selectedLanguage === lang.code ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span>{lang.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Editor */}

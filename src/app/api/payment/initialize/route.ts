@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeEspeesPayment, getPaymentUrl } from '@/lib/kingspay-service';
+import { initializeKingsPayPayment, getKingsPayPaymentUrl } from '@/lib/kingspay-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     
     // Initialize payment
-    const result = await initializeEspeesPayment({
+    const result = await initializeKingsPayPayment({
       amount,
+      currency: 'ESP',
       description,
-      merchantCallbackUrl: `${baseUrl}/api/payment/callback`,
-      merchantWebhookUrl: `${baseUrl}/api/payment/webhook`,
+      merchant_callback_url: `${baseUrl}/api/payment/callback`,
+      merchant_webhook_url: `${baseUrl}/api/payment/webhook`,
+      payment_type: 'espees',
       metadata,
       email,
     });
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         payment_id: result.payment_id,
-        payment_url: getPaymentUrl(result.payment_id),
+        payment_url: getKingsPayPaymentUrl(result.payment_id),
       });
     } else {
       return NextResponse.json(

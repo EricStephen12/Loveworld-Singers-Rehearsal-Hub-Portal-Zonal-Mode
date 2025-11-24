@@ -31,6 +31,34 @@ function PraiseNightPageContent() {
   const categoryFilter = searchParams.get('category');
   const pageParam = searchParams.get('page');
   const songParam = searchParams.get('song');
+  
+  // Get zone color for theming
+  const zoneColor = currentZone?.themeColor || '#9333EA';
+  
+  // Helper function to get color classes based on zone color
+  const getZoneColorClasses = (variant: 'solid' | 'light' | 'ring' | 'text' | 'hover' = 'solid') => {
+    const colorMap: Record<string, Record<string, string>> = {
+      '#10B981': { solid: 'bg-emerald-600', light: 'bg-emerald-100 text-emerald-700', ring: 'ring-emerald-400', text: 'text-emerald-600', hover: 'hover:bg-emerald-700' },
+      '#3B82F6': { solid: 'bg-blue-600', light: 'bg-blue-100 text-blue-700', ring: 'ring-blue-400', text: 'text-blue-600', hover: 'hover:bg-blue-700' },
+      '#F59E0B': { solid: 'bg-amber-600', light: 'bg-amber-100 text-amber-700', ring: 'ring-amber-400', text: 'text-amber-600', hover: 'hover:bg-amber-700' },
+      '#EF4444': { solid: 'bg-red-600', light: 'bg-red-100 text-red-700', ring: 'ring-red-400', text: 'text-red-600', hover: 'hover:bg-red-700' },
+      '#8B5CF6': { solid: 'bg-violet-600', light: 'bg-violet-100 text-violet-700', ring: 'ring-violet-400', text: 'text-violet-600', hover: 'hover:bg-violet-700' },
+      '#EC4899': { solid: 'bg-pink-600', light: 'bg-pink-100 text-pink-700', ring: 'ring-pink-400', text: 'text-pink-600', hover: 'hover:bg-pink-700' },
+      '#14B8A6': { solid: 'bg-teal-600', light: 'bg-teal-100 text-teal-700', ring: 'ring-teal-400', text: 'text-teal-600', hover: 'hover:bg-teal-700' },
+      '#6366F1': { solid: 'bg-indigo-600', light: 'bg-indigo-100 text-indigo-700', ring: 'ring-indigo-400', text: 'text-indigo-600', hover: 'hover:bg-indigo-700' },
+      '#F97316': { solid: 'bg-orange-600', light: 'bg-orange-100 text-orange-700', ring: 'ring-orange-400', text: 'text-orange-600', hover: 'hover:bg-orange-700' },
+      '#84CC16': { solid: 'bg-lime-600', light: 'bg-lime-100 text-lime-700', ring: 'ring-lime-400', text: 'text-lime-600', hover: 'hover:bg-lime-700' },
+      '#06B6D4': { solid: 'bg-cyan-600', light: 'bg-cyan-100 text-cyan-700', ring: 'ring-cyan-400', text: 'text-cyan-600', hover: 'hover:bg-cyan-700' },
+      '#A855F7': { solid: 'bg-purple-600', light: 'bg-purple-100 text-purple-700', ring: 'ring-purple-400', text: 'text-purple-600', hover: 'hover:bg-purple-700' },
+      '#22D3EE': { solid: 'bg-sky-600', light: 'bg-sky-100 text-sky-700', ring: 'ring-sky-400', text: 'text-sky-600', hover: 'hover:bg-sky-700' },
+      '#FB923C': { solid: 'bg-orange-500', light: 'bg-orange-100 text-orange-700', ring: 'ring-orange-400', text: 'text-orange-600', hover: 'hover:bg-orange-600' },
+      '#DC2626': { solid: 'bg-red-700', light: 'bg-red-100 text-red-800', ring: 'ring-red-500', text: 'text-red-700', hover: 'hover:bg-red-800' },
+      '#059669': { solid: 'bg-emerald-700', light: 'bg-emerald-100 text-emerald-800', ring: 'ring-emerald-500', text: 'text-emerald-700', hover: 'hover:bg-emerald-800' },
+      '#7C3AED': { solid: 'bg-violet-700', light: 'bg-violet-100 text-violet-800', ring: 'ring-violet-500', text: 'text-violet-700', hover: 'hover:bg-violet-800' },
+      '#9333EA': { solid: 'bg-purple-600', light: 'bg-purple-100 text-purple-700', ring: 'ring-purple-400', text: 'text-purple-600', hover: 'hover:bg-purple-700' },
+    };
+    return colorMap[zoneColor]?.[variant] || colorMap['#9333EA'][variant];
+  };
 
   // Use real-time zone-aware data for instant updates
   const { pages: allPraiseNights, loading, error, getCurrentPage, getCurrentSongs, refreshData } = useRealtimeData(currentZone?.id);
@@ -93,7 +121,8 @@ function PraiseNightPageContent() {
       try {
         console.log('🌍 Loading page categories for zone:', currentZone.id);
         const { FirebaseDatabaseService } = await import('@/lib/firebase-database');
-        const categories = await ZoneDatabaseService.getPageCategoriesByZone(currentZone.id);
+        // Use getPageCategories which handles both HQ (unfiltered) and zone (filtered) cases
+        const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
         console.log('📂 Loaded page categories:', categories);
         setPageCategories(categories);
       } catch (error) {
@@ -1085,14 +1114,16 @@ function PraiseNightPageContent() {
 
               {/* Right Section - Search Button and Logo */}
               <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => setIsSearchOpen((v) => !v)}
-                  aria-label="Toggle search"
-                  className="p-2.5 rounded-full transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 active:scale-95 hover:bg-gray-100/70 active:bg-gray-200/90 touch-optimized"
-                  style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                >
-                  <Search className="w-5 h-5 text-gray-600 transition-all duration-200" />
-                </button>
+                {categoryFilter !== 'archive' && (
+                  <button
+                    onClick={() => setIsSearchOpen((v) => !v)}
+                    aria-label="Toggle search"
+                    className="p-2.5 rounded-full transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 active:scale-95 hover:bg-gray-100/70 active:bg-gray-200/90 touch-optimized"
+                    style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                  >
+                    <Search className="w-5 h-5 text-gray-600 transition-all duration-200" />
+                  </button>
+                )}
                 <div className="flex items-center">
                   <div className="relative">
                     <img
@@ -1350,8 +1381,8 @@ function PraiseNightPageContent() {
               </div>
             )}
             
-            {/* Show page categories if in archive and no category selected */}
-            {!loadingPageCategories && categoryFilter === 'archive' && !selectedPageCategory && pageCategories.length > 0 && (
+            {/* Show page categories if in archive and no category selected AND categories exist */}
+            {!loadingPageCategories && categoryFilter === 'archive' && !selectedPageCategory && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-900">Browse by Category</h3>
@@ -1428,8 +1459,8 @@ function PraiseNightPageContent() {
               </div>
             )}
             
-            {/* Show pages only if category is selected (NOT when no categories - wait for them to load) */}
-            {!loading && !loadingPageCategories && selectedPageCategory && filteredPraiseNights.length > 0 ? (
+            {/* Show pages if: 1) category is selected, OR 2) no page categories exist (show all archived pages) */}
+            {!loading && !loadingPageCategories && (selectedPageCategory || pageCategories.length === 0) && filteredPraiseNights.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {filteredPraiseNights.map((praiseNight) => (
                   <button

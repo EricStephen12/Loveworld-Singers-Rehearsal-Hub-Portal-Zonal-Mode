@@ -41,6 +41,8 @@ interface Member {
   is_active?: boolean;
   groups?: string[];
   role?: string;
+  zoneId?: string;
+  zoneName?: string;
 }
 
 export default function Members() {
@@ -51,7 +53,24 @@ export default function Members() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterZone, setFilterZone] = useState<string>('current'); // 'current', 'all', or specific zone ID
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [allZones, setAllZones] = useState<any[]>([]);
+
+  // Load all zones for HQ admin filter
+  useEffect(() => {
+    const loadZones = async () => {
+      if (currentZone && isHQGroup(currentZone.id)) {
+        try {
+          const { ZONES } = await import('@/config/zones');
+          setAllZones(ZONES);
+        } catch (error) {
+          console.error('Error loading zones:', error);
+        }
+      }
+    };
+    loadZones();
+  }, [currentZone]);
 
   // Load members from correct collection based on zone type
   const loadMembers = async () => {
@@ -62,14 +81,35 @@ export default function Members() {
 
     setLoading(true);
     try {
-      console.log('🔄 Loading members for zone:', currentZone.id, currentZone.name);
+      console.log('🔄 Loading members for zone:', currentZone.id, currentZone.name, 'Filter:', filterZone);
       
       let zoneMemberships: any[] = [];
       
       // Check if HQ group or regular zone
       if (isHQGroup(currentZone.id)) {
-        console.log('🏢 Loading HQ members from hq_members collection');
-        zoneMemberships = await HQMembersService.getHQGroupMembers(currentZone.id);
+        if (filterZone === 'all') {
+          // Load ALL zone members from all zones
+          console.log('🌍 Loading ALL zone members from zone_members collection');
+          const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members');
+          zoneMemberships = allZoneMembers.map((member: any) => ({
+            ...member,
+            zoneId: member.zoneId,
+            zoneName: allZones.find(z => z.id === member.zoneId)?.name || member.zoneId
+          }));
+        } else if (filterZone === 'current') {
+          // Load only HQ members
+          console.log('🏢 Loading HQ members from hq_members collection');
+          zoneMemberships = await HQMembersService.getHQGroupMembers(currentZone.id);
+        } else {
+          // Load specific zone members
+          console.log('📍 Loading specific zone members:', filterZone);
+          zoneMemberships = await ZoneInvitationService.getZoneMembers(filterZone);
+          zoneMemberships = zoneMemberships.map((member: any) => ({
+            ...member,
+            zoneId: filterZone,
+            zoneName: allZones.find(z => z.id === filterZone)?.name || filterZone
+          }));
+        }
       } else {
         console.log('📍 Loading zone members from zone_members collection');
         zoneMemberships = await ZoneInvitationService.getZoneMembers(currentZone.id);
@@ -95,7 +135,9 @@ export default function Members() {
             updated_at: profile?.updated_at || new Date().toISOString(),
             is_active: membership.status === 'active',
             groups: profile?.groups || [],
-            role: membership.role || 'member'
+            role: membership.role || 'member',
+            zoneId: membership.zoneId,
+            zoneName: membership.zoneName
           };
         })
       );
@@ -109,12 +151,12 @@ export default function Members() {
     }
   };
 
-  // Load members when zone changes
+  // Load members when zone or filter changes
   useEffect(() => {
     if (currentZone) {
       loadMembers();
     }
-  }, [currentZone]);
+  }, [currentZone, filterZone]);
 
   // Filter members based on search and filters
   const filteredMembers = members.filter(member => {
@@ -212,11 +254,30 @@ export default function Members() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Zone Filter - Only for HQ Admins */}
+          {currentZone && isHQGroup(currentZone.id) && (
+            <select
+              value={filterZone}
+              onChange={(e) => setFilterZone(e.target.value)}
+              className="flex-1 min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-purple-50 font-medium"
+            >
+              <option value="current">🏢 HQ Members Only</option>
+              <option value="all">🌍 All Zone Members</option>
+              <optgroup label="Specific Zones">
+                {allZones.filter(z => !isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
+                  <option key={zone.id} value={zone.id}>
+                    {zone.name}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          )}
+          
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="all">All Roles</option>
             {uniqueRoles.map(role => (
@@ -228,7 +289,7 @@ export default function Members() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -464,6 +525,11 @@ export default function Members() {
                           {member.first_name} {member.last_name}
                         </h3>
                         <p className="text-xs text-slate-600 truncate">{member.email}</p>
+                        {member.zoneName && filterZone === 'all' && (
+                          <p className="text-xs text-purple-600 font-medium mt-0.5 truncate">
+                            📍 {member.zoneName}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

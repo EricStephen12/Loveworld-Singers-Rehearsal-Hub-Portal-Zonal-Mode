@@ -65,8 +65,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     tier: 'premium',
     name: 'Premium',
     price: {
-      monthly: 5000,   // ₦5,000 per month
-      yearly: 50000    // ₦50,000 per year (2 months free)
+      monthly: 100,   // 1 Espee (100 KOBE) per month
+      yearly: 1200    // 12 Espees (1200 KOBE) per year
     },
     features: {
       maxMembers: -1, // -1 means unlimited members
@@ -81,20 +81,28 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   }
 };
 
+// KingsPay Goods & Services Configuration
+export const KINGSPAY_CONFIG = {
+  apiUrl: 'https://api.kingspay-gs.com/api/payment',
+  paymentUrl: 'https://kingspay-gs.com/payment',
+  currency: 'ESP', // Espees
+  paymentType: 'espees',
+  merchantName: 'LoveWorld Singers Rehearsal Hub'
+};
+
 // Espees Payment Configuration
 export const ESPEES_CONFIG = {
   code: 'LWSRHP',
   name: 'Espees',
   description: 'LoveWorld Singers Rehearsal Hub Payment',
+  currency: 'ESP',
+  symbol: 'E',
   instructions: [
-    'Open your Espees app or visit Espees website',
-    'Select "Send Money" or "Transfer"',
-    'Enter Espees Code: LWSRHP',
-    'Enter the exact amount shown above',
-    'Add reference: Your Zone Name',
-    'Complete the payment',
-    'Take a screenshot of the successful transaction',
-    'Upload the screenshot below'
+    'Click "Pay with KingsPay" button below',
+    'You will be redirected to KingsPay Goods & Services',
+    'Complete the payment using your Espees account',
+    'You will be redirected back after payment',
+    'Your subscription will be activated automatically'
   ]
 };
 
@@ -114,9 +122,10 @@ export function displayMemberLimit(tier: SubscriptionTier): string {
   return limit === -1 ? 'Unlimited' : limit.toString();
 }
 
-// Helper function to format price in Naira
+// Helper function to format price in Espees
 export function formatPrice(amount: number): string {
-  return `₦${amount.toLocaleString()}`;
+  const espees = amount / 100; // Convert KOBE to Espees
+  return `${espees.toFixed(espees % 1 === 0 ? 0 : 2)} ${ESPEES_CONFIG.symbol}`;
 }
 
 // Helper function to calculate savings for yearly plan
@@ -124,6 +133,11 @@ export function calculateYearlySavings(): number {
   const monthlyTotal = SUBSCRIPTION_PLANS.premium.price.monthly * 12;
   const yearlyPrice = SUBSCRIPTION_PLANS.premium.price.yearly;
   return monthlyTotal - yearlyPrice;
+}
+
+// Helper function to format Espees amount for display
+export function formatEspeesAmount(kobeAmount: number): string {
+  return `${(kobeAmount / 100).toFixed(2)} ${ESPEES_CONFIG.symbol}`;
 }
 
 // Helper function to check if feature is available

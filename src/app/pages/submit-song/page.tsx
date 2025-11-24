@@ -26,6 +26,31 @@ export default function SubmitSongPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   
+  // Generate focus ring color based on zone color
+  const getFocusClasses = () => {
+    const colorMap: Record<string, string> = {
+      '#10B981': 'focus:outline-emerald-600 focus:ring-emerald-600',
+      '#3B82F6': 'focus:outline-blue-600 focus:ring-blue-600',
+      '#F59E0B': 'focus:outline-amber-600 focus:ring-amber-600',
+      '#EF4444': 'focus:outline-red-600 focus:ring-red-600',
+      '#8B5CF6': 'focus:outline-violet-600 focus:ring-violet-600',
+      '#EC4899': 'focus:outline-pink-600 focus:ring-pink-600',
+      '#14B8A6': 'focus:outline-teal-600 focus:ring-teal-600',
+      '#6366F1': 'focus:outline-indigo-600 focus:ring-indigo-600',
+      '#F97316': 'focus:outline-orange-600 focus:ring-orange-600',
+      '#84CC16': 'focus:outline-lime-600 focus:ring-lime-600',
+      '#06B6D4': 'focus:outline-cyan-600 focus:ring-cyan-600',
+      '#A855F7': 'focus:outline-purple-600 focus:ring-purple-600',
+      '#22D3EE': 'focus:outline-sky-600 focus:ring-sky-600',
+      '#FB923C': 'focus:outline-orange-500 focus:ring-orange-500',
+      '#DC2626': 'focus:outline-red-700 focus:ring-red-700',
+      '#059669': 'focus:outline-emerald-700 focus:ring-emerald-700',
+      '#7C3AED': 'focus:outline-violet-700 focus:ring-violet-700',
+      '#9333EA': 'focus:outline-purple-600 focus:ring-purple-600',
+    }
+    return colorMap[zoneColor] || 'focus:outline-purple-600 focus:ring-purple-600'
+  }
+  
   const getUserName = () => {
     if (!profile) return ''
     const parts = [profile.first_name, profile.middle_name, profile.last_name].filter(Boolean)
@@ -166,7 +191,7 @@ export default function SubmitSongPage() {
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Enter the title of the song"
-                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
                 required
               />
             </div>
@@ -179,7 +204,7 @@ export default function SubmitSongPage() {
                 value={formData.writer}
                 onChange={(e) => handleInputChange('writer', e.target.value)}
                 placeholder="Enter writer's name"
-                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -191,7 +216,7 @@ export default function SubmitSongPage() {
                 value={formData.leadSinger}
                 onChange={(e) => handleInputChange('leadSinger', e.target.value)}
                 placeholder="Enter lead singer's name"
-                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -205,7 +230,7 @@ export default function SubmitSongPage() {
                 onChange={(e) => handleInputChange('lyrics', e.target.value)}
                 placeholder="Enter the song lyrics..."
                 rows={10}
-                className="flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white min-h-[200px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white min-h-[200px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
                 required
               />
             </div>
@@ -218,7 +243,7 @@ export default function SubmitSongPage() {
                 value={formData.key}
                 onChange={(e) => handleInputChange('key', e.target.value)}
                 placeholder="e.g., C Major, D Minor"
-                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -230,7 +255,7 @@ export default function SubmitSongPage() {
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Any other details or instructions..."
                 rows={6}
-                className="flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:outline-purple-600 focus:ring-2 focus:ring-purple-600 border-2 border-gray-300 bg-white min-h-[120px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm"
+                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white min-h-[120px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
           </form>

@@ -847,37 +847,64 @@ function AuthPageContent() {
                   
                   {/* KingsChat ID Field with Fetch Button */}
                   <div className="relative">
-                    <input
-                      type="text"
-                      name="kingschatId"
-                      placeholder="KingsChat ID (Required)"
-                      value={formData.kingschatId}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm pr-24"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={handleFetchKingsChatId}
-                      disabled={isFetchingKingsChat}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                    >
-                      {isFetchingKingsChat ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>Fetch</span>
-                        </>
-                      ) : (
-                        <>
-                          <img 
-                            src="/kingschat.jpeg" 
-                            alt="KC" 
-                            className="w-3 h-3 rounded-full object-cover"
-                          />
-                          <span>Fetch</span>
-                        </>
-                      )}
-                    </button>
+                    {formData.kingschatId ? (
+                      // Show verified badge when KingsChat ID is fetched
+                      <div className="w-full px-4 py-4 bg-green-50 border-2 border-green-500 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-green-800 font-semibold text-sm">KingsChat Verified</p>
+                            <p className="text-green-600 text-xs">Your account is linked</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, kingschatId: '' }))}
+                          className="text-green-700 hover:text-green-900 text-xs underline"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          name="kingschatId"
+                          placeholder="KingsChat ID (Required)"
+                          value={formData.kingschatId}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm pr-24"
+                          required
+                          readOnly
+                        />
+                        <button
+                          type="button"
+                          onClick={handleFetchKingsChatId}
+                          disabled={isFetchingKingsChat}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {isFetchingKingsChat ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Fetch</span>
+                            </>
+                          ) : (
+                            <>
+                              <img 
+                                src="/kingschat.jpeg" 
+                                alt="KC" 
+                                className="w-3 h-3 rounded-full object-cover"
+                              />
+                              <span>Fetch</span>
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </>
               )}

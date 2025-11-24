@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPaymentStatus } from '@/lib/kingspay-service';
+import { getKingsPayPaymentStatus } from '@/lib/kingspay-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get payment status
-    const status = await getPaymentStatus(paymentId);
+    const status = await getKingsPayPaymentStatus(paymentId);
 
     if (!status) {
       return NextResponse.redirect(new URL('/subscription?error=status_check_failed', request.url));

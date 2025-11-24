@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Send, Trash2, MessageSquare, X } from 'lucide-react';
 import { sendMessageToAllUsers, getAllMessages, deleteMessage, AdminMessage } from '@/lib/simple-notifications-service';
 import { useAuth } from '@/contexts/AuthContext';
+import { useZone } from '@/contexts/ZoneContext';
 import { useAdminTheme } from './AdminThemeProvider';
 
 export default function SimpleNotificationsSection() {
   const { user } = useAuth();
+  const { currentZone } = useZone();
   const { theme } = useAdminTheme();
   const [messages, setMessages] = useState<AdminMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,14 +18,16 @@ export default function SimpleNotificationsSection() {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Load messages
+  // Load messages when zone changes
   useEffect(() => {
-    loadMessages();
-  }, []);
+    if (currentZone) {
+      loadMessages();
+    }
+  }, [currentZone]);
 
   const loadMessages = async () => {
     setLoading(true);
-    const msgs = await getAllMessages();
+    const msgs = await getAllMessages(currentZone?.id);
     setMessages(msgs);
     setLoading(false);
   };
@@ -45,11 +49,12 @@ export default function SimpleNotificationsSection() {
       const result = await sendMessageToAllUsers(
         title,
         message,
-        user.displayName || user.email || 'Admin'
+        user.displayName || user.email || 'Admin',
+        currentZone?.id
       );
 
       if (result.success) {
-        alert('✅ Message sent to all users!');
+        alert('✅ Message sent to all users in your zone!');
         setTitle('');
         setMessage('');
         setShowModal(false);
@@ -70,7 +75,7 @@ export default function SimpleNotificationsSection() {
       return;
     }
 
-    const result = await deleteMessage(messageId);
+    const result = await deleteMessage(messageId, currentZone?.id);
 
     if (result.success) {
       alert('✅ Message deleted!');

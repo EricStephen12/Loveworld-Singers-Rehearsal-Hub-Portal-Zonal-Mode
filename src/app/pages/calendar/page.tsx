@@ -168,8 +168,47 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <CalendarStyles />
+      
+      {/* Coming Soon Overlay */}
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+          <div 
+            className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
+          >
+            <CalendarIcon className="w-10 h-10 text-white" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            Ministry Calendar
+          </h2>
+          
+          <p className="text-gray-600 mb-6">
+            We're working on something amazing! The ministry calendar feature is currently under development and will be available soon.
+          </p>
+          
+          <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <p className="text-sm text-gray-700 font-medium mb-2">Coming Features:</p>
+            <ul className="text-sm text-gray-600 space-y-1 text-left">
+              <li>• Schedule rehearsals and events</li>
+              <li>• Sync with your zone's activities</li>
+              <li>• Get reminders and notifications</li>
+              <li>• View ministry-wide calendar</li>
+            </ul>
+          </div>
+          
+          <button
+            onClick={() => window.history.back()}
+            className="w-full py-3 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

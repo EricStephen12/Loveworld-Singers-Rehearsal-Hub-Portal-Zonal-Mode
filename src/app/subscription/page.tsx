@@ -13,11 +13,12 @@ export default function SubscriptionPage() {
   const { currentZone } = useZone()
   
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState('')
   const [step, setStep] = useState<'plans' | 'payment' | 'upload' | 'success'>('plans')
+  const [copied, setCopied] = useState(false)
   const [proofImage, setProofImage] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -25,41 +26,92 @@ export default function SubscriptionPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('Image size must be less than 5MB')
-        return
-      }
       setProofImage(file)
       setError('')
     }
   }
 
   const handleSubmitProof = async () => {
-    if (!user || !profile || !currentZone || !proofImage) {
-      setError('Please select an image to upload')
-      return
-    }
+    if (!proofImage || !user || !currentZone) return
 
     setIsUploading(true)
     setError('')
 
     try {
-      // For now, just simulate success
-      // In real implementation, you would upload to Firebase Storage
-      // and save payment request to database
-      
-      setTimeout(() => {
+      // Upload proof image to Cloudinary or your storage
+      const formData = new FormData()
+      formData.append('file', proofImage)
+      formData.append('zoneId', currentZone.id)
+      formData.append('userId', user.uid)
+      formData.append('plan', selectedPlan)
+      formData.append('amount', SUBSCRIPTION_PLANS.premium.price[selectedPlan].toString())
+
+      const response = await fetch('/api/subscription/submit-proof', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
         setStep('success')
-        setIsUploading(false)
-      }, 2000)
-      
+      } else {
+        setError(data.error || 'Failed to submit proof')
+      }
     } catch (err) {
       console.error('Upload error:', err)
-      setError('An error occurred. Please try again.')
+      setError('Failed to upload proof. Please try again.')
+    } finally {
       setIsUploading(false)
+    }
+  }
+
+  const handlePayWithKingsPay = async () => {
+    if (!user || !currentZone) {
+      setError('Please sign in to continue')
+      return
+    }
+
+    setIsProcessing(true)
+    setError('')
+
+    try {
+      const amount = SUBSCRIPTION_PLANS.premium.price[selectedPlan]
+      
+      // Initialize payment with KingsPay
+      const response = await fetch('/api/kingspay/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount,
+          description: `LWSRH Premium ${selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'} Subscription`,
+          zoneId: currentZone.id,
+          zoneName: currentZone.name,
+          userId: user.uid,
+          userEmail: user.email,
+          duration: selectedPlan
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.payment_id) {
+        // Redirect to KingsPay payment page
+        const paymentUrl = `https://kingspay-gs.com/payment?id=${data.payment_id}`
+        window.location.href = paymentUrl
+      } else {
+        setError(data.error || 'Failed to initialize payment')
+        setIsProcessing(false)
+      }
+    } catch (err) {
+      console.error('Payment error:', err)
+      setError('An error occurred. Please try again.')
+      setIsProcessing(false)
     }
   }
 

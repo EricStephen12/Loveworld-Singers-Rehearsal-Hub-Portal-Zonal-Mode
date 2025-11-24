@@ -217,7 +217,7 @@ function HomePageContent() {
     },
     {
       icon: Bell,
-      title: 'Push Notifications',
+      title: 'Notifications',
       href: '/pages/notifications',
       badge: true,
       premium: false,
