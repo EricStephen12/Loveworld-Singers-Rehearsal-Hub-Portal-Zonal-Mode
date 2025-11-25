@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useMedia } from '../../_context/MediaContext'
 import { ArrowLeft, Heart, Share2, Download } from 'lucide-react'
 import { firebaseMediaService, MediaItem } from '../../_lib'
+import { convertToYouTubeEmbed, isYouTubeUrl } from '@/utils/youtube'
 
 export default function PlayerPage() {
   const router = useRouter()
@@ -52,6 +53,9 @@ export default function PlayerPage() {
       saveWatchProgress(mediaId, currentProgress)
     }
   }
+
+  const isYouTubeVideo = media?.isYouTube || (media?.videoUrl && isYouTubeUrl(media.videoUrl))
+  const embedUrl = isYouTubeVideo && media?.videoUrl ? convertToYouTubeEmbed(media.videoUrl) : null
 
   const handleToggleFavorite = async () => {
     if (isFavorited) {
@@ -133,15 +137,25 @@ export default function PlayerPage() {
 
       {/* Video Player */}
       <div className="relative w-full h-screen">
-        <video
-          src={media.videoUrl}
-          poster={media.backdropImage || media.thumbnail}
-          controls
-          autoPlay
-          className="w-full h-full object-contain bg-black"
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={() => saveWatchProgress(mediaId, 100)}
-        />
+        {isYouTubeVideo && embedUrl ? (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={media.title}
+          />
+        ) : (
+          <video
+            src={media.videoUrl}
+            poster={media.backdropImage || media.thumbnail}
+            controls
+            autoPlay
+            className="w-full h-full object-contain bg-black"
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => saveWatchProgress(mediaId, 100)}
+          />
+        )}
       </div>
 
       {/* Media Info */}

@@ -40,46 +40,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.uid])
 
   const signOut = useCallback(async () => {
-    console.log('🚪 Signing out...')
-    
+    // Set logout flag to prevent auth listener from re-authenticating
     setIsLoggingOut(true)
     
-    // Clear all state immediately
-    setUser(null)
-    setProfile(null)
-    
-    // Check if user is authenticated with KingsChat
-    const authProvider = typeof window !== 'undefined' ? localStorage.getItem('authProvider') : null
-    
-    // Clear KingsChat tokens if authenticated with KingsChat
-    if (authProvider === 'kingschat') {
-      KingsChatAuthService.clearTokens()
-      console.log('✅ KingsChat tokens cleared')
-    }
-    
-    // Clear storage
     try {
-      localStorage.clear()
-      sessionStorage.clear()
-    } catch (e) {
-      console.log('Storage clear error:', e)
-    }
-    
-    // Firebase logout
-    try {
-      const result = await FirebaseAuthService.signOut()
-      if ((result as any).success) {
-        console.log('✅ Firebase logout successful')
+      // Clear state
+      setUser(null)
+      setProfile(null)
+      
+      // Firebase logout
+      await FirebaseAuthService.signOut()
+      
+      // Clear storage and ALL auth flags
+      if (typeof window !== 'undefined') {
+        // Clear specific auth flags first (in case localStorage.clear() fails)
+        localStorage.removeItem('userAuthenticated')
+        localStorage.removeItem('bypassLogin')
+        localStorage.removeItem('hasCompletedProfile')
+        localStorage.removeItem('lastAuthTime')
+        localStorage.removeItem('specialUser')
+        localStorage.removeItem('userRole')
+        localStorage.removeItem('authProvider')
+        
+        // Then clear everything
+        localStorage.clear()
+        sessionStorage.clear()
       }
+      
     } catch (error) {
-      console.log('Firebase logout error:', error)
+      console.error('Logout error:', error)
     }
     
-    // Redirect to auth page
-    setTimeout(() => {
-      console.log('🚪 Redirecting to auth...')
-      window.location.replace('/auth')
-    }, 100)
+    // Redirect
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth'
+    }
   }, [])
 
   // Main auth state listener using Firebase's onAuthStateChanged
@@ -102,55 +97,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Use Firebase's built-in auth state listener for proper persistence
         unsubscribe = FirebaseAuthService.onAuthStateChange((currentUser) => {
-          if (!isMounted) return
+          if (!isMounted || isLoggingOut) return
 
           const currentUserId = currentUser?.uid || null
           
-          // Only process if user actually changed
+          // Prevent double processing
           if (currentUserId === lastUserId && hasInitialized) {
-            // User hasn't changed and we've already initialized, skip
             return
           }
           
-          if (currentUserId !== lastUserId) {
-            console.log('🔄 Auth state changed:', currentUser ? currentUser.email : 'No user')
-            lastUserId = currentUserId
-          }
+          lastUserId = currentUserId
           
-          if (currentUser) {
-            if (!hasInitialized) {
-              console.log('✅ User is authenticated:', currentUser.email)
-            }
+          if (currentUser && !isLoggingOut) {
             setUser(currentUser)
 
-            // Load user profile only if we don't have it or user changed
-            if (!profile || profile.id !== currentUser.uid) {
-              FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
-                .then((userProfile) => {
-                  if (userProfile && isMounted) {
-                    setProfile(userProfile as any)
-                    if (!hasInitialized) {
-                      console.log('✅ Profile loaded successfully')
-                    }
-                  }
-                })
-                .catch((error) => {
-                  console.error('❌ Error loading profile:', error)
-                })
-            }
+            // Load user profile
+            FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
+              .then((userProfile) => {
+                if (userProfile && isMounted && !isLoggingOut) {
+                  setProfile(userProfile as any)
+                }
+              })
+              .catch(() => {
+                // Silent error handling
+              })
           } else {
-            if (user) {
-              console.log('❌ User signed out')
-            }
             setUser(null)
             setProfile(null)
           }
           
           if (isMounted) {
             setIsLoading(false)
-            if (!hasInitialized) {
-              setHasInitialized(true)
-            }
+            setHasInitialized(true)
           }
         })
 
@@ -174,12 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isLoggingOut])
 
-  // Reset logout flag when component unmounts or when we're on auth page
+  // Reset logout flag when we reach auth page
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.pathname === '/auth') {
       setIsLoggingOut(false)
     }
-  }, [])
+  }, [typeof window !== 'undefined' ? window.location.pathname : ''])
   
   // Debug logging - only on initialization (run once)
   useEffect(() => {

@@ -89,11 +89,29 @@ export class FirebaseAuthService {
         await SessionManager.endSession(currentUser.uid)
       }
       
+      // Clear persistence before signing out
+      await setPersistence(auth, browserSessionPersistence)
+      
+      // Sign out from Firebase
       await signOut(auth)
-      return { error: null }
+      
+      // Clear any remaining auth state
+      if (typeof window !== 'undefined') {
+        // Clear all Firebase keys from localStorage
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('firebase') || key.includes('__firebase') || key.startsWith('firebase:')) {
+            localStorage.removeItem(key)
+          }
+        })
+        
+        // Clear sessionStorage too
+        sessionStorage.clear()
+      }
+      
+      return { error: null, success: true }
     } catch (error: any) {
       const friendlyError = ErrorHandler.getErrorMessage(error, 'auth')
-      return { error: friendlyError }
+      return { error: friendlyError, success: false }
     }
   }
 

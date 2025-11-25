@@ -140,14 +140,21 @@ function HomePageContent() {
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Home: Starting logout process...')
       await signOut()
+      console.log('✅ Home: Logout completed')
       // Don't use router.push - signOut already handles redirect
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('❌ Home: Logout error:', error)
+      // Fallback redirect if signOut fails
+      router.push('/auth')
     }
   }
 
-  const handleRefresh = handleAppRefresh;
+  const handleRefresh = () => {
+    console.log('🔄 Home: Starting app refresh...')
+    handleAppRefresh()
+  }
 
   // Helper function to get icon component by name
   const getIconComponent = (iconName: string) => {
@@ -303,7 +310,7 @@ function HomePageContent() {
   }, [shouldShowLoading])
 
   // Show loading state while checking zone OR if profile is still loading OR if zones are loading
-  if (shouldShowLoading && !loadingTimeout) {
+  if ((shouldShowLoading && !loadingTimeout) || !profile) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
         {/* Skeleton Loading */}
@@ -387,24 +394,42 @@ function HomePageContent() {
     )
   }
   
-  // Show message if user has no zone (ONLY after loading is complete)
+  // Show skeleton loading if user has no zone (instead of error message)
   if (!currentZone && profile && !zoneLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-6">
-        <div className="max-w-md text-center">
-          <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Users className="w-10 h-10 text-yellow-600" />
+      <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
+        {/* Skeleton Loading */}
+        <div className="h-full flex flex-col">
+          {/* Header Skeleton */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">No Zone Assigned</h2>
-          <p className="text-gray-600 mb-6">
-            You haven't been added to any zone yet. Please contact your zone coordinator to get an invitation link.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
-          >
-            Sign Out
-          </button>
+
+          {/* Content Skeleton */}
+          <div className="flex-1 overflow-auto p-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Programs List */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -677,12 +702,19 @@ function HomePageContent() {
                 const isExternal = (feature as any).external
                 
                 const handleClick = (e: React.MouseEvent) => {
+                  // Prevent navigation for placeholder links
+                  if (feature.href === '#') {
+                    e.preventDefault()
+                    return
+                  }
+                  
+                  // Handle premium features without access
                   if (isPremiumFeature && !hasAccess) {
                     e.preventDefault()
                     if (canShowUpgrade) {
                       router.push('/subscription')
                     }
-                    // For non-Zone Leaders, just prevent navigation (feature is locked)
+                    return
                   }
                 }
                 

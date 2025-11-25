@@ -23,7 +23,14 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
 
-// Set auth persistence to local storage
-setPersistence(auth, browserLocalPersistence)
+// Set auth persistence conditionally - don't persist if logging out
+if (typeof window !== 'undefined') {
+  // Check if we're in the middle of logout
+  const isLoggingOut = window.location.href.includes('/auth')
+  
+  if (!isLoggingOut) {
+    setPersistence(auth, browserLocalPersistence)
+  }
+}
 
 export default app

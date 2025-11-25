@@ -30,33 +30,20 @@ import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import '@/utils/auth-debug'
 import '@/utils/safeAreaManager'
 import '@/utils/logger' // Disable console logs in production
+import { disableConsoleLogs } from '@/utils/disable-logs'
 
 // Auto-optimize for low data on app startup
 if (typeof window !== 'undefined') {
+  // Disable all console logs for security
+  disableConsoleLogs()
+  
   PerformanceOptimizer.autoOptimize()
   ViewportHeightFix.init()
   NavigationManager.init()
   SafeAreaUtils.init()
   DeviceSafeArea.getInstance().init()
-  FirebaseAuthService.ensurePersistence()
+  // Don't force auth persistence - let AuthContext handle it
   lowDataOptimizer.init()
-  
-        // Check persistence status and make it globally available
-        FirebaseAuthService.checkPersistenceStatus().then(status => {
-          console.log('🔐 Auth Persistence Status:', status)
-        })
-        
-        // Test login persistence and low data optimization
-        setTimeout(() => {
-          AuthPersistenceTest.runAllTests().then(results => {
-            console.log('🎯 Auth Persistence Test Results:', results)
-            if (results.overall) {
-              console.log('✅ Login persistence is working perfectly!')
-            } else {
-              console.log('⚠️ Login persistence needs attention')
-            }
-          })
-        }, 2000) // Wait 2 seconds for auth to initialize
   
   // Make utilities globally available for debugging
   ;(window as any).ViewportHeightFix = ViewportHeightFix
@@ -162,6 +149,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* Cloudinary Upload Widget */}
+        <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
       </head>
       <body className="font-sans">
         <script dangerouslySetInnerHTML={{

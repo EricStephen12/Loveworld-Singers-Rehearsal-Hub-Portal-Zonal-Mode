@@ -53,7 +53,10 @@ export default function BasicTextEditor({
     if (!editorRef.current) return;
     
     const currentContent = editorRef.current.innerHTML;
-    if (!currentContent || currentContent.trim() === '') return;
+    if (!currentContent || currentContent.trim() === '') {
+      alert('Please enter some text before translating.');
+      return;
+    }
     
     setSelectedLanguage(langCode);
     setShowLanguageMenu(false);
@@ -75,14 +78,30 @@ export default function BasicTextEditor({
 
     setIsTranslating(true);
     try {
+      console.log('Starting translation to', langCode);
+      console.log('Content to translate:', currentContent.substring(0, 200));
+      
       const translated = await translationService.translateLyrics(currentContent, langCode);
-      if (editorRef.current) {
+      
+      console.log('Translation result:', translated.substring(0, 200));
+      
+      if (editorRef.current && translated && translated !== currentContent) {
         editorRef.current.innerHTML = translated;
         onChange(translated);
+        
+        // Show success message
+        const langName = translationService.LANGUAGES.find(l => l.code === langCode)?.name || langCode;
+        console.log(`Translation to ${langName} completed successfully!`);
+      } else if (translated === currentContent) {
+        console.warn('Translation returned the same content - translation may have failed');
+        alert('Translation service returned the same content. This might indicate a translation error or the text is already in the target language.');
       }
     } catch (error) {
       console.error('Translation failed:', error);
-      alert('Translation failed. Please try again.');
+      alert('Translation failed. Please check your internet connection and try again. If the problem persists, the translation service might be temporarily unavailable.');
+      
+      // Reset language selection on error
+      setSelectedLanguage('en');
     } finally {
       setIsTranslating(false);
     }
@@ -262,9 +281,15 @@ export default function BasicTextEditor({
           <button
             type="button"
             onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-            className="flex items-center gap-2 px-3 py-1 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors text-sm font-medium"
+            className={`flex items-center gap-2 px-3 py-1 rounded transition-colors text-sm font-medium ${
+              isTranslating 
+                ? 'bg-yellow-500 text-white cursor-wait' 
+                : selectedLanguage === 'en'
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
             disabled={isTranslating}
-            title="Translate text"
+            title={isTranslating ? 'Translating...' : 'Translate text'}
           >
             <Languages className="w-4 h-4" />
             <span className="text-xs">

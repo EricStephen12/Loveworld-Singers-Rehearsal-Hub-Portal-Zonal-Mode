@@ -56,6 +56,20 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  // Listen for media upload events and refresh
+  useEffect(() => {
+    const handleMediaUploaded = () => {
+      console.log('📺 New media uploaded, refreshing...')
+      loadInitialData()
+      if (user) {
+        loadUserData()
+      }
+    }
+
+    window.addEventListener('mediaUploaded', handleMediaUploaded)
+    return () => window.removeEventListener('mediaUploaded', handleMediaUploaded)
+  }, [user])
+
   const loadInitialData = async () => {
     setIsLoading(true)
     try {

@@ -24,6 +24,7 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import PagesSection from '../../components/admin/PagesSection';
 import CategoriesSection from '../../components/admin/CategoriesSection';
 import MediaSection from '../../components/admin/MediaSection';
+import MediaUploadSection from '../../components/admin/MediaUploadSection';
 import MembersSection from '../../components/admin/MembersSection';
 import SimpleNotificationsSection from '../../components/admin/SimpleNotificationsSection';
 import AdminModals from '../../components/admin/AdminModals';
@@ -54,6 +55,14 @@ export default function AdminPage() {
       setIsAuthenticated(true);
     }
   }, [user, profile, currentZone]);
+
+  // Check if user is HQ Admin
+  const isHQAdmin = Boolean(profile?.email && [
+    'lliamzelvin@gmail.com',
+    'ihenacho23@gmail.com', 
+    'ephraimloveworld1@gmail.com',
+    'takeshopstores@gmail.com'
+  ].includes(profile.email.toLowerCase()))
 
   // UI state
   const [activeSection, setActiveSection] = useState('Dashboard');
@@ -259,14 +268,14 @@ export default function AdminPage() {
     }
 
     // Check if user has admin access (zone coordinator OR HQ admin)
-    const isHQAdmin = profile?.email && [
+    const isHQAdminCheck = Boolean(profile?.email && [
       'lliamzelvin@gmail.com',
       'ihenacho23@gmail.com', 
       'ephraimloveworld1@gmail.com',
       'takeshopstores@gmail.com'
-    ].includes(profile.email.toLowerCase())
+    ].includes(profile.email.toLowerCase()))
     
-    if (!isZoneCoordinator && !isHQAdmin) {
+    if (!isZoneCoordinator && !isHQAdminCheck) {
       console.log('❌ User is not a zone coordinator or HQ admin, redirecting to home')
       router.push('/home')
       return
@@ -1418,6 +1427,7 @@ export default function AdminPage() {
         setSidebarCollapsed={(collapsed) => setIsSidebarOpen(!collapsed)}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        isHQAdmin={isHQAdmin}
       />
 
       {/* Main Content */}
@@ -1593,6 +1603,7 @@ export default function AdminPage() {
         )}
         {activeSection === 'Members' && <MembersSection />}
         {activeSection === 'Media' && <MediaSection />}
+        {activeSection === 'Media Upload' && isHQAdmin && <MediaUploadSection />}
         {activeSection === 'Notifications' && <SimpleNotificationsSection />}
       </div>
 

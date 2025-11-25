@@ -7,6 +7,8 @@ import { useMedia } from './_context/MediaContext'
 import { Play, Info, Film } from 'lucide-react'
 import MediaNav from './_components/MediaNav'
 import SliderContainer from './_components/SliderContainer'
+import YouTubeThumbnail from '@/components/YouTubeThumbnail'
+import { isYouTubeUrl } from '@/utils/youtube'
 
 export default function MediaPage() {
   const router = useRouter()
@@ -41,6 +43,7 @@ export default function MediaPage() {
   }
 
   const heroMedia = featuredMedia[0] || allMedia[0]
+  const isHeroYouTube = heroMedia?.isYouTube || isYouTubeUrl(heroMedia?.videoUrl || '') || isYouTubeUrl(heroMedia?.thumbnail || '')
 
   return (
     <div className="min-h-screen bg-black text-white overflow-y-auto">
@@ -51,12 +54,22 @@ export default function MediaPage() {
       <div className="relative h-[70vh] mt-20">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img
-            src={heroMedia?.backdropImage || heroMedia?.thumbnail || '/movie/default-hero.jpeg'}
-            alt="Hero"
-            className="w-full h-full object-cover"
-            style={{ filter: 'brightness(40%)' }}
-          />
+          {isHeroYouTube ? (
+            <YouTubeThumbnail
+              url={heroMedia?.videoUrl || heroMedia?.backdropImage || heroMedia?.thumbnail || ''}
+              alt="Hero"
+              className="w-full h-full object-cover"
+              fallbackSrc="/movie/default-hero.jpeg"
+            />
+          ) : (
+            <img
+              src={heroMedia?.backdropImage || heroMedia?.thumbnail || '/movie/default-hero.jpeg'}
+              alt="Hero"
+              className="w-full h-full object-cover"
+              style={{ filter: 'brightness(40%)' }}
+            />
+          )}
+          <div style={{ filter: 'brightness(40%)', position: 'absolute', inset: 0, pointerEvents: 'none' }} />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
         </div>
 

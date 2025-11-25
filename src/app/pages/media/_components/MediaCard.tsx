@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Play, Plus, ThumbsUp, ThumbsDown, Check, ChevronDown } from 'lucide-react'
 import { MediaItem } from '../_lib'
 import { useMedia } from '../_context/MediaContext'
+import YouTubeThumbnail from '@/components/YouTubeThumbnail'
+import { isYouTubeUrl } from '@/utils/youtube'
 
 interface MediaCardProps {
   media: MediaItem
@@ -16,6 +18,9 @@ export default function MediaCard({ media }: MediaCardProps) {
   const { addToFavorites, removeFromFavorites, favorites } = useMedia()
 
   const isFavorited = favorites.some(fav => fav.id === media.id)
+  
+  // Check if this is a YouTube video (fallback detection)
+  const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.videoUrl || '') || isYouTubeUrl(media.thumbnail || '')
 
   const handlePlay = () => {
     router.push(`/pages/media/player/${media.id}`)
@@ -36,23 +41,40 @@ export default function MediaCard({ media }: MediaCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Thumbnail */}
-      <img
-        src={media.thumbnail}
-        alt={media.title}
-        className="w-full h-full object-cover rounded-md"
-        onClick={handlePlay}
-      />
+      {isYouTubeVideo ? (
+        <YouTubeThumbnail
+          url={media.videoUrl || media.thumbnail}
+          alt={media.title}
+          className="w-full h-full object-cover rounded-md"
+          onClick={handlePlay}
+        />
+      ) : (
+        <img
+          src={media.thumbnail}
+          alt={media.title}
+          className="w-full h-full object-cover rounded-md"
+          onClick={handlePlay}
+        />
+      )}
 
       {/* Hover Card */}
       {isHovered && (
         <div className="absolute top-0 left-0 w-80 bg-zinc-900 rounded-md shadow-2xl border border-gray-700 transition-all duration-300 -translate-y-16">
           {/* Image/Video Preview */}
           <div className="relative h-44">
-            <img
-              src={media.backdropImage || media.thumbnail}
-              alt={media.title}
-              className="w-full h-full object-cover rounded-t-md"
-            />
+            {isYouTubeVideo ? (
+              <YouTubeThumbnail
+                url={media.videoUrl || media.backdropImage || media.thumbnail}
+                alt={media.title}
+                className="w-full h-full object-cover rounded-t-md"
+              />
+            ) : (
+              <img
+                src={media.backdropImage || media.thumbnail}
+                alt={media.title}
+                className="w-full h-full object-cover rounded-t-md"
+              />
+            )}
             {/* Play overlay */}
             <div 
               className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"

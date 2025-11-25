@@ -24,15 +24,17 @@ export interface MediaItem {
   description: string
   thumbnail: string
   videoUrl: string
+  youtubeUrl?: string
   backdropImage?: string
   genre: string[]
-  type: 'movie' | 'tvshow' | 'sermon' | 'worship' | 'teaching'
+  type: 'praise' | 'medley' | 'healing' | 'gfap'
   duration?: number
   releaseYear?: number
   rating?: number
   views: number
   likes: number
   featured: boolean
+  isYouTube?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -59,7 +61,7 @@ export interface UserFavorite {
 }
 
 class FirebaseMediaService {
-  private mediaCollection = 'media_items'
+  private mediaCollection = 'media'
   private genresCollection = 'media_genres'
   private watchHistoryCollection = 'watch_history'
   private favoritesCollection = 'user_favorites'

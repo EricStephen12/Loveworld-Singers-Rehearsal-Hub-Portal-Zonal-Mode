@@ -24,13 +24,15 @@ interface AdminSidebarProps {
   setSidebarCollapsed: (value: boolean) => void;
   activeSection: string;
   setActiveSection: (section: string) => void;
+  isHQAdmin?: boolean;
 }
 
 export default function AdminSidebar({
   sidebarCollapsed,
   setSidebarCollapsed,
   activeSection,
-  setActiveSection
+  setActiveSection,
+  isHQAdmin = false
 }: AdminSidebarProps) {
   const router = useRouter();
   const { theme } = useAdminTheme();
@@ -47,12 +49,12 @@ export default function AdminSidebar({
     { icon: Upload, label: 'Submitted Songs', active: activeSection === 'Submitted Songs' },
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
-    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', isLink: true, href: '/admin/media', hqOnly: true },
+    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
   ];
   
-  // Filter sidebar items based on HQ status
-  const sidebarItems = allSidebarItems.filter(item => !item.hqOnly || isHQ);
+  // Filter sidebar items based on HQ admin status
+  const sidebarItems = allSidebarItems.filter(item => !item.hqOnly || isHQAdmin);
 
   return (
     <>
@@ -100,18 +102,16 @@ export default function AdminSidebar({
                 <button
                   key={index}
                   onClick={() => {
-                    if (item.isLink && item.href) {
-                      router.push(item.href);
-                    } else {
-                      if (item.label === 'Dashboard') setActiveSection('Dashboard');
-                      else if (item.label === 'Pages') setActiveSection('Pages');
-                      else if (item.label === 'Categories') setActiveSection('Categories');
-                      else if (item.label === 'Page Categories') setActiveSection('Page Categories');
-                      else if (item.label === 'Submitted Songs') setActiveSection('Submitted Songs');
-                      else if (item.label === 'Members') setActiveSection('Members');
-                      else if (item.label === 'Media') setActiveSection('Media');
-                      else if (item.label === 'Notifications') setActiveSection('Notifications');
-                    }
+                    if (item.label === 'Dashboard') setActiveSection('Dashboard');
+                    else if (item.label === 'Pages') setActiveSection('Pages');
+                    else if (item.label === 'Categories') setActiveSection('Categories');
+                    else if (item.label === 'Page Categories') setActiveSection('Page Categories');
+                    else if (item.label === 'Submitted Songs') setActiveSection('Submitted Songs');
+                    else if (item.label === 'Members') setActiveSection('Members');
+                    else if (item.label === 'Media') setActiveSection('Media');
+                    else if (item.label === 'Media Upload') setActiveSection('Media Upload');
+                    else if (item.label === 'Notifications') setActiveSection('Notifications');
+                    
                     // Auto-close sidebar on mobile after clicking
                     setSidebarCollapsed(true);
                   }}

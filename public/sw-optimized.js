@@ -67,6 +67,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // LOGOUT DETECTION - Clear all caches if logout is happening
+  if (url.pathname === '/auth' && url.searchParams.get('logout') === 'true') {
+    event.respondWith(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }).then(() => {
+        return fetch(request);
+      })
+    );
+    return;
+  }
+
   // API requests - Network First (with timeout)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(

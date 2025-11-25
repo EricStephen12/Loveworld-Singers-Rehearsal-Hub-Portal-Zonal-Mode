@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Upload, Film, Image, Loader2 } from 'lucide-react'
 import { mediaService } from '@/app/pages/media/_lib'
+import { CONTENT_TYPES } from '@/config/contentTypes'
 
 export default function AdminMediaUploadPage() {
   const router = useRouter()
@@ -15,7 +16,7 @@ export default function AdminMediaUploadPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'sermon' as 'movie' | 'tvshow' | 'sermon' | 'worship' | 'teaching',
+    type: 'praise' as 'praise' | 'medley' | 'healing' | 'gfap',
     genre: [] as string[],
     videoUrl: '',
     thumbnail: '',
@@ -128,7 +129,7 @@ export default function AdminMediaUploadPage() {
       setFormData({
         title: '',
         description: '',
-        type: 'sermon',
+        type: 'praise',
         genre: [],
         videoUrl: '',
         thumbnail: '',
@@ -194,11 +195,11 @@ export default function AdminMediaUploadPage() {
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-red-600"
               >
-                <option value="sermon">Sermon</option>
-                <option value="worship">Worship</option>
-                <option value="teaching">Teaching</option>
-                <option value="movie">Movie</option>
-                <option value="tvshow">TV Show</option>
+                {CONTENT_TYPES.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
               </select>
             </div>
 

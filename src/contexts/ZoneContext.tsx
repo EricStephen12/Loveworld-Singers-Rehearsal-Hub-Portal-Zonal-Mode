@@ -206,8 +206,16 @@ export function ZoneProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Load zones when user changes
+  // Load zones when user changes (but not during logout)
   useEffect(() => {
+    // Don't load zones if we're in the middle of logging out
+    if (typeof window !== 'undefined' && localStorage.getItem('logging_out') === 'true') {
+      setUserZones([])
+      setCurrentZone(null)
+      setIsLoading(false)
+      return
+    }
+    
     loadUserZones()
   }, [user?.uid])
 

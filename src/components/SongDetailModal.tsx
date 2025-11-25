@@ -70,6 +70,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   // State for fresh song data
   const [freshSongData, setFreshSongData] = useState<PraiseNightSong | null>(null);
   
+  // Translation state
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<{[key: string]: string}>({});
+  const [originalContent, setOriginalContent] = useState<{[key: string]: string}>({});
+  
+  // Text editor state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingContent, setEditingContent] = useState('');
+  const [editingField, setEditingField] = useState<'lyrics' | 'solfas' | null>(null);
+  
   // Use global audio context
   const { currentSong, isPlaying, currentTime, duration, isLoading, hasError, togglePlayPause, audioRef, setCurrentSong } = useAudio();
 

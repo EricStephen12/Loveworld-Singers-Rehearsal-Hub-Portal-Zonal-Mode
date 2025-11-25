@@ -82,17 +82,28 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
                   e.preventDefault()
                   e.stopPropagation()
                   console.log('🔗 Menu item clicked (onClick):', item.title);
+                  
                   if (isLogout) {
+                    console.log('🚪 Logout button clicked - showing confirmation modal');
                     // Show confirmation modal for logout
                     // Store the callback correctly
                     setLogoutCallback(() => () => {
+                      console.log('🚪 Executing logout callback');
                       if (item.onClick) {
                         item.onClick()
                       }
                     })
                     setShowLogoutModal(true)
+                  } else if (isRefresh) {
+                    console.log('🔄 Refresh button clicked - executing immediately');
+                    // Execute immediately for refresh
+                    if (item.onClick) {
+                      item.onClick()
+                    }
+                    onClose()
                   } else {
-                    // Execute immediately for non-logout items
+                    console.log('🔗 Regular menu item clicked - executing immediately');
+                    // Execute immediately for other items
                     if (item.onClick) {
                       item.onClick()
                     }
@@ -295,15 +306,18 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
               </button>
               <button
                 onClick={() => {
-                  console.log('🚪 Logout confirmed, executing callback');
+                  console.log('🚪 Logout confirmed in modal, executing callback');
                   setShowLogoutModal(false)
                   onClose()
-                  // Execute callback immediately
-                  if (logoutCallback) {
-                    logoutCallback()
-                  } else {
-                    console.error('❌ No logout callback available');
-                  }
+                  // Execute callback with a small delay to ensure modal closes
+                  setTimeout(() => {
+                    if (logoutCallback) {
+                      console.log('🚪 Executing logout callback now');
+                      logoutCallback()
+                    } else {
+                      console.error('❌ No logout callback available');
+                    }
+                  }, 100)
                 }}
                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
               >
