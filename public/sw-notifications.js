@@ -51,22 +51,62 @@ self.addEventListener('notificationclick', (event) => {
 
   const data = event.notification.data || {}
   const action = event.action
+  const notification = event.notification
+
+  // Build notification URL parameters
+  const buildNotificationUrl = (baseUrl) => {
+    const url = new URL(baseUrl, self.location.origin)
+    url.searchParams.set('notification', 'true')
+    
+    if (notification.title) {
+      url.searchParams.set('title', encodeURIComponent(notification.title))
+    }
+    if (notification.body) {
+      url.searchParams.set('body', encodeURIComponent(notification.body))
+    }
+    if (notification.timestamp) {
+      url.searchParams.set('timestamp', notification.timestamp.toString())
+    } else {
+      url.searchParams.set('timestamp', Date.now().toString())
+    }
+    url.searchParams.set('tapped', 'true')
+
+    // Add all custom data fields with data_ prefix
+    if (data) {
+      Object.keys(data).forEach(key => {
+        if (key !== 'url' && key !== 'type') {
+          url.searchParams.set(`data_${key}`, encodeURIComponent(String(data[key])))
+        }
+      })
+      // Add type and url as regular params for easier access
+      if (data.type) {
+        url.searchParams.set('data_type', data.type)
+      }
+      if (data.url) {
+        // Don't override the base URL if data.url is provided
+        return data.url.startsWith('/') ? url.toString() : data.url
+      }
+    }
+
+    return url.toString()
+  }
 
   if (action === 'view' && data.url) {
-    // Open the app to the specific URL
+    // Open the app to the specific URL with notification params
+    const targetUrl = buildNotificationUrl(data.url)
     event.waitUntil(
       clients.matchAll({ type: 'window' }).then((clientList) => {
         // Check if app is already open
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             client.focus()
-            client.navigate(data.url)
+            client.navigate(targetUrl)
             return
           }
         }
         // Open new window if app is not open
         if (clients.openWindow) {
-          return clients.openWindow(data.url)
+          return clients.openWindow(targetUrl)
         }
       })
     )
@@ -74,19 +114,24 @@ self.addEventListener('notificationclick', (event) => {
     // Just close the notification (already done above)
     console.log('Notification dismissed')
   } else {
-    // Default click behavior - open the app
+    // Default click behavior - open the app with notification params
+    const targetUrl = data.url ? buildNotificationUrl(data.url) : buildNotificationUrl('/')
     event.waitUntil(
       clients.matchAll({ type: 'window' }).then((clientList) => {
         // Check if app is already open
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             client.focus()
+            // Navigate to the notification URL even if app is open
+            if (targetUrl) {
+              client.navigate(targetUrl)
+            }
             return
           }
         }
         // Open new window if app is not open
         if (clients.openWindow) {
-          return clients.openWindow('/')
+          return clients.openWindow(targetUrl)
         }
       })
     )

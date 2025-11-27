@@ -16,7 +16,7 @@ import {
   X
 } from "lucide-react";
 import { useAdminTheme } from './AdminThemeProvider';
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 
 interface AdminSidebarProps {

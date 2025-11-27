@@ -215,7 +215,7 @@ export const useUltraFastSupabase = <T = any>({
     channelRef.current = channel;
   }, [table, enableRealtime, setCachedData]);
 
-  // Initial data fetch
+  // Initial data fetch - only run once on mount or when table changes
   useEffect(() => {
     fetchData();
     setupRealtimeSubscription();
@@ -226,7 +226,8 @@ export const useUltraFastSupabase = <T = any>({
         channelRef.current = null;
       }
     };
-  }, [fetchData, setupRealtimeSubscription]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, enableRealtime]); // Only depend on table and enableRealtime, not the callbacks
 
   // Refresh function
   const refresh = useCallback(() => {

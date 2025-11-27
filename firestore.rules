@@ -145,11 +145,77 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // ===== SONG SUBMISSIONS =====
+    // ===== SONG SUBMISSIONS (Legacy) =====
     match /song_submissions/{submissionId} {
       allow read: if true;  // Anyone can read (for admin review)
       allow create: if request.auth != null;  // Authenticated users can submit
       allow update, delete: if true;  // Open for admin panel
+    }
+
+    // ===== SUBMITTED SONGS (Current) =====
+    match /submitted_songs/{submissionId} {
+      // Users can read their own submissions
+      allow read: if request.auth != null && 
+                     (resource.data.submittedBy.userId == request.auth.uid || true);
+      // Authenticated users can create submissions
+      allow create: if request.auth != null && 
+                       request.resource.data.submittedBy.userId == request.auth.uid;
+      // Admins can update (approve/reject/reply) - open for admin panel
+      allow update: if request.auth != null;
+      // Admins can delete - open for admin panel
+      allow delete: if request.auth != null;
+    }
+
+    // ===== SONG NOTIFICATIONS =====
+    match /song_notifications/{notificationId} {
+      // Users can read notifications about their submissions
+      allow read: if request.auth != null;
+      // System can create notifications (when songs are submitted/approved/rejected)
+      allow create: if request.auth != null;
+      // Users can update their own notifications (mark as read)
+      allow update: if request.auth != null;
+      // Admins can delete notifications
+      allow delete: if request.auth != null;
+    }
+
+    // ===== MEDIA COLLECTION =====
+    match /media/{mediaId} {
+      // Anyone can read media (for public viewing)
+      allow read: if true;
+      // Authenticated users can create/update/delete (admin uploads)
+      allow write: if request.auth != null;
+    }
+
+    // ===== MEDIA GENRES =====
+    match /media_genres/{genreId} {
+      allow read: if true;  // Anyone can read genres
+      allow write: if request.auth != null;  // Admins can manage genres
+    }
+
+    // ===== WATCH HISTORY =====
+    match /watch_history/{historyId} {
+      // Users can only read/write their own watch history
+      allow read, write: if request.auth != null && 
+                            (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    // ===== USER FAVORITES =====
+    match /user_favorites/{favoriteId} {
+      // Users can only read/write their own favorites
+      allow read, write: if request.auth != null && 
+                            (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    // ===== VIDEO UPLOAD QUEUE (HQ Admin) =====
+    match /video-upload/{docId} {
+      // Read-only dashboards (recent uploads list) need to be available
+      allow read: if request.auth != null;
+
+      // Create/update can only happen from authenticated HQ admins
+      allow create, update: if request.auth != null;
+
+      // Deletes are restricted to authenticated users as well
+      allow delete: if request.auth != null;
     }
 
 

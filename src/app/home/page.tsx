@@ -9,11 +9,10 @@ import SharedDrawer from '@/components/SharedDrawer'
 import Tooltip from '@/components/Tooltip'
 
 import { useHomeGlobalSearch, HomeSearchResult } from '@/hooks/useHomeGlobalSearch'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 
-import AuthGuard from '@/components/AuthGuard'
 import ZoneSwitcher from '@/components/ZoneSwitcher'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 import { canSeeUpgradePrompts } from '@/lib/user-role-utils'
@@ -23,6 +22,9 @@ import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime'
 function HomePageContent() {
   const router = useRouter()
   const { signOut, profile, user } = useAuth()
+  
+  // No auth check here - Zustand authStore is the single source of truth
+  // If user is null, just show login prompt inline (no redirect)
   
   // Check if user is Boss (declare early for use in features array)
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
@@ -309,6 +311,12 @@ function HomePageContent() {
     }
   }, [shouldShowLoading])
 
+  // Don't show anything if no user - let Zustand authStore handle it
+  // This prevents flashing login prompt while Firebase is checking
+  if (!user && !profile) {
+    return null
+  }
+  
   // Show loading state while checking zone OR if profile is still loading OR if zones are loading
   if ((shouldShowLoading && !loadingTimeout) || !profile) {
     return (
@@ -698,7 +706,13 @@ function HomePageContent() {
              <div className="grid grid-cols-3 gap-2">
               {features.map((feature, index) => {
                 const isPremiumFeature = feature.premium
-                const hasAccess = !isPremiumFeature || hasFeature('audioLab') || hasFeature('rehearsals') || hasFeature('customSongs') || hasFeature('analytics')
+                // Check specific feature access based on the feature
+                let featureKey = 'audioLab' // default
+                if (feature.title === 'Rehearsals') featureKey = 'rehearsals'
+                if (feature.title === 'Submit Song') featureKey = 'customSongs'
+                if (feature.title === 'Analytics') featureKey = 'analytics'
+                
+                const hasAccess = !isPremiumFeature || hasFeature(featureKey)
                 const isExternal = (feature as any).external
                 
                 const handleClick = (e: React.MouseEvent) => {
@@ -883,9 +897,5 @@ function HomePageContent() {
 }
 
 export default function HomePage() {
-  return (
-    <AuthGuard requireAuth={true} requireCompleteProfile={false}>
-      <HomePageContent />
-    </AuthGuard>
-  )
+  return <HomePageContent />
 }

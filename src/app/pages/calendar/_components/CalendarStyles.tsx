@@ -1,6 +1,8 @@
 'use client'
 
+import '../calendar.css'
+import 'react-big-calendar/lib/css/react-big-calendar.css'
+
 export default function CalendarStyles() {
-  // CSS is imported in the parent component or globally
   return null
 }

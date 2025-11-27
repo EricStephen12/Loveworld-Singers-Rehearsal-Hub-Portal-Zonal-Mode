@@ -2,8 +2,14 @@
 
 import { useEffect } from 'react'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 export default function SuperFastServiceWorker() {
   useEffect(() => {
+    if (!isProduction) {
+      return
+    }
+
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       const registerSW = async () => {
         try {

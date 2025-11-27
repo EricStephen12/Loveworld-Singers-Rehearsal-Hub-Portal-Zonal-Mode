@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { Upload, Film, Image, Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { Upload, Film, Image, Loader2, Link } from 'lucide-react'
 import { mediaService } from '@/app/pages/media/_lib'
 import { CONTENT_TYPES } from '@/config/contentTypes'
+import { isYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
 
 export default function AdminMediaUploadPage() {
   const router = useRouter()
@@ -13,18 +14,47 @@ export default function AdminMediaUploadPage() {
   
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [sourceType, setSourceType] = useState<'upload' | 'youtube'>('upload')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'praise' as 'praise' | 'medley' | 'healing' | 'gfap',
     genre: [] as string[],
     videoUrl: '',
+    youtubeUrl: '',
     thumbnail: '',
     backdropImage: '',
     duration: 0,
     releaseYear: new Date().getFullYear(),
-    featured: false
+    featured: false,
+    isYouTube: false
   })
+
+  const handleSourceChange = (type: 'upload' | 'youtube') => {
+    setSourceType(type)
+    setFormData(prev => ({
+      ...prev,
+      videoUrl: type === 'upload' ? prev.videoUrl : '',
+      youtubeUrl: type === 'youtube' ? prev.youtubeUrl : '',
+      duration: type === 'upload' ? prev.duration : 0,
+      isYouTube: type === 'youtube' ? prev.isYouTube : false
+    }))
+  }
+
+  const handleYouTubeUrlChange = (url: string) => {
+    setFormData(prev => {
+      const valid = isYouTubeUrl(url)
+      const thumbnail = valid ? getYouTubeThumbnail(url) : null
+      return {
+        ...prev,
+        youtubeUrl: url,
+        videoUrl: valid ? url : '',
+        isYouTube: valid,
+        thumbnail: prev.thumbnail || thumbnail || '',
+        backdropImage: prev.backdropImage || thumbnail || ''
+      }
+    })
+  }
 
   // Cloudinary upload widget
   const openCloudinaryWidget = (type: 'video' | 'image' | 'backdrop') => {
@@ -66,7 +96,8 @@ export default function AdminMediaUploadPage() {
               setFormData(prev => ({ 
                 ...prev, 
                 videoUrl: url,
-                duration: Math.round(result.info.duration || 0)
+                duration: Math.round(result.info.duration || 0),
+                isYouTube: false
               }))
             } else if (type === 'image') {
               setFormData(prev => ({ ...prev, thumbnail: url }))
@@ -90,19 +121,25 @@ export default function AdminMediaUploadPage() {
       return
     }
 
-    if (!formData.title || !formData.videoUrl || !formData.thumbnail) {
+    const hasVideoSource = sourceType === 'upload'
+      ? Boolean(formData.videoUrl)
+      : Boolean(formData.youtubeUrl && isYouTubeUrl(formData.youtubeUrl))
+
+    if (!formData.title || !hasVideoSource || !formData.thumbnail) {
       alert('Please fill in all required fields')
       return
     }
 
     setIsUploading(true)
     setUploadProgress(0)
+    let progressInterval: NodeJS.Timeout | null = null
 
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
+      if (sourceType === 'upload') {
+        progressInterval = setInterval(() => {
+          setUploadProgress(prev => Math.min(prev + 10, 90))
+        }, 200)
+      }
 
       // Create media item in Firebase
       await mediaService.createMedia({
@@ -110,40 +147,49 @@ export default function AdminMediaUploadPage() {
         description: formData.description,
         type: formData.type,
         genre: formData.genre,
-        videoUrl: formData.videoUrl,
+        videoUrl: sourceType === 'youtube' ? formData.youtubeUrl : formData.videoUrl,
+        youtubeUrl: sourceType === 'youtube' ? formData.youtubeUrl : undefined,
         thumbnail: formData.thumbnail,
         backdropImage: formData.backdropImage || formData.thumbnail,
         duration: formData.duration,
         releaseYear: formData.releaseYear,
         featured: formData.featured,
         views: 0,
-        likes: 0
+        likes: 0,
+        isYouTube: sourceType === 'youtube'
       })
 
-      clearInterval(progressInterval)
       setUploadProgress(100)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mediaUploaded'))
+      }
 
       alert('Media uploaded successfully!')
       
-      // Reset form
       setFormData({
         title: '',
         description: '',
         type: 'praise',
         genre: [],
         videoUrl: '',
+        youtubeUrl: '',
         thumbnail: '',
         backdropImage: '',
         duration: 0,
         releaseYear: new Date().getFullYear(),
-        featured: false
+        featured: false,
+        isYouTube: false
       })
+      setSourceType('upload')
       
       router.push('/pages/media')
     } catch (error) {
       console.error('Upload error:', error)
       alert('Failed to upload media')
     } finally {
+      if (progressInterval) {
+        clearInterval(progressInterval)
+      }
       setIsUploading(false)
       setUploadProgress(0)
     }
@@ -214,25 +260,86 @@ export default function AdminMediaUploadPage() {
             </div>
           </div>
 
-          {/* Video Upload */}
+          {/* Video Source */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Video <span className="text-red-500">*</span>
+              Video Source <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => openCloudinaryWidget('video')}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                onClick={() => handleSourceChange('upload')}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg border transition-colors ${
+                  sourceType === 'upload'
+                    ? 'border-red-500 bg-red-600 text-white'
+                    : 'border-zinc-700 bg-zinc-900 text-gray-300 hover:border-red-500'
+                }`}
               >
-                <Film className="w-5 h-5" />
-                Upload Video
+                <Upload className="w-5 h-5" />
+                Upload File
               </button>
-              {formData.videoUrl && (
-                <span className="text-sm text-green-500">✓ Video uploaded</span>
-              )}
+              <button
+                type="button"
+                onClick={() => handleSourceChange('youtube')}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg border transition-colors ${
+                  sourceType === 'youtube'
+                    ? 'border-blue-500 bg-blue-600 text-white'
+                    : 'border-zinc-700 bg-zinc-900 text-gray-300 hover:border-blue-500'
+                }`}
+              >
+                <Link className="w-5 h-5" />
+                YouTube URL
+              </button>
             </div>
           </div>
+
+          {/* Upload Flow */}
+          {sourceType === 'upload' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => openCloudinaryWidget('video')}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                >
+                  <Film className="w-5 h-5" />
+                  Upload Video
+                </button>
+                {formData.videoUrl && !formData.isYouTube && (
+                  <span className="text-sm text-green-500">✓ Video uploaded</span>
+                )}
+              </div>
+              {formData.videoUrl && !formData.isYouTube && (
+                <div className="p-4 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-200">
+                  Your video is uploaded to Cloudinary and ready to publish.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* YouTube Flow */}
+          {sourceType === 'youtube' && (
+            <div className="space-y-3">
+              <input
+                type="url"
+                value={formData.youtubeUrl}
+                onChange={(e) => handleYouTubeUrlChange(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+              <p className="text-xs text-gray-400">
+                We will stream directly from YouTube. You can still upload a custom thumbnail/backdrop below.
+              </p>
+              {formData.youtubeUrl && !formData.isYouTube && (
+                <p className="text-sm text-red-400">Enter a valid YouTube link.</p>
+              )}
+              {formData.youtubeUrl && formData.isYouTube && (
+                <div className="p-4 bg-blue-900/40 border border-blue-700 rounded-lg text-sm text-blue-100">
+                  YouTube link captured. Thumbnail will auto-fill if available.
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Thumbnail Upload */}
           <div>

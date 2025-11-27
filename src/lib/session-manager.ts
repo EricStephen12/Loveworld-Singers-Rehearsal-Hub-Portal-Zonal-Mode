@@ -215,56 +215,16 @@ export class SessionManager {
   
   // Start tracking user activity
   static startActivityTracking(userId: string): void {
-    // Update activity every 2 minutes
-    const activityInterval = setInterval(() => {
-      this.updateActivity(userId)
-    }, 2 * 60 * 1000)
-    
-    // Listen for session termination
-    const sessionRef = doc(db, 'user_sessions', userId)
-    this.sessionListener = onSnapshot(sessionRef, (doc) => {
-      if (doc.exists()) {
-        const session = doc.data() as UserSession
-        const currentDeviceId = this.generateDeviceId()
-        
-        // If session is marked as terminated and it's not for this device, force logout
-        if (!session.isActive && session.terminatedByDeviceId && session.terminatedByDeviceId !== currentDeviceId) {
-          this.handleSessionTermination()
-        }
-      }
-    })
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-      clearInterval(activityInterval)
-      if (this.sessionListener) {
-        this.sessionListener()
-      }
-    })
+    // DISABLED - Session tracking causes page reloads
+    // Just log the activity without forcing logouts
+    console.log('📊 Activity tracking disabled to prevent reloads')
   }
   
   // Handle session termination (user logged in elsewhere)
   static handleSessionTermination(): void {
-    // Show user-friendly message
-    const message = 'Your account has been logged in from another device. You have been signed out for security. If this was not you, please sign up for your own account.'
-    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
-      alert(message)
-    }
-    
-    // Force logout
-    if (typeof window !== 'undefined') {
-      // Clear local storage
-      localStorage.removeItem('userAuthenticated')
-      localStorage.removeItem('lastAuthTime')
-      localStorage.removeItem('hasCompletedProfile')
-      localStorage.removeItem('bypassLogin')
-      localStorage.removeItem('specialUser')
-      localStorage.removeItem('userRole')
-      localStorage.removeItem('userName')
-      
-      // Redirect to auth page
-      window.location.href = '/auth?error=session_terminated&message=Your account was logged in from another device. Please sign in again.'
-    }
+    // DISABLED - No more forced reloads
+    // Just clear the session silently, let React handle the UI
+    console.log('⚠️ Session terminated on another device')
   }
   
   // End session

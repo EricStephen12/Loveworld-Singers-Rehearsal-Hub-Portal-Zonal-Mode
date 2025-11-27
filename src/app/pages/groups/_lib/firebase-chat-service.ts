@@ -15,9 +15,11 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
+  deleteField
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import { getZoneById } from '@/config/zones'
 
 // Types
 export interface ChatUser {
@@ -49,6 +51,9 @@ export interface ChatMessage {
   editedAt?: Date
   reactions: MessageReaction[]
   replyTo?: string
+  replySnippet?: string
+  replySenderName?: string
+  deleted?: boolean
 }
 
 export interface MessageReaction {
@@ -181,13 +186,14 @@ export class FirebaseChatService {
       zoneMembersSnapshot.forEach(doc => {
         const member = doc.data()
         if (member.userId && member.userId !== currentUserId) {
+          const zoneDetails = getZoneById(member.zoneId || zoneId)
           users.push({
             id: member.userId,
             email: member.userEmail || '',
             fullName: member.userName || 'Unknown User',
             profilePic: undefined, // We can fetch this later if needed
-            zoneId: zoneId,
-            zoneName: member.zoneName || 'Unknown Zone',
+            zoneId: member.zoneId || zoneId,
+            zoneName: member.zoneName || zoneDetails?.name || 'Unknown Zone',
             isOnline: false,
             lastSeen: new Date()
           })
@@ -272,13 +278,14 @@ export class FirebaseChatService {
       
       if (!zoneMembersSnapshot.empty) {
         const memberData = zoneMembersSnapshot.docs[0].data()
+        const zoneDetails = getZoneById(memberData.zoneId || memberData.hqGroupId)
         return {
           id: userId,
           email: memberData.userEmail || '',
           fullName: memberData.userName || 'Unknown User',
           profilePic: undefined,
-          zoneId: memberData.zoneId,
-          zoneName: memberData.zoneName || 'Unknown Zone',
+          zoneId: memberData.zoneId || memberData.hqGroupId,
+          zoneName: memberData.zoneName || zoneDetails?.name || 'Unknown Zone',
           isOnline: false,
           lastSeen: new Date()
         }
@@ -288,13 +295,14 @@ export class FirebaseChatService {
       const profileDoc = await getDoc(doc(db, 'profiles', userId))
       if (profileDoc.exists()) {
         const profile = profileDoc.data()
+        const zoneDetails = getZoneById(profile.zone_id || profile.zone)
         return {
           id: userId,
           email: profile.email || '',
           fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown User',
           profilePic: profile.profile_image_url || undefined,
-          zoneId: profile.zone_id,
-          zoneName: profile.zone_name || profile.zone,
+          zoneId: profile.zone_id || profile.zone,
+          zoneName: profile.zone_name || zoneDetails?.name || profile.zone || 'Unknown Zone',
           isOnline: false,
           lastSeen: new Date()
         }
@@ -319,20 +327,68 @@ export class FirebaseChatService {
       
       if (!fromUser || !toUser) return false
 
-      await addDoc(collection(db, 'friend_requests'), {
+      const payload: any = {
         fromUserId,
         fromUserName: fromUser.fullName,
-        fromUserAvatar: fromUser.profilePic,
         toUserId,
         toUserName: toUser.fullName,
         status: 'pending',
         createdAt: serverTimestamp()
-      })
+      }
+      if (fromUser.profilePic) {
+        payload.fromUserAvatar = fromUser.profilePic
+      }
+
+      await addDoc(collection(db, 'friend_requests'), payload)
 
       return true
     } catch (error) {
       console.error('Error sending friend request:', error)
       return false
+    }
+  }
+
+  /**
+   * Get friendship status between two users
+   */
+  static async getFriendStatus(userId: string, otherUserId: string): Promise<{ status: 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends'; requestId?: string }> {
+    try {
+      const requestsRef = collection(db, 'friend_requests')
+      
+      const outgoingQuery = query(
+        requestsRef,
+        where('fromUserId', '==', userId),
+        where('toUserId', '==', otherUserId)
+      )
+      const outgoingSnapshot = await getDocs(outgoingQuery)
+      if (!outgoingSnapshot.empty) {
+        const docSnap = outgoingSnapshot.docs[0]
+        const status = docSnap.data().status
+        return {
+          status: status === 'accepted' ? 'friends' : 'pending_outgoing',
+          requestId: docSnap.id
+        }
+      }
+
+      const incomingQuery = query(
+        requestsRef,
+        where('fromUserId', '==', otherUserId),
+        where('toUserId', '==', userId)
+      )
+      const incomingSnapshot = await getDocs(incomingQuery)
+      if (!incomingSnapshot.empty) {
+        const docSnap = incomingSnapshot.docs[0]
+        const status = docSnap.data().status
+        return {
+          status: status === 'accepted' ? 'friends' : 'pending_incoming',
+          requestId: docSnap.id
+        }
+      }
+
+      return { status: 'none' }
+    } catch (error) {
+      console.error('Error checking friend status:', error)
+      return { status: 'none' }
     }
   }
 
@@ -545,6 +601,11 @@ export class FirebaseChatService {
       image?: string
       fileUrl?: string
       fileName?: string
+      replyTo?: {
+        messageId: string
+        senderName: string
+        snippet: string
+      }
     },
     isBoss: boolean = false
   ): Promise<boolean> {
@@ -570,6 +631,11 @@ export class FirebaseChatService {
       if (messageData.image) message.image = messageData.image
       if (messageData.fileUrl) message.fileUrl = messageData.fileUrl
       if (messageData.fileName) message.fileName = messageData.fileName
+      if (messageData.replyTo) {
+        message.replyTo = messageData.replyTo.messageId
+        message.replySnippet = messageData.replyTo.snippet
+        message.replySenderName = messageData.replyTo.senderName
+      }
 
       // Add message
       await addDoc(collection(db, 'messages'), message)
@@ -589,6 +655,96 @@ export class FirebaseChatService {
     } catch (error) {
       console.error('Error sending message:', error)
       return false
+    }
+  }
+
+  /**
+   * Edit a message
+   */
+  static async editMessage(messageId: string, userId: string, newText: string): Promise<boolean> {
+    try {
+      const messageRef = doc(db, 'messages', messageId)
+      const messageDoc = await getDoc(messageRef)
+      if (!messageDoc.exists()) return false
+
+      const data = messageDoc.data() as ChatMessage
+      if (data.senderId !== userId || data.deleted) return false
+
+      await updateDoc(messageRef, {
+        text: newText,
+        edited: true,
+        editedAt: serverTimestamp()
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error editing message:', error)
+      return false
+    }
+  }
+
+  /**
+   * Delete a message (soft delete)
+   */
+  static async deleteMessage(messageId: string, userId: string): Promise<boolean> {
+    try {
+      const messageRef = doc(db, 'messages', messageId)
+      const messageDoc = await getDoc(messageRef)
+      if (!messageDoc.exists()) return false
+
+      const data = messageDoc.data() as ChatMessage
+      if (data.senderId !== userId || data.deleted) return false
+
+      await updateDoc(messageRef, {
+        text: 'This message was deleted',
+        deleted: true,
+        image: deleteField(),
+        fileUrl: deleteField(),
+        fileName: deleteField(),
+        replyTo: deleteField(),
+        replySnippet: deleteField(),
+        replySenderName: deleteField(),
+        edited: false
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error deleting message:', error)
+      return false
+    }
+  }
+
+  /**
+   * Toggle reaction (like) on a message
+   */
+  static async toggleReaction(messageId: string, userId: string, userName: string, emoji: string = '❤️'): Promise<void> {
+    try {
+      const messageRef = doc(db, 'messages', messageId)
+      const messageDoc = await getDoc(messageRef)
+      if (!messageDoc.exists()) return
+
+      const data = messageDoc.data() as ChatMessage
+      const reactions = Array.isArray(data.reactions) ? [...data.reactions] : []
+      const existingIndex = reactions.findIndex(
+        (reaction) => reaction.userId === userId && reaction.emoji === emoji
+      )
+
+      if (existingIndex >= 0) {
+        reactions.splice(existingIndex, 1)
+      } else {
+        reactions.push({
+          userId,
+          userName,
+          emoji,
+          timestamp: new Date()
+        })
+      }
+
+      await updateDoc(messageRef, {
+        reactions
+      })
+    } catch (error) {
+      console.error('Error toggling reaction:', error)
     }
   }
 
@@ -812,6 +968,32 @@ export class FirebaseChatService {
     } catch (error) {
       console.error('Error updating group info:', error)
       return false
+    }
+  }
+
+  /**
+   * Get detailed participant info for chats
+   */
+  static async getChatParticipants(chatId: string): Promise<ChatUser[]> {
+    try {
+      const chatRef = doc(db, 'chats', chatId)
+      const chatDoc = await getDoc(chatRef)
+      if (!chatDoc.exists()) return []
+
+      const chat = chatDoc.data() as Chat
+      const results: ChatUser[] = []
+
+      for (const participantId of chat.participants) {
+        const user = await this.getUser(participantId)
+        if (user) {
+          results.push(user)
+        }
+      }
+
+      return results
+    } catch (error) {
+      console.error('Error getting chat participants:', error)
+      return []
     }
   }
 }

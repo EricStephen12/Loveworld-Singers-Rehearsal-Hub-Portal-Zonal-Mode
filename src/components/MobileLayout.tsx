@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import SplashScreen from './SplashScreen'
 import AuthScreen from './AuthScreen'
 import ProfileCompletionScreen from './ProfileCompletionScreen'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 // Subscription components removed
 
 interface MobileLayoutProps {

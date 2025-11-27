@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { FileText, Music, Tag, Users, Menu, ArrowLeft } from "lucide-react";
 import { PraiseNightSong, Comment, PraiseNight, Category } from '../../types/supabase';
 import { useAdminData } from '../../hooks/useAdminData';
-import { useZone } from '@/contexts/ZoneContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useZone } from '@/hooks/useZone';
+import { useAuth } from '@/hooks/useAuth';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { FirebaseAuthService } from '@/lib/firebase-auth';
@@ -35,6 +35,9 @@ import DashboardSection from '../../components/admin/DashboardSection';
 export default function AdminPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
+  
+  // Don't show anything if no user - prevents redirect
+  if (!user) return null
   
   // Zone context
   const { currentZone, isZoneCoordinator, isLoading: zoneLoading } = useZone();
@@ -255,9 +258,8 @@ export default function AdminPage() {
 
   // Check if user is zone coordinator
   useEffect(() => {
+    // Don't redirect - just return nothing if no user
     if (!user) {
-      console.log('❌ No user, redirecting to auth')
-      router.push('/auth')
       return
     }
 

@@ -16,8 +16,20 @@ export default function PWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstallBanner, setShowInstallBanner] = useState(false)
   const [showInstallDialog, setShowInstallDialog] = useState(false)
+  const [isNativeApp, setIsNativeApp] = useState(false)
 
   useEffect(() => {
+    // Check if running in native app
+    const nativeAppFlag = localStorage.getItem('isNativeApp') === 'true'
+    const isNative = nativeAppFlag || (typeof window !== 'undefined' && (window as any).isNativeApp)
+    setIsNativeApp(isNative)
+
+    // Don't show install prompts if running in native app
+    if (isNative) {
+      console.log('📱 Native app detected - hiding PWA install prompts')
+      return
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
@@ -67,6 +79,11 @@ export default function PWAInstall() {
     
     // Only close the dialog, don't hide the banner
     setShowInstallDialog(false)
+  }
+
+  // Don't show install prompts if running in native app
+  if (isNativeApp) {
+    return null
   }
 
   // Only show the install button if we have the deferred prompt

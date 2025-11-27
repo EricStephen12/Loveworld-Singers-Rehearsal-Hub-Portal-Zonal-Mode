@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { getZoneByInvitationCode } from '@/config/zones'

@@ -38,12 +38,13 @@ export function useInstantUpdates<T>(config: InstantUpdateConfig) {
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [config.key, config.fetchFn]);
+  }, [config.key]); // Removed config.fetchFn to prevent infinite loops
 
-  // Initial load
+  // Initial load - only run once on mount
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount
 
   // Background refresh (Instagram-style)
   useEffect(() => {
@@ -57,7 +58,8 @@ export function useInstantUpdates<T>(config: InstantUpdateConfig) {
     }, config.updateInterval);
 
     return () => clearInterval(interval);
-  }, [fetchData, config.updateInterval, lastUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.updateInterval]); // Only depend on updateInterval, not fetchData or lastUpdate
 
   // Optimistic update function
   const optimisticUpdate = useCallback((newData: T) => {
@@ -70,7 +72,7 @@ export function useInstantUpdates<T>(config: InstantUpdateConfig) {
         fetchData(false);
       }, 100);
     }
-  }, [config.key, config.showOptimistic, fetchData]);
+  }, [config.key, config.showOptimistic]); // Removed fetchData to prevent infinite loops
 
   return {
     data,

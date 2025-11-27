@@ -99,10 +99,8 @@ export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCo
     title: 'Logout',
     badge: null,
     onClick: onLogout || (() => {
-      console.log('⚠️ Logout callback not provided, using fallback');
-      if (typeof window !== 'undefined') {
-        window.location.href = '/auth';
-      }
+      console.log('⚠️ Logout callback not provided - no fallback redirect');
+      // No hard redirect - let the app handle it
     }),
   },
 ]

@@ -6,7 +6,7 @@ import { X, Save, Trash2, FolderOpen, Clock, Plus, History } from 'lucide-react'
 import { PraiseNightSong, Comment, Category } from '../types/supabase';
 import MediaSelectionModal from './MediaSelectionModal';
 import BasicTextEditor from './BasicTextEditor';
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 // import { createHistoryEntry, deleteHistoryEntry } from '@/lib/firebase-database-service';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';

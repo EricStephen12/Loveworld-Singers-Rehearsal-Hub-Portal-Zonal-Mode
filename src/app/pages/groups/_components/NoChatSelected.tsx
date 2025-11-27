@@ -1,6 +1,6 @@
 'use client'
 
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 import { MessageCircle, Users, Search, Plus } from 'lucide-react'
 
 export default function NoChatSelected() {

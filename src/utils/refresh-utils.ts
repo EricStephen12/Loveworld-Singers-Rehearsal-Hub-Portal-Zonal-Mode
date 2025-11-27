@@ -81,6 +81,11 @@ export const handleAppRefresh = async () => {
     
     // Reload the page for complete refresh
     setTimeout(() => {
+      // Remove loading indicator before reload
+      const loadingDiv = document.querySelector('body > div[style*="position: fixed"]')
+      if (loadingDiv) {
+        loadingDiv.remove()
+      }
       window.location.reload();
     }, 1000); // Increased delay to show loading indicator
     

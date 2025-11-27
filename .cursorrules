@@ -1,0 +1,8 @@
+## Cursor Rules & Patterns
+
+- Always update/read Memory Bank files (`memory-bank/*.md`) at the start of each task; treat them as the authoritative project log.
+- Project runs Next.js 15 (App Router) with Turbopack — be mindful of client vs server component boundaries when fixing imports.
+- Prefer client-only dynamic imports for heavy media libraries like `react-player`; confirm their package entry exports before referencing sub-paths.
+- Keep documentation aligned with active work (update `activeContext.md` and `progress.md` after major changes).
+
+

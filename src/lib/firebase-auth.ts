@@ -19,7 +19,7 @@ import { ErrorHandler } from './error-handler'
 
 export class FirebaseAuthService {
   // Sign in with email and password
-  static async signIn(email: string, password: string) {
+  static async signIn(email: string, password: string, rememberMe: boolean = true) {
     try {
       // Validate inputs
       const emailError = ErrorHandler.validateEmail(email)
@@ -32,7 +32,8 @@ export class FirebaseAuthService {
         return { user: null, error: passwordError, userFriendly: true }
       }
       
-      // Set persistence to LOCAL (keeps user signed in across browser sessions)
+      // Use LOCAL persistence - keeps user logged in across browser sessions
+      // This is what Instagram, Twitter, Facebook use
       await setPersistence(auth, browserLocalPersistence)
       
       const result = await signInWithEmailAndPassword(auth, email, password)
@@ -52,6 +53,16 @@ export class FirebaseAuthService {
       // Create new session
       await SessionManager.createSession(result.user)
       
+      // Store auth token in localStorage for auto-login on return
+      if (rememberMe && typeof window !== 'undefined') {
+        const token = await result.user.getIdToken()
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('userEmail', email)
+        localStorage.setItem('userId', result.user.uid)
+        localStorage.setItem('lastLoginTime', Date.now().toString())
+        console.log('✅ Auth token saved for auto-login')
+      }
+      
       return { user: result.user, error: null }
     } catch (error: any) {
       const friendlyError = ErrorHandler.getErrorMessage(error, 'auth')
@@ -62,7 +73,7 @@ export class FirebaseAuthService {
   // Sign up with email and password
   static async signUp(email: string, password: string, userData: any) {
     try {
-      // Set persistence to LOCAL (keeps user signed in across browser sessions)
+      // Use LOCAL persistence
       await setPersistence(auth, browserLocalPersistence)
       
       const result = await createUserWithEmailAndPassword(auth, email, password)
@@ -80,33 +91,16 @@ export class FirebaseAuthService {
     }
   }
 
-  // Sign out
+  // Sign out - Firebase handles everything automatically
   static async signOut() {
     try {
       const currentUser = auth.currentUser
       if (currentUser) {
-        // End session first
         await SessionManager.endSession(currentUser.uid)
       }
       
-      // Clear persistence before signing out
-      await setPersistence(auth, browserSessionPersistence)
-      
-      // Sign out from Firebase
+      // Firebase clears localStorage automatically with browserLocalPersistence
       await signOut(auth)
-      
-      // Clear any remaining auth state
-      if (typeof window !== 'undefined') {
-        // Clear all Firebase keys from localStorage
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('firebase') || key.includes('__firebase') || key.startsWith('firebase:')) {
-            localStorage.removeItem(key)
-          }
-        })
-        
-        // Clear sessionStorage too
-        sessionStorage.clear()
-      }
       
       return { error: null, success: true }
     } catch (error: any) {
@@ -128,16 +122,15 @@ export class FirebaseAuthService {
   // Ensure auth persistence is set (call this on app startup)
   static async ensurePersistence() {
     try {
+      // Use LOCAL persistence - keeps user logged in like Instagram/Twitter
       await setPersistence(auth, browserLocalPersistence)
-      console.log('✅ Auth persistence set to LOCAL - users will stay signed in')
+      console.log('✅ Auth persistence set to LOCAL - user stays logged in')
       
       // Additional persistence checks
       const currentUser = auth.currentUser
       if (currentUser) {
         console.log('✅ User is already signed in:', currentUser.email)
-        console.log('✅ Auth persistence working - user will stay signed in across sessions')
         console.log('✅ User UID:', currentUser.uid)
-        console.log('✅ Auth state:', currentUser ? 'AUTHENTICATED' : 'NOT AUTHENTICATED')
       } else {
         console.log('ℹ️ No user currently signed in')
       }
@@ -215,7 +208,7 @@ export class FirebaseAuthService {
   // Create user with email and password (alias for signUp)
   static async createUserWithEmailAndPassword(email: string, password: string, userData?: any) {
     try {
-      // Set persistence to LOCAL (keeps user signed in across browser sessions)
+      // Use LOCAL persistence
       await setPersistence(auth, browserLocalPersistence)
       
       const result = await createUserWithEmailAndPassword(auth, email, password)
@@ -251,8 +244,63 @@ export class FirebaseAuthService {
   }
 
   // Sign in with email and password (alias for signIn)
-  static async signInWithEmailAndPassword(email: string, password: string) {
-    return this.signIn(email, password)
+  static async signInWithEmailAndPassword(email: string, password: string, rememberMe: boolean = true) {
+    return this.signIn(email, password, rememberMe)
+  }
+
+  // Auto-login using stored token
+  static async autoLogin(): Promise<{ user: User | null, error: string | null }> {
+    try {
+      if (typeof window === 'undefined') {
+        return { user: null, error: 'Not in browser' }
+      }
+
+      // CRITICAL: Check if user is logging out - prevent auto-login
+      const isLoggingOut = localStorage.getItem('isLoggingOut') === 'true' || 
+                          localStorage.getItem('logging_out') === 'true'
+      if (isLoggingOut) {
+        console.log('🚫 Auto-login blocked - logout in progress')
+        return { user: null, error: 'Logout in progress' }
+      }
+
+      const authToken = localStorage.getItem('authToken')
+      const userId = localStorage.getItem('userId')
+      const lastLoginTime = localStorage.getItem('lastLoginTime')
+
+      if (!authToken || !userId || !lastLoginTime) {
+        console.log('ℹ️ No stored auth token found')
+        return { user: null, error: 'No stored credentials' }
+      }
+
+      // Check if token is too old (7 days)
+      const tokenAge = Date.now() - parseInt(lastLoginTime)
+      const maxAge = 7 * 24 * 60 * 60 * 1000 // 7 days
+      if (tokenAge > maxAge) {
+        console.log('⚠️ Stored token expired')
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('userId')
+        localStorage.removeItem('userEmail')
+        localStorage.removeItem('lastLoginTime')
+        return { user: null, error: 'Token expired' }
+      }
+
+      console.log('🔄 Attempting auto-login with stored token...')
+
+      // Try to get current user from Firebase session
+      const currentUser = auth.currentUser
+      if (currentUser && currentUser.uid === userId) {
+        console.log('✅ Auto-login successful (Firebase session exists)')
+        return { user: currentUser, error: null }
+      }
+
+      // No Firebase session - user needs to login again
+      console.log('ℹ️ No Firebase session - user needs to login again')
+      return { user: null, error: 'Session expired - please login again' }
+
+    } catch (error: any) {
+      console.error('❌ Auto-login failed:', error)
+      return { user: null, error: error.message }
+    }
   }
 
   // Reset password - sends email with in-app redirect
@@ -312,7 +360,7 @@ export class FirebaseAuthService {
   // Sign in with Google
   static async signInWithGoogle() {
     try {
-      // Set persistence to LOCAL (keeps user signed in across browser sessions)
+      // Use LOCAL persistence
       await setPersistence(auth, browserLocalPersistence)
       
       const provider = new GoogleAuthProvider()

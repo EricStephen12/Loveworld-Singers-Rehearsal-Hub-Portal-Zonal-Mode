@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { SupabaseSupport } from '@/lib/supabase-support';
 import { debugSupportSystem } from '@/lib/debug-support';
 import {

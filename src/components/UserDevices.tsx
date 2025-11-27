@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DeviceRegistration } from '@/lib/device-registration';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function UserDevices() {
   const { user } = useAuth();

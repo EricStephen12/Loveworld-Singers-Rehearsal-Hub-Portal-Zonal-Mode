@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { mediaService as firebaseMediaService } from '../_lib'
 import type { MediaItem, Genre, UserWatchHistory } from '../_lib'
 

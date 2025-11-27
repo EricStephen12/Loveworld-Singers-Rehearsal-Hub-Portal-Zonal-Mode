@@ -13,14 +13,14 @@ import SongDetailModal from "@/components/SongDetailModal";
 import { PraiseNightSong, PraiseNight } from "@/types/supabase";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
 import ScreenHeader from "@/components/ScreenHeader";
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import SharedDrawer from "@/components/SharedDrawer";
 import { getMenuItems } from "@/config/menuItems";
 import { useAudio } from "@/contexts/AudioContext";
 import { usePageSearch, PageSearchResult } from "@/hooks/usePageSearch";
 import AudioWave from "@/components/AudioWave";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useServerCountdown } from "@/hooks/useServerCountdown";
 import { handleAppRefresh } from "@/utils/refresh-utils";
 
@@ -875,7 +875,12 @@ function PraiseNightPageContent() {
   if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || filteredPraiseNights.length === 0)) {
     console.log('⚠️ No data for category, showing empty state');
   return (
-      <div className="mobile-vh flex flex-col bg-gradient-to-br from-slate-50 via-white to-purple-50 safe-area-bottom">
+      <div
+        className="mobile-vh flex flex-col safe-area-bottom"
+        style={{
+          background: `linear-gradient(135deg, ${zoneColor}15, #ffffff)`,
+        }}
+      >
         {/* Simple Header - No menu, just title */}
         <div className="flex-shrink-0 w-full">
           <div className="bg-white/80 backdrop-blur-xl border-b border-gray-100/50 min-h-[60px] sm:min-h-[70px] w-full">
@@ -928,7 +933,11 @@ function PraiseNightPageContent() {
                 window.location.href = '/pages/rehearsals';
                 console.log('🔙 Navigation command sent');
               }}
-              className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            className="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            style={{
+              backgroundColor: zoneColor,
+              filter: 'brightness(0.95)',
+            }}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Rehearsals
@@ -1713,18 +1722,35 @@ function PraiseNightPageContent() {
                           }
                           return isActive;
                         })()
-                          ? 'ring-2 ring-purple-400 shadow-lg shadow-purple-200/30 bg-purple-200 hover:bg-purple-300' // Playing - solid purple
+                          ? 'ring-2 shadow-lg' // Playing - use zone color
                           : 'bg-white hover:bg-gray-50 ring-1 ring-black/5'
                       }`}
+                      style={(() => {
+                        const isActive = currentSong?.id === song.id;
+                        if (isActive) {
+                          return {
+                            backgroundColor: `${zoneColor}40`,
+                            borderColor: zoneColor,
+                            boxShadow: `0 0 0 2px ${zoneColor}, 0 10px 15px -3px ${zoneColor}30, 0 4px 6px -2px ${zoneColor}20`
+                          };
+                        }
+                        return {};
+                      })()}
                   >
                     {/* Song Header - Rehearsal Style */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 lg:gap-4">
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
+                        <div 
+                          className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm"
+                          style={{ backgroundColor: `${zoneColor}20` }}
+                        >
                           {currentSong?.id === song.id && isPlaying ? (
                             <AudioWave className="h-6 w-6" />
                           ) : (
-                          <span className="text-sm lg:text-base font-semibold text-purple-600">
+                          <span 
+                            className="text-sm lg:text-base font-semibold"
+                            style={{ color: zoneColor }}
+                          >
                             {index + 1}
                           </span>
                           )}
@@ -1740,8 +1766,14 @@ function PraiseNightPageContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         {/* Rehearsal Count */}
-                        <div className="px-2 py-1 bg-purple-100 rounded-full">
-                          <span className="text-xs font-bold text-purple-600">
+                        <div 
+                          className="px-2 py-1 rounded-full"
+                          style={{ backgroundColor: `${zoneColor}20` }}
+                        >
+                          <span 
+                            className="text-xs font-bold"
+                            style={{ color: zoneColor }}
+                          >
                             x{song.rehearsalCount || 1}
                           </span>
                         </div>
@@ -1773,7 +1805,12 @@ function PraiseNightPageContent() {
 
       {/* ✅ Category Bar for Individual Archive Pages with Horizontal Scroll */}
       {categoryFilter === 'archive' && pageParam && (
-        <div className="bottom-bar-enhanced flex-shrink-0 z-30 bg-gradient-to-t from-purple-100/60 via-purple-50/40 to-white/20 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full">
+        <div 
+          className="bottom-bar-enhanced flex-shrink-0 z-30 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
+          style={{
+            background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
+          }}
+        >
           <div className="w-full flex items-center px-3 sm:px-4 lg:px-6 py-4 gap-2">
             {/* Category buttons with horizontal scroll */}
             <div
@@ -1790,9 +1827,13 @@ function PraiseNightPageContent() {
                         hasActiveSong
                           ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
                           : activeCategory === category
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-200/50'
+                    ? 'text-white shadow-md'
                     : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200'
                     }`}
+                  style={activeCategory === category && !hasActiveSong ? {
+                    backgroundColor: zoneColor,
+                    boxShadow: `0 4px 6px -1px ${zoneColor}40, 0 2px 4px -1px ${zoneColor}20`
+                  } : {}}
                 >
                       <span className="block leading-tight">{category}</span>
                 </button>
@@ -1806,7 +1847,12 @@ function PraiseNightPageContent() {
 
        {/* ✅ Fixed Bottom Bar with Horizontal Scrolling Categories */}
       {filteredPraiseNights.length > 0 && categoryFilter !== 'archive' && (
-         <div className="bottom-bar-enhanced flex-shrink-0 z-30 bg-gradient-to-t from-purple-100/60 via-purple-50/40 to-white/20 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full">
+         <div 
+           className="bottom-bar-enhanced flex-shrink-0 z-30 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
+           style={{
+             background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
+           }}
+         >
              <div className="w-full flex items-center px-3 sm:px-4 lg:px-6 py-4 gap-2">
               {/* Category buttons with horizontal scroll */}
               <div
@@ -1823,9 +1869,13 @@ function PraiseNightPageContent() {
                           hasActiveSong
                             ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
                             : activeCategory === category
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-200/50'
+                    ? 'text-white shadow-md'
                     : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200'
                     }`}
+                  style={activeCategory === category && !hasActiveSong ? {
+                    backgroundColor: zoneColor,
+                    boxShadow: `0 4px 6px -1px ${zoneColor}40, 0 2px 4px -1px ${zoneColor}20`
+                  } : {}}
                 >
                         <span className="block leading-tight">{category}</span>
                 </button>

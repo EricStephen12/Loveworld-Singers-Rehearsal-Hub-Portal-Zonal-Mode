@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSubscription } from '@/contexts/SubscriptionContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { canSeeUpgradePrompts } from '@/lib/user-role-utils'
 import { Crown, Lock } from 'lucide-react'
 

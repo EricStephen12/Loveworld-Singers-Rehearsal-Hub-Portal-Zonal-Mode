@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '../_context/ChatContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 import { X, UserPlus, Check, X as XIcon, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useState } from 'react'

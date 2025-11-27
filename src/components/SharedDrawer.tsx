@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { X, LogOut, AlertCircle } from 'lucide-react'
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 
 type DrawerItem = {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>

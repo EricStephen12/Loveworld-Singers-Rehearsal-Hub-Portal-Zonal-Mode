@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useMedia } from '../../_context/MediaContext'
 import { ArrowLeft, Heart, Share2, Download } from 'lucide-react'
 import { firebaseMediaService, MediaItem } from '../../_lib'
-import { convertToYouTubeEmbed, isYouTubeUrl } from '@/utils/youtube'
+import { isYouTubeUrl } from '@/utils/youtube'
+import CustomVideoPlayer from '../../_components/CustomVideoPlayer'
 
 export default function PlayerPage() {
   const router = useRouter()
@@ -16,7 +17,7 @@ export default function PlayerPage() {
   
   const [media, setMedia] = useState<MediaItem | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [progress, setProgress] = useState(0)
+  const [currentDuration, setCurrentDuration] = useState(0)
 
   const mediaId = params.id as string
   const isFavorited = favorites.some(fav => fav.id === mediaId)
@@ -43,19 +44,25 @@ export default function PlayerPage() {
     }
   }
 
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = e.currentTarget
-    const currentProgress = (video.currentTime / video.duration) * 100
-    setProgress(currentProgress)
+  const handleProgress = (progress: { played: number; playedSeconds: number }) => {
+    const progressPercent = progress.played * 100
 
     // Save progress every 10 seconds
-    if (Math.floor(video.currentTime) % 10 === 0) {
-      saveWatchProgress(mediaId, currentProgress)
+    if (Math.floor(progress.playedSeconds) % 10 === 0) {
+      saveWatchProgress(mediaId, progressPercent)
     }
   }
 
-  const isYouTubeVideo = media?.isYouTube || (media?.videoUrl && isYouTubeUrl(media.videoUrl))
-  const embedUrl = isYouTubeVideo && media?.videoUrl ? convertToYouTubeEmbed(media.videoUrl) : null
+  const handleDuration = (duration: number) => {
+    setCurrentDuration(duration)
+  }
+
+  const handleEnded = () => {
+    saveWatchProgress(mediaId, 100)
+  }
+
+  const playbackUrl = media?.youtubeUrl || media?.videoUrl || ''
+  const isYouTubeVideo = media?.isYouTube || (playbackUrl && isYouTubeUrl(playbackUrl))
 
   const handleToggleFavorite = async () => {
     if (isFavorited) {
@@ -65,10 +72,8 @@ export default function PlayerPage() {
     }
   }
 
-  if (!user) {
-    router.push('/auth')
-    return null
-  }
+  // Don't redirect - just show nothing if no user
+  if (!user) return null
 
   if (isLoading) {
     return (
@@ -137,23 +142,14 @@ export default function PlayerPage() {
 
       {/* Video Player */}
       <div className="relative w-full h-screen">
-        {isYouTubeVideo && embedUrl ? (
-          <iframe
-            src={embedUrl}
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={media.title}
-          />
-        ) : (
-          <video
-            src={media.videoUrl}
+        {playbackUrl && (
+          <CustomVideoPlayer
+            url={playbackUrl}
+            isYouTube={!!isYouTubeVideo}
             poster={media.backdropImage || media.thumbnail}
-            controls
-            autoPlay
-            className="w-full h-full object-contain bg-black"
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={() => saveWatchProgress(mediaId, 100)}
+            onProgress={handleProgress}
+            onEnded={handleEnded}
+            onDuration={handleDuration}
           />
         )}
       </div>

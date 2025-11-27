@@ -1,8 +1,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { 
   FirebaseChatService, 
   Chat, 
@@ -18,6 +18,8 @@ interface ChatContextType {
   messages: ChatMessage[]
   onlineUsers: ChatUser[]
   friendRequests: FriendRequest[]
+  replyToMessage: ChatMessage | null
+  editingMessage: ChatMessage | null
   
   // Loading states
   isChatsLoading: boolean
@@ -26,12 +28,18 @@ interface ChatContextType {
   
   // Actions
   setSelectedChat: (chat: Chat | null) => void
+  setReplyToMessage: (message: ChatMessage | null) => void
+  setEditingMessage: (message: ChatMessage | null) => void
   sendMessage: (messageData: { text?: string; image?: string; fileUrl?: string; fileName?: string }) => Promise<boolean>
   searchUsers: (searchTerm: string) => Promise<ChatUser[]>
   createDirectChat: (userId: string) => Promise<string | null>
   createGroupChat: (name: string, description: string, participantIds: string[]) => Promise<string | null>
   sendFriendRequest: (userId: string) => Promise<boolean>
   acceptFriendRequest: (requestId: string) => Promise<boolean>
+  getFriendStatus: (userId: string) => Promise<{ status: 'none' | 'pending_outgoing' | 'pending_incoming' | 'friends'; requestId?: string }>
+  toggleReaction: (messageId: string, emoji?: string) => Promise<void>
+  deleteMessage: (messageId: string) => Promise<boolean>
+  editMessage: (messageId: string, newText: string) => Promise<boolean>
   
   // Group management
   addUserToGroup: (chatId: string, userId: string) => Promise<boolean>
@@ -52,6 +60,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [onlineUsers, setOnlineUsers] = useState<ChatUser[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
+  const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(null)
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null)
   
   // Loading states
   const [isChatsLoading, setIsChatsLoading] = useState(false)
@@ -113,6 +123,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (!selectedChat) {
       setMessages([])
       setIsMessagesLoading(false)
+      setReplyToMessage(null)
+      setEditingMessage(null)
       return
     }
 
@@ -174,14 +186,35 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // Check if user is Boss
     const isBoss = profile?.role === 'boss' || user.email?.toLowerCase().startsWith('boss')
 
-    return await FirebaseChatService.sendMessage(
+    const replyMeta = replyToMessage ? {
+      messageId: replyToMessage.id,
+      senderName: replyToMessage.senderName,
+      snippet: replyToMessage.text 
+        ? replyToMessage.text.slice(0, 120)
+        : replyToMessage.image 
+          ? '📷 Image'
+          : replyToMessage.fileName 
+            ? `📎 ${replyToMessage.fileName}`
+            : 'Message'
+    } : undefined
+
+    const result = await FirebaseChatService.sendMessage(
       selectedChat.id,
       user.uid,
       senderName,
-      messageData,
+      {
+        ...messageData,
+        replyTo: replyMeta
+      },
       isBoss
     )
-  }, [selectedChat, user, profile])
+    
+    if (result) {
+      setReplyToMessage(null)
+    }
+    
+    return result
+  }, [selectedChat, user, profile, replyToMessage])
 
   const searchUsers = useCallback(async (searchTerm: string) => {
     if (!user) return []
@@ -215,6 +248,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const sendFriendRequest = useCallback(async (userId: string) => {
     if (!user) return false
     return await FirebaseChatService.sendFriendRequest(user.uid, userId)
+  }, [user])
+
+  const getFriendStatus = useCallback(async (userId: string) => {
+    if (!user) return { status: 'none' as const }
+    return await FirebaseChatService.getFriendStatus(user.uid, userId)
   }, [user])
 
   const acceptFriendRequest = useCallback(async (requestId: string) => {
@@ -251,6 +289,25 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return await FirebaseChatService.updateGroupInfo(chatId, user.uid, updates)
   }, [user])
 
+  const toggleReaction = useCallback(async (messageId: string, emoji: string = '❤️') => {
+    if (!user) return
+    await FirebaseChatService.toggleReaction(messageId, user.uid, profile?.first_name || user.email || 'You', emoji)
+  }, [user, profile])
+
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!user) return false
+    return await FirebaseChatService.deleteMessage(messageId, user.uid)
+  }, [user])
+
+  const editMessage = useCallback(async (messageId: string, newText: string) => {
+    if (!user) return false
+    const result = await FirebaseChatService.editMessage(messageId, user.uid, newText)
+    if (result) {
+      setEditingMessage(null)
+    }
+    return result
+  }, [user])
+
   const contextValue: ChatContextType = {
     // State
     chats,
@@ -258,6 +315,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     messages,
     onlineUsers,
     friendRequests,
+    replyToMessage,
+    editingMessage,
     
     // Loading states
     isChatsLoading,
@@ -266,12 +325,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     
     // Actions
     setSelectedChat,
+    setReplyToMessage,
+    setEditingMessage,
     sendMessage,
     searchUsers,
     createDirectChat,
     createGroupChat,
     sendFriendRequest,
     acceptFriendRequest,
+    getFriendStatus,
+    toggleReaction,
+    deleteMessage,
+    editMessage,
     
     // Group management
     addUserToGroup,

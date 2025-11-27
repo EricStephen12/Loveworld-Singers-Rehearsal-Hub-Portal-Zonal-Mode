@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2 } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
-import { useZone } from "@/contexts/ZoneContext";
+import { useZone } from "@/hooks/useZone";
 import { isHQGroup } from "@/config/zones";
 import { FirebaseDatabaseService } from "@/lib/firebase-database";
 import { FirebaseCommentService } from "@/lib/firebase-comment-service";
@@ -42,6 +42,21 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // Get zone context to determine comment terminology
   const { currentZone } = useZone();
+  
+  // Get zone color for theming
+  const zoneColor = currentZone?.themeColor || '#9333EA';
+  
+  // Helper to darken color for gradients
+  const darkenColor = (color: string, percent: number) => {
+    const num = parseInt(color.replace("#",""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  };
   
   // Helper function to get correct comment terminology based on zone
   const getCommentLabel = () => {
@@ -1053,9 +1068,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   onClick={() => setActiveHistoryTab('lyrics')}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     activeHistoryTab === 'lyrics'
-                      ? 'bg-purple-600 text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
+                  style={activeHistoryTab === 'lyrics' ? { backgroundColor: zoneColor } : {}}
                 >
                   Lyrics
                 </button>
@@ -1063,9 +1079,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   onClick={() => setActiveHistoryTab('audio')}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     activeHistoryTab === 'audio'
-                      ? 'bg-purple-600 text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
+                  style={activeHistoryTab === 'audio' ? { backgroundColor: zoneColor } : {}}
                 >
                   Audio
                 </button>
@@ -1073,9 +1090,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   onClick={() => setActiveHistoryTab('solfas')}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     activeHistoryTab === 'solfas'
-                      ? 'bg-purple-600 text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
+                  style={activeHistoryTab === 'solfas' ? { backgroundColor: zoneColor } : {}}
                 >
                   Conductor's Guide
                 </button>
@@ -1083,9 +1101,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   onClick={() => setActiveHistoryTab('comments')}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     activeHistoryTab === 'comments'
-                      ? 'bg-purple-600 text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
+                  style={activeHistoryTab === 'comments' ? { backgroundColor: zoneColor } : {}}
                 >
                   {getCommentLabel()}'s Comments
                 </button>
@@ -1093,9 +1112,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   onClick={() => setActiveHistoryTab('metadata')}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     activeHistoryTab === 'metadata'
-                      ? 'bg-purple-600 text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                   }`}
+                  style={activeHistoryTab === 'metadata' ? { backgroundColor: zoneColor } : {}}
                 >
                   Song Details
                 </button>
@@ -1137,7 +1157,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <BookOpen className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1201,7 +1226,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <Music className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1223,7 +1253,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                 <div className="flex items-center gap-3">
                                   <button
                                     onClick={() => handleHistoryAudioPlayPause(entry.id)}
-                                    className="w-10 h-10 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
+                                    className="w-10 h-10 rounded-full text-white transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
+                                    style={{
+                                      backgroundColor: zoneColor
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = zoneColor;
+                                    }}
                                   >
                                     {historyAudioStates[entry.id]?.isPlaying ? (
                                       <Pause className="w-5 h-5" />
@@ -1329,7 +1368,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <Music className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1378,7 +1422,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <Users className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1413,7 +1462,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <Users className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1481,7 +1535,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           className="w-full flex items-center justify-between p-4 hover:bg-white/50 transition-all duration-200 rounded-2xl"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                              }}
+                            >
                               <Settings className="w-5 h-5 text-white" />
                             </div>
                             <div className="text-right">
@@ -1507,7 +1566,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                       const parsed = JSON.parse(entry.new_value);
                                       return Object.entries(parsed).map(([key, value], index) => (
                                         <div key={index} className="flex items-start gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5"></div>
+                                          <div 
+                                            className="w-2 h-2 rounded-full mt-1.5"
+                                            style={{ backgroundColor: zoneColor }}
+                                          ></div>
                                           <div className="flex-1">
                                             <span className="font-semibold text-slate-800">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: </span>
                                             <span className="text-slate-700">{String(value)}</span>
@@ -1518,7 +1580,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                       // If not JSON, split by pipe
                                       return entry.new_value.split(' | ').map((change, index) => (
                                         <div key={index} className="flex items-center gap-2">
-                                          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                                          <div 
+                                            className="w-2 h-2 rounded-full"
+                                            style={{ backgroundColor: zoneColor }}
+                                          ></div>
                                           <span className="text-sm text-slate-700">{change}</span>
                                         </div>
                                       ));
@@ -1545,7 +1610,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         {activeTab === 'lyrics' && !isFullscreenLyrics && (
           <button
             onClick={toggleFullscreenLyrics}
-            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            style={{
+              backgroundColor: zoneColor
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = zoneColor;
+            }}
             title="Fullscreen Lyrics"
           >
             <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1555,7 +1629,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         {activeTab === 'comments' && !isFullscreenComments && (
           <button
             onClick={toggleFullscreenComments}
-            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            style={{
+              backgroundColor: zoneColor
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = zoneColor;
+            }}
             title="Fullscreen Comments"
           >
             <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1565,7 +1648,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         {activeTab === 'solfas' && !isFullscreenSolfas && (
           <button
             onClick={toggleFullscreenSolfas}
-            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
+            style={{
+              backgroundColor: zoneColor
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = zoneColor;
+            }}
             title="Fullscreen Conductor's Guide"
           >
             <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

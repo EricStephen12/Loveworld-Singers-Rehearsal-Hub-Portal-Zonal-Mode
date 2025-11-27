@@ -6,7 +6,7 @@ import Link from 'next/link';
 import ScreenHeader from '@/components/ScreenHeader';
 import SharedDrawer from '@/components/SharedDrawer';
 import { getMenuItems } from '@/config/menuItems';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import {
   User,
   MessageCircle,

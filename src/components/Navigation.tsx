@@ -10,8 +10,8 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const navItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/pages/praise-night', label: 'Praise Night', icon: Music },
+    { href: '/home', label: 'Home', icon: Home },
+    { href: '/pages/praise-night', label: 'Program', icon: Music },
     { href: '/pages/admin', label: 'Admin', icon: Settings },
   ]
 
@@ -21,7 +21,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo - Mobile Optimized */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 touch-target">
+            <Link href="/home" className="flex items-center space-x-2 touch-target">
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Music className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>

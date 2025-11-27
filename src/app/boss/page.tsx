@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { Users, Eye, Crown, TrendingUp, Activity, BarChart3, CreditCard, CheckCircle, XCircle, Clock, Calendar, DollarSign, Image as ImageIcon } from 'lucide-react'
 import AnalyticsPage from '../pages/admin/analytics/page'

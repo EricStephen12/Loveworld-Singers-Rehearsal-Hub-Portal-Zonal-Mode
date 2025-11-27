@@ -1,4 +1,4 @@
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 import { bypassesFeatureGates, requiresSubscription } from '@/config/zones'
 
 /**

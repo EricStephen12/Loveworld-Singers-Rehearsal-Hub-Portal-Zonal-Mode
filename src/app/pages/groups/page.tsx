@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { useChat } from './_context/ChatContext'
 import { ArrowLeft, MessageCircle, Users, Search, Plus, UserPlus } from 'lucide-react'
 import { 
@@ -11,7 +11,8 @@ import {
   ChatContainer,
   NoChatSelected,
   UserSearchModal,
-  CreateGroupModal
+  CreateGroupModal,
+  FriendRequestsModal
 } from './_components'
 
 
@@ -25,25 +26,11 @@ export default function GroupsPage() {
   
   const [showUserSearch, setShowUserSearch] = useState(false)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [showFriendRequests, setShowFriendRequests] = useState(false)
 
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Please Sign In</h2>
-          <p className="text-gray-600 mb-4">You need to be signed in to access chat</p>
-          <button
-            onClick={() => router.push('/auth')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Don't show anything if no user - prevents redirect
+  if (!user) return null
 
   if (zoneLoading) {
     return (
@@ -79,7 +66,7 @@ export default function GroupsPage() {
 
       {/* Header */}
       <div 
-        className="flex-shrink-0 p-3 sm:p-4 text-white shadow-lg"
+        className={`flex-shrink-0 p-3 sm:p-4 text-white shadow-lg ${selectedChat ? 'hidden md:block' : ''}`}
         style={{ 
           background: currentZone?.themeColor 
             ? `linear-gradient(135deg, ${currentZone.themeColor} 0%, ${adjustColor(currentZone.themeColor, -20)} 100%)`
@@ -134,7 +121,11 @@ export default function GroupsPage() {
 
         {/* Chat Area - Show on mobile when chat is selected, full width on mobile */}
         <div className={`flex-1 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
-          {selectedChat ? <ChatContainer /> : <NoChatSelected />}
+          {selectedChat ? (
+            <ChatContainer onOpenFriendRequests={() => setShowFriendRequests(true)} />
+          ) : (
+            <NoChatSelected />
+          )}
         </div>
       </div>
 
@@ -147,6 +138,11 @@ export default function GroupsPage() {
       <CreateGroupModal 
         isOpen={showCreateGroup} 
         onClose={() => setShowCreateGroup(false)} 
+      />
+
+      <FriendRequestsModal
+        isOpen={showFriendRequests}
+        onClose={() => setShowFriendRequests(false)}
       />
       
 

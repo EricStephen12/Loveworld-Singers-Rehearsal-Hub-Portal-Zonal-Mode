@@ -30,7 +30,7 @@ import {
   deleteCloudinaryMedia,
   CloudinaryMediaFile
 } from '@/lib/cloudinary-media-service';
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { Toast } from './Toast';
 import { runMediaDiagnostics, printDiagnostics, DiagnosticResult } from '@/utils/media-diagnostics';
 

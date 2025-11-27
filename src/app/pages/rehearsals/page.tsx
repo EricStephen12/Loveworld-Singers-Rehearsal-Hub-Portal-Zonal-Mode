@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 
 export default function RehearsalsPage() {

@@ -1,17 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { Upload, Film, Image, Loader2, Play, Trash2, Link, X } from 'lucide-react'
-import { mediaService } from '@/app/pages/media/_lib'
+import { useAuth } from '@/hooks/useAuth'
+import { Upload, Film, Image, Loader2, Play, Link, X, RefreshCcw, Edit, Trash2 } from 'lucide-react'
+import { videoUploadService, type VideoUploadRecord } from '@/lib/videoUploadService'
 import { useAdminTheme } from './AdminThemeProvider'
 import { CONTENT_TYPES, ContentType } from '@/config/contentTypes'
-import { extractYouTubeVideoId, convertToYouTubeEmbed, isYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
+import { extractYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
 
 export default function MediaUploadSection() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { theme } = useAdminTheme()
   
   const [isUploading, setIsUploading] = useState(false)
@@ -32,6 +32,148 @@ export default function MediaUploadSection() {
   })
 
   const [uploadMethod, setUploadMethod] = useState<'upload' | 'youtube'>('upload')
+  const [recentUploads, setRecentUploads] = useState<VideoUploadRecord[]>([])
+  const [isRecentLoading, setIsRecentLoading] = useState(true)
+  const [recentError, setRecentError] = useState<string | null>(null)
+  const [editingVideo, setEditingVideo] = useState<VideoUploadRecord | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null)
+
+  useEffect(() => {
+    refreshRecentUploads()
+  }, [])
+
+  const refreshRecentUploads = async () => {
+    setIsRecentLoading(true)
+    setRecentError(null)
+    try {
+      const uploads = await videoUploadService.getAllUploads()
+      setRecentUploads(uploads)
+    } catch (error) {
+      console.error('Failed to load uploads:', error)
+      setRecentError('Unable to load uploads right now.')
+    } finally {
+      setIsRecentLoading(false)
+    }
+  }
+
+  const handleEdit = (video: VideoUploadRecord) => {
+    setEditingVideo(video)
+    setFormData({
+      title: video.title,
+      description: video.description,
+      type: video.type as ContentType,
+      genre: video.genre || [],
+      videoUrl: video.videoUrl || '',
+      youtubeUrl: video.youtubeUrl || '',
+      thumbnail: video.thumbnail,
+      backdropImage: video.backdropImage || '',
+      duration: video.duration || 0,
+      releaseYear: video.releaseYear || new Date().getFullYear(),
+      featured: video.featured,
+      isYouTube: video.isYouTube
+    })
+    setUploadMethod(video.sourceType === 'youtube' ? 'youtube' : 'upload')
+    setShowEditModal(true)
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingVideo || !user) return
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    try {
+      const isYouTubeMode = uploadMethod === 'youtube'
+      const playbackUrl = isYouTubeMode
+        ? (formData.youtubeUrl || '')
+        : (formData.videoUrl || '')
+
+      if (!formData.title || !playbackUrl || !formData.thumbnail) {
+        alert('Please fill in all required fields')
+        setIsUploading(false)
+        return
+      }
+
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90))
+      }, 200)
+
+      await videoUploadService.updateUpload(editingVideo.id, {
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        genre: formData.genre,
+        playbackUrl,
+        videoUrl: !isYouTubeMode ? formData.videoUrl : undefined,
+        youtubeUrl: isYouTubeMode ? formData.youtubeUrl : undefined,
+        thumbnail: formData.thumbnail,
+        backdropImage: formData.backdropImage || formData.thumbnail,
+        duration: formData.duration,
+        releaseYear: formData.releaseYear,
+        featured: formData.featured,
+        isYouTube: formData.isYouTube,
+        sourceType: isYouTubeMode ? 'youtube' : 'upload',
+        createdBy: user.uid,
+        createdByEmail: user.email ?? null,
+        createdByName: user.displayName || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || null,
+        views: editingVideo.views || 0,
+        likes: editingVideo.likes || 0
+      })
+
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      alert('Video updated successfully!')
+      setShowEditModal(false)
+      setEditingVideo(null)
+      
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        type: 'praise',
+        genre: [],
+        videoUrl: '',
+        youtubeUrl: '',
+        thumbnail: '',
+        backdropImage: '',
+        duration: 0,
+        releaseYear: new Date().getFullYear(),
+        featured: false,
+        isYouTube: false
+      })
+      setUploadMethod('upload')
+      refreshRecentUploads()
+    } catch (error) {
+      console.error('Update error:', error)
+      alert('Failed to update video')
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+      return
+    }
+
+    setDeletingVideoId(id)
+    try {
+      await videoUploadService.deleteUpload(id)
+      alert('Video deleted successfully!')
+      refreshRecentUploads()
+    } catch (error) {
+      console.error('Delete error:', error)
+      alert('Failed to delete video')
+    } finally {
+      setDeletingVideoId(null)
+    }
+  }
 
   // Handle YouTube URL input
   const handleYouTubeUrl = (url: string) => {
@@ -42,8 +184,9 @@ export default function MediaUploadSection() {
       setFormData(prev => ({
         ...prev,
         youtubeUrl: url,
-        videoUrl: url, // Store original URL, conversion happens in player
-        thumbnail: thumbnailUrl,
+        videoUrl: '',
+        thumbnail: prev.thumbnail || thumbnailUrl,
+        backdropImage: prev.backdropImage || thumbnailUrl,
         isYouTube: true
       }))
     } else {
@@ -117,39 +260,56 @@ export default function MediaUploadSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!user) {
+    // If editing, use update handler
+    if (editingVideo) {
+      await handleUpdate(e)
+      return
+    }
+    
+    if (!user?.uid) {
       alert('You must be logged in')
       return
     }
 
-    if (!formData.title || !formData.videoUrl || !formData.thumbnail) {
+    const isYouTubeMode = uploadMethod === 'youtube'
+    const playbackUrl = isYouTubeMode ? formData.youtubeUrl : formData.videoUrl
+
+    if (!formData.title || !playbackUrl || !formData.thumbnail) {
       alert('Please fill in all required fields and upload/add video')
       return
     }
 
     setIsUploading(true)
     setUploadProgress(0)
+    let progressInterval: NodeJS.Timeout | null = null
 
     try {
       // Simulate progress
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90))
       }, 200)
 
+      const sourceType = isYouTubeMode ? 'youtube' : 'upload'
+
       // Create media item in Firebase
-      await mediaService.createMedia({
+      await videoUploadService.createUpload({
         title: formData.title,
         description: formData.description,
         type: formData.type,
         genre: formData.genre,
-        videoUrl: formData.videoUrl,
-        youtubeUrl: formData.youtubeUrl,
+        playbackUrl,
+        videoUrl: !isYouTubeMode ? formData.videoUrl : undefined,
+        youtubeUrl: isYouTubeMode ? formData.youtubeUrl : undefined,
         thumbnail: formData.thumbnail,
         backdropImage: formData.backdropImage || formData.thumbnail,
         duration: formData.duration,
         releaseYear: formData.releaseYear,
         featured: formData.featured,
-        isYouTube: formData.isYouTube,
+        isYouTube: isYouTubeMode,
+        sourceType,
+        createdBy: user.uid,
+        createdByEmail: user.email ?? null,
+        createdByName: user.displayName || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || null,
         views: 0,
         likes: 0
       })
@@ -180,6 +340,7 @@ export default function MediaUploadSection() {
         isYouTube: false
       })
       setUploadMethod('upload')
+      refreshRecentUploads()
       
       // Redirect to media page after successful upload
       setTimeout(() => {
@@ -189,6 +350,9 @@ export default function MediaUploadSection() {
       console.error('Upload error:', error)
       alert('Failed to upload media')
     } finally {
+      if (progressInterval) {
+        clearInterval(progressInterval)
+      }
       setIsUploading(false)
       setUploadProgress(0)
     }
@@ -204,8 +368,12 @@ export default function MediaUploadSection() {
               <Film className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Media Studio</h2>
-              <p className="text-gray-600">Create and manage your video content</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                {editingVideo ? 'Edit Video' : 'Media Studio'}
+              </h2>
+              <p className="text-gray-600">
+                {editingVideo ? 'Update your video details' : 'Create and manage your video content'}
+              </p>
             </div>
           </div>
         </div>
@@ -544,6 +712,33 @@ export default function MediaUploadSection() {
 
             {/* Submit Button */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              {editingVideo && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingVideo(null)
+                    setFormData({
+                      title: '',
+                      description: '',
+                      type: 'praise',
+                      genre: [],
+                      videoUrl: '',
+                      youtubeUrl: '',
+                      thumbnail: '',
+                      backdropImage: '',
+                      duration: 0,
+                      releaseYear: new Date().getFullYear(),
+                      featured: false,
+                      isYouTube: false
+                    })
+                    setUploadMethod('upload')
+                  }}
+                  className="sm:w-auto px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -562,10 +757,14 @@ export default function MediaUploadSection() {
                     isYouTube: false
                   })
                   setUploadMethod('upload')
+                  if (editingVideo) {
+                    setShowEditModal(false)
+                    setEditingVideo(null)
+                  }
                 }}
                 className="sm:w-auto px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
               >
-                Reset Form
+                {editingVideo ? 'Reset Form' : 'Reset Form'}
               </button>
               
               <button
@@ -576,19 +775,129 @@ export default function MediaUploadSection() {
                 {isUploading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Publishing...
+                    {editingVideo ? 'Updating...' : 'Publishing...'}
                   </>
                 ) : (
                   <>
                     <Film className="w-5 h-5" />
-                    Publish Content
+                    {editingVideo ? 'Update Video' : 'Publish Content'}
                   </>
                 )}
               </button>
             </div>
           </form>
+
+          {/* Recent Uploads */}
+          <div className="mt-10">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">My Videos</h3>
+                  <p className="text-sm text-gray-500">
+                    Manage your uploaded videos from the <span className="font-mono text-xs bg-gray-100 px-1 rounded">video-upload</span> collection.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={refreshRecentUploads}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCcw className="w-4 h-4" />
+                  Refresh
+                </button>
+              </div>
+
+              {isRecentLoading ? (
+                <div className="flex items-center gap-3 text-gray-500">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Loading recent uploads...
+                </div>
+              ) : recentError ? (
+                <div className="text-sm text-red-500">{recentError}</div>
+              ) : recentUploads.length === 0 ? (
+                <p className="text-sm text-gray-500">No uploads yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {recentUploads.map((upload) => (
+                    <div
+                      key={upload.id}
+                      className="flex flex-col md:flex-row md:items-center gap-4 border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-colors"
+                    >
+                      {upload.thumbnail && (
+                        <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={upload.thumbnail}
+                            alt={upload.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{upload.title}</p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {upload.description || 'No description'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {upload.type
+                            ? `${upload.type.charAt(0).toUpperCase()}${upload.type.slice(1)}`
+                            : '—'}
+                          {upload.releaseYear ? ` · ${upload.releaseYear}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            upload.sourceType === 'youtube'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}
+                        >
+                          {upload.sourceType === 'youtube' ? 'YouTube' : 'Uploaded'}
+                        </span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {formatDateTime(upload.createdAt)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(upload)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit video"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(upload.id)}
+                          disabled={deletingVideoId === upload.id}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete video"
+                        >
+                          {deletingVideoId === upload.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
+}
+
+const formatDateTime = (date?: Date) => {
+  if (!date) return '—'
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date)
 }

@@ -1,22 +1,46 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChat } from '../_context/ChatContext'
-import { useZone } from '@/contexts/ZoneContext'
-import { Send, Image, Paperclip, Smile } from 'lucide-react'
+import { useZone } from '@/hooks/useZone'
+import { Send, Image, Paperclip, Smile, X } from 'lucide-react'
 
 export default function MessageInput() {
-  const { sendMessage, selectedChat } = useChat()
+  const { sendMessage, selectedChat, replyToMessage, setReplyToMessage, editingMessage, setEditingMessage, editMessage } = useChat()
   const { currentZone } = useZone()
   const [text, setText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    if (editingMessage?.text) {
+      setText(editingMessage.text)
+    } else if (!editingMessage) {
+      setText('')
+    }
+  }, [editingMessage])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!text.trim() || !selectedChat || isLoading) return
+    if (!selectedChat || isLoading) return
+    if (editingMessage) {
+      if (!text.trim()) return
+      setIsLoading(true)
+      try {
+        await editMessage(editingMessage.id, text.trim())
+      } catch (error) {
+        console.error('Error editing message:', error)
+      } finally {
+        setIsLoading(false)
+        setEditingMessage(null)
+        setText('')
+      }
+      return
+    }
+
+    if (!text.trim()) return
 
     setIsLoading(true)
     
@@ -84,6 +108,31 @@ export default function MessageInput() {
 
   return (
     <div className="p-3 sm:p-4 bg-white border-t border-gray-200">
+      {(replyToMessage || editingMessage) && (
+        <div className="mb-2 px-3 py-2 rounded-xl bg-gray-100 flex items-start justify-between text-sm">
+          <div>
+            <p className="font-semibold text-gray-800">
+              {editingMessage ? 'Editing message' : `Replying to ${replyToMessage?.senderName || 'message'}`}
+            </p>
+            {!editingMessage && replyToMessage?.text && (
+              <p className="text-gray-600 text-sm line-clamp-2">{replyToMessage.text}</p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              if (editingMessage) {
+                setEditingMessage(null)
+                setText('')
+              } else {
+                setReplyToMessage(null)
+              }
+            }}
+            className="ml-3 text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="flex items-end gap-1.5 sm:gap-2">
         {/* Attachment buttons */}
         <div className="flex items-center gap-0.5 sm:gap-1">

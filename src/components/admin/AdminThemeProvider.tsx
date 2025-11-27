@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { getZoneTheme, ZoneTheme } from '@/utils/zone-theme';
 
 interface AdminThemeContextType {

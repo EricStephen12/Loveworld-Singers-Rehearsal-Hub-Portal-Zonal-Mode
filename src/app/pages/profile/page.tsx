@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 
 import { ultraFastUploadProfileImage, ultraFastDeleteImage } from '@/utils/ultraFastImageUpload'
@@ -17,7 +17,6 @@ import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
 import { AccountLinkingService } from '@/lib/account-linking'
-import AuthGuard from '@/components/AuthGuard'
 import { isZoneLeader } from '@/lib/user-role-utils'
 
 // Helper function to adjust color brightness for gradient
@@ -31,6 +30,13 @@ const adjustColor = (color: string, amount: number) => {
 }
 
 function ProfilePage() {
+  const router = useRouter()
+  const { user, signOut, profile: currentProfile, refreshProfile, isLoading } = useAuth()
+  const { userZones, currentZone, isSuperAdmin, isZoneCoordinator } = useZone()
+  
+  // No auth check - Zustand auth store is the single source of truth
+  // If no user, show login prompt inline
+  
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
     firstName: '',
@@ -73,10 +79,11 @@ function ProfilePage() {
     attendance: false
   })
 
-  const router = useRouter()
-  const { user, signOut, profile: currentProfile, isLoading, refreshProfile } = useAuth()
-  const { userZones, currentZone, isSuperAdmin, isZoneCoordinator } = useZone()
-
+  // Don't show anything if no user - prevents flash
+  if (!user && !currentProfile) {
+    return null
+  }
+  
   // Helper function for input styling with zone colors
   const getInputClassName = () => {
     return "w-full mt-1 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
@@ -1672,10 +1679,6 @@ function ProfilePage() {
 }
 
 export default function ProfilePageWithAuth() {
-  return (
-    <AuthGuard requireAuth={false} requireCompleteProfile={false}>
-      <ProfilePage />
-    </AuthGuard>
-  )
+  return <ProfilePage />
 }
 

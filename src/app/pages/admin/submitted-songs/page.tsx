@@ -15,7 +15,7 @@ import {
   replyToSubmission,
   SongSubmission 
 } from '@/lib/song-submission-service'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useAdminTheme } from '@/components/admin/AdminThemeProvider'
 
 interface SubmittedSongsPageProps {
@@ -191,7 +191,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className={`w-12 h-12 ${theme.primary} rounded-lg flex items-center justify-center`}>
                 <Music className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -215,7 +215,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         {embedded && (
           <div className="bg-white rounded-xl shadow-lg p-4 mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className={`w-10 h-10 ${theme.primary} rounded-lg flex items-center justify-center`}>
                 <Music className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -242,7 +242,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
               onClick={() => setFilter('all')}
               className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
                 filter === 'all' 
-                  ? 'bg-purple-500 text-white' 
+                  ? `${theme.primary} text-white` 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -252,7 +252,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
               onClick={() => setFilter('pending')}
               className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
                 filter === 'pending' 
-                  ? 'bg-purple-500 text-white' 
+                  ? `${theme.primary} text-white` 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -313,7 +313,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       <span
                         className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium w-fit ${
                           song.status === 'pending'
-                            ? 'bg-purple-100 text-purple-800'
+                            ? `${theme.primaryLight} ${theme.text}`
                             : song.status === 'approved'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
@@ -358,11 +358,11 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2">
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${song.adminSeen ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700'}`}>
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${song.adminSeen ? `${theme.primaryLight} ${theme.text}` : 'bg-gray-100 text-gray-700'}`}>
                         {song.adminSeen ? 'Seen' : 'Unseen'}
                       </span>
                       {song.replyMessage && (
-                        <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${theme.primaryLight} ${theme.text}`}>
                           Replied
                         </span>
                       )}
@@ -370,7 +370,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                         <>
                         <button
                           onClick={() => setSelectedSong(song)}
-                          className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-2 text-xs sm:text-sm"
+                          className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
                         >
                           <Eye className="w-4 h-4" />
                           <span className="hidden sm:inline">View Details</span>
@@ -379,7 +379,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                           <button
                             onClick={() => handleSeen(song)}
                             disabled={processing === song.id || song.adminSeen}
-                            className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 text-xs sm:text-sm"
+                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors disabled:opacity-50 text-xs sm:text-sm`}
                           >
                             <span className="hidden sm:inline">Mark as Seen</span>
                             <span className="sm:hidden">Seen</span>
@@ -406,7 +406,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                           <button
                             onClick={() => { setSelectedSong(song); setShowReplyModal(true); }}
                             disabled={processing === song.id}
-                            className="px-3 sm:px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 flex items-center gap-2 text-xs sm:text-sm"
+                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors disabled:opacity-50 flex items-center gap-2 text-xs sm:text-sm`}
                           >
                             <MessageSquare className="w-4 h-4" />
                             <span className="hidden sm:inline">Reply</span>

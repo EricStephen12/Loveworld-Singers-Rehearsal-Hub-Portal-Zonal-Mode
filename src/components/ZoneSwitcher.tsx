@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 import { ChevronDown, Check, Users } from 'lucide-react'
 
 export default function ZoneSwitcher() {

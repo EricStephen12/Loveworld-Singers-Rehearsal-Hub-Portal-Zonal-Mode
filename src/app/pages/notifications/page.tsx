@@ -7,7 +7,7 @@ import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
 import { getAllMessages, AdminMessage } from '@/lib/simple-notifications-service'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function NotificationsPage() {
   const [messages, setMessages] = useState<AdminMessage[]>([])

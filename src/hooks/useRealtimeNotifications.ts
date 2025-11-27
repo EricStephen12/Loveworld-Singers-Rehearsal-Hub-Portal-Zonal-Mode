@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
-import { useAuth } from '@/contexts/AuthContext';
-import { useZone } from '@/contexts/ZoneContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useZone } from '@/hooks/useZone';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 import { isHQGroup } from '@/config/zones';

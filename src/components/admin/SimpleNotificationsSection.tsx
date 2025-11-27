@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Send, Trash2, MessageSquare, X } from 'lucide-react';
 import { sendMessageToAllUsers, getAllMessages, deleteMessage, AdminMessage } from '@/lib/simple-notifications-service';
-import { useAuth } from '@/contexts/AuthContext';
-import { useZone } from '@/contexts/ZoneContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useZone } from '@/hooks/useZone';
 import { useAdminTheme } from './AdminThemeProvider';
 
 export default function SimpleNotificationsSection() {

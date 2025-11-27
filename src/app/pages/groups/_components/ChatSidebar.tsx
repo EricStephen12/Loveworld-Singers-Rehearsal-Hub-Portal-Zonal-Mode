@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useChat } from '../_context/ChatContext'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { MessageCircle, Users, Search, Clock, CheckCircle2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Chat, formatTimestamp } from '../_lib/firebase-chat-service'

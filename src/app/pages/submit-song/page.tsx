@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Upload, CheckCircle, XCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { submitSong } from '@/lib/song-submission-service'
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
+import { getZoneTheme } from '@/utils/zone-theme'
 
 interface SongSubmissionForm {
   title: string
@@ -21,34 +22,15 @@ export default function SubmitSongPage() {
   const { user, profile } = useAuth()
   const { currentZone } = useZone()
   
-  // Get zone color for theming
+  // Get zone color and theme for theming
   const zoneColor = currentZone?.themeColor || '#9333EA'
+  const zoneTheme = getZoneTheme(zoneColor)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   
   // Generate focus ring color based on zone color
   const getFocusClasses = () => {
-    const colorMap: Record<string, string> = {
-      '#10B981': 'focus:outline-emerald-600 focus:ring-emerald-600',
-      '#3B82F6': 'focus:outline-blue-600 focus:ring-blue-600',
-      '#F59E0B': 'focus:outline-amber-600 focus:ring-amber-600',
-      '#EF4444': 'focus:outline-red-600 focus:ring-red-600',
-      '#8B5CF6': 'focus:outline-violet-600 focus:ring-violet-600',
-      '#EC4899': 'focus:outline-pink-600 focus:ring-pink-600',
-      '#14B8A6': 'focus:outline-teal-600 focus:ring-teal-600',
-      '#6366F1': 'focus:outline-indigo-600 focus:ring-indigo-600',
-      '#F97316': 'focus:outline-orange-600 focus:ring-orange-600',
-      '#84CC16': 'focus:outline-lime-600 focus:ring-lime-600',
-      '#06B6D4': 'focus:outline-cyan-600 focus:ring-cyan-600',
-      '#A855F7': 'focus:outline-purple-600 focus:ring-purple-600',
-      '#22D3EE': 'focus:outline-sky-600 focus:ring-sky-600',
-      '#FB923C': 'focus:outline-orange-500 focus:ring-orange-500',
-      '#DC2626': 'focus:outline-red-700 focus:ring-red-700',
-      '#059669': 'focus:outline-emerald-700 focus:ring-emerald-700',
-      '#7C3AED': 'focus:outline-violet-700 focus:ring-violet-700',
-      '#9333EA': 'focus:outline-purple-600 focus:ring-purple-600',
-    }
-    return colorMap[zoneColor] || 'focus:outline-purple-600 focus:ring-purple-600'
+    return `${zoneTheme.focusRing} ${zoneTheme.focusBorder}`
   }
   
   const getUserName = () => {
@@ -146,7 +128,7 @@ export default function SubmitSongPage() {
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50 overflow-hidden">
         {/* Header */}
-      <header className="sticky top-0 z-10 flex items-center bg-gray-50/80 backdrop-blur-sm p-4 justify-between border-b border-gray-200">
+      <header className="sticky top-0 z-10 flex items-center bg-gray-50/80 backdrop-blur-sm p-4 justify-between border-b" style={{ borderColor: `${zoneColor}20` }}>
             <button
               onClick={() => router.back()}
           className="flex size-10 shrink-0 items-center justify-center text-gray-900"
@@ -191,7 +173,7 @@ export default function SubmitSongPage() {
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Enter the title of the song"
-                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
                 required
               />
             </div>
@@ -204,7 +186,7 @@ export default function SubmitSongPage() {
                 value={formData.writer}
                 onChange={(e) => handleInputChange('writer', e.target.value)}
                 placeholder="Enter writer's name"
-                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -216,7 +198,7 @@ export default function SubmitSongPage() {
                 value={formData.leadSinger}
                 onChange={(e) => handleInputChange('leadSinger', e.target.value)}
                 placeholder="Enter lead singer's name"
-                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -230,7 +212,7 @@ export default function SubmitSongPage() {
                 onChange={(e) => handleInputChange('lyrics', e.target.value)}
                 placeholder="Enter the song lyrics..."
                 rows={10}
-                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white min-h-[200px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white min-h-[200px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
                 required
               />
             </div>
@@ -243,7 +225,7 @@ export default function SubmitSongPage() {
                 value={formData.key}
                 onChange={(e) => handleInputChange('key', e.target.value)}
                 placeholder="e.g., C Major, D Minor"
-                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white h-14 placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
 
@@ -255,7 +237,7 @@ export default function SubmitSongPage() {
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Any other details or instructions..."
                 rows={6}
-                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 border-gray-300 bg-white min-h-[120px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
+                className={`flex w-full min-w-0 flex-1 resize-y rounded-xl text-gray-900 focus:outline-2 focus:ring-2 border-2 ${zoneTheme.border} focus:${zoneTheme.focusBorder.replace('focus:', '')} bg-white min-h-[120px] placeholder:text-gray-400 p-[15px] text-base font-normal leading-normal shadow-sm ${getFocusClasses()}`}
               />
             </div>
           </form>

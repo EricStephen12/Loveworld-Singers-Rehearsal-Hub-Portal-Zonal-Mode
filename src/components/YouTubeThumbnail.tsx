@@ -8,6 +8,7 @@ interface YouTubeThumbnailProps {
   alt: string
   className?: string
   onClick?: () => void
+  onLoad?: () => void
   fallbackSrc?: string
 }
 
@@ -16,6 +17,7 @@ export default function YouTubeThumbnail({
   alt, 
   className = '', 
   onClick,
+  onLoad,
   fallbackSrc = '/movie/default-hero.jpeg'
 }: YouTubeThumbnailProps) {
   const [currentSrc, setCurrentSrc] = useState<string>('')
@@ -50,12 +52,19 @@ export default function YouTubeThumbnail({
     }
   }
 
+  const handleLoad = () => {
+    if (onLoad) {
+      onLoad()
+    }
+  }
+
   return (
     <img
       src={currentSrc}
       alt={alt}
       className={className}
       onClick={onClick}
+      onLoad={handleLoad}
       onError={handleError}
     />
   )

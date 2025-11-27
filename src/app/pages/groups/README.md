@@ -30,8 +30,8 @@ src/app/pages/groups/
 ## Dependencies
 
 ### Internal (from main app)
-- `@/contexts/AuthContext` - User authentication
-- `@/contexts/ZoneContext` - Zone management
+- `@/hooks/useAuth` (Zustand auth store) - User authentication
+- `@/hooks/useZone` (Zustand zone store) - Zone management
 - Firebase configuration (uses main app's setup)
 
 ### External
@@ -54,7 +54,7 @@ import GroupsPage from '@/app/pages/groups/page'
 
 ### For External Use
 1. Copy the entire `groups` folder
-2. Update import paths for AuthContext and ZoneContext
+2. Rewire auth/zone dependencies to your own stores or hooks
 3. Ensure Firebase is configured
 4. Install required dependencies
 

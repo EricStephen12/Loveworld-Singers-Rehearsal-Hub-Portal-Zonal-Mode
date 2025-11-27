@@ -83,7 +83,7 @@ function AuthPageContent() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
   const [accountPassword, setAccountPassword] = useState('')
 
-  // NO AUTH CHECK - Let AuthContext handle redirects
+  // NO AUTH CHECK - Zustand auth store handles redirects
   // This prevents loops completely
 
   // Check for URL error parameters on mount
@@ -292,21 +292,11 @@ function AuthPageContent() {
           }
         }
         
-        // Set auth flags immediately for AuthGuard
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('userAuthenticated', 'true')
-          localStorage.setItem('lastAuthTime', Date.now().toString())
-          localStorage.setItem('bypassLogin', 'true')
-          localStorage.setItem('hasCompletedProfile', 'true') // Profile is complete with basic info
-        }
-        
-        // Go directly to home - no profile completion needed
+        // Go directly to home - Firebase auth listener will handle the rest
         console.log('✅ Account created, redirecting to home...')
-        console.log('👤 User created successfully')
         setTimeout(() => {
-          console.log('🔄 Redirecting to /home')
           router.push('/home')
-        }, 1500)
+        }, 1000)
       } else {
         setSuccess('Checking your account...')
         
@@ -315,20 +305,9 @@ function AuthPageContent() {
           // Special login for president - bypass all validation
           setSuccess('Welcome, President! Redirecting...')
           
-          // Set auth flags for special user
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('userAuthenticated', 'true')
-            localStorage.setItem('lastAuthTime', Date.now().toString())
-            localStorage.setItem('hasCompletedProfile', 'true')
-            localStorage.setItem('bypassLogin', 'true')
-            localStorage.setItem('specialUser', 'true')
-            localStorage.setItem('userRole', 'President')
-            localStorage.setItem('userName', 'The President')
-          }
-          
           setTimeout(() => {
             router.push('/home')
-          }, 1000)
+          }, 500)
           return
         }
         
@@ -348,17 +327,17 @@ function AuthPageContent() {
         setSuccess('Login successful! Welcome back!')
         console.log('Sign in successful:', result)
 
-        // Set auth flags immediately for AuthGuard
+        // Set flag to prevent AuthCheck from redirecting too early
         if (typeof window !== 'undefined') {
-          localStorage.setItem('userAuthenticated', 'true')
-          localStorage.setItem('lastAuthTime', Date.now().toString())
-          localStorage.setItem('hasCompletedProfile', 'true')
-          localStorage.setItem('bypassLogin', 'true')
+          sessionStorage.setItem('justLoggedIn', 'true')
         }
 
-        // Instant redirect without reload
+        // Redirect after showing success message
         setTimeout(() => {
-        router.replace('/home')
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('justLoggedIn')
+          }
+          router.push('/home')
         }, 1000)
       }
     } catch (error: any) {

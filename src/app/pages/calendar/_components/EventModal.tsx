@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { CalendarEvent, CalendarService } from '../_lib/firebase-calendar-service'
 import { X, Calendar, Clock, MapPin, Users, Repeat, Bell, Save, Loader2 } from 'lucide-react'
 import moment from 'moment'

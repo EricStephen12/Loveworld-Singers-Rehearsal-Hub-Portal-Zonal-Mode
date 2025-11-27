@@ -24,7 +24,7 @@ import { useAdminTheme } from './admin/AdminThemeProvider';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { HQMembersService } from '@/lib/hq-members-service';
 import { ZoneInvitationService } from '@/lib/zone-invitation-service';
-import { useZone } from '@/contexts/ZoneContext';
+import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 
 interface Member {

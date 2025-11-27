@@ -1,6 +1,6 @@
 'use client'
 
-import { useZone } from '@/contexts/ZoneContext'
+import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { 
   Users, Crown, Music, Calendar, TrendingUp, 

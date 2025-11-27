@@ -2,14 +2,15 @@
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
 import PWAInstall from '@/components/PWAInstall'
-import { AudioProvider } from '@/contexts/AudioContext'
-import { AuthProvider } from '@/contexts/AuthContext'
-import { ZoneProvider } from '@/contexts/ZoneContext'
+import '@/stores/authStore' // Initialize auth store
+import '@/stores/zoneStore' // Initialize zone store
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { ChatProvider } from '@/app/pages/groups/_context/ChatContext'
 import { MediaProvider } from '@/app/pages/media/_context/MediaContext'
+import { AudioProvider } from '@/contexts/AudioContext'
 import RealtimeNotifications from '@/components/RealtimeNotifications'
 import PushNotificationListener from '@/components/PushNotificationListener'
+import NotificationUrlHandler from '@/components/NotificationUrlHandler'
 import VersionChecker from '@/components/VersionChecker'
 import ScreenshotPrevention from '@/components/ScreenshotPrevention'
 import SuperFastServiceWorker from '@/components/SuperFastServiceWorker'
@@ -32,6 +33,8 @@ import '@/utils/safeAreaManager'
 import '@/utils/logger' // Disable console logs in production
 import { disableConsoleLogs } from '@/utils/disable-logs'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 // Auto-optimize for low data on app startup
 if (typeof window !== 'undefined') {
   // Disable all console logs for security
@@ -42,7 +45,7 @@ if (typeof window !== 'undefined') {
   NavigationManager.init()
   SafeAreaUtils.init()
   DeviceSafeArea.getInstance().init()
-  // Don't force auth persistence - let AuthContext handle it
+  // Don't force auth persistence - zustand auth store handles it
   lowDataOptimizer.init()
   
   // Make utilities globally available for debugging
@@ -154,8 +157,55 @@ export default function RootLayout({
         <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
       </head>
       <body className="font-sans">
-        <script dangerouslySetInnerHTML={{
+        {isProduction && (
+          <script
+            dangerouslySetInnerHTML={{
           __html: `
+            // Detect if running in native app and hide install prompts
+            function isRunningInNativeApp() {
+              const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+              // Check for common in-app browser indicators
+              return (
+                userAgent.includes('wv') || // Android WebView
+                userAgent.includes('InAppBrowser') ||
+                window.ReactNativeWebView !== undefined ||
+                // Check if running in standalone mode (PWA installed)
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true
+              );
+            }
+
+            // Hide install prompt if running in native app
+            if (isRunningInNativeApp()) {
+              // Add CSS to hide install prompts
+              const style = document.createElement('style');
+              style.textContent = \`
+                /* Hide common install prompt selectors */
+                .install-prompt,
+                .pwa-install,
+                .add-to-home,
+                [class*="install"],
+                [id*="install"],
+                .beforeinstallprompt {
+                  display: none !important;
+                }
+              \`;
+              document.head.appendChild(style);
+
+              // Prevent beforeinstallprompt event
+              window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                return false;
+              });
+
+              // Add flag to localStorage
+              localStorage.setItem('isNativeApp', 'true');
+              console.log('📱 Running in native app - install prompts hidden');
+            }
+
+            // Export for use in your app
+            window.isNativeApp = isRunningInNativeApp();
+
             // Register Optimized Service Worker for fast first load
             if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
               window.addEventListener('load', () => {
@@ -203,32 +253,32 @@ export default function RootLayout({
                 console.log('✅ Performance optimized!');
               });
             }
-          `
-        }} />
+              `,
+            }}
+          />
+        )}
         <ErrorBoundary>
-          <AuthProvider>
-            <MediaProvider>
-              <ZoneProvider>
-                <SubscriptionProvider>
-                  <ChatProvider>
-                    <AudioProvider>
-                      <AnalyticsProvider>
-                    {/* <ScreenshotPrevention /> */}
-                    <main className="h-full w-full bg-gray-50">
-                      {children}
-                    </main>
-                    <PWAInstall />
-                    <RealtimeNotifications />
-                    <OfflineIndicator />
-                    <FeatureUpdateChecker />
-                    <ForceUpdateButton />
-                      </AnalyticsProvider>
-                    </AudioProvider>
-                  </ChatProvider>
-                </SubscriptionProvider>
-              </ZoneProvider>
-            </MediaProvider>
-          </AuthProvider>
+          <AudioProvider>
+          <MediaProvider>
+            <SubscriptionProvider>
+              <ChatProvider>
+                <AnalyticsProvider>
+                  {/* <ScreenshotPrevention /> */}
+                  <main className="h-full w-full bg-gray-50">
+                    {children}
+                  </main>
+                  <PWAInstall />
+                  <RealtimeNotifications />
+                  <PushNotificationListener />
+                  <NotificationUrlHandler />
+                  <OfflineIndicator />
+                  <FeatureUpdateChecker />
+                  <ForceUpdateButton />
+                </AnalyticsProvider>
+              </ChatProvider>
+            </SubscriptionProvider>
+          </MediaProvider>
+          </AudioProvider>
         </ErrorBoundary>
       </body>
     </html>

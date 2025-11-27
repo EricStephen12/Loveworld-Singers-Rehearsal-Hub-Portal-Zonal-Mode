@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/contexts/AuthContext'
-import { useZone } from '@/contexts/ZoneContext'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import { CalendarEvent, CalendarService } from './_lib/firebase-calendar-service'
-import { Plus, Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon } from 'lucide-react'
 import CalendarStyles from './_components/CalendarStyles'
 
 // Dynamically import React Big Calendar components to avoid SSR issues
@@ -25,11 +25,19 @@ const EventModal = dynamic(() => import('./_components/EventModal'), {
   ssr: false
 })
 
-const CalendarToolbar = dynamic(() => import('./_components/CalendarToolbar'), {
+const GoogleCalendarToolbar = dynamic(() => import('./_components/GoogleCalendarToolbar'), {
+  ssr: false
+})
+
+const CalendarSidebar = dynamic(() => import('./_components/CalendarSidebar'), {
   ssr: false
 })
 
 const EventDetailsModal = dynamic(() => import('./_components/EventDetailsModal'), {
+  ssr: false
+})
+
+const UnifiedCarousel = dynamic(() => import('./_components/UnifiedCarousel'), {
   ssr: false
 })
 
@@ -49,6 +57,10 @@ export default function CalendarPage() {
   const [date, setDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [calendarReady, setCalendarReady] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [todaysBirthdays, setTodaysBirthdays] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+  const [upcomingEventsList, setUpcomingEventsList] = useState<any[]>([])
 
   const calendarService = new CalendarService()
 
@@ -90,6 +102,54 @@ export default function CalendarPage() {
 
     loadEvents()
   }, [user, currentZone])
+
+  // Load all birthdays for carousel only
+  useEffect(() => {
+    const loadBirthdays = async () => {
+      try {
+        const { BirthdayService } = await import('./_lib/birthday-service')
+        const allBirthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
+        setTodaysBirthdays(allBirthdays)
+      } catch (error) {
+        console.error('Error loading birthdays:', error)
+      }
+    }
+
+    loadBirthdays()
+  }, [])
+
+  // Load upcoming events for carousel and calendar
+  useEffect(() => {
+    const loadUpcomingEvents = async () => {
+      try {
+        const { UpcomingEventsService } = await import('./_lib/upcoming-events-service')
+        const carouselEvents = await UpcomingEventsService.getCarouselEvents()
+        const allUpcoming = await UpcomingEventsService.getUpcomingEvents()
+        
+        setUpcomingEvents(carouselEvents)
+        
+        // Convert to calendar events
+        const calendarEvents = allUpcoming.map(event => ({
+          id: event.id,
+          title: event.title,
+          start: moment(event.date).toDate(),
+          end: moment(event.date).toDate(),
+          allDay: !event.time,
+          color: '#8b5cf6', // Purple for upcoming events
+          description: event.description,
+          location: event.location,
+          time: event.time,
+          type: event.type
+        }))
+        
+        setUpcomingEventsList(calendarEvents)
+      } catch (error) {
+        console.error('Error loading upcoming events:', error)
+      }
+    }
+
+    loadUpcomingEvents()
+  }, [])
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
     setSelectedSlot({ start, end })
@@ -168,126 +228,146 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
       <CalendarStyles />
       
-      {/* Coming Soon Overlay */}
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-          <div 
-            className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
-            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
-          >
-            <CalendarIcon className="w-10 h-10 text-white" />
-          </div>
-          
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            Ministry Calendar
-          </h2>
-          
-          <p className="text-gray-600 mb-6">
-            We're working on something amazing! The ministry calendar feature is currently under development and will be available soon.
-          </p>
-          
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
-            <p className="text-sm text-gray-700 font-medium mb-2">Coming Features:</p>
-            <ul className="text-sm text-gray-600 space-y-1 text-left">
-              <li>• Schedule rehearsals and events</li>
-              <li>• Sync with your zone's activities</li>
-              <li>• Get reminders and notifications</li>
-              <li>• View ministry-wide calendar</li>
-            </ul>
-          </div>
-          
-          <button
-            onClick={() => window.history.back()}
-            className="w-full py-3 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-      
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                style={{ backgroundColor: currentZone.themeColor || '#10b981' }}
-              >
-                <CalendarIcon className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Calendar</h1>
-                <p className="text-sm text-gray-600">{currentZone.name}</p>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleCreateEvent}
-              className="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: currentZone.themeColor || '#10b981' }}
-            >
-              <Plus className="w-4 h-4" />
-              New Event
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Google Calendar Style Toolbar */}
+      {calendarReady && (
+        <GoogleCalendarToolbar
+          date={date}
+          view={view}
+          views={['month', 'week', 'day', 'agenda']}
+          label={moment(date).format(view === 'month' ? 'MMMM YYYY' : view === 'week' ? 'MMMM YYYY' : 'MMMM D, YYYY')}
+          onNavigate={(action) => {
+            if (action === 'PREV') {
+              const newDate = new Date(date)
+              if (view === 'month') newDate.setMonth(newDate.getMonth() - 1)
+              else if (view === 'week') newDate.setDate(newDate.getDate() - 7)
+              else newDate.setDate(newDate.getDate() - 1)
+              setDate(newDate)
+            } else if (action === 'NEXT') {
+              const newDate = new Date(date)
+              if (view === 'month') newDate.setMonth(newDate.getMonth() + 1)
+              else if (view === 'week') newDate.setDate(newDate.getDate() + 7)
+              else newDate.setDate(newDate.getDate() + 1)
+              setDate(newDate)
+            } else if (action === 'TODAY') {
+              setDate(new Date())
+            }
+          }}
+          onView={setView}
+          themeColor={currentZone.themeColor || '#10b981'}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
 
-      {/* Calendar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {!calendarReady || loading ? (
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600">
-                  {!calendarReady ? 'Initializing calendar...' : 'Loading events...'}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-6">
-              <Calendar
-                localizer={momentLocalizer}
-                events={events}
-                startAccessor={(event: any) => event.start}
-                endAccessor={(event: any) => event.end}
-                style={{ height: 600 }}
-                view={view}
-                onView={(newView: any) => setView(newView)}
-                date={date}
-                onNavigate={setDate}
-                selectable
-                onSelectSlot={handleSelectSlot}
-                onSelectEvent={handleSelectEvent}
-                eventPropGetter={eventStyleGetter}
-                components={{
-                  toolbar: (props: any) => (
-                    <CalendarToolbar 
-                      {...props} 
-                      themeColor={currentZone.themeColor || '#10b981'}
-                    />
-                  )
-                }}
-                formats={{
-                  timeGutterFormat: 'HH:mm',
-                  eventTimeRangeFormat: ({ start, end }: any) => 
-                    `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
-                  agendaTimeRangeFormat: ({ start, end }: any) =>
-                    `${moment(start).format('HH:mm')} - ${moment(end).format('HH:mm')}`,
-                }}
-                step={30}
-                timeslots={2}
-                min={new Date(2024, 0, 1, 6, 0, 0)}
-                max={new Date(2024, 0, 1, 23, 0, 0)}
-              />
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Sidebar */}
+        <div className={`
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          lg:translate-x-0 
+          fixed lg:relative 
+          z-50 lg:z-auto 
+          transition-transform duration-300 ease-in-out
+          h-full
+        `}>
+          {calendarReady && (
+            <CalendarSidebar
+              date={date}
+              onDateSelect={(newDate) => {
+                setDate(newDate)
+                // Close sidebar on mobile after selecting date
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false)
+                }
+              }}
+              onCreateEvent={() => {
+                handleCreateEvent()
+                // Close sidebar on mobile after creating event
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false)
+                }
+              }}
+              themeColor={currentZone.themeColor || '#10b981'}
+              zoneName={currentZone.name}
+              upcomingEvents={events}
+            />
           )}
+        </div>
+
+        {/* Calendar Area - Apple-style reveal animation */}
+        <div className={`
+          flex-1 overflow-auto bg-gray-100
+          transition-all duration-300 ease-in-out
+          lg:translate-x-0 lg:scale-100 lg:rounded-none
+          ${sidebarOpen 
+            ? 'translate-x-64 scale-90 rounded-2xl shadow-2xl' 
+            : 'translate-x-0 scale-100 rounded-none'
+          }
+        `}>
+          {/* Overlay to close sidebar on mobile */}
+          {sidebarOpen && (
+            <div 
+              className="absolute inset-0 z-10 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
+          <div className="h-full bg-white relative z-0 flex flex-col">
+            {/* Unified Carousel - Birthdays + Events */}
+            {(todaysBirthdays.length > 0 || upcomingEvents.length > 0) && (
+              <UnifiedCarousel 
+                birthdays={todaysBirthdays}
+                events={upcomingEvents}
+                themeColor={currentZone?.themeColor || '#10b981'} 
+              />
+            )}
+
+            {!calendarReady || loading ? (
+              <div className="flex items-center justify-center flex-1">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">
+                    {!calendarReady ? 'Initializing calendar...' : 'Loading events...'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 p-4">
+                <Calendar
+                  localizer={momentLocalizer}
+                  events={[...events, ...upcomingEventsList]}
+                  startAccessor={(event: any) => event.start}
+                  endAccessor={(event: any) => event.end}
+                  style={{ height: '100%' }}
+                  view={view}
+                  onView={(newView: any) => setView(newView)}
+                  date={date}
+                  onNavigate={setDate}
+                  selectable
+                  onSelectSlot={handleSelectSlot}
+                  onSelectEvent={handleSelectEvent}
+                  eventPropGetter={eventStyleGetter}
+                  toolbar={false}
+                  formats={{
+                    timeGutterFormat: 'h A',
+                    eventTimeRangeFormat: ({ start, end }: any) => 
+                      `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
+                    agendaTimeRangeFormat: ({ start, end }: any) =>
+                      `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
+                    dayHeaderFormat: (date: Date) => moment(date).format('ddd M/D'),
+                    dayRangeHeaderFormat: ({ start, end }: any) =>
+                      `${moment(start).format('MMM D')} - ${moment(end).format('MMM D, YYYY')}`,
+                  }}
+                  step={30}
+                  timeslots={2}
+                  min={new Date(2024, 0, 1, 6, 0, 0)}
+                  max={new Date(2024, 0, 1, 23, 0, 0)}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

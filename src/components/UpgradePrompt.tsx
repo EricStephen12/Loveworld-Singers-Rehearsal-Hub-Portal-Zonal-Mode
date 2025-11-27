@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Crown, X } from 'lucide-react'
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { canSeeUpgradePrompts } from '@/lib/user-role-utils'
 
 interface UpgradePromptProps {

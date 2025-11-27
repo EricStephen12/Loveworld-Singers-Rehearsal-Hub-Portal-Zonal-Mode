@@ -2,7 +2,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
-import { useZone } from './ZoneContext'
+import { useZone } from '@/hooks/useZone'
+import { useAuthStore } from '@/stores/authStore'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit } from '@/config/subscriptions'
 
@@ -38,9 +39,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
-  // Import useAuth to check for Boss role
-  const { useAuth } = require('./AuthContext')
-  const { profile } = useAuth()
+  // Use Zustand auth store to check for Boss role
+  const profile = useAuthStore(state => state.profile)
 
   // Load subscription for current zone
   const loadSubscription = async () => {
@@ -135,11 +135,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     // HQ members bypass all feature checks (unlimited access)
     const { bypassesFeatureGates } = require('@/config/zones')
     if (currentZone && bypassesFeatureGates(currentZone.id)) {
-      console.log('🏢 HQ Group detected - bypassing feature gate for:', feature)
       return true
     }
     
+    // While loading, allow access (optimistic rendering like Instagram)
+    if (isLoading) return true
+    
+    // No subscription = free tier
     if (!subscription) return false
+    
     return hasFeatureAccess(subscription.tier, feature as any)
   }
 
