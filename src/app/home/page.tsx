@@ -444,7 +444,19 @@ function HomePageContent() {
   }
 
   return (
-       <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-gray-50 via-white to-slate-50">
+       <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
+       {/* Main Content with Apple-style reveal effect */}
+       <div 
+         className={`
+           w-full h-full flex flex-col
+           transition-all duration-300 ease-out
+           ${isDrawerOpen 
+             ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
+             : 'translate-x-0 scale-100 rounded-none'
+           }
+         `}
+         onClick={() => isDrawerOpen && setIsDrawerOpen(false)}
+       >
        {/* Responsive Container with Max Width */}
        <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
       {/* Fixed Header - Full Width */}
@@ -881,7 +893,10 @@ function HomePageContent() {
         </div>
       </div>
 
-      {/* Shared Drawer with Logout */}
+      </div> {/* End Desktop Container */}
+      </div> {/* End Apple-style animated container */}
+
+      {/* Shared Drawer with Logout - Outside animated container */}
       <SharedDrawer
         open={isDrawerOpen}
         onClose={toggleDrawer}
@@ -891,7 +906,6 @@ function HomePageContent() {
           return items
         })()}
       />
-      </div> {/* End Desktop Container */}
       </div>
   )
 }

@@ -11,12 +11,13 @@ import {
   getPendingSongs, 
   approveSong, 
   rejectSong,
-  markSubmissionSeen,
   replyToSubmission,
   SongSubmission 
 } from '@/lib/song-submission-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdminTheme } from '@/components/admin/AdminThemeProvider'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup } from '@/config/zones'
 
 interface SubmittedSongsPageProps {
   embedded?: boolean
@@ -26,6 +27,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const router = useRouter()
   const { user, profile } = useAuth()
   const { theme } = useAdminTheme()
+  const { currentZone, isSuperAdmin } = useZone()
   const [songs, setSongs] = useState<SongSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
@@ -35,6 +37,9 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const [processing, setProcessing] = useState<string | null>(null)
   const [showReplyModal, setShowReplyModal] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
+  
+  // Check if current zone is HQ (can see all submissions)
+  const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
 
   // Helper function to get user's display name
   const getUserName = () => {
@@ -44,17 +49,31 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   }
 
   useEffect(() => {
-    loadSongs()
-  }, [filter])
+    if (currentZone?.id) {
+      loadSongs()
+    }
+  }, [filter, currentZone?.id])
 
   const loadSongs = async () => {
     setLoading(true)
     try {
+      // Determine if user can see all submissions (HQ or super admin)
+      const canSeeAll = isSuperAdmin || isHQ
+      const zoneId = canSeeAll ? undefined : currentZone?.id
+      
+      console.log('📖 Loading submitted songs:', { 
+        zoneId, 
+        canSeeAll, 
+        isHQ, 
+        isSuperAdmin,
+        currentZone: currentZone?.name 
+      })
+      
       let data: SongSubmission[]
       if (filter === 'pending') {
-        data = await getPendingSongs()
+        data = await getPendingSongs(zoneId, canSeeAll)
       } else {
-        data = await getAllSubmittedSongs()
+        data = await getAllSubmittedSongs(zoneId, canSeeAll)
       }
       
       // Filter by status if needed
@@ -124,23 +143,6 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       }
     } catch (error) {
       alert('❌ Error rejecting song')
-    } finally {
-      setProcessing(null)
-    }
-  }
-
-  const handleSeen = async (song: SongSubmission) => {
-    if (!user || !song.id) return
-    setProcessing(song.id)
-    try {
-      const result = await markSubmissionSeen(song.id, getUserName())
-      if (result.success) {
-        loadSongs()
-      } else {
-        alert(`❌ Failed to mark seen: ${result.error}`)
-      }
-    } catch (e) {
-      alert('❌ Error marking seen')
     } finally {
       setProcessing(null)
     }
@@ -344,6 +346,13 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                         <span className="font-medium">By:</span>
                         <span className="truncate">{song.submittedBy.userName}</span>
                       </div>
+                      {/* Show zone info for HQ/super admin */}
+                      {(isHQ || isSuperAdmin) && song.zoneName && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="font-medium">Zone:</span>
+                          <span className="truncate px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{song.zoneName}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Quick Preview */}
@@ -358,51 +367,35 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2">
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${song.adminSeen ? `${theme.primaryLight} ${theme.text}` : 'bg-gray-100 text-gray-700'}`}>
-                        {song.adminSeen ? 'Seen' : 'Unseen'}
-                      </span>
-                      {song.replyMessage && (
-                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${theme.primaryLight} ${theme.text}`}>
-                          Replied
-                        </span>
-                      )}
                       {song.status === 'pending' && (
                         <>
-                        <button
-                          onClick={() => setSelectedSong(song)}
-                          className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span className="hidden sm:inline">View Details</span>
-                          <span className="sm:hidden">View</span>
-                        </button>
                           <button
-                            onClick={() => handleSeen(song)}
-                            disabled={processing === song.id || song.adminSeen}
-                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors disabled:opacity-50 text-xs sm:text-sm`}
+                            onClick={() => setSelectedSong(song)}
+                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
                           >
-                            <span className="hidden sm:inline">Mark as Seen</span>
-                            <span className="sm:hidden">Seen</span>
+                            <Eye className="w-4 h-4" />
+                            <span className="hidden sm:inline">View Details</span>
+                            <span className="sm:hidden">View</span>
                           </button>
-                        <button
-                          onClick={() => handleApprove(song)}
-                          disabled={processing === song.id}
-                          className="px-3 sm:px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedSong(song)
-                            setShowRejectModal(true)
-                          }}
-                          disabled={processing === song.id}
-                          className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
-                        >
-                          <XCircle className="w-4 h-4" />
-                          Reject
-                        </button>
+                          <button
+                            onClick={() => handleApprove(song)}
+                            disabled={processing === song.id}
+                            className="px-3 sm:px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSong(song)
+                              setShowRejectModal(true)
+                            }}
+                            disabled={processing === song.id}
+                            className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Reject
+                          </button>
                           <button
                             onClick={() => { setSelectedSong(song); setShowReplyModal(true); }}
                             disabled={processing === song.id}
@@ -412,6 +405,16 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                             <span className="hidden sm:inline">Reply</span>
                           </button>
                         </>
+                      )}
+                      {song.status !== 'pending' && (
+                        <button
+                          onClick={() => setSelectedSong(song)}
+                          className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
+                        </button>
                       )}
                     </div>
                   </div>

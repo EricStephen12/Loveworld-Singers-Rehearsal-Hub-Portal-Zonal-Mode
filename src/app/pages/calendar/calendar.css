@@ -308,8 +308,77 @@
   margin: -8px -8px 8px -8px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Responsive adjustments - Mobile First */
+@media (max-width: 640px) {
+  .rbc-calendar {
+    font-size: 12px;
+  }
+  
+  .rbc-month-view {
+    border-radius: 4px;
+  }
+  
+  .rbc-header {
+    padding: 6px 2px;
+    font-size: 9px;
+    letter-spacing: 0.3px;
+  }
+  
+  .rbc-date-cell {
+    padding: 1px;
+  }
+
+  .rbc-date-cell > a {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+  
+  .rbc-event {
+    font-size: 9px;
+    padding: 1px 2px;
+    border-left-width: 2px;
+    border-radius: 2px;
+  }
+  
+  .rbc-event-content {
+    font-size: 9px;
+  }
+  
+  .rbc-time-header-cell {
+    padding: 4px 2px;
+    font-size: 9px;
+  }
+  
+  .rbc-agenda-view tbody > tr > td {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .rbc-month-row {
+    min-height: 50px;
+  }
+
+  .rbc-time-gutter .rbc-label {
+    font-size: 8px;
+    padding-right: 4px;
+  }
+  
+  .rbc-timeslot-group {
+    min-height: 32px;
+  }
+  
+  .rbc-show-more {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+  
+  .rbc-row-segment {
+    padding: 0 1px;
+  }
+}
+
+@media (max-width: 768px) and (min-width: 641px) {
   .rbc-calendar {
     font-size: 13px;
   }

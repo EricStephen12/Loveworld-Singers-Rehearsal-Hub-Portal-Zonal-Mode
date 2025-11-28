@@ -951,7 +951,19 @@ function PraiseNightPageContent() {
   }
   
   return (
-    <div className="mobile-vh flex flex-col bg-gradient-to-br from-slate-50 via-white to-purple-50 safe-area-bottom">
+    <div className="mobile-vh bg-gradient-to-br from-slate-50 via-white to-purple-50 safe-area-bottom overflow-hidden">
+      {/* Main Content with Apple-style reveal effect */}
+      <div 
+        className={`
+          h-full flex flex-col
+          transition-all duration-300 ease-out
+          ${isMenuOpen 
+            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
+            : 'translate-x-0 scale-100 rounded-none'
+          }
+        `}
+        onClick={() => isMenuOpen && setIsMenuOpen(false)}
+      >
       <style jsx global>{`
         html { scroll-behavior: smooth; }
         
@@ -1794,6 +1806,7 @@ function PraiseNightPageContent() {
       </div>
       </div>
       {/* ✅ End of Scrollable Content */}
+      </div> {/* End Apple-style animated container */}
 
       <SharedDrawer 
         open={isMenuOpen} 

@@ -159,7 +159,7 @@ export default function RehearsalsPage() {
   ]
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-gray-50 via-white to-slate-50">
+    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
       <style jsx global>{`
         html { scroll-behavior: smooth; }
         .scrollbar-hide {
@@ -170,6 +170,19 @@ export default function RehearsalsPage() {
           display: none;
         }
       `}</style>
+      
+      {/* Main Content with Apple-style reveal effect */}
+      <div 
+        className={`
+          h-full flex flex-col
+          transition-all duration-300 ease-out
+          ${isMenuOpen 
+            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
+            : 'translate-x-0 scale-100 rounded-none'
+          }
+        `}
+        onClick={() => isMenuOpen && setIsMenuOpen(false)}
+      >
       <ScreenHeader 
         title="Rehearsals" 
         onMenuClick={toggleMenu} 
@@ -238,6 +251,8 @@ export default function RehearsalsPage() {
         </div>
         </div>
       </div>
+
+      </div> {/* End Apple-style animated container */}
 
       <SharedDrawer open={isMenuOpen} onClose={toggleMenu} title="Menu" items={menuItems as any} />
     </div>

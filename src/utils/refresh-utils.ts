@@ -1,13 +1,14 @@
-// Utility function for refreshing app data while preserving auth
+// Utility function for refreshing app data while preserving auth and zone state
 export const handleAppRefresh = async () => {
   try {
     console.log('🔄 Refreshing app data...');
-    console.log('🔐 Preserving authentication data...');
+    console.log('🔐 Preserving authentication and zone data...');
     
     // Show user feedback
     if (typeof window !== 'undefined') {
       // Create a simple loading indicator
       const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'refresh-loading-indicator';
       loadingDiv.innerHTML = `
         <div style="
           position: fixed;
@@ -41,7 +42,7 @@ export const handleAppRefresh = async () => {
               margin: 0 auto 12px;
             "></div>
             <div style="font-weight: 600; margin-bottom: 4px;">Refreshing App</div>
-            <div style="font-size: 14px; color: #6b7280;">Preserving your login...</div>
+            <div style="font-size: 14px; color: #6b7280;">Fetching latest data...</div>
           </div>
         </div>
         <style>
@@ -54,44 +55,129 @@ export const handleAppRefresh = async () => {
       document.body.appendChild(loadingDiv);
     }
     
-    // Clear all caches except auth data and countdown persistence keys
+    // Keys to ALWAYS preserve (auth, zone state, important user data)
+    const keysToPreserve = [
+      // Firebase/Auth
+      'firebase',
+      'auth',
+      'session',
+      'loveworld-singers-session',
+      'firebase:',
+      '__firebase',
+      // Zustand stores - CRITICAL: preserve zone and auth state
+      'lwsrh-zone-state',
+      'lwsrh-auth-state',
+      'currentZoneId',
+      // Countdown persistence
+      'server_target_date_',
+      'countdown_hash_',
+      // User preferences
+      'theme',
+      'language'
+    ];
+    
+    // Only clear non-essential cache data
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (
-        key &&
-        // Preserve Firebase/auth/session keys
-        !key.includes('firebase') &&
-        !key.includes('auth') &&
-        !key.includes('session') &&
-        !key.includes('loveworld-singers-session') &&
-        !key.startsWith('firebase:') &&
-        !key.includes('__firebase') &&
-        // Preserve countdown persistence keys
-        !key.startsWith('server_target_date_') &&
-        !key.startsWith('countdown_hash_')
-      ) {
-        keysToRemove.push(key);
+      if (key) {
+        // Check if this key should be preserved
+        const shouldPreserve = keysToPreserve.some(preserve => 
+          key.includes(preserve) || key.startsWith(preserve)
+        );
+        
+        if (!shouldPreserve) {
+          keysToRemove.push(key);
+        }
       }
     }
     
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log('✅ Cache cleared, preserving auth data');
-    console.log('🔐 Auth persistence maintained - you will stay logged in');
+    keysToRemove.forEach(key => {
+      console.log('🗑️ Clearing cache key:', key);
+      localStorage.removeItem(key);
+    });
     
-    // Reload the page for complete refresh
-    setTimeout(() => {
-      // Remove loading indicator before reload
-      const loadingDiv = document.querySelector('body > div[style*="position: fixed"]')
+    console.log('✅ Non-essential cache cleared');
+    console.log('🔐 Auth and zone data preserved');
+    
+    // Instead of page reload, refresh data in Zustand stores
+    try {
+      // Dynamically import to avoid circular dependencies
+      const { useZoneStore } = await import('@/stores/zoneStore');
+      
+      // Refresh zone data from server (without clearing state)
+      console.log('🔄 Refreshing zone data from server...');
+      await useZoneStore.getState().refreshZones();
+      
+      // Remove loading indicator
+      const loadingDiv = document.getElementById('refresh-loading-indicator');
       if (loadingDiv) {
-        loadingDiv.remove()
+        loadingDiv.remove();
       }
-      window.location.reload();
-    }, 1000); // Increased delay to show loading indicator
+      
+      // Show success message
+      showRefreshSuccess();
+      
+      console.log('✅ App data refreshed successfully!');
+    } catch (storeError) {
+      console.warn('Could not refresh stores, falling back to page reload:', storeError);
+      // Fallback to page reload if store refresh fails
+      setTimeout(() => {
+        const loadingDiv = document.getElementById('refresh-loading-indicator');
+        if (loadingDiv) {
+          loadingDiv.remove();
+        }
+        window.location.reload();
+      }, 500);
+    }
     
   } catch (error) {
     console.error('❌ Refresh error:', error);
+    // Remove loading indicator
+    const loadingDiv = document.getElementById('refresh-loading-indicator');
+    if (loadingDiv) {
+      loadingDiv.remove();
+    }
     // Fallback to page reload
     window.location.reload();
   }
+};
+
+// Show a brief success toast
+const showRefreshSuccess = () => {
+  if (typeof window === 'undefined') return;
+  
+  const toast = document.createElement('div');
+  toast.innerHTML = `
+    <div style="
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10B981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 9999;
+      animation: slideUp 0.3s ease-out;
+    ">
+      ✅ App refreshed successfully!
+    </div>
+    <style>
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
+    </style>
+  `;
+  document.body.appendChild(toast);
+  
+  // Remove after 2 seconds
+  setTimeout(() => {
+    toast.remove();
+  }, 2000);
 };

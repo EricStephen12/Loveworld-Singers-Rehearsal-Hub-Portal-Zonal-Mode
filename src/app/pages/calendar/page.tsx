@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { CalendarEvent, CalendarService } from './_lib/firebase-calendar-service'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight } from 'lucide-react'
 import CalendarStyles from './_components/CalendarStyles'
 
 // Dynamically import React Big Calendar components to avoid SSR issues
@@ -46,6 +47,7 @@ let momentLocalizer: any = null
 let moment: any = null
 
 export default function CalendarPage() {
+  const router = useRouter()
   const { user } = useAuth()
   const { currentZone } = useZone()
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -57,7 +59,7 @@ export default function CalendarPage() {
   const [date, setDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [calendarReady, setCalendarReady] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [todaysBirthdays, setTodaysBirthdays] = useState<any[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
   const [upcomingEventsList, setUpcomingEventsList] = useState<any[]>([])
@@ -120,6 +122,8 @@ export default function CalendarPage() {
 
   // Load upcoming events for carousel and calendar
   useEffect(() => {
+    if (!calendarReady || !moment) return
+    
     const loadUpcomingEvents = async () => {
       try {
         const { UpcomingEventsService } = await import('./_lib/upcoming-events-service')
@@ -132,8 +136,8 @@ export default function CalendarPage() {
         const calendarEvents = allUpcoming.map(event => ({
           id: event.id,
           title: event.title,
-          start: moment(event.date).toDate(),
-          end: moment(event.date).toDate(),
+          start: new Date(event.date),
+          end: new Date(event.date),
           allDay: !event.time,
           color: '#8b5cf6', // Purple for upcoming events
           description: event.description,
@@ -149,7 +153,7 @@ export default function CalendarPage() {
     }
 
     loadUpcomingEvents()
-  }, [])
+  }, [calendarReady])
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
     setSelectedSlot({ start, end })
@@ -228,10 +232,89 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-white overflow-hidden">
       <CalendarStyles />
       
-      {/* Google Calendar Style Toolbar */}
+      {/* Mobile Header - Compact */}
+      <div className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200">
+        {/* Top row: Menu + Title + Home */}
+        <div className="flex items-center px-2 py-1.5">
+          <button 
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <Menu className="w-5 h-5 text-gray-700" />
+          </button>
+          
+          <div className="flex-1 flex items-center justify-center gap-1">
+            <button
+              onClick={() => {
+                const newDate = new Date(date)
+                if (view === 'month') newDate.setMonth(newDate.getMonth() - 1)
+                else if (view === 'week') newDate.setDate(newDate.getDate() - 7)
+                else newDate.setDate(newDate.getDate() - 1)
+                setDate(newDate)
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full"
+            >
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            
+            <span className="text-sm font-medium text-gray-800 min-w-[90px] text-center">
+              {calendarReady && moment ? moment(date).format('MMM YYYY') : ''}
+            </span>
+            
+            <button
+              onClick={() => {
+                const newDate = new Date(date)
+                if (view === 'month') newDate.setMonth(newDate.getMonth() + 1)
+                else if (view === 'week') newDate.setDate(newDate.getDate() + 7)
+                else newDate.setDate(newDate.getDate() + 1)
+                setDate(newDate)
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full"
+            >
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => router.push('/home')}
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <Home className="w-5 h-5 text-gray-700" />
+          </button>
+        </div>
+        
+        {/* Bottom row: Today + View selector */}
+        <div className="flex items-center justify-between px-2 pb-2">
+          <button
+            onClick={() => setDate(new Date())}
+            className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Today
+          </button>
+          
+          <div className="flex gap-1">
+            {['month', 'week', 'day'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                  view === v 
+                    ? 'text-white' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+                style={view === v ? { backgroundColor: currentZone?.themeColor || '#10b981' } : {}}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Google Calendar Style Toolbar - Desktop */}
       {calendarReady && (
         <GoogleCalendarToolbar
           date={date}
@@ -263,7 +346,7 @@ export default function CalendarPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar */}
+        {/* Sidebar - Drawer on mobile */}
         <div className={`
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0 
@@ -277,14 +360,12 @@ export default function CalendarPage() {
               date={date}
               onDateSelect={(newDate) => {
                 setDate(newDate)
-                // Close sidebar on mobile after selecting date
                 if (window.innerWidth < 1024) {
                   setSidebarOpen(false)
                 }
               }}
               onCreateEvent={() => {
                 handleCreateEvent()
-                // Close sidebar on mobile after creating event
                 if (window.innerWidth < 1024) {
                   setSidebarOpen(false)
                 }
@@ -297,23 +378,18 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Area - Apple-style reveal animation */}
-        <div className={`
-          flex-1 overflow-auto bg-gray-100
-          transition-all duration-300 ease-in-out
-          lg:translate-x-0 lg:scale-100 lg:rounded-none
-          ${sidebarOpen 
-            ? 'translate-x-64 scale-90 rounded-2xl shadow-2xl' 
-            : 'translate-x-0 scale-100 rounded-none'
-          }
-        `}>
-          {/* Overlay to close sidebar on mobile */}
-          {sidebarOpen && (
-            <div 
-              className="absolute inset-0 z-10 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
-
+        <div 
+          className={`
+            flex-1 overflow-auto bg-gray-100
+            transition-all duration-300 ease-in-out
+            lg:translate-x-0 lg:scale-100 lg:rounded-none
+            ${sidebarOpen 
+              ? 'translate-x-64 scale-[0.85] rounded-2xl shadow-2xl origin-left' 
+              : 'translate-x-0 scale-100 rounded-none'
+            }
+          `}
+          onClick={() => sidebarOpen && setSidebarOpen(false)}
+        >
           <div className="h-full bg-white relative z-0 flex flex-col">
             {/* Unified Carousel - Birthdays + Events */}
             {(todaysBirthdays.length > 0 || upcomingEvents.length > 0) && (
@@ -325,22 +401,22 @@ export default function CalendarPage() {
             )}
 
             {!calendarReady || loading ? (
-              <div className="flex items-center justify-center flex-1">
+              <div className="flex items-center justify-center flex-1 py-20">
                 <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">
-                    {!calendarReady ? 'Initializing calendar...' : 'Loading events...'}
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 border-3 sm:border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    {!calendarReady ? 'Initializing...' : 'Loading events...'}
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 p-4">
+              <div className="flex-1 p-2 sm:p-4 min-h-[400px] sm:min-h-[500px]">
                 <Calendar
                   localizer={momentLocalizer}
                   events={[...events, ...upcomingEventsList]}
                   startAccessor={(event: any) => event.start}
                   endAccessor={(event: any) => event.end}
-                  style={{ height: '100%' }}
+                  style={{ height: '100%', minHeight: '400px' }}
                   view={view}
                   onView={(newView: any) => setView(newView)}
                   date={date}

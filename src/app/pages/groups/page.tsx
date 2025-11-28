@@ -43,23 +43,7 @@ export default function GroupsPage() {
     )
   }
 
-  if (!currentZone) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Zone Membership</h2>
-          <p className="text-gray-600 mb-4">You need to join a zone to access chat</p>
-          <button
-            onClick={() => router.push('/pages/join-zone')}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Join Zone
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Zone is optional - users can chat with anyone from any zone
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
@@ -85,7 +69,7 @@ export default function GroupsPage() {
             <div className="min-w-0">
               <h1 className="text-lg sm:text-xl font-bold truncate">Messages</h1>
               <p className="text-xs sm:text-sm opacity-90 truncate">
-                {currentZone ? `${currentZone.name}` : 'Chat with zone members'}
+                Chat with all members
               </p>
             </div>
           </div>

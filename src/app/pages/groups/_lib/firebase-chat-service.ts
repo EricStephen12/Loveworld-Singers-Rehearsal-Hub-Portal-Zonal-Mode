@@ -211,24 +211,31 @@ export class FirebaseChatService {
   }
 
   /**
-   * Search users by name or email within a zone (or all zones for Boss)
+   * Search users by name or email - searches ALL zones (no zone filtering)
+   * Anyone can search and chat with anyone from any zone
    */
   static async searchUsers(searchTerm: string, currentUserId: string, zoneId?: string, isBoss: boolean = false): Promise<ChatUser[]> {
     try {
       let allMembers: ChatUser[] = []
       
-      // Boss can search across ALL zones
-      if (isBoss) {
-        console.log('👑 Boss search - fetching members from all zones')
+      // Everyone can search across ALL zones - no zone filtering
+      console.log('🔍 Global search - fetching members from all zones')
+      
+      // Get all zone members from all zones
+      const zoneMembersRef = collection(db, 'zone_members')
+      const zoneMembersSnapshot = await getDocs(zoneMembersRef)
+      
+      // Use a Map to deduplicate by userId (in case user is in multiple zones)
+      const userMap = new Map<string, ChatUser>()
+      
+      zoneMembersSnapshot.docs.forEach(doc => {
+        const data = doc.data()
+        // Skip current user
+        if (data.userId === currentUserId) return
         
-        // Get all zone members from all zones
-        const zoneMembersRef = collection(db, 'zone_members')
-        const zoneMembersQuery = query(zoneMembersRef, where('userId', '!=', currentUserId))
-        const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
-        
-        allMembers = zoneMembersSnapshot.docs.map(doc => {
-          const data = doc.data()
-          return {
+        // Only add if not already in map (keep first occurrence)
+        if (!userMap.has(data.userId)) {
+          userMap.set(data.userId, {
             id: data.userId,
             email: data.userEmail || '',
             fullName: data.userName || 'Unknown User',
@@ -237,13 +244,14 @@ export class FirebaseChatService {
             zoneName: data.zoneName || 'Unknown Zone',
             isOnline: false,
             lastSeen: new Date()
-          }
-        })
-      } else {
-        // Regular users: search only within their zone
-        if (!zoneId) return []
-        allMembers = await this.getZoneMembers(zoneId, currentUserId)
-      }
+          })
+        }
+      })
+      
+      allMembers = Array.from(userMap.values())
+      
+      // Sort by name
+      allMembers.sort((a, b) => a.fullName.localeCompare(b.fullName))
       
       // If no search term, return all members
       if (!searchTerm || searchTerm.trim().length === 0) {

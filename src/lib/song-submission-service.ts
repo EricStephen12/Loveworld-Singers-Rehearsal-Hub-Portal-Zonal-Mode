@@ -42,6 +42,9 @@ export interface SongSubmission {
   status: 'pending' | 'approved' | 'rejected';
   adminSeen?: boolean;
   replyMessage?: string;
+  // CRITICAL: Zone tracking for proper filtering
+  zoneId: string;
+  zoneName?: string;
   submittedBy: {
     userId: string;
     userName: string;
@@ -93,8 +96,8 @@ export async function submitSong(songData: Omit<SongSubmission, 'id' | 'status' 
       updatedAt: serverTimestamp()
     });
     
-    // Create notification for admins
-    await createSubmissionNotification(docRef.id, songData.title, songData.submittedBy);
+    // Create notification for admins (include zone info)
+    await createSubmissionNotification(docRef.id, songData.title, songData.submittedBy, songData.zoneId, songData.zoneName);
     
     console.log('✅ [SongSubmission] Song submitted with ID:', docRef.id);
     
@@ -117,39 +120,59 @@ export async function submitSong(songData: Omit<SongSubmission, 'id' | 'status' 
 async function createSubmissionNotification(
   songId: string,
   songTitle: string,
-  submittedBy: SongSubmission['submittedBy']
+  submittedBy: SongSubmission['submittedBy'],
+  zoneId?: string,
+  zoneName?: string
 ): Promise<void> {
   try {
-    const notificationData: Omit<SongNotification, 'id'> = {
+    const notificationData: Omit<SongNotification, 'id'> & { zoneId?: string; zoneName?: string } = {
       songId,
       songTitle,
       submittedBy: submittedBy.userName,
       submittedByEmail: submittedBy.email,
       type: 'new_submission',
-      message: `New song "${songTitle}" submitted by ${submittedBy.userName}`,
+      message: `New song "${songTitle}" submitted by ${submittedBy.userName}${zoneName ? ` from ${zoneName}` : ''}`,
       read: false,
       createdAt: new Date().toISOString(),
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
+      // Include zone info for filtering
+      zoneId: zoneId || 'unknown',
+      zoneName: zoneName || 'Unknown Zone'
     };
     
     const notificationsRef = collection(db, SONG_NOTIFICATIONS_COLLECTION);
     await addDoc(notificationsRef, notificationData);
     
-    console.log('✅ [SongSubmission] Notification created for song:', songId);
+    console.log('✅ [SongSubmission] Notification created for song:', songId, 'zone:', zoneId);
   } catch (error) {
     console.error('❌ [SongSubmission] Error creating notification:', error);
   }
 }
 
 /**
- * Get all submitted songs (for admin)
+ * Get all submitted songs (for admin) - filtered by zone
+ * @param zoneId - The zone ID to filter by. If not provided, returns all (for super admin)
+ * @param isHQGroup - If true, returns all submissions (HQ can see everything)
  */
-export async function getAllSubmittedSongs(): Promise<SongSubmission[]> {
+export async function getAllSubmittedSongs(zoneId?: string, isHQGroup?: boolean): Promise<SongSubmission[]> {
   try {
-    console.log('📖 [SongSubmission] Getting all submitted songs...');
+    console.log('📖 [SongSubmission] Getting submitted songs for zone:', zoneId || 'ALL');
     
     const submissionsRef = collection(db, SUBMITTED_SONGS_COLLECTION);
-    const q = query(submissionsRef, orderBy('createdAt', 'desc'));
+    let q;
+    
+    // HQ groups and super admins can see all submissions
+    if (isHQGroup || !zoneId) {
+      q = query(submissionsRef, orderBy('createdAt', 'desc'));
+    } else {
+      // Regular zones only see their own submissions
+      q = query(
+        submissionsRef, 
+        where('zoneId', '==', zoneId),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    
     const snapshot = await getDocs(q);
     
     const submissions = snapshot.docs.map((docSnap) => {
@@ -158,12 +181,13 @@ export async function getAllSubmittedSongs(): Promise<SongSubmission[]> {
         id: docSnap.id,
         ...data,
         adminSeen: data.adminSeen || false,
+        zoneId: data.zoneId || 'unknown',
         createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
       } as SongSubmission;
     });
     
-    console.log('✅ [SongSubmission] Found', submissions.length, 'submitted songs');
+    console.log('✅ [SongSubmission] Found', submissions.length, 'submitted songs for zone:', zoneId || 'ALL');
     return submissions;
   } catch (error) {
     console.error('❌ [SongSubmission] Error getting submitted songs:', error);
@@ -172,31 +196,49 @@ export async function getAllSubmittedSongs(): Promise<SongSubmission[]> {
 }
 
 /**
- * Get pending songs (for admin)
+ * Get pending songs (for admin) - filtered by zone
+ * @param zoneId - The zone ID to filter by. If not provided, returns all (for super admin)
+ * @param isHQGroup - If true, returns all pending submissions (HQ can see everything)
  */
-export async function getPendingSongs(): Promise<SongSubmission[]> {
+export async function getPendingSongs(zoneId?: string, isHQGroup?: boolean): Promise<SongSubmission[]> {
   try {
-    console.log('📖 [SongSubmission] Getting pending songs...');
+    console.log('📖 [SongSubmission] Getting pending songs for zone:', zoneId || 'ALL');
     
     const submissionsRef = collection(db, SUBMITTED_SONGS_COLLECTION);
-    const q = query(
-      submissionsRef,
-      where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
+    let snapshot;
+    
+    // HQ groups and super admins can see all pending submissions
+    if (isHQGroup || !zoneId) {
+      const q = query(
+        submissionsRef,
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'desc')
+      );
+      snapshot = await getDocs(q);
+    } else {
+      // Regular zones only see their own pending submissions
+      // Note: Firestore requires composite index for multiple where + orderBy
+      const q = query(
+        submissionsRef,
+        where('status', '==', 'pending'),
+        where('zoneId', '==', zoneId),
+        orderBy('createdAt', 'desc')
+      );
+      snapshot = await getDocs(q);
+    }
     
     const submissions = snapshot.docs.map((docSnap) => {
       const data = docSnap.data();
       return {
         id: docSnap.id,
         ...data,
+        zoneId: data.zoneId || 'unknown',
         createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
       } as SongSubmission;
     });
     
-    console.log('✅ [SongSubmission] Found', submissions.length, 'pending songs');
+    console.log('✅ [SongSubmission] Found', submissions.length, 'pending songs for zone:', zoneId || 'ALL');
     return submissions;
   } catch (error) {
     console.error('❌ [SongSubmission] Error getting pending songs:', error);
@@ -367,9 +409,11 @@ async function createStatusNotification(
 }
 
 /**
- * Get unread notifications for admins
+ * Get unread notifications for admins - filtered by zone
+ * @param zoneId - The zone ID to filter by
+ * @param isHQGroup - If true, returns all notifications (HQ can see everything)
  */
-export async function getUnreadNotifications(): Promise<SongNotification[]> {
+export async function getUnreadNotifications(zoneId?: string, isHQGroup?: boolean): Promise<SongNotification[]> {
   try {
     const notificationsRef = collection(db, SONG_NOTIFICATIONS_COLLECTION);
     const q = query(
@@ -380,14 +424,20 @@ export async function getUnreadNotifications(): Promise<SongNotification[]> {
     );
     const snapshot = await getDocs(q);
     
-    const notifications = snapshot.docs.map((docSnap) => {
+    let notifications = snapshot.docs.map((docSnap) => {
       const data = docSnap.data();
       return {
         id: docSnap.id,
         ...data,
+        zoneId: data.zoneId || 'unknown',
         createdAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
-      } as SongNotification;
+      } as SongNotification & { zoneId?: string };
     });
+    
+    // Filter by zone if not HQ/super admin
+    if (zoneId && !isHQGroup) {
+      notifications = notifications.filter(n => (n as any).zoneId === zoneId);
+    }
     
     return notifications;
   } catch (error) {
@@ -476,3 +526,108 @@ export async function replyToSubmission(submissionId: string, adminName: string,
   }
 }
 
+
+
+/**
+ * Get submissions by a specific user (for users to see their own submissions)
+ */
+export async function getUserSubmissions(userId: string): Promise<SongSubmission[]> {
+  try {
+    console.log('📖 [SongSubmission] Getting submissions for user:', userId);
+    
+    const submissionsRef = collection(db, SUBMITTED_SONGS_COLLECTION);
+    const q = query(
+      submissionsRef,
+      where('submittedBy.userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    
+    const submissions = snapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        ...data,
+        zoneId: data.zoneId || 'unknown',
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
+      } as SongSubmission;
+    });
+    
+    console.log('✅ [SongSubmission] Found', submissions.length, 'submissions for user');
+    return submissions;
+  } catch (error) {
+    console.error('❌ [SongSubmission] Error getting user submissions:', error);
+    return [];
+  }
+}
+
+/**
+ * Get user's song notifications (approved, rejected, replied)
+ */
+export async function getUserSongNotifications(userEmail: string): Promise<SongNotification[]> {
+  try {
+    console.log('📖 [SongSubmission] Getting notifications for user:', userEmail);
+    
+    const notificationsRef = collection(db, SONG_NOTIFICATIONS_COLLECTION);
+    const q = query(
+      notificationsRef,
+      where('submittedByEmail', '==', userEmail),
+      where('type', 'in', ['approved', 'rejected', 'replied']),
+      orderBy('timestamp', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    
+    const notifications = snapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        ...data,
+        createdAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
+      } as SongNotification;
+    });
+    
+    console.log('✅ [SongSubmission] Found', notifications.length, 'notifications for user');
+    return notifications;
+  } catch (error) {
+    console.error('❌ [SongSubmission] Error getting user notifications:', error);
+    return [];
+  }
+}
+
+
+/**
+ * Delete a user's own submission (only if pending)
+ */
+export async function deleteUserSubmission(submissionId: string, userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('🗑️ [SongSubmission] Deleting submission:', submissionId);
+    
+    const submissionRef = doc(db, SUBMITTED_SONGS_COLLECTION, submissionId);
+    const submissionDoc = await getDoc(submissionRef);
+    
+    if (!submissionDoc.exists()) {
+      return { success: false, error: 'Submission not found' };
+    }
+    
+    const submissionData = submissionDoc.data() as SongSubmission;
+    
+    // Verify ownership
+    if (submissionData.submittedBy.userId !== userId) {
+      return { success: false, error: 'You can only delete your own submissions' };
+    }
+    
+    // Only allow deleting pending submissions
+    if (submissionData.status !== 'pending') {
+      return { success: false, error: 'Can only delete pending submissions' };
+    }
+    
+    await deleteDoc(submissionRef);
+    
+    console.log('✅ [SongSubmission] Submission deleted');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SongSubmission] Error deleting submission:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' };
+  }
+}

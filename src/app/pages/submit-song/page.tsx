@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, CheckCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { submitSong } from '@/lib/song-submission-service'
+import { submitSong, getUserSubmissions, deleteUserSubmission, SongSubmission } from '@/lib/song-submission-service'
 import { useZone } from '@/hooks/useZone'
 import { getZoneTheme } from '@/utils/zone-theme'
 
@@ -27,6 +27,10 @@ export default function SubmitSongPage() {
   const zoneTheme = getZoneTheme(zoneColor)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [mySubmissions, setMySubmissions] = useState<SongSubmission[]>([])
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false)
+  const [showMySubmissions, setShowMySubmissions] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   
   // Generate focus ring color based on zone color
   const getFocusClasses = () => {
@@ -55,6 +59,45 @@ export default function SubmitSongPage() {
     }
   }, [profile, user])
 
+  // Load user's submissions
+  useEffect(() => {
+    if (user?.uid) {
+      loadMySubmissions()
+    }
+  }, [user?.uid])
+
+  const loadMySubmissions = async () => {
+    if (!user?.uid) return
+    setLoadingSubmissions(true)
+    try {
+      const submissions = await getUserSubmissions(user.uid)
+      setMySubmissions(submissions)
+    } catch (error) {
+      console.error('Error loading submissions:', error)
+    } finally {
+      setLoadingSubmissions(false)
+    }
+  }
+
+  const handleDeleteSubmission = async (submissionId: string) => {
+    if (!user?.uid) return
+    if (!confirm('Are you sure you want to delete this submission?')) return
+    
+    setDeletingId(submissionId)
+    try {
+      const result = await deleteUserSubmission(submissionId, user.uid)
+      if (result.success) {
+        loadMySubmissions()
+      } else {
+        alert(result.error || 'Failed to delete submission')
+      }
+    } catch (error) {
+      alert('Error deleting submission')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const handleInputChange = (field: keyof SongSubmissionForm, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -76,6 +119,13 @@ export default function SubmitSongPage() {
     setSubmitStatus('idle')
 
     try {
+      // CRITICAL: Include zone ID for proper filtering
+      if (!currentZone?.id) {
+        alert('Please select a zone before submitting')
+        setIsSubmitting(false)
+        return
+      }
+      
       const result = await submitSong({
         title: formData.title.trim(),
         lyrics: formData.lyrics.trim(),
@@ -90,6 +140,9 @@ export default function SubmitSongPage() {
         drummer: '',
         solfas: '',
         notes: formData.notes.trim() || '',
+        // CRITICAL: Zone tracking
+        zoneId: currentZone.id,
+        zoneName: currentZone.name,
         submittedBy: {
           userId: user.uid,
           userName: getUserName() || user.email || 'Unknown',
@@ -103,6 +156,10 @@ export default function SubmitSongPage() {
       }
 
       setSubmitStatus('success')
+      
+      // Reload submissions to show the new one
+      loadMySubmissions()
+      setShowMySubmissions(true)
       
       setTimeout(() => {
         setFormData({
@@ -161,6 +218,103 @@ export default function SubmitSongPage() {
               <p className="font-medium text-red-900">Failed to submit song. Please try again.</p>
           </div>
         )}
+
+          {/* My Submissions Section */}
+          {mySubmissions.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setShowMySubmissions(!showMySubmissions)}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${zoneColor}20` }}>
+                    <Clock className="w-5 h-5" style={{ color: zoneColor }} />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">My Submissions</p>
+                    <p className="text-sm text-gray-500">{mySubmissions.length} song{mySubmissions.length !== 1 ? 's' : ''} submitted</p>
+                  </div>
+                </div>
+                {showMySubmissions ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+              
+              {showMySubmissions && (
+                <div className="border-t border-gray-200 divide-y divide-gray-100">
+                  {mySubmissions.map((submission) => (
+                    <div key={submission.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className="font-medium text-gray-900">{submission.title}</h4>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          submission.status === 'pending' 
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : submission.status === 'approved'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Submitted {new Date(submission.createdAt).toLocaleDateString()}
+                      </p>
+                      
+                      {/* Show admin reply if exists */}
+                      {submission.replyMessage && (
+                        <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                          <div className="flex items-center gap-2 mb-1">
+                            <MessageSquare className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-800">Admin Reply</span>
+                          </div>
+                          <p className="text-sm text-purple-900">{submission.replyMessage}</p>
+                        </div>
+                      )}
+                      
+                      {/* Show rejection reason if rejected */}
+                      {submission.status === 'rejected' && submission.reviewNotes && (
+                        <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                          <div className="flex items-center gap-2 mb-1">
+                            <XCircle className="w-4 h-4 text-red-600" />
+                            <span className="text-xs font-semibold text-red-800">Rejection Reason</span>
+                          </div>
+                          <p className="text-sm text-red-900">{submission.reviewNotes}</p>
+                        </div>
+                      )}
+                      
+                      {/* Show approval message */}
+                      {submission.status === 'approved' && (
+                        <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-sm text-green-800">Your song has been approved and added to the collection!</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Delete button - only for pending submissions */}
+                      {submission.status === 'pending' && submission.id && (
+                        <button
+                          onClick={() => handleDeleteSubmission(submission.id!)}
+                          disabled={deletingId === submission.id}
+                          className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === submission.id ? (
+                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                          Delete Submission
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Song Title */}

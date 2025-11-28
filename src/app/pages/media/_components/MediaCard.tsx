@@ -74,8 +74,8 @@ export default function MediaCard({ media }: MediaCardProps) {
       className="flex flex-col cursor-pointer group"
       onClick={handleClick}
     >
-      {/* Thumbnail Container */}
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727] group-hover:rounded-b-none transition-all duration-200">
+      {/* Thumbnail Container - Mobile optimized with rounded corners */}
+      <div className="relative w-full aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-[#272727]">
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-[#272727] to-[#1a1a1a] animate-pulse" />
         )}
@@ -105,42 +105,39 @@ export default function MediaCard({ media }: MediaCardProps) {
         
         {/* Duration Badge */}
         {media.duration && (
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs font-medium px-1.5 py-0.5 rounded">
+          <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-black/80 text-white text-[10px] sm:text-xs font-medium px-1 sm:px-1.5 py-0.5 rounded">
             {formatDuration(media.duration)}
           </div>
         )}
 
-        {/* Play Button Overlay (on hover) */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-          <div className="bg-white/90 rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform">
-            <Play className="w-6 h-6 text-black" fill="black" />
+        {/* Play Button Overlay - Desktop only hover */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden sm:flex items-center justify-center">
+          <div className="bg-white/90 rounded-full p-3 sm:p-4 transform scale-90 group-hover:scale-100 transition-transform">
+            <Play className="w-5 h-5 sm:w-6 sm:h-6 text-black" fill="black" />
           </div>
         </div>
       </div>
 
-      {/* Video Info */}
-      <div className="flex gap-3 pt-3 px-1">
-        {/* Channel Avatar Placeholder */}
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">
+      {/* Video Info - Mobile first layout */}
+      <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-3">
+        {/* Channel Avatar */}
+        <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <span className="text-white font-bold text-xs sm:text-sm">
             {media.title.charAt(0).toUpperCase()}
           </span>
         </div>
 
         {/* Video Details */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-1">
           {/* Title */}
-          <h3 className="text-white font-medium text-sm line-clamp-2 mb-1 group-hover:text-blue-400 transition-colors">
+          <h3 className="text-white font-medium text-xs sm:text-sm line-clamp-2 mb-0.5 sm:mb-1 leading-tight">
             {media.title}
           </h3>
 
-          {/* Channel Name / Type */}
-          <p className="text-gray-400 text-xs mb-1">
-            {media.type ? media.type.charAt(0).toUpperCase() + media.type.slice(1) : 'LoveWorld Singers'}
-          </p>
-
-          {/* Views and Time */}
-          <div className="flex items-center gap-1 text-gray-400 text-xs">
+          {/* Channel Name / Type + Views */}
+          <div className="flex flex-wrap items-center gap-x-1 text-gray-400 text-[11px] sm:text-xs">
+            <span>{media.type ? media.type.charAt(0).toUpperCase() + media.type.slice(1) : 'LWS'}</span>
+            <span>•</span>
             <span>{formatViews(media.views || 0)}</span>
             {media.createdAt && (
               <>
@@ -151,15 +148,14 @@ export default function MediaCard({ media }: MediaCardProps) {
           </div>
         </div>
 
-        {/* More Options */}
+        {/* More Options - Always visible on mobile */}
         <button
           onClick={(e) => {
             e.stopPropagation()
-            // Handle more options
           }}
-          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-white/10 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
         >
-          <MoreVertical className="w-5 h-5 text-gray-400" />
+          <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
         </button>
       </div>
     </div>

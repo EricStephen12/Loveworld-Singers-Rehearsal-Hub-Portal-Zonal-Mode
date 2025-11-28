@@ -252,20 +252,17 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
     )
   }
 
-  // Mobile mode - popup drawer (works on all screen sizes)
+  // Mobile mode - Apple-style drawer (works on all screen sizes)
   return (
     <>
-      <div className={`fixed inset-0 z-50 transform transition-all duration-300 ease-out ${open ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Backdrop with blur */}
-        <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={onClose}
-        />
-
-        {/* Drawer Content */}
-        <div className="relative w-80 max-w-sm h-full bg-white/95 backdrop-blur-xl shadow-2xl border-r border-gray-200/50 overflow-y-auto" data-drawer>
-          {renderDrawerContent()}
-        </div>
+      {/* Drawer slides in from left */}
+      <div 
+        className={`fixed left-0 top-0 bottom-0 z-50 w-72 max-w-[80vw] bg-white/98 backdrop-blur-xl shadow-2xl border-r border-gray-200/50 overflow-y-auto transform transition-transform duration-300 ease-out ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        data-drawer
+      >
+        {renderDrawerContent()}
       </div>
 
       {/* Logout Confirmation Modal */}

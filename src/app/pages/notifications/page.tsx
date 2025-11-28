@@ -8,6 +8,7 @@ import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
 import { getAllMessages, AdminMessage } from '@/lib/simple-notifications-service'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 
 export default function NotificationsPage() {
   const [messages, setMessages] = useState<AdminMessage[]>([])
@@ -15,14 +16,25 @@ export default function NotificationsPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const { user, profile } = useAuth()
+  const { currentZone, isLoading: zoneLoading } = useZone()
 
   useEffect(() => {
-    loadMessages()
-  }, [])
+    // Only load messages when zone is ready
+    if (currentZone?.id && !zoneLoading) {
+      loadMessages()
+    }
+  }, [currentZone?.id, zoneLoading])
 
   const loadMessages = async () => {
+    if (!currentZone?.id) {
+      console.log('⚠️ No zone selected, cannot load messages')
+      setLoading(false)
+      return
+    }
+    
     setLoading(true)
-    const msgs = await getAllMessages()
+    console.log('📖 Loading messages for zone:', currentZone.id, currentZone.name)
+    const msgs = await getAllMessages(currentZone.id)
     setMessages(msgs)
     setLoading(false)
   }
@@ -44,16 +56,22 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 overflow-hidden">
+      {/* Main Content with Apple-style reveal effect */}
+      <div 
+        className={`
+          min-h-screen
+          transition-all duration-300 ease-out
+          ${isMenuOpen 
+            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
+            : 'translate-x-0 scale-100 rounded-none'
+          }
+        `}
+        onClick={() => isMenuOpen && setIsMenuOpen(false)}
+      >
       <ScreenHeader
         title="Messages"
         onMenuClick={() => setIsMenuOpen(true)}
-      />
-
-      <SharedDrawer
-        open={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        items={getMenuItems(() => setIsMenuOpen(false))}
       />
 
       <div className="pt-16 pb-20 px-4">
@@ -102,6 +120,13 @@ export default function NotificationsPage() {
           </div>
         </div>
       </div>
+      </div> {/* End Apple-style animated container */}
+
+      <SharedDrawer
+        open={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        items={getMenuItems(() => setIsMenuOpen(false))}
+      />
     </div>
   )
 }

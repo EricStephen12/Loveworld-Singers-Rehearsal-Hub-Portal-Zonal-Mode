@@ -144,7 +144,7 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
           {isSearching ? (
             <div className="p-8 text-center">
               <Loader2 className="w-8 h-8 text-gray-400 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">Loading zone members...</p>
+              <p className="text-gray-600">Loading members...</p>
             </div>
           ) : searchResults.length === 0 ? (
             <div className="p-8 text-center">
@@ -155,7 +155,7 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
               <p className="text-gray-600 text-sm">
                 {searchTerm 
                   ? `No members found matching "${searchTerm}"`
-                  : 'No members in your zone yet'}
+                  : 'No members available yet'}
               </p>
             </div>
           ) : (

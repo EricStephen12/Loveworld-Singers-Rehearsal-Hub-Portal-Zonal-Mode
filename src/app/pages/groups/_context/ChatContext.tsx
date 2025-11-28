@@ -219,17 +219,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const searchUsers = useCallback(async (searchTerm: string) => {
     if (!user) return []
     
-    // Check if user is Boss
-    const isBoss = profile?.role === 'boss' || user.email?.toLowerCase().startsWith('boss')
-    
-    // Boss doesn't need a zone to search (can search all zones)
-    if (!isBoss && !currentZone) return []
-    
+    // Everyone can search all zones - no zone filtering required
     setIsUsersLoading(true)
-    const users = await FirebaseChatService.searchUsers(searchTerm, user.uid, currentZone?.id, isBoss)
+    const users = await FirebaseChatService.searchUsers(searchTerm, user.uid, currentZone?.id, true)
     setIsUsersLoading(false)
     return users
-  }, [user, currentZone, profile])
+  }, [user, currentZone])
 
   const createDirectChat = useCallback(async (userId: string) => {
     if (!user) return null
