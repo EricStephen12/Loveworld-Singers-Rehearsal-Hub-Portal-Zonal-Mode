@@ -116,6 +116,35 @@ export class FirebaseDatabaseService {
     }
   }
 
+  // Update user profile
+  static async updateUserProfile(userId: string, data: any) {
+    try {
+      const docRef = doc(db, 'profiles', userId)
+      await updateDoc(docRef, {
+        ...data,
+        updatedAt: new Date()
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating user profile:', error)
+      return { success: false }
+    }
+  }
+
+  // Get all users
+  static async getAllUsers() {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'profiles'))
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+    } catch (error) {
+      console.error('Error getting all users:', error)
+      return []
+    }
+  }
+
   // Real-time listener for praise nights
   static subscribeToPraiseNights(callback: (data: any[]) => void) {
     const q = query(

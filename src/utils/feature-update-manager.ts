@@ -232,39 +232,11 @@ class FeatureUpdateManager {
   }
 
   // Show update notification to user via notification system
+  // DISABLED: Push notifications for feature updates are disabled
   private async showUpdateNotification(): Promise<void> {
-    if (typeof window === 'undefined') return;
-
-    try {
-      // Create a system notification for feature updates
-      const notificationData = {
-        title: '✨ New Features Available',
-        message: `Version ${this.CURRENT_VERSION.version} is now available with ${this.CURRENT_VERSION.features.length} new features`,
-        type: 'info' as const,
-        category: 'system' as const,
-        priority: 'medium' as const,
-        target_audience: 'all' as const,
-        action_url: '/pages/notifications', // Link to notifications page
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Expire in 7 days
-      };
-
-      // Send to notification system
-      const response = await fetch('/api/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(notificationData)
-      });
-
-      if (response.ok) {
-        console.log('✅ Feature update notification sent to all users');
-      } else {
-        console.log('⚠️ Failed to send feature update notification');
-      }
-    } catch (error) {
-      console.error('Error sending feature update notification:', error);
-    }
+    // Disabled - no longer broadcasting push notifications for feature updates
+    console.log('ℹ️ Feature update detected, notification disabled');
+    return;
   }
 
   // Force refresh for all users (emergency updates)
