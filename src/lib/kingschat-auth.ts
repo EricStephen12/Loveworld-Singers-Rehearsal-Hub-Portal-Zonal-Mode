@@ -26,23 +26,96 @@ interface KingsChatUserProfile {
   profilePicture?: string
 }
 
+// Extend Window interface for native app bridge
+declare global {
+  interface Window {
+    IS_NATIVE_APP?: boolean
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void
+    }
+    // Callback for native app to inject tokens after OAuth
+    onNativeKingsChatAuth?: (tokens: KingsChatAuthTokens) => void
+  }
+}
+
+/**
+ * Check if running inside React Native WebView
+ */
+export function isNativeApp(): boolean {
+  if (typeof window === 'undefined') return false
+  return !!(window.IS_NATIVE_APP || window.ReactNativeWebView)
+}
+
+/**
+ * Send message to React Native app
+ */
+function postMessageToNative(type: string, data?: any): void {
+  if (typeof window !== 'undefined' && window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type, data }))
+  }
+}
+
 export class KingsChatAuthService {
+  // Promise resolver for native app OAuth callback
+  private static nativeAuthResolver: ((tokens: KingsChatAuthTokens | null) => void) | null = null
+
   /**
    * Initiate KingsChat login flow
    * Opens KingsChat OAuth popup and returns authentication tokens
+   * Supports both browser (popup) and React Native WebView (native bridge)
    */
   static async login(): Promise<KingsChatAuthTokens | null> {
     try {
       console.log('🔐 Initiating KingsChat login...')
       console.log('📋 Client ID:', KINGSCHAT_CLIENT_ID)
       console.log('🌐 Current Origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A')
+      console.log('📱 Is Native App:', isNativeApp())
       
       if (!KINGSCHAT_CLIENT_ID || KINGSCHAT_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
         console.error('❌ KingsChat Client ID is not configured!')
         alert('KingsChat Client ID is missing. Please configure NEXT_PUBLIC_KINGSCHAT_CLIENT_ID in your .env.local file')
         return null
       }
-      
+
+      // ============================================
+      // NATIVE APP BRIDGE (React Native WebView)
+      // ============================================
+      if (isNativeApp()) {
+        console.log('📱 Running in React Native WebView - requesting native OAuth...')
+        
+        // Create a promise that will be resolved when native app sends tokens back
+        const nativeAuthPromise = new Promise<KingsChatAuthTokens | null>((resolve) => {
+          this.nativeAuthResolver = resolve
+          
+          // Set up callback for native app to call
+          window.onNativeKingsChatAuth = (tokens: KingsChatAuthTokens) => {
+            console.log('📱 Received tokens from native app')
+            this.handleNativeAuthCallback(tokens)
+          }
+          
+          // Timeout after 2 minutes (user might take time to login)
+          setTimeout(() => {
+            if (this.nativeAuthResolver) {
+              console.log('⏰ Native OAuth timeout')
+              this.nativeAuthResolver(null)
+              this.nativeAuthResolver = null
+            }
+          }, 120000)
+        })
+        
+        // Request native app to handle OAuth
+        postMessageToNative('KINGSCHAT_LOGIN_REQUEST', {
+          clientId: KINGSCHAT_CLIENT_ID,
+          scopes: ['profile', 'email', 'send_chat_message']
+        })
+        
+        // Wait for native app to complete OAuth and send tokens back
+        return nativeAuthPromise
+      }
+
+      // ============================================
+      // BROWSER/PWA FLOW (unchanged)
+      // ============================================
       const loginOptions = {
         scopes: ['profile', 'email', 'send_chat_message'], // Request all available scopes
         clientId: KINGSCHAT_CLIENT_ID
@@ -86,6 +159,41 @@ export class KingsChatAuthService {
       }
       
       return null
+    }
+  }
+
+  /**
+   * Handle OAuth callback from native app
+   * Called by React Native when OAuth completes
+   */
+  static handleNativeAuthCallback(tokens: KingsChatAuthTokens | null): void {
+    console.log('📱 Processing native auth callback...')
+    
+    if (tokens) {
+      // Store tokens in localStorage (same as browser flow)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kingschat_access_token', tokens.accessToken)
+        localStorage.setItem('kingschat_refresh_token', tokens.refreshToken)
+        localStorage.setItem('kingschat_token_expiry', (Date.now() + tokens.expiresInMillis).toString())
+        console.log('💾 Stored KingsChat tokens from native app')
+      }
+    }
+    
+    // Resolve the pending promise
+    if (this.nativeAuthResolver) {
+      this.nativeAuthResolver(tokens)
+      this.nativeAuthResolver = null
+    }
+  }
+
+  /**
+   * Cancel pending native auth (e.g., user cancelled in native app)
+   */
+  static cancelNativeAuth(): void {
+    if (this.nativeAuthResolver) {
+      console.log('📱 Native auth cancelled')
+      this.nativeAuthResolver(null)
+      this.nativeAuthResolver = null
     }
   }
 
