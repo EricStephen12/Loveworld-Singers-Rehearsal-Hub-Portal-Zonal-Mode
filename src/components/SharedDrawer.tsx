@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { X, LogOut, AlertCircle } from 'lucide-react'
 import { useZone } from '@/hooks/useZone'
+import { useAuth } from '@/hooks/useAuth'
 
 type DrawerItem = {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
@@ -30,9 +31,11 @@ type SharedDrawerProps = {
 
 export default function SharedDrawer({ open, onClose, title = 'Menu', items, customSections = [], fixedOnDesktop = false }: SharedDrawerProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [logoutCallback, setLogoutCallback] = useState<(() => void) | null>(null)
+  // Use ref instead of state to prevent callback from being lost on re-render
+  const logoutCallbackRef = useRef<(() => void) | null>(null)
   const router = useRouter()
   const { currentZone } = useZone()
+  const { signOut } = useAuth()
   
   // Get zone colors
   const zoneColors = {
@@ -85,14 +88,8 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
                   
                   if (isLogout) {
                     console.log('🚪 Logout button clicked - showing confirmation modal');
-                    // Show confirmation modal for logout
-                    // Store the callback correctly
-                    setLogoutCallback(() => () => {
-                      console.log('🚪 Executing logout callback');
-                      if (item.onClick) {
-                        item.onClick()
-                      }
-                    })
+                    // Store the callback in ref (won't be lost on re-render)
+                    logoutCallbackRef.current = item.onClick || null
                     setShowLogoutModal(true)
                   } else if (isRefresh) {
                     console.log('🔄 Refresh button clicked - executing immediately');
@@ -302,19 +299,25 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  console.log('🚪 Logout confirmed in modal, executing callback');
+                onClick={async () => {
+                  console.log('🚪 Logout confirmed in modal, executing logout...');
                   setShowLogoutModal(false)
                   onClose()
-                  // Execute callback with a small delay to ensure modal closes
-                  setTimeout(() => {
-                    if (logoutCallback) {
-                      console.log('🚪 Executing logout callback now');
-                      logoutCallback()
-                    } else {
-                      console.error('❌ No logout callback available');
+                  
+                  // Execute logout directly using signOut from useAuth
+                  // This is more reliable than using a stored callback
+                  try {
+                    console.log('🚪 Calling signOut directly...');
+                    await signOut()
+                    console.log('✅ SignOut completed');
+                  } catch (error) {
+                    console.error('❌ SignOut error:', error);
+                    // Fallback: try the stored callback
+                    if (logoutCallbackRef.current) {
+                      console.log('🚪 Trying stored callback as fallback...');
+                      logoutCallbackRef.current()
                     }
-                  }, 100)
+                  }
                 }}
                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
               >
