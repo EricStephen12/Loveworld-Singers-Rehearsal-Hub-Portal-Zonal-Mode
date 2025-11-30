@@ -41,12 +41,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.log('🚪 Starting logout process...')
       isLoggingOut = true
       
-      // Set logout flag in localStorage to prevent auto-login
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('isLoggingOut', 'true')
-        localStorage.setItem('logging_out', 'true')
-      }
-      
       // CRITICAL: Clear zone state FIRST to prevent cross-user contamination
       try {
         const zoneStore = await getZoneStore()
@@ -56,13 +50,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.warn('Could not clear zone state:', e)
       }
       
-      // Clear auth state in Zustand
+      // Clear auth state in Zustand BEFORE Firebase signOut
       set({ user: null, profile: null, isLoading: false })
       
-      // Sign out from Firebase
+      // Sign out from Firebase FIRST - this is the critical step
+      console.log('🔥 Signing out from Firebase...')
       const result = await FirebaseAuthService.signOut()
+      console.log('🔥 Firebase signOut result:', result)
       
-      // Clear all auth-related storage (regardless of Firebase result)
+      // Clear all auth-related storage AFTER Firebase signOut
       if (typeof window !== 'undefined') {
         // Keys to preserve (only countdown data)
         const keysToPreserve = ['server_target_date_', 'countdown_hash_']
@@ -86,6 +82,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Clear sessionStorage
         sessionStorage.clear()
         
+        // Clear IndexedDB Firebase data to prevent auto-login
+        try {
+          const databases = await indexedDB.databases()
+          for (const db of databases) {
+            if (db.name && (db.name.includes('firebase') || db.name.includes('firebaseLocalStorage'))) {
+              console.log('🗑️ Deleting IndexedDB:', db.name)
+              indexedDB.deleteDatabase(db.name)
+            }
+          }
+        } catch (e) {
+          console.warn('Could not clear IndexedDB:', e)
+        }
+        
         // Clear service worker caches
         if ('caches' in window) {
           try {
@@ -100,10 +109,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       console.log('✅ Logout successful, redirecting to auth page...')
       
-      // Redirect to auth page
+      // Redirect to auth page with a flag to prevent any auto-login attempts
       if (typeof window !== 'undefined') {
         // Use replace to prevent back button returning to logged-in state
-        window.location.replace('/auth')
+        window.location.replace('/auth?logout=true')
       }
       
     } catch (error) {
@@ -113,7 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Clear everything and redirect
         localStorage.clear()
         sessionStorage.clear()
-        window.location.replace('/auth')
+        window.location.replace('/auth?logout=true')
       }
     } finally {
       // Reset flag after a delay
@@ -138,15 +147,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: () => {
+    // Check if we just logged out (URL flag)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('logout') === 'true') {
+        console.log('🚪 Logout flag detected in URL - skipping auto-login')
+        isLoggingOut = true
+        // Clear the URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname)
+        // Reset flag after a short delay
+        setTimeout(() => {
+          isLoggingOut = false
+        }, 3000)
+      }
+    }
+    
     // Listen to Firebase auth state changes
     const unsubscribe = FirebaseAuthService.onAuthStateChange(async (currentUser) => {
       // Don't update state if we're logging out
-      if (isLoggingOut && !currentUser) {
-        return // Allow logout to proceed
-      }
-      
-      if (isLoggingOut && currentUser) {
-        // If user appears during logout, ignore it (might be stale state)
+      if (isLoggingOut) {
+        console.log('🚪 Auth state change ignored - logout in progress')
+        if (currentUser) {
+          // Force sign out again if Firebase still has a user during logout
+          console.log('🔥 Force signing out stale Firebase user...')
+          await FirebaseAuthService.signOut()
+        }
+        set({ user: null, profile: null, isLoading: false })
         return
       }
       

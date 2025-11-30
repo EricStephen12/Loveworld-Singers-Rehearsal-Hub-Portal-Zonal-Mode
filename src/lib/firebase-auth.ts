@@ -258,7 +258,12 @@ export class FirebaseAuthService {
       // CRITICAL: Check if user is logging out - prevent auto-login
       const isLoggingOut = localStorage.getItem('isLoggingOut') === 'true' || 
                           localStorage.getItem('logging_out') === 'true'
-      if (isLoggingOut) {
+      
+      // Also check URL for logout flag
+      const urlParams = new URLSearchParams(window.location.search)
+      const logoutFromUrl = urlParams.get('logout') === 'true'
+      
+      if (isLoggingOut || logoutFromUrl) {
         console.log('🚫 Auto-login blocked - logout in progress')
         return { user: null, error: 'Logout in progress' }
       }
