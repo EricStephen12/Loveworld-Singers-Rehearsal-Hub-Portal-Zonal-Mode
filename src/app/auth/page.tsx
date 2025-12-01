@@ -912,7 +912,7 @@ function AuthPageContent() {
             >
               {isLogin ? "Don't Have Account? " : "Already have an account? "}
               <span className="text-purple-600 font-semibold">
-                {isLogin ? "Join Zone" : "Sign In"}
+                {isLogin ? "Sign Up" : "Sign In"}
               </span>
             </button>
           </div>
