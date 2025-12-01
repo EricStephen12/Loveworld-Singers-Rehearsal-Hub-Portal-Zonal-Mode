@@ -1050,7 +1050,7 @@ export default function AdminPage() {
         throw new Error('Invalid song ID for status update');
       }
 
-      const result = await PraiseNightSongsService.updateSongStatus(song.id, newStatus);
+      const result = await PraiseNightSongsService.updateSongStatus(song.id, newStatus, currentZone?.id);
 
       if (result.success) {
         console.log('✅ [FRESH] Song status updated successfully');
@@ -1086,7 +1086,7 @@ export default function AdminPage() {
 
       const result = await PraiseNightSongsService.updateSong(song.id, {
         isActive: newActiveStatus
-      });
+      }, currentZone?.id);
 
       if (result.success) {
         console.log('✅ [FRESH] Song active status updated successfully');
@@ -1125,7 +1125,7 @@ export default function AdminPage() {
         // UPDATE existing song
         console.log('🔄 [FRESH] Updating song ID:', editingSong.id);
 
-        result = await PraiseNightSongsService.updateSong(editingSong.id!, songData);
+        result = await PraiseNightSongsService.updateSong(editingSong.id!, songData, currentZone?.id);
 
         if (result.success) {
           console.log('✅ [FRESH] Song updated successfully');
@@ -1167,7 +1167,7 @@ export default function AdminPage() {
           categories: newSongData.categories
         });
 
-        result = await PraiseNightSongsService.createSong(newSongData);
+        result = await PraiseNightSongsService.createSong(newSongData, currentZone?.id);
 
         if (result.success) {
           console.log('✅ [FRESH] Song created with ID:', result.id);
@@ -1222,7 +1222,7 @@ export default function AdminPage() {
 
       console.log('🗑️ [FRESH] Deleting song:', songToDelete.title, 'ID:', songToDelete.id);
 
-      const deleteResult = await PraiseNightSongsService.deleteSong(songToDelete.id);
+      const deleteResult = await PraiseNightSongsService.deleteSong(songToDelete.id, currentZone?.id);
 
       if (deleteResult.success) {
         console.log('✅ [FRESH] Song deleted successfully');

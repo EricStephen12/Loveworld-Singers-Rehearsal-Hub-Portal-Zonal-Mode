@@ -213,8 +213,10 @@ export const BOSS_ZONE_ID = 'zone-boss'
 export const HQ_GROUP_IDS = ['zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005']
 
 // Check if a zone is an HQ group (uses unfiltered Firebase database)
+// Also includes zone-boss (Central Admin) since Boss manages HQ groups
 export function isHQGroup(zoneId: string | undefined): boolean {
-  return zoneId ? HQ_GROUP_IDS.includes(zoneId) : false
+  if (!zoneId) return false
+  return HQ_GROUP_IDS.includes(zoneId) || zoneId === BOSS_ZONE_ID
 }
 
 // Check if a zone uses Firebase database without zone filtering
