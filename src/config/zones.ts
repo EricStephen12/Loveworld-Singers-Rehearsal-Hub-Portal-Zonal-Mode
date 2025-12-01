@@ -21,7 +21,7 @@ export interface Zone {
 
 export const ZONES: Zone[] = [
   // ========================================
-  // HQ GROUPS (5) - Managed by Central Admin
+  // HQ GROUPS (5 core + 3 senior zones) - Managed by Central Admin
   // Purple color (#9333EA)
   // Use Firebase database WITHOUT zone filtering
   // ========================================
@@ -30,6 +30,11 @@ export const ZONES: Zone[] = [
   { id: 'zone-003', name: 'Loveworld Singers Children Choir', slug: 'lws-children', region: 'Headquarters', invitationCode: 'ZONE003', themeColor: '#9333EA' },
   { id: 'zone-004', name: 'Loveworld Singers Teens Choir', slug: 'lws-teens', region: 'Headquarters', invitationCode: 'ZONE004', themeColor: '#9333EA' },
   { id: 'zone-005', name: 'Presidential Mass Choir', slug: 'presidential-mass-choir', region: 'Headquarters', invitationCode: 'ZONE005', themeColor: '#9333EA' },
+
+  // Senior HQ zones (own zones but treated as HQ groups)
+  { id: 'zone-president', name: 'The President Zone', slug: 'president-zone', region: 'Headquarters', invitationCode: 'ZONEPRES', themeColor: '#9333EA' },
+  { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
+  { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
   
   // South Africa (7)
   { id: 'zone-006', name: 'Loveworld Singers SA Zone 1', slug: 'lws-sa-zone-1', region: 'South Africa', invitationCode: 'ZONE006', themeColor: '#3B82F6' },
@@ -208,9 +213,19 @@ export const BOSS_ZONE_ID = 'zone-boss'
 // ========================================
 // HQ GROUPS CONFIGURATION
 // ========================================
-// These 5 HQ groups use Firebase database WITHOUT zone filtering
+// These HQ groups use Firebase database WITHOUT zone filtering
 // They are managed by Central Admin (Boss) who can access unfiltered data
-export const HQ_GROUP_IDS = ['zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005']
+export const HQ_GROUP_IDS = [
+  'zone-001',
+  'zone-002',
+  'zone-003',
+  'zone-004',
+  'zone-005',
+  // Senior HQ zones (have their own zones but behave like HQ groups)
+  'zone-president',
+  'zone-director',
+  'zone-oftp',
+]
 
 // Check if a zone is an HQ group (uses unfiltered Firebase database)
 // Also includes zone-boss (Central Admin) since Boss manages HQ groups

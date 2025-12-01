@@ -29,7 +29,7 @@ export default function SubmitSongPage() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [mySubmissions, setMySubmissions] = useState<SongSubmission[]>([])
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
-  const [showMySubmissions, setShowMySubmissions] = useState(false)
+  const [activeTab, setActiveTab] = useState<'submit' | 'submitted'>('submit')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   
   // Generate focus ring color based on zone color
@@ -159,7 +159,6 @@ export default function SubmitSongPage() {
       
       // Reload submissions to show the new one
       loadMySubmissions()
-      setShowMySubmissions(true)
       
       setTimeout(() => {
         setFormData({
@@ -200,6 +199,34 @@ export default function SubmitSongPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-24">
+        {/* Tabs */}
+        <div className="px-4 pt-4">
+          <div className="inline-flex items-center rounded-full bg-gray-100 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('submit')}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                activeTab === 'submit'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              Submit Song
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('submitted')}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                activeTab === 'submitted'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              Submitted Songs
+            </button>
+          </div>
+        </div>
+
         <section className="flex flex-col gap-6 p-4">
           {/* Status Messages */}
         {submitStatus === 'success' && (
@@ -219,49 +246,50 @@ export default function SubmitSongPage() {
           </div>
         )}
 
-          {/* My Submissions Section */}
-          {mySubmissions.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <button
-                onClick={() => setShowMySubmissions(!showMySubmissions)}
-                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${zoneColor}20` }}>
-                    <Clock className="w-5 h-5" style={{ color: zoneColor }} />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold text-gray-900">My Submissions</p>
-                    <p className="text-sm text-gray-500">{mySubmissions.length} song{mySubmissions.length !== 1 ? 's' : ''} submitted</p>
-                  </div>
+          {/* Submitted Songs Tab Content */}
+          {activeTab === 'submitted' && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${zoneColor}20` }}
+                >
+                  <Clock className="w-5 h-5" style={{ color: zoneColor }} />
                 </div>
-                {showMySubmissions ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-              
-              {showMySubmissions && (
-                <div className="border-t border-gray-200 divide-y divide-gray-100">
+                <div className="text-left">
+                  <p className="font-semibold text-gray-900">Submitted Songs</p>
+                  <p className="text-sm text-gray-500">
+                    {loadingSubmissions
+                      ? 'Loading your submissions...'
+                      : mySubmissions.length === 0
+                      ? 'You have not submitted any songs yet.'
+                      : `${mySubmissions.length} song${mySubmissions.length !== 1 ? 's' : ''} submitted`}
+                  </p>
+                </div>
+              </div>
+
+              {mySubmissions.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                   {mySubmissions.map((submission) => (
                     <div key={submission.id} className="p-4">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <h4 className="font-medium text-gray-900">{submission.title}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          submission.status === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : submission.status === 'approved'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            submission.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : submission.status === 'approved'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 mb-2">
                         Submitted {new Date(submission.createdAt).toLocaleDateString()}
                       </p>
-                      
+
                       {/* Show admin reply if exists */}
                       {submission.replyMessage && (
                         <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
@@ -272,7 +300,7 @@ export default function SubmitSongPage() {
                           <p className="text-sm text-purple-900">{submission.replyMessage}</p>
                         </div>
                       )}
-                      
+
                       {/* Show rejection reason if rejected */}
                       {submission.status === 'rejected' && submission.reviewNotes && (
                         <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
@@ -283,17 +311,19 @@ export default function SubmitSongPage() {
                           <p className="text-sm text-red-900">{submission.reviewNotes}</p>
                         </div>
                       )}
-                      
+
                       {/* Show approval message */}
                       {submission.status === 'approved' && (
                         <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span className="text-sm text-green-800">Your song has been approved and added to the collection!</span>
+                            <span className="text-sm text-green-800">
+                              Your song has been approved and added to the collection!
+                            </span>
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Delete button - only for pending submissions */}
                       {submission.status === 'pending' && submission.id && (
                         <button
@@ -316,6 +346,8 @@ export default function SubmitSongPage() {
             </div>
           )}
 
+          {/* Submit Song Tab Content */}
+          {activeTab === 'submit' && (
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Song Title */}
             <div className="flex flex-col">
@@ -395,6 +427,7 @@ export default function SubmitSongPage() {
               />
             </div>
           </form>
+          )}
         </section>
       </main>
 

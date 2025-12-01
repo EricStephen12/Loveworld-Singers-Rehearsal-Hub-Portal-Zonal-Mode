@@ -49,6 +49,17 @@ function sanitizeError(error: string): string {
   return sanitized || 'An unexpected error occurred. Please try again.'
 }
 
+// Special senior HQ logins: allow name-based "email" that maps to internal emails
+// NOTE: These require matching Firebase Auth users with these email addresses.
+const SPECIAL_LOGIN_MAP: Record<string, { email: string }> = {
+  // Senior HQ zones (have their own zones but are HQ groups, not necessarily HQ admins)
+  'the president': { email: 'president@loveworldhq.org' },
+  'the director': { email: 'director@loveworldhq.org' },
+  'pst daba': { email: 'oftp.daba@loveworldhq.org' },
+  'pst bisola': { email: 'oftp.bisola@loveworldhq.org' },
+  'pst rita': { email: 'oftp.rita@loveworldhq.org' },
+}
+
 function AuthPageContent() {
   const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
@@ -146,6 +157,7 @@ function AuthPageContent() {
           setIsCheckingAccount(false)
           return
         }
+        // KingsChat ID is required during signup
         if (!formData.kingschatId || formData.kingschatId.trim().length === 0) {
           setError('Please enter your KingsChat ID or click the button to fetch it')
           setIsLoading(false)
@@ -276,20 +288,16 @@ function AuthPageContent() {
       } else {
         setSuccess('Checking your account...')
         
-        // Check if it's special login (The President) - MUST be first!
-        if (formData.email === 'The President' && formData.password === 'KING_PRIEST') {
-          // Special login for president - bypass all validation
-          setSuccess('Welcome, President! Redirecting...')
-          
-          setTimeout(() => {
-            router.push('/home')
-          }, 500)
-          return
-        }
-        
-        // Regular Firebase login (only if not special login)
+        // Support special name-based logins (The President, The Director, PST Daba/Bisola/Rita)
+        const rawIdentifier = formData.email.trim()
+        const key = rawIdentifier.toLowerCase()
+        const special = SPECIAL_LOGIN_MAP[key]
+
+        const signInEmail = special ? special.email : formData.email
+
+        // Firebase login (using mapped email if special login)
         const result = await FirebaseAuthService.signInWithEmailAndPassword(
-          formData.email,
+          signInEmail,
           formData.password
         )
         
