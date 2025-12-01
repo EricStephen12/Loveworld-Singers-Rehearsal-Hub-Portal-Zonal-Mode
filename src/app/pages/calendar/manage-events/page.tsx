@@ -3,14 +3,15 @@
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import ManageUpcomingEvents from '../_components/ManageUpcomingEvents'
 import { ArrowLeft } from 'lucide-react'
 
 export default function ManageEventsPage() {
-  const { user, profile } = useAuth()
-  const { currentZone } = useZone()
+  const { user, profile, isLoading: authLoading } = useAuth()
+  const { currentZone, isLoading: zoneLoading } = useZone()
   const router = useRouter()
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
 
   // Check if user is coordinator or admin
   const isAuthorized = profile?.role === 'admin' || 
@@ -18,13 +19,31 @@ export default function ManageEventsPage() {
                        profile?.administration === 'Coordinator' ||
                        profile?.administration === 'Assistant Coordinator'
 
+  // Only redirect after auth has finished loading
   useEffect(() => {
+    // Wait for auth to finish loading before checking
+    if (authLoading) return
+    
+    setHasCheckedAuth(true)
+    
     if (!user) {
       router.push('/auth')
-    } else if (!isAuthorized) {
+    } else if (profile && !isAuthorized) {
       router.push('/pages/calendar')
     }
-  }, [user, isAuthorized, router])
+  }, [user, profile, isAuthorized, router, authLoading])
+
+  // Show loading while auth is being checked
+  if (authLoading || !hasCheckedAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!user || !isAuthorized) {
     return (

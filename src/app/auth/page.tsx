@@ -152,31 +152,7 @@ function AuthPageContent() {
           setIsCheckingAccount(false)
           return
         }
-        if (!formData.birthday) {
-          setError('Please select your birthday')
-          setIsLoading(false)
-          setIsCheckingAccount(false)
-          return
-        }
-        
-        // Validate age (must be at least 13 years old)
-        const birthDate = new Date(formData.birthday)
-        const today = new Date()
-        const age = today.getFullYear() - birthDate.getFullYear()
-        const monthDiff = today.getMonth() - birthDate.getMonth()
-        
-        if (age < 13 || (age === 13 && monthDiff < 0) || (age === 13 && monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          setError('You must be at least 13 years old to create an account')
-          setIsLoading(false)
-          setIsCheckingAccount(false)
-          return
-        }
-        if (!formData.profileImage) {
-          setError('Please upload a profile picture')
-          setIsLoading(false)
-          setIsCheckingAccount(false)
-          return
-        }
+        // Birthday and profile image are optional - can be added later in profile
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match')
           setIsLoading(false)
@@ -746,51 +722,6 @@ function AuthPageContent() {
                       className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
                       required
                     />
-                  </div>
-                  
-                  {/* Birthday Field */}
-                  <div>
-                    <input
-                      type="date"
-                      name="birthday"
-                      placeholder="Birthday"
-                      value={formData.birthday}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
-                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
-                      min="1900-01-01"
-                      required
-                    />
-                    <p className="text-xs text-gray-500 mt-1 ml-1">Required - Used for birthday celebrations and age verification</p>
-                  </div>
-                  
-                  {/* Profile Image Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Profile Picture (Required) *
-                    </label>
-                    <div className="flex items-center gap-4">
-                      {formData.profileImage && (
-                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                          <img
-                            src={URL.createObjectURL(formData.profileImage)}
-                            alt="Profile preview"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <input
-                          type="file"
-                          name="profileImage"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                          required
-                        />
-                        <p className="text-xs text-gray-500 mt-1">JPG, PNG or GIF (max 5MB) - Required for identification</p>
-                      </div>
-                    </div>
                   </div>
                   
                   {/* KingsChat ID Field with Fetch Button */}

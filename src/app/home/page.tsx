@@ -43,8 +43,8 @@ function HomePageContent() {
   const { hasFeature, isFreeTier } = useSubscription()
   
   // Use minimum loading time to prevent flashing empty states
-  // But add a maximum timeout to prevent infinite loading
-  const shouldShowLoading = useMinimumLoadingTime(zoneLoading || !profile, 1000)
+  // Only shows skeleton on FIRST load - subsequent visits skip skeleton if data is cached
+  const shouldShowLoading = useMinimumLoadingTime(zoneLoading || !profile, 1000, 'home')
   
   // Debug logging for HQ groups
   useEffect(() => {

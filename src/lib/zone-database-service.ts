@@ -100,6 +100,7 @@ export class ZoneDatabaseService {
       const praiseNightData = {
         ...data,
         zoneId, // Add zone ID
+        scope: 'zone', // Mark as zone-level rehearsal (Phase 4)
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -498,6 +499,189 @@ export class ZoneDatabaseService {
     } else {
       console.log('📍 Loading zone page categories from zone_page_categories collection (filtered)')
       return this.getPageCategoriesByZone(zoneId)
+    }
+  }
+
+  // ============================================
+  // MASTER LIBRARY FUNCTIONS (Phase 1B)
+  // ============================================
+  
+  /**
+   * Get all songs from Master Library
+   * Zone Coordinators use this to browse available songs for import
+   */
+  static async getMasterSongs() {
+    try {
+      console.log('📚 [Zone] Getting Master Library songs...')
+      
+      const songs = await FirebaseDatabaseService.getCollection('master_songs')
+      
+      // Sort by publishedAt (newest first)
+      const sorted = songs.sort((a: any, b: any) => {
+        const dateA = new Date(a.publishedAt || 0).getTime()
+        const dateB = new Date(b.publishedAt || 0).getTime()
+        return dateB - dateA
+      })
+      
+      console.log(`✅ [Zone] Found ${sorted.length} songs in Master Library`)
+      return sorted
+    } catch (error) {
+      console.error('❌ [Zone] Error getting Master Library songs:', error)
+      return []
+    }
+  }
+  
+  /**
+   * Search Master Library songs
+   */
+  static async searchMasterSongs(searchTerm: string) {
+    try {
+      const allSongs = await this.getMasterSongs()
+      const term = searchTerm.toLowerCase()
+      
+      return allSongs.filter((song: any) => 
+        song.title?.toLowerCase().includes(term) ||
+        song.writer?.toLowerCase().includes(term) ||
+        song.leadSinger?.toLowerCase().includes(term) ||
+        song.category?.toLowerCase().includes(term)
+      )
+    } catch (error) {
+      console.error('❌ [Zone] Error searching Master Library:', error)
+      return []
+    }
+  }
+  
+  /**
+   * Import a song from Master Library to Zone
+   * Creates a copy in zone_songs with import tracking
+   */
+  static async importFromMasterLibrary(
+    zoneId: string,
+    praiseNightId: string,
+    masterSong: any,
+    importedBy: string
+  ) {
+    try {
+      console.log('📥 [Zone] Importing song from Master Library:', masterSong.title)
+      
+      // Check if already imported to this praise night
+      const existingSongs = await this.getSongsByPraiseNight(praiseNightId)
+      const alreadyImported = existingSongs.some(
+        (s: any) => s.importedFrom === 'master' && s.originalSongId === masterSong.id
+      )
+      
+      if (alreadyImported) {
+        return { 
+          success: false, 
+          error: 'This song has already been imported to this praise night' 
+        }
+      }
+      
+      // Get the next order index
+      const maxOrderIndex = existingSongs.reduce(
+        (max: number, s: any) => Math.max(max, s.orderIndex || 0), 
+        0
+      )
+      
+      // Create zone song data (copy only song data, no comments/history)
+      const zoneSongData = {
+        // Song data
+        title: masterSong.title || '',
+        lyrics: masterSong.lyrics || '',
+        solfa: masterSong.solfa || '',
+        key: masterSong.key || '',
+        tempo: masterSong.tempo || '',
+        writer: masterSong.writer || '',
+        leadSinger: masterSong.leadSinger || '',
+        category: masterSong.category || '',
+        categories: masterSong.categories || [],
+        audioFile: masterSong.audioFile || '',
+        audioUrls: masterSong.audioUrls || {},
+        // Zone reference
+        zoneId,
+        praiseNightId,
+        orderIndex: maxOrderIndex + 1,
+        // Import tracking (NEW)
+        importedFrom: 'master',
+        originalSongId: masterSong.id,
+        importedAt: new Date(),
+        importedBy,
+        // Metadata
+        status: 'unheard',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      
+      // Remove undefined values
+      const cleanData = Object.fromEntries(
+        Object.entries(zoneSongData).filter(([_, v]) => v !== undefined)
+      )
+      
+      const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
+      
+      if (result.success && result.id) {
+        // Increment import count on master song
+        await this.incrementMasterSongImportCount(masterSong.id)
+        
+        console.log('✅ [Zone] Song imported from Master Library:', result.id)
+        return { success: true, id: result.id }
+      } else {
+        return { success: false, error: 'Failed to import song' }
+      }
+    } catch (error) {
+      console.error('❌ [Zone] Error importing from Master Library:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }
+    }
+  }
+  
+  /**
+   * Increment the import count for a master song
+   */
+  static async incrementMasterSongImportCount(masterSongId: string) {
+    try {
+      // Get current count
+      const songs = await FirebaseDatabaseService.getCollection('master_songs') as any[]
+      const masterSong = songs.find((s) => s.id === masterSongId)
+      
+      if (masterSong) {
+        const newCount = ((masterSong as any).importCount || 0) + 1
+        await FirebaseDatabaseService.updateDocument('master_songs', masterSongId, {
+          importCount: newCount
+        })
+        console.log('📊 [Zone] Import count incremented for:', masterSongId)
+      }
+    } catch (error) {
+      console.error('❌ [Zone] Error incrementing import count:', error)
+    }
+  }
+  
+  /**
+   * Check if a song was imported from Master Library
+   */
+  static async isImportedFromMaster(songId: string): Promise<boolean> {
+    try {
+      const songs = await FirebaseDatabaseService.getCollection('zone_songs') as any[]
+      const song = songs.find((s) => s.id === songId)
+      return (song as any)?.importedFrom === 'master'
+    } catch (error) {
+      console.error('❌ [Zone] Error checking import status:', error)
+      return false
+    }
+  }
+  
+  /**
+   * Get all imported songs for a zone (from Master Library)
+   */
+  static async getImportedSongs(zoneId: string) {
+    try {
+      const allSongs = await this.getAllSongsByZone(zoneId)
+      return allSongs.filter((song: any) => song.importedFrom === 'master')
+    } catch (error) {
+      console.error('❌ [Zone] Error getting imported songs:', error)
+      return []
     }
   }
 }

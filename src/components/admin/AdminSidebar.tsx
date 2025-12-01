@@ -13,7 +13,9 @@ import {
   FolderOpen,
   Upload,
   Menu,
-  X
+  X,
+  Library,
+  UsersRound
 } from "lucide-react";
 import { useAdminTheme } from './AdminThemeProvider';
 import { useZone } from '@/hooks/useZone';
@@ -25,6 +27,7 @@ interface AdminSidebarProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   isHQAdmin?: boolean;
+  pendingSubGroupCount?: number;
 }
 
 export default function AdminSidebar({
@@ -32,7 +35,8 @@ export default function AdminSidebar({
   setSidebarCollapsed,
   activeSection,
   setActiveSection,
-  isHQAdmin = false
+  isHQAdmin = false,
+  pendingSubGroupCount = 0
 }: AdminSidebarProps) {
   const router = useRouter();
   const { theme } = useAdminTheme();
@@ -40,6 +44,9 @@ export default function AdminSidebar({
   
   // Check if current zone is HQ
   const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
+  
+  // Check if user is Zone Coordinator (not HQ)
+  const isZoneCoordinator = currentZone && !isHQ && !isHQAdmin;
   
   const allSidebarItems = [
     { icon: BarChart3, label: 'Dashboard', active: activeSection === 'Dashboard' },
@@ -50,11 +57,19 @@ export default function AdminSidebar({
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
     { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqOnly: true },
+    { icon: Library, label: 'Master Library', active: activeSection === 'Master Library' }, // NEW: For both HQ and Zones
+    { icon: UsersRound, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount }, // NEW: For Zone Coordinators
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
   ];
   
-  // Filter sidebar items based on HQ admin status
-  const sidebarItems = allSidebarItems.filter(item => !item.hqOnly || isHQAdmin);
+  // Filter sidebar items based on role
+  const sidebarItems = allSidebarItems.filter(item => {
+    // HQ-only items
+    if (item.hqOnly && !isHQAdmin) return false;
+    // Zone-only items (Sub-Groups management)
+    if (item.zoneOnly && !isZoneCoordinator) return false;
+    return true;
+  });
 
   return (
     <>
@@ -102,15 +117,8 @@ export default function AdminSidebar({
                 <button
                   key={index}
                   onClick={() => {
-                    if (item.label === 'Dashboard') setActiveSection('Dashboard');
-                    else if (item.label === 'Pages') setActiveSection('Pages');
-                    else if (item.label === 'Categories') setActiveSection('Categories');
-                    else if (item.label === 'Page Categories') setActiveSection('Page Categories');
-                    else if (item.label === 'Submitted Songs') setActiveSection('Submitted Songs');
-                    else if (item.label === 'Members') setActiveSection('Members');
-                    else if (item.label === 'Media') setActiveSection('Media');
-                    else if (item.label === 'Media Upload') setActiveSection('Media Upload');
-                    else if (item.label === 'Notifications') setActiveSection('Notifications');
+                    // Set active section based on label
+                    setActiveSection(item.label);
                     
                     // Auto-close sidebar on mobile after clicking
                     setSidebarCollapsed(true);
@@ -128,7 +136,13 @@ export default function AdminSidebar({
                   <span className={`font-medium ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
                     {item.label}
                   </span>
-                  {item.active && (
+                  {/* Badge for pending items */}
+                  {item.badge && item.badge > 0 && !sidebarCollapsed && (
+                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                  {item.active && !item.badge && (
                     <div className={`w-2 h-2 ${theme.primary.replace('bg-', 'bg-').replace('-600', '-500')} rounded-full ml-auto ${sidebarCollapsed ? 'lg:hidden' : ''}`} />
                   )}
                 </button>

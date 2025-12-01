@@ -31,16 +31,19 @@ import AdminModals from '../../components/admin/AdminModals';
 import PageCategoriesSection from '../../components/admin/PageCategoriesSection';
 import SubmittedSongsPage from '../pages/admin/submitted-songs/page';
 import DashboardSection from '../../components/admin/DashboardSection';
+import MasterLibrarySection from '../../components/admin/MasterLibrarySection';
+import SubGroupsSection from '../../components/admin/SubGroupsSection';
+import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
   
-  // Don't show anything if no user - prevents redirect
-  if (!user) return null
-  
-  // Zone context
+  // Zone context - must be called before any conditional returns
   const { currentZone, isZoneCoordinator, isLoading: zoneLoading } = useZone();
+  
+  // Sub-group management (for Zone Coordinators) - must be called before any conditional returns
+  const { pendingCount: pendingSubGroupCount } = useZoneSubGroups();
   
   // Admin authentication state
   const [currentAdmin, setCurrentAdmin] = useState<{ id: string; username: string; fullName: string } | null>(null);
@@ -310,6 +313,9 @@ export default function AdminPage() {
     console.log('📄 All pages data:', allPraiseNights);
     return allPraiseNights;
   }, [allPraiseNights, loading]);
+
+  // Don't show anything if no user - must be after all hooks
+  if (!user) return null;
 
   // Toast helper functions
   const addToast = (toast: Omit<Toast, 'id'>) => {
@@ -1430,6 +1436,7 @@ export default function AdminPage() {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
         isHQAdmin={isHQAdmin}
+        pendingSubGroupCount={pendingSubGroupCount}
       />
 
       {/* Main Content */}
@@ -1606,6 +1613,8 @@ export default function AdminPage() {
         {activeSection === 'Members' && <MembersSection />}
         {activeSection === 'Media' && <MediaSection />}
         {activeSection === 'Media Upload' && isHQAdmin && <MediaUploadSection />}
+        {activeSection === 'Master Library' && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
+        {activeSection === 'Sub-Groups' && <SubGroupsSection />}
         {activeSection === 'Notifications' && <SimpleNotificationsSection />}
       </div>
 

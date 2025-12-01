@@ -7,6 +7,9 @@ import type { UserProfile } from '@/types/supabase'
 // Import zone store for clearing on logout (lazy to avoid circular deps)
 const getZoneStore = () => import('./zoneStore').then(m => m.useZoneStore)
 
+// Import loaded pages cache clearer (lazy to avoid circular deps)
+const clearLoadedPagesCache = () => import('@/hooks/useMinimumLoadingTime').then(m => m.clearLoadedPagesCache())
+
 interface AuthState {
   user: User | null
   profile: UserProfile | null
@@ -48,6 +51,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.log('🧹 Zone state cleared')
       } catch (e) {
         console.warn('Could not clear zone state:', e)
+      }
+      
+      // Clear loaded pages cache to show skeleton on next login
+      try {
+        await clearLoadedPagesCache()
+        console.log('🧹 Loaded pages cache cleared')
+      } catch (e) {
+        console.warn('Could not clear loaded pages cache:', e)
       }
       
       // Clear auth state in Zustand BEFORE Firebase signOut

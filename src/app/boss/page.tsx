@@ -31,7 +31,7 @@ interface ZoneStats {
 
 export default function BossPage() {
   const router = useRouter()
-  const { profile } = useAuth()
+  const { profile, isLoading: authLoading } = useAuth()
   const [zones, setZones] = useState<ZoneStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -48,17 +48,21 @@ export default function BossPage() {
   const [approvalDuration, setApprovalDuration] = useState<number>(1)
   const [rejectionNotes, setRejectionNotes] = useState('')
 
+  // Check if user has boss role or is in boss zone
+  const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
+
   useEffect(() => {
-    // Check if user has boss role or is in boss zone
-    const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
-    if (!isBoss) {
+    // Wait for auth to finish loading before checking permissions
+    if (authLoading) return
+    
+    if (!profile || !isBoss) {
       router.push('/home')
       return
     }
     
     loadZones()
     loadPendingPayments()
-  }, [profile, router])
+  }, [profile, isBoss, router, authLoading])
 
   const loadPendingPayments = async () => {
     try {
@@ -159,7 +163,8 @@ export default function BossPage() {
   const activeZones = zones.filter(z => z.subscriptionStatus === 'active').length
   const premiumZones = zones.filter(z => z.subscriptionTier === 'premium').length
 
-  if (isLoading) {
+  // Show loading while auth is being checked or data is loading
+  if (authLoading || isLoading) {
     return (
       <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-purple-50 overflow-hidden">
         {/* Header Skeleton */}
