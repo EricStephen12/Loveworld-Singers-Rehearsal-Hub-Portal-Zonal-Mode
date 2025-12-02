@@ -12,6 +12,7 @@ import {
   approveSong, 
   rejectSong,
   replyToSubmission,
+  deleteSubmissionAsAdmin,
   SongSubmission 
 } from '@/lib/song-submission-service'
 import { useAuth } from '@/hooks/useAuth'
@@ -37,6 +38,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const [processing, setProcessing] = useState<string | null>(null)
   const [showReplyModal, setShowReplyModal] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   
   // Check if current zone is HQ (can see all submissions)
   const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
@@ -178,6 +180,26 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   })
 
   const pendingCount = songs.filter(s => s.status === 'pending').length
+
+  const handleDeleteAsAdmin = async (song: SongSubmission) => {
+    if (!song.id) return
+    if (!confirm(`Delete the submission "${song.title}"? This cannot be undone.`)) return
+    
+    setDeletingId(song.id)
+    try {
+      const result = await deleteSubmissionAsAdmin(song.id)
+      if (result.success) {
+        alert('✅ Submission deleted')
+        loadSongs()
+      } else {
+        alert(`❌ Failed to delete submission: ${result.error}`)
+      }
+    } catch (e) {
+      alert('❌ Error deleting submission')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className={`${embedded ? 'h-full' : 'min-h-screen'} bg-gradient-to-br from-slate-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8`}>
@@ -366,7 +388,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 items-center">
                       {song.status === 'pending' && (
                         <>
                           <button
@@ -414,6 +436,22 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                           <Eye className="w-4 h-4" />
                           <span className="hidden sm:inline">View Details</span>
                           <span className="sm:hidden">View</span>
+                        </button>
+                      )}
+                      {/* Admin delete action */}
+                      {song.id && (
+                        <button
+                          onClick={() => handleDeleteAsAdmin(song)}
+                          disabled={deletingId === song.id}
+                          className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
+                        >
+                          {deletingId === song.id ? (
+                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                          <span className="hidden sm:inline">Delete</span>
+                          <span className="sm:hidden">Del</span>
                         </button>
                       )}
                     </div>

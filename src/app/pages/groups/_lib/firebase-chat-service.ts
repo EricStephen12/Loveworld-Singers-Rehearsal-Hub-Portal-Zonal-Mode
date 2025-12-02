@@ -19,7 +19,8 @@ import {
   deleteField
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
-import { getZoneById } from '@/config/zones'
+import { getZoneById, isHQGroup } from '@/config/zones'
+import { HQMembersService } from '@/lib/hq-members-service'
 
 // Types
 export interface ChatUser {
@@ -158,35 +159,63 @@ export class FirebaseChatService {
    */
   static async getZoneMembers(zoneId: string, currentUserId: string): Promise<ChatUser[]> {
     try {
-      // First, get zone members from zone_members collection
-      const zoneMembersRef = collection(db, 'zone_members')
-      const zoneMembersQuery = query(zoneMembersRef, where('zoneId', '==', zoneId))
-      const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
-      
-      if (zoneMembersSnapshot.empty) {
-        return []
-      }
-      
-      // Get user IDs from zone members
-      const userIds: string[] = []
-      zoneMembersSnapshot.forEach(doc => {
-        const member = doc.data()
-        if (member.userId && member.userId !== currentUserId) {
-          userIds.push(member.userId)
-        }
-      })
-      
-      if (userIds.length === 0) {
-        return []
-      }
-      
-      // Create users from zone members data (we already have the names)
       const users: ChatUser[] = []
+      const zoneDetails = getZoneById(zoneId)
       
+      // Check if this is an HQ group - if so, fetch from hq_members collection
+      if (isHQGroup(zoneId)) {
+        console.log('🏢 HQ Group detected, fetching from hq_members collection:', zoneId)
+        const hqMembers = await HQMembersService.getHQGroupMembers(zoneId)
+        
+        // Convert HQ members to ChatUser format
+        for (const rawMember of hqMembers as any[]) {
+          const member = rawMember as any
+          if (member.userId && member.userId !== currentUserId) {
+            // Get user profile for additional info
+            try {
+              const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
+              const profile: any = await FirebaseDatabaseService.getDocument('profiles', member.userId)
+              const fullName =
+                profile
+                  ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || member.userName
+                  : member.userName
+              
+              users.push({
+                id: member.userId,
+                email: member.userEmail || '',
+                fullName: fullName || 'Unknown User',
+                profilePic: profile?.profile_image || undefined,
+                zoneId: member.hqGroupId || zoneId,
+                zoneName: zoneDetails?.name || 'Unknown Zone',
+                isOnline: false,
+                lastSeen: new Date()
+              })
+            } catch (profileError) {
+              // Fallback if profile fetch fails
+              users.push({
+                id: member.userId,
+                email: member.userEmail || '',
+                fullName: member.userName || 'Unknown User',
+                profilePic: undefined,
+                zoneId: member.hqGroupId || zoneId,
+                zoneName: zoneDetails?.name || 'Unknown Zone',
+                isOnline: false,
+                lastSeen: new Date()
+              })
+            }
+          }
+        }
+      } else {
+        // Regular zone - fetch from zone_members collection
+        console.log('📍 Regular zone, fetching from zone_members collection:', zoneId)
+        const zoneMembersRef = collection(db, 'zone_members')
+        const zoneMembersQuery = query(zoneMembersRef, where('zoneId', '==', zoneId))
+        const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
+        
+        if (!zoneMembersSnapshot.empty) {
       zoneMembersSnapshot.forEach(doc => {
         const member = doc.data()
         if (member.userId && member.userId !== currentUserId) {
-          const zoneDetails = getZoneById(member.zoneId || zoneId)
           users.push({
             id: member.userId,
             email: member.userEmail || '',
@@ -199,10 +228,13 @@ export class FirebaseChatService {
           })
         }
       })
+        }
+      }
       
       // Sort by name
       users.sort((a, b) => a.fullName.localeCompare(b.fullName))
       
+      console.log(`✅ Found ${users.length} members for zone ${zoneId}`)
       return users
     } catch (error) {
       console.error('Error getting zone members:', error)
@@ -216,22 +248,41 @@ export class FirebaseChatService {
    */
   static async searchUsers(searchTerm: string, currentUserId: string, zoneId?: string, isBoss: boolean = false): Promise<ChatUser[]> {
     try {
+      // SECURITY: Senior zones that should only be visible to their own zone members
+      const SENIOR_ZONES = ['zone-president', 'zone-director', 'zone-oftp']
+      
+      // Check if searcher is in a senior zone - if so, they can see EVERYONE
+      const isSearcherInSeniorZone = zoneId ? SENIOR_ZONES.includes(zoneId) : false
+      
       let allMembers: ChatUser[] = []
       
-      // Everyone can search across ALL zones - no zone filtering
-      console.log('🔍 Global search - fetching members from all zones')
+      // Everyone can search across ALL zones - but with security filtering for senior zones
+      console.log('🔍 Global search - fetching members from all zones and HQ groups', { 
+        currentZone: zoneId, 
+        isSearcherInSeniorZone,
+        canSeeEveryone: isSearcherInSeniorZone || isBoss
+      })
+      
+      // Use a Map to deduplicate by userId (in case user is in multiple zones)
+      const userMap = new Map<string, ChatUser>()
       
       // Get all zone members from all zones
       const zoneMembersRef = collection(db, 'zone_members')
       const zoneMembersSnapshot = await getDocs(zoneMembersRef)
       
-      // Use a Map to deduplicate by userId (in case user is in multiple zones)
-      const userMap = new Map<string, ChatUser>()
-      
       zoneMembersSnapshot.docs.forEach(doc => {
         const data = doc.data()
         // Skip current user
         if (data.userId === currentUserId) return
+        
+        // SECURITY: Hide senior zone members from users outside their zone
+        // BUT: If searcher is in a senior zone or is a boss, they can see everyone
+        const memberZoneId = data.zoneId
+        if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
+          // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
+          console.log('🚫 Hiding senior zone member:', { memberZoneId, searcherZone: zoneId, isSearcherInSeniorZone, isBoss })
+          return
+        }
         
         // Only add if not already in map (keep first occurrence)
         if (!userMap.has(data.userId)) {
@@ -247,6 +298,65 @@ export class FirebaseChatService {
           })
         }
       })
+      
+      // Also get all HQ members from all HQ groups
+      const { HQ_GROUP_IDS } = await import('@/config/zones')
+      for (const hqZoneId of HQ_GROUP_IDS) {
+        try {
+          const hqMembers = await HQMembersService.getHQGroupMembers(hqZoneId)
+          const zoneDetails = getZoneById(hqZoneId)
+          
+          for (const rawMember of hqMembers as any[]) {
+            const member = rawMember as any
+            if (member.userId && member.userId !== currentUserId && !userMap.has(member.userId)) {
+              // SECURITY: Hide senior zone members from users outside their zone
+              // BUT: If searcher is in a senior zone or is a boss, they can see everyone
+              const memberZoneId = member.hqGroupId || hqZoneId
+              if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
+                // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
+                console.log('🚫 Hiding senior HQ member:', { memberZoneId, searcherZone: zoneId, isSearcherInSeniorZone, isBoss })
+                continue
+              }
+              
+              // Get user profile for additional info
+              try {
+                const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
+                const profile: any = await FirebaseDatabaseService.getDocument('profiles', member.userId)
+                const fullName =
+                  profile
+                    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || member.userName
+                    : member.userName
+                
+                userMap.set(member.userId, {
+                  id: member.userId,
+                  email: member.userEmail || '',
+                  fullName: fullName || 'Unknown User',
+                  profilePic: profile?.profile_image || undefined,
+                  zoneId: member.hqGroupId || hqZoneId,
+                  zoneName: zoneDetails?.name || 'Unknown Zone',
+                  isOnline: false,
+                  lastSeen: new Date()
+                })
+              } catch (profileError) {
+                // Fallback if profile fetch fails
+                userMap.set(member.userId, {
+                  id: member.userId,
+                  email: member.userEmail || '',
+                  fullName: member.userName || 'Unknown User',
+                  profilePic: undefined,
+                  zoneId: member.hqGroupId || hqZoneId,
+                  zoneName: zoneDetails?.name || 'Unknown Zone',
+                  isOnline: false,
+                  lastSeen: new Date()
+                })
+              }
+            }
+          }
+        } catch (hqError) {
+          console.error(`Error fetching HQ members for ${hqZoneId}:`, hqError)
+          // Continue with other HQ groups
+        }
+      }
       
       allMembers = Array.from(userMap.values())
       
@@ -1005,3 +1115,6 @@ export class FirebaseChatService {
     }
   }
 }
+
+
+

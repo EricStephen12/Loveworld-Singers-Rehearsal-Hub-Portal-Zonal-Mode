@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { submitSong, getUserSubmissions, deleteUserSubmission, SongSubmission } from '@/lib/song-submission-service'
+import { submitSong, getAllSubmittedSongs, deleteUserSubmission, SongSubmission } from '@/lib/song-submission-service'
 import { useZone } from '@/hooks/useZone'
 import { getZoneTheme } from '@/utils/zone-theme'
 
@@ -61,17 +61,30 @@ export default function SubmitSongPage() {
 
   // Load user's submissions
   useEffect(() => {
-    if (user?.uid) {
+    if (user) {
       loadMySubmissions()
     }
-  }, [user?.uid])
+  }, [user?.uid, user?.email])
 
   const loadMySubmissions = async () => {
-    if (!user?.uid) return
+    if (!user) return
     setLoadingSubmissions(true)
     try {
-      const submissions = await getUserSubmissions(user.uid)
-      setMySubmissions(submissions)
+      // Fetch all submissions (admin-style) then filter by this user
+      const allSubmissions = await getAllSubmittedSongs(undefined, true)
+      const emailLower = (user.email || '').toLowerCase()
+
+      const my = allSubmissions.filter((submission) => {
+        const submittedEmail = (submission.submittedBy?.email || '').toLowerCase()
+        const submittedUserId = submission.submittedBy?.userId
+
+        // Match by email if available, otherwise fall back to userId
+        if (emailLower && submittedEmail === emailLower) return true
+        if (submittedUserId && submittedUserId === user.uid) return true
+        return false
+      })
+
+      setMySubmissions(my)
     } catch (error) {
       console.error('Error loading submissions:', error)
     } finally {
@@ -157,8 +170,9 @@ export default function SubmitSongPage() {
 
       setSubmitStatus('success')
       
-      // Reload submissions to show the new one
-      loadMySubmissions()
+      // Reload submissions to show the new one and switch to Submitted tab
+      await loadMySubmissions()
+      setActiveTab('submitted')
       
       setTimeout(() => {
         setFormData({
@@ -215,7 +229,10 @@ export default function SubmitSongPage() {
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('submitted')}
+              onClick={() => {
+                setActiveTab('submitted')
+                loadMySubmissions()
+              }}
               className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                 activeTab === 'submitted'
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -254,9 +271,9 @@ export default function SubmitSongPage() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: `${zoneColor}20` }}
                 >
-                  <Clock className="w-5 h-5" style={{ color: zoneColor }} />
-                </div>
-                <div className="text-left">
+                    <Clock className="w-5 h-5" style={{ color: zoneColor }} />
+                  </div>
+                  <div className="text-left">
                   <p className="font-semibold text-gray-900">Submitted Songs</p>
                   <p className="text-sm text-gray-500">
                     {loadingSubmissions
@@ -267,7 +284,7 @@ export default function SubmitSongPage() {
                   </p>
                 </div>
               </div>
-
+              
               {mySubmissions.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                   {mySubmissions.map((submission) => (
@@ -276,11 +293,11 @@ export default function SubmitSongPage() {
                         <h4 className="font-medium text-gray-900">{submission.title}</h4>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            submission.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : submission.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                          submission.status === 'pending' 
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : submission.status === 'approved'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                           }`}
                         >
                           {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
@@ -289,7 +306,7 @@ export default function SubmitSongPage() {
                       <p className="text-xs text-gray-500 mb-2">
                         Submitted {new Date(submission.createdAt).toLocaleDateString()}
                       </p>
-
+                      
                       {/* Show admin reply if exists */}
                       {submission.replyMessage && (
                         <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
@@ -300,7 +317,7 @@ export default function SubmitSongPage() {
                           <p className="text-sm text-purple-900">{submission.replyMessage}</p>
                         </div>
                       )}
-
+                      
                       {/* Show rejection reason if rejected */}
                       {submission.status === 'rejected' && submission.reviewNotes && (
                         <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
@@ -311,7 +328,7 @@ export default function SubmitSongPage() {
                           <p className="text-sm text-red-900">{submission.reviewNotes}</p>
                         </div>
                       )}
-
+                      
                       {/* Show approval message */}
                       {submission.status === 'approved' && (
                         <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
@@ -323,7 +340,7 @@ export default function SubmitSongPage() {
                           </div>
                         </div>
                       )}
-
+                      
                       {/* Delete button - only for pending submissions */}
                       {submission.status === 'pending' && submission.id && (
                         <button

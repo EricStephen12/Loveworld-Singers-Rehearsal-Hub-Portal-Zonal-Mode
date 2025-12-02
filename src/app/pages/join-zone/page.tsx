@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
@@ -14,12 +14,26 @@ import { useCanAddMember } from '@/components/MemberLimitGuard'
 export default function JoinZonePage() {
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { refreshZones } = useZone()
+  const { refreshZones, currentZone } = useZone()
   const [invitationCode, setInvitationCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [zoneName, setZoneName] = useState('')
+
+  const fallbackColor = '#10b981'
+  const themeColor = currentZone?.themeColor || fallbackColor
+  const withAlpha = (color: string, alphaHex: string) => {
+    if (!color.startsWith('#') || color.length !== 7) return color
+    return `${color}${alphaHex}`
+  }
+  const pageBackground: CSSProperties & { '--join-theme'?: string } = {
+    '--join-theme': themeColor,
+    background: `linear-gradient(145deg, ${withAlpha(themeColor, '1F')}, #f4f6fb)`
+  }
+  const headerBackground = {
+    background: `linear-gradient(135deg, ${themeColor}, ${withAlpha(themeColor, 'CC')})`
+  }
 
   const handleJoinZone = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,7 +107,8 @@ export default function JoinZonePage() {
           </p>
           <Link
             href="/auth"
-            className="inline-block px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+            className="inline-block px-6 py-3 text-white rounded-xl transition-colors hover:opacity-90"
+            style={{ backgroundColor: themeColor }}
           >
             Go to Login
           </Link>
@@ -103,16 +118,18 @@ export default function JoinZonePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-y-auto pb-20">
+    <div className="h-screen overflow-y-auto pb-20" style={pageBackground}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6">
+      <div className="text-white p-6" style={headerBackground}>
         <div className="max-w-2xl mx-auto">
           <Link href="/pages/profile" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-4">
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Profile</span>
           </Link>
           <h1 className="text-2xl font-bold">Join a Zone</h1>
-          <p className="text-green-100 mt-2">Enter your zone invitation code to join</p>
+          <p className="mt-2" style={{ color: withAlpha(themeColor, 'B3') }}>
+            Enter your zone invitation code to join
+          </p>
         </div>
       </div>
 
@@ -121,14 +138,17 @@ export default function JoinZonePage() {
         {success ? (
           // Success State
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+              style={{ backgroundColor: withAlpha(themeColor, '1F') }}
+            >
+              <CheckCircle className="w-10 h-10" style={{ color: themeColor }} />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Successfully Joined!</h2>
             <p className="text-gray-600 mb-2">
               You've been added to
             </p>
-            <p className="text-xl font-bold text-green-600 mb-6">
+            <p className="text-xl font-bold mb-6" style={{ color: themeColor }}>
               {zoneName}
             </p>
             <p className="text-sm text-gray-500">
@@ -139,8 +159,11 @@ export default function JoinZonePage() {
           // Join Form
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-green-600" />
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: withAlpha(themeColor, '1F') }}
+              >
+                <Users className="w-8 h-8" style={{ color: themeColor }} />
               </div>
             </div>
 
@@ -162,7 +185,8 @@ export default function JoinZonePage() {
                   value={invitationCode}
                   onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
                   placeholder="LWS-HQ-001"
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-center text-lg font-mono tracking-wider"
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 text-center text-lg font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--join-theme)] focus:border-[var(--join-theme)]"
+                  style={{ borderColor: withAlpha(themeColor, '66') }}
                   maxLength={20}
                   disabled={isLoading}
                 />
@@ -185,7 +209,11 @@ export default function JoinZonePage() {
               <button
                 type="submit"
                 disabled={isLoading || !invitationCode.trim()}
-                className="w-full py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-95"
+                style={{
+                  backgroundColor: themeColor,
+                  boxShadow: `0 20px 45px -20px ${withAlpha(themeColor, '70')}`
+                }}
               >
                 {isLoading ? (
                   <>

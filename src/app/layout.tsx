@@ -159,59 +159,14 @@ export default function RootLayout({
         {isProduction && (
           <script
             dangerouslySetInnerHTML={{
-          __html: `
-            // Detect if running in native app and hide install prompts
-            function isRunningInNativeApp() {
-              const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-              // Check for common in-app browser indicators
-              return (
-                userAgent.includes('wv') || // Android WebView
-                userAgent.includes('InAppBrowser') ||
-                window.ReactNativeWebView !== undefined ||
-                // Check if running in standalone mode (PWA installed)
-                window.matchMedia('(display-mode: standalone)').matches ||
-                window.navigator.standalone === true
-              );
-            }
-
-            // Hide install prompt if running in native app
-            if (isRunningInNativeApp()) {
-              // Add CSS to hide install prompts
-              const style = document.createElement('style');
-              style.textContent = \`
-                /* Hide common install prompt selectors */
-                .install-prompt,
-                .pwa-install,
-                .add-to-home,
-                [class*="install"],
-                [id*="install"],
-                .beforeinstallprompt {
-                  display: none !important;
-                }
-              \`;
-              document.head.appendChild(style);
-
-              // Prevent beforeinstallprompt event
-              window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                return false;
-              });
-
-              // Add flag to localStorage
-              localStorage.setItem('isNativeApp', 'true');
-              console.log('📱 Running in native app - install prompts hidden');
-            }
-
-            // Export for use in your app
-            window.isNativeApp = isRunningInNativeApp();
-
+              __html: `
+            // Lightweight runtime bootstrap (no custom install prompt override)
             // Register Optimized Service Worker for fast first load
             if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
               window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw-optimized.js')
                   .then((registration) => {
                     console.log('⚡ Optimized Service Worker registered:', registration);
-                    // Update service worker when new version available
                     registration.addEventListener('updatefound', () => {
                       console.log('🔄 New service worker version found');
                     });
@@ -222,37 +177,13 @@ export default function RootLayout({
               });
             }
 
-            // Optimize performance on load
+            // Basic performance hook
             if (typeof window !== 'undefined') {
               window.addEventListener('load', () => {
-                console.log('🚀 Optimizing PWA performance...');
-                
-                // Preload critical data
-                const preloadData = () => {
-                  const cachedData = localStorage.getItem('app_cache');
-                  if (cachedData) {
-                    console.log('📦 Found cached data, app will load instantly');
-                  }
-                };
-                
-                preloadData();
-                
-                // Cache current page
-                const cacheCurrentPage = () => {
-                  const currentPage = window.location.pathname;
-                  const pageData = {
-                    url: currentPage,
-                    timestamp: Date.now(),
-                    title: document.title
-                  };
-                  localStorage.setItem('last_page', JSON.stringify(pageData));
-                };
-                
-                cacheCurrentPage();
-                console.log('✅ Performance optimized!');
+                console.log('🚀 PWA bootstrap complete');
               });
             }
-              `,
+          `,
             }}
           />
         )}
@@ -266,7 +197,7 @@ export default function RootLayout({
                   <main className="h-full w-full bg-gray-50">
                     {children}
                   </main>
-                  <PWAInstall />
+                  {/* Browser will handle its own install prompt; custom UI removed */}
                   <RealtimeNotifications />
                   <PushNotificationListener />
                   <NotificationUrlHandler />

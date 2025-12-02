@@ -16,19 +16,30 @@ export interface HomeSearchResult {
   icon?: string;
 }
 
-export function useHomeGlobalSearch() {
-  const { pages } = useRealtimeData();
+export function useHomeGlobalSearch(zoneId?: string) {
+  const { pages } = useRealtimeData(zoneId);
   const [searchQuery, setSearchQuery] = useState('');
   const [allSongs, setAllSongs] = useState<PraiseNightSong[]>([]);
   const [songsLoaded, setSongsLoaded] = useState(false);
 
   // Load all songs for search - FROM NEW TABLE!
   useEffect(() => {
+    // Reset cache when zone changes
+    setAllSongs([]);
+    setSongsLoaded(false);
+  }, [zoneId]);
+
+  useEffect(() => {
+    if (!zoneId) {
+      console.log('⏳ [Home Search] Waiting for zone to load before fetching songs...');
+      return;
+    }
+
     const loadAllSongs = async () => {
       try {
-        console.log('🔍 [Home Search] Loading all songs from NEW TABLE (praise_night_songs)...');
-        const songs = await PraiseNightSongsService.getAllSongs();
-        console.log('✅ [Home Search] Loaded', songs.length, 'songs from NEW TABLE');
+        console.log('🔍 [Home Search] Loading songs for zone:', zoneId);
+        const songs = await PraiseNightSongsService.getAllSongs(zoneId);
+        console.log('✅ [Home Search] Loaded', songs.length, 'songs for zone', zoneId);
         setAllSongs(songs as any[]);
         setSongsLoaded(true);
       } catch (error) {
@@ -40,7 +51,7 @@ export function useHomeGlobalSearch() {
     if (pages.length > 0 && !songsLoaded) {
       loadAllSongs();
     }
-  }, [pages.length, songsLoaded]);
+  }, [pages.length, songsLoaded, zoneId]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) {

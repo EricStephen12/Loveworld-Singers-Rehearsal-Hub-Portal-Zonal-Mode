@@ -874,9 +874,9 @@ function PraiseNightPageContent() {
   // Show empty state when there's no data for the current category (but not when still loading)
   if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || filteredPraiseNights.length === 0)) {
     console.log('⚠️ No data for category, showing empty state');
-  return (
+    return (
       <div
-        className="mobile-vh flex flex-col safe-area-bottom"
+        className="h-screen flex flex-col safe-area-bottom overflow-y-auto"
         style={{
           background: `linear-gradient(135deg, ${zoneColor}15, #ffffff)`,
         }}
@@ -951,7 +951,10 @@ function PraiseNightPageContent() {
   }
   
   return (
-    <div className="mobile-vh bg-gradient-to-br from-slate-50 via-white to-purple-50 safe-area-bottom overflow-hidden">
+    <div
+      className="h-screen safe-area-bottom overflow-y-auto"
+      style={{ background: `linear-gradient(135deg, ${zoneColor}12, #fdfbff)` }}
+    >
       {/* Main Content with Apple-style reveal effect */}
       <div 
         className={`

@@ -29,7 +29,7 @@ export default function NoChatSelected() {
         
         {/* Description */}
         <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 leading-relaxed">
-          Select a chat from the sidebar to start messaging, or create a new conversation with zone members.
+          Select a chat from the sidebar to start messaging, or create a new conversation.
         </p>
 
         {/* Action buttons */}
@@ -46,7 +46,7 @@ export default function NoChatSelected() {
             </div>
             <div className="text-left min-w-0">
               <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Search Users</h4>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">Find and message zone members</p>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Find and message users</p>
             </div>
           </div>
           
@@ -77,9 +77,9 @@ export default function NoChatSelected() {
               />
             </div>
             <div className="text-left min-w-0">
-              <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Zone Members</h4>
+              <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Users</h4>
               <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                {currentZone ? `Connect with ${currentZone.name} members` : 'Connect with your zone'}
+                Connect with other users
               </p>
             </div>
           </div>

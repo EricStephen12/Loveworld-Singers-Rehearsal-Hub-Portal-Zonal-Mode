@@ -563,6 +563,32 @@ export async function getUserSubmissions(userId: string): Promise<SongSubmission
 }
 
 /**
+ * Get submissions for a user by email.
+ * This fetches all submitted songs (admin-style) and then filters them by submittedBy.email.
+ */
+export async function getUserSubmissionsByEmail(userEmail: string): Promise<SongSubmission[]> {
+  try {
+    console.log('📖 [SongSubmission] Getting submissions for user by email:', userEmail);
+    if (!userEmail) return [];
+
+    // Fetch all submissions with HQ-style access, then filter in memory by email
+    const allSubmissions = await getAllSubmittedSongs(undefined, true);
+    const lower = userEmail.toLowerCase();
+
+    const filtered = allSubmissions.filter((sub) => {
+      const email = sub.submittedBy?.email || '';
+      return email.toLowerCase() === lower;
+    });
+
+    console.log('✅ [SongSubmission] Found', filtered.length, 'submissions for email');
+    return filtered;
+  } catch (error) {
+    console.error('❌ [SongSubmission] Error getting user submissions by email:', error);
+    return [];
+  }
+}
+
+/**
  * Get user's song notifications (approved, rejected, replied)
  */
 export async function getUserSongNotifications(userEmail: string): Promise<SongNotification[]> {
@@ -628,6 +654,29 @@ export async function deleteUserSubmission(submissionId: string, userId: string)
     return { success: true };
   } catch (error) {
     console.error('❌ [SongSubmission] Error deleting submission:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' };
+  }
+}
+
+/**
+ * Delete a submission from admin (can remove any status)
+ */
+export async function deleteSubmissionAsAdmin(submissionId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('🗑️ [SongSubmission][Admin] Deleting submission as admin:', submissionId);
+    
+    const submissionRef = doc(db, SUBMITTED_SONGS_COLLECTION, submissionId);
+    const submissionDoc = await getDoc(submissionRef);
+    
+    if (!submissionDoc.exists()) {
+      return { success: false, error: 'Submission not found' };
+    }
+    
+    await deleteDoc(submissionRef);
+    console.log('✅ [SongSubmission][Admin] Submission deleted');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ [SongSubmission][Admin] Error deleting submission:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' };
   }
 }

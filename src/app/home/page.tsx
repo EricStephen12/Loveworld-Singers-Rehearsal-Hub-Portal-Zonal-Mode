@@ -70,7 +70,7 @@ function HomePageContent() {
   const [isCoordinator, setIsCoordinator] = useState(false)
 
   // Use global search hook for comprehensive search
-  const { searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery, searchResults, hasResults } = useHomeGlobalSearch()
+  const { searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery, searchResults, hasResults } = useHomeGlobalSearch(currentZone?.id)
   const typedSearchResults = searchResults as HomeSearchResult[]
 
   // Carousel images array

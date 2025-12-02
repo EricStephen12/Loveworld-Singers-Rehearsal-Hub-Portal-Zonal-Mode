@@ -21,32 +21,13 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
   const [isSearching, setIsSearching] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  // Load all zone members when modal opens
-  useEffect(() => {
-    if (!isOpen) return
-
-    const loadZoneMembers = async () => {
-      setIsSearching(true)
-      try {
-        const results = await searchUsers('') // Empty string returns all zone members
-        setSearchResults(results)
-      } catch (error) {
-        console.error('Error loading zone members:', error)
-      } finally {
-        setIsSearching(false)
-      }
-    }
-
-    loadZoneMembers()
-  }, [isOpen, searchUsers])
-
+  // SECURITY: Don't load users on open - only show results when searching
   // Filter results when search term changes
   useEffect(() => {
     const filterUsers = async () => {
-      if (searchTerm.trim().length === 0) {
-        // Show all zone members
-        const results = await searchUsers('')
-        setSearchResults(results)
+      // SECURITY: Only search if user has typed at least 2 characters
+      if (searchTerm.trim().length < 2) {
+        setSearchResults([])
         return
       }
 
@@ -56,6 +37,7 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
         setSearchResults(results)
       } catch (error) {
         console.error('Error searching users:', error)
+        setSearchResults([])
       } finally {
         setIsSearching(false)
       }
@@ -130,11 +112,12 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
             <input
               type="text"
-              placeholder="Search by name or email..."
+              placeholder="Search by name or email (min 2 characters)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 text-base"
               autoFocus
+              minLength={2}
             />
           </div>
         </div>
@@ -151,11 +134,15 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Members Found</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm.trim().length < 2 
+                  ? 'Start Searching' 
+                  : 'No Users Found'}
+              </h3>
               <p className="text-gray-600 text-sm">
-                {searchTerm 
-                  ? `No members found matching "${searchTerm}"`
-                  : 'No members available yet'}
+                {searchTerm.trim().length < 2
+                  ? 'Type at least 2 characters to search for users'
+                  : `No users found matching "${searchTerm}"`}
               </p>
             </div>
           ) : (
