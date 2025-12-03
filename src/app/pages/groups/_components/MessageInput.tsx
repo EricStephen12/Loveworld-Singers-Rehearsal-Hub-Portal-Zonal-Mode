@@ -61,11 +61,18 @@ export default function MessageInput() {
     setIsLoading(true)
     
     try {
-      // TODO: Upload to Cloudinary
-      const imageUrl = URL.createObjectURL(file)
-      await sendMessage({ image: imageUrl })
+      // Upload to Cloudinary
+      const { uploadImageToCloudinary } = await import('@/lib/cloudinary-storage')
+      const uploadResult = await uploadImageToCloudinary(file)
+      
+      if (!uploadResult || !uploadResult.url) {
+        throw new Error('Failed to upload image')
+      }
+      
+      await sendMessage({ image: uploadResult.url })
     } catch (error) {
       console.error('Error uploading image:', error)
+      alert('Failed to upload image. Please try again.')
     } finally {
       setIsLoading(false)
       if (imageInputRef.current) {
@@ -81,14 +88,21 @@ export default function MessageInput() {
     setIsLoading(true)
     
     try {
-      // TODO: Upload to Cloudinary
-      const fileUrl = URL.createObjectURL(file)
+      // Upload to Cloudinary
+      const { uploadToCloudinary } = await import('@/lib/cloudinary-storage')
+      const uploadResult = await uploadToCloudinary(file)
+      
+      if (!uploadResult || !uploadResult.url) {
+        throw new Error('Failed to upload file')
+      }
+      
       await sendMessage({ 
-        fileUrl, 
+        fileUrl: uploadResult.url, 
         fileName: file.name 
       })
     } catch (error) {
       console.error('Error uploading file:', error)
+      alert('Failed to upload file. Please try again.')
     } finally {
       setIsLoading(false)
       if (fileInputRef.current) {

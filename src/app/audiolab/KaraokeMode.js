@@ -1,41 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, Maximize2, Minimize2, Play, Pause, RotateCcw, RotateCw } from 'lucide-react';
 import './KaraokeMode.css';
 
 const KaraokeMode = ({ onBack }) => {
-  // State management
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration] = useState(180); // 3 minutes sample
+  const [duration] = useState(180);
   const [pitchAccuracy, setPitchAccuracy] = useState(85);
   const [score, setScore] = useState(0);
   const [currentLine, setCurrentLine] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
   const [performanceRating, setPerformanceRating] = useState('Great!');
   const [streak, setStreak] = useState(0);
   const [totalNotes, setTotalNotes] = useState(0);
   const [hitNotes, setHitNotes] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  // Refs
   const animationRef = useRef();
 
-
-
-  // Sample lyrics with timing (in seconds)
   const lyrics = [
-    { time: 5, text: "Welcome to your karaoke session", active: false },
-    { time: 10, text: "Sing along with confidence and style", active: false },
-    { time: 15, text: "Let your voice shine bright tonight", active: false },
-    { time: 20, text: "Every note you sing matters", active: false },
-    { time: 25, text: "Feel the rhythm in your heart", active: false },
-    { time: 30, text: "This is your moment to shine", active: false },
-    { time: 35, text: "Sing like nobody's listening", active: false },
-    { time: 40, text: "Your voice is unique and beautiful", active: false },
-    { time: 45, text: "Keep going, you're doing great", active: false },
-    { time: 50, text: "The music flows through you", active: false }
+    { time: 5, text: "Welcome to your karaoke session" },
+    { time: 10, text: "Sing along with confidence and style" },
+    { time: 15, text: "Let your voice shine bright tonight" },
+    { time: 20, text: "Every note you sing matters" },
+    { time: 25, text: "Feel the rhythm in your heart" },
+    { time: 30, text: "This is your moment to shine" },
+    { time: 35, text: "Sing like nobody's listening" },
+    { time: 40, text: "Your voice is unique and beautiful" },
+    { time: 45, text: "Keep going, you're doing great" },
+    { time: 50, text: "The music flows through you" }
   ];
 
-  // Animation loop for real-time updates
   useEffect(() => {
     if (isPlaying) {
       const animate = () => {
@@ -48,12 +41,10 @@ const KaraokeMode = ({ onBack }) => {
           return newTime;
         });
         
-        // Update pitch accuracy with realistic variation
         setPitchAccuracy(prev => {
           const variation = (Math.random() - 0.5) * 10;
           const newAccuracy = Math.max(60, Math.min(100, prev + variation));
-
-          // Update performance metrics
+          
           setTotalNotes(prevTotal => prevTotal + 1);
           if (newAccuracy > 80) {
             setHitNotes(prevHit => prevHit + 1);
@@ -62,7 +53,6 @@ const KaraokeMode = ({ onBack }) => {
             setStreak(0);
           }
 
-          // Update performance rating
           if (newAccuracy >= 95) setPerformanceRating('Perfect!');
           else if (newAccuracy >= 85) setPerformanceRating('Excellent!');
           else if (newAccuracy >= 75) setPerformanceRating('Good!');
@@ -72,7 +62,6 @@ const KaraokeMode = ({ onBack }) => {
           return newAccuracy;
         });
 
-        // Update score based on pitch accuracy and streak
         setScore(prev => {
           const basePoints = pitchAccuracy > 80 ? 10 : 5;
           const streakBonus = Math.min(streak * 2, 50);
@@ -85,44 +74,24 @@ const KaraokeMode = ({ onBack }) => {
     }
     
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isPlaying, duration, pitchAccuracy]);
+  }, [isPlaying, duration, pitchAccuracy, streak]);
 
-  // Update current lyric line
   useEffect(() => {
-    const activeLine = lyrics.findIndex(lyric => 
-      currentTime >= lyric.time && currentTime < (lyrics[lyrics.indexOf(lyric) + 1]?.time || duration)
+    const activeLine = lyrics.findIndex((lyric, index) => 
+      currentTime >= lyric.time && currentTime < (lyrics[index + 1]?.time || duration)
     );
-    if (activeLine !== -1) {
-      setCurrentLine(activeLine);
-    }
-  }, [currentTime, lyrics, duration]);
+    if (activeLine !== -1) setCurrentLine(activeLine);
+  }, [currentTime, duration]);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    if (!isRecording && !isPlaying) {
-      setIsRecording(true);
-    }
-  };
-
-
+  const togglePlayPause = () => setIsPlaying(!isPlaying);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullScreen(true);
-      }).catch(err => {
-        console.error('Error entering fullscreen:', err);
-      });
+      document.documentElement.requestFullscreen().then(() => setIsFullScreen(true)).catch(() => {});
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullScreen(false);
-      }).catch(err => {
-        console.error('Error exiting fullscreen:', err);
-      });
+      document.exitFullscreen().then(() => setIsFullScreen(false)).catch(() => {});
     }
   };
 
@@ -133,122 +102,100 @@ const KaraokeMode = ({ onBack }) => {
   };
 
   const getScoreColor = () => {
-    if (pitchAccuracy >= 90) return '#4CAF50';
-    if (pitchAccuracy >= 80) return '#FF9800';
-    return '#F44336';
+    if (pitchAccuracy >= 90) return '#10b981';
+    if (pitchAccuracy >= 80) return '#f59e0b';
+    return '#ef4444';
   };
 
   return (
-    <div className="karaoke-mode-clean">
-      {/* Fixed Header */}
-      <div className="karaoke-header-fixed">
-        <button className="back-btn" onClick={onBack}>
-          <span className="material-icons">arrow_back</span>
+    <div className="karaoke-container">
+      {/* Header */}
+      <header className="karaoke-header">
+        <button className="icon-btn" onClick={onBack}>
+          <ChevronLeft size={22} />
         </button>
         <div className="song-info">
-          <h2 className="song-title">Practice Session</h2>
+          <h1 className="song-title">Practice Session</h1>
           <p className="artist-name">Vocal Training</p>
         </div>
-        <div className="header-controls">
-          <button className="control-btn-header" onClick={toggleFullScreen}>
-            <span className="material-icons">
-              {isFullScreen ? 'fullscreen_exit' : 'fullscreen'}
-            </span>
-          </button>
-        </div>
-      </div>
+        <button className="icon-btn" onClick={toggleFullScreen}>
+          {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+        </button>
+      </header>
 
-      {/* Main Karaoke Content */}
-      <div className="karaoke-main-content">
-        {/* Progress Bar */}
-        <div className="progress-container">
-          <div className="time-display">{formatTime(currentTime)}</div>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
+      {/* Main Content */}
+      <div className="karaoke-main">
+        {/* Progress */}
+        <div className="progress-row">
+          <span className="time">{formatTime(currentTime)}</span>
+          <div className="progress-track">
+            <div 
+              className="progress-fill" 
               style={{ width: `${(currentTime / duration) * 100}%` }}
-            ></div>
+            />
           </div>
-          <div className="time-display">{formatTime(duration)}</div>
+          <span className="time">{formatTime(duration)}</span>
         </div>
 
-        {/* Lyrics Display */}
-        <div className="lyrics-container">
-          <div className="lyrics-scroll">
-            {lyrics.map((lyric, index) => (
-              <div
-                key={index}
-                className={`lyric-line ${
-                  index === currentLine ? 'active' :
-                  index < currentLine ? 'past' : 'upcoming'
-                }`}
-              >
-                {lyric.text}
-              </div>
-            ))}
-          </div>
+        {/* Lyrics */}
+        <div className="lyrics-area">
+          {lyrics.map((lyric, index) => (
+            <p
+              key={index}
+              className={`lyric ${
+                index === currentLine ? 'active' :
+                index < currentLine ? 'past' : 'upcoming'
+              }`}
+            >
+              {lyric.text}
+            </p>
+          ))}
         </div>
 
-        {/* Score Display */}
-        <div className="score-display">
-          <div className="score-item">
-            <span className="score-label">Score</span>
-            <span className="score-value">{score.toLocaleString()}</span>
+        {/* Stats */}
+        <div className="stats-row">
+          <div className="stat">
+            <span className="stat-value">{score.toLocaleString()}</span>
+            <span className="stat-label">Score</span>
           </div>
-          <div className="score-item">
-            <span className="score-label">Accuracy</span>
-            <span className="score-value" style={{ color: getScoreColor() }}>
+          <div className="stat">
+            <span className="stat-value" style={{ color: getScoreColor() }}>
               {Math.round(pitchAccuracy)}%
             </span>
+            <span className="stat-label">Accuracy</span>
           </div>
-          <div className="score-item">
-            <span className="score-label">Streak</span>
-            <span className="score-value" style={{ color: streak > 5 ? '#4CAF50' : '#FFF' }}>
-              {streak}
-            </span>
-          </div>
-          <div className="score-item">
-            <span className="score-label">Hit Rate</span>
-            <span className="score-value">
-              {totalNotes > 0 ? Math.round((hitNotes / totalNotes) * 100) : 0}%
-            </span>
+          <div className="stat">
+            <span className="stat-value">{streak}</span>
+            <span className="stat-label">Streak</span>
           </div>
         </div>
 
-        {/* Performance Feedback */}
-        <div className="performance-feedback">
-          <span className="performance-text" style={{ color: getScoreColor() }}>
-            {performanceRating}
-          </span>
+        {/* Performance */}
+        <div className="performance" style={{ color: getScoreColor() }}>
+          {performanceRating}
         </div>
       </div>
 
-      {/* Fixed Player Controls */}
-      <div className="karaoke-controls-fixed">
-        <div className="primary-controls">
-          <button
-            className="control-btn secondary"
-            onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
-          >
-            <span className="material-icons">replay_10</span>
-          </button>
-
-          <button
-            className={`control-btn primary ${isPlaying ? 'playing' : ''}`}
-            onClick={togglePlayPause}
-          >
-            <span className="material-icons">
-              {isPlaying ? 'pause' : 'play_arrow'}
-            </span>
-          </button>
-
-          <button
-            className="control-btn secondary"
-            onClick={() => setCurrentTime(Math.min(duration, currentTime + 10))}
-          >
-            <span className="material-icons">forward_10</span>
-          </button>
-        </div>
+      {/* Controls */}
+      <div className="karaoke-controls">
+        <button 
+          className="control-btn"
+          onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
+        >
+          <RotateCcw size={22} />
+        </button>
+        <button 
+          className={`play-btn ${isPlaying ? 'playing' : ''}`}
+          onClick={togglePlayPause}
+        >
+          {isPlaying ? <Pause size={28} /> : <Play size={28} fill="white" />}
+        </button>
+        <button 
+          className="control-btn"
+          onClick={() => setCurrentTime(Math.min(duration, currentTime + 10))}
+        >
+          <RotateCw size={22} />
+        </button>
       </div>
     </div>
   );

@@ -28,7 +28,10 @@ let isLoggingOut = false
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
-  isLoading: false,
+  // Start in "loading" state until Firebase tells us the real auth status.
+  // This prevents pages from thinking the user is logged out for a split second
+  // and redirecting to /auth while the session is actually still valid.
+  isLoading: true,
 
   setUser: (user) => {
     // Don't update user if we're in the middle of logging out
@@ -158,6 +161,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: () => {
+    // Mark auth as loading while we wait for the first Firebase auth event
+    set({ isLoading: true })
     // Check if we just logged out (URL flag)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
@@ -201,6 +206,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ profile: null })
       }
       
+      // We've now received the first definitive auth state
       set({ isLoading: false })
     })
 

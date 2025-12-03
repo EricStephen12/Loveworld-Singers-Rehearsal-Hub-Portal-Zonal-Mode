@@ -1,48 +1,41 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* =============================================
+   AUDIO LAB - Responsive Design
+   ============================================= */
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background: #f8f7fc;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+:root {
+  --al-primary: #7c3aed;
+  --al-primary-light: #a78bfa;
+  --al-bg: #f8f7fc;
+  --al-card: #ffffff;
+  --al-text: #1f2937;
+  --al-text-secondary: #6b7280;
+  --al-text-muted: #9ca3af;
+  --al-border: rgba(0, 0, 0, 0.06);
+  --al-radius: 12px;
+  --al-safe-top: env(safe-area-inset-top, 0px);
+  --al-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* =============================================
-   APP CONTAINER - Full Width, No Phone Constraints
+   BASE - Full Width Layout
    ============================================= */
 
 .app {
   min-height: 100vh;
-  width: 100%;
-  max-width: 100%;
-  background: #f8f7fc;
+  min-height: 100dvh;
+  background: var(--al-bg);
 }
 
 .app-container {
   width: 100%;
-  max-width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  position: relative;
-}
-
-/* Remove ALL phone-like container constraints */
-.container {
-  max-width: 100% !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  min-height: auto !important;
 }
 
 /* =============================================
-   HEADER - App-Style Navigation Stack
+   HEADER - Full Width, Professional Design
    ============================================= */
 
 .header {
@@ -53,18 +46,16 @@ body {
   z-index: 100;
   height: 64px;
   padding: 0 20px;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: var(--al-safe-top);
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--al-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  max-width: 100% !important;
-  border-radius: 0 !important;
 }
 
 .header-left {
@@ -82,13 +73,21 @@ body {
   flex-shrink: 0;
 }
 
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--al-text);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
 .back-btn {
   width: 40px;
   height: 40px;
   border: none;
   border-radius: 10px;
   background: #f3f4f6;
-  color: #7c3aed;
+  color: var(--al-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,46 +105,12 @@ body {
   transform: translateX(0);
 }
 
-.title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a1a;
-  letter-spacing: -0.3px;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header-icons {
-  display: flex;
-  gap: 10px;
-}
-
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 10px;
-  background: #f3f4f6;
-  color: #7c3aed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-  background: #e5e7eb;
-}
-
 .profile-btn {
   width: 40px;
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--al-primary) 0%, #a855f7 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -161,25 +126,7 @@ body {
 }
 
 /* =============================================
-   MAIN CONTENT - Full Width
-   ============================================= */
-
-.main-content {
-  flex: 1;
-  margin-top: 64px;
-  margin-bottom: 70px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  max-width: 100%;
-}
-
-.main-content.with-player {
-  margin-bottom: calc(70px + 80px);
-}
-
-/* =============================================
-   BOTTOM NAVIGATION - App-Style Tab Bar
+   BOTTOM NAVIGATION - Full Width, Responsive
    ============================================= */
 
 .bottom-nav {
@@ -189,16 +136,13 @@ body {
   right: 0;
   z-index: 100;
   height: 70px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: var(--al-safe-bottom);
+  background: var(--al-card);
+  border-top: 1px solid var(--al-border);
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  max-width: 100% !important;
 }
 
 .nav-item {
@@ -211,7 +155,7 @@ body {
   gap: 6px;
   border: none;
   background: none;
-  color: #9ca3af;
+  color: var(--al-text-muted);
   cursor: pointer;
   padding: 10px 12px;
   transition: all 0.2s ease;
@@ -220,12 +164,12 @@ body {
 }
 
 .nav-item:hover {
-  color: #7c3aed;
+  color: var(--al-primary);
   background: rgba(124, 58, 237, 0.05);
 }
 
 .nav-item.active {
-  color: #7c3aed;
+  color: var(--al-primary);
   background: rgba(124, 58, 237, 0.1);
 }
 
@@ -237,7 +181,7 @@ body {
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: #7c3aed;
+  background: var(--al-primary);
   border-radius: 0 0 3px 3px;
 }
 
@@ -258,19 +202,34 @@ body {
 }
 
 /* =============================================
-   MUSIC PLAYER
+   MAIN CONTENT
+   ============================================= */
+
+.main-content {
+  flex: 1;
+  margin-top: calc(56px + var(--al-safe-top));
+  margin-bottom: calc(60px + var(--al-safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-content.with-player {
+  margin-bottom: calc(60px + 80px + var(--al-safe-bottom));
+}
+
+/* =============================================
+   MINI PLAYER - Full Width
    ============================================= */
 
 .music-player {
   position: fixed;
-  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(60px + var(--al-safe-bottom));
   left: 0;
   right: 0;
   z-index: 99;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--al-primary) 0%, #a855f7 100%);
+  padding: 12px 16px;
   color: white;
-  max-width: 100% !important;
 }
 
 .player-main {
@@ -278,7 +237,7 @@ body {
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
-  max-width: 1400px;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -339,7 +298,6 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .player-btn:hover {
@@ -347,7 +305,7 @@ body {
 }
 
 .player-progress {
-  max-width: 1400px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -379,7 +337,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: linear-gradient(180deg, #f8f7fc 0%, #fff 100%);
+  background: linear-gradient(180deg, var(--al-bg) 0%, #fff 100%);
   display: flex;
   flex-direction: column;
 }
@@ -389,15 +347,16 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
-  max-width: 100%;
+  padding-top: calc(16px + var(--al-safe-top));
+  max-width: 600px;
+  margin: 0 auto;
   width: 100%;
 }
 
 .fullscreen-header h3 {
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--al-text-secondary);
   margin: 0;
 }
 
@@ -408,7 +367,7 @@ body {
   border: none;
   border-radius: 50%;
   background: #f3f4f6;
-  color: #7c3aed;
+  color: var(--al-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -422,9 +381,10 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(24px + var(--al-safe-bottom));
   gap: 24px;
-  max-width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   width: 100%;
 }
 
@@ -436,7 +396,7 @@ body {
 .fullscreen-placeholder-image {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--al-primary) 0%, #a855f7 100%);
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(124, 58, 237, 0.3);
 }
@@ -448,13 +408,13 @@ body {
 .fullscreen-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--al-text);
   margin: 0 0 4px;
 }
 
 .fullscreen-artist {
   font-size: 16px;
-  color: #7c3aed;
+  color: var(--al-primary);
   margin: 0;
 }
 
@@ -472,7 +432,7 @@ body {
 
 .fullscreen-progress-fill {
   height: 100%;
-  background: #7c3aed;
+  background: var(--al-primary);
   border-radius: 2px;
 }
 
@@ -480,7 +440,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--al-text-muted);
 }
 
 .fullscreen-controls {
@@ -495,12 +455,11 @@ body {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #6b7280;
+  color: var(--al-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .fullscreen-control-btn:hover {
@@ -508,7 +467,7 @@ body {
 }
 
 .fullscreen-control-btn.active {
-  color: #7c3aed;
+  color: var(--al-primary);
 }
 
 .fullscreen-play-btn {
@@ -516,14 +475,13 @@ body {
   height: 64px;
   border: none;
   border-radius: 50%;
-  background: #7c3aed;
+  background: var(--al-primary);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
-  transition: all 0.2s ease;
 }
 
 .fullscreen-play-btn:hover {
@@ -557,7 +515,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--al-border);
 }
 
 .modal-header h2 {
@@ -584,7 +542,7 @@ body {
 
 .modal-content p {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--al-text-secondary);
   margin: 0 0 16px;
 }
 
@@ -608,14 +566,14 @@ body {
 }
 
 .input-group input:focus {
-  border-color: #7c3aed;
+  border-color: var(--al-primary);
 }
 
 .modal-footer {
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--al-border);
 }
 
 .btn-secondary,
@@ -631,11 +589,11 @@ body {
 
 .btn-secondary {
   background: #f3f4f6;
-  color: #1a1a1a;
+  color: var(--al-text);
 }
 
 .btn-primary {
-  background: #7c3aed;
+  background: var(--al-primary);
   color: white;
 }
 
@@ -643,14 +601,16 @@ body {
   opacity: 0.5;
 }
 
+
 /* =============================================
-   RESPONSIVE - Tablet & Desktop
+   TABLET (768px+)
    ============================================= */
 
 @media (min-width: 768px) {
   .header {
     height: 72px;
     padding: 0 32px;
+    max-width: 100%;
   }
 
   .title {
@@ -663,40 +623,56 @@ body {
     height: 44px;
   }
 
-  .main-content {
-    margin-top: 72px;
-    margin-bottom: 80px;
-    padding: 0 32px;
-  }
-
-  .main-content.with-player {
-    margin-bottom: calc(80px + 96px);
-  }
-
   .bottom-nav {
     height: 80px;
     padding: 0 32px;
+    justify-content: center;
     gap: 8px;
   }
-
+  
   .nav-item {
     max-width: 160px;
     gap: 8px;
     padding: 12px 16px;
   }
-
+  
   .nav-item svg {
     width: 26px;
     height: 26px;
   }
-
+  
   .nav-label {
     font-size: 13px;
   }
 
+  .nav-item {
+    max-width: 140px;
+    gap: 6px;
+  }
+
+  .nav-item svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-label {
+    font-size: 12px;
+  }
+
+  .main-content {
+    margin-top: calc(72px + var(--al-safe-top));
+    margin-bottom: calc(80px + var(--al-safe-bottom));
+    padding: 0 32px;
+  }
+
+  .main-content.with-player {
+    margin-bottom: calc(80px + 96px + var(--al-safe-bottom));
+  }
+
   .music-player {
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(80px + var(--al-safe-bottom));
     padding: 16px 32px;
+    max-width: 100%;
   }
 
   .player-placeholder-image {
@@ -716,12 +692,102 @@ body {
     width: 40px;
     height: 40px;
   }
+
+  .fullscreen-artwork {
+    width: 320px;
+  }
+
+  .fullscreen-title {
+    font-size: 26px;
+  }
+
+  .fullscreen-artist {
+    font-size: 18px;
+  }
+
+  .fullscreen-play-btn {
+    width: 72px;
+    height: 72px;
+  }
+
+  /* Song Library Tablet */
+  .song-library-container .library-content {
+    padding: 20px 24px;
+  }
+
+  .song-library-container .song-item {
+    padding: 14px 16px;
+  }
+
+  .song-library-container .song-album-art {
+    width: 56px;
+    height: 56px;
+  }
+
+  .song-library-container .song-title {
+    font-size: 16px;
+  }
+
+  /* Practice Page Tablet */
+  .practice-page .practice-content {
+    padding: 20px 24px;
+  }
+
+  .practice-page .practice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .practice-page .practice-card {
+    padding: 18px;
+  }
+
+  .practice-page .progress-section {
+    padding: 20px 24px;
+  }
+
+  /* Collab Page Tablet */
+  .collab-page {
+    padding: 24px;
+  }
+
+  .collab-page .hero-title {
+    font-size: 32px;
+  }
+
+  .collab-page .action-card {
+    padding: 24px;
+  }
+
+  /* Studio Tablet */
+  .studio-container .studio-header {
+    padding: 16px 24px;
+  }
+
+  .studio-container .track-list {
+    padding: 20px 24px;
+  }
+
+  /* Karaoke Tablet */
+  .karaoke-container .karaoke-header {
+    padding: 20px 24px;
+  }
+
+  .karaoke-container .lyric.active {
+    font-size: 24px;
+  }
 }
+
+/* =============================================
+   DESKTOP (1024px+)
+   ============================================= */
 
 @media (min-width: 1024px) {
   .header {
     height: 80px;
     padding: 0 48px;
+    max-width: 100%;
   }
 
   .title {
@@ -734,22 +800,10 @@ body {
     height: 48px;
   }
 
-  .main-content {
-    margin-top: 80px;
-    margin-bottom: 90px;
-    padding: 0 48px;
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .main-content.with-player {
-    margin-bottom: calc(90px + 100px);
-  }
-
   .bottom-nav {
     height: 90px;
     padding: 0 48px;
+    justify-content: center;
     gap: 12px;
   }
 
@@ -758,52 +812,202 @@ body {
     gap: 10px;
     padding: 14px 20px;
   }
-
+  
   .nav-item svg {
     width: 28px;
     height: 28px;
   }
-
+  
   .nav-label {
     font-size: 14px;
   }
 
-  .music-player {
-    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-    padding: 20px 48px;
+  .main-content {
+    margin-top: calc(80px + var(--al-safe-top));
+    margin-bottom: calc(90px + var(--al-safe-bottom));
+    padding: 0 48px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .player-main,
-  .player-progress {
+  .main-content.with-player {
+    margin-bottom: calc(90px + 100px + var(--al-safe-bottom));
+  }
+
+  .music-player {
+    bottom: calc(90px + var(--al-safe-bottom));
+    padding: 20px 48px;
     max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .player-main {
+    max-width: 1000px;
+  }
+
+  .player-progress {
+    max-width: 1000px;
+  }
+
+  .fullscreen-header {
+    max-width: 800px;
+  }
+
+  .fullscreen-content {
+    max-width: 800px;
+  }
+
+  .fullscreen-artwork {
+    width: 360px;
+  }
+
+  .fullscreen-progress {
+    max-width: 500px;
+  }
+
+  /* Song Library Desktop */
+  .song-library-container .library-header {
+    padding: 16px 32px;
+  }
+
+  .song-library-container .library-content {
+    padding: 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .song-library-container .songs-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .song-library-container .song-item {
+    padding: 16px;
+  }
+
+  /* Practice Page Desktop */
+  .practice-page .practice-content {
+    padding: 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .practice-page .practice-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .practice-page .practice-card {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 180px;
+  }
+
+  .practice-page .card-arrow {
+    display: none;
+  }
+
+  .practice-page .progress-section {
+    padding: 24px 32px;
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .practice-page .progress-card,
+  .practice-page .challenge-card {
+    flex: 1;
+  }
+
+  /* Collab Page Desktop */
+  .collab-page {
+    padding: 32px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .collab-page .collab-actions {
+    gap: 20px;
+  }
+
+  .collab-page .recent-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Studio Desktop */
+  .studio-container .studio-header {
+    padding: 20px 32px;
+  }
+
+  .studio-container .track-list {
+    padding: 24px 32px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .studio-container .track-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+
+  /* Karaoke Desktop */
+  .karaoke-container .karaoke-main {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .karaoke-container .stats-row {
+    gap: 48px;
+  }
+
+  .karaoke-container .stat-value {
+    font-size: 28px;
   }
 }
+
+/* =============================================
+   OVERRIDE PHONE-LIKE CONSTRAINTS
+   ============================================= */
+
+/* Remove all max-width: 375px constraints for tablet and desktop */
+@media (min-width: 768px) {
+  .fixed-header-section,
+  .container,
+  .app-container,
+  *[style*="max-width: 375px"] {
+    max-width: 100% !important;
+  }
+}
+
+/* =============================================
+   LARGE DESKTOP (1440px+)
+   ============================================= */
 
 @media (min-width: 1440px) {
   .header {
     padding: 0 64px;
   }
 
-  .main-content {
-    padding: 0 64px;
-    max-width: 1600px;
-  }
-
   .bottom-nav {
-    padding: 0 64px;
+    justify-content: center;
     gap: 32px;
+    padding: 0 64px;
   }
 
   .nav-item {
     max-width: 220px;
     padding: 16px 24px;
   }
-
+  
   .nav-item svg {
     width: 30px;
     height: 30px;
   }
-
+  
   .nav-label {
     font-size: 15px;
   }
@@ -815,5 +1019,109 @@ body {
   .player-main,
   .player-progress {
     max-width: 1600px;
+  }
+  
+  .main-content {
+    padding: 0 64px;
+    max-width: 1600px;
+  }
+
+  /* Song Library Large Desktop */
+  .song-library-container .library-content {
+    max-width: 1100px;
+  }
+
+  .song-library-container .songs-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Practice Page Large Desktop */
+  .practice-page .practice-content {
+    max-width: 1100px;
+  }
+
+  /* Collab Page Large Desktop */
+  .collab-page {
+    max-width: 1000px;
+  }
+
+  .collab-page .recent-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Studio Large Desktop */
+  .studio-container .track-list {
+    max-width: 1200px;
+  }
+}
+
+/* =============================================
+   SMALL MOBILE (< 360px)
+   ============================================= */
+
+@media (max-width: 359px) {
+  .header {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .back-btn,
+  .profile-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bottom-nav {
+    height: 52px;
+  }
+
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-label {
+    font-size: 9px;
+  }
+
+  .main-content {
+    margin-top: calc(48px + var(--al-safe-top));
+    margin-bottom: calc(52px + var(--al-safe-bottom));
+  }
+
+  .music-player {
+    bottom: calc(52px + var(--al-safe-bottom));
+    padding: 10px 12px;
+  }
+
+  .player-placeholder-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .player-song-title {
+    font-size: 13px;
+  }
+
+  .player-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .fullscreen-artwork {
+    width: min(200px, 55vw);
+  }
+
+  .fullscreen-title {
+    font-size: 18px;
+  }
+
+  .fullscreen-play-btn {
+    width: 56px;
+    height: 56px;
   }
 }

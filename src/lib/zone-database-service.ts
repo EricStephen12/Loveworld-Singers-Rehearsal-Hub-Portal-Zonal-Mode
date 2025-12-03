@@ -90,31 +90,47 @@ export class ZoneDatabaseService {
   }
   
   /**
-   * Create praise night for a zone
-   * Saves to zone_praise_nights collection
+   * Create praise night for a zone - HQ AWARE
+   * HQ groups → saves to praise_nights (unfiltered)
+   * Regular zones → saves to zone_praise_nights
    */
   static async createPraiseNight(zoneId: string, data: any) {
     try {
-      console.log('📝 Creating zone praise night for zone:', zoneId)
+      // Import here to avoid circular dependency
+      const { isHQGroup } = await import('@/config/zones')
+      const now = new Date()
+
+      if (isHQGroup(zoneId)) {
+        console.log('🏢 [ZoneDB] Creating HQ praise night in praise_nights collection for zone:', zoneId)
+
+        const praiseNightData = {
+          ...data,
+          zoneId,
+          scope: 'hq',
+          createdAt: now,
+          updatedAt: now
+        }
+
+        const result = await FirebaseDatabaseService.addDocument('praise_nights', praiseNightData)
+        console.log('✅ [ZoneDB] HQ praise night created:', result.id)
+        return { success: true, id: result.id, firebaseId: result.id }
+      } else {
+        console.log('📍 [ZoneDB] Creating zone praise night in zone_praise_nights for zone:', zoneId)
       
       const praiseNightData = {
         ...data,
         zoneId, // Add zone ID
         scope: 'zone', // Mark as zone-level rehearsal (Phase 4)
-        createdAt: new Date(),
-        updatedAt: new Date()
+          createdAt: now,
+          updatedAt: now
       }
       
-      // Use addDocument to save to zone_praise_nights collection with auto-generated ID
-      const result = await FirebaseDatabaseService.addDocument(
-        'zone_praise_nights',
-        praiseNightData
-      )
-      
-      console.log('✅ Zone praise night created:', result.id)
+        const result = await FirebaseDatabaseService.addDocument('zone_praise_nights', praiseNightData)
+        console.log('✅ [ZoneDB] Zone praise night created:', result.id)
       return { success: true, id: result.id, firebaseId: result.id }
+      }
     } catch (error) {
-      console.error('❌ Error creating zone praise night:', error)
+      console.error('❌ [ZoneDB] Error creating praise night:', error)
       return { success: false }
     }
   }
@@ -152,19 +168,29 @@ export class ZoneDatabaseService {
   }
   
   /**
-   * Update praise night (zone is already set, can't be changed)
-   * Updates in zone_praise_nights collection
+   * Update praise night - HQ AWARE
+   * HQ groups → updates praise_nights
+   * Regular zones → updates zone_praise_nights
    */
-  static async updatePraiseNight(praiseNightId: string, data: any) {
+  static async updatePraiseNight(praiseNightId: string, data: any, zoneId?: string) {
     try {
       // Don't allow changing zoneId
       const updateData = { ...data, updatedAt: new Date() }
       delete updateData.zoneId
       
+      if (zoneId) {
+        const { isHQGroup } = await import('@/config/zones')
+        if (isHQGroup(zoneId)) {
+          console.log('🏢 [ZoneDB] Updating HQ praise night in praise_nights:', praiseNightId)
+          return await FirebaseDatabaseService.updatePraiseNight(praiseNightId, updateData)
+        }
+      }
+
+      console.log('📍 [ZoneDB] Updating zone praise night in zone_praise_nights:', praiseNightId)
       await FirebaseDatabaseService.updateDocument('zone_praise_nights', praiseNightId, updateData)
       return { success: true }
     } catch (error) {
-      console.error('❌ Error updating zone praise night:', error)
+      console.error('❌ [ZoneDB] Error updating praise night:', error)
       return { success: false }
     }
   }
@@ -195,14 +221,25 @@ export class ZoneDatabaseService {
   }
   
   /**
-   * Delete praise night from zone_praise_nights collection
+   * Delete praise night - HQ AWARE
+   * HQ groups → deletes from praise_nights
+   * Regular zones → deletes from zone_praise_nights
    */
-  static async deletePraiseNight(praiseNightId: string) {
+  static async deletePraiseNight(praiseNightId: string, zoneId?: string) {
     try {
+      if (zoneId) {
+        const { isHQGroup } = await import('@/config/zones')
+        if (isHQGroup(zoneId)) {
+          console.log('🏢 [ZoneDB] Deleting HQ praise night from praise_nights:', praiseNightId)
+          return await FirebaseDatabaseService.deletePraiseNight(praiseNightId)
+        }
+      }
+
+      console.log('📍 [ZoneDB] Deleting zone praise night from zone_praise_nights:', praiseNightId)
       await FirebaseDatabaseService.deleteDocument('zone_praise_nights', praiseNightId)
       return { success: true }
     } catch (error) {
-      console.error('❌ Error deleting zone praise night:', error)
+      console.error('❌ [ZoneDB] Error deleting praise night:', error)
       return { success: false }
     }
   }

@@ -159,7 +159,7 @@ export default function RootLayout({
         {isProduction && (
           <script
             dangerouslySetInnerHTML={{
-              __html: `
+          __html: `
             // Lightweight runtime bootstrap (no custom install prompt override)
             // Register Optimized Service Worker for fast first load
             if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -183,7 +183,7 @@ export default function RootLayout({
                 console.log('🚀 PWA bootstrap complete');
               });
             }
-          `,
+              `,
             }}
           />
         )}

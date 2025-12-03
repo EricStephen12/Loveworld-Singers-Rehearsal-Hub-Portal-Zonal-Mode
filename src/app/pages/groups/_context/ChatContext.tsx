@@ -46,6 +46,17 @@ interface ChatContextType {
   removeUserFromGroup: (chatId: string, userId: string) => Promise<boolean>
   makeUserAdmin: (chatId: string, userId: string) => Promise<boolean>
   updateGroupInfo: (chatId: string, updates: { name?: string; description?: string; avatar?: string }) => Promise<boolean>
+  leaveGroup: (chatId: string) => Promise<boolean>
+  
+  // Chat management
+  deleteChat: (chatId: string) => Promise<boolean>
+  togglePinChat: (chatId: string, pin: boolean) => Promise<boolean>
+  toggleStarChat: (chatId: string, star: boolean) => Promise<boolean>
+  searchMessages: (chatId: string, searchTerm: string) => Promise<ChatMessage[]>
+  
+  // Message management
+  toggleStarMessage: (messageId: string) => Promise<boolean>
+  isMessageStarred: (messageId: string) => Promise<boolean>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -287,6 +298,48 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return await FirebaseChatService.updateGroupInfo(chatId, user.uid, updates)
   }, [user])
 
+  const leaveGroup = useCallback(async (chatId: string) => {
+    if (!user) return false
+    const result = await FirebaseChatService.leaveGroup(chatId, user.uid)
+    if (result) {
+      setSelectedChat(null)
+    }
+    return result
+  }, [user])
+
+  const deleteChat = useCallback(async (chatId: string) => {
+    if (!user) return false
+    const result = await FirebaseChatService.deleteChat(chatId, user.uid)
+    if (result && selectedChat?.id === chatId) {
+      setSelectedChat(null)
+    }
+    return result
+  }, [user, selectedChat])
+
+  const togglePinChat = useCallback(async (chatId: string, pin: boolean) => {
+    if (!user) return false
+    return await FirebaseChatService.togglePinChat(chatId, user.uid, pin)
+  }, [user])
+
+  const toggleStarChat = useCallback(async (chatId: string, star: boolean) => {
+    if (!user) return false
+    return await FirebaseChatService.toggleStarChat(chatId, user.uid, star)
+  }, [user])
+
+  const searchMessages = useCallback(async (chatId: string, searchTerm: string) => {
+    return await FirebaseChatService.searchMessages(chatId, searchTerm)
+  }, [])
+
+  const toggleStarMessage = useCallback(async (messageId: string) => {
+    if (!user) return false
+    return await FirebaseChatService.toggleStarMessage(messageId, user.uid)
+  }, [user])
+
+  const isMessageStarred = useCallback(async (messageId: string) => {
+    if (!user) return false
+    return await FirebaseChatService.isMessageStarred(messageId, user.uid)
+  }, [user])
+
   const toggleReaction = useCallback(async (messageId: string, emoji: string = '❤️') => {
     if (!user) return
     await FirebaseChatService.toggleReaction(messageId, user.uid, profile?.first_name || user.email || 'You', emoji)
@@ -340,7 +393,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     addUserToGroup,
     removeUserFromGroup,
     makeUserAdmin,
-    updateGroupInfo
+    updateGroupInfo,
+    leaveGroup,
+    
+    // Chat management
+    deleteChat,
+    togglePinChat,
+    toggleStarChat,
+    searchMessages,
+    
+    // Message management
+    toggleStarMessage,
+    isMessageStarred
   }
 
   return (

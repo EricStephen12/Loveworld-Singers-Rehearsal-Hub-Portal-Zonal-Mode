@@ -1,164 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Plus, Link2, Music, Clock, Users, ChevronRight, Sparkles } from 'lucide-react';
 import './CollabPage.css';
 
 const CollabPage = ({ onBack, currentProject, openCreateProject }) => {
   const [projectCode, setProjectCode] = useState('');
 
-  // Mouse tracking for card glow effects
-  useEffect(() => {
-    const handleMouseMove = (e, card) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
-    };
-
-    const cards = document.querySelectorAll('.card-glow');
-    cards.forEach(card => {
-      const mouseMoveHandler = (e) => handleMouseMove(e, card);
-      card.addEventListener('mousemove', mouseMoveHandler);
-
-      return () => {
-        card.removeEventListener('mousemove', mouseMoveHandler);
-      };
-    });
-  }, []);
-
-  const handleCreateProject = () => {
-    openCreateProject();
-  };
-
-  const handleJoinProject = () => {
-    if (projectCode.trim()) {
-      console.log('Joining project with code:', projectCode);
-      // Add your join project logic here
-    }
-  };
-
-  const handleRecentProject = (projectName) => {
-    console.log('Opening recent project:', projectName);
-    // Add your recent project logic here
-  };
+  const recentProjects = [
+    { id: 1, name: 'Midnight Melody', time: '2h ago', members: 3, color: '#7c3aed' },
+    { id: 2, name: 'Summer Vibes', time: '1d ago', members: 5, color: '#06b6d4' },
+    { id: 3, name: 'Acoustic Session', time: '3d ago', members: 2, color: '#10b981' }
+  ];
 
   return (
-    <div className="collab-container">
-      {/* Header */}
-      <header className="collab-header">
-        <button className="back-button" onClick={onBack}>
-          <span className="material-icons">arrow_back_ios_new</span>
+    <div className="collab-page">
+      {/* Hero Section */}
+      <div className="collab-hero">
+        <div className="hero-icon">
+          <Sparkles size={32} />
+        </div>
+        <h1 className="hero-title">Collaborate</h1>
+        <p className="hero-subtitle">Create music together in real-time</p>
+      </div>
+
+      {/* Actions */}
+      <div className="collab-actions">
+        {/* Create Project */}
+        <button className="action-card create" onClick={openCreateProject}>
+          <div className="action-icon">
+            <Plus size={24} />
+          </div>
+          <div className="action-text">
+            <span className="action-title">New Project</span>
+            <span className="action-desc">Start fresh</span>
+          </div>
         </button>
-        <h1 className="header-title">Collaboration</h1>
-        <div style={{ width: '3rem' }}></div> {/* Spacer for centering */}
-      </header>
 
-      {/* Main Content */}
-      <main className="collab-main">
-        <div className="collab-section">
-          {/* Create New Project Card */}
-          <div className="card-glow project-card animate-fadeIn">
-            <div className="card-header">
-              <div className="icon-container create-icon">
-                <span className="material-icons">add_circle</span>
-              </div>
-              <h2 className="card-title">Create New Project</h2>
-            </div>
-            <p className="card-description">
-              Start a new session and invite friends to bring your ideas to life.
-            </p>
-            <button className="btn-glow primary-button" onClick={handleCreateProject}>
-              <span className="shine"></span>
-              <span className="button-text">Create Project</span>
-            </button>
+        {/* Join Project */}
+        <div className="action-card join">
+          <div className="action-icon join-icon">
+            <Link2 size={24} />
           </div>
-
-          {/* Join Existing Project Card */}
-          <div className="card-glow project-card animate-fadeIn animate-fadeIn-delay-1">
-            <div className="card-header">
-              <div className="icon-container join-icon">
-                <span className="material-icons">link</span>
-              </div>
-              <h2 className="card-title">Join Existing Project</h2>
-            </div>
-            <p className="card-description">
-              Enter a project code or use an invitation link to jump in.
-            </p>
-            <div className="join-input-group">
-              <input
-                type="text"
-                className="project-code-input"
-                placeholder="Enter code..."
-                value={projectCode}
-                onChange={(e) => setProjectCode(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleJoinProject()}
-              />
-              <button className="btn-glow join-button" onClick={handleJoinProject}>
-                <span className="shine"></span>
-                <span className="button-text">Join</span>
-              </button>
-            </div>
+          <div className="action-text">
+            <span className="action-title">Join Project</span>
+            <span className="action-desc">Enter code</span>
           </div>
         </div>
+      </div>
 
-        {/* Recent Collaborations */}
-        <div className="recent-section animate-fadeIn animate-fadeIn-delay-2">
-          <h3 className="section-title">Recent Collaborations</h3>
-          <div className="recent-projects">
-            <div
-              className="card-glow recent-project-card animate-fadeIn animate-fadeIn-delay-3"
-              onClick={() => handleRecentProject('Midnight Melody')}
-            >
-              <div className="project-icon music-icon">
-                <span className="material-icons">music_note</span>
-              </div>
-              <div className="project-info">
-                <p className="project-name">Midnight Melody</p>
-                <p className="project-time">Updated 2 hours ago</p>
-              </div>
-              <div className="collaborators">
-                <img
-                  className="avatar"
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
-                  alt="User avatar"
-                />
-                <img
-                  className="avatar"
-                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
-                  alt="User avatar"
-                />
-                <div className="avatar-count">+2</div>
-              </div>
-              <span className="material-icons chevron">chevron_right</span>
-            </div>
-
-            <div
-              className="card-glow recent-project-card animate-fadeIn animate-fadeIn-delay-4"
-              onClick={() => handleRecentProject('City Lights Beat')}
-            >
-              <div className="project-icon beat-icon">
-                <span className="material-icons">graphic_eq</span>
-              </div>
-              <div className="project-info">
-                <p className="project-name">City Lights Beat</p>
-                <p className="project-time">Updated yesterday</p>
-              </div>
-              <div className="collaborators">
-                <img
-                  className="avatar"
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face"
-                  alt="User avatar"
-                />
-                <img
-                  className="avatar"
-                  src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face"
-                  alt="User avatar"
-                />
-              </div>
-              <span className="material-icons chevron">chevron_right</span>
-            </div>
-          </div>
+      {/* Join Input */}
+      <div className="join-section">
+        <div className="join-input-wrapper">
+          <input
+            type="text"
+            className="join-input"
+            placeholder="Enter project code..."
+            value={projectCode}
+            onChange={(e) => setProjectCode(e.target.value.toUpperCase())}
+            maxLength={8}
+          />
+          <button 
+            className="join-btn"
+            disabled={projectCode.length < 4}
+          >
+            Join
+          </button>
         </div>
-      </main>
+      </div>
+
+      {/* Recent Projects */}
+      <div className="recent-section">
+        <h2 className="section-title">Recent</h2>
+        <div className="recent-list">
+          {recentProjects.map((project) => (
+            <div key={project.id} className="recent-card">
+              <div className="project-avatar" style={{ background: project.color }}>
+                <Music size={18} color="white" />
+              </div>
+              <div className="project-details">
+                <h3 className="project-name">{project.name}</h3>
+                <div className="project-meta">
+                  <span><Clock size={12} /> {project.time}</span>
+                  <span><Users size={12} /> {project.members}</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="arrow" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Search, Play, MoreVertical, Plus, Music, Users, Filter, ArrowUpDown, ChevronDown } from 'lucide-react';
 import './SongLibrary.css';
 
 const MainLibraryView = ({
@@ -16,7 +17,7 @@ const MainLibraryView = ({
   const [sortBy, setSortBy] = useState('Alphabetical');
   const [filterBy, setFilterBy] = useState('All');
 
-  // Sample songs data matching the design
+  // Sample songs data
   const sampleSongs = [
     {
       id: 1,
@@ -24,7 +25,6 @@ const MainLibraryView = ({
       artist: "The Midnight",
       genre: "Synthwave",
       duration: "3:45",
-      albumArt: "🌙",
       color: "#FFB347"
     },
     {
@@ -33,7 +33,6 @@ const MainLibraryView = ({
       artist: "Led Zeppelin",
       genre: "Rock",
       duration: "8:02",
-      albumArt: "🎸",
       color: "#87CEEB"
     },
     {
@@ -42,7 +41,6 @@ const MainLibraryView = ({
       artist: "Indie Pop",
       genre: "Alternative",
       duration: "4:12",
-      albumArt: "🎭",
       color: "#DDA0DD"
     },
     {
@@ -51,22 +49,34 @@ const MainLibraryView = ({
       artist: "Synth Pop",
       genre: "Electronic",
       duration: "5:28",
-      albumArt: "⚡",
       color: "#98FB98"
     }
   ];
+
+  // Filter songs based on search query
+  const filteredSongs = sampleSongs.filter(song => {
+    const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         song.artist.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterBy === 'All' || song.genre === filterBy;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Sort songs
+  const sortedSongs = [...filteredSongs].sort((a, b) => {
+    if (sortBy === 'Alphabetical') return a.title.localeCompare(b.title);
+    if (sortBy === 'Duration') return a.duration.localeCompare(b.duration);
+    return 0;
+  });
 
   return (
     <div className="song-library-container">
       {/* Fixed Header */}
       <div className="library-header">
         {/* Continue from Last Session Button */}
-        <div className="continue-session">
-          <button className="continue-btn" onClick={continueLastRehearsal}>
-            <span className="continue-icon">▶</span>
-            <span className="continue-text">CONTINUE FROM THE LAST SESSION</span>
-          </button>
-        </div>
+        <button className="continue-btn" onClick={continueLastRehearsal}>
+          <Play size={16} fill="white" />
+          <span>Continue Last Session</span>
+        </button>
 
         {/* Tabs */}
         <div className="library-tabs">
@@ -90,42 +100,42 @@ const MainLibraryView = ({
         {activeTab === 'Songs' && (
           <>
             {/* Search Bar */}
-            <div className="search-container">
-              <div className="search-bar">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search by title, song, voice part..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-              </div>
+            <div className="search-bar">
+              <Search size={18} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search songs, artists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
             </div>
 
             {/* Filter and Sort */}
-            <div className="filter-sort-container">
-              <div className="filter-section">
-                <span className="filter-label">Filter</span>
+            <div className="filter-sort-row">
+              <div className="filter-group">
+                <Filter size={14} />
                 <select
                   value={filterBy}
                   onChange={(e) => setFilterBy(e.target.value)}
                   className="filter-select"
                 >
-                  <option value="All">All</option>
+                  <option value="All">All Genres</option>
                   <option value="Rock">Rock</option>
                   <option value="Pop">Pop</option>
                   <option value="Electronic">Electronic</option>
+                  <option value="Synthwave">Synthwave</option>
+                  <option value="Alternative">Alternative</option>
                 </select>
               </div>
-              <div className="sort-section">
-                <span className="sort-label">Sort:</span>
+              <div className="sort-group">
+                <ArrowUpDown size={14} />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="sort-select"
                 >
-                  <option value="Alphabetical">Alphabetical</option>
+                  <option value="Alphabetical">A-Z</option>
                   <option value="Recent">Recent</option>
                   <option value="Duration">Duration</option>
                 </select>
@@ -138,44 +148,49 @@ const MainLibraryView = ({
         <div className="songs-list-container">
           {activeTab === 'Songs' ? (
             <div className="songs-list">
-              {sampleSongs.map((song) => (
-                <div key={song.id} className="song-item" onClick={() => playSong(song)}>
-                  <div className="song-album-art" style={{ backgroundColor: song.color }}>
-                    <span className="album-art-emoji">{song.albumArt}</span>
+              {sortedSongs.length > 0 ? (
+                sortedSongs.map((song) => (
+                  <div key={song.id} className="song-item" onClick={() => playSong(song)}>
+                    <div className="song-album-art" style={{ backgroundColor: song.color }}>
+                      <Music size={20} color="white" />
+                    </div>
+                    <div className="song-details">
+                      <h3 className="song-title">{song.title}</h3>
+                      <p className="song-artist">{song.artist}</p>
+                      <p className="song-meta">{song.genre} • {song.duration}</p>
+                    </div>
+                    <div className="song-actions">
+                      <button className="play-button" onClick={(e) => { e.stopPropagation(); playSong(song); }}>
+                        <Play size={14} fill="white" />
+                      </button>
+                      <button className="more-button" onClick={(e) => e.stopPropagation()}>
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="song-details">
-                    <h3 className="song-title">{song.title}</h3>
-                    <p className="song-artist">{song.artist}</p>
-                    <p className="song-genre">{song.genre} • {song.duration}</p>
-                  </div>
-                  <div className="song-actions">
-                    <button className="play-button">
-                      <span className="play-icon">▶</span>
-                    </button>
-                    <button className="more-button">
-                      <span className="more-icon">⋮</span>
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <Music size={40} />
+                  <p>No songs found</p>
                 </div>
-              ))}
+              )}
             </div>
           ) : (
             <div className="playlists-container">
               {/* Create New Playlist Button */}
-              <div className="create-playlist-section pinned">
-                <button className="create-playlist-btn" onClick={openCreatePlaylist}>
-                  <span style={{fontSize: '18px'}}>+</span>
-                  Create New Playlist
-                </button>
-              </div>
+              <button className="create-playlist-btn" onClick={openCreatePlaylist}>
+                <Plus size={18} />
+                <span>Create New Playlist</span>
+              </button>
 
               {/* Playlists List */}
               <div className="playlists-list">
                 {playlists && playlists.map((playlist) => (
                   <div key={playlist.id} className="playlist-item" onClick={() => openPlaylistDetail(playlist)}>
                     <div className="playlist-cover">
-                      <div className={`playlist-cover-image ${playlist.type}`}>
-                        {playlist.type === 'choir' ? '👥' : '🎵'}
+                      <div className="playlist-cover-image">
+                        {playlist.type === 'choir' ? <Users size={20} /> : <Music size={20} />}
                       </div>
                     </div>
                     <div className="playlist-info">
@@ -183,12 +198,15 @@ const MainLibraryView = ({
                       <p className="playlist-description">{playlist.description}</p>
                       <span className="playlist-count">{playlist.songs?.length || 0} songs</span>
                     </div>
+                    <button className="playlist-more" onClick={(e) => e.stopPropagation()}>
+                      <MoreVertical size={16} />
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
-      </div>
+        </div>
       </div>
     </div>
   );

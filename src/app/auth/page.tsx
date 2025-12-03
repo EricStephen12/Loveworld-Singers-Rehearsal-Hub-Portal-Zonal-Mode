@@ -178,6 +178,14 @@ function AuthPageContent() {
           return
         }
 
+        // Prevent account creation when completely offline to avoid partial signups
+        if (typeof window !== 'undefined' && window.navigator && window.navigator.onLine === false) {
+          setError('You appear to be offline. Please connect to the internet before creating your account.')
+          setIsLoading(false)
+          setIsCheckingAccount(false)
+          return
+        }
+
         // Validate zone code
         const { getZoneByInvitationCode, getZoneRole, isBossCode } = await import('@/config/zones')
         

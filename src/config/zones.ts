@@ -30,6 +30,7 @@ export const ZONES: Zone[] = [
   { id: 'zone-003', name: 'Loveworld Singers Children Choir', slug: 'lws-children', region: 'Headquarters', invitationCode: 'ZONE003', themeColor: '#9333EA' },
   { id: 'zone-004', name: 'Loveworld Singers Teens Choir', slug: 'lws-teens', region: 'Headquarters', invitationCode: 'ZONE004', themeColor: '#9333EA' },
   { id: 'zone-005', name: 'Presidential Mass Choir', slug: 'presidential-mass-choir', region: 'Headquarters', invitationCode: 'ZONE005', themeColor: '#9333EA' },
+  { id: 'zone-orchestra', name: 'Loveworld Singers Orchestra', slug: 'lws-orchestra', region: 'Headquarters', invitationCode: 'ZONEORCH', themeColor: '#9333EA' },
 
   // Senior HQ zones (own zones but treated as HQ groups)
   { id: 'zone-president', name: 'The President Zone', slug: 'president-zone', region: 'Headquarters', invitationCode: 'ZONEPRES', themeColor: '#9333EA' },

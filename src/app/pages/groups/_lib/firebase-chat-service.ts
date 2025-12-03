@@ -83,6 +83,8 @@ export interface Chat {
   }
   unreadCount: { [userId: string]: number }
   isActive: boolean
+  pinned?: { [userId: string]: boolean } // User ID to pinned status
+  starred?: { [userId: string]: boolean } // User ID to starred status
 }
 
 export interface FriendRequest {
@@ -396,14 +398,15 @@ export class FirebaseChatService {
       
       if (!zoneMembersSnapshot.empty) {
         const memberData = zoneMembersSnapshot.docs[0].data()
-        const zoneDetails = getZoneById(memberData.zoneId || memberData.hqGroupId)
+        const zoneId = memberData.zoneId || memberData.hqGroupId
+        const zoneDetails = zoneId ? getZoneById(zoneId) : null
         return {
           id: userId,
           email: memberData.userEmail || '',
           fullName: memberData.userName || 'Unknown User',
           profilePic: undefined,
-          zoneId: memberData.zoneId || memberData.hqGroupId,
-          zoneName: memberData.zoneName || zoneDetails?.name || 'Unknown Zone',
+          zoneId: zoneId,
+          zoneName: memberData.zoneName || zoneDetails?.name || (zoneId ? `Zone ${zoneId}` : 'No zone assigned'),
           isOnline: false,
           lastSeen: new Date()
         }
@@ -413,14 +416,35 @@ export class FirebaseChatService {
       const profileDoc = await getDoc(doc(db, 'profiles', userId))
       if (profileDoc.exists()) {
         const profile = profileDoc.data()
-        const zoneDetails = getZoneById(profile.zone_id || profile.zone)
+        const zoneId = profile.zone_id || profile.zone
+        const zoneDetails = zoneId ? getZoneById(zoneId) : null
+        
+        // Try to get zone name from multiple sources
+        let zoneName = profile.zone_name || zoneDetails?.name || null
+        
+        // If still no zone name, try fetching from zone_members or hq_members
+        if (!zoneName && zoneId) {
+          try {
+            // Check zone_members first
+            const zoneMembersRef = collection(db, 'zone_members')
+            const zoneMembersQuery = query(zoneMembersRef, where('userId', '==', userId), where('zoneId', '==', zoneId))
+            const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
+            if (!zoneMembersSnapshot.empty) {
+              const memberData = zoneMembersSnapshot.docs[0].data()
+              zoneName = memberData.zoneName || zoneDetails?.name || null
+            }
+          } catch (error) {
+            console.error('Error fetching zone name from zone_members:', error)
+          }
+        }
+        
         return {
           id: userId,
           email: profile.email || '',
           fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown User',
           profilePic: profile.profile_image_url || undefined,
-          zoneId: profile.zone_id || profile.zone,
-          zoneName: profile.zone_name || zoneDetails?.name || profile.zone || 'Unknown Zone',
+          zoneId: zoneId,
+          zoneName: zoneName || zoneDetails?.name || (zoneId ? `Zone ${zoneId}` : 'No zone assigned'),
           isOnline: false,
           lastSeen: new Date()
         }
@@ -1090,6 +1114,34 @@ export class FirebaseChatService {
   }
 
   /**
+   * Leave group (user removes themselves)
+   */
+  static async leaveGroup(chatId: string, userId: string): Promise<boolean> {
+    try {
+      const chatRef = doc(db, 'chats', chatId)
+      const chatDoc = await getDoc(chatRef)
+      
+      if (!chatDoc.exists()) return false
+      
+      const chat = chatDoc.data() as Chat
+      
+      // Check if user is a participant
+      if (!chat.participants.includes(userId)) return false
+      
+      // Remove user from participants and admins (if they were an admin)
+      await updateDoc(chatRef, {
+        participants: arrayRemove(userId),
+        admins: arrayRemove(userId)
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error leaving group:', error)
+      return false
+    }
+  }
+
+  /**
    * Get detailed participant info for chats
    */
   static async getChatParticipants(chatId: string): Promise<ChatUser[]> {
@@ -1111,6 +1163,229 @@ export class FirebaseChatService {
       return results
     } catch (error) {
       console.error('Error getting chat participants:', error)
+      return []
+    }
+  }
+
+  /**
+   * Delete a chat (archives it for the user)
+   */
+  static async deleteChat(chatId: string, userId: string): Promise<boolean> {
+    try {
+      const chatRef = doc(db, 'chats', chatId)
+      const chatDoc = await getDoc(chatRef)
+      
+      if (!chatDoc.exists()) return false
+      
+      const chat = chatDoc.data() as Chat
+      
+      // Check if user is a participant
+      if (!chat.participants.includes(userId)) return false
+      
+      // For direct chats, remove user from participants (effectively deleting it for them)
+      // For group chats, just mark as inactive for the user
+      if (chat.type === 'direct') {
+        await updateDoc(chatRef, {
+          participants: arrayRemove(userId),
+          [`unreadCount.${userId}`]: deleteField()
+        })
+      } else {
+        // For groups, just remove from participants
+        await updateDoc(chatRef, {
+          participants: arrayRemove(userId),
+          admins: arrayRemove(userId),
+          [`unreadCount.${userId}`]: deleteField()
+        })
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error deleting chat:', error)
+      return false
+    }
+  }
+
+  /**
+   * Pin or unpin a chat
+   */
+  static async togglePinChat(chatId: string, userId: string, pin: boolean): Promise<boolean> {
+    try {
+      const chatRef = doc(db, 'chats', chatId)
+      const chatDoc = await getDoc(chatRef)
+      
+      if (!chatDoc.exists()) return false
+      
+      const chat = chatDoc.data() as Chat
+      
+      // Check if user is a participant
+      if (!chat.participants.includes(userId)) return false
+      
+      const pinned = chat.pinned || {}
+      pinned[userId] = pin
+      
+      await updateDoc(chatRef, {
+        pinned
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error pinning/unpinning chat:', error)
+      return false
+    }
+  }
+
+  /**
+   * Star or unstar a chat
+   */
+  static async toggleStarChat(chatId: string, userId: string, star: boolean): Promise<boolean> {
+    try {
+      const chatRef = doc(db, 'chats', chatId)
+      const chatDoc = await getDoc(chatRef)
+      
+      if (!chatDoc.exists()) return false
+      
+      const chat = chatDoc.data() as Chat
+      
+      // Check if user is a participant
+      if (!chat.participants.includes(userId)) return false
+      
+      const starred = chat.starred || {}
+      starred[userId] = star
+      
+      await updateDoc(chatRef, {
+        starred
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error starring/unstarring chat:', error)
+      return false
+    }
+  }
+
+  /**
+   * Star or unstar a message
+   */
+  static async toggleStarMessage(messageId: string, userId: string): Promise<boolean> {
+    try {
+      // Check if message is already starred by this user
+      const starredRef = collection(db, 'starred_messages')
+      const starredQuery = query(
+        starredRef,
+        where('messageId', '==', messageId),
+        where('userId', '==', userId)
+      )
+      const snapshot = await getDocs(starredQuery)
+      
+      if (!snapshot.empty) {
+        // Unstar - delete the starred message document
+        snapshot.docs.forEach(doc => {
+          deleteDoc(doc.ref)
+        })
+        return true
+      } else {
+        // Star - create a starred message document
+        await addDoc(starredRef, {
+          messageId,
+          userId,
+          createdAt: serverTimestamp()
+        })
+        return true
+      }
+    } catch (error) {
+      console.error('Error toggling star message:', error)
+      return false
+    }
+  }
+
+  /**
+   * Check if a message is starred by a user
+   */
+  static async isMessageStarred(messageId: string, userId: string): Promise<boolean> {
+    try {
+      const starredRef = collection(db, 'starred_messages')
+      const starredQuery = query(
+        starredRef,
+        where('messageId', '==', messageId),
+        where('userId', '==', userId)
+      )
+      const snapshot = await getDocs(starredQuery)
+      return !snapshot.empty
+    } catch (error) {
+      console.error('Error checking if message is starred:', error)
+      return false
+    }
+  }
+
+  /**
+   * Search messages in a chat
+   */
+  static async searchMessages(chatId: string, searchTerm: string): Promise<ChatMessage[]> {
+    try {
+      if (!searchTerm.trim()) return []
+      
+      const messagesRef = collection(db, 'messages')
+      const searchLower = searchTerm.toLowerCase().trim()
+      
+      // Try with orderBy first, fallback to without if index is missing
+      let snapshot
+      try {
+        const messagesQuery = query(
+          messagesRef,
+          where('chatId', '==', chatId),
+          orderBy('timestamp', 'desc')
+        )
+        snapshot = await getDocs(messagesQuery)
+      } catch (error: any) {
+        // If orderBy fails (likely missing index), try without it
+        if (error.code === 'failed-precondition') {
+          console.log('Index missing, searching without orderBy')
+          const messagesQuery = query(
+            messagesRef,
+            where('chatId', '==', chatId)
+          )
+          snapshot = await getDocs(messagesQuery)
+        } else {
+          throw error
+        }
+      }
+      
+      const results: ChatMessage[] = []
+      
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        if (data.deleted) return // Skip deleted messages
+        
+        const messageText = (data.text || '').toLowerCase()
+        const senderName = (data.senderName || '').toLowerCase()
+        
+        // Search in message text or sender name
+        if (messageText.includes(searchLower) || senderName.includes(searchLower)) {
+          results.push({
+            ...data,
+            id: doc.id,
+            timestamp: formatTimestamp(data.timestamp),
+            chatId: data.chatId,
+            senderId: data.senderId,
+            senderName: data.senderName,
+            messageType: data.messageType || 'text',
+            edited: data.edited || false,
+            reactions: data.reactions || [],
+            deleted: data.deleted || false
+          } as ChatMessage)
+        }
+      })
+      
+      // Sort by timestamp descending (newest first) if we didn't use orderBy
+      results.sort((a, b) => {
+        const aTime = a.timestamp.getTime()
+        const bTime = b.timestamp.getTime()
+        return bTime - aTime
+      })
+      
+      return results
+    } catch (error) {
+      console.error('Error searching messages:', error)
       return []
     }
   }

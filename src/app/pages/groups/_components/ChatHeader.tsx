@@ -5,25 +5,35 @@ import { useChat } from '../_context/ChatContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { FirebaseChatService, ChatUser } from '../_lib/firebase-chat-service'
-import { MoreVertical, Users, Settings, UserPlus, UserMinus, Shield, ArrowLeft, Loader2, CheckCircle, User, Mail, MapPin, Bell } from 'lucide-react'
+import { MoreVertical, Users, Settings, UserMinus, Shield, ArrowLeft, User, Mail, MapPin, UserPlus, Loader2, X, Search } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 
 interface ChatHeaderProps {
-  onOpenFriendRequests: () => void
+  onOpenFriendRequests?: () => void
+  onOpenSearch?: () => void
 }
 
-export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
-  const { selectedChat, setSelectedChat, sendFriendRequest, getFriendStatus, friendRequests } = useChat()
+export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatHeaderProps) {
+  const { selectedChat, setSelectedChat, addUserToGroup, removeUserFromGroup, makeUserAdmin, updateGroupInfo, leaveGroup, searchUsers } = useChat()
   const { user } = useAuth()
   const { currentZone } = useZone()
   const [showMenu, setShowMenu] = useState(false)
   const [otherUserName, setOtherUserName] = useState<string | null>(null)
   const [otherUserProfile, setOtherUserProfile] = useState<ChatUser | null>(null)
-  const [friendStatus, setFriendStatus] = useState<'none' | 'pending_outgoing' | 'pending_incoming' | 'friends'>('none')
-  const [isFriendActionLoading, setIsFriendActionLoading] = useState(false)
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isMembersLoading, setIsMembersLoading] = useState(false)
   const [groupMembers, setGroupMembers] = useState<ChatUser[]>([])
+  const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false)
+  const [isGroupSettingsModalOpen, setIsGroupSettingsModalOpen] = useState(false)
+  const [isManageAdminsModalOpen, setIsManageAdminsModalOpen] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<ChatUser[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false)
+  const [groupName, setGroupName] = useState(selectedChat?.name || '')
+  const [groupDescription, setGroupDescription] = useState((selectedChat as any)?.description || '')
+  const [isSavingGroupSettings, setIsSavingGroupSettings] = useState(false)
+  const [isLeavingGroup, setIsLeavingGroup] = useState(false)
 
   if (!selectedChat) return null
 
@@ -63,32 +73,6 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
     ? selectedChat.participants.find(id => id !== user?.uid)
     : null
 
-  useEffect(() => {
-    const fetchFriendStatus = async () => {
-      if (!otherParticipantId) {
-        setFriendStatus('none')
-        return
-      }
-
-      const status = await getFriendStatus(otherParticipantId)
-      setFriendStatus(status.status)
-    }
-
-    fetchFriendStatus()
-  }, [otherParticipantId, getFriendStatus])
-
-  const handleAddFriend = async () => {
-    if (!otherParticipantId || friendStatus === 'pending_outgoing' || friendStatus === 'friends') return
-    setIsFriendActionLoading(true)
-    try {
-      await sendFriendRequest(otherParticipantId)
-      const status = await getFriendStatus(otherParticipantId)
-      setFriendStatus(status.status)
-    } finally {
-      setIsFriendActionLoading(false)
-    }
-  }
-
   const getOtherParticipantName = () => {
     if (isGroupChat) return selectedChat.name || 'Group Chat'
     return otherUserName || 'Loading...'
@@ -98,7 +82,22 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
     if (isGroupChat) {
       return `${selectedChat.participants.length} members`
     } else {
-      return otherUserProfile?.zoneName || 'Direct chat'
+      // Show online status for direct chats
+      if (otherUserProfile?.isOnline) {
+        return 'Online'
+      } else if (otherUserProfile?.lastSeen) {
+        try {
+          const lastSeenDate = otherUserProfile.lastSeen instanceof Date 
+            ? otherUserProfile.lastSeen 
+            : new Date(otherUserProfile.lastSeen)
+          if (!isNaN(lastSeenDate.getTime())) {
+            return `Last seen ${formatDistanceToNow(lastSeenDate, { addSuffix: true })}`
+          }
+        } catch (error) {
+          console.error('Error formatting last seen:', error)
+        }
+      }
+      return 'Offline'
     }
   }
 
@@ -127,6 +126,115 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
       }
     }
     setIsProfileModalOpen(true)
+  }
+
+  const handleAddMembers = async () => {
+    setIsAddMembersModalOpen(true)
+    setSearchTerm('')
+    setAvailableUsers([])
+  }
+
+  const handleSearchUsers = async (term: string) => {
+    setSearchTerm(term)
+    if (!term.trim()) {
+      setAvailableUsers([])
+      return
+    }
+    setIsSearchingUsers(true)
+    try {
+      const users = await searchUsers(term)
+      // Filter out users already in the group
+      const existingParticipantIds = selectedChat?.participants || []
+      const filteredUsers = users.filter(user => !existingParticipantIds.includes(user.id))
+      setAvailableUsers(filteredUsers)
+    } catch (error) {
+      console.error('Error searching users:', error)
+    } finally {
+      setIsSearchingUsers(false)
+    }
+  }
+
+  const handleAddUserToGroup = async (userId: string) => {
+    if (!selectedChat) return
+    try {
+      const success = await addUserToGroup(selectedChat.id, userId)
+      if (success) {
+        // Refresh members list
+        handleViewMembers()
+        setSearchTerm('')
+        setAvailableUsers([])
+      }
+    } catch (error) {
+      console.error('Error adding user to group:', error)
+    }
+  }
+
+  const handleGroupSettings = () => {
+    setIsGroupSettingsModalOpen(true)
+    setGroupName(selectedChat?.name || '')
+    setGroupDescription((selectedChat as any)?.description || '')
+  }
+
+  const handleSaveGroupSettings = async () => {
+    if (!selectedChat || !groupName.trim()) return
+    setIsSavingGroupSettings(true)
+    try {
+      const success = await updateGroupInfo(selectedChat.id, {
+        name: groupName.trim(),
+        description: groupDescription.trim() || undefined
+      })
+      if (success) {
+        setIsGroupSettingsModalOpen(false)
+      }
+    } catch (error) {
+      console.error('Error updating group settings:', error)
+    } finally {
+      setIsSavingGroupSettings(false)
+    }
+  }
+
+  const handleManageAdmins = async () => {
+    setIsManageAdminsModalOpen(true)
+    await handleViewMembers() // Load members first
+  }
+
+  const handleMakeAdmin = async (userId: string) => {
+    if (!selectedChat) return
+    try {
+      await makeUserAdmin(selectedChat.id, userId)
+      await handleViewMembers() // Refresh members list
+    } catch (error) {
+      console.error('Error making user admin:', error)
+    }
+  }
+
+  const handleRemoveFromGroup = async (userId: string) => {
+    if (!selectedChat) return
+    if (!confirm('Are you sure you want to remove this user from the group?')) return
+    try {
+      const success = await removeUserFromGroup(selectedChat.id, userId)
+      if (success) {
+        await handleViewMembers() // Refresh members list
+      }
+    } catch (error) {
+      console.error('Error removing user from group:', error)
+    }
+  }
+
+  const handleLeaveGroup = async () => {
+    if (!selectedChat) return
+    if (!confirm('Are you sure you want to leave this group?')) return
+    setIsLeavingGroup(true)
+    try {
+      const success = await leaveGroup(selectedChat.id)
+      if (success) {
+        setSelectedChat(null)
+      }
+    } catch (error) {
+      console.error('Error leaving group:', error)
+    } finally {
+      setIsLeavingGroup(false)
+    }
   }
 
   return (
@@ -158,9 +266,14 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
         
         {/* Name and Status */}
         <div>
-          <h3 className="font-semibold text-gray-900">
-            {getOtherParticipantName()}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900">
+              {getOtherParticipantName()}
+            </h3>
+            {!isGroupChat && otherUserProfile?.isOnline && (
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Online" />
+            )}
+          </div>
           <p className="text-sm text-gray-600">
             {getSubtitle()}
           </p>
@@ -169,46 +282,15 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        {/* Add Friend button (for direct chats) - Hide text on mobile */}
-        <button
-          onClick={onOpenFriendRequests}
-          className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Friend requests"
-        >
-          <Bell className="w-5 h-5 text-gray-600" />
-          {friendRequests.length > 0 && (
-            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center bg-red-500 text-white text-[10px] font-semibold rounded-full h-4 min-w-[16px] px-1">
-              {friendRequests.length}
-            </span>
-          )}
-        </button>
-
-        {!isGroupChat && otherParticipantId && (
-          <button 
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg flex items-center gap-1 transition-colors ${
-              friendStatus === 'friends'
-                ? 'bg-green-600 text-white'
-                : friendStatus === 'pending_outgoing'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
-            }`}
-            onClick={handleAddFriend}
-            disabled={isFriendActionLoading || friendStatus === 'pending_outgoing' || friendStatus === 'friends'}
+        {/* Search Button */}
+        {selectedChat && (
+          <button
+            onClick={onOpenSearch}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Search messages"
+            title="Search messages"
           >
-            {isFriendActionLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : friendStatus === 'friends' ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : (
-            <UserPlus className="w-4 h-4" />
-            )}
-            <span className="hidden sm:inline">
-              {friendStatus === 'friends'
-                ? 'Friends'
-                : friendStatus === 'pending_outgoing'
-                  ? 'Request Sent'
-                  : 'Add Friend'}
-            </span>
+            <Search className="w-5 h-5 text-gray-600" />
           </button>
         )}
         
@@ -228,15 +310,33 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
                 <>
                   {isAdmin && (
                 <>
-                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2">
+                  <button 
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                    onClick={() => {
+                      setShowMenu(false)
+                      handleAddMembers()
+                    }}
+                  >
                     <UserPlus className="w-4 h-4" />
                     Add Members
                   </button>
-                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2">
+                  <button 
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                    onClick={() => {
+                      setShowMenu(false)
+                      handleGroupSettings()
+                    }}
+                  >
                     <Settings className="w-4 h-4" />
                     Group Settings
                   </button>
-                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2">
+                  <button 
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                    onClick={() => {
+                      setShowMenu(false)
+                      handleManageAdmins()
+                    }}
+                  >
                     <Shield className="w-4 h-4" />
                     Manage Admins
                   </button>
@@ -253,10 +353,17 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
                 <Users className="w-4 h-4" />
                 View Members
               </button>
-                <button className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2">
+                <button 
+                  className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2"
+                  onClick={() => {
+                    setShowMenu(false)
+                    handleLeaveGroup()
+                  }}
+                  disabled={isLeavingGroup}
+                >
                   <UserMinus className="w-4 h-4" />
-                  Leave Group
-                  </button>
+                  {isLeavingGroup ? 'Leaving...' : 'Leave Group'}
+                </button>
                 </>
               ) : (
                 <button
@@ -285,44 +392,78 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
 
       {/* Members Modal */}
       {isMembersModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-hidden">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Group Members</h3>
-                <p className="text-sm text-gray-500">{selectedChat.participants.length} members</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Group Members</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {selectedChat.participants.length} {selectedChat.participants.length === 1 ? 'member' : 'members'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsMembersModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
-              <button
-                onClick={() => setIsMembersModalOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                ✕
-              </button>
             </div>
+
+            {/* Content */}
             {isMembersLoading ? (
-              <div className="p-6 text-center">
-                <Loader2 className="w-6 h-6 mx-auto animate-spin text-gray-400" />
-                <p className="text-gray-600 mt-3">Loading members...</p>
+              <div className="flex-1 flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
+                  <p className="text-gray-600 mt-4 text-sm sm:text-base">Loading members...</p>
+                </div>
               </div>
             ) : (
-              <div className="max-h-[60vh] overflow-y-auto divide-y">
-                {groupMembers.map(member => (
-                  <div key={member.id} className="p-4 flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                      style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
-                    >
-                      {member.fullName?.[0]?.toUpperCase() || '?'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{member.fullName}</p>
-                      <p className="text-sm text-gray-500">{member.email}</p>
-                    </div>
+              <div className="flex-1 overflow-y-auto">
+                {groupMembers.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {groupMembers.map((member, index) => (
+                      <div 
+                        key={member.id} 
+                        className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          {/* Avatar */}
+                          <div
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md flex-shrink-0"
+                            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
+                          >
+                            {member.fullName?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                              {member.fullName || 'Unknown User'}
+                            </p>
+                            <p 
+                              className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
+                              title={member.email}
+                            >
+                              {member.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {groupMembers.length === 0 && (
-                  <div className="p-6 text-center text-gray-500">
-                    No members found.
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 px-4">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <Users className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 font-medium text-sm sm:text-base">No members found</p>
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1 text-center">
+                      This group doesn't have any members yet
+                    </p>
                   </div>
                 )}
               </div>
@@ -354,7 +495,13 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
                 </div>
                 <div>
                   <p className="text-xl font-semibold text-gray-900">{otherUserProfile.fullName}</p>
-                  <p className="text-sm text-gray-500">{friendStatus === 'friends' ? 'Friend' : 'Not added'}</p>
+                  <p className="text-sm text-gray-500">
+                    {otherUserProfile.isOnline 
+                      ? 'Online' 
+                      : otherUserProfile.lastSeen 
+                        ? `Last seen ${formatDistanceToNow(otherUserProfile.lastSeen instanceof Date ? otherUserProfile.lastSeen : new Date(otherUserProfile.lastSeen), { addSuffix: true })}`
+                        : 'Offline'}
+                  </p>
                 </div>
               </div>
               <div className="space-y-3 text-gray-700 text-sm">
@@ -362,12 +509,327 @@ export default function ChatHeader({ onOpenFriendRequests }: ChatHeaderProps) {
                   <Mail className="w-4 h-4 text-gray-500" />
                   <span>{otherUserProfile.email || 'No email available'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span>{otherUserProfile.zoneName || 'No zone info'}</span>
-                </div>
+                {otherUserProfile.zoneName && 
+                 otherUserProfile.zoneName !== 'No zone assigned' && 
+                 otherUserProfile.zoneName !== 'No zone info' && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span>{otherUserProfile.zoneName}</span>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Members Modal */}
+      {isAddMembersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">Add Members</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                      Search and add users to this group
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsAddMembersModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search users by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchUsers(e.target.value)}
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm sm:text-base"
+                />
+                <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              {isSearchingUsers ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
+                    <p className="text-gray-600 mt-4 text-sm sm:text-base">Searching users...</p>
+                  </div>
+                </div>
+              ) : availableUsers.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {availableUsers.map(user => (
+                    <div 
+                      key={user.id} 
+                      className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                          {/* Avatar */}
+                          <div
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md flex-shrink-0"
+                            style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
+                          >
+                            {user.fullName?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                              {user.fullName || 'Unknown User'}
+                            </p>
+                            <p 
+                              className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
+                              title={user.email}
+                            >
+                              {user.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Add Button */}
+                        <button
+                          onClick={() => handleAddUserToGroup(user.id)}
+                          className="px-4 py-2 sm:px-5 sm:py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:bg-green-800 transition-all shadow-sm hover:shadow-md font-medium text-sm sm:text-base flex-shrink-0"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : searchTerm ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <User className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium text-sm sm:text-base">No users found</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1 text-center">
+                    No users found matching "{searchTerm}"
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <UserPlus className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium text-sm sm:text-base">Start searching</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1 text-center">
+                    Type a name or email to search for users
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Group Settings Modal */}
+      {isGroupSettingsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Group Settings</h3>
+              <button
+                onClick={() => setIsGroupSettingsModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Group Name
+                </label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Enter group name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={groupDescription}
+                  onChange={(e) => setGroupDescription(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Enter group description"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setIsGroupSettingsModalOpen(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveGroupSettings}
+                  disabled={isSavingGroupSettings || !groupName.trim()}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSavingGroupSettings ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Admins Modal */}
+      {isManageAdminsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">Manage Admins</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                      {groupMembers.length} {groupMembers.length === 1 ? 'member' : 'members'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsManageAdminsModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            {isMembersLoading ? (
+              <div className="flex-1 flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
+                  <p className="text-gray-600 mt-4 text-sm sm:text-base">Loading members...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                {groupMembers.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {groupMembers.map(member => {
+                      const isMemberAdmin = selectedChat?.admins?.includes(member.id) || false
+                      const isCurrentUser = member.id === user?.uid
+                      return (
+                        <div 
+                          key={member.id} 
+                          className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            {/* Avatar */}
+                            <div
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md flex-shrink-0 relative"
+                              style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
+                            >
+                              {member.fullName?.[0]?.toUpperCase() || '?'}
+                              {isMemberAdmin && (
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-600 rounded-full border-2 border-white flex items-center justify-center">
+                                  <Shield className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                                  {member.fullName || 'Unknown User'}
+                                </p>
+                                {isCurrentUser && (
+                                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full flex-shrink-0">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <p 
+                                className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
+                                title={member.email}
+                              >
+                                {member.email || 'No email'}
+                              </p>
+                            </div>
+
+                            {/* Actions */}
+                            {!isCurrentUser && (
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {!isMemberAdmin ? (
+                                  <button
+                                    onClick={() => handleMakeAdmin(member.id)}
+                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-all shadow-sm hover:shadow-md font-medium"
+                                  >
+                                    Make Admin
+                                  </button>
+                                ) : (
+                                  <span className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-purple-100 text-purple-700 rounded-lg font-medium">
+                                    Admin
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => handleRemoveFromGroup(member.id)}
+                                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition-all shadow-sm hover:shadow-md font-medium"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 px-4">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <Shield className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 font-medium text-sm sm:text-base">No members found</p>
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1 text-center">
+                      This group doesn't have any members yet
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

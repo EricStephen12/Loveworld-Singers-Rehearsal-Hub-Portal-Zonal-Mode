@@ -809,6 +809,7 @@ export default function AdminPage() {
         date: newPageDate.trim(),
         location: newPageLocation.trim(),
         category: newPageCategory,
+        pageCategory: newPagePageCategory || undefined, // Save selected page category
         countdown: {
           days: newPageDays,
           hours: newPageHours,
@@ -836,9 +837,11 @@ export default function AdminPage() {
             console.log('✅ Banner image uploaded:', bannerImageUrl);
 
             // Update the page with the banner image URL
-            await ZoneDatabaseService.updatePraiseNight(result.id!, {
-              bannerImage: bannerImageUrl
-            });
+            await ZoneDatabaseService.updatePraiseNight(
+              result.id!,
+              { bannerImage: bannerImageUrl },
+              currentZone?.id
+            );
           } else {
             console.warn('⚠️ Banner image upload failed:', uploadResult.error);
           }
@@ -942,8 +945,12 @@ export default function AdminPage() {
 
       console.log('🔄 Updating page with data:', pageData);
 
-      // Update the page in Firebase
-      const result = await ZoneDatabaseService.updatePraiseNight(editingPage.firebaseId || editingPage.id.toString(), pageData);
+      // Update the page in Firebase (HQ / Zone aware)
+      const result = await ZoneDatabaseService.updatePraiseNight(
+        editingPage.firebaseId || editingPage.id.toString(),
+        pageData,
+        currentZone?.id
+      );
 
       if (result.success) {
         console.log('✅ Page updated successfully');
@@ -993,7 +1000,10 @@ export default function AdminPage() {
     if (!pageToDelete) return;
 
     try {
-      const result = await ZoneDatabaseService.deletePraiseNight(pageToDelete.firebaseId || pageToDelete.id.toString());
+      const result = await ZoneDatabaseService.deletePraiseNight(
+        pageToDelete.firebaseId || pageToDelete.id.toString(),
+        currentZone?.id
+      );
 
       if (result.success) {
         console.log('✅ Page deleted successfully');
