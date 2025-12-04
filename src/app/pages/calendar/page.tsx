@@ -48,7 +48,7 @@ let moment: any = null
 
 export default function CalendarPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone } = useZone()
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -86,15 +86,32 @@ export default function CalendarPage() {
     initializeCalendar()
   }, [])
 
-  // Load events
+  // Load events with caching
   useEffect(() => {
-    if (!user || !currentZone) return
+    // Use profile (cached) instead of waiting for user
+    const userId = user?.uid || profile?.id
+    if (!userId || !currentZone) return
 
     const loadEvents = async () => {
-      setLoading(true)
+      // Load cached events immediately for instant display
+      const { CalendarCache } = await import('@/utils/calendar-cache')
+      const cachedEvents = CalendarCache.loadEvents(currentZone.id)
+      
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log(`⚡ Showing ${cachedEvents.length} cached calendar events instantly`)
+        setEvents(cachedEvents)
+        setLoading(false)
+      } else {
+        setLoading(true)
+      }
+
+      // Load fresh events from Firebase in background
       try {
         const zoneEvents = await calendarService.getZoneEvents(currentZone.id)
         setEvents(zoneEvents)
+        
+        // Cache the events for next time
+        CalendarCache.saveEvents(currentZone.id, zoneEvents)
       } catch (error) {
         console.error('Error loading events:', error)
       } finally {
@@ -103,7 +120,7 @@ export default function CalendarPage() {
     }
 
     loadEvents()
-  }, [user, currentZone])
+  }, [user, profile, currentZone])
 
   // Load all birthdays for carousel only
   useEffect(() => {
@@ -207,17 +224,21 @@ export default function CalendarPage() {
     }
   }
 
-  if (!user) {
+  // Only show loading if auth is loading AND no cached profile
+  if (authLoading && !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
-          <p className="text-gray-600">Please sign in to access the calendar.</p>
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
   }
+
+  // If we have cached profile, show content even if user is still loading
+  // This prevents blank screen on revisits
+  if (!user && !profile) return null
 
   if (!currentZone) {
     return (

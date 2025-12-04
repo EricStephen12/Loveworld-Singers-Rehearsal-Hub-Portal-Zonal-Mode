@@ -82,9 +82,7 @@ function AuthPageContent() {
     password: '',
     confirmPassword: '',
     zoneCode: '',
-    kingschatId: '',
-    birthday: '',
-    profileImage: null as File | null
+    kingschatId: ''
   })
   const [isFetchingKingsChat, setIsFetchingKingsChat] = useState(false)
   const [showAccountSelector, setShowAccountSelector] = useState(false)
@@ -222,46 +220,15 @@ function AuthPageContent() {
 
         setSuccess('Creating your account...')
         
-        let profileImageUrl = ''
-        
-        // Upload profile image if provided
-        if (formData.profileImage) {
-          setSuccess('Uploading profile picture...')
-          try {
-            const imageFormData = new FormData()
-            imageFormData.append('file', formData.profileImage)
-            imageFormData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'loveworld-singers')
-            
-            const uploadResponse = await fetch(
-              `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dvtjjt3js'}/image/upload`,
-              {
-                method: 'POST',
-                body: imageFormData
-              }
-            )
-            
-            if (uploadResponse.ok) {
-              const uploadData = await uploadResponse.json()
-              profileImageUrl = uploadData.secure_url
-            }
-          } catch (uploadError) {
-            console.error('Image upload error:', uploadError)
-            // Continue without image if upload fails
-          }
-        }
-        
-        // Sign up with Firebase and create profile in one step
+        // Create Firebase account with minimal data (fast)
         const profileData: any = {
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email,
           kingschat_id: formData.kingschatId,
-          birthday: formData.birthday || null,
-          profile_image: profileImageUrl || null,
-          role: isBoss ? 'boss' : 'user', // Set boss role during creation
+          role: isBoss ? 'boss' : 'user',
         }
         
-        // Only add administration field if user is Boss (Firebase doesn't allow undefined)
         if (isBoss) {
           profileData.administration = 'Boss'
         }
@@ -279,12 +246,10 @@ function AuthPageContent() {
           return
         }
 
-        setSuccess('Account created! Setting up your profile...')
+        setSuccess('Account created! Joining your zone...')
         
-        // Add user to zone (Boss joins Boss zone, others join their zone)
+        // Join zone
         if (result.user && zone) {
-          setSuccess(`Adding you to ${zone.name}...`)
-          
           const { ZoneInvitationService } = await import('@/lib/zone-invitation-service')
           const joinResult = await ZoneInvitationService.joinZoneWithCode(
             result.user.uid,
@@ -294,14 +259,14 @@ function AuthPageContent() {
             role
           )
           
-          if (joinResult.success) {
-            setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
-          } else {
+          if (!joinResult.success) {
             setError(sanitizeError(('error' in joinResult ? joinResult.error : 'Failed to join zone') || 'Failed to join zone'))
             setIsLoading(false)
             setIsCheckingAccount(false)
             return
           }
+          
+          setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
         }
         
         // Go directly to home - Firebase auth listener will handle the rest

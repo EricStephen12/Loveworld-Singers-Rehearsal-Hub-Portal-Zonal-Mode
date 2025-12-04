@@ -612,8 +612,8 @@ function ProfilePage() {
   //   }
   // }, [isLoading, user, router])
 
-  // Show loading state while authentication is being checked
-  if (isLoading) {
+  // Only show loading if auth is loading AND no cached profile
+  if (isLoading && !currentProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">

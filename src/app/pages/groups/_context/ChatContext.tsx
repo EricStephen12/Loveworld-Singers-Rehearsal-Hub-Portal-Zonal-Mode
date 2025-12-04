@@ -79,22 +79,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isMessagesLoading, setIsMessagesLoading] = useState(false)
   const [isUsersLoading, setIsUsersLoading] = useState(false)
 
-  // Initialize user in chat system
+  // Initialize user in chat system - use cached profile for instant initialization
   useEffect(() => {
-    if (user && profile) {
+    // Use profile (cached) to initialize immediately, don't wait for user
+    if (profile) {
+      const userId = user?.uid || profile.id
       const chatUser: Partial<ChatUser> = {
-        id: user.uid,
-        email: profile.email || user.email || '',
+        id: userId,
+        email: profile.email || user?.email || '',
         fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email || 'User',
         firstName: profile.first_name,
         lastName: profile.last_name,
-        profilePic: profile.profile_image_url,
+        profilePic: (profile as any).profile_image_url,
         zoneId: currentZone?.id,
         zoneName: currentZone?.name
       }
       
       FirebaseChatService.createOrUpdateUser(chatUser)
-      FirebaseChatService.updateUserStatus(user.uid, true)
+      FirebaseChatService.updateUserStatus(userId, true)
     }
   }, [user, profile, currentZone])
 
@@ -115,19 +117,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
-  // Subscribe to chats
+  // Subscribe to chats - use cached profile.id for instant loading
   useEffect(() => {
-    if (!user) return
+    // Use profile.id (cached) instead of user.uid (slow to load)
+    const userId = user?.uid || profile?.id
+    if (!userId) return
 
     setIsChatsLoading(true)
     
-    const unsubscribe = FirebaseChatService.subscribeToChats(user.uid, (chats) => {
+    const unsubscribe = FirebaseChatService.subscribeToChats(userId, (chats) => {
       setChats(chats)
       setIsChatsLoading(false)
     })
 
     return unsubscribe
-  }, [user])
+  }, [user, profile])
 
   // Subscribe to messages for selected chat
   useEffect(() => {
@@ -159,17 +163,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedChat])
 
-  // Load friend requests
+  // Load friend requests - use cached profile.id for instant loading
   useEffect(() => {
-    if (!user) return
+    // Use profile.id (cached) instead of user.uid (slow to load)
+    const userId = user?.uid || profile?.id
+    if (!userId) return
 
     const loadFriendRequests = async () => {
-      const requests = await FirebaseChatService.getFriendRequests(user.uid)
+      const requests = await FirebaseChatService.getFriendRequests(userId)
       setFriendRequests(requests)
     }
 
     loadFriendRequests()
-  }, [user])
+  }, [user, profile])
 
   // Actions
   const sendMessage = useCallback(async (messageData: { 

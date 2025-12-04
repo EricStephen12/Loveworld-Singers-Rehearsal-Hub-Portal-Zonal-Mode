@@ -19,7 +19,7 @@ interface SongSubmissionForm {
 
 export default function SubmitSongPage() {
   const router = useRouter()
-  const { user, profile } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone } = useZone()
   
   // Get zone color and theme for theming
@@ -195,6 +195,21 @@ export default function SubmitSongPage() {
     }
   }
 
+  // Only show loading if auth is loading AND no cached profile
+  if (authLoading && !profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-purple-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If we have cached profile, show content even if user is still loading
+  if (!user && !profile) return null
+
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50 overflow-hidden">
         {/* Header */}
@@ -206,7 +221,7 @@ export default function SubmitSongPage() {
           <ArrowLeft className="w-5 h-5" />
             </button>
         <h1 className="text-gray-900 text-lg font-bold leading-tight tracking-tight flex-1 text-center">
-          Submit a Song
+          Submit Song
         </h1>
         <div className="w-10"></div>
       </header>

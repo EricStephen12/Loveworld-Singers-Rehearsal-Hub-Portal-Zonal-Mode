@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { BarChart3, Users, Music, TrendingUp, Calendar, Activity, Eye, Download, RefreshCw } from 'lucide-react'
+import { BarChart3, Users, Music, TrendingUp, Calendar, Activity, Eye, Download, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useZone } from '@/hooks/useZone'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { ZoneDatabaseService } from '@/lib/zone-database-service'
@@ -14,6 +14,11 @@ export default function AnalyticsSection() {
   const { currentZone } = useZone()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  
+  // Month/Year selector
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()) // 0-11
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  
   const [analytics, setAnalytics] = useState({
     totalMembers: 0,
     totalPages: 0,
@@ -37,16 +42,19 @@ export default function AnalyticsSection() {
 
   useEffect(() => {
     loadAnalytics()
-  }, [currentZone])
+  }, [currentZone, selectedMonth, selectedYear])
 
   const loadAnalytics = async (forceRefresh = false) => {
     if (!currentZone) return
     
+    // Cache key includes month and year
+    const cacheKey = `${currentZone.id}-${selectedYear}-${selectedMonth}`
+    
     // Check cache first (skip if force refresh)
     if (!forceRefresh) {
-      const cached = analyticsCache.get(currentZone.id)
+      const cached = analyticsCache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log('📊 Using cached analytics data')
+        console.log(`📊 Using cached analytics data for ${selectedYear}-${selectedMonth + 1}`)
         setAnalytics(cached.data)
         setLoading(false)
         return
@@ -62,8 +70,14 @@ export default function AnalyticsSection() {
       }
     } else {
       setRefreshing(true)
-      console.log('🔄 Force refreshing analytics...')
+      console.log(`🔄 Force refreshing analytics for ${selectedYear}-${selectedMonth + 1}...`)
     }
+    
+    // Calculate month date range
+    const monthStart = new Date(selectedYear, selectedMonth, 1)
+    const monthEnd = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999)
+    
+    console.log(`📅 Loading analytics for ${monthStart.toLocaleDateString()} to ${monthEnd.toLocaleDateString()}`)
     
     try {
       console.log('🔄 Loading fresh analytics data...')
@@ -114,8 +128,29 @@ export default function AnalyticsSection() {
         totalSongs = songCounts.reduce((sum: number, count: number) => sum + count, 0)
       }
 
-      // Get recent events (last 10) - these are app-wide analytics events
-      const recentEvents = analyticsEvents
+      // Filter events by selected month
+      const monthFilteredEvents = analyticsEvents.filter((e: any) => {
+        if (!e.timestamp) return false
+        const eventDate = new Date(e.timestamp)
+        return eventDate >= monthStart && eventDate <= monthEnd
+      })
+      
+      // Filter sessions by selected month
+      const monthFilteredSessions = analyticsSessions.filter((s: any) => {
+        if (!s.startTime) return false
+        const sessionDate = new Date(s.startTime)
+        return sessionDate >= monthStart && sessionDate <= monthEnd
+      })
+      
+      console.log(`📊 Filtered data for ${selectedYear}-${selectedMonth + 1}:`, {
+        totalEvents: analyticsEvents.length,
+        monthEvents: monthFilteredEvents.length,
+        totalSessions: analyticsSessions.length,
+        monthSessions: monthFilteredSessions.length
+      })
+
+      // Get recent events (last 10) from selected month
+      const recentEvents = monthFilteredEvents
         .sort((a: any, b: any) => {
           const dateA = a.timestamp ? a.timestamp : 0
           const dateB = b.timestamp ? b.timestamp : 0
@@ -123,11 +158,11 @@ export default function AnalyticsSection() {
         })
         .slice(0, 10)
 
-      // Calculate page views from analytics events
-      const pageViews = analyticsEvents.filter((e: any) => e.type === 'page_view').length
+      // Calculate page views from analytics events (filtered by month)
+      const pageViews = monthFilteredEvents.filter((e: any) => e.type === 'page_view').length
 
-      // Get popular pages from analytics events
-      const pageViewsByPath = analyticsEvents
+      // Get popular pages from analytics events (filtered by month)
+      const pageViewsByPath = monthFilteredEvents
         .filter((e: any) => e.type === 'page_view')
         .reduce((acc: any, event: any) => {
           const page = event.page || 'Unknown'

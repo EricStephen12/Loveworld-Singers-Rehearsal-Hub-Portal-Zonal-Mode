@@ -71,7 +71,19 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const loadInitialData = async () => {
-    setIsLoading(true)
+    // Load cached media immediately for instant display
+    const { MediaCache } = await import('@/utils/media-cache')
+    const cachedMedia = MediaCache.loadMedia()
+    
+    if (cachedMedia && cachedMedia.length > 0) {
+      console.log(`⚡ Showing ${cachedMedia.length} cached media items instantly`)
+      setAllMedia(cachedMedia as any)
+      setIsLoading(false)
+    } else {
+      setIsLoading(true)
+    }
+
+    // Load fresh data from Firebase in background
     try {
       const [media, featured, genresList] = await Promise.all([
         firebaseMediaService.getAllMedia(),
@@ -82,6 +94,9 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       setAllMedia(media)
       setFeaturedMedia(featured)
       setGenres(genresList)
+      
+      // Cache the media for next time
+      MediaCache.saveMedia(media)
     } catch (error) {
       console.error('Error loading initial data:', error)
     } finally {

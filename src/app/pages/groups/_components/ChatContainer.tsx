@@ -16,7 +16,7 @@ interface ChatContainerProps {
 
 export default function ChatContainer({ onOpenFriendRequests }: ChatContainerProps) {
   const { selectedChat, messages, isMessagesLoading, toggleReaction, setReplyToMessage, setEditingMessage, deleteMessage, searchMessages, toggleStarMessage, isMessageStarred } = useChat()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { currentZone } = useZone()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [activeActionMessage, setActiveActionMessage] = useState<string | null>(null)

@@ -42,9 +42,9 @@ function HomePageContent() {
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature, isFreeTier } = useSubscription()
   
-  // Don't use minimum loading time - we have cached data
-  // Show content immediately on revisits
-  const shouldShowLoading = false
+  // Show loading only on first visit (no cached zone data)
+  // This prevents the flicker when zone data loads
+  const shouldShowLoading = zoneLoading && !currentZone
   
   // Debug logging for HQ groups
   useEffect(() => {
@@ -356,7 +356,22 @@ function HomePageContent() {
   const isBossZone = currentZone?.id === 'zone-boss'
   
   // Don't show skeleton for zone loading - zones are cached
-  // Just show content immediately
+  // Show loading screen for first-time users (prevents zone flicker)
+  if (shouldShowLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
+        <div className="text-center">
+          <div 
+            className="w-16 h-16 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-4"
+            style={{ 
+              borderTopColor: '#10b981'
+            }}
+          />
+          <p className="text-gray-600 text-lg font-medium">Loading your zone...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
        <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">

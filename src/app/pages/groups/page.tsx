@@ -29,7 +29,7 @@ export default function GroupsPage() {
   const [showFriendRequests, setShowFriendRequests] = useState(false)
 
 
-  // Show loading while auth is being checked (but not if we have cached profile)
+  // Show loading ONLY on first visit (no cached profile)
   if (authLoading && !profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -41,21 +41,12 @@ export default function GroupsPage() {
     )
   }
 
-  // Don't show anything if auth is done and no user
-  if (!authLoading && !user) return null
+  // If we have cached profile, show content immediately
+  // Don't wait for user or zone to load - show content with cached data
+  if (!user && !profile) return null
 
-  if (zoneLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading zone information...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Zone is optional - users can chat with anyone from any zone
+  // Don't block on zoneLoading - zone is optional for chats
+  // Users can chat with anyone from any zone
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
@@ -140,7 +131,6 @@ export default function GroupsPage() {
         isOpen={showFriendRequests}
         onClose={() => setShowFriendRequests(false)}
       />
-      
 
     </div>
   )
