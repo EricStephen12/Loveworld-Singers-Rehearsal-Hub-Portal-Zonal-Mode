@@ -93,19 +93,35 @@ function AuthPageContent() {
   const [selectedAccount, setSelectedAccount] = useState<any>(null)
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
   const [accountPassword, setAccountPassword] = useState('')
+  const [isRecoveredAccount, setIsRecoveredAccount] = useState(false)
+  const [recoveredEmail, setRecoveredEmail] = useState('')
 
   // NO AUTH CHECK - Zustand auth store handles redirects
   // This prevents loops completely
 
-  // Check for URL error parameters on mount
+  // Check for URL parameters on mount (error, recovery)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const urlError = urlParams.get('error')
     const urlMessage = urlParams.get('message')
+    const recovered = urlParams.get('recovered')
+    const email = urlParams.get('email')
 
     if (urlError && urlMessage) {
       setError(urlMessage)
-      // Clear URL parameters
+    }
+    
+    if (recovered === 'true') {
+      setIsRecoveredAccount(true)
+      setIsLogin(false) // Switch to signup mode
+      if (email) {
+        setRecoveredEmail(decodeURIComponent(email))
+        setFormData(prev => ({ ...prev, email: decodeURIComponent(email) }))
+      }
+    }
+    
+    // Clear URL parameters
+    if (urlError || recovered) {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [])
@@ -679,6 +695,32 @@ function AuthPageContent() {
                   <p className="text-base font-bold text-green-700">
                     {zoneName}
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Account Recovery Message */}
+          {isRecoveredAccount && (
+            <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-500">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    Account Recovered!
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Your account was recovered but needs additional information. Please complete the signup form below with your <strong>Zone Code</strong> and <strong>KingsChat ID</strong> to finish setting up your account.
+                  </p>
+                  {recoveredEmail && (
+                    <p className="text-xs text-blue-600 mt-2">
+                      Email: <strong>{recoveredEmail}</strong>
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

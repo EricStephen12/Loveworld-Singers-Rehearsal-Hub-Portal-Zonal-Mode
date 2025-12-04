@@ -15,7 +15,9 @@ interface ToastProps {
   onRemove: (id: string) => void;
 }
 
-export default function ToastComponent({ toast, onRemove }: ToastProps) {
+import { memo } from 'react'
+
+const ToastComponent = memo(function ToastComponent({ toast, onRemove }: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onRemove(toast.id);
@@ -83,7 +85,9 @@ export default function ToastComponent({ toast, onRemove }: ToastProps) {
       </button>
     </div>
   );
-}
+})
+
+export default ToastComponent
 
 interface ToastContainerProps {
   toasts: Toast[];

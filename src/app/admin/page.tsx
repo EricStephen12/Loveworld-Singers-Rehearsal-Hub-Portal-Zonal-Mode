@@ -33,11 +33,12 @@ import SubmittedSongsPage from '../pages/admin/submitted-songs/page';
 import DashboardSection from '../../components/admin/DashboardSection';
 import MasterLibrarySection from '../../components/admin/MasterLibrarySection';
 import SubGroupsSection from '../../components/admin/SubGroupsSection';
+import AnalyticsSection from '../../components/admin/AnalyticsSection';
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
   const router = useRouter()
-  const { user, profile } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   
   // Zone context - must be called before any conditional returns
   const { currentZone, isZoneCoordinator, isLoading: zoneLoading } = useZone();
@@ -314,8 +315,20 @@ export default function AdminPage() {
     return allPraiseNights;
   }, [allPraiseNights, loading]);
 
-  // Don't show anything if no user - must be after all hooks
-  if (!user) return null;
+  // Only show loading if NO cached profile exists at all
+  if (!profile && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show anything if no user and no cached profile
+  if (!user && !profile) return null;
 
   // Toast helper functions
   const addToast = (toast: Omit<Toast, 'id'>) => {
@@ -1284,8 +1297,9 @@ export default function AdminPage() {
     }
   };
 
-  // Show loading state only for initial page load
-  if (loading && allPraiseNights.length === 0) {
+  // Don't show loading skeleton - data loads in background
+  // Show content immediately with cached data
+  if (false) {  // Disabled - no skeleton on revisits
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex">
         {/* Sidebar Skeleton */}
@@ -1369,8 +1383,8 @@ export default function AdminPage() {
     );
   }
 
-  // Show loading while checking auth
-  if (!user || zoneLoading) {
+  // Don't show loading if we have cached profile - show content immediately
+  if (!user && !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -1381,17 +1395,8 @@ export default function AdminPage() {
     )
   }
 
-  // Show loading while checking zone status
-  if (zoneLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm">Loading admin panel...</p>
-        </div>
-      </div>
-    )
-  }
+  // Don't show loading for zones - zones are cached
+  // Content shows immediately with cached data
 
   // Check if user is Boss
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
@@ -1474,6 +1479,7 @@ export default function AdminPage() {
         )}
 
         {activeSection === 'Dashboard' && <DashboardSection onSectionChange={setActiveSection} />}
+        {activeSection === 'Analytics' && isHQAdmin && <AnalyticsSection />}
         
         {activeSection === 'Pages' && (
           <PagesSection

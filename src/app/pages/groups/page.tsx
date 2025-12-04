@@ -18,7 +18,7 @@ import {
 
 export default function GroupsPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone, userZones, isLoading: zoneLoading } = useZone()
   const { selectedChat } = useChat()
   
@@ -29,8 +29,20 @@ export default function GroupsPage() {
   const [showFriendRequests, setShowFriendRequests] = useState(false)
 
 
-  // Don't show anything if no user - prevents redirect
-  if (!user) return null
+  // Show loading while auth is being checked (but not if we have cached profile)
+  if (authLoading && !profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't show anything if auth is done and no user
+  if (!authLoading && !user) return null
 
   if (zoneLoading) {
     return (

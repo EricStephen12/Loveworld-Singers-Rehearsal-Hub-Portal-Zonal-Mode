@@ -52,10 +52,16 @@ export default function BossPage() {
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
 
   useEffect(() => {
-    // Wait for auth to finish loading before checking permissions
-    if (authLoading) return
+    // Use cached profile immediately - don't wait for authLoading
+    if (!profile) {
+      // Only redirect if auth is done loading and still no profile
+      if (!authLoading) {
+        router.push('/home')
+      }
+      return
+    }
     
-    if (!profile || !isBoss) {
+    if (!isBoss) {
       router.push('/home')
       return
     }
@@ -163,8 +169,8 @@ export default function BossPage() {
   const activeZones = zones.filter(z => z.subscriptionStatus === 'active').length
   const premiumZones = zones.filter(z => z.subscriptionTier === 'premium').length
 
-  // Show loading while auth is being checked or data is loading
-  if (authLoading || isLoading) {
+  // Show loading only if no cached profile or data is loading
+  if ((!profile && authLoading) || isLoading) {
     return (
       <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-purple-50 overflow-hidden">
         {/* Header Skeleton */}

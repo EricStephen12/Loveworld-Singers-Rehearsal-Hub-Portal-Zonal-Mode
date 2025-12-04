@@ -8,7 +8,9 @@ interface OfflineIndicatorProps {
   className?: string
 }
 
-export default function OfflineIndicator({ className = '' }: OfflineIndicatorProps) {
+import { memo } from 'react'
+
+const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: OfflineIndicatorProps) {
   const [isOnline, setIsOnline] = useState(true)
   const [showOnlineNotification, setShowOnlineNotification] = useState(false)
 
@@ -59,4 +61,6 @@ export default function OfflineIndicator({ className = '' }: OfflineIndicatorPro
       </div>
     </div>
   )
-}
+})
+
+export default OfflineIndicator

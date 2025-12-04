@@ -41,7 +41,8 @@ export const useZoneStore = create<ZoneState>()(
     (set, get) => ({
       currentZone: null,
       userZones: [],
-      isLoading: true,
+      // Start as not loading if we have cached data
+      isLoading: false,
       isSuperAdmin: false,
       userRole: 'zone_member',
       currentZoneMembership: null,

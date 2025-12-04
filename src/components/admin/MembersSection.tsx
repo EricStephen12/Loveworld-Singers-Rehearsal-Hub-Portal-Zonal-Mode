@@ -12,7 +12,7 @@ export default function MembersSection(props: MembersSectionProps) {
   const { theme } = useAdminTheme();
   
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden">
       <Members />
     </div>
   );

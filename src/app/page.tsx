@@ -2,25 +2,56 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
+import '@/utils/auth-persistence-check'
 
 export default function SplashPage() {
   const router = useRouter()
   const [hasRedirected, setHasRedirected] = useState(false)
+  const { user, profile } = useAuth()
 
-  // ✅ PURE UI SPLASH - NO AUTH CHECKING
+  // ✅ INSTANT REDIRECT - Use cached profile for immediate redirect
   useEffect(() => {
     // Prevent multiple redirects
     if (hasRedirected) return
     
-    // Show splash for 1 second then redirect to auth
+    // Check localStorage for cached profile (instant check)
+    const checkCachedAuth = () => {
+      try {
+        const cached = localStorage.getItem('cachedUserProfile')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          // Check if cache is less than 24 hours old
+          if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+            console.log('🎨 Cached profile found - redirecting to home instantly')
+            return true
+          }
+        }
+      } catch (e) {
+        console.error('Error checking cached profile:', e)
+      }
+      return false
+    }
+    
+    const hasCachedProfile = checkCachedAuth()
+    
+    // INSTANT redirect if we have cached profile OR user from Zustand
+    if (hasCachedProfile || user || profile) {
+      console.log('🎨 User logged in (cached or live) - redirecting to home')
+      setHasRedirected(true)
+      router.replace('/home')
+      return
+    }
+    
+    // No cached profile - show splash briefly then redirect to auth
     const timer = setTimeout(() => {
-      console.log('🎨 Splash complete - redirecting to auth')
+      console.log('🎨 No cached profile - redirecting to auth')
       setHasRedirected(true)
       router.replace('/auth')
-    }, 1000) // 1 second splash display
+    }, 1000)
 
     return () => clearTimeout(timer)
-  }, [hasRedirected, router])
+  }, [hasRedirected, router, user, profile])
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">

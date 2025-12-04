@@ -3,8 +3,12 @@ const nextConfig = {
   // Performance optimizations
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
+  
+  // Production optimizations
+  productionBrowserSourceMaps: false, // Disable source maps for faster builds
+  swcMinify: true, // Use SWC for faster minification
   
   // Turbopack configuration (moved from experimental)
   turbopack: {

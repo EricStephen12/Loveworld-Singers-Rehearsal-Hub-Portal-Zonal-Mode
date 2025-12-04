@@ -8,7 +8,9 @@ interface TooltipProps {
   className?: string
 }
 
-export default function Tooltip({ children, text, className = '' }: TooltipProps) {
+import { memo } from 'react'
+
+const Tooltip = memo(function Tooltip({ children, text, className = '' }: TooltipProps) {
   const [show, setShow] = useState(false)
 
   return (
@@ -34,4 +36,6 @@ export default function Tooltip({ children, text, className = '' }: TooltipProps
       )}
     </div>
   )
-}
+})
+
+export default Tooltip

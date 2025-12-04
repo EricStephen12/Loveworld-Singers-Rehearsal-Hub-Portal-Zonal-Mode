@@ -365,7 +365,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
 
           {members.length > 5 && (
             <button
-              onClick={() => {}}
+              onClick={() => onSectionChange?.('Members')}
               className={`w-full mt-4 py-3 ${theme.text} font-semibold ${theme.bgHover} rounded-lg transition-colors`}
             >
               View All Members →

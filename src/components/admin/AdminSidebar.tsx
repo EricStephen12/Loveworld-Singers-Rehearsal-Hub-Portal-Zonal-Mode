@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Library,
-  UsersRound
+  UsersRound,
+  Home
 } from "lucide-react";
 import { useAdminTheme } from './AdminThemeProvider';
 import { useZone } from '@/hooks/useZone';
@@ -49,7 +50,8 @@ export default function AdminSidebar({
   const isZoneCoordinator = currentZone && !isHQ && !isHQAdmin;
   
   const allSidebarItems = [
-    { icon: BarChart3, label: 'Dashboard', active: activeSection === 'Dashboard' },
+    { icon: Home, label: 'Dashboard', active: activeSection === 'Dashboard' },
+    { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqOnly: true }, // NEW: Analytics for HQ Admin
     { icon: FileText, label: 'Pages', active: activeSection === 'Pages' },
     { icon: Tag, label: 'Categories', active: activeSection === 'Categories' },
     { icon: FolderOpen, label: 'Page Categories', active: activeSection === 'Page Categories' },

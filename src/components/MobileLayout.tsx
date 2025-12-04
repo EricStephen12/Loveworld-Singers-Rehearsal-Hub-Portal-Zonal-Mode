@@ -44,32 +44,14 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
   // Handle authentication state changes
   useEffect(() => {
-    console.log('🔍 MobileLayout Debug:', {
-      isLoading,
-      user: !!user,
-      showSplash,
-      showAuth,
-      showProfileCompletion
-    })
-
-    if (isLoading) return // Wait for auth to load
-
-    if (!user) {
-      // No user - show auth screen
-      console.log('📱 No user - showing auth screen')
-      setShowSplash(false)
-      setShowAuth(true)
-      setShowProfileCompletion(false)
-    } else {
-      // User is authenticated - show main app (no profile completion required)
-      console.log('📱 User authenticated - showing main app')
-      setShowSplash(false)
-      setShowAuth(false)
-      setShowProfileCompletion(false)
-    }
-    
+    // Don't wait for isLoading - auth store handles this now
+    // Just mark as initialized immediately
     setIsInitialized(true)
-  }, [user, isLoading])
+    
+    // MobileLayout is no longer responsible for auth flow
+    // The main splash page (src/app/page.tsx) handles redirects
+    // This component just renders children
+  }, [])
 
   const handleSplashComplete = () => {
     setShowSplash(false)
@@ -100,29 +82,8 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
 
   // Subscription functionality removed
 
-  // Show loading while checking authentication status
-  if (isLoading || !isInitialized) {
-    return (
-      <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-      </div>
-    )
-  }
-
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />
-  }
-
-  if (showAuth) {
-    return <AuthScreen onComplete={handleAuthComplete} />
-  }
-
-  if (showProfileCompletion && socialData) {
-    return <ProfileCompletionScreen onComplete={handleProfileComplete} onBack={handleProfileBack} socialData={socialData} />
-  }
-
-  // Subscription screen removed
-
+  // No loading states - auth is handled by the main app flow
+  // MobileLayout just provides mobile-optimized wrapper
   return (
     <div className={`min-h-screen ${isMobile ? 'mobile-optimized' : ''}`}>
       {children}

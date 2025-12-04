@@ -7,7 +7,9 @@ interface LoadingScreenProps {
   message?: string
 }
 
-export default function LoadingScreen({ message = "Loading LoveWorld Singers..." }: LoadingScreenProps) {
+import { memo } from 'react'
+
+const LoadingScreen = memo(function LoadingScreen({ message = "Loading LoveWorld Singers..." }: LoadingScreenProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center">
       <div className="text-center text-white">
@@ -36,4 +38,6 @@ export default function LoadingScreen({ message = "Loading LoveWorld Singers..."
       </div>
     </div>
   )
-}
+})
+
+export default LoadingScreen

@@ -11,7 +11,6 @@ export default function ManageEventsPage() {
   const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone, isLoading: zoneLoading } = useZone()
   const router = useRouter()
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
 
   // Check if user is coordinator or admin
   const isAuthorized = profile?.role === 'admin' || 
@@ -19,22 +18,22 @@ export default function ManageEventsPage() {
                        profile?.administration === 'Coordinator' ||
                        profile?.administration === 'Assistant Coordinator'
 
-  // Only redirect after auth has finished loading
+  // Only redirect if definitely not authorized
+  // Don't wait for authLoading - use cached profile for instant access
   useEffect(() => {
-    // Wait for auth to finish loading before checking
-    if (authLoading) return
-    
-    setHasCheckedAuth(true)
-    
-    if (!user) {
-      router.push('/auth')
-    } else if (profile && !isAuthorized) {
+    // If we have profile data (cached or fresh), check authorization immediately
+    if (profile && !isAuthorized) {
       router.push('/pages/calendar')
+    }
+    // Only redirect to auth if we're certain there's no user (after loading completes)
+    if (!authLoading && !user) {
+      router.push('/auth')
     }
   }, [user, profile, isAuthorized, router, authLoading])
 
-  // Show loading while auth is being checked
-  if (authLoading || !hasCheckedAuth) {
+  // Show content immediately if we have cached profile
+  // Only show loading if we truly have no profile data
+  if (!profile && authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -45,7 +44,19 @@ export default function ManageEventsPage() {
     )
   }
 
-  if (!user || !isAuthorized) {
+  // If auth is done loading and no user, show access denied (redirect will happen)
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (profile && !isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

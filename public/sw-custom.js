@@ -1,6 +1,9 @@
 // Custom Service Worker for LWSRH Offline Support
-const CACHE_NAME = 'lwsrh-cache-v1';
-const DATA_CACHE_NAME = 'lwsrh-data-cache-v1';
+// IMPORTANT: Update this version number on every deployment to bust cache
+const APP_VERSION = '2.3.0';
+const BUILD_TIME = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+const CACHE_NAME = `lwsrh-cache-${APP_VERSION}`;
+const DATA_CACHE_NAME = `lwsrh-data-cache-${APP_VERSION}`;
 
 // Files to cache for offline functionality
 const STATIC_CACHE_URLS = [

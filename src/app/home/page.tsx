@@ -42,9 +42,9 @@ function HomePageContent() {
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature, isFreeTier } = useSubscription()
   
-  // Use minimum loading time to prevent flashing empty states
-  // Only shows skeleton on FIRST load - subsequent visits skip skeleton if data is cached
-  const shouldShowLoading = useMinimumLoadingTime(zoneLoading || !profile, 1000, 'home')
+  // Don't use minimum loading time - we have cached data
+  // Show content immediately on revisits
+  const shouldShowLoading = false
   
   // Debug logging for HQ groups
   useEffect(() => {
@@ -299,26 +299,20 @@ function HomePageContent() {
 
  
 
-  // Add timeout to prevent infinite loading (max 10 seconds)
-  const [loadingTimeout, setLoadingTimeout] = useState(false)
-  useEffect(() => {
-    if (shouldShowLoading) {
-      const timer = setTimeout(() => {
-        console.log('⏰ Loading timeout reached - forcing display')
-        setLoadingTimeout(true)
-      }, 10000) // 10 second max
-      return () => clearTimeout(timer)
-    }
-  }, [shouldShowLoading])
 
-  // Don't show anything if no user - let Zustand authStore handle it
+
+  // Check if we have cached data (profile or zone)
+  const hasCachedData = profile !== null || currentZone !== null
+  
+  // Don't show anything if no user AND no cached profile
   // This prevents flashing login prompt while Firebase is checking
   if (!user && !profile) {
     return null
   }
   
-  // Show loading state while checking zone OR if profile is still loading OR if zones are loading
-  if ((shouldShowLoading && !loadingTimeout) || !profile) {
+  // NEVER show skeleton if we have ANY cached data
+  // Only show skeleton on absolute first load (no profile AND no cached data)
+  if (!profile && !hasCachedData) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
         {/* Skeleton Loading */}
@@ -361,87 +355,8 @@ function HomePageContent() {
   // Check if in Boss zone
   const isBossZone = currentZone?.id === 'zone-boss'
   
-  // Show loading if still loading zones (prevent "No Zone" flash)
-  if (zoneLoading) {
-    return (
-      <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
-        {/* Skeleton Loading */}
-        <div className="h-full flex flex-col">
-          {/* Header Skeleton */}
-          <div className="bg-white border-b border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-          </div>
-
-          {/* Content Skeleton */}
-          <div className="flex-1 overflow-auto p-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Programs List */}
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  
-  // Show skeleton loading if user has no zone (instead of error message)
-  if (!currentZone && profile && !zoneLoading) {
-    return (
-      <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
-        {/* Skeleton Loading */}
-        <div className="h-full flex flex-col">
-          {/* Header Skeleton */}
-          <div className="bg-white border-b border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-          </div>
-
-          {/* Content Skeleton */}
-          <div className="flex-1 overflow-auto p-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Programs List */}
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-                  <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Don't show skeleton for zone loading - zones are cached
+  // Just show content immediately
 
   return (
        <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
