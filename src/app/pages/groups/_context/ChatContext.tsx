@@ -180,12 +180,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log('💬 [ChatContext] Loading messages for chat:', selectedChat.id)
+    console.log('💬 [ChatContext] Chat details:', {
+      id: selectedChat.id,
+      type: selectedChat.type,
+      participants: selectedChat.participants,
+      name: selectedChat.name
+    })
     setIsMessagesLoading(true)
     setMessages([])
     
     // Subscribe to fresh messages from Firebase
     const unsubscribe = FirebaseChatService.subscribeToMessages(selectedChat.id, (freshMessages) => {
-      console.log('📥 [ChatContext] Received', freshMessages.length, 'messages')
+      console.log('📥 [ChatContext] Received', freshMessages.length, 'messages for chat:', selectedChat.id)
+      if (freshMessages.length === 0) {
+        console.log('⚠️ [ChatContext] No messages found. This could mean:')
+        console.log('  1. The chat is new and has no messages')
+        console.log('  2. Messages are stored with a different chatId')
+        console.log('  3. Firestore index is missing (check console for index errors)')
+      }
       setMessages(freshMessages)
       setIsMessagesLoading(false)
     })

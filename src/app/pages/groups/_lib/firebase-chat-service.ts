@@ -981,6 +981,12 @@ export class FirebaseChatService {
   static subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): () => void {
     console.log('🔌 [Chat] Setting up message subscription for chat:', chatId)
     
+    if (!chatId) {
+      console.error('❌ [Chat] No chatId provided for message subscription')
+      callback([])
+      return () => {}
+    }
+    
     // OPTIMIZED: Limit to 100 most recent messages to reduce reads
     const q = query(
       collection(db, 'messages'),
@@ -990,19 +996,29 @@ export class FirebaseChatService {
     )
     
     return onSnapshot(q, (snapshot) => {
+        console.log('📨 [Chat] Message snapshot received:', snapshot.docs.length, 'messages for chat:', chatId)
+        
         const messages: ChatMessage[] = []
         
         snapshot.docs.forEach(doc => {
-          messages.push({ id: doc.id, ...doc.data() } as ChatMessage)
+          const data = doc.data()
+          console.log('📝 [Chat] Message:', doc.id, 'chatId:', data.chatId, 'text:', data.text?.substring(0, 30))
+          messages.push({ id: doc.id, ...data } as ChatMessage)
         })
         
         // Reverse to show oldest first (query returns newest first due to desc order)
         messages.reverse()
         
+        console.log('✅ [Chat] Returning', messages.length, 'messages')
         callback(messages)
       }, 
       (error) => {
         console.error('❌ [Chat] Message subscription error:', error)
+        console.error('❌ [Chat] Error details:', error.message, error.code)
+        // Check if it's an index error
+        if (error.message?.includes('index')) {
+          console.error('🔧 [Chat] This error requires creating a Firestore composite index. Check the Firebase console.')
+        }
         callback([])
       }
     )

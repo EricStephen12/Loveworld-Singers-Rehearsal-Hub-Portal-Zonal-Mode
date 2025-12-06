@@ -344,20 +344,18 @@ export default function AdminPage() {
     return allPraiseNights;
   }, [allPraiseNights, loading]);
 
-  // Only show loading if NO cached profile exists at all
-  if (!profile && !user) {
+  // Only show brief loading if absolutely no user data exists
+  // This should rarely happen since auth is cached
+  if (!profile && !user && authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading admin panel...</p>
+          <p className="text-gray-400">Loading...</p>
         </div>
       </div>
     );
   }
-
-  // Don't show anything if no user and no cached profile
-  if (!user && !profile) return null;
 
   // Toast helper functions
   const addToast = (toast: Omit<Toast, 'id'>) => {
@@ -1412,41 +1410,13 @@ export default function AdminPage() {
     );
   }
 
-  // Don't show loading if we have cached profile - show content immediately
-  if (!user && !profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't show loading for zones - zones are cached
-  // Content shows immediately with cached data
+  // Content shows immediately - no blocking states
 
   // Check if user is Boss
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
   const isBossZone = currentZone?.id === 'zone-boss'
   
-  // Redirect if no zone
-  if (!currentZone) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center p-6">
-        <div className="max-w-md text-center">
-          <p className="text-gray-600 mb-4">No zone assigned. Please join a zone first.</p>
-          <button
-            onClick={() => router.push('/pages/join-zone')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          >
-            Join Zone
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Don't block on zone - show content immediately, zone loads in background
 
   // Temporarily show coordinator status for debugging
   // if (!isZoneCoordinator) {
@@ -1466,8 +1436,8 @@ export default function AdminPage() {
   //   )
   // }
 
-  // Get zone theme colors
-  const zoneTheme = getZoneTheme(currentZone?.themeColor);
+  // Get zone theme colors (use default if zone not loaded yet)
+  const zoneTheme = getZoneTheme(currentZone?.themeColor || 'purple');
 
   // Add PageCategoriesSection to the active sections
   return (
