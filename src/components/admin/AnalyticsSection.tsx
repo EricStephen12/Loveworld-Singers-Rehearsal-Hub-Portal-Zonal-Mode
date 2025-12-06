@@ -1,203 +1,290 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { BarChart3, Users, Music, TrendingUp, Calendar, Activity, Eye, Download, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Users, Activity, Eye, Download, RefreshCw, ChevronLeft, ChevronRight, Database, Zap, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react'
 import { useZone } from '@/hooks/useZone'
-import { FirebaseDatabaseService } from '@/lib/firebase-database'
-import { ZoneDatabaseService } from '@/lib/zone-database-service'
+import { AnalyticsAggregationService } from '@/lib/analytics-aggregation-service'
 
-// Cache for analytics data
-const analyticsCache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+// Simple Bar Chart Component
+function BarChart({ data, maxValue, color = 'purple' }: { 
+  data: { label: string; value: number }[]; 
+  maxValue: number;
+  color?: string;
+}) {
+  const colorClasses: Record<string, string> = {
+    purple: 'bg-purple-500',
+    blue: 'bg-blue-500',
+    green: 'bg-green-500',
+    orange: 'bg-orange-500',
+  }
+  
+  return (
+    <div className="flex items-end gap-2 h-40">
+      {data.map((item, i) => {
+        const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0
+        return (
+          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+            <span className="text-xs text-gray-600 font-medium">{item.value.toLocaleString()}</span>
+            <div className="w-full bg-gray-100 rounded-t-md relative" style={{ height: '120px' }}>
+              <div 
+                className={`absolute bottom-0 w-full ${colorClasses[color]} rounded-t-md transition-all duration-500`}
+                style={{ height: `${height}%` }}
+              />
+            </div>
+            <span className="text-xs text-gray-500 truncate w-full text-center">{item.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Donut Chart Component
+function DonutChart({ data }: { 
+  data: { label: string; value: number; color: string }[] 
+}) {
+  const total = data.reduce((sum, item) => sum + item.value, 0)
+  if (total === 0) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-sm text-gray-500">No data</p>
+      </div>
+    )
+  }
+  
+  // Calculate percentages and create conic gradient
+  let accumulated = 0
+  const gradientParts = data.map(item => {
+    const percentage = (item.value / total) * 100
+    const start = accumulated
+    accumulated += percentage
+    return `${item.color} ${start}% ${accumulated}%`
+  }).join(', ')
+  
+  return (
+    <div className="flex items-center gap-6">
+      <div 
+        className="w-32 h-32 rounded-full relative"
+        style={{ 
+          background: `conic-gradient(${gradientParts})`,
+        }}
+      >
+        <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+          <span className="text-lg font-bold text-gray-900">{total.toLocaleString()}</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        {data.map((item, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-sm text-gray-600">{item.label}</span>
+            <span className="text-sm font-semibold text-gray-900">{item.value.toLocaleString()}</span>
+            <span className="text-xs text-gray-400">({((item.value / total) * 100).toFixed(0)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Horizontal Bar Chart Component
+function HorizontalBarChart({ data, color = 'purple' }: { 
+  data: { label: string; value: number }[];
+  color?: string;
+}) {
+  const maxValue = Math.max(...data.map(d => d.value), 1)
+  const colorClasses: Record<string, string> = {
+    purple: 'bg-purple-500',
+    blue: 'bg-blue-500',
+    green: 'bg-green-500',
+    orange: 'bg-orange-500',
+  }
+  
+  return (
+    <div className="space-y-3">
+      {data.map((item, i) => {
+        const width = (item.value / maxValue) * 100
+        return (
+          <div key={i} className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-700 truncate max-w-[60%]">{item.label}</span>
+              <span className="font-semibold text-gray-900">{item.value.toLocaleString()}</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${colorClasses[color]} rounded-full transition-all duration-500`}
+                style={{ width: `${width}%` }}
+              />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Cache for aggregated data - instant loads after first fetch
+const summaryCache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
+
+interface MonthlySummary {
+  year: number
+  month: number
+  totalEvents: number
+  totalSessions: number
+  totalPageViews: number
+  uniqueUsers: number
+  desktopSessions: number
+  mobileSessions: number
+  tabletSessions: number
+  pageViews: { [page: string]: number }
+  countries: { [country: string]: number }
+  cities: { [city: string]: number }
+  browsers: { [browser: string]: number }
+}
 
 export default function AnalyticsSection() {
   const { currentZone } = useZone()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrationLog, setMigrationLog] = useState<string[]>([])
   
   // Month/Year selector
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()) // 0-11
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   
-  const [analytics, setAnalytics] = useState({
-    totalMembers: 0,
-    totalPages: 0,
-    totalSongs: 0,
-    totalEvents: 0,
-    totalSessions: 0,
-    totalMediaViews: 0,
-    recentEvents: [] as any[],
-    popularPages: [] as any[],
-    topMedia: [] as any[]
-  })
+  // Pre-aggregated monthly summaries (lightweight!)
+  const [monthlySummaries, setMonthlySummaries] = useState<MonthlySummary[]>([])
+  const [totalMembers, setTotalMembers] = useState(0)
 
-  // Check if we have cached data
-  const hasCachedData = useMemo(() => {
-    if (!currentZone) return false
-    const cached = analyticsCache.get(currentZone.id)
-    if (!cached) return false
-    const isValid = Date.now() - cached.timestamp < CACHE_DURATION
-    return isValid
-  }, [currentZone])
+  // Get selected month's data
+  const selectedSummary = useMemo(() => {
+    return monthlySummaries.find(s => s.year === selectedYear && s.month === selectedMonth) || null
+  }, [monthlySummaries, selectedYear, selectedMonth])
 
+  // Calculate all-time totals
+  const allTimeTotals = useMemo(() => {
+    return monthlySummaries.reduce((acc, s) => ({
+      events: acc.events + s.totalEvents,
+      sessions: acc.sessions + s.totalSessions,
+      pageViews: acc.pageViews + s.totalPageViews
+    }), { events: 0, sessions: 0, pageViews: 0 })
+  }, [monthlySummaries])
+
+  // Convert maps to sorted arrays for display
+  const topCountries = useMemo(() => {
+    if (!selectedSummary?.countries) return []
+    return Object.entries(selectedSummary.countries)
+      .map(([country, sessions]) => ({ country: country.replace(/_/g, '.'), sessions }))
+      .sort((a, b) => b.sessions - a.sessions)
+      .slice(0, 5)
+  }, [selectedSummary])
+
+  const topCities = useMemo(() => {
+    if (!selectedSummary?.cities) return []
+    return Object.entries(selectedSummary.cities)
+      .map(([city, sessions]) => ({ city: city.replace(/_/g, '.'), sessions }))
+      .sort((a, b) => b.sessions - a.sessions)
+      .slice(0, 5)
+  }, [selectedSummary])
+
+  const topBrowsers = useMemo(() => {
+    if (!selectedSummary?.browsers) return []
+    return Object.entries(selectedSummary.browsers)
+      .map(([browser, count]) => ({ browser: browser.replace(/_/g, '.'), count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+  }, [selectedSummary])
+
+  const popularPages = useMemo(() => {
+    if (!selectedSummary?.pageViews) return []
+    return Object.entries(selectedSummary.pageViews)
+      .map(([page, views]) => ({ page: page.replace(/_/g, '/'), views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 5)
+  }, [selectedSummary])
+
+  // Chart data: Last 6 months sessions trend
+  const sessionsChartData = useMemo(() => {
+    const sorted = [...monthlySummaries].sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year
+      return b.month - a.month
+    }).slice(0, 6).reverse()
+    
+    return sorted.map(s => ({
+      label: new Date(s.year, s.month).toLocaleDateString('en-US', { month: 'short' }),
+      value: s.totalSessions
+    }))
+  }, [monthlySummaries])
+
+  const sessionsChartMax = useMemo(() => {
+    return Math.max(...sessionsChartData.map(d => d.value), 1)
+  }, [sessionsChartData])
+
+  // Device breakdown for donut chart
+  const deviceChartData = useMemo(() => {
+    if (!selectedSummary) return []
+    return [
+      { label: 'Desktop', value: selectedSummary.desktopSessions || 0, color: '#8b5cf6' },
+      { label: 'Mobile', value: selectedSummary.mobileSessions || 0, color: '#22c55e' },
+      { label: 'Tablet', value: selectedSummary.tabletSessions || 0, color: '#f97316' },
+    ]
+  }, [selectedSummary])
+
+  // Load data on mount
   useEffect(() => {
+    if (!currentZone) return
     loadAnalytics()
-  }, [currentZone, selectedMonth, selectedYear])
+  }, [currentZone])
 
   const loadAnalytics = async (forceRefresh = false) => {
     if (!currentZone) return
     
-    // Cache key includes month and year
-    const cacheKey = `${currentZone.id}-${selectedYear}-${selectedMonth}`
+    const cacheKey = `summaries-${currentZone.id}`
     
-    // Check cache first (skip if force refresh)
+    // Check cache
     if (!forceRefresh) {
-      const cached = analyticsCache.get(cacheKey)
+      const cached = summaryCache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log(`📊 Using cached analytics data for ${selectedYear}-${selectedMonth + 1}`)
-        setAnalytics(cached.data)
+        console.log('📦 Using cached analytics summaries')
+        setMonthlySummaries(cached.data.summaries)
+        setTotalMembers(cached.data.members)
         setLoading(false)
         return
       }
-
-      // Show cached data immediately while loading fresh data
-      if (cached) {
-        console.log('📊 Showing cached data while refreshing')
-        setAnalytics(cached.data)
-        setLoading(false)
-      } else {
-        setLoading(true)
-      }
-    } else {
-      setRefreshing(true)
-      console.log(`🔄 Force refreshing analytics for ${selectedYear}-${selectedMonth + 1}...`)
     }
     
-    // Calculate month date range
-    const monthStart = new Date(selectedYear, selectedMonth, 1)
-    const monthEnd = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999)
-    
-    console.log(`📅 Loading analytics for ${monthStart.toLocaleDateString()} to ${monthEnd.toLocaleDateString()}`)
+    setLoading(true)
+    console.log('🔄 Loading analytics summaries...')
     
     try {
-      console.log('🔄 Loading fresh analytics data...')
-      
-      // Parallel fetch all data at once (much faster!)
-      const [
-        members,
-        pages,
-        analyticsEvents,
-        analyticsSessions
-      ] = await Promise.all([
+      // Fetch pre-aggregated summaries (FAST - just a few documents!)
+      const [summaries, members] = await Promise.all([
+        AnalyticsAggregationService.getAllMonthlySummaries(),
         (async () => {
           const { ZoneInvitationService } = await import('@/lib/zone-invitation-service')
           return ZoneInvitationService.getZoneMembers(currentZone.id)
-        })(),
-        ZoneDatabaseService.getPraiseNightsByZone(currentZone.id, 100),
-        FirebaseDatabaseService.getCollection('analytics_events'),
-        FirebaseDatabaseService.getCollection('analytics_sessions')
+        })()
       ])
-
-      console.log('📊 Raw analytics data loaded:', {
-        members: members.length,
-        pages: pages.length,
-        analyticsEvents: analyticsEvents.length,
-        analyticsSessions: analyticsSessions.length
-      })
-
-      // Count songs from all pages (use cached song counts if available)
-      let totalSongs = 0
-      for (const page of pages) {
-        const pageData = page as any
-        if (pageData.songCount !== undefined) {
-          totalSongs += pageData.songCount
-        } else if (pageData.songs && Array.isArray(pageData.songs)) {
-          totalSongs += pageData.songs.length
-        }
-      }
-
-      // If no song count available, fetch from database (slower)
-      if (totalSongs === 0 && pages.length > 0) {
-        const songCounts = await Promise.all(
-          pages.slice(0, 10).map((page: any) => // Only check first 10 pages for speed
-            ZoneDatabaseService.getSongsByPraiseNight(page.id)
-              .then((songs: any[]) => songs.length)
-              .catch(() => 0)
-          )
-        )
-        totalSongs = songCounts.reduce((sum: number, count: number) => sum + count, 0)
-      }
-
-      // Filter events by selected month
-      const monthFilteredEvents = analyticsEvents.filter((e: any) => {
-        if (!e.timestamp) return false
-        const eventDate = new Date(e.timestamp)
-        return eventDate >= monthStart && eventDate <= monthEnd
-      })
       
-      // Filter sessions by selected month
-      const monthFilteredSessions = analyticsSessions.filter((s: any) => {
-        if (!s.startTime) return false
-        const sessionDate = new Date(s.startTime)
-        return sessionDate >= monthStart && sessionDate <= monthEnd
-      })
+      console.log(`📊 Loaded ${summaries.length} monthly summaries:`, summaries)
+      console.log(`👥 Loaded ${members.length} members`)
       
-      console.log(`📊 Filtered data for ${selectedYear}-${selectedMonth + 1}:`, {
-        totalEvents: analyticsEvents.length,
-        monthEvents: monthFilteredEvents.length,
-        totalSessions: analyticsSessions.length,
-        monthSessions: monthFilteredSessions.length
-      })
-
-      // Get recent events (last 10) from selected month
-      const recentEvents = monthFilteredEvents
-        .sort((a: any, b: any) => {
-          const dateA = a.timestamp ? a.timestamp : 0
-          const dateB = b.timestamp ? b.timestamp : 0
-          return dateB - dateA
-        })
-        .slice(0, 10)
-
-      // Calculate page views from analytics events (filtered by month)
-      const pageViews = monthFilteredEvents.filter((e: any) => e.type === 'page_view').length
-
-      // Get popular pages from analytics events (filtered by month)
-      const pageViewsByPath = monthFilteredEvents
-        .filter((e: any) => e.type === 'page_view')
-        .reduce((acc: any, event: any) => {
-          const page = event.page || 'Unknown'
-          acc[page] = (acc[page] || 0) + 1
-          return acc
-        }, {})
-
-      const popularPagePaths = Object.entries(pageViewsByPath)
-        .map(([page, views]) => ({ page, views }))
-        .sort((a: any, b: any) => b.views - a.views)
-        .slice(0, 5)
-
-      const newAnalytics = {
-        totalMembers: members.length,
-        totalPages: pages.length,
-        totalSongs,
-        totalEvents: analyticsEvents.length,
-        totalSessions: analyticsSessions.length,
-        totalMediaViews: pageViews, // Use page views as "media views"
-        recentEvents,
-        popularPages: popularPagePaths, // Use actual popular pages from analytics
-        topMedia: [] // No media analytics yet
+      if (summaries.length > 0) {
+        console.log('📅 First summary:', summaries[0])
       }
-
-      console.log('✅ Analytics loaded:', newAnalytics)
-
+      
+      setMonthlySummaries(summaries)
+      setTotalMembers(members.length)
+      
       // Cache the data
-      analyticsCache.set(currentZone.id, {
-        data: newAnalytics,
+      summaryCache.set(cacheKey, {
+        data: { summaries, members: members.length },
         timestamp: Date.now()
       })
-
-      setAnalytics(newAnalytics)
     } catch (error) {
-      console.error('❌ Error loading analytics:', error)
+      console.error('Error loading analytics:', error)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -205,19 +292,49 @@ export default function AnalyticsSection() {
   }
 
   const handleRefresh = () => {
-    console.log('🔄 Refresh button clicked')
-    // Clear cache and force reload
-    if (currentZone) {
-      console.log('🗑️ Clearing cache for zone:', currentZone.id)
-      analyticsCache.delete(currentZone.id)
-      loadAnalytics(true)
-    } else {
-      console.warn('⚠️ No current zone available')
+    setRefreshing(true)
+    loadAnalytics(true)
+  }
+
+  // Smart migration - processes data month by month (like big companies)
+  const handleMigration = async () => {
+    setMigrating(true)
+    setMigrationLog(['🚀 Starting smart migration (month-by-month)...'])
+    
+    try {
+      setMigrationLog(prev => [...prev, '📡 Auto-detecting months with data...'])
+      
+      const response = await fetch('/api/analytics/migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoDetect: true })
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        setMigrationLog(prev => [
+          ...prev, 
+          `✅ ${result.message}`,
+          `📊 Events: ${result.totalEvents?.toLocaleString()}`,
+          `📊 Sessions: ${result.totalSessions?.toLocaleString()}`,
+          `📅 Months processed: ${result.monthsProcessed}`,
+          result.months?.length > 0 ? `📆 ${result.months.join(', ')}` : ''
+        ].filter(Boolean))
+        // Reload data after migration
+        await loadAnalytics(true)
+      } else {
+        setMigrationLog(prev => [...prev, `❌ Error: ${result.error}`])
+      }
+    } catch (error) {
+      setMigrationLog(prev => [...prev, `❌ Error: ${error}`])
+    } finally {
+      setMigrating(false)
     }
   }
 
-  // Only show skeleton if loading AND no cached data
-  if (loading && !hasCachedData) {
+  // Loading state
+  if (loading) {
     return (
       <div className="flex-1 overflow-auto bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
@@ -234,22 +351,102 @@ export default function AnalyticsSection() {
     )
   }
 
+  // Debug: Log current state
+  console.log('🔍 Analytics State:', {
+    monthlySummaries: monthlySummaries.length,
+    selectedMonth,
+    selectedYear,
+    selectedSummary: selectedSummary ? 'found' : 'not found',
+    allTimeTotals
+  })
+
+  // No data state - show migration option
+  if (monthlySummaries.length === 0) {
+    return (
+      <div className="flex-1 overflow-auto bg-gray-50 p-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center">
+            <Database className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No Analytics Data Found</h2>
+            <p className="text-gray-600 mb-6">
+              Analytics data needs to be aggregated from raw events. This is a one-time process that will make future loads instant.
+            </p>
+            
+            {migrating ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-purple-600">
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <span>Migrating data...</span>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 text-left max-h-48 overflow-y-auto">
+                  {migrationLog.map((log, i) => (
+                    <p key={i} className="text-sm text-gray-600 font-mono">{log}</p>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleMigration}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
+                <Zap className="w-5 h-5" />
+                Aggregate Existing Data
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics</h1>
             <p className="text-sm text-gray-600 mt-1">
               {currentZone?.name} Performance Metrics
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Month/Year Selector */}
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
+              <button
+                onClick={() => {
+                  if (selectedMonth === 0) {
+                    setSelectedMonth(11)
+                    setSelectedYear(selectedYear - 1)
+                  } else {
+                    setSelectedMonth(selectedMonth - 1)
+                  }
+                }}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm font-medium min-w-[120px] text-center">
+                {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </span>
+              <button
+                onClick={() => {
+                  if (selectedMonth === 11) {
+                    setSelectedMonth(0)
+                    setSelectedYear(selectedYear + 1)
+                  } else {
+                    setSelectedMonth(selectedMonth + 1)
+                  }
+                }}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
             <button 
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
@@ -261,98 +458,205 @@ export default function AnalyticsSection() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Stats Cards - Key Monthly Report Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {/* Total Members */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
-              <span className="text-xs text-green-600 font-semibold">+12%</span>
+              <span className="text-xs text-green-600 font-semibold">All Time</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalMembers}</h3>
-            <p className="text-sm text-gray-600 mt-1">Total Members</p>
+            <h3 className="text-2xl font-bold text-gray-900">{totalMembers}</h3>
+            <p className="text-sm text-gray-600 mt-1">Registered Members</p>
           </div>
 
-          {/* Total Pages */}
+          {/* Total Visits/Sessions */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600" />
+                <UserCheck className="w-6 h-6 text-purple-600" />
               </div>
-              <span className="text-xs text-green-600 font-semibold">+8%</span>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalPages}</h3>
-            <p className="text-sm text-gray-600 mt-1">Total Pages</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {(selectedSummary?.totalSessions || 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Total Visits</p>
           </div>
 
-          {/* Total Songs */}
+          {/* Page Views */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Music className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Eye className="w-6 h-6 text-orange-600" />
               </div>
-              <span className="text-xs text-green-600 font-semibold">+15%</span>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalSongs}</h3>
-            <p className="text-sm text-gray-600 mt-1">Total Songs</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {(selectedSummary?.totalPageViews || 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Page Views</p>
           </div>
 
           {/* Total Events */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Activity className="w-6 h-6 text-green-600" />
               </div>
-              <span className="text-xs text-green-600 font-semibold">Live</span>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalEvents}</h3>
-            <p className="text-sm text-gray-600 mt-1">Analytics Events</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {(selectedSummary?.totalEvents || 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Total Events</p>
           </div>
         </div>
 
-        {/* Additional Stats Row */}
+        {/* Device Breakdown Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          {/* Total Sessions */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-6 h-6 text-indigo-600" />
+                <Monitor className="w-6 h-6 text-indigo-600" />
               </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalSessions}</h3>
-            <p className="text-sm text-gray-600 mt-1">User Sessions</p>
-          </div>
-
-          {/* Total Page Views */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-6 h-6 text-pink-600" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900">{analytics.totalMediaViews.toLocaleString()}</h3>
-            <p className="text-sm text-gray-600 mt-1">Page Views</p>
-          </div>
-
-          {/* Average Session Duration */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-teal-600" />
-              </div>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
             </div>
             <h3 className="text-2xl font-bold text-gray-900">
-              {analytics.totalSessions > 0 
-                ? Math.round(analytics.recentEvents.reduce((sum: number, e: any) => sum + (e.metadata?.duration || 0), 0) / analytics.totalSessions / 1000)
-                : 0}s
+              {(selectedSummary?.desktopSessions || 0).toLocaleString()}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">Avg Session</p>
+            <p className="text-sm text-gray-600 mt-1">Desktop Visits</p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-green-600" />
+              </div>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {(selectedSummary?.mobileSessions || 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Mobile Visits</p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Tablet className="w-6 h-6 text-orange-600" />
+              </div>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {(selectedSummary?.tabletSessions || 0).toLocaleString()}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Tablet Visits</p>
           </div>
         </div>
 
         {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Sessions Trend Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Sessions Trend</h3>
+              <span className="text-xs text-purple-600 font-semibold">Last 6 Months</span>
+            </div>
+            {sessionsChartData.length > 0 ? (
+              <BarChart data={sessionsChartData} maxValue={sessionsChartMax} color="purple" />
+            ) : (
+              <div className="flex items-center justify-center h-40">
+                <p className="text-sm text-gray-500">No data available</p>
+              </div>
+            )}
+          </div>
+
+          {/* Device Breakdown Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Device Breakdown</h3>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
+            </div>
+            <DonutChart data={deviceChartData} />
+            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-gray-600">Desktop</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-green-500" />
+                <span className="text-xs text-gray-600">Mobile</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Tablet className="w-4 h-4 text-orange-500" />
+                <span className="text-xs text-gray-600">Tablet</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Breakdown */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Monthly Breakdown</h3>
+            <div className="text-sm text-gray-500">
+              All Time: {allTimeTotals.events.toLocaleString()} events • {allTimeTotals.sessions.toLocaleString()} sessions
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Month</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Events</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Sessions</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Page Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlySummaries.length > 0 ? (
+                  monthlySummaries.slice(0, 12).map((row, index) => {
+                    const isSelected = row.year === selectedYear && row.month === selectedMonth
+                    const monthName = new Date(row.year, row.month).toLocaleDateString('en-US', { month: 'short' })
+                    return (
+                      <tr 
+                        key={index} 
+                        className={`border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-purple-50' : ''}`}
+                        onClick={() => {
+                          setSelectedYear(row.year)
+                          setSelectedMonth(row.month)
+                        }}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            {isSelected && <div className="w-2 h-2 bg-purple-600 rounded-full"></div>}
+                            <span className={`text-sm ${isSelected ? 'font-semibold text-purple-600' : 'text-gray-900'}`}>
+                              {monthName} {row.year}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-4 text-sm text-gray-900">{row.totalEvents.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4 text-sm text-gray-900">{row.totalSessions.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4 text-sm text-gray-900">{row.totalPageViews.toLocaleString()}</td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm text-gray-500">
+                      No monthly data available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Popular Pages & Browsers with Bar Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Popular Pages */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -360,82 +664,67 @@ export default function AnalyticsSection() {
               <h3 className="text-lg font-bold text-gray-900">Popular Pages</h3>
               <Eye className="w-5 h-5 text-gray-400" />
             </div>
-            <div className="space-y-4">
-              {analytics.popularPages.length > 0 ? (
-                analytics.popularPages.map((page: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <span className="text-sm font-bold text-purple-600">{index + 1}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{page.page}</p>
-                        <p className="text-xs text-gray-500">Page path</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold text-gray-900">{page.views}</p>
-                      <p className="text-xs text-gray-500">views</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-8">No page views yet</p>
-              )}
-            </div>
+            {popularPages.length > 0 ? (
+              <HorizontalBarChart 
+                data={popularPages.map(p => ({ label: p.page, value: p.views }))} 
+                color="purple" 
+              />
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No page views yet</p>
+            )}
           </div>
 
-          {/* Member Growth */}
+          {/* Top Browsers */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Member Growth</h3>
-              <TrendingUp className="w-5 h-5 text-green-600" />
+              <h3 className="text-lg font-bold text-gray-900">Top Browsers</h3>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
             </div>
-            <div className="h-64 flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-sm text-gray-500">Growth chart coming soon</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Analytics Events */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Recent Analytics Events</h3>
-          <div className="space-y-4">
-            {analytics.recentEvents.length > 0 ? (
-              analytics.recentEvents.map((event: any, index: number) => (
-                <div key={index} className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Activity className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{event.eventType || 'Event'}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {event.eventName || event.action || 'User activity'}
-                    </p>
-                    {event.metadata && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {JSON.stringify(event.metadata).substring(0, 50)}...
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">
-                      {event.timestamp ? new Date(event.timestamp).toLocaleString() : 'Recently'}
-                    </p>
-                  </div>
-                </div>
-              ))
+            {topBrowsers.length > 0 ? (
+              <HorizontalBarChart 
+                data={topBrowsers.map(b => ({ label: b.browser, value: b.count }))} 
+                color="orange" 
+              />
             ) : (
-              <div className="text-center py-8">
-                <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No analytics events yet</p>
-                <p className="text-xs text-gray-400 mt-1">Events will appear here as users interact with the app</p>
-              </div>
+              <p className="text-sm text-gray-500 text-center py-8">No browser data yet</p>
             )}
           </div>
         </div>
 
+        {/* Geography Row with Bar Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Countries */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Top Countries</h3>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
+            </div>
+            {topCountries.length > 0 ? (
+              <HorizontalBarChart 
+                data={topCountries.map(c => ({ label: c.country, value: c.sessions }))} 
+                color="blue" 
+              />
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No geography data yet</p>
+            )}
+          </div>
+
+          {/* Top Cities */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Top Cities</h3>
+              <span className="text-xs text-purple-600 font-semibold">This Month</span>
+            </div>
+            {topCities.length > 0 ? (
+              <HorizontalBarChart 
+                data={topCities.map(c => ({ label: c.city, value: c.sessions }))} 
+                color="green" 
+              />
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">No city data yet</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -118,7 +118,9 @@ export default function SubmitSongPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!user) {
+    // Use cached profile if user is still loading
+    const currentUser = user || (profile?.id ? { uid: profile.id } : null)
+    if (!currentUser) {
       alert('Please log in to submit a song')
       return
     }
@@ -135,6 +137,16 @@ export default function SubmitSongPage() {
       // CRITICAL: Include zone ID for proper filtering
       if (!currentZone?.id) {
         alert('Please select a zone before submitting')
+        setIsSubmitting(false)
+        return
+      }
+      
+      // Use cached profile if user is still loading
+      const userId = user?.uid || profile?.id
+      const userEmail = user?.email || profile?.email || ''
+      
+      if (!userId) {
+        alert('Please log in to submit a song')
         setIsSubmitting(false)
         return
       }
@@ -157,9 +169,9 @@ export default function SubmitSongPage() {
         zoneId: currentZone.id,
         zoneName: currentZone.name,
         submittedBy: {
-          userId: user.uid,
-          userName: getUserName() || user.email || 'Unknown',
-          email: user.email || '',
+          userId: userId,
+          userName: getUserName() || userEmail || 'Unknown',
+          email: userEmail,
           submittedAt: new Date().toISOString()
         }
       })

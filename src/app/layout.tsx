@@ -2,8 +2,7 @@
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
 import PWAInstall from '@/components/PWAInstall'
-import '@/stores/authStore' // Initialize auth store
-import '@/stores/zoneStore' // Initialize zone store
+import { AuthProvider } from '@/contexts/AuthContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { ChatProvider } from '@/app/pages/groups/_context/ChatContext'
 import { MediaProvider } from '@/app/pages/media/_context/MediaContext'
@@ -27,9 +26,7 @@ import FeatureUpdateChecker from '@/components/FeatureUpdateChecker'
 import OfflineIndicator from '@/components/OfflineIndicator'
 import ForceUpdateButton from '@/components/ForceUpdateButton'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
-import '@/utils/auth-debug'
 import '@/utils/safeAreaManager'
-import '@/utils/logger' // Disable console logs in production
 import { disableConsoleLogs } from '@/utils/disable-logs'
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -188,27 +185,29 @@ export default function RootLayout({
           />
         )}
         <ErrorBoundary>
-          <AudioProvider>
-          <MediaProvider>
-            <SubscriptionProvider>
-              <ChatProvider>
-                <AnalyticsProvider>
-                  {/* <ScreenshotPrevention /> */}
-                  <main className="h-full w-full bg-gray-50">
-                    {children}
-                  </main>
-                  {/* Browser will handle its own install prompt; custom UI removed */}
-                  <RealtimeNotifications />
-                  <PushNotificationListener />
-                  <NotificationUrlHandler />
-                  <OfflineIndicator />
-                  <FeatureUpdateChecker />
-                  <ForceUpdateButton />
-                </AnalyticsProvider>
-              </ChatProvider>
-            </SubscriptionProvider>
-          </MediaProvider>
-          </AudioProvider>
+          <AuthProvider>
+            <AudioProvider>
+            <MediaProvider>
+              <SubscriptionProvider>
+                <ChatProvider>
+                  <AnalyticsProvider>
+                    {/* <ScreenshotPrevention /> */}
+                    <main className="h-full w-full bg-gray-50">
+                      {children}
+                    </main>
+                    {/* Browser will handle its own install prompt; custom UI removed */}
+                    <RealtimeNotifications />
+                    <PushNotificationListener />
+                    <NotificationUrlHandler />
+                    <OfflineIndicator />
+                    <FeatureUpdateChecker />
+                    <ForceUpdateButton />
+                  </AnalyticsProvider>
+                </ChatProvider>
+              </SubscriptionProvider>
+            </MediaProvider>
+            </AudioProvider>
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>

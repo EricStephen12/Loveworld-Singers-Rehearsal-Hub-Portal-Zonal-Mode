@@ -17,6 +17,8 @@ interface MediaContextType {
   
   // Loading states
   isLoading: boolean
+  isLoadingMore: boolean
+  hasMore: boolean
   
   // Actions
   getMediaByType: (type: MediaItem['type']) => Promise<MediaItem[]>
@@ -27,6 +29,7 @@ interface MediaContextType {
   saveWatchProgress: (mediaId: string, progress: number) => Promise<void>
   incrementViews: (mediaId: string) => Promise<void>
   refreshMedia: () => Promise<void>
+  loadMore: () => Promise<void>
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined)
@@ -40,6 +43,8 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<MediaItem[]>([])
   const [genres, setGenres] = useState<Genre[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
 
   // Load initial data
   useEffect(() => {
@@ -84,9 +89,10 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     }
 
     // Load fresh data from Firebase in background
+    // OPTIMIZED: Load only first 24 items initially
     try {
       const [media, featured, genresList] = await Promise.all([
-        firebaseMediaService.getAllMedia(),
+        firebaseMediaService.getAllMedia(24), // Load first 24
         firebaseMediaService.getFeaturedMedia(),
         firebaseMediaService.getAllGenres()
       ])
@@ -94,6 +100,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       setAllMedia(media)
       setFeaturedMedia(featured)
       setGenres(genresList)
+      setHasMore(media.length >= 24) // If we got 24, there might be more
       
       // Cache the media for next time
       MediaCache.saveMedia(media)
@@ -101,6 +108,30 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       console.error('Error loading initial data:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Load more media (pagination)
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore || allMedia.length === 0) return
+    
+    setIsLoadingMore(true)
+    try {
+      const lastMedia = allMedia[allMedia.length - 1]
+      if (!lastMedia?.createdAt) return
+      
+      const moreMedia = await firebaseMediaService.loadMoreMedia(lastMedia.createdAt, 12)
+      
+      if (moreMedia.length === 0) {
+        setHasMore(false)
+      } else {
+        setAllMedia(prev => [...prev, ...moreMedia])
+        setHasMore(moreMedia.length >= 12)
+      }
+    } catch (error) {
+      console.error('Error loading more media:', error)
+    } finally {
+      setIsLoadingMore(false)
     }
   }
 
@@ -187,6 +218,8 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     favorites,
     genres,
     isLoading,
+    isLoadingMore,
+    hasMore,
     getMediaByType,
     getMediaByGenre,
     searchMedia,
@@ -194,7 +227,8 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     removeFromFavorites,
     saveWatchProgress,
     incrementViews,
-    refreshMedia
+    refreshMedia,
+    loadMore
   }
 
   return <MediaContext.Provider value={value}>{children}</MediaContext.Provider>

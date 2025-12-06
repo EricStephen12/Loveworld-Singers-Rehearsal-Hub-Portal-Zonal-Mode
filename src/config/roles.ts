@@ -316,7 +316,8 @@ export const HQ_ADMIN_EMAILS = [
   'lliamzelvin@gmail.com',      // Lliamz Elvin - HQ Admin
   'ihenacho23@gmail.com',       // Ihenacho Uche - HQ Admin  
   'ephraimloveworld1@gmail.com', // Ephraim Udoji - HQ Admin
-  'takeshopstores@gmail.com', // Eric Stephen - HQ Admin
+  'takeshopstores@gmail.com',   // Eric Stephen - HQ Admin
+  'nnennawealth@gmail.com',     // Nnenna Wealth - HQ Admin
 ];
 
 // Helper to check if email should be HQ admin

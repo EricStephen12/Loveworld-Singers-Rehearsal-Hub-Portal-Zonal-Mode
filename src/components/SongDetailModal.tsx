@@ -120,23 +120,25 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         console.log('⚠️ Direct fetch failed, trying collection method:', directError);
       }
       
-      // Fallback to collection method
-      const allSongs = await FirebaseDatabaseService.getCollection('songs');
-      console.log('📊 Total songs fetched from Firebase:', allSongs.length);
-      
-      const freshSong = allSongs.find(song => song.id === songId);
-      if (freshSong) {
-        console.log('✅ Fresh song data fetched:', (freshSong as any).title);
-        console.log('📝 Fresh song solfas:', (freshSong as any).solfas);
-        console.log('💬 Fresh song comments:', (freshSong as any).comments);
-        setFreshSongData(freshSong as unknown as PraiseNightSong);
-        // Update the parent component with fresh data
-        if (onSongChange) {
-          onSongChange(freshSong as unknown as PraiseNightSong);
+      // Fallback: Try praise_night_songs collection (zone songs)
+      try {
+        const zoneSong = await FirebaseDatabaseService.getDocument('praise_night_songs', songId);
+        if (zoneSong) {
+          console.log('✅ Zone song fetch successful:', (zoneSong as any).title);
+          setFreshSongData(zoneSong as unknown as PraiseNightSong);
+          if (onSongChange) {
+            onSongChange(zoneSong as unknown as PraiseNightSong);
+          }
+          return;
         }
-      } else {
-        console.log('❌ Song not found in Firebase with ID:', songId);
-        console.log('🔍 Available song IDs:', allSongs.map(s => s.id));
+      } catch (zoneError) {
+        console.log('⚠️ Zone song fetch failed:', zoneError);
+      }
+      
+      // Final fallback: Use the selectedSong data we already have
+      console.log('⚠️ Could not fetch fresh song data, using existing data');
+      if (selectedSong) {
+        setFreshSongData(selectedSong);
       }
     } catch (error) {
       console.error('❌ Error fetching fresh song data:', error);

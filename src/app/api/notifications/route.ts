@@ -32,29 +32,14 @@ export async function POST(request: NextRequest) {
     // Save to Firebase
     await FirebaseDatabaseService.createDocument('notifications', notificationId, notification);
 
-    // If targeting all users, create user_notifications entries
+    // OPTIMIZED: For "all" users, we DON'T create individual user_notifications
+    // Instead, we rely on the notification's target_audience field
+    // Users will see notifications where target_audience === 'all' OR they have a user_notification entry
+    // This saves MASSIVE Firebase writes (1 write vs N writes where N = number of users)
     if (target_audience === 'all') {
-      try {
-        const profiles = await FirebaseDatabaseService.getCollection('profiles');
-
-        if (profiles && profiles.length > 0) {
-          const userNotifications = profiles.map((profile: any) => ({
-            notification_id: notificationId,
-            user_id: profile.id,
-            read: false,
-            created_at: new Date().toISOString()
-          }));
-
-          // Save user notifications to Firebase
-          for (const userNotification of userNotifications) {
-            const userNotificationId = `user_notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            await FirebaseDatabaseService.createDocument('user_notifications', userNotificationId, userNotification);
-          }
-        }
-      } catch (error) {
-        console.error('Error creating user notifications:', error);
-        // Don't fail the request, just log the error
-      }
+      console.log('📢 Notification targets all users - no individual entries needed');
+      // The notification itself with target_audience='all' is sufficient
+      // Client-side filtering will show this to all users
     }
 
     // 🔔 TRIGGER BROWSER PUSH NOTIFICATION (NEW!)
@@ -108,44 +93,44 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Get user notifications from Firebase
-    const userNotifications = await FirebaseDatabaseService.getCollection('user_notifications');
+    // OPTIMIZED: Use Firestore query instead of fetching all and filtering
+    const userSpecificNotifications = await FirebaseDatabaseService.getCollectionWhere(
+      'user_notifications',
+      'user_id',
+      '==',
+      userId
+    );
     
-    if (!userNotifications) {
+    if (!userSpecificNotifications || userSpecificNotifications.length === 0) {
       return NextResponse.json({ notifications: [] });
     }
 
-    // Filter notifications for the specific user
-    const userSpecificNotifications = userNotifications.filter((notification: any) => 
-      notification.user_id === userId
-    );
+    // OPTIMIZED: Batch fetch notification details instead of one-by-one
+    const notificationIds = [...new Set(userSpecificNotifications.map((n: any) => n.notification_id))];
+    const notificationDetails = await FirebaseDatabaseService.getDocumentsByIds('notifications', notificationIds);
+    const notificationMap = new Map(notificationDetails.map((n: any) => [n.id, n]));
 
-    // Get the actual notification details for each user notification
-    const notifications = [];
-    for (const userNotification of userSpecificNotifications) {
-      try {
-        const notification = await FirebaseDatabaseService.getDocument('notifications', (userNotification as any).notification_id);
-        if (notification) {
-          notifications.push({
-            ...userNotification,
-            notification: {
-              id: (notification as any).id,
-              title: (notification as any).title,
-              message: (notification as any).message,
-              type: (notification as any).type,
-              category: (notification as any).category,
-              priority: (notification as any).priority,
-              action_url: (notification as any).action_url,
-              expires_at: (notification as any).expires_at,
-              created_at: (notification as any).created_at
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching notification details:', error);
-        // Skip this notification if we can't fetch its details
-      }
-    }
+    // Map user notifications with their details
+    const notifications = userSpecificNotifications
+      .map((userNotification: any) => {
+        const notification = notificationMap.get(userNotification.notification_id);
+        if (!notification) return null;
+        return {
+          ...userNotification,
+          notification: {
+            id: notification.id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            category: notification.category,
+            priority: notification.priority,
+            action_url: notification.action_url,
+            expires_at: notification.expires_at,
+            created_at: notification.created_at
+          }
+        };
+      })
+      .filter(Boolean);
 
     // Sort by created_at descending
     notifications.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

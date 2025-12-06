@@ -10,7 +10,8 @@ import {
   orderBy, 
   onSnapshot,
   Timestamp,
-  serverTimestamp
+  serverTimestamp,
+  limit
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
@@ -181,12 +182,13 @@ export class CalendarService {
     }
   }
 
-  // Subscribe to real-time events for a zone
+  // Subscribe to real-time events for a zone (OPTIMIZED: limited to 100 events)
   subscribeToZoneEvents(zoneId: string, callback: (events: CalendarEvent[]) => void): () => void {
     const q = query(
       this.eventsCollection,
       where('zoneId', '==', zoneId),
-      orderBy('start', 'asc')
+      orderBy('start', 'asc'),
+      limit(100) // OPTIMIZED: Limit to 100 events to reduce reads
     )
 
     return onSnapshot(q, (snapshot) => {

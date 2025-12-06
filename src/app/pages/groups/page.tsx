@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
@@ -15,38 +15,24 @@ import {
   FriendRequestsModal
 } from './_components'
 
-
 export default function GroupsPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone, userZones, isLoading: zoneLoading } = useZone()
   const { selectedChat } = useChat()
   
-
-  
   const [showUserSearch, setShowUserSearch] = useState(false)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [showFriendRequests, setShowFriendRequests] = useState(false)
 
+  // Load chats on mount
+  useEffect(() => {
+    console.log('📱 Groups page loaded')
+  }, [])
 
-  // Show loading ONLY on first visit (no cached profile)
-  if (authLoading && !profile) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // If we have cached profile, show content immediately
-  // Don't wait for user or zone to load - show content with cached data
+  // ✅ NO PAGE-LEVEL LOADING - Show page immediately, let sidebar handle loading
+  // If truly logged out (no user AND no cached profile), show nothing
   if (!user && !profile) return null
-
-  // Don't block on zoneLoading - zone is optional for chats
-  // Users can chat with anyone from any zone
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
@@ -101,15 +87,15 @@ export default function GroupsPage() {
 
       {/* Chat Interface */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar - Hide on mobile when chat is selected */}
-        <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-gray-200 bg-white ${selectedChat ? 'hidden md:block' : 'block'}`}>
+        {/* Chat List - Hide on mobile when chat is selected */}
+        <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-gray-200 ${selectedChat ? 'hidden md:block' : 'block'}`}>
           <ChatSidebar />
         </div>
 
-        {/* Chat Area - Show on mobile when chat is selected, full width on mobile */}
+        {/* Chat Interface - Show on mobile when chat is selected */}
         <div className={`flex-1 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
           {selectedChat ? (
-            <ChatContainer onOpenFriendRequests={() => setShowFriendRequests(true)} />
+            <ChatContainer />
           ) : (
             <NoChatSelected />
           )}

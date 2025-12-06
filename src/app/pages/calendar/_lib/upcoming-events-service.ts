@@ -15,19 +15,69 @@ export interface UpcomingEvent {
   createdBy?: string
 }
 
+// OPTIMIZED: Cache events for 30 minutes
+const EVENTS_CACHE_KEY = 'lwsrh-upcoming-events-cache'
+const EVENTS_CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+
+interface EventsCache {
+  data: UpcomingEvent[]
+  timestamp: number
+}
+
+function getEventsCache(): EventsCache | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const cached = localStorage.getItem(EVENTS_CACHE_KEY)
+    if (!cached) return null
+    const data: EventsCache = JSON.parse(cached)
+    if (Date.now() - data.timestamp > EVENTS_CACHE_TTL) {
+      return null
+    }
+    return data
+  } catch {
+    return null
+  }
+}
+
+function setEventsCache(data: UpcomingEvent[]) {
+  if (typeof window === 'undefined') return
+  try {
+    const cache: EventsCache = { data, timestamp: Date.now() }
+    localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(cache))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export class UpcomingEventsService {
   private static COLLECTION = 'upcoming_events'
 
   /**
    * Get all upcoming events (next 30 days)
+   * OPTIMIZED: Uses caching to reduce Firebase reads
    */
   static async getUpcomingEvents(): Promise<UpcomingEvent[]> {
     try {
-      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION) as unknown as UpcomingEvent[]
+      // Check cache first
+      const cached = getEventsCache()
+      if (cached) {
+        // Filter cached data for upcoming events
+        const today = moment()
+        const next30Days = moment().add(30, 'days')
+        return cached.data.filter(event => {
+          const eventDate = moment(event.date)
+          return eventDate.isBetween(today, next30Days, 'day', '[]')
+        }).sort((a, b) => moment(a.date).diff(moment(b.date)))
+      }
+
+      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION, 200) as unknown as UpcomingEvent[]
       
       if (!allEvents || allEvents.length === 0) {
         return []
       }
+      
+      // Cache all events
+      setEventsCache(allEvents)
 
       const today = moment()
       const next30Days = moment().add(30, 'days')

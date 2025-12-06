@@ -19,9 +19,16 @@ import {
   where, 
   orderBy,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  limit as firestoreLimit,
+  startAfter,
+  QueryDocumentSnapshot
 } from 'firebase/firestore';
 import { isHQGroup } from '@/config/zones';
+
+// Cache for media files (5 min TTL)
+const mediaCache: Map<string, { data: CloudinaryMediaFile[]; timestamp: number; lastDoc: QueryDocumentSnapshot | null }> = new Map();
+const MEDIA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Helper to get correct collection name based on zone
 function getCollectionName(zoneId?: string): string {
@@ -52,11 +59,20 @@ export interface CloudinaryMediaFile {
 }
 
 /**
- * Get all media files for a zone
+ * Get all media files for a zone with caching and limit
  */
-export async function getAllCloudinaryMedia(zoneId?: string): Promise<CloudinaryMediaFile[]> {
+export async function getAllCloudinaryMedia(zoneId?: string, limitCount: number = 100, forceRefresh: boolean = false): Promise<CloudinaryMediaFile[]> {
   try {
-    console.log('📖 [CloudinaryMedia] Getting media files for zone:', zoneId);
+    const cacheKey = zoneId || 'global';
+    
+    // Check cache first
+    const cached = mediaCache.get(cacheKey);
+    if (!forceRefresh && cached && Date.now() - cached.timestamp < MEDIA_CACHE_TTL) {
+      console.log('📖 [CloudinaryMedia] Using cached media files:', cached.data.length);
+      return cached.data;
+    }
+    
+    console.log('📖 [CloudinaryMedia] Getting media files for zone:', zoneId, '(limit:', limitCount, ')');
     console.log('📖 [CloudinaryMedia] Is HQ Group?', zoneId ? isHQGroup(zoneId) : 'No zone');
     
     const collectionName = getCollectionName(zoneId);
@@ -68,12 +84,10 @@ export async function getAllCloudinaryMedia(zoneId?: string): Promise<Cloudinary
     let q;
     if (zoneId && !isHQGroup(zoneId)) {
       console.log('📍 [CloudinaryMedia] Filtering by zoneId:', zoneId);
-      // Try without orderBy first to avoid index issues
-      q = query(mediaRef, where('zoneId', '==', zoneId));
+      q = query(mediaRef, where('zoneId', '==', zoneId), firestoreLimit(limitCount));
     } else {
       console.log('🏢 [CloudinaryMedia] Loading all (HQ or no zone)');
-      // HQ groups see all media (no filter)
-      q = query(mediaRef);
+      q = query(mediaRef, firestoreLimit(limitCount));
     }
     
     const snapshot = await getDocs(q);
@@ -81,7 +95,6 @@ export async function getAllCloudinaryMedia(zoneId?: string): Promise<Cloudinary
     
     const files = snapshot.docs.map(doc => {
       const data = doc.data();
-      console.log('📄 [CloudinaryMedia] Document:', doc.id, 'zoneId:', data.zoneId, 'name:', data.name);
       return {
         ...data,
         id: doc.id,
@@ -93,12 +106,103 @@ export async function getAllCloudinaryMedia(zoneId?: string): Promise<Cloudinary
     // Sort by createdAt in JavaScript (to avoid index requirement)
     files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
+    // Update cache
+    const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+    mediaCache.set(cacheKey, { data: files, timestamp: Date.now(), lastDoc });
+    
     console.log(`✅ [CloudinaryMedia] Found ${files.length} media files from ${collectionName}`);
     return files;
   } catch (error) {
     console.error('❌ [CloudinaryMedia] Error getting media files:', error);
     return [];
   }
+}
+
+/**
+ * Load more media files (pagination)
+ */
+export async function loadMoreCloudinaryMedia(zoneId?: string, limitCount: number = 50): Promise<CloudinaryMediaFile[]> {
+  try {
+    const cacheKey = zoneId || 'global';
+    const cached = mediaCache.get(cacheKey);
+    
+    if (!cached?.lastDoc) {
+      console.log('📖 [CloudinaryMedia] No more media files to load');
+      return [];
+    }
+    
+    console.log('📖 [CloudinaryMedia] Loading more media files...');
+    
+    const collectionName = getCollectionName(zoneId);
+    const mediaRef = collection(db, collectionName);
+    
+    let q;
+    if (zoneId && !isHQGroup(zoneId)) {
+      q = query(
+        mediaRef, 
+        where('zoneId', '==', zoneId), 
+        startAfter(cached.lastDoc),
+        firestoreLimit(limitCount)
+      );
+    } else {
+      q = query(
+        mediaRef, 
+        startAfter(cached.lastDoc),
+        firestoreLimit(limitCount)
+      );
+    }
+    
+    const snapshot = await getDocs(q);
+    
+    const files = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
+      };
+    }) as CloudinaryMediaFile[];
+    
+    // Sort by createdAt
+    files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // Update cache with new files
+    const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+    mediaCache.set(cacheKey, { 
+      data: [...cached.data, ...files], 
+      timestamp: Date.now(), 
+      lastDoc 
+    });
+    
+    console.log(`✅ [CloudinaryMedia] Loaded ${files.length} more media files`);
+    return files;
+  } catch (error) {
+    console.error('❌ [CloudinaryMedia] Error loading more media files:', error);
+    return [];
+  }
+}
+
+/**
+ * Check if there are more media files to load
+ */
+export function hasMoreCloudinaryMedia(zoneId?: string): boolean {
+  const cacheKey = zoneId || 'global';
+  const cached = mediaCache.get(cacheKey);
+  return cached?.lastDoc !== null && cached?.lastDoc !== undefined;
+}
+
+/**
+ * Clear media cache (call after upload/delete)
+ */
+export function clearCloudinaryMediaCache(zoneId?: string): void {
+  if (zoneId) {
+    mediaCache.delete(zoneId);
+    mediaCache.delete('global'); // Also clear global cache
+  } else {
+    mediaCache.clear();
+  }
+  console.log('🗑️ [CloudinaryMedia] Cache cleared');
 }
 
 /**
@@ -259,6 +363,9 @@ export async function createCloudinaryMedia(
     const mediaRef = collection(db, collectionName);
     const docRef = await addDoc(mediaRef, cleanData);
     
+    // Clear cache so next fetch gets fresh data
+    clearCloudinaryMediaCache(zoneId);
+    
     console.log('✅ [CloudinaryMedia] Media file created with ID:', docRef.id, 'in', collectionName);
     
     return {
@@ -346,6 +453,9 @@ export async function deleteCloudinaryMedia(id: string, zoneId?: string): Promis
     }
     
     await deleteDoc(mediaRef);
+    
+    // Clear cache so next fetch gets fresh data
+    clearCloudinaryMediaCache(zoneId);
     
     console.log('✅ [CloudinaryMedia] Media file deleted successfully from', collectionName);
     

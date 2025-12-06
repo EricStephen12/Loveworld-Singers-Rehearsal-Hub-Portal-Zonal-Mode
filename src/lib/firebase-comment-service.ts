@@ -36,10 +36,19 @@ export class FirebaseCommentService {
   }
 
   // Get comments for a song
+  // OPTIMIZED: Use Firestore query instead of fetching all comments
   static async getCommentsBySongId(songId: number): Promise<Comment[]> {
     try {
-      const comments = await FirebaseDatabaseService.getCollection('comments')
-      return comments.filter((comment: any) => comment.song_id === songId)
+      // Use query to filter at database level instead of fetching all
+      const comments = await FirebaseDatabaseService.getCollectionWhere(
+        'comments',
+        'song_id',
+        '==',
+        songId
+      )
+      
+      // Sort by created_at
+      return comments
         .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) as unknown as Comment[]
     } catch (error) {
       console.error('Error fetching comments:', error)

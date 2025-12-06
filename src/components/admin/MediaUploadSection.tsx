@@ -787,100 +787,154 @@ export default function MediaUploadSection() {
             </div>
           </form>
 
-          {/* Recent Uploads */}
+          {/* Video Library - YouTube Style */}
           <div className="mt-10">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">My Videos</h3>
-                  <p className="text-sm text-gray-500">
-                    Manage your uploaded videos from the <span className="font-mono text-xs bg-gray-100 px-1 rounded">video-upload</span> collection.
+                  <h3 className="text-xl font-bold text-gray-900">Video Library</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {recentUploads.length} video{recentUploads.length !== 1 ? 's' : ''} uploaded
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={refreshRecentUploads}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                  disabled={isRecentLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
-                  <RefreshCcw className="w-4 h-4" />
+                  <RefreshCcw className={`w-4 h-4 ${isRecentLoading ? 'animate-spin' : ''}`} />
                   Refresh
                 </button>
               </div>
 
               {isRecentLoading ? (
-                <div className="flex items-center gap-3 text-gray-500">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Loading recent uploads...
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="aspect-video bg-gray-200 rounded-xl mb-3"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  ))}
                 </div>
               ) : recentError ? (
-                <div className="text-sm text-red-500">{recentError}</div>
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X className="w-8 h-8 text-red-500" />
+                  </div>
+                  <p className="text-red-600 font-medium">{recentError}</p>
+                  <button
+                    onClick={refreshRecentUploads}
+                    className="mt-4 text-sm text-purple-600 hover:underline"
+                  >
+                    Try again
+                  </button>
+                </div>
               ) : recentUploads.length === 0 ? (
-                <p className="text-sm text-gray-500">No uploads yet.</p>
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Film className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No videos yet</h4>
+                  <p className="text-gray-500 text-sm">Upload your first video to get started</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {recentUploads.map((upload) => (
                     <div
                       key={upload.id}
-                      className="flex flex-col md:flex-row md:items-center gap-4 border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition-colors"
+                      className="group bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200"
                     >
-                      {upload.thumbnail && (
-                        <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden bg-gray-100">
+                      {/* Thumbnail */}
+                      <div className="relative aspect-video bg-gray-900">
+                        {upload.thumbnail ? (
                           <img
                             src={upload.thumbnail}
                             alt={upload.title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none'
+                              e.currentTarget.src = '/images/video-placeholder.png'
                             }}
                           />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                            <Film className="w-12 h-12 text-gray-600" />
+                          </div>
+                        )}
+                        
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                          <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-90 group-hover:scale-100">
+                            <Play className="w-6 h-6 text-gray-900 ml-1" />
+                          </div>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{upload.title}</p>
-                        <p className="text-sm text-gray-500 truncate">
+                        
+                        {/* Duration badge */}
+                        {upload.duration && upload.duration > 0 && (
+                          <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
+                            {Math.floor(upload.duration / 60)}:{String(upload.duration % 60).padStart(2, '0')}
+                          </div>
+                        )}
+                        
+                        {/* Source badge */}
+                        <div className={`absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded ${
+                          upload.sourceType === 'youtube'
+                            ? 'bg-red-600 text-white'
+                            : 'bg-purple-600 text-white'
+                        }`}>
+                          {upload.sourceType === 'youtube' ? 'YouTube' : 'Upload'}
+                        </div>
+                      </div>
+                      
+                      {/* Info */}
+                      <div className="p-4">
+                        <h4 className="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-purple-600 transition-colors">
+                          {upload.title}
+                        </h4>
+                        <p className="text-sm text-gray-500 line-clamp-1 mb-3">
                           {upload.description || 'No description'}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {upload.type
-                            ? `${upload.type.charAt(0).toUpperCase()}${upload.type.slice(1)}`
-                            : '—'}
-                          {upload.releaseYear ? ` · ${upload.releaseYear}` : ''}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            upload.sourceType === 'youtube'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-green-100 text-green-700'
-                          }`}
-                        >
-                          {upload.sourceType === 'youtube' ? 'YouTube' : 'Uploaded'}
-                        </span>
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                          {formatDateTime(upload.createdAt)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(upload)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit video"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(upload.id)}
-                          disabled={deletingVideoId === upload.id}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Delete video"
-                        >
-                          {deletingVideoId === upload.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
+                        
+                        {/* Stats */}
+                        <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
+                          <span>{upload.views || 0} views</span>
+                          <span>•</span>
+                          <span>{formatDateTime(upload.createdAt)}</span>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                          <button
+                            type="button"
+                            onClick={() => window.open(upload.playbackUrl || upload.youtubeUrl || upload.videoUrl, '_blank')}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            <Play className="w-4 h-4" />
+                            Watch
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(upload)}
+                            className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(upload.id)}
+                            disabled={deletingVideoId === upload.id}
+                            className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                            title="Delete"
+                          >
+                            {deletingVideoId === upload.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

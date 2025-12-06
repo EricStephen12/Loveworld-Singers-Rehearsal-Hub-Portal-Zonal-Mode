@@ -219,15 +219,28 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
 
         {!isMessagesLoading && messages.length > 0 && (
           <>
-            {messages.map((message) => {
-              const isOwnMessage = message.senderId === user?.uid
+            {messages.map((message, index) => {
+              // Use cached profile if user is still loading
+              const currentUserId = user?.uid || profile?.id
+              const isOwnMessage = message.senderId === currentUserId
               const showAvatar = !isOwnMessage
               const reactions = Array.isArray(message.reactions) ? message.reactions : []
-              const hasLiked = reactions.some(reaction => reaction.userId === user?.uid && reaction.emoji === '❤️')
+              const hasLiked = reactions.some(reaction => reaction.userId === currentUserId && reaction.emoji === '❤️')
               const likeCount = reactions.filter(reaction => reaction.emoji === '❤️').length
 
               const isSearchMatch = searchResults.includes(message.id)
               const isCurrentMatch = searchResults[currentSearchIndex] === message.id
+              
+              // Debug first message only
+              if (index === 0) {
+                console.log('💬 [Message Debug]', {
+                  messageSenderId: message.senderId,
+                  currentUserId: currentUserId,
+                  isOwnMessage: isOwnMessage,
+                  userUid: user?.uid,
+                  profileId: profile?.id
+                })
+              }
               
               return (
                 <div 

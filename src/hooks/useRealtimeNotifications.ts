@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 import { isHQGroup } from '@/config/zones';
 
@@ -42,7 +42,7 @@ export function useRealtimeNotifications() {
   const { user, profile } = useAuth();
   const { currentZone } = useZone();
 
-  // Load notifications with real-time updates
+  // Load notifications with real-time updates (OPTIMIZED: limited to 50 most recent)
   useEffect(() => {
     if (!user?.uid || !currentZone) {
       setNotifications([]);
@@ -51,42 +51,39 @@ export function useRealtimeNotifications() {
     }
 
     console.log('🔔 Setting up Firebase notifications listener for user:', user.uid, 'zone:', currentZone.id);
-    console.log('🔔 Is HQ Group?', isHQGroup(currentZone.id));
     setLoading(true);
 
     // Get zone-aware collection name
     const collectionName = getNotificationCollectionName(currentZone.id);
     const notificationsRef = collection(db, collectionName);
 
-    // Build query based on zone type
+    // Build query based on zone type - OPTIMIZED: limit to 50 most recent
     let q;
     if (currentZone.id && !isHQGroup(currentZone.id)) {
-      // Regular zone: filter by zoneId
-      console.log('📍 Filtering notifications by zoneId:', currentZone.id);
+      // Regular zone: filter by zoneId, limit to 50
       q = query(
         notificationsRef,
-        where('zoneId', '==', currentZone.id)
+        where('zoneId', '==', currentZone.id),
+        orderBy('created_at', 'desc'),
+        limit(50)
       );
     } else {
-      // HQ group: no filter (see all)
-      console.log('🏢 Loading all notifications (HQ)');
-      q = query(notificationsRef);
+      // HQ group: limit to 50 most recent
+      q = query(
+        notificationsRef,
+        orderBy('created_at', 'desc'),
+        limit(50)
+      );
     }
 
     // Set up real-time listener
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
-        console.log('📬 Received notifications update:', snapshot.size, 'notifications from', collectionName);
-
+        // Already sorted by Firestore query, no need to sort again
         const allNotifications = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         } as NotificationData));
-
-        // Sort by created_at in JavaScript (to avoid index requirement)
-        allNotifications.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
 
         // Filter notifications for current user
         const userNotifications = allNotifications.filter(notif => {

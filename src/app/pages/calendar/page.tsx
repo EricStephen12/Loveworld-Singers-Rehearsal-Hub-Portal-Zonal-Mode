@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { CalendarEvent, CalendarService } from './_lib/firebase-calendar-service'
-import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 import CalendarStyles from './_components/CalendarStyles'
 
 // Dynamically import React Big Calendar components to avoid SSR issues
@@ -258,13 +258,14 @@ export default function CalendarPage() {
       
       {/* Mobile Header - Compact */}
       <div className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200">
-        {/* Top row: Menu + Title + Home */}
+        {/* Top row: Back + Title + Home */}
         <div className="flex items-center px-2 py-1.5">
           <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => router.back()}
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Go back"
           >
-            <Menu className="w-5 h-5 text-gray-700" />
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
           
           <div className="flex-1 flex items-center justify-center gap-1">
@@ -300,10 +301,11 @@ export default function CalendarPage() {
           </div>
           
           <button 
-            onClick={() => router.push('/home')}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Open menu"
           >
-            <Home className="w-5 h-5 text-gray-700" />
+            <Menu className="w-5 h-5 text-gray-700" />
           </button>
         </div>
         

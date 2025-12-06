@@ -121,6 +121,47 @@ export const formatTimestamp = (timestamp: any): Date => {
 
 export class FirebaseChatService {
   
+  // ==================== WHATSAPP CACHE CLEARING ====================
+  
+  /**
+   * Clear all chat cache - WhatsApp approach
+   */
+  static async clearChatCache(): Promise<void> {
+    try {
+      console.log('🧹 [WhatsApp Mode] Clearing all chat cache...')
+      
+      // Clear IndexedDB (Firestore cache)
+      if (typeof window !== 'undefined') {
+        const databases = await window.indexedDB.databases()
+        for (const dbInfo of databases) {
+          if (dbInfo.name?.includes('firestore')) {
+            console.log('🗑️ [WhatsApp Mode] Deleting Firestore DB:', dbInfo.name)
+            const deleteReq = window.indexedDB.deleteDatabase(dbInfo.name)
+            await new Promise((resolve) => {
+              deleteReq.onsuccess = () => resolve(true)
+              deleteReq.onerror = () => resolve(true)
+              deleteReq.onblocked = () => resolve(true)
+            })
+          }
+        }
+      }
+      
+      // Clear localStorage chat data
+      if (typeof window !== 'undefined') {
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('chat') || key.includes('firebase')) {
+            localStorage.removeItem(key)
+            console.log('🗑️ [WhatsApp Mode] Cleared localStorage:', key)
+          }
+        })
+      }
+      
+      console.log('✅ [WhatsApp Mode] Cache cleared completely')
+    } catch (error) {
+      console.error('❌ [WhatsApp Mode] Cache clear failed:', error)
+    }
+  }
+  
   // ==================== USER MANAGEMENT ====================
   
   /**
@@ -244,9 +285,14 @@ export class FirebaseChatService {
     }
   }
 
+  // OPTIMIZED: Cache for zone members to prevent repeated fetches
+  private static zoneMembersCache: { data: any[], timestamp: number } | null = null
+  private static CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
   /**
    * Search users by name or email - searches ALL zones (no zone filtering)
    * Anyone can search and chat with anyone from any zone
+   * OPTIMIZED: Uses caching to prevent repeated fetches
    */
   static async searchUsers(searchTerm: string, currentUserId: string, zoneId?: string, isBoss: boolean = false): Promise<ChatUser[]> {
     try {
@@ -258,22 +304,28 @@ export class FirebaseChatService {
       
       let allMembers: ChatUser[] = []
       
-      // Everyone can search across ALL zones - but with security filtering for senior zones
-      console.log('🔍 Global search - fetching members from all zones and HQ groups', { 
-        currentZone: zoneId, 
-        isSearcherInSeniorZone,
-        canSeeEveryone: isSearcherInSeniorZone || isBoss
-      })
-      
       // Use a Map to deduplicate by userId (in case user is in multiple zones)
       const userMap = new Map<string, ChatUser>()
       
-      // Get all zone members from all zones
-      const zoneMembersRef = collection(db, 'zone_members')
-      const zoneMembersSnapshot = await getDocs(zoneMembersRef)
+      // OPTIMIZED: Use cached zone members if available and not expired
+      let zoneMembersDocs: any[]
+      const now = Date.now()
       
-      zoneMembersSnapshot.docs.forEach(doc => {
-        const data = doc.data()
+      if (this.zoneMembersCache && (now - this.zoneMembersCache.timestamp) < this.CACHE_TTL) {
+        zoneMembersDocs = this.zoneMembersCache.data
+      } else {
+        // Fetch with limit to prevent massive reads
+        const zoneMembersRef = collection(db, 'zone_members')
+        const zoneMembersQuery = query(zoneMembersRef, limit(1000)) // OPTIMIZED: Limit to 1000
+        const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
+        zoneMembersDocs = zoneMembersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        
+        // Cache the results
+        this.zoneMembersCache = { data: zoneMembersDocs, timestamp: now }
+      }
+      
+      zoneMembersDocs.forEach(memberDoc => {
+        const data = memberDoc
         // Skip current user
         if (data.userId === currentUserId) return
         
@@ -583,6 +635,12 @@ export class FirebaseChatService {
    */
   static async createDirectChat(user1Id: string, user2Id: string): Promise<string | null> {
     try {
+      // CRITICAL: Prevent self-chat creation
+      if (user1Id === user2Id) {
+        console.error('❌ Cannot create self-chat:', user1Id)
+        return null
+      }
+      
       // Check if chat already exists
       const existingChat = await this.findDirectChat(user1Id, user2Id)
       if (existingChat) return existingChat.id
@@ -606,6 +664,7 @@ export class FirebaseChatService {
         isActive: true
       }
 
+      console.log('✅ Creating direct chat between:', user1?.fullName || 'User1', 'and', user2?.fullName || 'User2')
       const docRef = await addDoc(collection(db, 'chats'), chatData)
       return docRef.id
     } catch (error) {
@@ -917,88 +976,136 @@ export class FirebaseChatService {
   }
 
   /**
-   * Subscribe to real-time messages
+   * Subscribe to real-time messages - OPTIMIZED: Limited to 100 most recent messages
    */
   static subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): () => void {
+    console.log('🔌 [Chat] Setting up message subscription for chat:', chatId)
+    
+    // OPTIMIZED: Limit to 100 most recent messages to reduce reads
     const q = query(
       collection(db, 'messages'),
-      where('chatId', '==', chatId)
+      where('chatId', '==', chatId),
+      orderBy('timestamp', 'desc'),
+      limit(100)
     )
     
     return onSnapshot(q, (snapshot) => {
-      const messages: ChatMessage[] = []
-      
-      // Process documents more efficiently
-      snapshot.docs.forEach(doc => {
-        messages.push({ id: doc.id, ...doc.data() } as ChatMessage)
-      })
-      
-      // Sort messages by timestamp (newest last)
-      messages.sort((a, b) => {
-        const aTime = formatTimestamp(a.timestamp).getTime()
-        const bTime = formatTimestamp(b.timestamp).getTime()
-        return aTime - bTime
-      })
-      
-      // Call callback immediately
-      callback(messages)
-    }, (error) => {
-      console.error('Error in message subscription:', error)
-      // Call callback with empty array on error to stop loading
-      callback([])
-    })
+        const messages: ChatMessage[] = []
+        
+        snapshot.docs.forEach(doc => {
+          messages.push({ id: doc.id, ...doc.data() } as ChatMessage)
+        })
+        
+        // Reverse to show oldest first (query returns newest first due to desc order)
+        messages.reverse()
+        
+        callback(messages)
+      }, 
+      (error) => {
+        console.error('❌ [Chat] Message subscription error:', error)
+        callback([])
+      }
+    )
   }
 
   /**
-   * Subscribe to real-time chats
+   * Subscribe to real-time chats - OPTIMIZED: Removed cache rejection to reduce reads
    */
   static subscribeToChats(userId: string, callback: (chats: Chat[]) => void): () => void {
+    console.log('🔌 [Chat] Setting up chat subscription for user:', userId)
+    
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', userId),
       where('isActive', '==', true)
     )
     
+    // OPTIMIZED: Accept cache to reduce reads, only fetch fresh when needed
     return onSnapshot(q, async (snapshot) => {
-      const chats: Chat[] = []
-      
-      // Process each chat
-      for (const doc of snapshot.docs) {
-        const chatData = { id: doc.id, ...doc.data() } as Chat
+        const chats: Chat[] = []
+        const selfChatsToDelete: string[] = []
         
-        // For direct chats without participant names, populate them
-        if (chatData.type === 'direct' && !chatData.participantNames) {
-          const otherParticipantId = chatData.participants.find(id => id !== userId)
-          if (otherParticipantId) {
-            try {
-              const userData = await this.getUser(otherParticipantId)
-              if (userData) {
-                chatData.participantNames = { [otherParticipantId]: userData.fullName }
+        // Process each chat with STRICT filtering
+        for (const doc of snapshot.docs) {
+          const chatData = { id: doc.id, ...doc.data() } as Chat
+          
+          // FILTER 1: Direct chats only (groups are always valid)
+          if (chatData.type === 'direct') {
+            const [p1, p2] = chatData.participants
+            
+            // FILTER 2: Must have exactly 2 participants
+            if (chatData.participants.length !== 2) {
+              console.log('🗑️ [Firebase] Invalid chat (wrong participant count):', doc.id, chatData.participants)
+              selfChatsToDelete.push(doc.id)
+              continue
+            }
+            
+            // FILTER 3: Both participants must be different people
+            if (p1 === p2) {
+              console.log('🗑️ [Firebase] Self-chat detected (duplicate):', doc.id, [p1, p2])
+              selfChatsToDelete.push(doc.id)
+              continue
+            }
+            
+            // FILTER 4: Current user should only appear ONCE
+            const userCount = chatData.participants.filter(p => p === userId).length
+            if (userCount !== 1) {
+              console.log('🗑️ [Firebase] Self-chat detected (user appears', userCount, 'times):', doc.id)
+              selfChatsToDelete.push(doc.id)
+              continue
+            }
+            
+            // Populate participant names for UI
+            if (!chatData.participantNames) {
+              const otherUserId = chatData.participants.find(id => id !== userId)
+              if (otherUserId) {
+                try {
+                  const userData = await this.getUser(otherUserId)
+                  if (userData) {
+                    chatData.participantNames = { [otherUserId]: userData.fullName }
+                  }
+                } catch (error) {
+                  console.error('Error getting participant name:', error)
+                  chatData.participantNames = { [otherUserId]: 'Unknown User' }
+                }
               }
-            } catch (error) {
-              console.error('Error getting participant name:', error)
-              chatData.participantNames = { [otherParticipantId]: 'Unknown User' }
             }
           }
+          
+          // Chat passed all filters - add it
+          chats.push(chatData)
         }
         
-        chats.push(chatData)
+        // Clean up invalid chats in background
+        if (selfChatsToDelete.length > 0) {
+          console.log(`🧹 [Firebase] Cleaning up ${selfChatsToDelete.length} invalid chats...`)
+          selfChatsToDelete.forEach(async (chatId) => {
+            try {
+              await deleteDoc(doc(db, 'chats', chatId))
+              console.log('✅ [Firebase] Deleted invalid chat:', chatId)
+            } catch (error) {
+              console.error('❌ [Firebase] Failed to delete chat:', chatId, error)
+            }
+          })
+        }
+        
+        // Sort by last message time
+        const sortedChats = [...chats].sort((a, b) => {
+          const aTime = a.lastMessage?.timestamp || a.createdAt
+          const bTime = b.lastMessage?.timestamp || b.createdAt
+          const aTimeMs = formatTimestamp(aTime).getTime()
+          const bTimeMs = formatTimestamp(bTime).getTime()
+          return bTimeMs - aTimeMs
+        })
+        
+        console.log('✅ [Firebase] Returning', sortedChats.length, 'valid chats')
+        callback(sortedChats)
+      },
+      (error) => {
+        console.error('❌ [Firebase] Chat subscription error:', error)
+        callback([]) // Return empty array on error
       }
-      
-      // Sort by last message timestamp (create new array to trigger React re-render)
-      const sortedChats = [...chats].sort((a, b) => {
-        const aTime = a.lastMessage?.timestamp || a.createdAt
-        const bTime = b.lastMessage?.timestamp || b.createdAt
-        
-        // Handle different timestamp formats
-        const aTimeMs = formatTimestamp(aTime).getTime()
-        const bTimeMs = formatTimestamp(bTime).getTime()
-        
-        return bTimeMs - aTimeMs
-      })
-      
-      callback(sortedChats)
-    })
+    )
   }
 
   // ==================== GROUP MANAGEMENT ====================

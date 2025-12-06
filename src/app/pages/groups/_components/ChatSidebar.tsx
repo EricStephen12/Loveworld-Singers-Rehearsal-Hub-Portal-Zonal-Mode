@@ -1,6 +1,6 @@
    'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useChat } from '../_context/ChatContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
@@ -16,6 +16,23 @@ export default function ChatSidebar() {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null)
   const [showMenuChatId, setShowMenuChatId] = useState<string | null>(null)
 
+  // Debug chats on load
+  useEffect(() => {
+    if (chats.length > 0) {
+      console.log('💬 [ChatSidebar] Loaded chats:', chats.length)
+      chats.forEach((chat, i) => {
+        if (i < 3) { // Only log first 3
+          console.log(`  Chat ${i + 1}:`, {
+            type: chat.type,
+            participants: chat.participants,
+            participantNames: chat.participantNames,
+            currentUserId: user?.uid
+          })
+        }
+      })
+    }
+  }, [chats, user?.uid])
+  
   // Filter and sort chats
   const filteredChats = chats.filter(chat => {
     if (!searchTerm) return true
@@ -105,7 +122,8 @@ export default function ChatSidebar() {
 
   if (isChatsLoading) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col bg-white">
+        {/* Loading Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2 mb-4">
             <MessageCircle className="w-5 h-5 text-gray-400" />
@@ -114,16 +132,9 @@ export default function ChatSidebar() {
           <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
         </div>
         
-        <div className="flex-1 p-4 space-y-3">
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-lg">
-              <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
-              <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
-              </div>
-            </div>
-          ))}
+        {/* FAST LOADING SPINNER */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin"></div>
         </div>
       </div>
     )
@@ -180,9 +191,9 @@ export default function ChatSidebar() {
                     setShowMenuChatId(null)
                   }}
                 >
-                  <button
+                  <div
                     onClick={() => setSelectedChat(chat)}
-                    className={`w-full p-3 sm:p-3 rounded-lg transition-all hover:bg-gray-50 touch-target ${
+                    className={`w-full p-3 sm:p-3 rounded-lg transition-all hover:bg-gray-50 touch-target cursor-pointer ${
                       selectedChat?.id === chat.id 
                         ? 'bg-green-50 border-l-4 border-green-500' 
                         : ''
@@ -267,7 +278,7 @@ export default function ChatSidebar() {
                         </button>
                       )}
                     </div>
-                  </button>
+                  </div>
 
                   {/* Dropdown Menu */}
                   {showMenu && (

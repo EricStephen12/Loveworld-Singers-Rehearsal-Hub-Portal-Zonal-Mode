@@ -104,21 +104,53 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
   }, [pageCategories, searchTerm]);
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Page Categories</h1>
-            <p className="text-slate-600 mt-1">
-              Manage page categories for better organization
-              {filteredCategories.length > 0 && (
-                <span className={`ml-2 ${theme.text} font-medium`}>
-                  ({filteredCategories.length} {filteredCategories.length === 1 ? 'category' : 'categories'})
-                </span>
-              )}
-            </p>
+    <div className="flex-1 overflow-auto bg-white lg:bg-gradient-to-br lg:from-slate-50 lg:via-white lg:to-purple-50">
+      {/* Mobile Stats Header */}
+      <div className="lg:hidden bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <Tag className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white/80 text-xs">Page Categories</p>
+              <p className="text-white font-bold text-lg">{filteredCategories.length}</p>
+            </div>
           </div>
+        </div>
+      </div>
+      
+      <div className="p-4 lg:p-6 pb-24 lg:pb-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header - Desktop Only */}
+          <div className="hidden lg:flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Page Categories</h1>
+              <p className="text-slate-600 mt-1">
+                Manage page categories for better organization
+                {filteredCategories.length > 0 && (
+                  <span className={`ml-2 ${theme.text} font-medium`}>
+                    ({filteredCategories.length} {filteredCategories.length === 1 ? 'category' : 'categories'})
+                  </span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingPageCategory(null);
+                setNewPageCategoryName('');
+                setNewPageCategoryDescription('');
+                setNewPageCategoryImage('');
+                setShowPageCategoryModal(true);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium`}
+            >
+              <Plus className="w-4 h-4" />
+              Add Page Category
+            </button>
+          </div>
+          
+          {/* Mobile Add Button - Floating */}
           <button
             onClick={() => {
               setEditingPageCategory(null);
@@ -127,29 +159,27 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
               setNewPageCategoryImage('');
               setShowPageCategoryModal(true);
             }}
-            className={`flex items-center gap-2 px-4 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium`}
+            className={`lg:hidden fixed bottom-20 right-4 z-40 w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
           >
-            <Plus className="w-4 h-4" />
-            Add Page Category
+            <Plus className="w-6 h-6" />
           </button>
-        </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search page categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+          {/* Search */}
+          <div className="mb-4 lg:mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search page categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50 lg:bg-white lg:max-w-md text-sm"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Show pages in selected category */}
-        {selectedCategory ? (
+          {/* Show pages in selected category */}
+          {selectedCategory ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -216,55 +246,112 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
             )}
           </div>
         ) : (
-          /* Categories List */
+          /* Categories List - Instagram Style */
           filteredCategories.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCategories.map((category) => {
-              const pageCount = pages.filter(page => page.pageCategory === category.name).length;
-              return (
-              <div key={category.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
+          <>
+            {/* Mobile List View */}
+            <div className="lg:hidden divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              {filteredCategories.map((category) => {
+                const pageCount = pages.filter(page => page.pageCategory === category.name).length;
+                return (
                   <div 
-                    className="flex-1 cursor-pointer" 
+                    key={category.id} 
+                    className="flex items-center gap-3 p-4 active:bg-slate-50 transition-colors cursor-pointer"
                     onClick={() => setSelectedCategory(category)}
-                    title="Click to view pages in this category"
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Tag className={`w-4 h-4 ${theme.text}`} />
-                      <h3 className="font-semibold text-slate-900">{category.name}</h3>
-                      <span className={`px-2 py-0.5 ${theme.primaryLight} ${theme.text} text-xs font-medium rounded-full`}>
+                    {/* Category Image/Icon */}
+                    <div className="flex-shrink-0">
+                      {category.image ? (
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className="w-14 h-14 rounded-xl object-cover ring-2 ring-white shadow-sm"
+                        />
+                      ) : (
+                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center ring-2 ring-white shadow-sm`}>
+                          <Tag className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-[15px] text-slate-900 truncate">{category.name}</h3>
+                      <p className="text-sm text-slate-500 truncate">{category.description || 'No description'}</p>
+                      <span className={`inline-block mt-1 px-2 py-0.5 ${theme.primaryLight} ${theme.text} text-[10px] font-semibold rounded-full`}>
                         {pageCount} {pageCount === 1 ? 'page' : 'pages'}
                       </span>
                     </div>
-                    {category.image && (
-                      <img 
-                        src={category.image} 
-                        alt={category.name}
-                        className="w-full h-24 object-cover rounded mb-2"
-                      />
-                    )}
-                    <p className="text-sm text-slate-500">{category.description}</p>
+                    
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEditPageCategory(category); }}
+                        className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeletePageCategory(category); }}
+                        className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 active:scale-95 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleEditPageCategory(category)}
-                      className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                      title="Edit category"
+                );
+              })}
+            </div>
+            
+            {/* Desktop Grid View */}
+            <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredCategories.map((category) => {
+                const pageCount = pages.filter(page => page.pageCategory === category.name).length;
+                return (
+                <div key={category.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div 
+                      className="flex-1 cursor-pointer" 
+                      onClick={() => setSelectedCategory(category)}
+                      title="Click to view pages in this category"
                     >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeletePageCategory(category)}
-                      className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50"
-                      title="Delete category"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className={`w-4 h-4 ${theme.text}`} />
+                        <h3 className="font-semibold text-slate-900">{category.name}</h3>
+                        <span className={`px-2 py-0.5 ${theme.primaryLight} ${theme.text} text-xs font-medium rounded-full`}>
+                          {pageCount} {pageCount === 1 ? 'page' : 'pages'}
+                        </span>
+                      </div>
+                      {category.image && (
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className="w-full h-24 object-cover rounded mb-2"
+                        />
+                      )}
+                      <p className="text-sm text-slate-500">{category.description}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleEditPageCategory(category)}
+                        className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                        title="Edit category"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePageCategory(category)}
+                        className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        title="Delete category"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )})}
-          </div>
+              )})}
+            </div>
+          </>
         ) : (
           /* No categories found */
           <div className="text-center py-12">
@@ -290,6 +377,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
           </div>
         )
         )}
+        </div>
       </div>
 
       {/* Add/Edit Page Category Modal */}

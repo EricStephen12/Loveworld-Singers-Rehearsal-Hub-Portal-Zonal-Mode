@@ -1,0 +1,277 @@
+/* Audio Lab UX Improvements */
+
+/* Better mobile touch targets */
+.audiolab-wrapper .app {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+}
+
+/* Improve header UX */
+.audiolab-wrapper .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.8) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Better touch targets for mobile */
+.audiolab-wrapper .back-btn,
+.audiolab-wrapper .profile-btn,
+.audiolab-wrapper .icon-btn,
+.audiolab-wrapper button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth transitions */
+.audiolab-wrapper * {
+  transition: all 0.2s ease;
+}
+
+/* Better bottom navigation */
+.audiolab-wrapper .bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.9) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Better nav items */
+.audiolab-wrapper .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.audiolab-wrapper .nav-item.active {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.audiolab-wrapper .nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Better music player */
+.audiolab-wrapper .music-player {
+  position: fixed;
+  bottom: 72px; /* Above bottom nav */
+  left: 0;
+  right: 0;
+  z-index: 90;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.95) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+/* Better main content spacing */
+.audiolab-wrapper .main-content {
+  padding-bottom: 160px; /* Space for player + nav */
+  min-height: calc(100vh - 60px);
+  min-height: calc(100dvh - 60px);
+}
+
+.audiolab-wrapper .main-content.with-player {
+  padding-bottom: 240px; /* More space when player is visible */
+}
+
+/* Better cards and lists */
+.audiolab-wrapper .song-item,
+.audiolab-wrapper .playlist-card,
+.audiolab-wrapper .track-row {
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.audiolab-wrapper .song-item:hover,
+.audiolab-wrapper .playlist-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Better scrolling */
+.audiolab-wrapper {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Better focus states */
+.audiolab-wrapper button:focus-visible,
+.audiolab-wrapper input:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+/* Remove tap highlight on mobile */
+.audiolab-wrapper * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better loading states */
+.audiolab-wrapper .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* Better empty states */
+.audiolab-wrapper .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Better modals */
+.audiolab-wrapper .modal-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.audiolab-wrapper .modal,
+.audiolab-wrapper .create-project-modal {
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Better inputs */
+.audiolab-wrapper input,
+.audiolab-wrapper textarea {
+  border-radius: 12px;
+  font-size: 16px; /* Prevent zoom on iOS */
+}
+
+/* Better buttons */
+.audiolab-wrapper .btn-primary,
+.audiolab-wrapper .play-btn-large {
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.audiolab-wrapper .btn-primary:hover,
+.audiolab-wrapper .play-btn-large:hover {
+  transform: scale(1.05);
+}
+
+.audiolab-wrapper .btn-primary:active,
+.audiolab-wrapper .play-btn-large:active {
+  transform: scale(0.95);
+}
+
+/* Better tabs */
+.audiolab-wrapper .tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.audiolab-wrapper .tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.audiolab-wrapper .tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.audiolab-wrapper .tab.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: white;
+}
+
+/* Better fullscreen player */
+.audiolab-wrapper .fullscreen-player {
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  background: rgba(0, 0, 0, 0.95) !important;
+}
+
+/* Better waveforms */
+.audiolab-wrapper .waveform-visual,
+.audiolab-wrapper .wave-bar {
+  border-radius: 2px;
+}
+
+/* Better studio interface */
+.audiolab-wrapper .studio-container {
+  background: #111827;
+}
+
+.audiolab-wrapper .track-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+}
+
+.audiolab-wrapper .track-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.audiolab-wrapper .track-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.audiolab-wrapper .track-list::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 3px;
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .audiolab-wrapper .header {
+    padding: 12px 16px;
+  }
+  
+  .audiolab-wrapper .main-content {
+    padding: 16px;
+  }
+  
+  .audiolab-wrapper .bottom-nav {
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .audiolab-wrapper {
+    color-scheme: dark;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .audiolab-wrapper * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

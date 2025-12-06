@@ -38,7 +38,9 @@ export default function JoinZonePage() {
   const handleJoinZone = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!user || !profile) {
+    // Use cached profile if user is still loading
+    const currentUser = user || (profile?.id ? { uid: profile.id } : null)
+    if (!currentUser) {
       setError('You must be logged in to join a zone')
       return
     }
@@ -66,10 +68,10 @@ export default function JoinZonePage() {
 
       // Join the zone
       const result = await ZoneInvitationService.joinZoneWithCode(
-        user.uid,
+        currentUser.uid,
         code,
-        profile.email || user.email || '',
-        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User'
+        profile?.email || user?.email || '',
+        `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'User'
       )
 
       if (result.success) {
@@ -94,7 +96,8 @@ export default function JoinZonePage() {
     }
   }
 
-  if (!user) {
+  // Only show login prompt if truly logged out (no user AND no profile)
+  if (!user && !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">

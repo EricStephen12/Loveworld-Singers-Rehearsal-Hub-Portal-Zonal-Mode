@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Music, Mic, SlidersHorizontal, Users, ChevronLeft, User, 
   Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
-  X, ChevronDown, MoreVertical
+  X, ChevronDown, MoreVertical, Plus, Search, Clock, Heart, ListMusic,
+  Headphones, Radio, TrendingUp, Star, Download
 } from 'lucide-react';
-import './App.css';
-import './TrackCategories.css';
-import './responsive.css';
+import './audiolab-improvements.css';
 // @ts-ignore
 import PracticePage from './PracticePage';
 // @ts-ignore

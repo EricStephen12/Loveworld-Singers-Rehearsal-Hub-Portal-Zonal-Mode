@@ -34,15 +34,33 @@ export interface SessionData {
 
 class AnalyticsTracker {
   private sessionId: string;
+  private visitorId: string; // Persistent visitor ID for unique user tracking
   private startTime: number;
   private pageViews: number = 0;
   private pages: string[] = [];
   private isTracking: boolean = false;
 
   constructor() {
+    this.visitorId = this.getOrCreateVisitorId();
     this.sessionId = this.generateSessionId();
     this.startTime = Date.now();
     this.initializeTracking();
+  }
+
+  // Get or create a persistent visitor ID (stored in localStorage)
+  private getOrCreateVisitorId(): string {
+    if (typeof window === 'undefined') return 'server';
+    
+    const VISITOR_ID_KEY = 'lwsrh_visitor_id';
+    let visitorId = localStorage.getItem(VISITOR_ID_KEY);
+    
+    if (!visitorId) {
+      // Generate a unique visitor ID that persists across sessions
+      visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem(VISITOR_ID_KEY, visitorId);
+    }
+    
+    return visitorId;
   }
 
   private generateSessionId(): string {
@@ -99,8 +117,9 @@ class AnalyticsTracker {
   private async storeSessionStart(): Promise<void> {
     try {
       const location = await this.getLocation();
-      const sessionData: Partial<SessionData> = {
+      const sessionData: Partial<SessionData> & { visitorId: string } = {
         sessionId: this.sessionId,
+        visitorId: this.visitorId, // Persistent visitor ID for unique user tracking
         startTime: this.startTime,
         pageViews: 0,
         pages: [],
@@ -199,10 +218,14 @@ class AnalyticsTracker {
 
   private async updateSessionPageViews(): Promise<void> {
     try {
-      await FirebaseDatabaseService.updateDocument('analytics_sessions', this.sessionId, {
-        pageViews: this.pageViews,
-        pages: [...new Set(this.pages)]
-      } as any);
+      // Check if session exists first
+      const sessionExists = await FirebaseDatabaseService.getDocument('analytics_sessions', this.sessionId);
+      if (sessionExists) {
+        await FirebaseDatabaseService.updateDocument('analytics_sessions', this.sessionId, {
+          pageViews: this.pageViews,
+          pages: [...new Set(this.pages)]
+        } as any);
+      }
     } catch (error) {
       // Silently fail - session might not exist yet
     }

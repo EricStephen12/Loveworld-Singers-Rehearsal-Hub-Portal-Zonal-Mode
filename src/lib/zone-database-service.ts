@@ -6,6 +6,21 @@
 
 import { FirebaseDatabaseService } from './firebase-database'
 
+// In-memory cache for categories (5 minute TTL)
+const CATEGORIES_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+interface CategoriesCache {
+  data: any[];
+  timestamp: number;
+  zoneId: string;
+}
+const categoriesCache = new Map<string, CategoriesCache>();
+const pageCategoriesCache = new Map<string, CategoriesCache>();
+
+function isCategoriesCacheValid(cache: CategoriesCache | undefined): boolean {
+  if (!cache) return false;
+  return Date.now() - cache.timestamp < CATEGORIES_CACHE_TTL;
+}
+
 export class ZoneDatabaseService {
   
   /**
@@ -293,6 +308,7 @@ export class ZoneDatabaseService {
           updatedAt: new Date()
         }
         const result = await FirebaseDatabaseService.addDocument('categories', data)
+        this.invalidateCategoriesCache(zoneId) // Invalidate cache
         return { success: true, id: result.id, ...data }
       } else {
         console.log('📍 Creating zone category in zone_categories collection (filtered)')
@@ -303,6 +319,7 @@ export class ZoneDatabaseService {
           updatedAt: new Date()
         }
         const result = await FirebaseDatabaseService.addDocument('zone_categories', data)
+        this.invalidateCategoriesCache(zoneId) // Invalidate cache
         return { success: true, id: result.id, ...data }
       }
     } catch (error) {
@@ -347,6 +364,7 @@ export class ZoneDatabaseService {
           updatedAt: new Date()
         }
         const result = await FirebaseDatabaseService.addDocument('page_categories', categoryData)
+        this.invalidatePageCategoriesCache(zoneId) // Invalidate cache
         return { success: true, id: result.id }
       } else {
         console.log('📍 Creating zone page category in zone_page_categories collection (filtered)')
@@ -357,6 +375,7 @@ export class ZoneDatabaseService {
           updatedAt: new Date()
         }
         const result = await FirebaseDatabaseService.addDocument('zone_page_categories', categoryData)
+        this.invalidatePageCategoriesCache(zoneId) // Invalidate cache
         return { success: true, id: result.id }
       }
     } catch (error) {
@@ -384,6 +403,7 @@ export class ZoneDatabaseService {
         await FirebaseDatabaseService.updateDocument('zone_page_categories', pageCategoryId, updateData)
       }
       
+      this.invalidatePageCategoriesCache(zoneId) // Invalidate cache
       return { success: true }
     } catch (error) {
       console.error('❌ Error updating page category:', error)
@@ -407,6 +427,7 @@ export class ZoneDatabaseService {
         await FirebaseDatabaseService.deleteDocument('zone_page_categories', pageCategoryId)
       }
       
+      this.invalidatePageCategoriesCache(zoneId) // Invalidate cache
       return { success: true }
     } catch (error) {
       console.error('❌ Error deleting page category:', error)
@@ -433,6 +454,7 @@ export class ZoneDatabaseService {
         await FirebaseDatabaseService.updateDocument('zone_categories', categoryId, updateData)
       }
       
+      this.invalidateCategoriesCache(zoneId) // Invalidate cache
       return { success: true }
     } catch (error) {
       console.error('❌ Error updating category:', error)
@@ -456,6 +478,7 @@ export class ZoneDatabaseService {
         await FirebaseDatabaseService.deleteDocument('zone_categories', categoryId)
       }
       
+      this.invalidateCategoriesCache(zoneId) // Invalidate cache
       return { success: true }
     } catch (error) {
       console.error('❌ Error deleting category:', error)
@@ -508,35 +531,89 @@ export class ZoneDatabaseService {
   }
   
   /**
-   * Get categories for a zone - HQ AWARE
+   * Get categories for a zone - HQ AWARE (with caching)
    */
   static async getCategories(zoneId: string) {
+    // Check cache first
+    const cacheKey = `categories_${zoneId}`;
+    const cached = categoriesCache.get(cacheKey);
+    if (isCategoriesCacheValid(cached)) {
+      console.log('📦 [Categories] Using cached data for zone:', zoneId);
+      return cached!.data;
+    }
+    
     // Import here to avoid circular dependency
     const { isHQGroup } = await import('@/config/zones')
     
+    let categories: any[];
     if (isHQGroup(zoneId)) {
       console.log('🏢 Loading HQ categories from categories collection (unfiltered)')
-      return await FirebaseDatabaseService.getCollection('categories')
+      categories = await FirebaseDatabaseService.getCollection('categories')
     } else {
       console.log('📍 Loading zone categories from zone_categories collection (filtered)')
-      return this.getCategoriesByZone(zoneId)
+      categories = await this.getCategoriesByZone(zoneId)
     }
+    
+    // Cache the results
+    categoriesCache.set(cacheKey, {
+      data: categories,
+      timestamp: Date.now(),
+      zoneId
+    });
+    console.log('✅ [Categories] Cached for zone:', zoneId);
+    
+    return categories;
   }
   
   /**
-   * Get page categories for a zone - HQ AWARE
+   * Get page categories for a zone - HQ AWARE (with caching)
    */
   static async getPageCategories(zoneId: string) {
+    // Check cache first
+    const cacheKey = `page_categories_${zoneId}`;
+    const cached = pageCategoriesCache.get(cacheKey);
+    if (isCategoriesCacheValid(cached)) {
+      console.log('📦 [PageCategories] Using cached data for zone:', zoneId);
+      return cached!.data;
+    }
+    
     // Import here to avoid circular dependency
     const { isHQGroup } = await import('@/config/zones')
     
+    let pageCategories: any[];
     if (isHQGroup(zoneId)) {
       console.log('🏢 Loading HQ page categories from page_categories collection (unfiltered)')
-      return await FirebaseDatabaseService.getCollection('page_categories')
+      pageCategories = await FirebaseDatabaseService.getCollection('page_categories')
     } else {
       console.log('📍 Loading zone page categories from zone_page_categories collection (filtered)')
-      return this.getPageCategoriesByZone(zoneId)
+      pageCategories = await this.getPageCategoriesByZone(zoneId)
     }
+    
+    // Cache the results
+    pageCategoriesCache.set(cacheKey, {
+      data: pageCategories,
+      timestamp: Date.now(),
+      zoneId
+    });
+    console.log('✅ [PageCategories] Cached for zone:', zoneId);
+    
+    return pageCategories;
+  }
+  
+  /**
+   * Invalidate categories cache (call after create/update/delete)
+   */
+  static invalidateCategoriesCache(zoneId: string) {
+    categoriesCache.delete(`categories_${zoneId}`);
+    console.log('🗑️ [Categories] Cache invalidated for zone:', zoneId);
+  }
+  
+  /**
+   * Invalidate page categories cache (call after create/update/delete)
+   */
+  static invalidatePageCategoriesCache(zoneId: string) {
+    pageCategoriesCache.delete(`page_categories_${zoneId}`);
+    console.log('🗑️ [PageCategories] Cache invalidated for zone:', zoneId);
   }
 
   // ============================================
@@ -546,22 +623,18 @@ export class ZoneDatabaseService {
   /**
    * Get all songs from Master Library
    * Zone Coordinators use this to browse available songs for import
+   * OPTIMIZED: Uses MasterLibraryService with caching and limits
    */
-  static async getMasterSongs() {
+  static async getMasterSongs(limit: number = 100) {
     try {
-      console.log('📚 [Zone] Getting Master Library songs...')
+      console.log('📚 [Zone] Getting Master Library songs (limit:', limit, ')...')
       
-      const songs = await FirebaseDatabaseService.getCollection('master_songs')
+      // Use the optimized MasterLibraryService with caching
+      const { MasterLibraryService } = await import('./master-library-service')
+      const songs = await MasterLibraryService.getMasterSongs(limit)
       
-      // Sort by publishedAt (newest first)
-      const sorted = songs.sort((a: any, b: any) => {
-        const dateA = new Date(a.publishedAt || 0).getTime()
-        const dateB = new Date(b.publishedAt || 0).getTime()
-        return dateB - dateA
-      })
-      
-      console.log(`✅ [Zone] Found ${sorted.length} songs in Master Library`)
-      return sorted
+      console.log(`✅ [Zone] Found ${songs.length} songs in Master Library`)
+      return songs
     } catch (error) {
       console.error('❌ [Zone] Error getting Master Library songs:', error)
       return []
@@ -676,12 +749,12 @@ export class ZoneDatabaseService {
   
   /**
    * Increment the import count for a master song
+   * OPTIMIZED: Fetch single document instead of entire collection
    */
   static async incrementMasterSongImportCount(masterSongId: string) {
     try {
-      // Get current count
-      const songs = await FirebaseDatabaseService.getCollection('master_songs') as any[]
-      const masterSong = songs.find((s) => s.id === masterSongId)
+      // Get single document instead of entire collection
+      const masterSong = await FirebaseDatabaseService.getDocument('master_songs', masterSongId)
       
       if (masterSong) {
         const newCount = ((masterSong as any).importCount || 0) + 1
@@ -697,11 +770,11 @@ export class ZoneDatabaseService {
   
   /**
    * Check if a song was imported from Master Library
+   * OPTIMIZED: Fetch single document instead of entire collection
    */
   static async isImportedFromMaster(songId: string): Promise<boolean> {
     try {
-      const songs = await FirebaseDatabaseService.getCollection('zone_songs') as any[]
-      const song = songs.find((s) => s.id === songId)
+      const song = await FirebaseDatabaseService.getDocument('zone_songs', songId)
       return (song as any)?.importedFrom === 'master'
     } catch (error) {
       console.error('❌ [Zone] Error checking import status:', error)

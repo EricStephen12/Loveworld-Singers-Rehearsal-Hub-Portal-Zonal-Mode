@@ -23,7 +23,7 @@ const categories = [
 export default function MediaPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
-  const { allMedia, isLoading } = useMedia()
+  const { allMedia, isLoading, isLoadingMore, hasMore, loadMore } = useMedia()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
@@ -141,8 +141,8 @@ export default function MediaPage() {
         {/* Header */}
         <header className="sticky top-0 z-50 bg-[#0f0f0f] h-12 sm:h-14 flex items-center justify-between px-2 sm:px-4 border-b border-white/10">
           <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={(e) => { e.stopPropagation(); setSidebarOpen(true); }} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full md:hidden">
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+            <button onClick={() => router.back()} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full md:hidden" aria-label="Go back">
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div className="flex items-center gap-1 cursor-pointer" onClick={() => router.push('/home')}>
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-red-600 rounded-lg flex items-center justify-center">
@@ -181,9 +181,13 @@ export default function MediaPage() {
             <button className="p-2 hover:bg-white/10 rounded-full hidden sm:flex">
               <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-600 flex items-center justify-center text-xs sm:text-sm font-medium ml-1">
-              {user?.email?.[0]?.toUpperCase() || 'U'}
-            </div>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSidebarOpen(true); }} 
+              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
           </div>
         </header>
 
@@ -223,11 +227,33 @@ export default function MediaPage() {
               ))}
             </div>
           ) : filteredMedia.length > 0 ? (
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {filteredMedia.map((media) => (
-                <MediaCard key={media.id} media={media} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                {filteredMedia.map((media) => (
+                  <MediaCard key={media.id} media={media} />
+                ))}
+              </div>
+              
+              {/* Load More Button */}
+              {hasMore && !searchQuery && selectedCategory === 'all' && (
+                <div className="flex justify-center mt-6 sm:mt-8">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    className="px-6 py-3 bg-[#272727] hover:bg-[#3f3f3f] text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      'Load More'
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 sm:py-20">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#272727] rounded-full flex items-center justify-center mb-3 sm:mb-4">

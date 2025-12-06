@@ -12,7 +12,10 @@ import {
   orderBy,
   limit,
   where,
-  onSnapshot
+  onSnapshot,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore'
 import { db } from './firebase-setup'
 import { IDManager } from '@/utils/idManager'
@@ -232,9 +235,12 @@ export class FirebaseDatabaseService {
   }
 
   // Generic methods for migration
-  static async getCollection(collectionName: string) {
+  // OPTIMIZED: Added optional limit parameter (default 500 to prevent massive reads)
+  static async getCollection(collectionName: string, maxLimit: number = 500) {
     try {
-      const querySnapshot = await getDocs(collection(db, collectionName))
+      // Use limit to prevent fetching entire large collections
+      const q = query(collection(db, collectionName), limit(maxLimit))
+      const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
         const result = {
@@ -244,26 +250,119 @@ export class FirebaseDatabaseService {
           ...data
         }
         
-        // Debug comments specifically for songs collection
-        if (collectionName === 'songs' && data.comments) {
-          console.log('🔍 Firebase getCollection - Song comments debug:', {
-            songTitle: data.title,
-            docId: doc.id,
-            hasComments: !!data.comments,
-            commentsType: typeof data.comments,
-            commentsIsArray: Array.isArray(data.comments),
-            commentsLength: data.comments?.length || 0,
-            commentsData: data.comments,
-            commentsStringified: JSON.stringify(data.comments)
-          });
-        }
-        
         return result;
       })
     } catch (error) {
       console.error(`Error getting collection ${collectionName}:`, error)
       return []
     }
+  }
+
+  // Get ALL documents from a collection (no limit) - use carefully!
+  static async getAllFromCollection(collectionName: string) {
+    try {
+      const querySnapshot = await getDocs(collection(db, collectionName))
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          firebaseId: doc.id,
+          ...data
+        }
+      })
+    } catch (error) {
+      console.error(`Error getting all from ${collectionName}:`, error)
+      return []
+    }
+  }
+
+  // Batch fetch with cursor pagination - for large collections like analytics
+  // Returns data in batches and calls onBatch callback for each batch
+  static async getCollectionInBatches(
+    collectionName: string,
+    batchSize: number = 500,
+    maxTotal: number = 10000,
+    orderByField: string = 'timestamp',
+    onBatch?: (batch: any[], totalFetched: number, isComplete: boolean) => void
+  ): Promise<any[]> {
+    try {
+      const allResults: any[] = []
+      let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null
+      let hasMore = true
+      
+      console.log(`📦 [Batch] Starting batch fetch for ${collectionName} (batch size: ${batchSize}, max: ${maxTotal})`)
+      
+      while (hasMore && allResults.length < maxTotal) {
+        // Build query with cursor if we have a last document
+        const q = lastDoc
+          ? query(
+              collection(db, collectionName),
+              orderBy(orderByField, 'desc'),
+              startAfter(lastDoc),
+              limit(batchSize)
+            )
+          : query(
+              collection(db, collectionName),
+              orderBy(orderByField, 'desc'),
+              limit(batchSize)
+            )
+        
+        const querySnapshot = await getDocs(q)
+        const batchDocs: QueryDocumentSnapshot<DocumentData>[] = querySnapshot.docs
+        
+        if (batchDocs.length === 0) {
+          hasMore = false
+          console.log(`📦 [Batch] No more documents in ${collectionName}`)
+        } else {
+          // Map documents to data
+          const batchData = batchDocs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
+            id: docSnap.id,
+            firebaseId: docSnap.id,
+            ...docSnap.data()
+          }))
+          
+          allResults.push(...batchData)
+          lastDoc = batchDocs[batchDocs.length - 1]
+          
+          console.log(`📦 [Batch] Fetched ${batchData.length} docs, total: ${allResults.length}`)
+          
+          // Call callback with batch progress
+          if (onBatch) {
+            const isComplete = batchDocs.length < batchSize || allResults.length >= maxTotal
+            onBatch(batchData, allResults.length, isComplete)
+          }
+          
+          // Check if we got less than batch size (means no more data)
+          if (batchDocs.length < batchSize) {
+            hasMore = false
+          }
+        }
+      }
+      
+      console.log(`✅ [Batch] Complete: ${allResults.length} total documents from ${collectionName}`)
+      return allResults
+    } catch (error) {
+      console.error(`❌ [Batch] Error fetching ${collectionName}:`, error)
+      return []
+    }
+  }
+
+  // Batch fetch for analytics_sessions (uses startTime field)
+  static async getSessionsInBatches(
+    batchSize: number = 500,
+    maxTotal: number = 5000,
+    onBatch?: (batch: any[], totalFetched: number, isComplete: boolean) => void
+  ): Promise<any[]> {
+    return this.getCollectionInBatches('analytics_sessions', batchSize, maxTotal, 'startTime', onBatch)
+  }
+
+  // Batch fetch for analytics_events (uses timestamp field)
+  static async getEventsInBatches(
+    batchSize: number = 500,
+    maxTotal: number = 10000,
+    onBatch?: (batch: any[], totalFetched: number, isComplete: boolean) => void
+  ): Promise<any[]> {
+    return this.getCollectionInBatches('analytics_events', batchSize, maxTotal, 'timestamp', onBatch)
   }
 
   static async getDocument(collectionName: string, docId: string) {
@@ -336,6 +435,61 @@ export class FirebaseDatabaseService {
       }))
     } catch (error) {
       console.error(`Error getting collection ${collectionName} with where:`, error)
+      return []
+    }
+  }
+
+  // OPTIMIZED: Batch fetch documents by IDs using 'in' operator (max 30 IDs per query)
+  static async getCollectionWhereIn(collectionName: string, field: string, values: string[]) {
+    try {
+      if (values.length === 0) return []
+      
+      // Firestore 'in' operator supports max 30 values
+      const maxBatchSize = 30
+      const results: any[] = []
+      
+      for (let i = 0; i < values.length; i += maxBatchSize) {
+        const batchValues = values.slice(i, i + maxBatchSize)
+        const q = query(collection(db, collectionName), where(field, 'in', batchValues))
+        const querySnapshot = await getDocs(q)
+        querySnapshot.docs.forEach(doc => {
+          results.push({
+            id: doc.id,
+            ...doc.data()
+          })
+        })
+      }
+      
+      return results
+    } catch (error) {
+      console.error(`Error batch fetching from ${collectionName}:`, error)
+      return []
+    }
+  }
+
+  // OPTIMIZED: Batch fetch documents by document IDs (max 30 per batch)
+  static async getDocumentsByIds(collectionName: string, docIds: string[]) {
+    try {
+      if (docIds.length === 0) return []
+      
+      const results: any[] = []
+      const maxBatchSize = 30
+      
+      for (let i = 0; i < docIds.length; i += maxBatchSize) {
+        const batchIds = docIds.slice(i, i + maxBatchSize)
+        // Fetch each document individually but in parallel
+        const promises = batchIds.map(id => 
+          getDoc(doc(db, collectionName, id))
+            .then(docSnap => docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null)
+            .catch(() => null)
+        )
+        const batchResults = await Promise.all(promises)
+        results.push(...batchResults.filter(Boolean))
+      }
+      
+      return results
+    } catch (error) {
+      console.error(`Error batch fetching documents from ${collectionName}:`, error)
       return []
     }
   }

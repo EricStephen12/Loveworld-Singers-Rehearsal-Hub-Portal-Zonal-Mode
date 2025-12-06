@@ -25,8 +25,8 @@ export default function ManageEventsPage() {
     if (profile && !isAuthorized) {
       router.push('/pages/calendar')
     }
-    // Only redirect to auth if we're certain there's no user (after loading completes)
-    if (!authLoading && !user) {
+    // Only redirect to auth if we're certain there's no user AND no cached profile
+    if (!authLoading && !user && !profile) {
       router.push('/auth')
     }
   }, [user, profile, isAuthorized, router, authLoading])

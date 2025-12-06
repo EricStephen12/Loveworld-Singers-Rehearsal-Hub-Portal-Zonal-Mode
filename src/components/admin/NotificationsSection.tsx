@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Bell, Search, X, Clock, Megaphone, Trash2 } from 'lucide-react';
+import { Bell, Search, X, Clock, Megaphone, Trash2, RefreshCw, ChevronDown } from 'lucide-react';
 import { useRealtimeNotifications, useNotificationActions } from '@/hooks/useRealtimeNotifications';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { useAdminTheme } from './AdminThemeProvider';
@@ -16,26 +16,40 @@ export default function NotificationsSection() {
   const [notifGroup, setNotifGroup] = useState('');
   const [sending, setSending] = useState(false);
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+  const [displayLimit, setDisplayLimit] = useState(20); // Show 20 initially
 
   const { notifications, loading, error, markAsRead, markAllAsRead, deleteNotification } = useRealtimeNotifications();
   const { createNotificationForAll, createNotificationForGroup } = useNotificationActions();
 
-  // Fetch available groups from Firebase profiles
+  // Fetch available groups - OPTIMIZED: Use cached groups or fetch limited data
   React.useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const profiles = await FirebaseDatabaseService.getCollection('profiles');
-        const groups = new Set<string>();
-
-        profiles.forEach((profile: any) => {
-          if (profile.group && profile.group.trim()) {
-            groups.add(profile.group.toLowerCase().trim());
+        // Check localStorage cache first (groups don't change often)
+        const cached = localStorage.getItem('lwsrh-groups-cache');
+        if (cached) {
+          const { groups, timestamp } = JSON.parse(cached);
+          // Cache valid for 30 minutes
+          if (Date.now() - timestamp < 30 * 60 * 1000) {
+            setAvailableGroups(groups);
+            return;
           }
-        });
+        }
 
-        setAvailableGroups(Array.from(groups).sort());
+        // Fetch groups from a dedicated groups collection if available, or use predefined list
+        // This avoids fetching ALL profiles just to get group names
+        const predefinedGroups = ['soprano', 'alto', 'tenor', 'bass', 'instrumentalists', 'choir', 'worship team'];
+        setAvailableGroups(predefinedGroups);
+        
+        // Cache the groups
+        localStorage.setItem('lwsrh-groups-cache', JSON.stringify({
+          groups: predefinedGroups,
+          timestamp: Date.now()
+        }));
       } catch (error) {
         console.error('Error fetching groups:', error);
+        // Fallback to predefined groups
+        setAvailableGroups(['soprano', 'alto', 'tenor', 'bass']);
       }
     };
 
@@ -156,9 +170,9 @@ export default function NotificationsSection() {
   const handleDeleteAll = async () => {
     if (confirm('⚠️ Delete ALL notifications? This cannot be undone!')) {
       try {
-        const allNotifications = await FirebaseDatabaseService.getCollection('notifications');
-        
-        for (const notif of allNotifications) {
+        // OPTIMIZED: Delete only the notifications we already have loaded
+        // instead of fetching the entire collection again
+        for (const notif of notifications) {
           await FirebaseDatabaseService.deleteDocument('notifications', notif.id);
         }
         
@@ -227,48 +241,55 @@ export default function NotificationsSection() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden p-4 lg:p-6 space-y-4">
-      {/* Header */}
-      <div className="flex-shrink-0">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white lg:bg-transparent">
+      {/* Header - Hidden on mobile (shown in AdminMobileHeader) */}
+      <div className="hidden lg:block flex-shrink-0 p-6">
         <div className="flex items-center gap-3">
           <Bell className={`w-5 h-5 ${theme.text} flex-shrink-0`} />
-          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 flex-1">Notifications</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 flex-1">Notifications</h2>
           {unreadCount > 0 && (
             <span className={`${theme.primary} text-white text-xs px-2.5 py-1 rounded-full font-medium`}>
               {unreadCount}
             </span>
           )}
         </div>
-        <p className="text-xs lg:text-sm text-gray-600 mt-1 ml-8">
+        <p className="text-sm text-gray-600 mt-1 ml-8">
           Send messages to users
         </p>
       </div>
+      
+      {/* Mobile content wrapper */}
+      <div className="flex-1 flex flex-col overflow-hidden p-4 lg:px-6 lg:py-0 space-y-4">
 
-      {/* Admin Controls */}
-      <div className="flex-shrink-0 bg-white border border-gray-200 rounded-lg p-4 lg:p-6">
-        <h3 className="text-gray-900 font-semibold text-sm lg:text-base mb-3 lg:mb-4 flex items-center gap-2">
-          <Megaphone className={`w-4 h-4 lg:w-5 lg:h-5 ${theme.text}`} />
-          Send Notification
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
+      {/* Admin Controls - Clean card design */}
+      <div className="flex-shrink-0 bg-white border border-gray-100 rounded-2xl lg:rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3 border-b border-gray-100">
+          <h3 className="text-gray-900 font-semibold text-sm flex items-center gap-2">
+            <Megaphone className={`w-4 h-4 ${theme.text}`} />
+            Send Notification
+          </h3>
+        </div>
+        <div className="p-4 grid grid-cols-3 gap-2">
           <button
             onClick={() => openModal('all')}
-            className={`${theme.primary} text-white py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg ${theme.primaryHover} transition-colors font-medium flex items-center justify-center gap-2 text-sm`}
+            className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
           >
-            <span className="hidden sm:inline">📢</span> All
+            <span className="text-lg">📢</span>
+            <span>All</span>
           </button>
           <button
             onClick={() => openModal('group')}
-            className={`${theme.primary} text-white py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg ${theme.primaryHover} transition-colors font-medium flex items-center justify-center gap-2 text-sm`}
+            className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
           >
-            <span className="hidden sm:inline">👥</span> Group
+            <span className="text-lg">👥</span>
+            <span>Group</span>
           </button>
           <button
             onClick={handleDeleteAll}
-            className="bg-white border border-red-300 text-red-600 py-2 px-3 lg:py-2.5 lg:px-4 rounded-lg hover:bg-red-50 transition-colors font-medium flex items-center justify-center gap-2 text-sm"
+            className="bg-white border border-red-200 text-red-600 py-2.5 px-3 rounded-xl hover:bg-red-50 transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs"
           >
-            <Trash2 className="w-3 h-3 lg:w-4 lg:h-4" />
-            <span className="hidden sm:inline">Delete</span>
+            <Trash2 className="w-4 h-4" />
+            <span>Clear</span>
           </button>
         </div>
       </div>
@@ -281,36 +302,38 @@ export default function NotificationsSection() {
           placeholder="Search notifications..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 lg:bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
         />
       </div>
 
       {/* Quick Actions */}
       {unreadCount > 0 && (
-        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3">
-          <span className="text-sm text-gray-600">{unreadCount} unread notifications</span>
+        <div className="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-xl p-3">
+          <span className="text-sm text-purple-700 font-medium">{unreadCount} unread</span>
           <button
             onClick={markAllAsRead}
-            className={`${theme.text} hover:${theme.text.replace('600', '700')} font-medium text-sm`}
+            className={`${theme.text} font-semibold text-sm hover:underline`}
           >
-            Mark all as read
+            Mark all read
           </button>
         </div>
       )}
 
       {/* Notifications List */}
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-auto">
+      <div className="flex-1 bg-white rounded-2xl lg:rounded-lg border border-gray-100 lg:border-gray-200 overflow-auto shadow-sm">
         {filteredNotifications.length === 0 ? (
-          <div className="text-center py-12">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <div className="text-center py-12 px-6">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-slate-400" />
+            </div>
             <h3 className="text-base font-semibold text-gray-900 mb-1">No notifications</h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 max-w-xs mx-auto">
               {searchTerm ? 'No notifications match your search.' : 'Send your first notification to users!'}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {filteredNotifications.map((notification) => {
+            {filteredNotifications.slice(0, displayLimit).map((notification) => {
               const categoryStyle = getCategoryStyle(notification.category);
               return (
                 <div
@@ -358,8 +381,22 @@ export default function NotificationsSection() {
                 </div>
               );
             })}
+            
+            {/* Load More Button */}
+            {filteredNotifications.length > displayLimit && (
+              <div className="p-4 text-center border-t border-gray-100">
+                <button
+                  onClick={() => setDisplayLimit(prev => prev + 20)}
+                  className={`px-6 py-2 ${theme.text} hover:bg-purple-50 rounded-lg transition-colors font-medium flex items-center gap-2 mx-auto`}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Load More ({filteredNotifications.length - displayLimit} remaining)
+                </button>
+              </div>
+            )}
           </div>
         )}
+      </div>
       </div>
 
       {/* Send Notification Modal */}

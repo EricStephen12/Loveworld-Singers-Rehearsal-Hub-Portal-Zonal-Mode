@@ -82,11 +82,13 @@ class FirebaseMediaService {
     }
   }
 
-  async getAllMedia(): Promise<MediaItem[]> {
+  // OPTIMIZED: Added pagination support with default limit
+  async getAllMedia(limitCount: number = 24): Promise<MediaItem[]> {
     try {
       const q = query(
         collection(db, this.mediaCollection),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(limitCount) // OPTIMIZED: Limit initial load
       )
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => ({
@@ -97,6 +99,29 @@ class FirebaseMediaService {
       })) as MediaItem[]
     } catch (error) {
       console.error('Error fetching media:', error)
+      return []
+    }
+  }
+
+  // Load more media with pagination
+  async loadMoreMedia(lastCreatedAt: Date, limitCount: number = 12): Promise<MediaItem[]> {
+    try {
+      const { startAfter } = await import('firebase/firestore')
+      const q = query(
+        collection(db, this.mediaCollection),
+        orderBy('createdAt', 'desc'),
+        startAfter(Timestamp.fromDate(lastCreatedAt)),
+        limit(limitCount)
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as MediaItem[]
+    } catch (error) {
+      console.error('Error loading more media:', error)
       return []
     }
   }
@@ -402,10 +427,12 @@ class FirebaseMediaService {
 
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
   
+  // OPTIMIZED: Limited to 50 most recent media items
   subscribeToMedia(callback: (media: MediaItem[]) => void): Unsubscribe {
     const q = query(
       collection(db, this.mediaCollection),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(50) // OPTIMIZED: Limit to reduce reads
     )
     
     return onSnapshot(q, (snapshot) => {

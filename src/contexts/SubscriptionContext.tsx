@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { useZone } from '@/hooks/useZone'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuth } from '@/hooks/useAuth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit } from '@/config/subscriptions'
 
@@ -39,8 +39,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
-  // Use Zustand auth store to check for Boss role
-  const profile = useAuthStore(state => state.profile)
+  // Use auth hook to check for Boss role
+  const { profile } = useAuth()
 
   // Load subscription for current zone
   const loadSubscription = async () => {

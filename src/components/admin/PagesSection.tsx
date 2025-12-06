@@ -5,32 +5,13 @@ import {
   Search, 
   Calendar, 
   FileText, 
-  ShoppingCart, 
-  Settings,
-  Bookmark,
-  ChevronRight,
-  Filter,
-  Download,
-  Printer,
   Plus,
-  MoreHorizontal,
   ChevronLeft,
-  ChevronDown,
   Edit,
   Trash2,
-  Play,
-  Pause,
-  Music,
-  Tag,
-  X,
-  Check,
-  Save,
-  ExternalLink,
-  RefreshCw,
-  Send,
-  Users
+  Music
 } from "lucide-react";
-import { PraiseNightSong, Comment, PraiseNight, Category } from '../../types/supabase';
+import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { Toast } from '../Toast';
 import { useAdminTheme } from './AdminThemeProvider';
 
@@ -100,6 +81,9 @@ interface PagesSectionProps {
 
 export default function PagesSection(props: PagesSectionProps) {
   const { theme } = useAdminTheme();
+  
+  // Pagination state for pages list
+  const [pagesDisplayLimit, setPagesDisplayLimit] = useState(10);
   
   const {
     allPraiseNights,
@@ -181,6 +165,9 @@ export default function PagesSection(props: PagesSectionProps) {
 
   // Filter pages by page category (when searchTerm matches a page category name)
   const filteredPages = useMemo(() => {
+    // Reset pagination when filter changes
+    setPagesDisplayLimit(10);
+    
     if (!searchTerm) return pages;
     
     // Filter by page category name or page name
@@ -311,7 +298,8 @@ export default function PagesSection(props: PagesSectionProps) {
     <div className="flex-1 flex flex-col lg:flex-row h-full">
       {/* Pages List - Hidden on mobile when page is selected */}
       <div className={`w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col h-full ${selectedPage ? 'hidden lg:flex' : 'flex'}`}>
-        <div className="p-6 border-b border-slate-200 flex-shrink-0">
+        {/* Header - Hidden on mobile (shown in AdminMobileHeader) */}
+        <div className="hidden lg:block p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-900">Pages</h2>
             <button
@@ -345,10 +333,43 @@ export default function PagesSection(props: PagesSectionProps) {
             />
           </div>
         </div>
+        
+        {/* Mobile Search & Add */}
+        <div className="lg:hidden p-4 border-b border-slate-100 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search pages..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+            />
+          </div>
+        </div>
+        
+        {/* Mobile Add Button - Floating */}
+        <button
+          onClick={() => {
+            setNewPageName('');
+            setNewPageDate('');
+            setNewPageLocation('');
+            setNewPageDescription('');
+            setNewPageCategory('unassigned');
+            setNewPageDays(0);
+            setNewPageHours(0);
+            setNewPageMinutes(0);
+            setNewPageSeconds(0);
+            setNewPageBannerImage('');
+            setNewPageBannerFile(null);
+            setShowPageModal(true);
+          }}
+          className={`lg:hidden fixed bottom-20 right-4 z-40 w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
+        >
+          <Plus className="w-6 h-6" />
+        </button>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-20 lg:pb-0">
           <div className="p-3 lg:p-4 space-y-2 lg:space-y-3">
-            {filteredPages.map((page) => (
+            {filteredPages.slice(0, pagesDisplayLimit).map((page) => (
               <div
                 key={page.id}
                 onClick={() => {
@@ -357,16 +378,16 @@ export default function PagesSection(props: PagesSectionProps) {
                   setCurrentPage(1);
                 }}
                 className={`
-                  p-3 lg:p-4 rounded-lg border cursor-pointer transition-all duration-200
+                  p-3 lg:p-4 rounded-2xl lg:rounded-lg border cursor-pointer transition-all duration-200 active:scale-[0.98] lg:active:scale-100
                   ${selectedPage?.id === page.id
                     ? `${theme.bg} ${theme.border} shadow-sm`
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm active:scale-98'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
                   }
                 `}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-slate-900 truncate">{page.name}</h3>
+                    <h3 className="font-semibold text-slate-900 truncate">{page.name}</h3>
                     <p className="text-sm text-slate-500 mt-1">{page.date}</p>
                     <p className="text-sm text-slate-500">{page.location}</p>
                     <div className="flex items-center gap-2 mt-2">
@@ -390,7 +411,7 @@ export default function PagesSection(props: PagesSectionProps) {
                         e.stopPropagation();
                         handleEditPage(page);
                       }}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -399,7 +420,7 @@ export default function PagesSection(props: PagesSectionProps) {
                         e.stopPropagation();
                         handleDeletePage(page);
                       }}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -407,6 +428,26 @@ export default function PagesSection(props: PagesSectionProps) {
                 </div>
               </div>
             ))}
+            
+            {/* Load More Button for Pages */}
+            {filteredPages.length > pagesDisplayLimit && (
+              <div className="pt-2 pb-1">
+                <button
+                  onClick={() => setPagesDisplayLimit(prev => prev + 10)}
+                  className={`w-full py-2.5 ${theme.text} hover:bg-purple-50 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-slate-200 bg-white`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Load More ({filteredPages.length - pagesDisplayLimit} remaining)
+                </button>
+              </div>
+            )}
+            
+            {/* Show count */}
+            {filteredPages.length > 0 && (
+              <div className="text-center text-xs text-slate-500 pt-1">
+                Showing {Math.min(pagesDisplayLimit, filteredPages.length)} of {filteredPages.length} pages
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -416,17 +457,17 @@ export default function PagesSection(props: PagesSectionProps) {
         {selectedPage ? (
           <>
             {/* Mobile Header - Only visible on mobile */}
-            <div className="lg:hidden bg-white border-b border-slate-200 shadow-sm">
-              <div className="p-4 flex items-center gap-3">
+            <div className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-lg border-b border-slate-100">
+              <div className="px-4 py-3 flex items-center gap-3">
                 <button
                   onClick={() => setSelectedPage(null)}
-                  className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg active:bg-slate-200 transition-colors"
+                  className="p-2 -ml-2 hover:bg-slate-100 rounded-xl transition-colors active:scale-95"
                   aria-label="Back to pages"
                 >
-                  <ChevronLeft className="w-6 h-6" />
+                  <ChevronLeft className="w-5 h-5 text-slate-700" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-lg font-bold text-slate-900 truncate">{selectedPage.name}</h1>
+                  <h1 className="text-lg font-semibold text-slate-900 truncate">{selectedPage.name}</h1>
                   <p className="text-xs text-slate-500 truncate">{selectedPage.date} • {selectedPage.location}</p>
                 </div>
                 <button
@@ -449,7 +490,7 @@ export default function PagesSection(props: PagesSectionProps) {
                     audioFile: '',
                     history: []
                   })}
-                  className={`p-2.5 ${theme.primary} text-white rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm`}
+                  className={`p-2.5 ${theme.primary} text-white rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-sm`}
                   aria-label="Add song"
                 >
                   <Plus className="w-5 h-5" />
@@ -653,107 +694,102 @@ export default function PagesSection(props: PagesSectionProps) {
                     </table>
                   </div>
 
-                  {/* Songs Cards - Mobile Only */}
-                  <div className="lg:hidden flex-1 overflow-auto p-3">
-                    <div className="space-y-3">
+                  {/* Songs Cards - Mobile Only - Instagram Style */}
+                  <div className="lg:hidden flex-1 overflow-auto bg-white">
+                    {/* Song count */}
+                    <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
+                      <p className="text-xs text-slate-500">
+                        <span className="font-semibold text-slate-700">{filteredSongs.length}</span> songs
+                      </p>
+                    </div>
+                    
+                    <div className="divide-y divide-slate-100">
                       {filteredSongs
                         .slice(startIndex, startIndex + itemsPerPage)
                         .map((song, index) => (
-                        <div key={index} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                          {/* Song Header */}
-                          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 border-b border-slate-200">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 ${theme.primary} rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                                <Music className="w-5 h-5 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-900 text-sm truncate">{song.title}</h3>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white border border-purple-200 text-purple-700">
-                                    {song.category}
+                        <div key={index} className="bg-white">
+                          {/* Main Row - Tappable */}
+                          <div 
+                            className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors"
+                            onClick={() => handleEditSong(song)}
+                          >
+                            {/* Song Icon */}
+                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
+                              song.status === 'heard' 
+                                ? 'from-green-400 to-emerald-500' 
+                                : 'from-purple-400 to-pink-500'
+                            } flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                              <Music className="w-6 h-6 text-white" />
+                            </div>
+                            
+                            {/* Song Info */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-[15px] text-slate-900 truncate">{song.title}</h3>
+                              <p className="text-sm text-slate-500 truncate">
+                                {song.leadSinger || song.writer || 'No artist info'}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                                  {song.category}
+                                </span>
+                                {song.key && (
+                                  <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                    Key: {song.key}
                                   </span>
-                                  <button
-                                    onClick={() => handleToggleSongStatus(song)}
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      song.status === 'heard'
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-yellow-500 text-white'
-                                    }`}
-                                  >
-                                    {song.status === 'heard' ? '✓ Heard' : '○ Unheard'}
-                                  </button>
-                                </div>
+                                )}
                               </div>
                             </div>
-                          </div>
-
-                          {/* Song Details */}
-                          <div className="p-3 space-y-2.5">
-                            {song.leadSinger && (
-                              <div className="flex items-start">
-                                <span className="text-xs text-slate-500 w-20 flex-shrink-0 pt-0.5">Lead Singer</span>
-                                <span className="text-sm text-slate-900 font-medium flex-1">{song.leadSinger}</span>
-                              </div>
-                            )}
-                            {song.writer && (
-                              <div className="flex items-start">
-                                <span className="text-xs text-slate-500 w-20 flex-shrink-0 pt-0.5">Writer</span>
-                                <span className="text-sm text-slate-900 flex-1">{song.writer}</span>
-                              </div>
-                            )}
-                            {song.conductor && (
-                              <div className="flex items-start">
-                                <span className="text-xs text-slate-500 w-20 flex-shrink-0 pt-0.5">Conductor</span>
-                                <span className="text-sm text-slate-900 flex-1">{song.conductor}</span>
-                              </div>
-                            )}
                             
-                            {/* Key and Tempo Row */}
-                            {(song.key || song.tempo) && (
-                              <div className="flex items-center gap-4 pt-1">
-                                {song.key && (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-slate-500">Key:</span>
-                                    <span className="text-sm font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{song.key}</span>
-                                  </div>
-                                )}
-                                {song.tempo && (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-slate-500">Tempo:</span>
-                                    <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{song.tempo}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            {/* Status */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleSongStatus(song);
+                              }}
+                              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+                                song.status === 'heard'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              {song.status === 'heard' ? '✓ Heard' : 'Unheard'}
+                            </button>
                           </div>
-
-                          {/* Actions Footer */}
-                          <div className="bg-slate-50 px-3 py-2.5 flex items-center justify-between border-t border-slate-200">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-slate-600">Active</span>
-                              <button
-                                onClick={() => handleToggleSongActive(song)}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                  (song as any).isActive ? 'bg-green-500' : 'bg-gray-300'
-                                }`}
-                              >
-                                <span
-                                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${
-                                    (song as any).isActive ? 'translate-x-5' : 'translate-x-0.5'
-                                  }`}
-                                />
-                              </button>
+                          
+                          {/* Quick Actions Bar */}
+                          <div className="flex items-center justify-between px-4 py-2 bg-slate-50/50 border-t border-slate-100">
+                            <div className="flex items-center gap-3">
+                              {song.tempo && (
+                                <span className="text-xs text-slate-500">
+                                  <span className="font-medium">{song.tempo}</span> BPM
+                                </span>
+                              )}
+                              {song.conductor && (
+                                <span className="text-xs text-slate-500 truncate max-w-[100px]">
+                                  🎼 {song.conductor}
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center gap-1">
                               <button
-                                onClick={() => handleEditSong(song)}
-                                className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSongActive(song);
+                                }}
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
+                                  (song as any).isActive 
+                                    ? 'bg-green-500 text-white' 
+                                    : 'bg-slate-200 text-slate-600'
+                                }`}
                               >
-                                <Edit className="w-4 h-4" />
+                                {(song as any).isActive ? '● Live' : '○ Off'}
                               </button>
                               <button
-                                onClick={() => handleDeleteSong(song)}
-                                className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSong(song);
+                                }}
+                                className="p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -764,28 +800,35 @@ export default function PagesSection(props: PagesSectionProps) {
                     </div>
                   </div>
 
-                  {/* Pagination Controls */}
+                  {/* Pagination Controls - Responsive */}
                   {totalPages > 1 && (
-                    <div className="bg-white border-t border-slate-200 px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-slate-700">
-                          Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredSongs.length)} of {filteredSongs.length} songs
+                    <div className="bg-white border-t border-slate-200 px-3 py-3 lg:px-6 lg:py-4">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        {/* Mobile: Compact count | Desktop: Full text */}
+                        <div className="text-xs sm:text-sm text-slate-500 sm:text-slate-700">
+                          <span className="sm:hidden">
+                            {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredSongs.length)} of {filteredSongs.length}
+                          </span>
+                          <span className="hidden sm:inline">
+                            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredSongs.length)} of {filteredSongs.length} songs
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <button
                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            className="px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-500 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
                           >
-                            Previous
+                            Prev
                           </button>
 
+                          {/* Desktop: Show all pages */}
                           <div className="hidden sm:flex items-center gap-1">
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                               <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-md ${
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                                   currentPage === page
                                     ? `${theme.primary} text-white`
                                     : 'text-slate-500 bg-white border border-slate-300 hover:bg-slate-50'
@@ -796,38 +839,17 @@ export default function PagesSection(props: PagesSectionProps) {
                             ))}
                           </div>
 
-                          <div className="sm:hidden flex items-center gap-1">
-                            {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
-                              let page;
-                              if (totalPages <= 3) {
-                                page = i + 1;
-                              } else if (currentPage === 1) {
-                                page = i + 1;
-                              } else if (currentPage === totalPages) {
-                                page = totalPages - 2 + i;
-                              } else {
-                                page = currentPage - 1 + i;
-                              }
-                              return (
-                                <button
-                                  key={page}
-                                  onClick={() => setCurrentPage(page)}
-                                  className={`px-2 py-1.5 text-xs font-medium rounded-md ${
-                                    currentPage === page
-                                      ? `${theme.primary} text-white`
-                                      : 'text-slate-500 bg-white border border-slate-300'
-                                  }`}
-                                >
-                                  {page}
-                                </button>
-                              );
-                            })}
+                          {/* Mobile: Show current/total */}
+                          <div className="sm:hidden flex items-center">
+                            <span className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg">
+                              {currentPage}/{totalPages}
+                            </span>
                           </div>
 
                           <button
                             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages}
-                            className="px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-500 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
                           >
                             Next
                           </button>

@@ -23,6 +23,7 @@ import AudioWave from "@/components/AudioWave";
 import { useAuth } from "@/hooks/useAuth";
 import { useServerCountdown } from "@/hooks/useServerCountdown";
 import { handleAppRefresh } from "@/utils/refresh-utils";
+import { lowDataOptimizer } from "@/utils/low-data-optimizer";
 
 function PraiseNightPageContent() {
   const searchParams = useSearchParams();
@@ -109,7 +110,7 @@ function PraiseNightPageContent() {
   const [allSongsFromFirebase, setAllSongsFromFirebase] = useState<PraiseNightSong[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
 
-  // Load page categories (zone-aware)
+  // Load page categories (zone-aware) with caching
   useEffect(() => {
     const loadPageCategories = async () => {
       if (!currentZone?.id) {
@@ -117,14 +118,26 @@ function PraiseNightPageContent() {
         return;
       }
       
+      // Check cache first (5 minute TTL for page categories - they rarely change)
+      const cacheKey = `page-categories-${currentZone.id}`;
+      const cached = lowDataOptimizer.get(cacheKey);
+      if (cached) {
+        console.log('📦 [PageCategories] Using cached data');
+        setPageCategories(cached);
+        setLoadingPageCategories(false);
+        return;
+      }
+      
       setLoadingPageCategories(true);
       try {
         console.log('🌍 Loading page categories for zone:', currentZone.id);
-        const { FirebaseDatabaseService } = await import('@/lib/firebase-database');
         // Use getPageCategories which handles both HQ (unfiltered) and zone (filtered) cases
         const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
         console.log('📂 Loaded page categories:', categories);
         setPageCategories(categories);
+        
+        // Cache for 5 minutes
+        lowDataOptimizer.set(cacheKey, categories);
       } catch (error) {
         console.error('❌ Error loading page categories:', error);
         setPageCategories([]);
@@ -207,12 +220,12 @@ function PraiseNightPageContent() {
     };
   }, [refreshData]);
 
-  // Periodic refresh to ensure data stays up to date
+  // Periodic refresh to ensure data stays up to date (optimized interval)
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       console.log('🔄 Periodic refresh...');
       refreshData();
-    }, 30000); // Refresh every 30 seconds
+    }, 60000); // Refresh every 60 seconds (reduced from 30s to save Firebase reads)
 
     return () => {
       clearInterval(refreshInterval);
@@ -850,20 +863,20 @@ function PraiseNightPageContent() {
           <p className="text-red-600 font-medium mb-2">Error loading data</p>
           <p className="text-slate-600 text-sm">{error}</p>
         </div>
-        {/* Header with menu button */}
+        {/* Header with back button */}
         <ScreenHeader 
           title="Error"
-          onMenuClick={toggleMenu}
-          showMenuButton={true}
-        />
-        
-        {/* ALWAYS show SharedDrawer even when there's an error */}
-        <SharedDrawer 
-          open={isMenuOpen} 
-          onClose={toggleMenu} 
-          title="Menu" 
-          items={menuItems}
-          key={`drawer-error-${categoryFilter}`}
+          showMenuButton={false}
+          leftButtons={
+            <button
+              onClick={() => router.back()}
+              className="flex items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 active:scale-95"
+              aria-label="Go back"
+              style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          }
         />
       </div>
     );
@@ -881,15 +894,24 @@ function PraiseNightPageContent() {
           background: `linear-gradient(135deg, ${zoneColor}15, #ffffff)`,
         }}
       >
-        {/* Simple Header - No menu, just title */}
+        {/* Simple Header - Back button and title */}
         <div className="flex-shrink-0 w-full">
           <div className="bg-white/80 backdrop-blur-xl border-b border-gray-100/50 min-h-[60px] sm:min-h-[70px] w-full">
-            <div className="flex items-center justify-center px-3 sm:px-4 py-2 sm:py-3">
+            <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 active:scale-95"
+                aria-label="Go back"
+                style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
               <h1 className="text-base sm:text-lg font-outfit-semibold text-gray-800">
                 {categoryFilter === 'ongoing' ? 'Ongoing Sessions' : 
                  categoryFilter === 'archive' ? 'Archives' : 
                  categoryFilter === 'pre-rehearsal' ? 'Pre-Rehearsal' : 'Praise Night'}
               </h1>
+              <div className="w-9" /> {/* Spacer for centering */}
             </div>
           </div>
         </div>
@@ -1091,15 +1113,15 @@ function PraiseNightPageContent() {
             {/* Normal Header Content */}
             <div className={`flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300 ease-out ${isSearchOpen ? 'opacity-0' : 'opacity-100'
               }`}>
-              {/* Left Section - Menu and Left Buttons */}
+              {/* Left Section - Back Button and Left Buttons */}
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={toggleMenu}
+                  onClick={() => router.back()}
                   className="flex items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 active:scale-95"
-                  aria-label="Open menu"
+                  aria-label="Go back"
                   style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
                 >
-                  <Menu className="w-5 h-5 text-gray-600" />
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </button>
                 {categoryFilter !== 'archive' && !pageParam && (
                   <button
@@ -1491,10 +1513,8 @@ function PraiseNightPageContent() {
                     key={praiseNight.id}
                     onClick={() => {
                       // Navigate to praise-night page with this specific page's data
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('page', praiseNight.id.toString());
-                      url.searchParams.delete('category'); // Remove archive filter to show full page
-                      window.location.href = url.toString();
+                      // Use Next.js router to avoid full page reload
+                      router.push(`/pages/praise-night?page=${praiseNight.id}`);
                     }}
                     className={`group relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${currentPraiseNight?.id === praiseNight.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                       }`}

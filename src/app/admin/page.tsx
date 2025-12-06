@@ -21,6 +21,8 @@ import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
 
 // Import admin components
 import AdminSidebar from '../../components/admin/AdminSidebar';
+import AdminMobileNav from '../../components/admin/AdminMobileNav';
+import AdminMobileHeader from '../../components/admin/AdminMobileHeader';
 import PagesSection from '../../components/admin/PagesSection';
 import CategoriesSection from '../../components/admin/CategoriesSection';
 import MediaSection from '../../components/admin/MediaSection';
@@ -68,7 +70,8 @@ export default function AdminPage() {
     'lliamzelvin@gmail.com',
     'ihenacho23@gmail.com', 
     'ephraimloveworld1@gmail.com',
-    'takeshopstores@gmail.com'
+    'takeshopstores@gmail.com',
+    'nnennawealth@gmail.com'
   ].includes(profile.email.toLowerCase()))
 
   // UI state
@@ -260,10 +263,19 @@ export default function AdminPage() {
     loadPageCategories();
   }, [currentZone]);
 
-  // Check if user is zone coordinator
+  // Check if user is zone coordinator - ONLY on initial load, not on every re-render
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
+  
   useEffect(() => {
+    // Wait for Firebase auth to finish loading first
+    if (authLoading) {
+      console.log('⏳ Auth still loading...')
+      return
+    }
+
     // Don't redirect - just return nothing if no user
     if (!user) {
+      console.log('⏳ No user yet, waiting...')
       return
     }
 
@@ -273,28 +285,45 @@ export default function AdminPage() {
       return
     }
 
-    // Check if user has admin access (zone coordinator OR HQ admin)
-    const isHQAdminCheck = Boolean(profile?.email && [
-      'lliamzelvin@gmail.com',
-      'ihenacho23@gmail.com', 
-      'ephraimloveworld1@gmail.com',
-      'takeshopstores@gmail.com'
-    ].includes(profile.email.toLowerCase()))
-    
-    if (!isZoneCoordinator && !isHQAdminCheck) {
-      console.log('❌ User is not a zone coordinator or HQ admin, redirecting to home')
-      router.push('/home')
-      return
-    }
-
+    // Wait for zone to be available
     if (!currentZone) {
       console.log('⏳ Waiting for zone to load...')
       return
     }
 
-    const role = getRoleTerminology(currentZone.id);
-    console.log(`✅ ${role.title} access granted for:`, currentZone.name)
-  }, [user, isZoneCoordinator, currentZone, zoneLoading, router]);
+    // Only check auth ONCE on initial load to prevent redirect loops
+    if (hasCheckedAuth) {
+      return
+    }
+
+    // Check if user has admin access (zone coordinator OR HQ admin)
+    const isHQAdminCheck = Boolean(profile?.email && [
+      'lliamzelvin@gmail.com',
+      'ihenacho23@gmail.com', 
+      'ephraimloveworld1@gmail.com',
+      'takeshopstores@gmail.com',
+      'nnennawealth@gmail.com'
+    ].includes(profile.email.toLowerCase()))
+    
+    // Give a small delay to ensure zone role is properly loaded from cache
+    const checkAccess = () => {
+      if (!isZoneCoordinator && !isHQAdminCheck) {
+        console.log('❌ User is not a zone coordinator or HQ admin, redirecting to home')
+        router.push('/home')
+        return
+      }
+
+      // Mark auth as checked so we don't redirect on subsequent re-renders
+      setHasCheckedAuth(true)
+      
+      const role = getRoleTerminology(currentZone.id);
+      console.log(`✅ ${role.title} access granted for:`, currentZone.name)
+    }
+
+    // Small delay to ensure zone data is fully loaded from cache
+    const timer = setTimeout(checkAccess, 500)
+    return () => clearTimeout(timer)
+  }, [user, isZoneCoordinator, currentZone, zoneLoading, router, hasCheckedAuth, profile?.email, authLoading]);
 
   // Get pages from Firebase (includes unassigned for admin)
   const pages = useMemo(() => {
@@ -1455,27 +1484,14 @@ export default function AdminPage() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header - Only visible on mobile and when not viewing page details */}
+      <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+        {/* Mobile Header - Clean native design (single header only) */}
         {!(activeSection === 'Pages' && selectedPage) && (
-          <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            {/* Always show hamburger menu for main sections */}
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              aria-label="Open Menu"
-            >
-              <Menu className="w-5 h-5 text-slate-600" />
-            </button>
-            <h1 className="text-lg font-semibold text-slate-900 truncate flex-1">
-              {activeSection}
-            </h1>
-            {currentZone && (
-              <div className="text-xs text-slate-600 truncate max-w-[120px]">
-                {currentZone.name}
-              </div>
-            )}
-          </div>
+          <AdminMobileHeader
+            title={activeSection}
+            showBack={true}
+            onBack={() => router.push('/home')}
+          />
         )}
 
         {activeSection === 'Dashboard' && <DashboardSection onSectionChange={setActiveSection} />}
@@ -1707,6 +1723,13 @@ export default function AdminPage() {
         confirmDeleteCategory={confirmDeleteCategory}
         cancelDeleteCategory={cancelDeleteCategory}
         pageCategories={pageCategories}
+      />
+
+      {/* Mobile Bottom Navigation */}
+      <AdminMobileNav
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        onMenuOpen={() => setIsSidebarOpen(true)}
       />
 
       {/* Toast Notifications */}

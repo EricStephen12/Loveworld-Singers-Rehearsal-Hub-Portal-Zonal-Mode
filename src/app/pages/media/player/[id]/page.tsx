@@ -12,7 +12,7 @@ import CustomVideoPlayer from '../../_components/CustomVideoPlayer'
 export default function PlayerPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { incrementViews, saveWatchProgress, addToFavorites, removeFromFavorites, favorites } = useMedia()
   
   const [media, setMedia] = useState<MediaItem | null>(null)
@@ -72,8 +72,8 @@ export default function PlayerPage() {
     }
   }
 
-  // Don't redirect - just show nothing if no user
-  if (!user) return null
+  // Don't redirect - just show nothing if truly logged out
+  if (!user && !profile) return null
 
   if (isLoading) {
     return (

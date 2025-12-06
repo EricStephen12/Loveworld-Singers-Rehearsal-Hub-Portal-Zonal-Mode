@@ -10,6 +10,7 @@ import {
   ChatUser, 
   FriendRequest 
 } from '../_lib/firebase-chat-service'
+import { WhatsAppPresence } from '../_lib/whatsapp-presence'
 
 interface ChatContextType {
   // Current state
@@ -65,21 +66,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth()
   const { currentZone } = useZone()
   
-  // State
+  // Local state for all chat data (no Zustand caching)
   const [chats, setChats] = useState<Chat[]>([])
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [isChatsLoading, setIsChatsLoading] = useState(true) // Start as loading
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false)
+  
+  // Local state for UI-only data
   const [onlineUsers, setOnlineUsers] = useState<ChatUser[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(null)
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null)
-  
-  // Loading states
-  const [isChatsLoading, setIsChatsLoading] = useState(false)
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false)
   const [isUsersLoading, setIsUsersLoading] = useState(false)
 
-  // Initialize user in chat system - use cached profile for instant initialization
+  // Initialize user in chat system with WhatsApp presence
   useEffect(() => {
     // Use profile (cached) to initialize immediately, don't wait for user
     if (profile) {
@@ -90,78 +91,111 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email || 'User',
         firstName: profile.first_name,
         lastName: profile.last_name,
-        profilePic: (profile as any).profile_image_url,
         zoneId: currentZone?.id,
         zoneName: currentZone?.name
       }
+      
+      // Only add profilePic if it exists (Firebase doesn't allow undefined)
+      const profileImageUrl = (profile as any).profile_image_url
+      if (profileImageUrl) {
+        chatUser.profilePic = profileImageUrl
+      }
+      
+      // Initialize WhatsApp-style presence
+      WhatsAppPresence.initializePresence(userId)
       
       FirebaseChatService.createOrUpdateUser(chatUser)
       FirebaseChatService.updateUserStatus(userId, true)
     }
   }, [user, profile, currentZone])
 
-  // Update user status on window focus/blur
+  // Update user status on window focus/blur with WhatsApp presence
   useEffect(() => {
-    if (!user) return
+    const userId = user?.uid || profile?.id
+    if (!userId) return
 
-    const handleFocus = () => FirebaseChatService.updateUserStatus(user.uid, true)
-    const handleBlur = () => FirebaseChatService.updateUserStatus(user.uid, false)
+    const handleFocus = () => {
+      WhatsAppPresence.updateStatus(userId, 'online')
+      FirebaseChatService.updateUserStatus(userId, true)
+    }
+    
+    const handleBlur = () => {
+      WhatsAppPresence.updateStatus(userId, 'offline')
+      FirebaseChatService.updateUserStatus(userId, false)
+    }
+    
+    const handleBeforeUnload = () => {
+      WhatsAppPresence.updateStatus(userId, 'offline')
+    }
     
     window.addEventListener('focus', handleFocus)
     window.addEventListener('blur', handleBlur)
+    window.addEventListener('beforeunload', handleBeforeUnload)
     
     return () => {
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('blur', handleBlur)
-      FirebaseChatService.updateUserStatus(user.uid, false)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      WhatsAppPresence.cleanup(userId)
+      FirebaseChatService.updateUserStatus(userId, false)
     }
-  }, [user])
+  }, [user, profile])
 
-  // Subscribe to chats - use cached profile.id for instant loading
+  // Subscribe to chats - SIMPLE like WhatsApp
   useEffect(() => {
-    // Use profile.id (cached) instead of user.uid (slow to load)
+    // Just need user ID - that's it!
     const userId = user?.uid || profile?.id
-    if (!userId) return
-
+    if (!userId) {
+      console.log('⏳ Waiting for user...')
+      setIsChatsLoading(false) // Don't show loading if no user
+      return
+    }
+    
+    console.log('🚀 [ChatContext] Loading chats for user:', userId)
     setIsChatsLoading(true)
     
-    const unsubscribe = FirebaseChatService.subscribeToChats(userId, (chats) => {
-      setChats(chats)
+    // Subscribe to Firebase - it handles ALL filtering
+    const unsubscribe = FirebaseChatService.subscribeToChats(userId, (cleanChats) => {
+      console.log('✅ [ChatContext] Received', cleanChats.length, 'clean chats from Firebase service')
+      
+      // NO FILTERING HERE - Firebase service already filtered everything
+      // Just use the clean data directly
+      setChats(cleanChats)
       setIsChatsLoading(false)
     })
 
-    return unsubscribe
-  }, [user, profile])
+    return () => {
+      console.log('🧹 [ChatContext] Unsubscribing from chats')
+      unsubscribe()
+    }
+  }, [user?.uid, profile?.id]) // Only re-run when user changes
 
-  // Subscribe to messages for selected chat
+  // Subscribe to messages for selected chat - Fetch fresh from Firebase
   useEffect(() => {
     if (!selectedChat) {
-      setMessages([])
-      setIsMessagesLoading(false)
       setReplyToMessage(null)
       setEditingMessage(null)
+      setMessages([])
       return
     }
 
+    console.log('💬 [ChatContext] Loading messages for chat:', selectedChat.id)
     setIsMessagesLoading(true)
+    setMessages([])
     
-    // Set a timeout to prevent infinite loading
-    const loadingTimeout = setTimeout(() => {
-      console.log('⚠️ Message loading timeout - setting loading to false')
-      setIsMessagesLoading(false)
-    }, 3000) // 3 second timeout
-    
-    const unsubscribe = FirebaseChatService.subscribeToMessages(selectedChat.id, (messages) => {
-      clearTimeout(loadingTimeout)
-      setMessages(messages)
+    // Subscribe to fresh messages from Firebase
+    const unsubscribe = FirebaseChatService.subscribeToMessages(selectedChat.id, (freshMessages) => {
+      console.log('📥 [ChatContext] Received', freshMessages.length, 'messages')
+      setMessages(freshMessages)
       setIsMessagesLoading(false)
     })
 
     return () => {
-      clearTimeout(loadingTimeout)
+      console.log('🧹 [ChatContext] Cleaning up messages subscription')
       unsubscribe()
+      setMessages([])
     }
-  }, [selectedChat])
+  }, [selectedChat?.id])
 
   // Load friend requests - use cached profile.id for instant loading
   useEffect(() => {
@@ -234,22 +268,35 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [selectedChat, user, profile, replyToMessage])
 
   const searchUsers = useCallback(async (searchTerm: string) => {
-    if (!user || !profile) return []
+    // Use cached profile if user is still loading
+    const userId = user?.uid || profile?.id
+    if (!userId || !profile) {
+      console.log('⚠️ [searchUsers] Missing userId or profile:', { userId, hasProfile: !!profile })
+      return []
+    }
     
     // Check if user is Boss (Boss can see everyone)
-    const isBoss = profile?.role === 'boss' || user.email?.toLowerCase().startsWith('boss')
+    const isBoss = profile?.role === 'boss' || user?.email?.toLowerCase().startsWith('boss')
     
+    console.log('🔍 [searchUsers] Searching with:', { searchTerm, userId, zoneId: currentZone?.id, isBoss })
     setIsUsersLoading(true)
     // Pass correct zoneId and isBoss flag for proper filtering
-    const users = await FirebaseChatService.searchUsers(searchTerm, user.uid, currentZone?.id, isBoss)
+    const users = await FirebaseChatService.searchUsers(searchTerm, userId, currentZone?.id, isBoss)
+    console.log('✅ [searchUsers] Found users:', users.length)
     setIsUsersLoading(false)
     return users
   }, [user, profile, currentZone])
 
   const createDirectChat = useCallback(async (userId: string) => {
-    if (!user) return null
-    return await FirebaseChatService.createDirectChat(user.uid, userId)
-  }, [user])
+    // Use cached profile if user is still loading
+    const currentUserId = user?.uid || profile?.id
+    if (!currentUserId) {
+      console.log('⚠️ [createDirectChat] No user ID available')
+      return null
+    }
+    console.log('💬 [createDirectChat] Creating chat between:', currentUserId, 'and', userId)
+    return await FirebaseChatService.createDirectChat(currentUserId, userId)
+  }, [user, profile])
 
   const createGroupChat = useCallback(async (
     name: string, 

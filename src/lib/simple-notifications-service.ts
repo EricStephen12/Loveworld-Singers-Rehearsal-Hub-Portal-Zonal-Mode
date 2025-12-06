@@ -7,6 +7,10 @@
  * HQ AWARE:
  * - HQ groups use 'admin_messages' collection (unfiltered)
  * - Regular zones use 'zone_admin_messages' collection (filtered by zoneId)
+ * 
+ * CACHING:
+ * - Messages are cached in memory with a 2-minute TTL
+ * - Cache is invalidated when sending/deleting messages
  */
 
 import { db } from './firebase-setup';
@@ -23,6 +27,32 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { isHQGroup } from '@/config/zones';
+
+// Cache configuration
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+interface CacheEntry {
+  data: AdminMessage[];
+  timestamp: number;
+}
+const messagesCache = new Map<string, CacheEntry>();
+
+// Helper to get cache key
+function getCacheKey(zoneId?: string): string {
+  return `messages_${zoneId || 'default'}`;
+}
+
+// Helper to check if cache is valid
+function isCacheValid(entry: CacheEntry | undefined): boolean {
+  if (!entry) return false;
+  return Date.now() - entry.timestamp < CACHE_TTL;
+}
+
+// Invalidate cache for a zone
+function invalidateCache(zoneId?: string): void {
+  const key = getCacheKey(zoneId);
+  messagesCache.delete(key);
+  console.log('🗑️ [Messages] Cache invalidated for:', key);
+}
 
 // Helper to get correct collection name based on zone
 function getMessagesCollectionName(zoneId?: string): string {
@@ -71,6 +101,9 @@ export async function sendMessageToAllUsers(
     
     console.log('✅ [Messages] Message sent with ID:', docRef.id, 'to collection:', collectionName);
     
+    // Invalidate cache so next fetch gets fresh data
+    invalidateCache(zoneId);
+    
     return {
       success: true,
       id: docRef.id
@@ -86,10 +119,22 @@ export async function sendMessageToAllUsers(
 
 /**
  * Get all messages for a zone (for users and admins)
+ * Uses in-memory cache with 2-minute TTL
  */
-export async function getAllMessages(zoneId?: string): Promise<AdminMessage[]> {
+export async function getAllMessages(zoneId?: string, forceRefresh = false): Promise<AdminMessage[]> {
   try {
-    console.log('📖 [Messages] Getting all messages for zone:', zoneId);
+    const cacheKey = getCacheKey(zoneId);
+    
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = messagesCache.get(cacheKey);
+      if (isCacheValid(cached)) {
+        console.log('📦 [Messages] Returning cached messages for zone:', zoneId, `(${cached!.data.length} items)`);
+        return cached!.data;
+      }
+    }
+    
+    console.log('📖 [Messages] Fetching fresh messages for zone:', zoneId);
     
     const collectionName = getMessagesCollectionName(zoneId);
     const messagesRef = collection(db, collectionName);
@@ -122,7 +167,13 @@ export async function getAllMessages(zoneId?: string): Promise<AdminMessage[]> {
       };
     }) as AdminMessage[];
     
-    console.log(`✅ [Messages] Found ${messages.length} messages from ${collectionName}`);
+    // Update cache
+    messagesCache.set(cacheKey, {
+      data: messages,
+      timestamp: Date.now()
+    });
+    
+    console.log(`✅ [Messages] Found ${messages.length} messages from ${collectionName} (cached)`);
     return messages;
   } catch (error) {
     console.error('❌ [Messages] Error getting messages:', error);
@@ -142,6 +193,9 @@ export async function deleteMessage(messageId: string, zoneId?: string): Promise
     await deleteDoc(messageRef);
     
     console.log('✅ [Messages] Message deleted successfully from', collectionName);
+    
+    // Invalidate cache so next fetch gets fresh data
+    invalidateCache(zoneId);
     
     return {
       success: true

@@ -72,6 +72,14 @@ function AuthPageContent() {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false)
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'kingschat' | 'newPassword'>('email')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [verifiedKingschatId, setVerifiedKingschatId] = useState<string | null>(null)
+  const [resetUserFirstName, setResetUserFirstName] = useState('')
+  const [maskedKingschatId, setMaskedKingschatId] = useState('')
+  const [isVerifyingKingschat, setIsVerifyingKingschat] = useState(false)
   const [zoneInvitationCode, setZoneInvitationCode] = useState('')
   const [zoneName, setZoneName] = useState<string | null>(null)
   const [isCoordinator, setIsCoordinator] = useState(false)
@@ -576,27 +584,143 @@ function AuthPageContent() {
     }
   }
 
+  // Store the actual KingsChat ID from profile for verification
+  const [storedKingschatIdForReset, setStoredKingschatIdForReset] = useState<string | null>(null)
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
     
     try {
-      if (!forgotPasswordEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotPasswordEmail)) {
-        setError('Please enter a valid email address')
-        return
+      if (forgotPasswordStep === 'email') {
+        // Step 1: Verify email exists and has KingsChat linked (client-side lookup)
+        if (!forgotPasswordEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotPasswordEmail)) {
+          setError('Please enter a valid email address')
+          setIsLoading(false)
+          return
+        }
+        
+        // Lookup user profile client-side using existing Firebase client
+        const profiles = await FirebaseDatabaseService.getCollectionWhere(
+          'profiles',
+          'email',
+          '==',
+          forgotPasswordEmail.toLowerCase()
+        )
+        
+        if (!profiles || profiles.length === 0) {
+          setError('No account found with this email')
+          setIsLoading(false)
+          return
+        }
+        
+        const profile = profiles[0] as any
+        const kingschatId = profile.kingschat_id
+        
+        if (!kingschatId) {
+          setError('This account does not have KingsChat linked. Please contact support.')
+          setIsLoading(false)
+          return
+        }
+        
+        // Store user info and move to KingsChat verification step
+        setResetUserFirstName(profile.first_name || '')
+        setStoredKingschatIdForReset(kingschatId)
+        // Mask the KingsChat ID for display
+        const maskedId = kingschatId.length > 4 
+          ? '****' + kingschatId.slice(-4)
+          : '****'
+        setMaskedKingschatId(maskedId)
+        setForgotPasswordStep('kingschat')
+        
+      } else if (forgotPasswordStep === 'newPassword') {
+        // Step 3: Set new password after KingsChat verification
+        if (!newPassword || newPassword.length < 6) {
+          setError('Password must be at least 6 characters')
+          setIsLoading(false)
+          return
+        }
+        
+        if (newPassword !== confirmNewPassword) {
+          setError('Passwords do not match')
+          setIsLoading(false)
+          return
+        }
+        
+        if (!verifiedKingschatId || !storedKingschatIdForReset) {
+          setError('KingsChat verification required')
+          setForgotPasswordStep('kingschat')
+          setIsLoading(false)
+          return
+        }
+        
+        // Call API to reset password - send both IDs for server verification
+        const response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'reset',
+            email: forgotPasswordEmail.toLowerCase(),
+            storedKingschatId: storedKingschatIdForReset,
+            verifiedKingschatId: verifiedKingschatId,
+            newPassword: newPassword
+          })
+        })
+        
+        const result = await response.json()
+        
+        if (!result.success) {
+          setError(result.error || 'Failed to reset password')
+          setIsLoading(false)
+          return
+        }
+        
+        setForgotPasswordSuccess(true)
       }
-      const res = await FirebaseAuthService.resetPassword(forgotPasswordEmail)
-      if (res.error) {
-        setError(sanitizeError(res.error))
-        return
-      }
-      setForgotPasswordSuccess(true)
     } catch (error: any) {
       console.error('Forgot password error:', error)
-      setError(sanitizeError(error.message || 'Failed to send reset email'))
+      setError(sanitizeError(error.message || 'Failed to reset password'))
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Handle KingsChat verification for password reset
+  const handleKingschatVerification = async () => {
+    setError('')
+    setIsVerifyingKingschat(true)
+    
+    try {
+      // Initiate KingsChat OAuth flow
+      const authTokens = await KingsChatAuthService.login()
+      
+      if (!authTokens) {
+        setError('KingsChat verification was cancelled. Please try again.')
+        setIsVerifyingKingschat(false)
+        return
+      }
+      
+      // Extract KingsChat UID from token
+      const { jwtDecode } = await import('jwt-decode')
+      const decoded: any = jwtDecode(authTokens.accessToken)
+      const kingschatUserId = decoded.userId || decoded.sub || decoded.id
+      
+      if (!kingschatUserId) {
+        setError('Could not verify KingsChat account')
+        setIsVerifyingKingschat(false)
+        return
+      }
+      
+      // Store verified KingsChat ID and move to new password step
+      setVerifiedKingschatId(kingschatUserId)
+      setForgotPasswordStep('newPassword')
+      
+    } catch (error: any) {
+      console.error('KingsChat verification error:', error)
+      setError(sanitizeError(error.message || 'KingsChat verification failed'))
+    } finally {
+      setIsVerifyingKingschat(false)
     }
   }
 
@@ -949,7 +1073,11 @@ function AuthPageContent() {
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">Reset Password</h2>
               <p className="text-gray-600 text-sm">
-                Enter your email address and we'll send you a link to reset your password.
+                {forgotPasswordStep === 'email' 
+                  ? 'Enter your email address to reset your password.'
+                  : forgotPasswordStep === 'kingschat'
+                  ? 'Verify your identity with KingsChat.'
+                  : 'Create a new password for your account.'}
               </p>
             </div>
 
@@ -960,33 +1088,116 @@ function AuthPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Sent!</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Password Reset!</h3>
                 <p className="text-gray-600 text-sm mb-6">
-                  We've sent a password reset link to <strong>{forgotPasswordEmail}</strong>
+                  Your password has been successfully reset. You can now sign in with your new password.
                 </p>
                 <button
                   onClick={() => {
                     setShowForgotPassword(false)
                     setForgotPasswordSuccess(false)
                     setForgotPasswordEmail('')
+                    setForgotPasswordStep('email')
+                    setNewPassword('')
+                    setConfirmNewPassword('')
+                    setVerifiedKingschatId(null)
+                    setStoredKingschatIdForReset(null)
+                    setResetUserFirstName('')
+                    setMaskedKingschatId('')
                   }}
                   className="w-full py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors"
                 >
-                  Close
+                  Sign In Now
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={forgotPasswordEmail}
-                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
-                    required
-                  />
-                </div>
+                {forgotPasswordStep === 'email' && (
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
+                      required
+                    />
+                  </div>
+                )}
+
+                {forgotPasswordStep === 'kingschat' && (
+                  <>
+                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                      <p className="text-purple-700 text-sm mb-1">
+                        Account found{resetUserFirstName ? ` for ${resetUserFirstName}` : ''}
+                      </p>
+                      <p className="text-purple-600 text-xs">
+                        KingsChat ID: {maskedKingschatId}
+                      </p>
+                    </div>
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 text-sm mb-4">
+                        To verify your identity, please sign in with the KingsChat account linked to this email.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleKingschatVerification}
+                        disabled={isVerifyingKingschat}
+                        className="w-full flex items-center justify-center gap-3 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isVerifyingKingschat ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <img 
+                            src="/kingschat.jpeg" 
+                            alt="KingsChat" 
+                            className="w-5 h-5 rounded-full object-cover"
+                          />
+                        )}
+                        {isVerifyingKingschat ? 'Verifying...' : 'Verify with KingsChat'}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {forgotPasswordStep === 'newPassword' && (
+                  <>
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                      <p className="text-green-700 text-sm">
+                        ✓ KingsChat verified for: <strong>{forgotPasswordEmail}</strong>
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        placeholder="New Password (min 6 characters)"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm pr-12"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <div>
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        placeholder="Confirm New Password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {error && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
@@ -998,22 +1209,38 @@ function AuthPageContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setShowForgotPassword(false)
-                      setForgotPasswordEmail('')
-                      setError('')
+                      if (forgotPasswordStep === 'newPassword') {
+                        setForgotPasswordStep('kingschat')
+                        setNewPassword('')
+                        setConfirmNewPassword('')
+                        setVerifiedKingschatId(null)
+                        setError('')
+                      } else if (forgotPasswordStep === 'kingschat') {
+                        setForgotPasswordStep('email')
+                        setResetUserFirstName('')
+                        setMaskedKingschatId('')
+                        setError('')
+                      } else {
+                        setShowForgotPassword(false)
+                        setForgotPasswordEmail('')
+                        setForgotPasswordStep('email')
+                        setError('')
+                      }
                     }}
                     className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
                   >
-                    Cancel
+                    {forgotPasswordStep !== 'email' ? 'Back' : 'Cancel'}
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="flex-1 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Send Reset Link
-                  </button>
+                  {forgotPasswordStep !== 'kingschat' && (
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {forgotPasswordStep === 'email' ? 'Continue' : 'Reset Password'}
+                    </button>
+                  )}
                 </div>
               </form>
             )}

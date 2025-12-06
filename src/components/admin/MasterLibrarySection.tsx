@@ -56,6 +56,11 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
   // Zone-specific state for importing
   const [zonePraiseNights, setZonePraiseNights] = useState<any[]>([]);
   const [selectedPraiseNight, setSelectedPraiseNight] = useState<string>('');
+  
+  // Load more state
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreMasterSongs, setHasMoreMasterSongs] = useState(true);
+  const [hasMoreInternalSongs, setHasMoreInternalSongs] = useState(true);
 
   // Load data
   useEffect(() => {
@@ -65,16 +70,18 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
   const loadData = async () => {
     setLoading(true);
     try {
-      // Always load master songs and stats
+      // Always load master songs and stats with limits
       const [songs, statsData, internal] = await Promise.all([
-        MasterLibraryService.getMasterSongs(),
+        MasterLibraryService.getMasterSongs(50), // Load 50 initially
         MasterLibraryService.getMasterLibraryStats(),
-        MasterLibraryService.getHQInternalSongs() // Always fetch HQ internal songs
+        MasterLibraryService.getHQInternalSongs(100) // Load 100 initially
       ]);
       
       setMasterSongs(songs);
       setStats(statsData);
       setHqInternalSongs(internal);
+      setHasMoreMasterSongs(MasterLibraryService.hasMoreMasterSongs());
+      setHasMoreInternalSongs(MasterLibraryService.hasMoreHQInternalSongs());
       
       console.log('📚 Master songs:', songs.length, '| HQ internal songs:', internal.length);
       
@@ -88,6 +95,44 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
       showToast('error', 'Failed to load Master Library');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load more master songs
+  const loadMoreMasterSongs = async () => {
+    if (isLoadingMore || !hasMoreMasterSongs) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const moreSongs = await MasterLibraryService.loadMoreMasterSongs(50);
+      if (moreSongs.length > 0) {
+        setMasterSongs(prev => [...prev, ...moreSongs]);
+      }
+      setHasMoreMasterSongs(MasterLibraryService.hasMoreMasterSongs());
+    } catch (error) {
+      console.error('Error loading more songs:', error);
+      showToast('error', 'Failed to load more songs');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Load more internal songs (for publish modal)
+  const loadMoreInternalSongs = async () => {
+    if (isLoadingMore || !hasMoreInternalSongs) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const moreSongs = await MasterLibraryService.loadMoreHQInternalSongs(100);
+      if (moreSongs.length > 0) {
+        setHqInternalSongs(prev => [...prev, ...moreSongs]);
+      }
+      setHasMoreInternalSongs(MasterLibraryService.hasMoreHQInternalSongs());
+    } catch (error) {
+      console.error('Error loading more internal songs:', error);
+      showToast('error', 'Failed to load more songs');
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -232,7 +277,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-purple-50">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white lg:bg-gradient-to-br lg:from-slate-50 lg:via-white lg:to-purple-50">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
@@ -243,9 +288,32 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         </div>
       )}
 
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
+      {/* Mobile Stats Header */}
+      <div className="lg:hidden bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <Library className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white/80 text-xs">Master Library</p>
+              <p className="text-white font-bold text-lg">{stats.totalSongs} songs</p>
+            </div>
+          </div>
+          {canManage && (
+            <button
+              onClick={() => setShowPublishModal(true)}
+              className="p-2.5 bg-white/20 text-white rounded-xl transition-colors active:scale-95"
+            >
+              <Upload className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 lg:p-6 pb-24 lg:pb-6">
+        {/* Header - Desktop Only */}
+        <div className="hidden lg:block mb-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -273,42 +341,42 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 border border-slate-200">
+        {/* Stats Cards - Horizontal scroll on mobile */}
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-3 mb-4 lg:mb-6 scrollbar-hide">
+          <div className="flex-shrink-0 w-[140px] lg:w-auto bg-white rounded-2xl lg:rounded-xl p-4 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
+              <div className="p-2.5 lg:p-2 bg-purple-100 rounded-xl lg:rounded-lg">
                 <Music className="w-5 h-5 text-purple-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalSongs}</p>
-                <p className="text-sm text-slate-500">Songs in Library</p>
+                <p className="text-xs lg:text-sm text-slate-500 whitespace-nowrap">Songs</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <div className="flex-shrink-0 w-[140px] lg:w-auto bg-white rounded-2xl lg:rounded-xl p-4 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
+              <div className="p-2.5 lg:p-2 bg-green-100 rounded-xl lg:rounded-lg">
                 <Download className="w-5 h-5 text-green-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalImports}</p>
-                <p className="text-sm text-slate-500">Total Imports</p>
+                <p className="text-xs lg:text-sm text-slate-500 whitespace-nowrap">Imports</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <div className="flex-shrink-0 w-[140px] lg:w-auto bg-white rounded-2xl lg:rounded-xl p-4 border border-slate-200 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2.5 lg:p-2 bg-blue-100 rounded-xl lg:rounded-lg">
                 <BarChart3 className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">
                   {stats.mostImported[0]?.importCount || 0}
                 </p>
-                <p className="text-sm text-slate-500">Top Song Imports</p>
+                <p className="text-xs lg:text-sm text-slate-500 whitespace-nowrap">Top Imports</p>
               </div>
             </div>
           </div>
@@ -367,6 +435,29 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
                   onImport={() => openImportModal(song)}
                 />
               ))}
+              
+              {/* Load More Button */}
+              {hasMoreMasterSongs && !searchTerm && (
+                <div className="p-4 text-center border-t border-slate-100">
+                  <button
+                    onClick={loadMoreMasterSongs}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center gap-2 mx-auto"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Load More Songs
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -384,6 +475,9 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
             setSelectedForPublish([]);
           }}
           publishing={publishing}
+          hasMore={hasMoreInternalSongs}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadMoreInternalSongs}
         />
       )}
 
@@ -419,7 +513,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
 }
 
 
-// Song Row Component
+// Song Row Component - Instagram Style
 function SongRow({ 
   song, 
   canManage, 
@@ -436,23 +530,40 @@ function SongRow({
   onImport?: () => void;
 }) {
   return (
-    <div className="p-4 hover:bg-slate-50 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-            <Music className="w-5 h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-medium text-slate-900 truncate">{song.title}</h3>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              {song.writer && <span>{song.writer}</span>}
-              {song.writer && song.category && <span>•</span>}
-              {song.category && <span>{song.category}</span>}
-            </div>
+    <div className="bg-white hover:bg-slate-50 transition-colors">
+      {/* Main Row - Tappable */}
+      <div 
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-slate-100 lg:active:bg-slate-50"
+        onClick={onView}
+      >
+        {/* Song Icon with gradient */}
+        <div className="w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-lg flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-500 shadow-sm">
+          <Music className="w-6 h-6 lg:w-5 lg:h-5 text-white" />
+        </div>
+        
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-[15px] lg:text-base text-slate-900 truncate">{song.title}</h3>
+          <p className="text-sm text-slate-500 truncate">
+            {song.writer || 'Unknown writer'}
+            {song.category && ` • ${song.category}`}
+          </p>
+          {/* Mobile badges */}
+          <div className="flex items-center gap-2 mt-1 lg:hidden">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-semibold">
+              <Download className="w-3 h-3" />
+              {song.importCount || 0}
+            </span>
+            {song.key && (
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-semibold">
+                {song.key}
+              </span>
+            )}
           </div>
         </div>
         
-        <div className="flex items-center gap-2 ml-4">
+        {/* Desktop Actions */}
+        <div className="hidden lg:flex items-center gap-2 ml-4">
           {/* Import count badge */}
           <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
             <Download className="w-3 h-3" />
@@ -462,7 +573,7 @@ function SongRow({
           {/* Import button (Zone Coordinators only) */}
           {canImport && onImport && (
             <button
-              onClick={onImport}
+              onClick={(e) => { e.stopPropagation(); onImport(); }}
               className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
               title="Import to your zone"
             >
@@ -473,7 +584,7 @@ function SongRow({
           
           {/* View button */}
           <button
-            onClick={onView}
+            onClick={(e) => { e.stopPropagation(); onView(); }}
             className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="View details"
           >
@@ -483,7 +594,7 @@ function SongRow({
           {/* Delete button (HQ Admin only) */}
           {canManage && (
             <button
-              onClick={onDelete}
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Remove from Master Library"
             >
@@ -491,7 +602,35 @@ function SongRow({
             </button>
           )}
         </div>
+        
+        {/* Mobile Import Button */}
+        {canImport && onImport && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onImport(); }}
+            className="lg:hidden flex-shrink-0 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-full active:scale-95 transition-all"
+          >
+            Import
+          </button>
+        )}
       </div>
+      
+      {/* Mobile Action Bar - Only for admins */}
+      {canManage && (
+        <div className="lg:hidden flex items-center justify-end gap-2 px-4 py-2 bg-slate-50/50 border-t border-slate-100">
+          <button
+            onClick={(e) => { e.stopPropagation(); onView(); }}
+            className="px-3 py-1.5 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-100 active:scale-95 transition-all"
+          >
+            View
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="px-3 py-1.5 text-red-600 text-xs font-medium rounded-lg hover:bg-red-50 active:scale-95 transition-all"
+          >
+            Remove
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -503,7 +642,10 @@ function PublishModal({
   onToggle,
   onPublish,
   onClose,
-  publishing
+  publishing,
+  hasMore,
+  isLoadingMore,
+  onLoadMore
 }: {
   songs: any[];
   selectedIds: string[];
@@ -511,6 +653,9 @@ function PublishModal({
   onPublish: () => void;
   onClose: () => void;
   publishing: boolean;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -597,6 +742,29 @@ function PublishModal({
                   </div>
                 );
               })}
+              
+              {/* Load More Button */}
+              {hasMore && !searchTerm && onLoadMore && (
+                <div className="pt-4 text-center">
+                  <button
+                    onClick={onLoadMore}
+                    disabled={isLoadingMore}
+                    className="px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2 mx-auto"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Load More Songs
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

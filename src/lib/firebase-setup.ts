@@ -1,7 +1,7 @@
 // Firebase Setup for LoveWorld Singers App
 import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore, Firestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 // Firebase configuration - FROM ENVIRONMENT VARIABLES
@@ -33,11 +33,47 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 }
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig)
+import type { FirebaseApp } from 'firebase/app'
+
+let app: FirebaseApp
+try {
+  app = initializeApp(firebaseConfig)
+} catch (error: any) {
+  // If already initialized, get the existing app
+  if (error.code === 'app/duplicate-app') {
+    const { getApp } = require('firebase/app')
+    app = getApp()
+  } else {
+    throw error
+  }
+}
 
 // Initialize Firebase services
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+
+// � WHATSAPPP APPROACH - Real-time connection with optimized settings
+export const db: Firestore = (() => {
+  try {
+    return initializeFirestore(app, {
+      // WhatsApp-style connection settings
+
+      experimentalForceLongPolling: false,
+      experimentalAutoDetectLongPolling: true,
+      // Enable persistence with optimized settings for WhatsApp-style performance
+      localCache: {
+        kind: 'persistent'
+      }
+    })
+  } catch (error: any) {
+    // If already initialized, get the existing instance
+    if (error.code === 'firestore/already-exists') {
+      const { getFirestore } = require('firebase/firestore')
+      return getFirestore(app)
+    }
+    throw error
+  }
+})()
+
 export const storage = getStorage(app)
 
 // CRITICAL: Set auth persistence to LOCAL - keeps user logged in across sessions

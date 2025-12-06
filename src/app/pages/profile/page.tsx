@@ -67,7 +67,7 @@ function ProfilePage() {
   const [isLinkingKingsChat, setIsLinkingKingsChat] = useState(false)
   const [kingsChatLinked, setKingsChatLinked] = useState(false)
   const [linkingMessage, setLinkingMessage] = useState('')
-  
+  const [isCoordinator, setIsCoordinator] = useState(false)
 
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
@@ -79,7 +79,90 @@ function ProfilePage() {
     attendance: false
   })
 
-  // Don't show anything if no user - prevents flash
+  // Set client flag to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Refresh profile data when component mounts
+  useEffect(() => {
+    if (user?.uid && !currentProfile) {
+      console.log('🔄 Refreshing profile data...')
+      refreshProfile()
+    }
+  }, [user?.uid, currentProfile, refreshProfile])
+
+  // Check if KingsChat is linked on mount
+  useEffect(() => {
+    const checkKingsChatLink = async () => {
+      if (user?.uid) {
+        const isLinked = await AccountLinkingService.isKingsChatLinked(user.uid)
+        setKingsChatLinked(isLinked)
+      }
+    }
+    checkKingsChatLink()
+  }, [user?.uid])
+
+  // Check coordinator status directly from database
+  useEffect(() => {
+    async function checkRole() {
+      if (user?.uid) {
+        const { isUserCoordinator } = await import('@/lib/check-coordinator')
+        const result = await isUserCoordinator(user.uid)
+        setIsCoordinator(result)
+      }
+    }
+    checkRole()
+  }, [user?.uid])
+
+  // Use profile data from auth, or empty defaults while loading
+  const profileData: any = currentProfile || {
+    id: user?.uid || '',
+    first_name: '',
+    last_name: '',
+    email: user?.email || '',
+    profile_completed: false
+  }
+
+  // ✅ SECURITY: Ensure user can only see their own profile
+  useEffect(() => {
+    if (user && currentProfile) {
+      if (currentProfile.id !== user.uid) {
+        console.error('🚨 CRITICAL SECURITY: Profile ID mismatch!')
+        refreshProfile()
+      }
+      if ((currentProfile as any).isPresident === true) {
+        const isSpecialUser = typeof window !== 'undefined' && localStorage.getItem('specialUser') === 'true'
+        if (!isSpecialUser) {
+          router.push('/home')
+        }
+      }
+    }
+  }, [user, currentProfile, router, refreshProfile])
+
+  // Initialize edit form with profile data (only once on mount)
+  useEffect(() => {
+    if (profileData) {
+      setEditForm({
+        firstName: profileData.first_name || '',
+        lastName: profileData.last_name || '',
+        middleName: (profileData as any).middle_name || '',
+        phoneNumber: (profileData as any).phone_number || '',
+        gender: (profileData as any).gender || '',
+        birthday: (profileData as any).birthday || '',
+        region: (profileData as any).region || '',
+        zone: (profileData as any).zone || '',
+        church: (profileData as any).church || '',
+        designation: (profileData as any).designation || '',
+        administration: (profileData as any).administration || ''
+      })
+      if ((profileData as any).profile_image_url) {
+        setProfileImage((profileData as any).profile_image_url)
+      }
+    }
+  }, [])
+
+  // Don't show anything if no user - prevents flash (MUST be after all hooks)
   if (!user && !currentProfile) {
     return null
   }
@@ -111,22 +194,6 @@ function ProfilePage() {
     }))
   }
 
-  // Set client flag to prevent hydration issues
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-
-  
-
-  // Refresh profile data when component mounts
-  useEffect(() => {
-    if (user?.uid && !currentProfile) {
-      console.log('🔄 Refreshing profile data...')
-      refreshProfile()
-    }
-  }, [user?.uid, currentProfile, refreshProfile])
-
   // Profile completion logic
   const isProfileComplete = currentProfile?.profile_completed || false
   
@@ -150,21 +217,23 @@ function ProfilePage() {
 
       const app = initializeApp(firebaseConfig)
       const auth = getAuth(app)
-      const user = auth.currentUser
+      const firebaseUser = auth.currentUser
       
       // Firebase auth doesn't have authError like Supabase
       // Authentication is handled by FirebaseAuthService
+      // Use cached profile if user is still loading
+      const currentUser = firebaseUser || (currentProfile?.id ? { uid: currentProfile.id } : null)
       
-      if (!user) {
+      if (!currentUser) {
         console.error('❌ No authenticated user found')
         throw new Error('No authenticated user')
       }
 
-      console.log('👤 User ID:', user.uid)
+      console.log('👤 User ID:', currentUser.uid)
       console.log('📝 Update data:', updates)
 
       // Test authentication and profile access before update using Firebase
-      const testData = await FirebaseDatabaseService.getDocument('profiles', user.uid)
+      const testData = await FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
       
       if (!testData) {
         console.error('❌ Profile access test failed: Profile not found')
@@ -173,7 +242,7 @@ function ProfilePage() {
 
       console.log('✅ Profile access test passed:', testData)
 
-      const result = await FirebaseDatabaseService.updateDocument('profiles', user.uid, updates)
+      const result = await FirebaseDatabaseService.updateDocument('profiles', currentUser.uid, updates)
 
       if (!result) {
         console.error('❌ Database update error: Update failed')
@@ -191,108 +260,9 @@ function ProfilePage() {
     }
   }
 
-  // Check if this is the president (local signin - no Firebase user)
-  const isPresident = !user
+
   
-  // Use default profile data if none is loaded yet
-  const profileData = currentProfile || (isPresident ? {
-    // President's hardcoded data (only shown when no Firebase user)
-    id: 'president-demo-123',
-    first_name: 'The',
-    middle_name: '',
-    last_name: 'President',
-    email: 'president@loveworld.com',
-    phone_number: '+1 (555) 000-0001',
-    gender: 'Male',
-    birthday: '1985-01-01',
-    region: 'Global',
-    zone: 'International',
-    church: 'LoveWorld International',
-    designation: 'President',
-    administration: 'President',
-    social_provider: 'email',
-    social_id: 'president@loveworld.com',
-    profile_image_url: '',
-    profile_completed: true,
-    email_verified: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  } : {
-    // Firebase users fallback (empty profile until data loads)
-    id: user?.uid || '',
-    first_name: (user as any)?.user_metadata?.first_name || '',
-    middle_name: (user as any)?.user_metadata?.middle_name || '',
-    last_name: (user as any)?.user_metadata?.last_name || '',
-    email: user?.email || '',
-    phone_number: '',
-    gender: '',
-    birthday: '',
-    region: '',
-    zone: '',
-    church: '',
-    designation: '',
-    administration: '',
-    social_provider: 'email',
-    social_id: user?.email || '',
-    profile_image_url: '',
-    profile_completed: false,
-    email_verified: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-
-  // Debug logging
-  console.log('🔍 Profile Debug Info:')
-  console.log('👤 User UID:', user?.uid)
-  console.log('📋 Current Profile ID:', currentProfile?.id)
-  console.log('📊 Profile Data:', profileData)
-  console.log('🔄 Is Loading:', isLoading)
   
-  // ✅ SECURITY: Ensure user can only see their own profile
-  useEffect(() => {
-    if (user && currentProfile) {
-      // Check if the loaded profile belongs to the current user
-      if (currentProfile.id !== user.uid) {
-        console.error('❌ SECURITY: Profile ID mismatch!')
-        console.error('User UID:', user.uid)
-        console.error('Profile ID:', currentProfile.id)
-        console.error('🔄 Refreshing to load correct profile...')
-        refreshProfile()
-      }
-      
-      // Check if user is trying to view President's profile without permission
-      if ((currentProfile as any).isPresident === true) {
-        const isSpecialUser = typeof window !== 'undefined' && localStorage.getItem('specialUser') === 'true'
-        if (!isSpecialUser) {
-          console.error('❌ SECURITY: Unauthorized access to President profile!')
-          router.push('/home')
-        }
-      }
-    }
-  }, [user, currentProfile, router, refreshProfile])
-
-  // Initialize edit form with profile data (only once on mount)
-  useEffect(() => {
-    setEditForm({
-      firstName: profileData.first_name || '',
-      lastName: profileData.last_name || '',
-      middleName: profileData.middle_name || '',
-      phoneNumber: profileData.phone_number || '',
-      gender: profileData.gender || '',
-      birthday: profileData.birthday || '',
-      region: profileData.region || '',
-      zone: profileData.zone || '',
-      church: profileData.church || '',
-      designation: profileData.designation || '',
-      administration: profileData.administration || ''
-    })
-    
-    // Initialize profile image from profile data
-    if (profileData.profile_image_url) {
-      setProfileImage(profileData.profile_image_url)
-    }
-  }, []) // Remove profileData dependency to prevent form reset
-
   // Handle form input changes
   const handleInputChange = (field: string, value: string) => {
     setEditForm(prev => ({
@@ -492,17 +462,6 @@ function ProfilePage() {
     // Don't use router.push - signOut already handles redirect
   }
 
-  // Check if KingsChat is linked on mount
-  useEffect(() => {
-    const checkKingsChatLink = async () => {
-      if (user?.uid) {
-        const isLinked = await AccountLinkingService.isKingsChatLinked(user.uid)
-        setKingsChatLinked(isLinked)
-      }
-    }
-    checkKingsChatLink()
-  }, [user?.uid])
-
   // Link KingsChat account
   const handleLinkKingsChat = async () => {
     if (!user?.uid) return
@@ -673,20 +632,6 @@ function ProfilePage() {
 
 
 
-  const [isCoordinator, setIsCoordinator] = useState(false)
-  
-  // Check coordinator status directly from database
-  useEffect(() => {
-    async function checkRole() {
-      if (user?.uid) {
-        const { isUserCoordinator } = await import('@/lib/check-coordinator')
-        const result = await isUserCoordinator(user.uid)
-        setIsCoordinator(result)
-      }
-    }
-    checkRole()
-  }, [user?.uid])
-  
   // Check if user is boss
   const isBossUser = currentProfile?.role === 'boss' || currentProfile?.email?.toLowerCase().startsWith('boss')
   

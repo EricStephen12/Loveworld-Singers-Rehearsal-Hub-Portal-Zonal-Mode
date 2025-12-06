@@ -28,6 +28,8 @@ import {
   getAllCloudinaryMedia,
   createCloudinaryMedia,
   deleteCloudinaryMedia,
+  loadMoreCloudinaryMedia,
+  hasMoreCloudinaryMedia,
   CloudinaryMediaFile
 } from '@/lib/cloudinary-media-service';
 import { useZone } from '@/hooks/useZone';
@@ -92,7 +94,8 @@ export default function MediaManager({
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
   const [runningDiagnostics, setRunningDiagnostics] = useState(false);
-
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -112,12 +115,15 @@ export default function MediaManager({
       console.log('🚀 [Cloudinary] Loading media files from Firebase...');
       const startTime = performance.now();
 
-      // Load from zone-aware collection
-      const mediaFiles = await getAllCloudinaryMedia(currentZone?.id);
+      // Load from zone-aware collection with limit
+      const mediaFiles = await getAllCloudinaryMedia(currentZone?.id, 50);
 
       const loadTime = performance.now() - startTime;
       console.log(`⚡ [Cloudinary] Media loaded in ${loadTime.toFixed(2)}ms`);
       console.log(`📊 [Cloudinary] Total media files: ${mediaFiles.length}`);
+
+      // Update hasMore state
+      setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
 
       // Show success message for slow loads
       if (loadTime > 1000 && showLoading) {
@@ -157,6 +163,43 @@ export default function MediaManager({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load more media files
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const moreFiles = await loadMoreCloudinaryMedia(currentZone?.id, 50);
+      
+      if (moreFiles.length > 0) {
+        const convertedFiles: MediaFile[] = moreFiles.map(dbFile => ({
+          id: dbFile.id,
+          name: dbFile.name,
+          url: dbFile.url,
+          type: dbFile.type,
+          size: dbFile.size,
+          folder: dbFile.folder || 'uncategorized',
+          uploadedAt: dbFile.createdAt,
+          storagePath: dbFile.publicId,
+          createdAt: new Date(dbFile.createdAt),
+          updatedAt: new Date(dbFile.updatedAt)
+        }));
+        
+        setFiles(prev => [...prev, ...convertedFiles]);
+      }
+      
+      setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
+    } catch (error) {
+      console.error('❌ Error loading more media:', error);
+      addToast({
+        type: 'error',
+        message: 'Failed to load more files'
+      });
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -869,6 +912,29 @@ export default function MediaManager({
                 )}
               </div>
             ))}
+            
+            {/* Load More Button */}
+            {hasMore && !searchTerm && (
+              <div className={viewMode === 'grid' ? 'col-span-full' : ''}>
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="w-full py-3 mt-4 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Loading more...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Load More Files
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

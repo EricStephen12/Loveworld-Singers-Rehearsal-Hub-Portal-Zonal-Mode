@@ -1,11 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Bell, MessageSquare, Users, Building2 } from 'lucide-react'
+import { Bell, MessageSquare, Users, Building2, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import ScreenHeader from '@/components/ScreenHeader'
-import SharedDrawer from '@/components/SharedDrawer'
-import { getMenuItems } from '@/config/menuItems'
 import { getAllMessages, AdminMessage } from '@/lib/simple-notifications-service'
 import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
 import { useAuth } from '@/hooks/useAuth'
@@ -25,20 +23,23 @@ interface CombinedNotification {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<CombinedNotification[]>([])
   const [loading, setLoading] = useState(true)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'zone' | 'subgroup'>('all')
   const router = useRouter()
   const { user, profile } = useAuth()
   const { currentZone, isLoading: zoneLoading } = useZone()
 
   useEffect(() => {
-    if (currentZone?.id && !zoneLoading && user?.uid) {
+    // Use cached profile if user is still loading
+    const userId = user?.uid || profile?.id
+    if (currentZone?.id && !zoneLoading && userId) {
       loadNotifications()
     }
-  }, [currentZone?.id, zoneLoading, user?.uid])
+  }, [currentZone?.id, zoneLoading, user?.uid, profile?.id])
 
   const loadNotifications = async () => {
-    if (!currentZone?.id || !user?.uid) {
+    // Use cached profile if user is still loading
+    const userId = user?.uid || profile?.id
+    if (!currentZone?.id || !userId) {
       setLoading(false)
       return
     }
@@ -57,7 +58,7 @@ export default function NotificationsPage() {
       }))
       
       // Load sub-group notifications
-      const subGroupNotifs = await SubGroupDatabaseService.getUserNotifications(user.uid, 50)
+      const subGroupNotifs = await SubGroupDatabaseService.getUserNotifications(userId, 50)
       const subGroupMapped: CombinedNotification[] = subGroupNotifs.map(notif => ({
         id: notif.id,
         title: notif.title,
@@ -108,21 +109,20 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 overflow-hidden">
-      {/* Main Content with Apple-style reveal effect */}
-      <div 
-        className={`
-          min-h-screen
-          transition-all duration-300 ease-out
-          ${isMenuOpen 
-            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
-            : 'translate-x-0 scale-100 rounded-none'
-          }
-        `}
-        onClick={() => isMenuOpen && setIsMenuOpen(false)}
-      >
+      <div className="min-h-screen">
       <ScreenHeader
         title="Messages"
-        onMenuClick={() => setIsMenuOpen(true)}
+        showMenuButton={false}
+        leftButtons={
+          <button
+            onClick={() => router.back()}
+            className="flex items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 active:scale-95"
+            aria-label="Go back"
+            style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        }
       />
 
       <div className="pt-16 pb-20 px-4">
@@ -216,13 +216,7 @@ export default function NotificationsPage() {
           </div>
         </div>
       </div>
-      </div> {/* End Apple-style animated container */}
-
-      <SharedDrawer
-        open={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        items={getMenuItems(() => setIsMenuOpen(false))}
-      />
+      </div>
     </div>
   )
 }

@@ -14,7 +14,8 @@ match /media/{mediaId} {
       'lliamzelvin@gmail.com',
       'ihenacho23@gmail.com', 
       'ephraimloveworld1@gmail.com',
-      'takeshopstores@gmail.com'
+      'takeshopstores@gmail.com',
+      'nnennawealth@gmail.com'
     ];
 }
 
@@ -34,7 +35,8 @@ match /media_comments/{commentId} {
           'lliamzelvin@gmail.com',
           'ihenacho23@gmail.com', 
           'ephraimloveworld1@gmail.com',
-          'takeshopstores@gmail.com'
+          'takeshopstores@gmail.com',
+          'nnennawealth@gmail.com'
         ]);
 }
 

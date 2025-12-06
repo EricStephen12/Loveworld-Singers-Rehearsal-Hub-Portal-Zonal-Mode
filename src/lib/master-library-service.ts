@@ -19,9 +19,24 @@ import {
   doc,
   getDoc,
   updateDoc,
-  increment
+  increment,
+  limit as firestoreLimit,
+  startAfter,
+  QueryDocumentSnapshot
 } from 'firebase/firestore';
 import { db } from './firebase-setup';
+
+// Cache for master songs (5 min TTL)
+let masterSongsCache: { data: MasterSong[]; timestamp: number } | null = null;
+const MASTER_SONGS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Cache for HQ internal songs (5 min TTL)
+let hqInternalSongsCache: { data: any[]; timestamp: number } | null = null;
+const HQ_INTERNAL_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Pagination state
+let lastMasterSongDoc: QueryDocumentSnapshot | null = null;
+let lastHQInternalDoc: QueryDocumentSnapshot | null = null;
 
 export interface MasterSong {
   id: string;
@@ -65,16 +80,23 @@ export interface ImportedSongTracking {
 export class MasterLibraryService {
   
   /**
-   * Get all songs from Master Library
+   * Get all songs from Master Library with caching and optional limit
    * Used by Zone Coordinators to browse available songs
    */
-  static async getMasterSongs(): Promise<MasterSong[]> {
+  static async getMasterSongs(limitCount: number = 100, forceRefresh: boolean = false): Promise<MasterSong[]> {
     try {
-      console.log('📚 Getting Master Library songs...');
+      // Check cache first
+      if (!forceRefresh && masterSongsCache && Date.now() - masterSongsCache.timestamp < MASTER_SONGS_CACHE_TTL) {
+        console.log('📚 Using cached Master Library songs:', masterSongsCache.data.length);
+        return masterSongsCache.data;
+      }
+      
+      console.log('📚 Getting Master Library songs (limit:', limitCount, ')...');
       
       const q = query(
         collection(db, 'master_songs'),
-        orderBy('publishedAt', 'desc')
+        orderBy('publishedAt', 'desc'),
+        firestoreLimit(limitCount)
       );
       
       const querySnapshot = await getDocs(q);
@@ -83,12 +105,82 @@ export class MasterLibraryService {
         ...doc.data()
       })) as MasterSong[];
       
+      // Update cache
+      masterSongsCache = { data: songs, timestamp: Date.now() };
+      
+      // Store last doc for pagination
+      if (querySnapshot.docs.length > 0) {
+        lastMasterSongDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      }
+      
       console.log(`✅ Found ${songs.length} songs in Master Library`);
       return songs;
     } catch (error) {
       console.error('❌ Error getting Master Library songs:', error);
       return [];
     }
+  }
+
+  /**
+   * Load more master songs (pagination)
+   */
+  static async loadMoreMasterSongs(limitCount: number = 50): Promise<MasterSong[]> {
+    try {
+      if (!lastMasterSongDoc) {
+        console.log('📚 No more master songs to load');
+        return [];
+      }
+      
+      console.log('📚 Loading more Master Library songs...');
+      
+      const q = query(
+        collection(db, 'master_songs'),
+        orderBy('publishedAt', 'desc'),
+        startAfter(lastMasterSongDoc),
+        firestoreLimit(limitCount)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const songs = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MasterSong[];
+      
+      // Update last doc for next pagination
+      if (querySnapshot.docs.length > 0) {
+        lastMasterSongDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        
+        // Update cache with new songs
+        if (masterSongsCache) {
+          masterSongsCache.data = [...masterSongsCache.data, ...songs];
+          masterSongsCache.timestamp = Date.now();
+        }
+      } else {
+        lastMasterSongDoc = null; // No more songs
+      }
+      
+      console.log(`✅ Loaded ${songs.length} more songs`);
+      return songs;
+    } catch (error) {
+      console.error('❌ Error loading more Master Library songs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if there are more master songs to load
+   */
+  static hasMoreMasterSongs(): boolean {
+    return lastMasterSongDoc !== null;
+  }
+
+  /**
+   * Clear master songs cache (call after publish/delete)
+   */
+  static clearMasterSongsCache(): void {
+    masterSongsCache = null;
+    lastMasterSongDoc = null;
+    console.log('🗑️ Master songs cache cleared');
   }
 
   /**
@@ -164,6 +256,8 @@ export class MasterLibraryService {
       const result = await FirebaseDatabaseService.addDocument('master_songs', cleanData);
       
       if (result.success) {
+        // Clear cache so next fetch gets fresh data
+        this.clearMasterSongsCache();
         console.log('✅ Song published to Master Library:', result.id);
         return { success: true, id: result.id };
       } else {
@@ -243,6 +337,9 @@ export class MasterLibraryService {
       console.log('🗑️ Deleting from Master Library:', songId);
       
       await FirebaseDatabaseService.deleteDocument('master_songs', songId);
+      
+      // Clear cache so next fetch gets fresh data
+      this.clearMasterSongsCache();
       
       console.log('✅ Master song deleted');
       return { success: true };
@@ -338,16 +435,24 @@ export class MasterLibraryService {
 
   /**
    * Get HQ Internal songs (for HQ Admin to select from)
-   * Fetches ALL songs from the praise_night_songs collection without any limit
+   * Fetches songs from the praise_night_songs collection with limit and caching
    */
-  static async getHQInternalSongs(): Promise<any[]> {
+  static async getHQInternalSongs(limitCount: number = 200, forceRefresh: boolean = false): Promise<any[]> {
     try {
-      console.log('🏢 Getting HQ Internal songs from praise_night_songs...');
+      // Check cache first
+      if (!forceRefresh && hqInternalSongsCache && Date.now() - hqInternalSongsCache.timestamp < HQ_INTERNAL_CACHE_TTL) {
+        console.log('🏢 Using cached HQ Internal songs:', hqInternalSongsCache.data.length);
+        return hqInternalSongsCache.data;
+      }
       
-      // HQ songs are in the 'praise_night_songs' collection - get ALL
-      // Note: Not using orderBy to avoid index requirements
-      const songsRef = collection(db, 'praise_night_songs');
-      const querySnapshot = await getDocs(songsRef);
+      console.log('🏢 Getting HQ Internal songs from praise_night_songs (limit:', limitCount, ')...');
+      
+      // HQ songs are in the 'praise_night_songs' collection
+      const q = query(
+        collection(db, 'praise_night_songs'),
+        firestoreLimit(limitCount)
+      );
+      const querySnapshot = await getDocs(q);
       
       const songs = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -358,12 +463,85 @@ export class MasterLibraryService {
       // Sort by title client-side
       songs.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       
+      // Update cache
+      hqInternalSongsCache = { data: songs, timestamp: Date.now() };
+      
+      // Store last doc for pagination
+      if (querySnapshot.docs.length > 0) {
+        lastHQInternalDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      }
+      
       console.log(`✅ Found ${songs.length} HQ Internal songs`);
       return songs;
     } catch (error) {
       console.error('❌ Error getting HQ Internal songs:', error);
       return [];
     }
+  }
+
+  /**
+   * Load more HQ internal songs (pagination)
+   */
+  static async loadMoreHQInternalSongs(limitCount: number = 100): Promise<any[]> {
+    try {
+      if (!lastHQInternalDoc) {
+        console.log('🏢 No more HQ internal songs to load');
+        return [];
+      }
+      
+      console.log('🏢 Loading more HQ Internal songs...');
+      
+      const q = query(
+        collection(db, 'praise_night_songs'),
+        startAfter(lastHQInternalDoc),
+        firestoreLimit(limitCount)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const songs = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        firebaseId: doc.id,
+        ...doc.data()
+      })) as Array<{ id: string; firebaseId: string; title?: string; [key: string]: any }>;
+      
+      // Sort by title client-side
+      songs.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      
+      // Update last doc for next pagination
+      if (querySnapshot.docs.length > 0) {
+        lastHQInternalDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        
+        // Update cache with new songs
+        if (hqInternalSongsCache) {
+          hqInternalSongsCache.data = [...hqInternalSongsCache.data, ...songs];
+          hqInternalSongsCache.timestamp = Date.now();
+        }
+      } else {
+        lastHQInternalDoc = null; // No more songs
+      }
+      
+      console.log(`✅ Loaded ${songs.length} more HQ internal songs`);
+      return songs;
+    } catch (error) {
+      console.error('❌ Error loading more HQ Internal songs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if there are more HQ internal songs to load
+   */
+  static hasMoreHQInternalSongs(): boolean {
+    return lastHQInternalDoc !== null;
+  }
+
+  /**
+   * Clear HQ internal songs cache
+   */
+  static clearHQInternalSongsCache(): void {
+    hqInternalSongsCache = null;
+    lastHQInternalDoc = null;
+    console.log('🗑️ HQ internal songs cache cleared');
   }
 
   /**

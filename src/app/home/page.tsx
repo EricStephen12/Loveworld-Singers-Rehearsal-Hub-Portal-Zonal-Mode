@@ -34,7 +34,8 @@ function HomePageContent() {
     'lliamzelvin@gmail.com',
     'ihenacho23@gmail.com', 
     'ephraimloveworld1@gmail.com',
-    'takeshopstores@gmail.com'
+    'takeshopstores@gmail.com',
+    'nnennawealth@gmail.com'
   ].includes(profile.email.toLowerCase())
   
   // Check if user can see upgrade prompts (only Zone Leaders with ZNL prefix)

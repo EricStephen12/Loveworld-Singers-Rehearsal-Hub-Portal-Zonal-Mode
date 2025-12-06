@@ -222,6 +222,7 @@ export const HQ_GROUP_IDS = [
   'zone-003',
   'zone-004',
   'zone-005',
+  'zone-orchestra', // Loveworld Singers Orchestra
   // Senior HQ zones (have their own zones but behave like HQ groups)
   'zone-president',
   'zone-director',
@@ -251,13 +252,13 @@ export function hasBossAccess(role: string | undefined, zoneId: string | undefin
 }
 
 // Check if user should bypass feature gates and subscription checks
-// HQ groups and India zone get free unlimited access without subscription requirements
+// Only HQ groups get free unlimited access without subscription requirements
 export function bypassesFeatureGates(zoneId: string | undefined): boolean {
-  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID || zoneId === 'zone-013' // India zone gets premium access
+  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID
 }
 
 // Check if zone requires subscription payment
-// HQ groups and India zone are free and don't need subscriptions
+// Only HQ groups are free and don't need subscriptions
 export function requiresSubscription(zoneId: string | undefined): boolean {
   return !bypassesFeatureGates(zoneId)
 }

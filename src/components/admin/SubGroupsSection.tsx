@@ -170,8 +170,8 @@ export default function SubGroupsSection() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats - Horizontal Scroll on Mobile */}
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 mb-6 scrollbar-hide">
           <StatCard 
             label="Total" 
             value={subGroups.length} 
@@ -191,37 +191,54 @@ export default function SubGroupsSection() {
             bgColor="bg-yellow-100"
           />
           <StatCard 
-            label="Awaiting Payment" 
+            label="Awaiting" 
             value={subGroups.filter(sg => sg.status === 'approved_pending_payment').length} 
             icon={<CreditCard className="w-5 h-5 text-blue-600" />}
             bgColor="bg-blue-100"
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        {/* Filters - Instagram Style */}
+        <div className="space-y-3 mb-6">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name or coordinator..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 lg:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
             />
           </div>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as SubGroupStatus | 'all')}
-            className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved_pending_payment">Awaiting Payment</option>
-            <option value="active">Active</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          {/* Status Filter Pills - Horizontal Scroll on Mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-hide">
+            {[
+              { value: 'all', label: 'All', count: subGroups.length },
+              { value: 'pending', label: 'Pending', count: subGroups.filter(sg => sg.status === 'pending').length },
+              { value: 'approved_pending_payment', label: 'Awaiting Pay', count: subGroups.filter(sg => sg.status === 'approved_pending_payment').length },
+              { value: 'active', label: 'Active', count: subGroups.filter(sg => sg.status === 'active').length },
+              { value: 'rejected', label: 'Rejected', count: subGroups.filter(sg => sg.status === 'rejected').length },
+            ].map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setStatusFilter(filter.value as SubGroupStatus | 'all')}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${
+                  statusFilter === filter.value
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                {filter.label}
+                {filter.count > 0 && (
+                  <span className={`ml-1.5 ${statusFilter === filter.value ? 'text-purple-200' : 'text-slate-400'}`}>
+                    {filter.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Sub-Groups List */}
@@ -275,7 +292,7 @@ export default function SubGroupsSection() {
 }
 
 
-// Stat Card Component
+// Stat Card Component - Instagram Style
 function StatCard({ 
   label, 
   value, 
@@ -288,21 +305,21 @@ function StatCard({
   bgColor: string;
 }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200">
+    <div className="flex-shrink-0 w-[140px] lg:w-auto bg-white rounded-2xl lg:rounded-xl p-4 border border-slate-200 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className={`p-2 ${bgColor} rounded-lg`}>
+        <div className={`p-2.5 lg:p-2 ${bgColor} rounded-xl lg:rounded-lg`}>
           {icon}
         </div>
         <div>
           <p className="text-2xl font-bold text-slate-900">{value}</p>
-          <p className="text-sm text-slate-500">{label}</p>
+          <p className="text-xs lg:text-sm text-slate-500 whitespace-nowrap">{label}</p>
         </div>
       </div>
     </div>
   );
 }
 
-// Sub-Group Row Component
+// Sub-Group Row Component - Instagram Style
 function SubGroupRow({
   subGroup,
   onApprove,
@@ -321,39 +338,52 @@ function SubGroupRow({
   const typeLabel = TYPE_LABELS[subGroup.type];
 
   return (
-    <div className="p-4 hover:bg-slate-50 transition-colors">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1 min-w-0">
-          <div className="p-2 bg-slate-100 rounded-lg flex-shrink-0">
-            {typeIcon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium text-slate-900 truncate">{subGroup.name}</h3>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${statusConfig.color}`}>
-                {statusConfig.icon}
-                {statusConfig.label}
+    <div className="bg-white hover:bg-slate-50 transition-colors">
+      {/* Main Row - Tappable */}
+      <div 
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-slate-100 lg:active:bg-slate-50"
+        onClick={onView}
+      >
+        {/* Icon with gradient */}
+        <div className={`w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-lg flex-shrink-0 flex items-center justify-center ${
+          subGroup.status === 'active' 
+            ? 'bg-gradient-to-br from-green-400 to-emerald-500' 
+            : subGroup.status === 'pending'
+            ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+            : subGroup.status === 'approved_pending_payment'
+            ? 'bg-gradient-to-br from-blue-400 to-indigo-500'
+            : 'bg-gradient-to-br from-slate-400 to-slate-500'
+        }`}>
+          <span className="text-white">{typeIcon}</span>
+        </div>
+        
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-[15px] text-slate-900 truncate">{subGroup.name}</h3>
+            {subGroup.status === 'active' && (
+              <span className="flex-shrink-0 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-[8px]">✓</span>
               </span>
-            </div>
-            <p className="text-sm text-slate-500 mb-1">{typeLabel}</p>
-            <div className="flex items-center gap-4 text-xs text-slate-400">
-              <span>By: {subGroup.coordinatorName || 'Unknown'}</span>
-              <span>•</span>
-              <span>~{subGroup.estimatedMembers} members</span>
-              <span>•</span>
-              <span>{new Date(subGroup.createdAt).toLocaleDateString()}</span>
-            </div>
-            {subGroup.description && (
-              <p className="text-sm text-slate-600 mt-2 line-clamp-2">{subGroup.description}</p>
             )}
+          </div>
+          <p className="text-sm text-slate-500 truncate">{typeLabel} • {subGroup.coordinatorName || 'Unknown'}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusConfig.color}`}>
+              {statusConfig.label}
+            </span>
+            <span className="text-[10px] text-slate-400">
+              ~{subGroup.estimatedMembers} members
+            </span>
           </div>
         </div>
         
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Desktop Actions */}
+        <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
           {subGroup.status === 'pending' && (
             <>
               <button
-                onClick={onApprove}
+                onClick={(e) => { e.stopPropagation(); onApprove(); }}
                 disabled={processing}
                 className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
@@ -361,7 +391,7 @@ function SubGroupRow({
                 Approve
               </button>
               <button
-                onClick={onReject}
+                onClick={(e) => { e.stopPropagation(); onReject(); }}
                 disabled={processing}
                 className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-600 text-sm rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
               >
@@ -372,7 +402,7 @@ function SubGroupRow({
           )}
           
           <button
-            onClick={onView}
+            onClick={(e) => { e.stopPropagation(); onView(); }}
             className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="View details"
           >
@@ -380,6 +410,28 @@ function SubGroupRow({
           </button>
         </div>
       </div>
+      
+      {/* Mobile Action Bar - Only for pending */}
+      {subGroup.status === 'pending' && (
+        <div className="lg:hidden flex items-center justify-end gap-2 px-4 py-2 bg-slate-50/50 border-t border-slate-100">
+          <button
+            onClick={(e) => { e.stopPropagation(); onApprove(); }}
+            disabled={processing}
+            className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Check className="w-4 h-4" />
+            Approve
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onReject(); }}
+            disabled={processing}
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-xl hover:bg-red-200 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <X className="w-4 h-4" />
+            Reject
+          </button>
+        </div>
+      )}
     </div>
   );
 }
