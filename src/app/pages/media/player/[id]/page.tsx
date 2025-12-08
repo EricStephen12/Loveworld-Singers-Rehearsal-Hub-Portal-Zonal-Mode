@@ -29,8 +29,11 @@ interface MediaComment {
 export default function PlayerPage() {
   const router = useRouter()
   const params = useParams()
-  const { user, profile } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const { incrementViews, saveWatchProgress } = useMedia()
+  
+  // Get userId from user or cached profile (like calendar does)
+  const userId = user?.uid || profile?.id
   
   const [media, setMedia] = useState<MediaItem | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,10 +59,14 @@ export default function PlayerPage() {
     loadMedia()
     loadComments()
     loadRelatedVideos()
-    if (user?.uid) {
-      checkUserStatus()
+  }, [mediaId])
+  
+  // Check user status when userId becomes available
+  useEffect(() => {
+    if (userId) {
+      checkUserStatus(userId)
     }
-  }, [mediaId, user?.uid])
+  }, [userId, mediaId])
 
   useEffect(() => {
     if (media) {
@@ -68,14 +75,17 @@ export default function PlayerPage() {
     }
   }, [media])
 
-  const checkUserStatus = async () => {
-    if (!user?.uid) return
-    const [liked, watchLater] = await Promise.all([
-      isVideoLiked(user.uid, mediaId),
-      isInWatchLater(user.uid, mediaId)
-    ])
-    setIsLiked(liked)
-    setIsWatchLater(watchLater)
+  const checkUserStatus = async (uid: string) => {
+    try {
+      const [liked, watchLater] = await Promise.all([
+        isVideoLiked(uid, mediaId),
+        isInWatchLater(uid, mediaId)
+      ])
+      setIsLiked(liked)
+      setIsWatchLater(watchLater)
+    } catch (error) {
+      console.error('Error checking user status:', error)
+    }
   }
 
   const loadMedia = async () => {
@@ -116,38 +126,70 @@ export default function PlayerPage() {
     }
   }
 
-  const handleLike = async () => {
-    if (!user) return
-    const newLiked = await toggleLikeVideo(user.uid, mediaId, media?.thumbnail)
-    setIsLiked(newLiked)
-    setIsDisliked(false)
-    setLikeCount(prev => newLiked ? prev + 1 : prev - 1)
+  // State for auth prompt
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false)
+
+  const showAuthRequired = () => {
+    setShowAuthPrompt(true)
+    setTimeout(() => setShowAuthPrompt(false), 3000)
   }
 
-  const handleDislike = () => {
-    if (!user) return
+  const handleLike = async () => {
+    if (!userId) {
+      showAuthRequired()
+      return
+    }
+    try {
+      console.log('👍 Liking video:', mediaId, 'User:', userId)
+      const newLiked = await toggleLikeVideo(userId, mediaId, media?.thumbnail)
+      console.log('👍 Like result:', newLiked)
+      setIsLiked(newLiked)
+      setIsDisliked(false)
+      setLikeCount(prev => newLiked ? prev + 1 : prev - 1)
+    } catch (error) {
+      console.error('❌ Like error:', error)
+    }
+  }
+
+  const handleDislike = async () => {
+    if (!userId) {
+      showAuthRequired()
+      return
+    }
     setIsDisliked(!isDisliked)
     if (isLiked) { 
       setIsLiked(false)
       setLikeCount(prev => prev - 1)
-      // Remove from liked playlist
-      toggleLikeVideo(user.uid, mediaId, media?.thumbnail)
+      try {
+        await toggleLikeVideo(userId, mediaId, media?.thumbnail)
+      } catch (error) {
+        console.error('❌ Unlike error:', error)
+      }
     }
   }
 
   const handleWatchLater = async () => {
-    if (!user) return
-    const newWatchLater = await toggleWatchLater(user.uid, mediaId, media?.thumbnail)
-    setIsWatchLater(newWatchLater)
+    if (!userId) {
+      showAuthRequired()
+      return
+    }
+    try {
+      console.log('⏰ Watch later:', mediaId, 'User:', userId)
+      const newWatchLater = await toggleWatchLater(userId, mediaId, media?.thumbnail)
+      console.log('⏰ Watch later result:', newWatchLater)
+      setIsWatchLater(newWatchLater)
+    } catch (error) {
+      console.error('❌ Watch later error:', error)
+    }
   }
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !user || !profile) return
+    if (!newComment.trim() || !userId || !profile) return
     setIsSubmitting(true)
     try {
       const comment = {
         mediaId,
-        userId: user.uid,
+        userId: userId,
         userName: profile.first_name || 'User',
         content: newComment.trim(),
         likes: 0,
@@ -158,19 +200,21 @@ export default function PlayerPage() {
       await FirebaseDatabaseService.createDocument('media_comments', docId, comment)
       setComments(prev => [{ ...comment, id: docId }, ...prev])
       setNewComment('')
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error submitting comment:', e)
+    }
     finally { setIsSubmitting(false) }
   }
 
   const handleLikeComment = (commentId: string) => {
-    if (!user) return
+    if (!userId) return
     setComments(prev => prev.map(c => {
       if (c.id === commentId) {
-        const liked = c.likedBy.includes(user.uid)
+        const liked = c.likedBy.includes(userId)
         return {
           ...c,
           likes: liked ? c.likes - 1 : c.likes + 1,
-          likedBy: liked ? c.likedBy.filter(id => id !== user.uid) : [...c.likedBy, user.uid]
+          likedBy: liked ? c.likedBy.filter(id => id !== userId) : [...c.likedBy, userId]
         }
       }
       return c
@@ -235,6 +279,18 @@ export default function PlayerPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
+      {/* Auth Prompt Toast */}
+      {showAuthPrompt && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+          <div 
+            className="flex items-center gap-3 px-4 py-3 bg-[#272727] text-white rounded-xl shadow-lg border border-white/10 cursor-pointer"
+            onClick={() => router.push('/auth')}
+          >
+            <span className="text-sm">Sign in to like, save, and comment</span>
+            <span className="text-xs text-blue-400 font-medium">Sign In →</span>
+          </div>
+        </div>
+      )}
       {/* Mobile */}
       <div className="lg:hidden">
         {/* Player */}
@@ -274,7 +330,13 @@ export default function PlayerPage() {
             <button onClick={handleWatchLater} className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg ${isWatchLater ? 'bg-blue-600' : 'bg-[#272727]'}`}>
               <Clock className="w-4 h-4" />
             </button>
-            <button onClick={() => setShowPlaylistModal(true)} className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#272727]">
+            <button onClick={() => {
+              if (!userId) {
+                showAuthRequired()
+                return
+              }
+              setShowPlaylistModal(true)
+            }} className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#272727]">
               <ListPlus className="w-4 h-4" />
             </button>
           </div>
@@ -338,7 +400,7 @@ export default function PlayerPage() {
                       <p className="text-xs text-gray-400 mb-0.5">@{c.userName} • {formatTimeAgo(c.createdAt)}</p>
                       <p className="text-sm">{c.content}</p>
                       <button onClick={() => handleLikeComment(c.id)} className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                        <ThumbsUp className="w-3 h-3" fill={c.likedBy.includes(user?.uid || '') ? 'currentColor' : 'none'} />
+                        <ThumbsUp className="w-3 h-3" fill={c.likedBy.includes(userId || '') ? 'currentColor' : 'none'} />
                         {c.likes > 0 && c.likes}
                       </button>
                     </div>
@@ -405,7 +467,13 @@ export default function PlayerPage() {
                 <Clock className="w-5 h-5" />
                 {isWatchLater ? 'Saved' : 'Watch later'}
               </button>
-              <button onClick={() => setShowPlaylistModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#272727] hover:bg-[#3a3a3a]">
+              <button onClick={() => {
+                if (!userId) {
+                  showAuthRequired()
+                  return
+                }
+                setShowPlaylistModal(true)
+              }} className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#272727] hover:bg-[#3a3a3a]">
                 <ListPlus className="w-5 h-5" />
                 Save
               </button>
@@ -458,7 +526,7 @@ export default function PlayerPage() {
                     <p className="text-sm"><span className="font-medium">@{c.userName}</span> <span className="text-gray-500 text-xs">{formatTimeAgo(c.createdAt)}</span></p>
                     <p className="text-sm mt-1">{c.content}</p>
                     <button onClick={() => handleLikeComment(c.id)} className="flex items-center gap-1 text-sm text-gray-500 mt-2 hover:text-white">
-                      <ThumbsUp className="w-4 h-4" fill={c.likedBy.includes(user?.uid || '') ? 'currentColor' : 'none'} />
+                      <ThumbsUp className="w-4 h-4" fill={c.likedBy.includes(userId || '') ? 'currentColor' : 'none'} />
                       {c.likes > 0 && c.likes}
                     </button>
                   </div>
@@ -496,13 +564,13 @@ export default function PlayerPage() {
       </div>
 
       {/* Playlist Modal */}
-      {user && (
+      {userId && (
         <AddToPlaylistModal
           isOpen={showPlaylistModal}
           onClose={() => setShowPlaylistModal(false)}
           videoId={mediaId}
           videoThumbnail={media?.thumbnail}
-          userId={user.uid}
+          userId={userId}
         />
       )}
     </div>

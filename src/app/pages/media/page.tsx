@@ -35,8 +35,20 @@ export default function MediaPage() {
     refreshMedia()
   }, [])
 
-  // No auth check - media page is accessible to everyone
-  // Just show content immediately
+  // Show loading only while auth is checking AND we have no cached profile (like groups page)
+  if (authLoading && !profile) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-gray-700 border-t-red-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If we have cached profile, show content even if user is still loading
+  // This prevents blank screen on revisits
 
   const filteredMedia = useMemo(() => {
     let filtered = allMedia

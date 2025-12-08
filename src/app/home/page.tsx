@@ -298,23 +298,12 @@ function HomePageContent() {
 
 
 
-  // Show loading spinner while checking auth state
-  if (authLoading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
-        <div className="text-center">
-          <div 
-            className="w-16 h-16 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-4"
-            style={{ borderTopColor: '#10b981' }}
-          />
-          <p className="text-gray-600 text-lg font-medium">Checking authentication...</p>
-        </div>
-      </div>
-    )
-  }
+  // OPTIMIZED: Only show auth loading on FIRST visit (no cached user)
+  // If we have a user object (even while loading profile), show content
+  // This prevents the "Checking authentication" spinner on every page load
   
   // After loading completes, if no user, show login prompt (no redirect)
-  if (!user) {
+  if (!authLoading && !user) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
         <div className="text-center p-8">
@@ -332,14 +321,12 @@ function HomePageContent() {
     )
   }
   
-  // Check if we have cached data (profile or zone)
-  const hasCachedData = profile !== null || currentZone !== null
-  
-  // Show skeleton only on first load when profile is still loading
-  if (!profile && !hasCachedData) {
+  // Show brief loading only on very first visit when we have NO data at all
+  // This is rare - usually we have cached user from Firebase Auth
+  if (authLoading && !user && !profile && !currentZone) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
-        {/* Skeleton Loading */}
+        {/* Skeleton Loading - shows briefly on first visit only */}
         <div className="h-full flex flex-col">
           {/* Header Skeleton */}
           <div className="bg-white border-b border-gray-200 p-4">
@@ -379,23 +366,9 @@ function HomePageContent() {
   // Check if in Boss zone
   const isBossZone = currentZone?.id === 'zone-boss'
   
-  // Don't show skeleton for zone loading - zones are cached
-  // Show loading screen for first-time users (prevents zone flicker)
-  if (shouldShowLoading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
-        <div className="text-center">
-          <div 
-            className="w-16 h-16 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-4"
-            style={{ 
-              borderTopColor: '#10b981'
-            }}
-          />
-          <p className="text-gray-600 text-lg font-medium">Loading your zone...</p>
-        </div>
-      </div>
-    )
-  }
+  // OPTIMIZED: Don't show full-screen loading for zone
+  // Zone data is cached, so this should be instant most of the time
+  // Only show loading if we're truly loading AND have no zone data at all
 
   // Show join zone prompt if user has no zone (after loading completes)
   if (!zoneLoading && !currentZone && user) {

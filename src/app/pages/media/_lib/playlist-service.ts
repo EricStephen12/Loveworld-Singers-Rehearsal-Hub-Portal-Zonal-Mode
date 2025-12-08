@@ -70,45 +70,65 @@ export async function ensureSystemPlaylists(userId: string): Promise<void> {
 
 // Toggle like on a video
 export async function toggleLikeVideo(userId: string, videoId: string, thumbnail?: string): Promise<boolean> {
-  const playlistId = getSystemPlaylistId(userId, 'liked')
-  const docRef = doc(db, COLLECTION, playlistId)
-  const snapshot = await getDoc(docRef)
-  
-  if (!snapshot.exists()) {
-    await ensureSystemPlaylists(userId)
-  }
-  
-  const playlist = await getPlaylist(playlistId)
-  const isLiked = playlist?.videoIds.includes(videoId)
-  
-  if (isLiked) {
-    await removeFromPlaylist(playlistId, videoId)
-    return false
-  } else {
-    await addToPlaylist(playlistId, videoId, thumbnail)
-    return true
+  try {
+    console.log('👍 toggleLikeVideo:', { userId, videoId })
+    const playlistId = getSystemPlaylistId(userId, 'liked')
+    const docRef = doc(db, COLLECTION, playlistId)
+    const snapshot = await getDoc(docRef)
+    
+    if (!snapshot.exists()) {
+      console.log('👍 Creating system playlists for user')
+      await ensureSystemPlaylists(userId)
+    }
+    
+    const playlist = await getPlaylist(playlistId)
+    const isLiked = playlist?.videoIds.includes(videoId)
+    console.log('👍 Current like status:', isLiked)
+    
+    if (isLiked) {
+      await removeFromPlaylist(playlistId, videoId)
+      console.log('👍 Removed from liked')
+      return false
+    } else {
+      await addToPlaylist(playlistId, videoId, thumbnail)
+      console.log('👍 Added to liked')
+      return true
+    }
+  } catch (error) {
+    console.error('👍 Error in toggleLikeVideo:', error)
+    throw error
   }
 }
 
 // Toggle watch later on a video
 export async function toggleWatchLater(userId: string, videoId: string, thumbnail?: string): Promise<boolean> {
-  const playlistId = getSystemPlaylistId(userId, 'watch_later')
-  const docRef = doc(db, COLLECTION, playlistId)
-  const snapshot = await getDoc(docRef)
-  
-  if (!snapshot.exists()) {
-    await ensureSystemPlaylists(userId)
-  }
-  
-  const playlist = await getPlaylist(playlistId)
-  const isInWatchLater = playlist?.videoIds.includes(videoId)
-  
-  if (isInWatchLater) {
-    await removeFromPlaylist(playlistId, videoId)
-    return false
-  } else {
-    await addToPlaylist(playlistId, videoId, thumbnail)
-    return true
+  try {
+    console.log('⏰ toggleWatchLater:', { userId, videoId })
+    const playlistId = getSystemPlaylistId(userId, 'watch_later')
+    const docRef = doc(db, COLLECTION, playlistId)
+    const snapshot = await getDoc(docRef)
+    
+    if (!snapshot.exists()) {
+      console.log('⏰ Creating system playlists for user')
+      await ensureSystemPlaylists(userId)
+    }
+    
+    const playlist = await getPlaylist(playlistId)
+    const isInWatchLater = playlist?.videoIds.includes(videoId)
+    console.log('⏰ Current watch later status:', isInWatchLater)
+    
+    if (isInWatchLater) {
+      await removeFromPlaylist(playlistId, videoId)
+      console.log('⏰ Removed from watch later')
+      return false
+    } else {
+      await addToPlaylist(playlistId, videoId, thumbnail)
+      console.log('⏰ Added to watch later')
+      return true
+    }
+  } catch (error) {
+    console.error('⏰ Error in toggleWatchLater:', error)
+    throw error
   }
 }
 
@@ -132,33 +152,47 @@ export async function createPlaylist(
   name: string,
   description?: string
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, COLLECTION), {
-    name,
-    description: description || '',
-    userId,
-    videoIds: [],
-    thumbnail: null,
-    isPublic: false,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  })
-  return docRef.id
+  try {
+    console.log('📝 createPlaylist:', { userId, name })
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      name,
+      description: description || '',
+      userId,
+      videoIds: [],
+      thumbnail: null,
+      isPublic: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+    console.log('📝 Created playlist:', docRef.id)
+    return docRef.id
+  } catch (error) {
+    console.error('📝 Error creating playlist:', error)
+    throw error
+  }
 }
 
 // Get user's playlists
 export async function getUserPlaylists(userId: string): Promise<Playlist[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where('userId', '==', userId),
-    orderBy('updatedAt', 'desc')
-  )
-  const snapshot = await getDocs(q)
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
-    updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
-  })) as Playlist[]
+  try {
+    console.log('📋 getUserPlaylists for:', userId)
+    const q = query(
+      collection(db, COLLECTION),
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    console.log('📋 Found playlists:', snapshot.docs.length)
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+      updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
+    })) as Playlist[]
+  } catch (error) {
+    console.error('📋 Error getting playlists:', error)
+    throw error
+  }
 }
 
 // Get single playlist

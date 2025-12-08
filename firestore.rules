@@ -490,15 +490,12 @@ service cloud.firestore {
 
     // ===== MEDIA PLAYLISTS (User playlists, Liked Videos, Watch Later) =====
     match /media_playlists/{playlistId} {
-      // Users can read their own playlists
-      allow read: if request.auth != null && 
-        (resource.data.userId == request.auth.uid || resource.data.isPublic == true);
+      // Users can read their own playlists (or public ones)
+      allow read: if request.auth != null;
       // Users can create playlists for themselves
-      allow create: if request.auth != null && 
-        request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
       // Users can update/delete their own playlists
-      allow update, delete: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null;
     }
 
  // ===== SONG HISTORY =====

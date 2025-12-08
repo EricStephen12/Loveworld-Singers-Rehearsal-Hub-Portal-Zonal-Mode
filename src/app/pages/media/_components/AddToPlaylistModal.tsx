@@ -70,16 +70,22 @@ export default function AddToPlaylistModal({
   }
 
   const handleCreatePlaylist = async () => {
-    if (!newPlaylistName.trim()) return
+    if (!newPlaylistName.trim() || !userId) {
+      console.log('❌ Cannot create playlist - missing name or userId:', { name: newPlaylistName, userId })
+      return
+    }
     setCreating(true)
     try {
+      console.log('📝 Creating playlist:', newPlaylistName.trim(), 'for user:', userId)
       const newId = await createPlaylist(userId, newPlaylistName.trim())
+      console.log('📝 Playlist created with ID:', newId)
       await addToPlaylist(newId, videoId, videoThumbnail)
+      console.log('📝 Video added to new playlist')
       setNewPlaylistName('')
       setShowCreate(false)
       await loadPlaylists()
     } catch (error) {
-      console.error('Error creating playlist:', error)
+      console.error('❌ Error creating playlist:', error)
     }
     setCreating(false)
   }

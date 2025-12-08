@@ -5,10 +5,9 @@ import { useZone } from '@/hooks/useZone'
 import { ChevronDown, Check, Users, Loader2 } from 'lucide-react'
 
 export default function ZoneSwitcher() {
-  const { currentZone, userZones, isSuperAdmin } = useZone()
+  const { currentZone, userZones, isSuperAdmin, switchZone } = useZone()
   const [isOpen, setIsOpen] = useState(false)
   const [isSwitching, setIsSwitching] = useState(false)
-  const [switchedToZone, setSwitchedToZone] = useState<string | null>(null)
 
   // Don't show if no zones or only 1 zone (no need to switch)
   if (!currentZone || userZones.length < 2) {
@@ -21,65 +20,50 @@ export default function ZoneSwitcher() {
       return
     }
     
-    const targetZone = userZones.find(z => z.id === zoneId)
     setIsSwitching(true)
     setIsOpen(false)
     
-    // IMPORTANT: Clear ALL caches FIRST before any state changes
-    // This ensures the page reloads with fresh data
-    try {
-      // Save the target zone ID for the reload to pick up
-      localStorage.setItem('lwsrh-pending-zone-switch', zoneId)
+    console.log('🔄 Zone Switch: Starting switch to', zoneId)
+    
+    // Call switchZone which saves the preference
+    const success = await switchZone(zoneId)
+    
+    if (success) {
+      console.log('🔄 Zone Switch: Preference saved, reloading page...')
       
-      // Clear zone cache completely - this is critical for zone switch
-      localStorage.removeItem('lwsrh-zone-cache-v5')
-      // Clear profile cache so auth context reloads and shows loading spinner
-      localStorage.removeItem('lwsrh-profile-cache-v1')
-      
-      // Clear all zone-specific data caches (but NOT the pending switch flag)
-      const keysToRemove: string[] = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const storageKey = localStorage.key(i)
-        if (storageKey && storageKey !== 'lwsrh-pending-zone-switch' && (
-          storageKey.includes('praise-nights') ||
-          storageKey.includes('songs-data') ||
-          storageKey.includes('categories') ||
-          storageKey.includes('calendar') ||
-          storageKey.includes('notifications') ||
-          storageKey.includes('subscription') ||
-          storageKey.includes('members') ||
-          storageKey.includes('rehearsal') ||
-          (storageKey.includes('zone-') && !storageKey.includes('pending'))
-        )) {
-          keysToRemove.push(storageKey)
+      // Clear all zone-specific caches before reload
+      try {
+        const keysToRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && !key.startsWith('lwsrh-user-zone-') && (
+            key.includes('praise-nights') ||
+            key.includes('songs-data') ||
+            key.includes('categories') ||
+            key.includes('calendar') ||
+            key.includes('notifications') ||
+            key.includes('members') ||
+            key.includes('rehearsal') ||
+            key.includes('media-cache')
+          )) {
+            keysToRemove.push(key)
+          }
         }
+        keysToRemove.forEach(k => localStorage.removeItem(k))
+        console.log('🔄 Zone Switch: Cleared', keysToRemove.length, 'data caches')
+      } catch (e) {
+        console.error('Error clearing caches:', e)
       }
-      keysToRemove.forEach(k => localStorage.removeItem(k))
       
-      console.log('🔄 Zone Switch: Saved pending zone:', zoneId, '- Cleared', keysToRemove.length, 'cache keys')
-    } catch (e) {
-      // Ignore storage errors
+      // Reload the page to refresh all contexts with new zone
+      window.location.reload()
+    } else {
+      setIsSwitching(false)
     }
-    
-    // Show success message
-    setSwitchedToZone(targetZone?.name || 'New Zone')
-    
-    // Immediate full page reload - the useZone hook will pick up the pending switch
-    window.location.replace('/home')
   }
 
   return (
     <>
-      {/* Success Toast - Fixed at top */}
-      {switchedToZone && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-xl shadow-lg">
-            <Check className="w-5 h-5" />
-            <span className="text-sm font-medium">Switched to {switchedToZone}</span>
-          </div>
-        </div>
-      )}
-
       {/* Switching Overlay */}
       {isSwitching && (
         <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-sm flex items-center justify-center">

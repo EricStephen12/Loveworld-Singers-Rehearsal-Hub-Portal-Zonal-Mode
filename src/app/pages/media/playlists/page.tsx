@@ -14,18 +14,23 @@ export default function PlaylistsPage() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
   useEffect(() => {
+    // Wait for user to be available (auth might still be loading)
     if (user?.uid) {
-      initAndLoad()
+      initAndLoad(user.uid)
+    } else if (!authLoading && profile) {
+      // If auth finished loading but no user, we have a stale profile cache
+      setLoading(false)
     }
-  }, [user?.uid])
+  }, [user?.uid, authLoading])
 
-  const initAndLoad = async () => {
-    if (!user?.uid) return
+  const initAndLoad = async (userId: string) => {
     setLoading(true)
     try {
+      console.log('📋 Loading playlists for user:', userId)
       // Ensure system playlists exist
-      await ensureSystemPlaylists(user.uid)
-      const data = await getUserPlaylists(user.uid)
+      await ensureSystemPlaylists(userId)
+      const data = await getUserPlaylists(userId)
+      console.log('📋 Loaded playlists:', data.length)
       // Sort: system playlists first, then by updatedAt
       const sorted = data.sort((a, b) => {
         if (a.isSystem && !b.isSystem) return -1
@@ -52,8 +57,8 @@ export default function PlaylistsPage() {
     setMenuOpen(null)
   }
 
-  // Show loading while auth is checking
-  if (authLoading) {
+  // Show loading only while auth is checking AND we have no cached profile
+  if (authLoading && !profile) {
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-gray-700 border-t-red-600 rounded-full animate-spin" />
@@ -61,8 +66,8 @@ export default function PlaylistsPage() {
     )
   }
 
-  // Show login prompt if not authenticated
-  if (!user) {
+  // Only show login prompt if truly logged out (no user AND no cached profile)
+  if (!user && !profile) {
     return (
       <div className="min-h-screen bg-[#0f0f0f] text-white">
         <header className="sticky top-0 z-50 bg-[#0f0f0f] h-14 flex items-center gap-3 px-4">

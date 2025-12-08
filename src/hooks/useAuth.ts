@@ -116,7 +116,10 @@ export function useAuth() {
   return {
     user,
     profile,
-    isLoading: loading || profileLoading,
+    // Only report loading if we're checking auth AND have no user yet
+    // Once we have a user, show content even if profile is still loading
+    isLoading: loading && !user,
+    isProfileLoading: profileLoading,
     signOut,
     refreshProfile
   }
