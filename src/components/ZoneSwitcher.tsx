@@ -1,13 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useZone } from '@/hooks/useZone'
 import { ChevronDown, Check, Users, Loader2 } from 'lucide-react'
 
 export default function ZoneSwitcher() {
-  const router = useRouter()
-  const { currentZone, userZones, switchZone, isSuperAdmin } = useZone()
+  const { currentZone, userZones, isSuperAdmin } = useZone()
   const [isOpen, setIsOpen] = useState(false)
   const [isSwitching, setIsSwitching] = useState(false)
   const [switchedToZone, setSwitchedToZone] = useState<string | null>(null)
@@ -27,42 +25,46 @@ export default function ZoneSwitcher() {
     setIsSwitching(true)
     setIsOpen(false)
     
-    // Switch zone
-    await switchZone(zoneId)
-    
-    // Clear ALL caches to force fresh data load with new zone context
+    // IMPORTANT: Clear ALL caches FIRST before any state changes
+    // This ensures the page reloads with fresh data
     try {
-      // Clear zone cache
+      // Save the target zone ID for the reload to pick up
+      localStorage.setItem('lwsrh-pending-zone-switch', zoneId)
+      
+      // Clear zone cache completely - this is critical for zone switch
       localStorage.removeItem('lwsrh-zone-cache-v5')
       // Clear profile cache so auth context reloads and shows loading spinner
       localStorage.removeItem('lwsrh-profile-cache-v1')
       
-      // Clear all zone-specific data caches
+      // Clear all zone-specific data caches (but NOT the pending switch flag)
       const keysToRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const storageKey = localStorage.key(i)
-        if (storageKey && (
+        if (storageKey && storageKey !== 'lwsrh-pending-zone-switch' && (
           storageKey.includes('praise-nights') ||
           storageKey.includes('songs-data') ||
           storageKey.includes('categories') ||
           storageKey.includes('calendar') ||
           storageKey.includes('notifications') ||
-          storageKey.includes('zone-')
+          storageKey.includes('subscription') ||
+          storageKey.includes('members') ||
+          storageKey.includes('rehearsal') ||
+          (storageKey.includes('zone-') && !storageKey.includes('pending'))
         )) {
           keysToRemove.push(storageKey)
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k))
+      
+      console.log('🔄 Zone Switch: Saved pending zone:', zoneId, '- Cleared', keysToRemove.length, 'cache keys')
     } catch (e) {
       // Ignore storage errors
     }
     
-    // Show success message and immediately reload
-    // The user won't lose login - Firebase auth persists in IndexedDB, only the cache is cleared
+    // Show success message
     setSwitchedToZone(targetZone?.name || 'New Zone')
     
-    // Immediate full page reload to /home - this forces all contexts to reload fresh
-    // Using replace to avoid back button issues
+    // Immediate full page reload - the useZone hook will pick up the pending switch
     window.location.replace('/home')
   }
 

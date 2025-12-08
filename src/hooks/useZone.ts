@@ -66,8 +66,27 @@ export function useZone() {
   const lastLoadedUserId = useRef<string | null>(null)
   const isFetching = useRef(false)
 
+  // Track if we've already processed a pending zone switch this session
+  const processedPendingSwitch = useRef(false)
+
   // Load zones when user changes (with caching to prevent repeated reads)
   useEffect(() => {
+    // FIRST: Check for pending zone switch BEFORE anything else
+    // This must happen before cache check to ensure zone switch works
+    let pendingZoneId: string | null = null
+    if (!processedPendingSwitch.current && typeof window !== 'undefined') {
+      pendingZoneId = localStorage.getItem('lwsrh-pending-zone-switch')
+      if (pendingZoneId) {
+        console.log('🔄 Zone Switch: Found pending zone switch to:', pendingZoneId)
+        // Mark as processed immediately
+        processedPendingSwitch.current = true
+        // Clear the pending switch from storage
+        localStorage.removeItem('lwsrh-pending-zone-switch')
+        // Clear zone cache to force fresh load
+        clearZoneCache()
+      }
+    }
+
     if (!user?.uid) {
       // No user - clear everything
       setCurrentZone(null)
@@ -76,13 +95,26 @@ export function useZone() {
       setIsSuperAdminUser(false)
       setIsLoading(false)
       lastLoadedUserId.current = null
-      clearZoneCache()
       return
     }
 
-    // Check cache first for instant display
+    // If we have a pending zone switch, skip cache and load fresh
+    if (pendingZoneId) {
+      console.log('🔄 Zone Switch: Processing pending zone switch to:', pendingZoneId)
+      // Reset fetching flag to allow the load
+      isFetching.current = false
+      lastLoadedUserId.current = null
+      // Set loading state to show spinner
+      setIsLoading(true)
+      // Force fresh load with the new zone as preferred
+      loadUserZones(user.uid, user.email || '', pendingZoneId)
+      return
+    }
+
+    // Check cache first for instant display (only if no pending switch)
     const cached = getZoneCache(user.uid)
     if (cached) {
+      console.log('📦 Zone Cache: Using cached zone:', cached.currentZone?.name)
       setCurrentZone(cached.currentZone)
       setUserZones(cached.userZones)
       setUserRole(cached.userRole)
@@ -100,18 +132,21 @@ export function useZone() {
     loadUserZones(user.uid, user.email || '')
   }, [user?.uid, user?.email])
 
-  const loadUserZones = async (userId: string, email: string) => {
-    // Prevent duplicate fetches
-    if (isFetching.current) return
+  const loadUserZones = async (userId: string, email: string, preferredZoneId?: string) => {
+    // Prevent duplicate fetches - but allow if there's a preferred zone (zone switch)
+    if (isFetching.current && !preferredZoneId) return
     isFetching.current = true
+    setIsLoading(true)
     
     try {
       const superAdmin = isSuperAdmin(email, userId)
       
       if (superAdmin) {
-        // Super admin gets all zones
-        const firstZone = ZONES[0]
-        setCurrentZone(firstZone)
+        // Super admin gets all zones - use preferred zone if specified
+        const targetZone = preferredZoneId 
+          ? ZONES.find(z => z.id === preferredZoneId) || ZONES[0]
+          : ZONES[0]
+        setCurrentZone(targetZone)
         setUserZones(ZONES)
         setIsSuperAdminUser(true)
         setUserRole('super_admin')
@@ -120,7 +155,7 @@ export function useZone() {
         
         setZoneCache({
           userId,
-          currentZone: firstZone,
+          currentZone: targetZone,
           userZones: ZONES,
           userRole: 'super_admin',
           isSuperAdmin: true
@@ -157,26 +192,36 @@ export function useZone() {
         .map((m: any) => ZONES.find(z => z.id === m.zoneId))
         .filter((z): z is Zone => z !== undefined)
 
-      const firstZone = zones[0]
-      const firstMembership = memberships.find((m: any) => m.zoneId === firstZone?.id)
+      // Use preferred zone if specified and user has access, otherwise use first zone
+      const targetZone = preferredZoneId 
+        ? zones.find(z => z.id === preferredZoneId) || zones[0]
+        : zones[0]
+      const targetMembership = memberships.find((m: any) => m.zoneId === targetZone?.id)
+      
+      console.log('🏠 Zone Load:', {
+        preferredZoneId,
+        targetZoneId: targetZone?.id,
+        targetZoneName: targetZone?.name,
+        availableZones: zones.map(z => z.name)
+      })
 
       let role: UserRole = 'zone_member'
-      if (firstMembership?.role === 'coordinator') {
+      if (targetMembership?.role === 'coordinator') {
         role = 'zone_coordinator'
-      } else if (firstZone && isHQGroup(firstZone.id)) {
+      } else if (targetZone && isHQGroup(targetZone.id)) {
         role = 'hq_member'
       }
 
-      setCurrentZone(firstZone || null)
+      setCurrentZone(targetZone || null)
       setUserZones(zones)
       setUserRole(role)
-      setCurrentZoneMembership(firstMembership)
+      setCurrentZoneMembership(targetMembership)
       setIsSuperAdminUser(false)
       setIsLoading(false)
 
       setZoneCache({
         userId,
-        currentZone: firstZone || null,
+        currentZone: targetZone || null,
         userZones: zones,
         userRole: role,
         isSuperAdmin: false

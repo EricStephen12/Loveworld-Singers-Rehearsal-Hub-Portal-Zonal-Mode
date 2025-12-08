@@ -123,8 +123,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // Load subscription when zone changes
   useEffect(() => {
+    console.log('📦 Subscription: Zone changed to', currentZone?.id, currentZone?.name)
     loadSubscription()
-  }, [currentZone?.id])
+  }, [currentZone?.id, currentZone?.name])
 
   // Check if zone has access to a feature
   const hasFeature = (feature: string) => {

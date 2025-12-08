@@ -15,8 +15,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 
 import ZoneSwitcher from '@/components/ZoneSwitcher'
 import { handleAppRefresh } from '@/utils/refresh-utils'
-import { canSeeUpgradePrompts } from '@/lib/user-role-utils'
-import { Crown, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime'
 
 function HomePageContent() {
@@ -37,10 +36,8 @@ function HomePageContent() {
     'nnennawealth@gmail.com'
   ].includes(profile.email.toLowerCase())
   
-  // Check if user can see upgrade prompts (only Zone Leaders with ZNL prefix)
-  const canShowUpgrade = canSeeUpgradePrompts(profile)
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
-  const { hasFeature, isFreeTier } = useSubscription()
+  const { hasFeature } = useSubscription()
   
   // Show loading only on first visit (no cached zone data)
   // This prevents the flicker when zone data loads
@@ -667,35 +664,7 @@ function HomePageContent() {
             <h1 className="text-1xl font-bold text-gray-800">LoveWorld Singers Rehearsal Hub Portal</h1>
           </div>
 
-          {/* Subscription Status Banner - Small version for Zone Coordinators */}
-          {(() => {
-            // Debug logging
-            console.log('🔍 Upgrade Prompt Debug:', {
-              isFreeTier,
-              isZoneCoordinator,
-              shouldShow: isFreeTier && isZoneCoordinator,
-              currentZone: currentZone?.name
-            })
-            return null
-          })()}
-          {isFreeTier && isZoneCoordinator && (
-            <div className="mx-4 mb-3">
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 rounded-lg p-2.5">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-gray-900">Free Plan</p>
-                  </div>
-                  <button
-                    onClick={() => router.push('/subscription')}
-                    className="text-[10px] bg-yellow-400 text-yellow-900 px-2 py-1 rounded font-semibold hover:bg-yellow-500 transition-colors whitespace-nowrap"
-                  >
-                    Upgrade
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+
 
            {/* Features Grid */}
            <div className="pb-4">
@@ -718,12 +687,9 @@ function HomePageContent() {
                     return
                   }
                   
-                  // Handle premium features without access
+                  // Handle premium features without access - just prevent navigation
                   if (isPremiumFeature && !hasAccess) {
                     e.preventDefault()
-                    if (canShowUpgrade) {
-                      router.push('/subscription')
-                    }
                     return
                   }
                 }
@@ -774,7 +740,7 @@ function HomePageContent() {
                       )}
                       {isPremiumFeature && !hasAccess && (
                         <div className="absolute -top-1 -right-1">
-                          <Crown className="w-3 h-3 text-yellow-500" />
+                          <Lock className="w-3 h-3 text-yellow-500" />
                         </div>
                       )}
                     </div>
