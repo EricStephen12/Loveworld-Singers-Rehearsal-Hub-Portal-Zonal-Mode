@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Play, MoreVertical } from 'lucide-react'
 import { MediaItem } from '../_lib'
-import YouTubeThumbnail from '@/components/YouTubeThumbnail'
 import { isYouTubeUrl } from '@/utils/youtube'
 
 interface MediaCardProps {
@@ -16,11 +15,7 @@ export default function MediaCard({ media }: MediaCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   
   // Check if this is a YouTube video
-  const isYouTubeVideo =
-    media.isYouTube ||
-    isYouTubeUrl(media.youtubeUrl || '') ||
-    isYouTubeUrl(media.videoUrl || '') ||
-    isYouTubeUrl(media.thumbnail || '')
+  const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.youtubeUrl || '')
 
   const handleClick = () => {
     router.push(`/pages/media/player/${media.id}`)
@@ -50,24 +45,30 @@ export default function MediaCard({ media }: MediaCardProps) {
     return `${views} views`
   }
 
-  // Get time ago
-  const getTimeAgo = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const months = Math.floor(days / 30)
-    const years = Math.floor(days / 365)
-    
-    if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`
-    if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`
-    return 'Just now'
+  // Get time ago - handle both Date objects and Firestore Timestamps
+  const getTimeAgo = (date: Date | { toDate?: () => Date } | any) => {
+    try {
+      // Convert to Date if it's a Firestore Timestamp
+      const dateObj = date?.toDate ? date.toDate() : (date instanceof Date ? date : new Date(date))
+      if (isNaN(dateObj.getTime())) return ''
+      
+      const now = new Date()
+      const diff = now.getTime() - dateObj.getTime()
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const months = Math.floor(days / 30)
+      const years = Math.floor(days / 365)
+      
+      if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`
+      if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`
+      if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`
+      return 'Just now'
+    } catch {
+      return ''
+    }
   }
 
-  const videoSource = media.youtubeUrl || media.videoUrl || ''
-  const thumbnailUrl = isYouTubeVideo 
-    ? (videoSource || media.thumbnail || '')
-    : (media.thumbnail || media.backdropImage || '/movie/default-hero.jpeg')
+  // Use thumbnail directly - it's already a proper URL from admin upload
+  const thumbnailUrl = media.thumbnail || media.backdropImage || '/movie/default-hero.jpeg'
 
   return (
     <div 
@@ -79,29 +80,19 @@ export default function MediaCard({ media }: MediaCardProps) {
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-[#272727] to-[#1a1a1a] animate-pulse" />
         )}
-        {isYouTubeVideo && thumbnailUrl ? (
-          <YouTubeThumbnail
-            url={thumbnailUrl}
-            alt={media.title}
-            className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-            onLoad={() => setImageLoaded(true)}
-            fallbackSrc="/movie/default-hero.jpeg"
-          />
-        ) : (
-          <img
-            src={thumbnailUrl}
-            alt={media.title}
-            className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-            loading="lazy"
-            onLoad={() => setImageLoaded(true)}
-            onError={(e) => {
-              setImageLoaded(true)
-              if (e.currentTarget.src !== '/movie/default-hero.jpeg') {
-                e.currentTarget.src = '/movie/default-hero.jpeg'
-              }
-            }}
-          />
-        )}
+        <img
+          src={thumbnailUrl}
+          alt={media.title}
+          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            setImageLoaded(true)
+            if (e.currentTarget.src !== '/movie/default-hero.jpeg') {
+              e.currentTarget.src = '/movie/default-hero.jpeg'
+            }
+          }}
+        />
         
         {/* Duration Badge */}
         {media.duration && (

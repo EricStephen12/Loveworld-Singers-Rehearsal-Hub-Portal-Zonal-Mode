@@ -30,9 +30,36 @@ export default function GroupsPage() {
     console.log('📱 Groups page loaded')
   }, [])
 
-  // ✅ NO PAGE-LEVEL LOADING - Show page immediately, let sidebar handle loading
-  // If truly logged out (no user AND no cached profile), show nothing
-  if (!user && !profile) return null
+  // Show loading spinner only while auth is checking (first load)
+  if (authLoading && !profile) {
+    return (
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // If truly logged out (no user AND no cached profile), show login prompt
+  if (!user && !profile) {
+    return (
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center p-8">
+          <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Sign in to view messages</h2>
+          <p className="text-gray-600 mb-6">Connect with your groups and friends</p>
+          <button 
+            onClick={() => router.push('/auth')}
+            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">

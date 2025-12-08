@@ -446,6 +446,15 @@ service cloud.firestore {
         ];
     }
 
+    // Media Videos Collection (unified video management)
+    match /media_videos/{videoId} {
+      // Anyone authenticated can read videos
+      allow read: if request.auth != null;
+
+      // Allow authenticated users to create, update, delete (admin panel uses localStorage)
+      allow create, update, delete: if request.auth != null;
+    }
+
     // Media Analytics Collection (for views, likes, etc.)
     match /media_analytics/{analyticsId} {
       allow read, write: if request.auth != null;
@@ -477,6 +486,19 @@ service cloud.firestore {
     match /user_favorites/{userId} {
       allow read, write: if request.auth != null 
         && request.auth.uid == userId;
+    }
+
+    // ===== MEDIA PLAYLISTS (User playlists, Liked Videos, Watch Later) =====
+    match /media_playlists/{playlistId} {
+      // Users can read their own playlists
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || resource.data.isPublic == true);
+      // Users can create playlists for themselves
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      // Users can update/delete their own playlists
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
     }
 
  // ===== SONG HISTORY =====

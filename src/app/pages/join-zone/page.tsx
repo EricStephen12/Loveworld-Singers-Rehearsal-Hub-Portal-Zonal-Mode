@@ -1,261 +1,228 @@
 'use client'
 
-import { useState, CSSProperties } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
-import { useSubscription } from '@/contexts/SubscriptionContext'
-import { ZoneInvitationService } from '@/lib/zone-invitation-service'
-import { getZoneByInvitationCode } from '@/config/zones'
-import { ArrowLeft, Users, CheckCircle, AlertCircle, Crown } from 'lucide-react'
-import Link from 'next/link'
-import { useCanAddMember } from '@/components/MemberLimitGuard'
+import { ArrowLeft, Users, Check, Loader2 } from 'lucide-react'
 
 export default function JoinZonePage() {
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { refreshZones, currentZone } = useZone()
-  const [invitationCode, setInvitationCode] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { refreshZones, userZones } = useZone()
+  
+  const [zoneCode, setZoneCode] = useState('')
+  const [zoneName, setZoneName] = useState<string | null>(null)
+  const [isJoining, setIsJoining] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [zoneName, setZoneName] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const fallbackColor = '#10b981'
-  const themeColor = currentZone?.themeColor || fallbackColor
-  const withAlpha = (color: string, alphaHex: string) => {
-    if (!color.startsWith('#') || color.length !== 7) return color
-    return `${color}${alphaHex}`
-  }
-  const pageBackground: CSSProperties & { '--join-theme'?: string } = {
-    '--join-theme': themeColor,
-    background: `linear-gradient(145deg, ${withAlpha(themeColor, '1F')}, #f4f6fb)`
-  }
-  const headerBackground = {
-    background: `linear-gradient(135deg, ${themeColor}, ${withAlpha(themeColor, 'CC')})`
+  // Validate zone code as user types
+  const handleZoneCodeChange = async (code: string) => {
+    setZoneCode(code.toUpperCase())
+    setError('')
+    setZoneName(null)
+    
+    if (code.length >= 6) {
+      const { getZoneByInvitationCode } = await import('@/config/zones')
+      const zone = getZoneByInvitationCode(code.toUpperCase())
+      if (zone) {
+        setZoneName(zone.name)
+      } else {
+        setError('Invalid zone code')
+      }
+    }
   }
 
   const handleJoinZone = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Use cached profile if user is still loading
-    const currentUser = user || (profile?.id ? { uid: profile.id } : null)
-    if (!currentUser) {
-      setError('You must be logged in to join a zone')
+    if (!user?.uid || !profile) {
+      setError('Please sign in first')
       return
     }
-
-    if (!invitationCode.trim()) {
-      setError('Please enter an invitation code')
+    
+    if (!zoneCode || zoneCode.length < 6) {
+      setError('Please enter a valid zone code')
       return
     }
-
-    setIsLoading(true)
+    
+    setIsJoining(true)
     setError('')
-    setSuccess(false)
-
+    
     try {
-      // Validate code format
-      const code = invitationCode.trim().toUpperCase()
+      const { ZoneInvitationService } = await import('@/lib/zone-invitation-service')
+      const { getZoneRole } = await import('@/config/zones')
       
-      // Check if zone exists
-      const zone = getZoneByInvitationCode(code)
-      if (!zone) {
-        setError('Invalid invitation code. Please check and try again.')
-        setIsLoading(false)
-        return
-      }
-
-      // Join the zone
+      const role = getZoneRole(zoneCode)
+      const userName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User'
+      
       const result = await ZoneInvitationService.joinZoneWithCode(
-        currentUser.uid,
-        code,
-        profile?.email || user?.email || '',
-        `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'User'
+        user.uid,
+        zoneCode,
+        profile.email || user.email || '',
+        userName,
+        role
       )
-
+      
       if (result.success) {
-        setSuccess(true)
-        setZoneName(('zoneName' in result ? result.zoneName : zone.name) || zone.name)
+        const zName = 'zoneName' in result ? result.zoneName : 'your zone'
+        setSuccess(`Welcome to ${zName}!`)
         
-        // Refresh zones in context
-        await refreshZones()
+        // Clear ALL caches to ensure fresh data with new zone
+        localStorage.removeItem('lwsrh-zone-cache-v5')
+        localStorage.removeItem('lwsrh-profile-cache-v1')
         
-        // Redirect after 2 seconds
+        // Clear any zone-specific data caches
+        const cacheKeys = ['praise-nights', 'songs-data', 'categories', 'calendar', 'notifications']
+        cacheKeys.forEach(key => {
+          try {
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+              const storageKey = localStorage.key(i)
+              if (storageKey && storageKey.includes(key)) {
+                localStorage.removeItem(storageKey)
+              }
+            }
+          } catch (e) { /* ignore */ }
+        })
+        
+        // Full page redirect to ensure all contexts reload fresh
         setTimeout(() => {
-          router.push('/home')
-        }, 2000)
+          window.location.href = '/home'
+        }, 1200)
       } else {
-        setError(('error' in result ? result.error : 'Failed to join zone') || 'Failed to join zone')
+        const errorMsg = 'error' in result && result.error ? result.error : 'Failed to join zone'
+        setError(errorMsg)
       }
-    } catch (error) {
-      console.error('Error joining zone:', error)
-      setError('An error occurred. Please try again.')
+    } catch (err: any) {
+      console.error('Join zone error:', err)
+      setError(err.message || 'Failed to join zone')
     } finally {
-      setIsLoading(false)
+      setIsJoining(false)
     }
-  }
-
-  // Only show login prompt if truly logged out (no user AND no profile)
-  if (!user && !profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-10 h-10 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Not Logged In</h2>
-          <p className="text-gray-600 mb-6">
-            You must be logged in to join a zone.
-          </p>
-          <Link
-            href="/auth"
-            className="inline-block px-6 py-3 text-white rounded-xl transition-colors hover:opacity-90"
-            style={{ backgroundColor: themeColor }}
-          >
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (
-    <div className="h-screen overflow-y-auto pb-20" style={pageBackground}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50">
       {/* Header */}
-      <div className="text-white p-6" style={headerBackground}>
-        <div className="max-w-2xl mx-auto">
-          <Link href="/pages/profile" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-4">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Profile</span>
-          </Link>
-          <h1 className="text-2xl font-bold">Join a Zone</h1>
-          <p className="mt-2" style={{ color: withAlpha(themeColor, 'B3') }}>
-            Enter your zone invitation code to join
-          </p>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => router.back()} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-900">Join a Zone</h1>
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto p-6">
-        {success ? (
-          // Success State
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ backgroundColor: withAlpha(themeColor, '1F') }}
-            >
-              <CheckCircle className="w-10 h-10" style={{ color: themeColor }} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Successfully Joined!</h2>
-            <p className="text-gray-600 mb-2">
-              You've been added to
-            </p>
-            <p className="text-xl font-bold mb-6" style={{ color: themeColor }}>
-              {zoneName}
-            </p>
-            <p className="text-sm text-gray-500">
-              Redirecting to home page...
-            </p>
-          </div>
-        ) : (
-          // Join Form
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="flex items-center justify-center mb-6">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: withAlpha(themeColor, '1F') }}
-              >
-                <Users className="w-8 h-8" style={{ color: themeColor }} />
-              </div>
-            </div>
-
-            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-              Enter Invitation Code
-            </h2>
-            <p className="text-gray-600 text-center mb-8">
-              Get the invitation code from your zone coordinator
-            </p>
-
-            <form onSubmit={handleJoinZone} className="space-y-6">
-              {/* Invitation Code Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Zone Invitation Code
-                </label>
-                <input
-                  type="text"
-                  value={invitationCode}
-                  onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
-                  placeholder="LWS-HQ-001"
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 text-center text-lg font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--join-theme)] focus:border-[var(--join-theme)]"
-                  style={{ borderColor: withAlpha(themeColor, '66') }}
-                  maxLength={20}
-                  disabled={isLoading}
-                />
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Example: LWS-HQ-001, LWS-NG-LAG1, LWS-US-R1Z1
-                </p>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-600">{error}</p>
-                  </div>
+      <div className="max-w-md mx-auto px-4 py-8">
+        {/* Current Zones */}
+        {userZones.length > 0 && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <p className="text-sm text-green-800 font-medium mb-2">Your Current Zones:</p>
+            <div className="space-y-2">
+              {userZones.map(zone => (
+                <div key={zone.id} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: zone.themeColor }}
+                  />
+                  <span className="text-sm text-green-700">{zone.name}</span>
                 </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading || !invitationCode.trim()}
-                className="w-full py-4 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-95"
-                style={{
-                  backgroundColor: themeColor,
-                  boxShadow: `0 20px 45px -20px ${withAlpha(themeColor, '70')}`
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Joining Zone...
-                  </>
-                ) : (
-                  <>
-                    <Users className="w-5 h-5" />
-                    Join Zone
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Help Text */}
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <h3 className="text-sm font-semibold text-blue-900 mb-2">
-                Don't have an invitation code?
-              </h3>
-              <p className="text-sm text-blue-700">
-                Contact your zone coordinator to get an invitation code. Each zone has a unique code that allows you to join.
-              </p>
-            </div>
-
-            {/* Example Codes (for testing) */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-              <h3 className="text-xs font-semibold text-gray-700 mb-2">
-                Example Codes (for reference):
-              </h3>
-              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-mono">
-                <div>LWS-HQ-001</div>
-                <div>LWS-NG-LAG1</div>
-                <div>LWS-US-R1Z1</div>
-                <div>LWS-UK-Z1D</div>
-              </div>
+              ))}
             </div>
           </div>
         )}
+
+        {/* Join Zone Form */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Join a Zone</h2>
+            <p className="text-sm text-gray-600">
+              Enter your zone invitation code to join a LoveWorld Singers zone
+            </p>
+          </div>
+
+          <form onSubmit={handleJoinZone} className="space-y-4">
+            {/* Zone Code Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Zone Invitation Code
+              </label>
+              <input
+                type="text"
+                value={zoneCode}
+                onChange={(e) => handleZoneCodeChange(e.target.value)}
+                placeholder="e.g., ZONE044 or ZNLZONE044"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-center text-lg font-mono uppercase"
+                maxLength={12}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Use ZNL prefix for coordinator access (e.g., ZNLZONE044)
+              </p>
+            </div>
+
+            {/* Zone Detection */}
+            {zoneName && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                    <Check className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-emerald-900">Zone Found!</p>
+                    <p className="text-base font-bold text-emerald-700">{zoneName}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                <p className="text-sm text-green-700">{success}</p>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!zoneName || isJoining}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {isJoining ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Joining...
+                </>
+              ) : (
+                <>
+                  <Users className="w-5 h-5" />
+                  Join Zone
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Help Text */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-500">
+            Don't have a zone code? Contact your zone coordinator or check your invitation message.
+          </p>
+        </div>
       </div>
     </div>
   )

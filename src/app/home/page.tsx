@@ -21,10 +21,9 @@ import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime'
 
 function HomePageContent() {
   const router = useRouter()
-  const { signOut, profile, user } = useAuth()
+  const { signOut, profile, user, isLoading: authLoading } = useAuth()
   
-  // No auth check here - Zustand authStore is the single source of truth
-  // If user is null, just show login prompt inline (no redirect)
+  // Show spinner while checking auth state (no redirect)
   
   // Check if user is Boss (declare early for use in features array)
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
@@ -302,17 +301,44 @@ function HomePageContent() {
 
 
 
+  // Show loading spinner while checking auth state
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
+        <div className="text-center">
+          <div 
+            className="w-16 h-16 border-4 border-gray-200 rounded-full animate-spin mx-auto mb-4"
+            style={{ borderTopColor: '#10b981' }}
+          />
+          <p className="text-gray-600 text-lg font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // After loading completes, if no user, show login prompt (no redirect)
+  if (!user) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
+        <div className="text-center p-8">
+          <img src="/logo.png" alt="Logo" className="w-20 h-20 mx-auto mb-6 rounded-2xl shadow-lg" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome to LWSRH</h1>
+          <p className="text-gray-600 mb-6">Please sign in to continue</p>
+          <Link 
+            href="/auth" 
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    )
+  }
+  
   // Check if we have cached data (profile or zone)
   const hasCachedData = profile !== null || currentZone !== null
   
-  // Don't show anything if no user AND no cached profile
-  // This prevents flashing login prompt while Firebase is checking
-  if (!user && !profile) {
-    return null
-  }
-  
-  // NEVER show skeleton if we have ANY cached data
-  // Only show skeleton on absolute first load (no profile AND no cached data)
+  // Show skeleton only on first load when profile is still loading
   if (!profile && !hasCachedData) {
     return (
       <div className="h-screen w-screen bg-gradient-to-br from-gray-50 via-white to-slate-50 overflow-hidden">
@@ -369,6 +395,33 @@ function HomePageContent() {
             }}
           />
           <p className="text-gray-600 text-lg font-medium">Loading your zone...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show join zone prompt if user has no zone (after loading completes)
+  if (!zoneLoading && !currentZone && user) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Users className="w-10 h-10 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Join a Zone</h2>
+          <p className="text-gray-600 mb-6">
+            You're not part of any zone yet. Enter your zone invitation code to join your LoveWorld Singers zone.
+          </p>
+          <Link 
+            href="/pages/join-zone"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg transition-colors"
+          >
+            <Users className="w-5 h-5" />
+            Join a Zone
+          </Link>
+          <p className="text-sm text-gray-500 mt-4">
+            Don't have a code? Contact your zone coordinator.
+          </p>
         </div>
       </div>
     )

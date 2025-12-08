@@ -44,7 +44,8 @@ export interface VideoUploadRecord extends VideoUploadInput {
 }
 
 class VideoUploadService {
-  private collectionName = 'video-upload'
+  // Changed to media_videos for unified video management
+  private collectionName = 'media_videos'
 
   async createUpload(payload: VideoUploadInput): Promise<string> {
     const docRef = await addDoc(collection(db, this.collectionName), {

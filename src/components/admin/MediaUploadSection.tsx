@@ -1,957 +1,534 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { Upload, Film, Image, Loader2, Play, Link, X, RefreshCcw, Edit, Trash2 } from 'lucide-react'
-import { videoUploadService, type VideoUploadRecord } from '@/lib/videoUploadService'
-import { useAdminTheme } from './AdminThemeProvider'
-import { CONTENT_TYPES, ContentType } from '@/config/contentTypes'
-import { extractYouTubeVideoId, isYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
+import { 
+  Upload, Film, Link2, X, Play, Trash2, Edit2, 
+  Youtube, Cloud, Check, AlertCircle, Eye, Heart,
+  Plus, MoreVertical, RefreshCw
+} from 'lucide-react'
+import { mediaVideosService, MediaVideo } from '@/lib/media-videos-service'
+import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtube'
+
+type UploadStep = 'list' | 'choose' | 'details'
 
 export default function MediaUploadSection() {
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { theme } = useAdminTheme()
   
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'praise' as ContentType,
-    genre: [] as string[],
-    videoUrl: '',
-    youtubeUrl: '',
-    thumbnail: '',
-    backdropImage: '',
-    duration: 0,
-    releaseYear: new Date().getFullYear(),
-    featured: false,
-    isYouTube: false
-  })
-
-  const [uploadMethod, setUploadMethod] = useState<'upload' | 'youtube'>('upload')
-  const [recentUploads, setRecentUploads] = useState<VideoUploadRecord[]>([])
-  const [isRecentLoading, setIsRecentLoading] = useState(true)
-  const [recentError, setRecentError] = useState<string | null>(null)
-  const [editingVideo, setEditingVideo] = useState<VideoUploadRecord | null>(null)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null)
+  const [step, setStep] = useState<UploadStep>('list')
+  const [sourceType, setSourceType] = useState<'youtube' | 'cloudinary' | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [videos, setVideos] = useState<MediaVideo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [editingVideo, setEditingVideo] = useState<MediaVideo | null>(null)
+  
+  // Form state
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [thumbnail, setThumbnail] = useState('')
+  const [type, setType] = useState<MediaVideo['type']>('praise')
+  const [featured, setFeatured] = useState(false)
+  const [urlError, setUrlError] = useState('')
 
   useEffect(() => {
-    refreshRecentUploads()
+    loadVideos()
   }, [])
 
-  const refreshRecentUploads = async () => {
-    setIsRecentLoading(true)
-    setRecentError(null)
+  const loadVideos = async () => {
+    setIsLoading(true)
     try {
-      const uploads = await videoUploadService.getAllUploads()
-      setRecentUploads(uploads)
-    } catch (error) {
-      console.error('Failed to load uploads:', error)
-      setRecentError('Unable to load uploads right now.')
+      const data = await mediaVideosService.getAll(50)
+      setVideos(data)
+    } catch (e) {
+      // Silent fail
     } finally {
-      setIsRecentLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const handleEdit = (video: VideoUploadRecord) => {
-    setEditingVideo(video)
-    setFormData({
-      title: video.title,
-      description: video.description,
-      type: video.type as ContentType,
-      genre: video.genre || [],
-      videoUrl: video.videoUrl || '',
-      youtubeUrl: video.youtubeUrl || '',
-      thumbnail: video.thumbnail,
-      backdropImage: video.backdropImage || '',
-      duration: video.duration || 0,
-      releaseYear: video.releaseYear || new Date().getFullYear(),
-      featured: video.featured,
-      isYouTube: video.isYouTube
-    })
-    setUploadMethod(video.sourceType === 'youtube' ? 'youtube' : 'upload')
-    setShowEditModal(true)
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  const resetForm = () => {
+    setTitle('')
+    setDescription('')
+    setVideoUrl('')
+    setThumbnail('')
+    setType('praise')
+    setFeatured(false)
+    setUrlError('')
+    setSourceType(null)
+    setEditingVideo(null)
   }
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingVideo || !user) return
-
-    setIsUploading(true)
-    setUploadProgress(0)
-
-    try {
-      const isYouTubeMode = uploadMethod === 'youtube'
-      const playbackUrl = isYouTubeMode
-        ? (formData.youtubeUrl || '')
-        : (formData.videoUrl || '')
-
-      if (!formData.title || !playbackUrl || !formData.thumbnail) {
-        alert('Please fill in all required fields')
-        setIsUploading(false)
-        return
-      }
-
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
-
-      await videoUploadService.updateUpload(editingVideo.id, {
-        title: formData.title,
-        description: formData.description,
-        type: formData.type,
-        genre: formData.genre,
-        playbackUrl,
-        videoUrl: !isYouTubeMode ? formData.videoUrl : undefined,
-        youtubeUrl: isYouTubeMode ? formData.youtubeUrl : undefined,
-        thumbnail: formData.thumbnail,
-        backdropImage: formData.backdropImage || formData.thumbnail,
-        duration: formData.duration,
-        releaseYear: formData.releaseYear,
-        featured: formData.featured,
-        isYouTube: formData.isYouTube,
-        sourceType: isYouTubeMode ? 'youtube' : 'upload',
-        createdBy: user.uid,
-        createdByEmail: user.email ?? null,
-        createdByName: user.displayName || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || null,
-        views: editingVideo.views || 0,
-        likes: editingVideo.likes || 0
-      })
-
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-
-      alert('Video updated successfully!')
-      setShowEditModal(false)
-      setEditingVideo(null)
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        type: 'praise',
-        genre: [],
-        videoUrl: '',
-        youtubeUrl: '',
-        thumbnail: '',
-        backdropImage: '',
-        duration: 0,
-        releaseYear: new Date().getFullYear(),
-        featured: false,
-        isYouTube: false
-      })
-      setUploadMethod('upload')
-      refreshRecentUploads()
-    } catch (error) {
-      console.error('Update error:', error)
-      alert('Failed to update video')
-    } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
-      return
-    }
-
-    setDeletingVideoId(id)
-    try {
-      await videoUploadService.deleteUpload(id)
-      alert('Video deleted successfully!')
-      refreshRecentUploads()
-    } catch (error) {
-      console.error('Delete error:', error)
-      alert('Failed to delete video')
-    } finally {
-      setDeletingVideoId(null)
-    }
-  }
-
-  // Handle YouTube URL input
-  const handleYouTubeUrl = (url: string) => {
-    const videoId = extractYouTubeVideoId(url)
-    const thumbnailUrl = getYouTubeThumbnail(url)
+  const handleUrlChange = (url: string) => {
+    setVideoUrl(url)
+    setUrlError('')
     
-    if (videoId && thumbnailUrl) {
-      setFormData(prev => ({
-        ...prev,
-        youtubeUrl: url,
-        videoUrl: '',
-        thumbnail: prev.thumbnail || thumbnailUrl,
-        backdropImage: prev.backdropImage || thumbnailUrl,
-        isYouTube: true
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        youtubeUrl: url,
-        videoUrl: '',
-        thumbnail: '',
-        isYouTube: false
-      }))
+    if (sourceType === 'youtube') {
+      const videoId = extractYouTubeVideoId(url)
+      if (videoId) {
+        const thumbUrl = getYouTubeThumbnail(url)
+        if (thumbUrl) setThumbnail(thumbUrl)
+        setUrlError('')
+      } else if (url.length > 10) {
+        setUrlError('Invalid YouTube URL')
+      }
     }
   }
 
-  // Cloudinary upload widget
-  const openCloudinaryWidget = (type: 'video' | 'image' | 'backdrop') => {
-    // @ts-ignore - Cloudinary widget
-    if (typeof window !== 'undefined' && window.cloudinary) {
-      // @ts-ignore
-      const widget = window.cloudinary.createUploadWidget(
+  const openCloudinaryWidget = (type: 'video' | 'image') => {
+    if (typeof window !== 'undefined' && (window as any).cloudinary) {
+      const widget = (window as any).cloudinary.createUploadWidget(
         {
           cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
           uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-          folder: type === 'video' ? 'media/videos' : 'media/images',
+          folder: type === 'video' ? 'media/videos' : 'media/thumbnails',
           resourceType: type === 'video' ? 'video' : 'image',
-          maxFileSize: type === 'video' ? 500000000 : 10000000, // 500MB for video, 10MB for images
-          sources: ['local', 'url'],
-          showUploadMoreButton: false,
+          maxFileSize: type === 'video' ? 500000000 : 10000000,
+          sources: ['local'],
+          multiple: false,
           styles: {
             palette: {
-              window: '#000000',
-              windowBorder: theme.primary.replace('bg-', '#'),
-              tabIcon: theme.primary.replace('bg-', '#'),
-              menuIcons: '#FFFFFF',
-              textDark: '#000000',
-              textLight: '#FFFFFF',
-              link: theme.primary.replace('bg-', '#'),
-              action: theme.primary.replace('bg-', '#'),
-              inactiveTabIcon: '#555555',
-              error: '#F44235',
-              inProgress: theme.primary.replace('bg-', '#'),
-              complete: '#22C55E',
-              sourceBg: '#000000'
+              window: '#1a1a1a',
+              windowBorder: '#333',
+              tabIcon: '#fff',
+              menuIcons: '#fff',
+              textDark: '#000',
+              textLight: '#fff',
+              link: '#8b5cf6',
+              action: '#8b5cf6',
+              inactiveTabIcon: '#666',
+              error: '#ef4444',
+              inProgress: '#8b5cf6',
+              complete: '#22c55e',
+              sourceBg: '#1a1a1a'
             }
           }
         },
         (error: any, result: any) => {
-          if (!error && result && result.event === 'success') {
-            const url = result.info.secure_url
-            
+          if (!error && result?.event === 'success') {
             if (type === 'video') {
-              setFormData(prev => ({ 
-                ...prev, 
-                videoUrl: url,
-                duration: Math.round(result.info.duration || 0),
-                isYouTube: false
-              }))
-            } else if (type === 'image') {
-              setFormData(prev => ({ ...prev, thumbnail: url }))
-            } else if (type === 'backdrop') {
-              setFormData(prev => ({ ...prev, backdropImage: url }))
+              setVideoUrl(result.info.secure_url)
+            } else {
+              setThumbnail(result.info.secure_url)
             }
           }
         }
       )
       widget.open()
-    } else {
-      alert('Cloudinary widget not loaded. Please refresh the page.')
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // If editing, use update handler
-    if (editingVideo) {
-      await handleUpdate(e)
-      return
-    }
-    
-    if (!user?.uid) {
-      alert('You must be logged in')
+  const handleSubmit = async () => {
+    if (!title.trim() || !videoUrl || !thumbnail) {
+      alert('Please fill in all required fields: Title, Video URL, and Thumbnail')
       return
     }
 
-    const isYouTubeMode = uploadMethod === 'youtube'
-    const playbackUrl = isYouTubeMode ? formData.youtubeUrl : formData.videoUrl
-
-    if (!formData.title || !playbackUrl || !formData.thumbnail) {
-      alert('Please fill in all required fields and upload/add video')
-      return
-    }
-
-    setIsUploading(true)
-    setUploadProgress(0)
-    let progressInterval: NodeJS.Timeout | null = null
-
+    setIsSubmitting(true)
     try {
-      // Simulate progress
-      progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
-
-      const sourceType = isYouTubeMode ? 'youtube' : 'upload'
-
-      // Create media item in Firebase
-      await videoUploadService.createUpload({
-        title: formData.title,
-        description: formData.description,
-        type: formData.type,
-        genre: formData.genre,
-        playbackUrl,
-        videoUrl: !isYouTubeMode ? formData.videoUrl : undefined,
-        youtubeUrl: isYouTubeMode ? formData.youtubeUrl : undefined,
-        thumbnail: formData.thumbnail,
-        backdropImage: formData.backdropImage || formData.thumbnail,
-        duration: formData.duration,
-        releaseYear: formData.releaseYear,
-        featured: formData.featured,
-        isYouTube: isYouTubeMode,
-        sourceType,
-        createdBy: user.uid,
-        createdByEmail: user.email ?? null,
-        createdByName: user.displayName || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || null,
-        views: 0,
-        likes: 0
-      })
-
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-
-      alert('Media uploaded successfully! Redirecting to media page...')
+      const isYouTube = sourceType === 'youtube'
       
-      // Trigger refresh event for MediaContext
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('mediaUploaded'))
+      // Build video data - don't include undefined fields (Firestore doesn't allow them)
+      const videoData = {
+        title: title.trim(),
+        description: description.trim(),
+        thumbnail,
+        isYouTube,
+        type: type as 'praise' | 'medley' | 'healing' | 'gfap',
+        featured,
+        createdBy: user?.uid || 'admin',
+        createdByName: profile?.first_name || 'Admin',
+        videoUrl: isYouTube ? '' : videoUrl,
+        youtubeUrl: isYouTube ? videoUrl : undefined
       }
+
+      if (editingVideo) {
+        await mediaVideosService.update(editingVideo.id, videoData as any)
+        alert('Video updated successfully!')
+      } else {
+        await mediaVideosService.create(videoData as any)
+        alert('Video published successfully!')
+      }
+
+      // Trigger refresh
+      window.dispatchEvent(new CustomEvent('mediaUploaded'))
       
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        type: 'praise',
-        genre: [],
-        videoUrl: '',
-        youtubeUrl: '',
-        thumbnail: '',
-        backdropImage: '',
-        duration: 0,
-        releaseYear: new Date().getFullYear(),
-        featured: false,
-        isYouTube: false
-      })
-      setUploadMethod('upload')
-      refreshRecentUploads()
-      
-      // Redirect to media page after successful upload
-      setTimeout(() => {
-        router.push('/pages/media')
-      }, 2000)
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Failed to upload media')
+      resetForm()
+      setStep('list')
+      loadVideos()
+    } catch (e: any) {
+      console.error('Error publishing video:', e)
+      alert(`Error: ${e?.message || 'Failed to publish video. Check console for details.'}`)
     } finally {
-      if (progressInterval) {
-        clearInterval(progressInterval)
-      }
-      setIsUploading(false)
-      setUploadProgress(0)
+      setIsSubmitting(false)
     }
   }
 
-  return (
-    <div className="w-full h-full overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
-      <div className="p-4 sm:p-6 lg:p-8">
+  const handleEdit = (video: MediaVideo) => {
+    setEditingVideo(video)
+    setTitle(video.title)
+    setDescription(video.description || '')
+    setVideoUrl(video.youtubeUrl || video.videoUrl || '')
+    setThumbnail(video.thumbnail)
+    setType(video.type)
+    setFeatured(video.featured)
+    setSourceType(video.isYouTube ? 'youtube' : 'cloudinary')
+    setStep('details')
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this video?')) return
+    try {
+      await mediaVideosService.delete(id)
+      loadVideos()
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  // Step 1: Video List
+  if (step === 'list') {
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
-              <Film className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                {editingVideo ? 'Edit Video' : 'Media Studio'}
-              </h2>
-              <p className="text-gray-600">
-                {editingVideo ? 'Update your video details' : 'Create and manage your video content'}
-              </p>
-            </div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Videos</h1>
+            <p className="text-sm text-gray-500">{videos.length} videos uploaded</p>
           </div>
+          <button
+            onClick={() => setStep('choose')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 active:scale-95 transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Add Video</span>
+          </button>
         </div>
 
-        {/* Upload Form */}
-        <div className="max-w-4xl">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Info Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                Basic Information
-              </h3>
-              
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-lg"
-                    placeholder="Enter your video title..."
-                    required
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                    placeholder="Describe your video content..."
-                    rows={4}
-                  />
-                </div>
-
-                {/* Type & Year */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Content Type</label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    >
-                      {CONTENT_TYPES.map((contentType) => (
-                        <option key={contentType.id} value={contentType.id}>
-                          {contentType.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Release Year</label>
-                    <input
-                      type="number"
-                      value={formData.releaseYear}
-                      onChange={(e) => setFormData({ ...formData, releaseYear: parseInt(e.target.value) })}
-                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      min="1900"
-                      max="2030"
-                    />
-                  </div>
+        {/* Video Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden animate-pulse">
+                <div className="aspect-video bg-gray-200" />
+                <div className="p-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
                 </div>
               </div>
+            ))}
+          </div>
+        ) : videos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <Film className="w-10 h-10 text-purple-600" />
             </div>
-
-            {/* Video Upload Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                Video Content <span className="text-red-500 text-sm">*</span>
-              </h3>
-
-              {/* Upload Method Tabs */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <button
-                  type="button"
-                  onClick={() => setUploadMethod('upload')}
-                  className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 transition-all ${
-                    uploadMethod === 'upload'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <Upload className="w-5 h-5" />
-                  <span className="font-medium">Upload File</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadMethod('youtube')}
-                  className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 transition-all ${
-                    uploadMethod === 'youtube'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <Link className="w-5 h-5" />
-                  <span className="font-medium">External Link</span>
-                </button>
-              </div>
-
-              {/* Upload Video */}
-              {uploadMethod === 'upload' && (
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors">
-                    <Film className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <button
-                      type="button"
-                      onClick={() => openCloudinaryWidget('video')}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-                    >
-                      <Upload className="w-5 h-5" />
-                      Choose Video File
-                    </button>
-                    <p className="text-sm text-gray-500 mt-3">MP4, MOV, AVI up to 500MB</p>
-                  </div>
-                  
-                  {formData.videoUrl && !formData.isYouTube && (
-                    <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <Play className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-green-800">Video uploaded successfully</p>
-                        <p className="text-sm text-green-600">Ready to publish</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => window.open(formData.videoUrl, '_blank')}
-                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                      >
-                        <Play className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* External Link */}
-              {uploadMethod === 'youtube' && (
-                <div className="space-y-4">
-                  <div>
-                    <input
-                      type="url"
-                      value={formData.youtubeUrl}
-                      onChange={(e) => handleYouTubeUrl(e.target.value)}
-                      placeholder="Paste video URL (YouTube, Vimeo, etc.)"
-                      className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  
-                  {formData.isYouTube && formData.thumbnail && (
-                    <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <img src={formData.thumbnail} alt="Video thumbnail" className="w-20 h-12 object-cover rounded-lg" />
-                      <div className="flex-1">
-                        <p className="font-medium text-blue-800">Video detected</p>
-                        <p className="text-sm text-blue-600">Thumbnail loaded automatically</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Media Assets Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                Visual Assets
-              </h3>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">No videos yet</h3>
+            <p className="text-gray-500 text-sm mb-4">Add your first video to get started</p>
+            <button
+              onClick={() => setStep('choose')}
+              className="px-6 py-2.5 bg-purple-600 text-white rounded-xl font-medium"
+            >
+              Add Video
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {videos.map(video => (
+              <div key={video.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
                 {/* Thumbnail */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">
-                    Thumbnail <span className="text-red-500">*</span>
-                  </label>
-                  
-                  {formData.thumbnail ? (
-                    <div className="relative group">
-                      <img 
-                        src={formData.thumbnail} 
-                        alt="Thumbnail" 
-                        className="w-full aspect-video object-cover rounded-xl border border-gray-200"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-xl flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openCloudinaryWidget('image')}
-                            className="p-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <Image className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, thumbnail: '' }))}
-                            className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      {formData.isYouTube && formData.thumbnail.includes('youtube.com') && (
-                        <div className="absolute top-2 right-2 px-2 py-1 bg-blue-600 text-white text-xs rounded-md">
-                          Auto
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors aspect-video flex flex-col items-center justify-center">
-                      <Image className="w-8 h-8 text-gray-400 mb-3" />
-                      <button
-                        type="button"
-                        onClick={() => openCloudinaryWidget('image')}
-                        className="text-sm font-medium text-purple-600 hover:text-purple-700"
-                      >
-                        Upload Thumbnail
-                      </button>
-                      <p className="text-xs text-gray-500 mt-1">16:9 ratio recommended</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Backdrop */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">
-                    Backdrop <span className="text-gray-400">(Optional)</span>
-                  </label>
-                  
-                  {formData.backdropImage ? (
-                    <div className="relative group">
-                      <img 
-                        src={formData.backdropImage} 
-                        alt="Backdrop" 
-                        className="w-full aspect-video object-cover rounded-xl border border-gray-200"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-xl flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openCloudinaryWidget('backdrop')}
-                            className="p-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <Image className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, backdropImage: '' }))}
-                            className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-gray-400 transition-colors aspect-video flex flex-col items-center justify-center">
-                      <Image className="w-8 h-8 text-gray-400 mb-3" />
-                      <button
-                        type="button"
-                        onClick={() => openCloudinaryWidget('backdrop')}
-                        className="text-sm font-medium text-gray-600 hover:text-gray-700"
-                      >
-                        Upload Backdrop
-                      </button>
-                      <p className="text-xs text-gray-500 mt-1">Hero background image</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Settings Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-                Publishing Settings
-              </h3>
-
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
-                <div>
-                  <label htmlFor="featured" className="font-medium text-gray-900 cursor-pointer">
-                    Featured Content
-                  </label>
-                  <p className="text-sm text-gray-600">Show this video prominently on the homepage</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="featured"
-                    checked={formData.featured}
-                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                    className="sr-only peer"
+                <div className="relative aspect-video bg-gray-100">
+                  <img 
+                    src={video.thumbnail} 
+                    alt={video.title}
+                    className="w-full h-full object-cover"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleEdit(video)}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-700" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(video.id)}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                  {/* YouTube badge */}
+                  {video.isYouTube && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-xs rounded font-medium flex items-center gap-1">
+                      <Youtube className="w-3 h-3" />
+                      YouTube
+                    </div>
+                  )}
+                  {/* Featured badge */}
+                  {video.featured && (
+                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-yellow-500 text-white text-xs rounded font-medium">
+                      Featured
+                    </div>
+                  )}
+                </div>
+                {/* Info */}
+                <div className="p-3">
+                  <h3 className="font-medium text-gray-900 line-clamp-1 mb-1">{video.title}</h3>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {video.views || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3 h-3" />
+                      {video.likes || 0}
+                    </span>
+                    <span className="capitalize">{video.type}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
 
-            {/* Progress Bar */}
-            {isUploading && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Publishing Content</h3>
-                    <p className="text-sm text-gray-600">Please wait while we process your video...</p>
+  // Step 2: Choose Source
+  if (step === 'choose') {
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+        <div className="max-w-lg mx-auto pt-8">
+          {/* Back */}
+          <button
+            onClick={() => { resetForm(); setStep('list') }}
+            className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+            Cancel
+          </button>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Add New Video</h1>
+          <p className="text-gray-500 mb-8">Choose how you want to add your video</p>
+
+          {/* Options */}
+          <div className="space-y-4">
+            {/* YouTube Option */}
+            <button
+              onClick={() => { setSourceType('youtube'); setStep('details') }}
+              className="w-full p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                  <Youtube className="w-7 h-7 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 text-lg mb-1">YouTube Link</h3>
+                  <p className="text-gray-500 text-sm">Paste a YouTube video URL. Free and unlimited.</p>
+                  <div className="mt-2 flex items-center gap-1 text-green-600 text-xs font-medium">
+                    <Check className="w-3 h-3" />
+                    Recommended
                   </div>
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Upload Progress</span>
-                    <span className="font-medium text-gray-900">{uploadProgress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
+              </div>
+            </button>
+
+            {/* Cloudinary Option */}
+            <button
+              onClick={() => { setSourceType('cloudinary'); setStep('details') }}
+              className="w-full p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-all text-left group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <Cloud className="w-7 h-7 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 text-lg mb-1">Upload Video</h3>
+                  <p className="text-gray-500 text-sm">Upload from your device. Uses storage quota.</p>
+                  <div className="mt-2 flex items-center gap-1 text-gray-400 text-xs">
+                    <AlertCircle className="w-3 h-3" />
+                    Max 500MB per video
                   </div>
                 </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Step 3: Video Details
+  return (
+    <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Back */}
+        <button
+          onClick={() => { if (editingVideo) { resetForm(); setStep('list') } else { setStep('choose') } }}
+          className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-900"
+        >
+          <X className="w-5 h-5" />
+          {editingVideo ? 'Cancel' : 'Back'}
+        </button>
+
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          {editingVideo ? 'Edit Video' : sourceType === 'youtube' ? 'Add YouTube Video' : 'Upload Video'}
+        </h1>
+
+        <div className="space-y-6">
+          {/* Video URL/Upload */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              {sourceType === 'youtube' ? 'YouTube URL' : 'Video File'}
+            </label>
+            
+            {sourceType === 'youtube' ? (
+              <div>
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                {urlError && <p className="text-red-500 text-sm mt-2">{urlError}</p>}
+              </div>
+            ) : (
+              <div>
+                {videoUrl ? (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <Check className="w-5 h-5 text-green-600" />
+                    <span className="text-green-700 text-sm flex-1">Video uploaded</span>
+                    <button onClick={() => setVideoUrl('')} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => openCloudinaryWidget('video')}
+                    className="w-full py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 font-medium">Click to upload video</p>
+                    <p className="text-gray-400 text-sm">MP4, MOV up to 500MB</p>
+                  </button>
+                )}
               </div>
             )}
+          </div>
 
-            {/* Submit Button */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              {editingVideo && (
+          {/* Thumbnail */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Thumbnail</label>
+            
+            {thumbnail ? (
+              <div className="relative">
+                <img src={thumbnail} alt="Thumbnail" className="w-full aspect-video object-cover rounded-xl" />
                 <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditModal(false)
-                    setEditingVideo(null)
-                    setFormData({
-                      title: '',
-                      description: '',
-                      type: 'praise',
-                      genre: [],
-                      videoUrl: '',
-                      youtubeUrl: '',
-                      thumbnail: '',
-                      backdropImage: '',
-                      duration: 0,
-                      releaseYear: new Date().getFullYear(),
-                      featured: false,
-                      isYouTube: false
-                    })
-                    setUploadMethod('upload')
-                  }}
-                  className="sm:w-auto px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  onClick={() => setThumbnail('')}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70"
                 >
-                  Cancel
+                  <X className="w-4 h-4" />
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData({
-                    title: '',
-                    description: '',
-                    type: 'praise',
-                    genre: [],
-                    videoUrl: '',
-                    youtubeUrl: '',
-                    thumbnail: '',
-                    backdropImage: '',
-                    duration: 0,
-                    releaseYear: new Date().getFullYear(),
-                    featured: false,
-                    isYouTube: false
-                  })
-                  setUploadMethod('upload')
-                  if (editingVideo) {
-                    setShowEditModal(false)
-                    setEditingVideo(null)
-                  }
-                }}
-                className="sm:w-auto px-8 py-4 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-              >
-                {editingVideo ? 'Reset Form' : 'Reset Form'}
-              </button>
-              
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="flex-1 sm:flex-none sm:px-12 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {editingVideo ? 'Updating...' : 'Publishing...'}
-                  </>
-                ) : (
-                  <>
-                    <Film className="w-5 h-5" />
-                    {editingVideo ? 'Update Video' : 'Publish Content'}
-                  </>
+                {sourceType === 'youtube' && thumbnail.includes('ytimg') && (
+                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                    Auto-fetched from YouTube
+                  </div>
                 )}
-              </button>
-            </div>
-          </form>
-
-          {/* Video Library - YouTube Style */}
-          <div className="mt-10">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Video Library</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {recentUploads.length} video{recentUploads.length !== 1 ? 's' : ''} uploaded
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={refreshRecentUploads}
-                  disabled={isRecentLoading}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  <RefreshCcw className={`w-4 h-4 ${isRecentLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
               </div>
+            ) : (
+              <button
+                onClick={() => openCloudinaryWidget('image')}
+                className="w-full py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors"
+              >
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600 font-medium">Upload thumbnail</p>
+                <p className="text-gray-400 text-sm">16:9 ratio recommended</p>
+              </button>
+            )}
+          </div>
 
-              {isRecentLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="aspect-video bg-gray-200 rounded-xl mb-3"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : recentError ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <X className="w-8 h-8 text-red-500" />
-                  </div>
-                  <p className="text-red-600 font-medium">{recentError}</p>
-                  <button
-                    onClick={refreshRecentUploads}
-                    className="mt-4 text-sm text-purple-600 hover:underline"
-                  >
-                    Try again
-                  </button>
-                </div>
-              ) : recentUploads.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Film className="w-10 h-10 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No videos yet</h4>
-                  <p className="text-gray-500 text-sm">Upload your first video to get started</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {recentUploads.map((upload) => (
-                    <div
-                      key={upload.id}
-                      className="group bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200"
-                    >
-                      {/* Thumbnail */}
-                      <div className="relative aspect-video bg-gray-900">
-                        {upload.thumbnail ? (
-                          <img
-                            src={upload.thumbnail}
-                            alt={upload.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/images/video-placeholder.png'
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                            <Film className="w-12 h-12 text-gray-600" />
-                          </div>
-                        )}
-                        
-                        {/* Play overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                          <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-90 group-hover:scale-100">
-                            <Play className="w-6 h-6 text-gray-900 ml-1" />
-                          </div>
-                        </div>
-                        
-                        {/* Duration badge */}
-                        {upload.duration && upload.duration > 0 && (
-                          <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 text-white text-xs font-medium rounded">
-                            {Math.floor(upload.duration / 60)}:{String(upload.duration % 60).padStart(2, '0')}
-                          </div>
-                        )}
-                        
-                        {/* Source badge */}
-                        <div className={`absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded ${
-                          upload.sourceType === 'youtube'
-                            ? 'bg-red-600 text-white'
-                            : 'bg-purple-600 text-white'
-                        }`}>
-                          {upload.sourceType === 'youtube' ? 'YouTube' : 'Upload'}
-                        </div>
-                      </div>
-                      
-                      {/* Info */}
-                      <div className="p-4">
-                        <h4 className="font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-purple-600 transition-colors">
-                          {upload.title}
-                        </h4>
-                        <p className="text-sm text-gray-500 line-clamp-1 mb-3">
-                          {upload.description || 'No description'}
-                        </p>
-                        
-                        {/* Stats */}
-                        <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
-                          <span>{upload.views || 0} views</span>
-                          <span>•</span>
-                          <span>{formatDateTime(upload.createdAt)}</span>
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                          <button
-                            type="button"
-                            onClick={() => window.open(upload.playbackUrl || upload.youtubeUrl || upload.videoUrl, '_blank')}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                          >
-                            <Play className="w-4 h-4" />
-                            Watch
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(upload)}
-                            className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(upload.id)}
-                            disabled={deletingVideoId === upload.id}
-                            className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                            title="Delete"
-                          >
-                            {deletingVideoId === upload.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Title */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter video title"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What's this video about?"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+            />
+          </div>
+
+          {/* Type & Featured */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-5 border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Category</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as MediaVideo['type'])}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="praise">Praise</option>
+                <option value="worship">Worship</option>
+                <option value="medley">Medley</option>
+                <option value="healing">Healing</option>
+                <option value="gfap">GFAP</option>
+                <option value="live">Live</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Featured</label>
+              <button
+                onClick={() => setFeatured(!featured)}
+                className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                  featured 
+                    ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {featured ? '⭐ Featured' : 'Not Featured'}
+              </button>
             </div>
           </div>
+
+          {/* Submit */}
+          <button
+            onClick={handleSubmit}
+            disabled={!title.trim() || !videoUrl || !thumbnail || isSubmitting}
+            className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                {editingVideo ? 'Saving...' : 'Publishing...'}
+              </>
+            ) : (
+              <>
+                <Check className="w-5 h-5" />
+                {editingVideo ? 'Save Changes' : 'Publish Video'}
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
   )
-}
-
-const formatDateTime = (date?: Date) => {
-  if (!date) return '—'
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(date)
 }

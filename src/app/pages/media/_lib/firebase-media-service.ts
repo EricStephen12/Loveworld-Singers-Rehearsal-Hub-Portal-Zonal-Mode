@@ -61,7 +61,8 @@ export interface UserFavorite {
 }
 
 class FirebaseMediaService {
-  private mediaCollection = 'media'
+  // Changed to media_videos collection for unified video management
+  private mediaCollection = 'media_videos'
   private genresCollection = 'media_genres'
   private watchHistoryCollection = 'watch_history'
   private favoritesCollection = 'user_favorites'
