@@ -127,53 +127,62 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     loadSubscription()
   }, [currentZone?.id, currentZone?.name])
 
-  // Check if zone has access to a feature
-  const hasFeature = (feature: string) => {
-    // Boss bypasses all feature checks
-    const isBoss = profile?.role === 'boss'
-    if (isBoss) return true
-    
-    // HQ members bypass all feature checks (unlimited access)
-    const { bypassesFeatureGates } = require('@/config/zones')
-    if (currentZone && bypassesFeatureGates(currentZone.id)) {
-      return true
-    }
-    
-    // While loading, allow access (optimistic rendering like Instagram)
-    if (isLoading) return true
-    
-    // No subscription = free tier
-    if (!subscription) return false
-    
-    return hasFeatureAccess(subscription.tier, feature as any)
-  }
-
-  // Check if zone can add more members
-  const canAddMember = async () => {
-    if (!currentZone || !subscription) return false
-    
-    try {
-      const zoneData = await FirebaseDatabaseService.getDocument('zones', currentZone.id)
-      const currentMemberCount = zoneData?.memberCount || 0
-      const limit = getMemberLimit(subscription.tier)
-      
-      return currentMemberCount < limit
-    } catch (error) {
-      console.error('Error checking member limit:', error)
-      return false
-    }
-  }
-
   // Refresh subscription
   const refreshSubscription = async () => {
     setIsLoading(true)
     await loadSubscription()
   }
 
+  // Import bypassesFeatureGates at module level for consistency
+  const { bypassesFeatureGates } = require('@/config/zones')
+
   const contextValue = useMemo(() => {
     // Check if HQ group (unlimited access, no subscription needed)
-    const { bypassesFeatureGates } = require('@/config/zones')
     const isHQGroup = currentZone && bypassesFeatureGates(currentZone.id)
+    
+    console.log('📦 Subscription Context Update:', {
+      zoneId: currentZone?.id,
+      zoneName: currentZone?.name,
+      isHQGroup,
+      subscriptionTier: subscription?.tier,
+      isLoading
+    })
+    
+    // Check if zone has access to a feature - defined inside useMemo to capture current values
+    const hasFeature = (feature: string) => {
+      // Boss bypasses all feature checks
+      const isBoss = profile?.role === 'boss'
+      if (isBoss) return true
+      
+      // HQ members bypass all feature checks (unlimited access)
+      if (isHQGroup) {
+        return true
+      }
+      
+      // While loading, allow access (optimistic rendering like Instagram)
+      if (isLoading) return true
+      
+      // No subscription = free tier
+      if (!subscription) return false
+      
+      return hasFeatureAccess(subscription.tier, feature as any)
+    }
+
+    // Check if zone can add more members
+    const canAddMember = async () => {
+      if (!currentZone || !subscription) return false
+      
+      try {
+        const zoneData = await FirebaseDatabaseService.getDocument('zones', currentZone.id)
+        const currentMemberCount = zoneData?.memberCount || 0
+        const limit = getMemberLimit(subscription.tier)
+        
+        return currentMemberCount < limit
+      } catch (error) {
+        console.error('Error checking member limit:', error)
+        return false
+      }
+    }
     
     return {
       subscription,
@@ -185,7 +194,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       isPremiumTier: isHQGroup ? true : subscription?.tier === 'premium', // HQ groups act like premium
       refreshSubscription
     }
-  }, [subscription, isLoading, currentZone])
+  }, [subscription, isLoading, currentZone, profile?.role])
 
   return (
     <SubscriptionContext.Provider value={contextValue}>
