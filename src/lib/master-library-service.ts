@@ -1,13 +1,3 @@
-/**
- * Master Library Service
- * Handles the curated song library that zones can access
- * 
- * Flow:
- * 1. HQ Admin creates songs in internal library (songs collection)
- * 2. HQ Admin publishes to Master Library (master_songs collection)
- * 3. Zone Coordinators can view and import from Master Library
- * 4. Sub-Groups can import from their Zone's library
- */
 
 import { FirebaseDatabaseService } from './firebase-database';
 import { 
@@ -87,11 +77,11 @@ export class MasterLibraryService {
     try {
       // Check cache first
       if (!forceRefresh && masterSongsCache && Date.now() - masterSongsCache.timestamp < MASTER_SONGS_CACHE_TTL) {
-        console.log('📚 Using cached Master Library songs:', masterSongsCache.data.length);
+        console.log('Using cached Master Library songs:', masterSongsCache.data.length);
         return masterSongsCache.data;
       }
       
-      console.log('📚 Getting Master Library songs (limit:', limitCount, ')...');
+      console.log('Getting Master Library songs (limit:', limitCount, ')...');
       
       const q = query(
         collection(db, 'master_songs'),
@@ -113,10 +103,10 @@ export class MasterLibraryService {
         lastMasterSongDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
       }
       
-      console.log(`✅ Found ${songs.length} songs in Master Library`);
+      console.log('Found', songs.length, 'songs in Master Library');
       return songs;
     } catch (error) {
-      console.error('❌ Error getting Master Library songs:', error);
+      console.error('Error getting Master Library songs:', error);
       return [];
     }
   }
@@ -127,11 +117,11 @@ export class MasterLibraryService {
   static async loadMoreMasterSongs(limitCount: number = 50): Promise<MasterSong[]> {
     try {
       if (!lastMasterSongDoc) {
-        console.log('📚 No more master songs to load');
+        console.log('No more master songs to load');
         return [];
       }
       
-      console.log('📚 Loading more Master Library songs...');
+      console.log('Loading more Master Library songs...');
       
       const q = query(
         collection(db, 'master_songs'),
@@ -159,10 +149,10 @@ export class MasterLibraryService {
         lastMasterSongDoc = null; // No more songs
       }
       
-      console.log(`✅ Loaded ${songs.length} more songs`);
+      console.log('Loaded', songs.length, 'more songs');
       return songs;
     } catch (error) {
-      console.error('❌ Error loading more Master Library songs:', error);
+      console.error('Error loading more Master Library songs:', error);
       return [];
     }
   }
@@ -180,7 +170,7 @@ export class MasterLibraryService {
   static clearMasterSongsCache(): void {
     masterSongsCache = null;
     lastMasterSongDoc = null;
-    console.log('🗑️ Master songs cache cleared');
+    console.log('Master songs cache cleared');
   }
 
   /**
@@ -196,7 +186,7 @@ export class MasterLibraryService {
       }
       return null;
     } catch (error) {
-      console.error('❌ Error getting Master song:', error);
+      console.error('Error getting Master song:', error);
       return null;
     }
   }
@@ -211,7 +201,7 @@ export class MasterLibraryService {
     publishedByName?: string
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-      console.log('📤 Publishing song to Master Library:', originalSong.title);
+      console.log('Publishing song to Master Library:', originalSong.title);
       
       // Check if already published
       const existing = await this.getMasterSongByOriginalId(originalSong.id);
@@ -258,13 +248,13 @@ export class MasterLibraryService {
       if (result.success) {
         // Clear cache so next fetch gets fresh data
         this.clearMasterSongsCache();
-        console.log('✅ Song published to Master Library:', result.id);
+        console.log('Song published to Master Library:', result.id);
         return { success: true, id: result.id };
       } else {
         return { success: false, error: 'Failed to publish song' };
       }
     } catch (error) {
-      console.error('❌ Error publishing to Master Library:', error);
+      console.error('Error publishing to Master Library:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -289,7 +279,7 @@ export class MasterLibraryService {
       }
       return null;
     } catch (error) {
-      console.error('❌ Error checking Master Library:', error);
+      console.error('Error checking Master Library:', error);
       return null;
     }
   }
@@ -303,7 +293,7 @@ export class MasterLibraryService {
     data: Partial<MasterSong>
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('📝 Updating Master Library song:', songId);
+      console.log('Updating Master Library song:', songId);
       
       // Don't allow changing source tracking
       const updateData = { ...data };
@@ -317,10 +307,10 @@ export class MasterLibraryService {
       
       await FirebaseDatabaseService.updateDocument('master_songs', songId, updateData);
       
-      console.log('✅ Master song updated');
+      console.log('Master song updated');
       return { success: true };
     } catch (error) {
-      console.error('❌ Error updating Master song:', error);
+      console.error('Error updating Master song:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -334,17 +324,17 @@ export class MasterLibraryService {
    */
   static async deleteMasterSong(songId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🗑️ Deleting from Master Library:', songId);
+      console.log('Deleting from Master Library:', songId);
       
       await FirebaseDatabaseService.deleteDocument('master_songs', songId);
       
       // Clear cache so next fetch gets fresh data
       this.clearMasterSongsCache();
       
-      console.log('✅ Master song deleted');
+      console.log('Master song deleted');
       return { success: true };
     } catch (error) {
-      console.error('❌ Error deleting Master song:', error);
+      console.error('Error deleting Master song:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -363,7 +353,7 @@ export class MasterLibraryService {
     importedBy: string
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-      console.log('📥 Importing song to zone:', masterSong.title, '→', zoneId);
+      console.log('Importing song to zone:', masterSong.title, '->', zoneId);
       
       // Create zone song data (copy only song data)
       const zoneSongData = {
@@ -404,13 +394,13 @@ export class MasterLibraryService {
         // Increment import count on master song
         await this.incrementImportCount(masterSong.id);
         
-        console.log('✅ Song imported to zone:', result.id);
+        console.log('Song imported to zone:', result.id);
         return { success: true, id: result.id };
       } else {
         return { success: false, error: 'Failed to import song' };
       }
     } catch (error) {
-      console.error('❌ Error importing to zone:', error);
+      console.error('Error importing to zone:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -427,9 +417,9 @@ export class MasterLibraryService {
       await updateDoc(docRef, {
         importCount: increment(1)
       });
-      console.log('📊 Import count incremented for:', masterSongId);
+      console.log('Import count incremented for:', masterSongId);
     } catch (error) {
-      console.error('❌ Error incrementing import count:', error);
+      console.error('Error incrementing import count:', error);
     }
   }
 
@@ -441,11 +431,11 @@ export class MasterLibraryService {
     try {
       // Check cache first
       if (!forceRefresh && hqInternalSongsCache && Date.now() - hqInternalSongsCache.timestamp < HQ_INTERNAL_CACHE_TTL) {
-        console.log('🏢 Using cached HQ Internal songs:', hqInternalSongsCache.data.length);
+        console.log('Using cached HQ Internal songs:', hqInternalSongsCache.data.length);
         return hqInternalSongsCache.data;
       }
       
-      console.log('🏢 Getting HQ Internal songs from praise_night_songs (limit:', limitCount, ')...');
+      console.log('Getting HQ Internal songs from praise_night_songs (limit:', limitCount, ')...');
       
       // HQ songs are in the 'praise_night_songs' collection
       const q = query(
@@ -471,10 +461,10 @@ export class MasterLibraryService {
         lastHQInternalDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
       }
       
-      console.log(`✅ Found ${songs.length} HQ Internal songs`);
+      console.log('Found', songs.length, 'HQ Internal songs');
       return songs;
     } catch (error) {
-      console.error('❌ Error getting HQ Internal songs:', error);
+      console.error('Error getting HQ Internal songs:', error);
       return [];
     }
   }
@@ -485,11 +475,11 @@ export class MasterLibraryService {
   static async loadMoreHQInternalSongs(limitCount: number = 100): Promise<any[]> {
     try {
       if (!lastHQInternalDoc) {
-        console.log('🏢 No more HQ internal songs to load');
+        console.log('No more HQ internal songs to load');
         return [];
       }
       
-      console.log('🏢 Loading more HQ Internal songs...');
+      console.log('Loading more HQ Internal songs...');
       
       const q = query(
         collection(db, 'praise_night_songs'),
@@ -520,10 +510,10 @@ export class MasterLibraryService {
         lastHQInternalDoc = null; // No more songs
       }
       
-      console.log(`✅ Loaded ${songs.length} more HQ internal songs`);
+      console.log('Loaded', songs.length, 'more HQ internal songs');
       return songs;
     } catch (error) {
-      console.error('❌ Error loading more HQ Internal songs:', error);
+      console.error('Error loading more HQ Internal songs:', error);
       return [];
     }
   }
@@ -541,7 +531,7 @@ export class MasterLibraryService {
   static clearHQInternalSongsCache(): void {
     hqInternalSongsCache = null;
     lastHQInternalDoc = null;
-    console.log('🗑️ HQ internal songs cache cleared');
+    console.log('HQ internal songs cache cleared');
   }
 
   /**
@@ -559,7 +549,7 @@ export class MasterLibraryService {
         song.category?.toLowerCase().includes(term)
       );
     } catch (error) {
-      console.error('❌ Error searching Master Library:', error);
+      console.error('Error searching Master Library:', error);
       return [];
     }
   }
@@ -586,7 +576,7 @@ export class MasterLibraryService {
         mostImported
       };
     } catch (error) {
-      console.error('❌ Error getting Master Library stats:', error);
+      console.error('Error getting Master Library stats:', error);
       return { totalSongs: 0, totalImports: 0, mostImported: [] };
     }
   }

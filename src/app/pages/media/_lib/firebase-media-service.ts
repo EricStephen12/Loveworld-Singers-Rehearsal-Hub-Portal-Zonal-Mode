@@ -104,6 +104,29 @@ class FirebaseMediaService {
     }
   }
 
+  // Get media filtered by zone type (HQ or regular zones)
+  async getMediaForZone(isHQZone: boolean, limitCount: number = 24): Promise<MediaItem[]> {
+    try {
+      const q = query(
+        collection(db, this.mediaCollection),
+        where('forHQ', '==', isHQZone),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        updatedAt: doc.data().updatedAt?.toDate()
+      })) as MediaItem[]
+    } catch (error) {
+      console.error('Error fetching zone media:', error)
+      // Fallback to all media if zone filtering fails (for backwards compatibility)
+      return this.getAllMedia(limitCount)
+    }
+  }
+
   // Load more media with pagination
   async loadMoreMedia(lastCreatedAt: Date, limitCount: number = 12): Promise<MediaItem[]> {
     try {

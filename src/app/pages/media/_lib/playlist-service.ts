@@ -150,17 +150,18 @@ export async function isInWatchLater(userId: string, videoId: string): Promise<b
 export async function createPlaylist(
   userId: string,
   name: string,
-  description?: string
+  description?: string,
+  isPublic: boolean = false
 ): Promise<string> {
   try {
-    console.log('📝 createPlaylist:', { userId, name })
+    console.log('📝 createPlaylist:', { userId, name, isPublic })
     const docRef = await addDoc(collection(db, COLLECTION), {
       name,
       description: description || '',
       userId,
       videoIds: [],
       thumbnail: null,
-      isPublic: false,
+      isPublic,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
@@ -253,4 +254,48 @@ export async function deletePlaylist(playlistId: string): Promise<void> {
 export async function getPlaylistsContainingVideo(userId: string, videoId: string): Promise<string[]> {
   const playlists = await getUserPlaylists(userId)
   return playlists.filter(p => p.videoIds.includes(videoId)).map(p => p.id)
+}
+
+// Get all public playlists (for browsing)
+export async function getPublicPlaylists(limitCount: number = 20): Promise<Playlist[]> {
+  try {
+    console.log('🌐 getPublicPlaylists')
+    const q = query(
+      collection(db, COLLECTION),
+      where('isPublic', '==', true),
+      where('isSystem', '==', false),
+      orderBy('updatedAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    console.log('🌐 Found public playlists:', snapshot.docs.length)
+    return snapshot.docs.slice(0, limitCount).map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+      updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
+    })) as Playlist[]
+  } catch (error) {
+    console.error('🌐 Error getting public playlists:', error)
+    // Fallback: try without isSystem filter (for older playlists)
+    try {
+      const q = query(
+        collection(db, COLLECTION),
+        where('isPublic', '==', true),
+        orderBy('updatedAt', 'desc')
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs
+        .filter(doc => !doc.data().isSystem)
+        .slice(0, limitCount)
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+          updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
+        })) as Playlist[]
+    } catch (fallbackError) {
+      console.error('🌐 Fallback also failed:', fallbackError)
+      return []
+    }
+  }
 }

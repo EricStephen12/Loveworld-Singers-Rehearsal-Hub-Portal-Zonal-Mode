@@ -81,13 +81,14 @@ export async function getAllCloudinaryMedia(zoneId?: string, limitCount: number 
     const mediaRef = collection(db, collectionName);
     
     // For regular zones, filter by zoneId
+    // Order by createdAt desc so newest files appear first
     let q;
     if (zoneId && !isHQGroup(zoneId)) {
       console.log('📍 [CloudinaryMedia] Filtering by zoneId:', zoneId);
-      q = query(mediaRef, where('zoneId', '==', zoneId), firestoreLimit(limitCount));
+      q = query(mediaRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'), firestoreLimit(limitCount));
     } else {
       console.log('🏢 [CloudinaryMedia] Loading all (HQ or no zone)');
-      q = query(mediaRef, firestoreLimit(limitCount));
+      q = query(mediaRef, orderBy('createdAt', 'desc'), firestoreLimit(limitCount));
     }
     
     const snapshot = await getDocs(q);
@@ -140,13 +141,15 @@ export async function loadMoreCloudinaryMedia(zoneId?: string, limitCount: numbe
     if (zoneId && !isHQGroup(zoneId)) {
       q = query(
         mediaRef, 
-        where('zoneId', '==', zoneId), 
+        where('zoneId', '==', zoneId),
+        orderBy('createdAt', 'desc'),
         startAfter(cached.lastDoc),
         firestoreLimit(limitCount)
       );
     } else {
       q = query(
-        mediaRef, 
+        mediaRef,
+        orderBy('createdAt', 'desc'),
         startAfter(cached.lastDoc),
         firestoreLimit(limitCount)
       );

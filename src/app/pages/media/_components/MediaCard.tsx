@@ -1,21 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Play, MoreVertical } from 'lucide-react'
 import { MediaItem } from '../_lib'
 import { isYouTubeUrl } from '@/utils/youtube'
+import { getCategories, MediaCategory } from '@/lib/media-category-service'
+
+// Cache categories to avoid repeated fetches
+let categoriesCache: MediaCategory[] | null = null
+let categoriesCachePromise: Promise<MediaCategory[]> | null = null
+
+async function getCachedCategories(): Promise<MediaCategory[]> {
+  if (categoriesCache) return categoriesCache
+  if (categoriesCachePromise) return categoriesCachePromise
+  
+  categoriesCachePromise = getCategories().then(cats => {
+    categoriesCache = cats
+    return cats
+  })
+  return categoriesCachePromise
+}
 
 interface MediaCardProps {
   media: MediaItem
+  categoryMap?: Map<string, string> // slug -> name mapping passed from parent
 }
 
-export default function MediaCard({ media }: MediaCardProps) {
+export default function MediaCard({ media, categoryMap }: MediaCardProps) {
   const router = useRouter()
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [categoryName, setCategoryName] = useState<string>(media.type || '')
   
   // Check if this is a YouTube video
   const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.youtubeUrl || '')
+  
+  // Load category name
+  useEffect(() => {
+    if (categoryMap && media.type) {
+      const name = categoryMap.get(media.type)
+      if (name) {
+        setCategoryName(name)
+        return
+      }
+    }
+    // Fallback: load from cache
+    if (media.type) {
+      getCachedCategories().then(cats => {
+        const cat = cats.find(c => c.slug === media.type)
+        if (cat) setCategoryName(cat.name)
+        else setCategoryName(media.type.charAt(0).toUpperCase() + media.type.slice(1))
+      })
+    }
+  }, [media.type, categoryMap])
 
   const handleClick = () => {
     router.push(`/pages/media/player/${media.id}`)
@@ -127,7 +164,7 @@ export default function MediaCard({ media }: MediaCardProps) {
 
           {/* Channel Name / Type + Views */}
           <div className="flex flex-wrap items-center gap-x-1 text-gray-400 text-[11px] sm:text-xs">
-            <span>{media.type ? media.type.charAt(0).toUpperCase() + media.type.slice(1) : 'LWS'}</span>
+            <span>{categoryName || 'LWS'}</span>
             <span>•</span>
             <span>{formatViews(media.views || 0)}</span>
             {media.createdAt && (

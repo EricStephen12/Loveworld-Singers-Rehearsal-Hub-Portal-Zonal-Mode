@@ -71,6 +71,7 @@ export default function PlayerPage() {
   useEffect(() => {
     if (media) {
       incrementViews(media.id)
+      // Set initial like count from media data
       setLikeCount(media.likes || 0)
     }
   }, [media])
@@ -83,6 +84,11 @@ export default function PlayerPage() {
       ])
       setIsLiked(liked)
       setIsWatchLater(watchLater)
+      
+      // If user has liked but media.likes is 0, set to at least 1
+      if (liked && (media?.likes || 0) === 0) {
+        setLikeCount(1)
+      }
     } catch (error) {
       console.error('Error checking user status:', error)
     }
@@ -145,7 +151,8 @@ export default function PlayerPage() {
       console.log('👍 Like result:', newLiked)
       setIsLiked(newLiked)
       setIsDisliked(false)
-      setLikeCount(prev => newLiked ? prev + 1 : prev - 1)
+      // Ensure like count never goes below 0
+      setLikeCount(prev => newLiked ? prev + 1 : Math.max(0, prev - 1))
     } catch (error) {
       console.error('❌ Like error:', error)
     }
@@ -159,7 +166,8 @@ export default function PlayerPage() {
     setIsDisliked(!isDisliked)
     if (isLiked) { 
       setIsLiked(false)
-      setLikeCount(prev => prev - 1)
+      // Ensure like count never goes below 0
+      setLikeCount(prev => Math.max(0, prev - 1))
       try {
         await toggleLikeVideo(userId, mediaId, media?.thumbnail)
       } catch (error) {

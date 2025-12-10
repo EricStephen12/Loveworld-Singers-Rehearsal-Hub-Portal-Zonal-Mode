@@ -71,7 +71,7 @@ export class FirebaseDatabaseService {
   // Get a single song by ID - CRITICAL for SongDetailModal
   static async getSongById(songId: string) {
     try {
-      console.log('🔍 [getSongById] Fetching song with ID:', songId);
+      console.log('[getSongById] Fetching song with ID:', songId);
       
       const docRef = doc(db, 'songs', songId);
       const docSnap = await getDoc(docRef);
@@ -84,20 +84,20 @@ export class FirebaseDatabaseService {
           ...data
         };
         
-        console.log('✅ [getSongById] Song found:', songData.title);
-        console.log('🎤 [getSongById] Lead singer:', songData.leadSinger || 'MISSING');
-        console.log('🎸 [getSongById] Lead guitarist:', songData.leadGuitarist || 'MISSING');
-        console.log('🎹 [getSongById] Lead keyboardist:', songData.leadKeyboardist || 'MISSING');
-        console.log('🥁 [getSongById] Drummer:', songData.drummer || 'MISSING');
-        console.log('🎵 [getSongById] Audio file:', songData.audioFile || 'MISSING');
+        console.log('[getSongById] Song found:', songData.title);
+        console.log('[getSongById] Lead singer:', songData.leadSinger || 'MISSING');
+        console.log('[getSongById] Lead guitarist:', songData.leadGuitarist || 'MISSING');
+        console.log('[getSongById] Lead keyboardist:', songData.leadKeyboardist || 'MISSING');
+        console.log('[getSongById] Drummer:', songData.drummer || 'MISSING');
+        console.log('[getSongById] Audio file:', songData.audioFile || 'MISSING');
         
         return songData;
       } else {
-        console.warn('❌ [getSongById] Song not found with ID:', songId);
+        console.warn('[getSongById] Song not found with ID:', songId);
         return null;
       }
     } catch (error) {
-      console.error('❌ [getSongById] Error:', error);
+      console.error('[getSongById] Error:', error);
       return null;
     }
   }
@@ -168,7 +168,7 @@ export class FirebaseDatabaseService {
   // Add new praise night with Firebase-generated ID
   static async addPraiseNight(data: any) {
     try {
-      console.log('🔥 Creating praise night with Firebase-generated ID...');
+      console.log('Creating praise night with Firebase-generated ID...');
 
       const pageData = {
         ...data,
@@ -179,11 +179,11 @@ export class FirebaseDatabaseService {
       // Use addDoc to let Firebase generate a unique ID
       const docRef = await addDoc(collection(db, 'praise_nights'), pageData);
 
-      console.log('✅ Page created with Firebase-generated ID:', docRef.id);
+      console.log('Page created with Firebase-generated ID:', docRef.id);
 
       return { id: docRef.id, firebaseId: docRef.id, success: true }
     } catch (error) {
-      console.error('❌ Error adding praise night:', error)
+      console.error('Error adding praise night:', error)
       return { id: null, firebaseId: null, success: false }
     }
   }
@@ -290,7 +290,7 @@ export class FirebaseDatabaseService {
       let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null
       let hasMore = true
       
-      console.log(`📦 [Batch] Starting batch fetch for ${collectionName} (batch size: ${batchSize}, max: ${maxTotal})`)
+      console.log('[Batch] Starting batch fetch for', collectionName, '(batch size:', batchSize, ', max:', maxTotal, ')')
       
       while (hasMore && allResults.length < maxTotal) {
         // Build query with cursor if we have a last document
@@ -312,7 +312,7 @@ export class FirebaseDatabaseService {
         
         if (batchDocs.length === 0) {
           hasMore = false
-          console.log(`📦 [Batch] No more documents in ${collectionName}`)
+          console.log('[Batch] No more documents in', collectionName)
         } else {
           // Map documents to data
           const batchData = batchDocs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
@@ -324,7 +324,7 @@ export class FirebaseDatabaseService {
           allResults.push(...batchData)
           lastDoc = batchDocs[batchDocs.length - 1]
           
-          console.log(`📦 [Batch] Fetched ${batchData.length} docs, total: ${allResults.length}`)
+          console.log('[Batch] Fetched', batchData.length, 'docs, total:', allResults.length)
           
           // Call callback with batch progress
           if (onBatch) {
@@ -339,10 +339,10 @@ export class FirebaseDatabaseService {
         }
       }
       
-      console.log(`✅ [Batch] Complete: ${allResults.length} total documents from ${collectionName}`)
+      console.log('[Batch] Complete:', allResults.length, 'total documents from', collectionName)
       return allResults
     } catch (error) {
-      console.error(`❌ [Batch] Error fetching ${collectionName}:`, error)
+      console.error('[Batch] Error fetching', collectionName, ':', error)
       return []
     }
   }
@@ -496,21 +496,21 @@ export class FirebaseDatabaseService {
 
   static async getDocuments(collectionName: string, filters: Array<{ field: string; operator: any; value: any }>) {
     try {
-      console.log(`🔍 [getDocuments] Querying ${collectionName} with filters:`, filters)
+      console.log('[getDocuments] Querying', collectionName, 'with filters:', filters)
       let q = query(collection(db, collectionName))
       
       // Apply filters
       for (const filter of filters) {
-        console.log(`  📌 Adding filter: ${filter.field} ${filter.operator} ${filter.value}`)
+        console.log('  Adding filter:', filter.field, filter.operator, filter.value)
         q = query(q, where(filter.field, filter.operator, filter.value))
       }
       
       const querySnapshot = await getDocs(q)
-      console.log(`📊 [getDocuments] Found ${querySnapshot.docs.length} documents in ${collectionName}`)
+      console.log('[getDocuments] Found', querySnapshot.docs.length, 'documents in', collectionName)
       
       const results = querySnapshot.docs.map(doc => {
         const data = doc.data()
-        console.log(`  📄 Document ${doc.id}:`, data)
+        console.log('  Document', doc.id, ':', data)
         return {
           id: doc.id,
           ...data
@@ -519,7 +519,7 @@ export class FirebaseDatabaseService {
       
       return results
     } catch (error) {
-      console.error(`❌ [getDocuments] Error getting documents from ${collectionName}:`, error)
+      console.error('[getDocuments] Error getting documents from', collectionName, ':', error)
       return []
     }
   }
@@ -528,34 +528,34 @@ export class FirebaseDatabaseService {
   static async createCategory(categoryData: any) {
     try {
       const docRef = await addDoc(collection(db, 'categories'), categoryData)
-      console.log('✅ Category created successfully with ID:', docRef.id);
+      console.log('Category created successfully with ID:', docRef.id);
       return { success: true, id: docRef.id, ...categoryData }
     } catch (error) {
-      console.error('❌ Error creating category:', error)
+      console.error('Error creating category:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 
   static async updateCategory(categoryId: string | number, data: any) {
     try {
-      console.log('🔄 Updating category with ID:', categoryId, 'Data:', data);
+      console.log('Updating category with ID:', categoryId, 'Data:', data);
       await updateDoc(doc(db, 'categories', categoryId.toString()), data)
-      console.log('✅ Category updated successfully');
+      console.log('Category updated successfully');
       return { success: true }
     } catch (error) {
-      console.error('❌ Error updating category:', error)
+      console.error('Error updating category:', error)
       return { success: false }
     }
   }
 
   static async deleteCategory(categoryId: string | number) {
     try {
-      console.log('🔥 Deleting category with ID:', categoryId);
+      console.log('Deleting category with ID:', categoryId);
       await deleteDoc(doc(db, 'categories', categoryId.toString()))
-      console.log('✅ Category deleted successfully');
+      console.log('Category deleted successfully');
       return { success: true }
     } catch (error) {
-      console.error('❌ Error deleting category:', error)
+      console.error('Error deleting category:', error)
       return { success: false }
     }
   }
@@ -568,7 +568,7 @@ export class FirebaseDatabaseService {
         Object.entries(songData).filter(([_, value]) => value !== undefined)
       )
 
-      console.log('🔥 Creating song with clean data:', cleanData)
+      console.log('Creating song with clean data:', cleanData)
       const docRef = await addDoc(collection(db, 'songs'), cleanData)
       
       // Return the created song with proper ID fields
@@ -580,8 +580,8 @@ export class FirebaseDatabaseService {
         updatedAt: new Date()
       };
       
-      console.log('✅ Song created successfully with ID:', docRef.id);
-      console.log('🎵 Created song data:', createdSong);
+      console.log('Song created successfully with ID:', docRef.id);
+      console.log('Created song data:', createdSong);
       
       return { 
         success: true, 
@@ -600,14 +600,14 @@ export class FirebaseDatabaseService {
       const firebaseDocId = String(songId).trim();
 
       if (!firebaseDocId || firebaseDocId === '' || firebaseDocId === 'null' || firebaseDocId === 'undefined') {
-        console.error('❌ Invalid song ID for update:', songId);
+        console.error('Invalid song ID for update:', songId);
         return {
           success: false,
           error: `Invalid song ID: ${songId}`
         };
       }
 
-      console.log('🔥 Updating song:', {
+      console.log('Updating song:', {
         firebaseDocId: firebaseDocId,
         title: data.title,
         praiseNightId: data.praiseNightId,
@@ -626,12 +626,12 @@ export class FirebaseDatabaseService {
 
       // Update the document
       const docRef = doc(db, 'songs', firebaseDocId);
-      console.log('📍 Document path:', `songs/${firebaseDocId}`);
+      console.log('Document path:', `songs/${firebaseDocId}`);
 
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
-        console.error('❌ Song not found:', firebaseDocId);
+        console.error('Song not found:', firebaseDocId);
         return {
           success: false,
           error: `Song not found: ${firebaseDocId}`
@@ -643,11 +643,11 @@ export class FirebaseDatabaseService {
 
       // Update the document
       await updateDoc(docRef, cleanData);
-      console.log('✅ Song updated successfully:', data.title);
+      console.log('Song updated successfully:', data.title);
 
       // Save history entries if provided
       if (data.history && data.history.length > 0) {
-        console.log('💾 Saving', data.history.length, 'history entries to Firebase...');
+        console.log('Saving', data.history.length, 'history entries to Firebase...');
         
         // Get existing history to avoid duplicates
         const existingHistory = await this.getCollectionWhere('song_history', 'song_id', '==', firebaseDocId);
@@ -664,18 +664,18 @@ export class FirebaseDatabaseService {
           });
           
           if (savedEntry) {
-            console.log('✅ Saved history entry to Firebase:', historyEntry.type);
+            console.log('Saved history entry to Firebase:', historyEntry.type);
           } else {
-            console.error('❌ Failed to save history entry to Firebase:', historyEntry.type);
+            console.error('Failed to save history entry to Firebase:', historyEntry.type);
           }
         }
         
-        console.log('✅ History entries saved to Firebase');
+        console.log('History entries saved to Firebase');
       }
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Firebase updateSong error:', error)
+      console.error('Firebase updateSong error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
@@ -690,21 +690,21 @@ export class FirebaseDatabaseService {
       const firebaseDocId = String(songId).trim();
 
       if (!firebaseDocId || firebaseDocId === '' || firebaseDocId === 'undefined' || firebaseDocId === 'null') {
-        console.error('❌ Invalid song ID for deletion:', songId);
+        console.error('Invalid song ID for deletion:', songId);
         return {
           success: false,
           error: `Invalid song ID: ${songId}`
         };
       }
 
-      console.log('🗑️ Deleting song:', firebaseDocId);
+      console.log('Deleting song:', firebaseDocId);
 
       const docRef = doc(db, 'songs', firebaseDocId);
 
       // Check if exists first
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
-        console.error('❌ Song not found:', firebaseDocId);
+        console.error('Song not found:', firebaseDocId);
         return {
           success: false,
           error: 'Song not found in database'
@@ -713,10 +713,10 @@ export class FirebaseDatabaseService {
 
       // Delete it
       await deleteDoc(docRef);
-      console.log('✅ Song deleted successfully');
+      console.log('Song deleted successfully');
       return { success: true };
     } catch (error) {
-      console.error('❌ Delete error:', error);
+      console.error('Delete error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -738,24 +738,24 @@ export class FirebaseDatabaseService {
   static async updatePage(pageId: string | number, data: any) {
     try {
       const docId = typeof pageId === 'number' ? pageId.toString() : pageId
-      console.log('🔥 Firebase updatePage called with:', { docId, data });
+      console.log('Firebase updatePage called with:', { docId, data });
       
       // Check if document exists first
       const docRef = doc(db, 'praise_nights', docId);
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {
-        console.error('❌ Document does not exist:', docId);
+        console.error('Document does not exist:', docId);
         return false;
       }
       
-      console.log('📄 Document exists, current data:', docSnap.data());
+      console.log('Document exists, current data:', docSnap.data());
       
       await updateDoc(docRef, data);
-      console.log('✅ Firebase updatePage successful');
+      console.log('Firebase updatePage successful');
       return true
     } catch (error) {
-      console.error('❌ Firebase updatePage error:', error)
+      console.error('Firebase updatePage error:', error)
       return false
     }
   }

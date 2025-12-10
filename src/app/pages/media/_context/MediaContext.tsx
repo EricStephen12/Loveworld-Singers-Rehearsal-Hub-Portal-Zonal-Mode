@@ -2,8 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup } from '@/config/zones'
 import { mediaService as firebaseMediaService } from '../_lib'
-import type { MediaItem, Genre, UserWatchHistory } from '../_lib'
+import type { MediaItem, Genre } from '../_lib'
 
 interface MediaContextType {
   // Media
@@ -36,6 +38,7 @@ const MediaContext = createContext<MediaContextType | undefined>(undefined)
 
 export function MediaProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { currentZone } = useZone()
   
   const [allMedia, setAllMedia] = useState<MediaItem[]>([])
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem[]>([])
@@ -45,11 +48,14 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  
+  // Determine if user is in HQ zone
+  const userIsHQ = isHQGroup(currentZone?.id)
 
-  // Load initial data
+  // Load initial data when zone changes
   useEffect(() => {
     loadInitialData()
-  }, [])
+  }, [currentZone?.id])
 
   // Load user-specific data when user changes
   useEffect(() => {
@@ -78,10 +84,11 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   const loadInitialData = async () => {
     // Load cached media immediately for instant display
     const { MediaCache } = await import('@/utils/media-cache')
-    const cachedMedia = MediaCache.loadMedia()
+    const cacheKey = userIsHQ ? 'hq' : 'regular'
+    const cachedMedia = MediaCache.loadMedia(cacheKey)
     
     if (cachedMedia && cachedMedia.length > 0) {
-      console.log(`⚡ Showing ${cachedMedia.length} cached media items instantly`)
+      console.log(`⚡ Showing ${cachedMedia.length} cached ${cacheKey} media items instantly`)
       setAllMedia(cachedMedia as any)
       setIsLoading(false)
     } else {
@@ -89,10 +96,12 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     }
 
     // Load fresh data from Firebase in background
-    // OPTIMIZED: Load only first 24 items initially
+    // Filter by zone type: HQ zones see forHQ=true, regular zones see forHQ=false
     try {
+      console.log(`📺 Loading media for ${userIsHQ ? 'HQ' : 'regular'} zone: ${currentZone?.name || 'unknown'}`)
+      
       const [media, featured, genresList] = await Promise.all([
-        firebaseMediaService.getAllMedia(24), // Load first 24
+        firebaseMediaService.getMediaForZone(userIsHQ, 24), // Load zone-filtered media
         firebaseMediaService.getFeaturedMedia(),
         firebaseMediaService.getAllGenres()
       ])
@@ -102,8 +111,8 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       setGenres(genresList)
       setHasMore(media.length >= 24) // If we got 24, there might be more
       
-      // Cache the media for next time
-      MediaCache.saveMedia(media)
+      // Cache the media for next time (with zone-specific key)
+      MediaCache.saveMedia(media, cacheKey)
     } catch (error) {
       console.error('Error loading initial data:', error)
     } finally {

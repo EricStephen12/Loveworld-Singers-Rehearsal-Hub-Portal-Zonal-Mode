@@ -83,11 +83,11 @@ export default function AdminPage() {
   // Modal states
   const [showPageModal, setShowPageModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showPageCategoryModal, setShowPageCategoryModal] = useState(false); // New state for page categories
+  const [showPageCategoryModal, setShowPageCategoryModal] = useState(false); 
   const [showSongModal, setShowSongModal] = useState(false);
   const [editingPage, setEditingPage] = useState<PraiseNight | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingPageCategory, setEditingPageCategory] = useState<any | null>(null); // New state for editing page categories
+  const [editingPageCategory, setEditingPageCategory] = useState<any | null>(null); 
   const [editingSong, setEditingSong] = useState<PraiseNightSong | null>(null);
 
   // Form states
@@ -96,7 +96,7 @@ export default function AdminPage() {
   const [newPageLocation, setNewPageLocation] = useState('');
   const [newPageDescription, setNewPageDescription] = useState('');
   const [newPageCategory, setNewPageCategory] = useState<'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive'>('unassigned');
-  const [newPagePageCategory, setNewPagePageCategory] = useState(''); // New state for page category
+  const [newPagePageCategory, setNewPagePageCategory] = useState(''); 
   const [newPageDays, setNewPageDays] = useState(0);
   const [newPageHours, setNewPageHours] = useState(0);
   const [newPageMinutes, setNewPageMinutes] = useState(0);
@@ -104,24 +104,24 @@ export default function AdminPage() {
   const [newPageBannerImage, setNewPageBannerImage] = useState('');
   const [newPageBannerFile, setNewPageBannerFile] = useState<File | null>(null);
   const [newPageCategoryName, setNewPageCategoryName] = useState('');
-  const [newPageCategoryDescription, setNewPageCategoryDescription] = useState(''); // New state for page category description
-  const [newPageCategoryImage, setNewPageCategoryImage] = useState(''); // New state for page category image
-  const [selectedPageCategoryFilter, setSelectedPageCategoryFilter] = useState<string | null>(null); // Filter pages by page category
+  const [newPageCategoryDescription, setNewPageCategoryDescription] = useState(''); 
+  const [newPageCategoryImage, setNewPageCategoryImage] = useState(''); 
+  const [selectedPageCategoryFilter, setSelectedPageCategoryFilter] = useState<string | null>(null); 
 
   // Delete dialog states
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [pageToDelete, setPageToDelete] = useState<PraiseNight | null>(null);
   const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
-  const [showDeletePageCategoryDialog, setShowDeletePageCategoryDialog] = useState(false); // New state for page category deletion
+  const [showDeletePageCategoryDialog, setShowDeletePageCategoryDialog] = useState(false); 
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [pageCategoryToDelete, setPageCategoryToDelete] = useState<any | null>(null); // New state for page category to delete
+  const [pageCategoryToDelete, setPageCategoryToDelete] = useState<any | null>(null); 
   const [showDeleteSongDialog, setShowDeleteSongDialog] = useState(false);
   const [songToDelete, setSongToDelete] = useState<PraiseNightSong | null>(null);
 
   // Data states
   const [allSongs, setAllSongs] = useState<PraiseNightSong[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
-  const [pageCategories, setPageCategories] = useState<any[]>([]); // New state for page categories
+  const [pageCategories, setPageCategories] = useState<any[]>([]); 
   
 
   // Pagination and filtering
@@ -135,7 +135,7 @@ export default function AdminPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
 
-  // Get admin data (optimized for fast loading)
+ 
   const {
     pages: allPraiseNights,
     loading,
@@ -154,14 +154,14 @@ export default function AdminPage() {
     }
   }, [currentZone, setZoneId]);
 
-  // Songs for the selected page (loaded on demand)
+ 
   const [loadingSongs, setLoadingSongs] = useState(false);
 
-  // Load songs when a page is selected
+ 
   useEffect(() => {
     if (selectedPage) {
       setLoadingSongs(true);
-      // Force refresh songs (don't use cache) to avoid showing deleted songs
+     
       getCurrentSongs(selectedPage.id, true).then(songs => {
         console.log(`📊 Loaded ${songs.length} songs for page ${selectedPage.id}`);
         setAllSongs(songs);
@@ -176,9 +176,9 @@ export default function AdminPage() {
     }
   }, [selectedPage, getCurrentSongs]);
 
-  // Categories from database
+ 
 
-  // Get all available categories from songs (only when songs are loaded)
+
   const allAvailableCategories = useMemo(() => {
     if (allSongs.length === 0) return [];
     const songCategoryNames = allSongs.map((song: PraiseNightSong) => song.category);
@@ -186,7 +186,7 @@ export default function AdminPage() {
     return [...new Set(songCategoryNames)];
   }, [allSongs]);
 
-  // Get categories from database and songs (combine both sources)
+  
   const allCategories = useMemo(() => {
     // Start with database categories
     const combinedCategories = [...dbCategories];

@@ -490,12 +490,24 @@ service cloud.firestore {
 
     // ===== MEDIA PLAYLISTS (User playlists, Liked Videos, Watch Later) =====
     match /media_playlists/{playlistId} {
-      // Users can read their own playlists (or public ones)
+      // Users can read their own playlists or public playlists
       allow read: if request.auth != null;
       // Users can create playlists for themselves
       allow create: if request.auth != null;
       // Users can update/delete their own playlists
       allow update, delete: if request.auth != null;
+    }
+
+    // ===== MEDIA CATEGORIES (Dynamic video categories) =====
+    match /media_categories/{categoryId} {
+      allow read: if true;  // Anyone can read categories
+      allow write: if true;  // Open for admin panel
+    }
+
+    // ===== ADMIN PLAYLISTS (Curated playlists by admin) =====
+    match /admin_playlists/{playlistId} {
+      allow read: if true;  // Anyone can read public playlists
+      allow write: if true;  // Open for admin panel
     }
 
  // ===== SONG HISTORY =====

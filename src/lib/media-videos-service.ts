@@ -1,6 +1,4 @@
-// Media Videos Service - Clean unified service for video management
-// Collection: media_videos
-
+// Video management service for media_videos collection
 import {
   collection,
   doc,
@@ -18,28 +16,23 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase-setup'
 
-// Clean video type
 export interface MediaVideo {
   id: string
   title: string
   description: string
   thumbnail: string
-  // Video source - either cloudinary URL or YouTube URL
-  videoUrl?: string      // Cloudinary/direct video URL
-  youtubeUrl?: string    // YouTube URL
+  videoUrl?: string
+  youtubeUrl?: string
   isYouTube: boolean
-  // Metadata
   type: 'praise' | 'medley' | 'healing' | 'gfap' | 'worship' | 'live' | 'other'
-  duration?: number      // in seconds
+  duration?: number
   releaseYear?: number
   featured: boolean
-  // Stats
+  forHQ: boolean
   views: number
   likes: number
-  // Timestamps
   createdAt: Date
   updatedAt: Date
-  // Creator info
   createdBy?: string
   createdByName?: string
 }
@@ -49,7 +42,6 @@ export type MediaVideoInput = Omit<MediaVideo, 'id' | 'createdAt' | 'updatedAt' 
 const COLLECTION = 'media_videos'
 
 class MediaVideosService {
-  // Create a new video
   async create(data: MediaVideoInput): Promise<string> {
     const docRef = await addDoc(collection(db, COLLECTION), {
       ...data,
@@ -117,11 +109,49 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
+  // Get videos for HQ zones only
+  async getForHQ(limitCount = 24): Promise<MediaVideo[]> {
+    const q = query(
+      collection(db, COLLECTION),
+      where('forHQ', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
+    const snapshot = await getDocs(q)
+    return this.mapDocs(snapshot.docs)
+  }
+
+  // Get videos for regular (non-HQ) zones only
+  async getForRegularZones(limitCount = 24): Promise<MediaVideo[]> {
+    const q = query(
+      collection(db, COLLECTION),
+      where('forHQ', '==', false),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
+    const snapshot = await getDocs(q)
+    return this.mapDocs(snapshot.docs)
+  }
+
+  // Get videos based on zone type
+  async getForZoneType(isHQZone: boolean, limitCount = 24): Promise<MediaVideo[]> {
+    return isHQZone ? this.getForHQ(limitCount) : this.getForRegularZones(limitCount)
+  }
+
   // Update video
   async update(id: string, data: Partial<MediaVideoInput>): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
+    
+    // Filter out undefined values (Firestore doesn't accept them)
+    const cleanData: Record<string, any> = {}
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        cleanData[key] = value
+      }
+    }
+    
     await updateDoc(docRef, {
-      ...data,
+      ...cleanData,
       updatedAt: Timestamp.now()
     })
   }
@@ -182,6 +212,7 @@ class MediaVideosService {
       duration: data.duration,
       releaseYear: data.releaseYear,
       featured: data.featured || false,
+      forHQ: data.forHQ !== false, // Default to true if not set
       views: data.views || 0,
       likes: data.likes || 0,
       createdAt: data.createdAt?.toDate?.() || new Date(),

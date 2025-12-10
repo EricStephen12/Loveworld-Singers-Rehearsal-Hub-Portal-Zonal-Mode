@@ -6,16 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMedia } from './_context/MediaContext'
 import { Play, Search, Home, ListVideo, ArrowLeft, X } from 'lucide-react'
 import MediaCard from './_components/MediaCard'
-
-const categories = [
-  { id: 'all', label: 'All' },
-  { id: 'praise', label: 'Praise' },
-  { id: 'worship', label: 'Worship' },
-  { id: 'medley', label: 'Medley' },
-  { id: 'healing', label: 'Healing' },
-  { id: 'gfap', label: 'GFAP' },
-  { id: 'live', label: 'Live' },
-]
+import { getCategories, MediaCategory } from '@/lib/media-category-service'
 
 export default function MediaPage() {
   const router = useRouter()
@@ -24,10 +15,24 @@ export default function MediaPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [categories, setCategories] = useState<MediaCategory[]>([])
 
   useEffect(() => {
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
+  }, [])
+
+  // Load categories from Firestore
+  useEffect(() => {
+    const loadCats = async () => {
+      try {
+        const cats = await getCategories()
+        setCategories(cats)
+      } catch (e) {
+        console.error('Error loading categories:', e)
+      }
+    }
+    loadCats()
   }, [])
 
   // Refresh on mount
@@ -49,6 +54,13 @@ export default function MediaPage() {
 
   // If we have cached profile, show content even if user is still loading
   // This prevents blank screen on revisits
+
+  // Create category map for efficient lookup
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>()
+    categories.forEach(cat => map.set(cat.slug, cat.name))
+    return map
+  }, [categories])
 
   const filteredMedia = useMemo(() => {
     let filtered = allMedia
@@ -111,17 +123,29 @@ export default function MediaPage() {
       {/* Category Pills */}
       <div className="sticky top-14 z-30 bg-[#0f0f0f] px-4 py-2">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* All category */}
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+              selectedCategory === 'all' 
+                ? 'bg-white text-black' 
+                : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+            }`}
+          >
+            All
+          </button>
+          {/* Dynamic categories from Firestore */}
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => setSelectedCategory(cat.slug)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                selectedCategory === cat.id 
+                selectedCategory === cat.slug 
                   ? 'bg-white text-black' 
                   : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
               }`}
             >
-              {cat.label}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -148,7 +172,7 @@ export default function MediaPage() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredMedia.map((media) => (
-                  <MediaCard key={media.id} media={media} />
+                  <MediaCard key={media.id} media={media} categoryMap={categoryMap} />
                 ))}
               </div>
               
