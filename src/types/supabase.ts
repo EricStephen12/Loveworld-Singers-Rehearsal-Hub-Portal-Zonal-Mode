@@ -32,6 +32,9 @@ export interface UserProfile {
   // Onboarding tour fields
   has_seen_onboarding_tour?: boolean;
   onboarding_completed_at?: string;
+  // AudioLab / profile UI helpers (Firebase-style fields)
+  avatar_url?: string | null;
+  display_name?: string | null;
 }
 
 export interface UserGroup {

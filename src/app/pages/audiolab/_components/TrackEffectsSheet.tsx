@@ -37,14 +37,17 @@ export function TrackEffectsSheet({
   }, [isOpen, trackId]);
 
   const initializeEffects = async () => {
-    await trackEffectsEngine.initialize();
-    const chain = trackEffectsEngine.getTrackChain(trackId);
-    if (chain) {
-      setEffects(chain.getEffects());
-    } else {
-      await trackEffectsEngine.createTrackChain(trackId, DEFAULT_EFFECTS);
-      setEffects(DEFAULT_EFFECTS);
-    }
+    const ok = await trackEffectsEngine.initialize();
+    if (!ok) return;
+
+    // Ensure audio chain exists for this track; if not, create it with the provided audio element
+    const existingContext = trackEffectsEngine.getContext();
+    if (!existingContext) return;
+
+    // We don't manage the HTMLAudioElement here, so just create the chain without a source.
+    // Effects are applied to the underlying nodes via applyEffects.
+    trackEffectsEngine.createTrackChain(trackId);
+    trackEffectsEngine.applyEffects(trackId, effects);
     setIsInitialized(true);
   };
 
@@ -52,22 +55,22 @@ export function TrackEffectsSheet({
     const newEffects = { ...effects, [key]: value };
     setEffects(newEffects);
     setActivePreset(null);
-    trackEffectsEngine.setTrackEffects(trackId, { [key]: value });
+    trackEffectsEngine.applyEffects(trackId, newEffects);
     onEffectsChange?.(newEffects);
   };
 
-  const applyPreset = (preset: typeof EFFECT_PRESETS[0]) => {
+  const applyPreset = (preset: (typeof EFFECT_PRESETS)[number]) => {
     const newEffects = { ...effects, ...preset.effects };
     setEffects(newEffects);
     setActivePreset(preset.name);
-    trackEffectsEngine.setTrackEffects(trackId, preset.effects);
+    trackEffectsEngine.applyEffects(trackId, newEffects as TrackEffects);
     onEffectsChange?.(newEffects);
   };
 
   const resetEffects = () => {
     setEffects(DEFAULT_EFFECTS);
     setActivePreset(null);
-    trackEffectsEngine.setTrackEffects(trackId, DEFAULT_EFFECTS);
+    trackEffectsEngine.applyEffects(trackId, DEFAULT_EFFECTS);
     onEffectsChange?.(DEFAULT_EFFECTS);
   };
 
@@ -120,7 +123,7 @@ export function TrackEffectsSheet({
                       : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <span className="text-xl">{preset.icon}</span>
+                  <span className="text-xl">🎛️</span>
                   <span className="text-xs font-medium">{preset.name}</span>
                 </button>
               ))}

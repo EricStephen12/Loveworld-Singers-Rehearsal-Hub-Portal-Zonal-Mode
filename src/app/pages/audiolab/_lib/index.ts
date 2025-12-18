@@ -7,4 +7,15 @@ export type { TrackEffects, EffectPreset } from './track-effects-engine';
 export * from './song-service';
 export * from './project-service';
 export * from './practice-service';
-export * from './session-service';
+export { 
+  createSession,
+  endSession,
+  getActiveSessions,
+  getMessages,
+  joinSession,
+  leaveSession,
+  sendMessage,
+  subscribeToMessages,
+  subscribeToSession,
+  toggleMute
+} from './session-service';

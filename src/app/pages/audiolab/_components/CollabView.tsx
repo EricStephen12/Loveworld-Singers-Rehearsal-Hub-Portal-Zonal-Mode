@@ -344,9 +344,16 @@ export function CollabView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h5 className="text-white font-bold truncate">{project.name}</h5>
-                  <p className="text-slate-400 text-xs mt-0.5">
-                    {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : 'Recently'}
-                  </p>
+              <p className="text-slate-400 text-xs mt-0.5">
+                {project.updatedAt
+                  ? new Date(
+                      // Handle both Date and Timestamp-like values
+                      (project.updatedAt as any).toDate
+                        ? (project.updatedAt as any).toDate()
+                        : project.updatedAt
+                    ).toLocaleDateString()
+                  : 'Recently'}
+              </p>
                 </div>
                 <ChevronRight size={18} className="text-slate-400" />
               </button>

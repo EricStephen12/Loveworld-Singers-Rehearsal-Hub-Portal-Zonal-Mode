@@ -12,12 +12,18 @@ interface MasterSongDetailSheetProps {
   song: MasterSong;
   isOpen: boolean;
   onClose: () => void;
+  // Optional props reserved for future editing capabilities
+  canEdit?: boolean;
+  onSongUpdated?: (updatedSong: MasterSong) => void;
 }
 
 export function MasterSongDetailSheet({ 
   song, 
   isOpen, 
-  onClose
+  onClose,
+  // currently unused but accepted to match callers
+  canEdit,
+  onSongUpdated,
 }: MasterSongDetailSheetProps) {
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -191,7 +197,7 @@ export function MasterSongDetailSheet({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 bg-slate-50/80">
-          {/* Audio Player */}
+          {/* Audio Player (Master: keep audio) */}
           {currentAudioUrl && (
             <div className="bg-white rounded-2xl p-4 mb-4 border border-slate-100 shadow-sm">
               <audio
@@ -251,7 +257,7 @@ export function MasterSongDetailSheet({
             </div>
           )}
 
-          {/* Lyrics Section */}
+          {/* Lyrics Section (Master: keep lyrics) */}
           {song.lyrics && (
             <div className="mb-4">
               <button
@@ -274,33 +280,6 @@ export function MasterSongDetailSheet({
                     className="text-slate-800 text-sm leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: song.lyrics }}
                   />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Solfa Section */}
-          {song.solfa && (
-            <div className="mb-2">
-              <button
-                onClick={() => setShowSolfa(!showSolfa)}
-                className="w-full flex items-center justify-between px-3 py-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center gap-2">
-                  <Music size={18} className="text-purple-600" />
-                  <span className="font-medium text-slate-900 text-sm">Solfa Notation</span>
-                </div>
-                {showSolfa ? (
-                  <ChevronUp size={18} className="text-slate-400" />
-                ) : (
-                  <ChevronDown size={18} className="text-slate-400" />
-                )}
-              </button>
-              {showSolfa && (
-                <div className="mt-2 p-4 bg-white rounded-xl border border-slate-100">
-                  <pre className="whitespace-pre-wrap text-slate-800 text-sm leading-relaxed font-mono">
-                    {song.solfa}
-                  </pre>
                 </div>
               )}
             </div>
