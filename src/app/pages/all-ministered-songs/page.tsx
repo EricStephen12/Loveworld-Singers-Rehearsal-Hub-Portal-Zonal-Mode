@@ -1,25 +1,20 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { Search, Music, Play, Pause, User, Loader2 } from 'lucide-react'
+import { Search, Music, Play, Pause, Loader2, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { MasterLibraryService, MasterSong } from '@/lib/master-library-service'
 import { useAudio } from '@/contexts/AudioContext'
 import { MasterSongDetailSheet } from '@/components/admin/MasterSongDetailSheet'
 import ScreenHeader from '@/components/ScreenHeader'
-import SharedDrawer from '@/components/SharedDrawer'
-import { getMenuItems } from '@/config/menuItems'
-import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { isHQGroup, isBossZone } from '@/config/zones'
-import { handleAppRefresh } from '@/utils/refresh-utils'
 
 export default function AllMinisteredSongsPage() {
   const router = useRouter()
-  const { signOut } = useAuth()
   const { currentZone } = useZone()
-  const { currentSong, isPlaying, setCurrentSong } = useAudio()
+  const { currentSong, isPlaying } = useAudio()
   
   // Check if user can edit (HQ or Boss zone)
   const isHQ = currentZone ? isHQGroup(currentZone.id) : false
@@ -30,7 +25,6 @@ export default function AllMinisteredSongsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [selectedSong, setSelectedSong] = useState<MasterSong | null>(null)
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false)
 
@@ -85,18 +79,9 @@ export default function AllMinisteredSongsPage() {
   }, [songs, searchQuery, selectedCategory])
 
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
+  const handleBack = () => {
+    router.back()
   }
-
-  const handleRefresh = handleAppRefresh
-  const menuItems = getMenuItems(handleLogout, handleRefresh)
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   const handleSongClick = (song: MasterSong) => {
     setSelectedSong(song)
@@ -118,16 +103,19 @@ export default function AllMinisteredSongsPage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
-      <div 
-        className={`
-          h-full flex flex-col transition-all duration-300 ease-out
-          ${isMenuOpen ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' : 'translate-x-0 scale-100 rounded-none'}
-        `}
-        onClick={() => isMenuOpen && setIsMenuOpen(false)}
-      >
+      <div className="h-full flex flex-col">
         <ScreenHeader 
           title="All Ministered Songs" 
-          onMenuClick={toggleMenu}
+          showMenuButton={false}
+          leftButtons={
+            <button
+              onClick={handleBack}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          }
           rightImageSrc="/logo.png"
           onTitleClick={() => router.push('/home')}
         />
@@ -266,9 +254,6 @@ export default function AllMinisteredSongsPage() {
           )}
         </div>
       </div>
-
-      {/* Menu Drawer */}
-      <SharedDrawer open={isMenuOpen} onClose={toggleMenu} title="Menu" items={menuItems as any} />
 
       {/* Song Detail Sheet */}
       {selectedSong && (

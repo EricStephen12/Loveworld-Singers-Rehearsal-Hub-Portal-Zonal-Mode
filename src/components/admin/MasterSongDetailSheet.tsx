@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { 
-  X, Music, Play, Pause, User, Key, Clock, 
-  Download, Mic, ChevronDown, ChevronUp, BookOpen
+  X, Music, Play, Pause, Key, Clock, 
+  Mic, ChevronDown, ChevronUp, BookOpen
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MasterSong } from '@/lib/master-library-service';
+import { useZone } from '@/hooks/useZone';
+import { isHQGroup } from '@/config/zones';
 
 interface MasterSongDetailSheetProps {
   song: MasterSong;
@@ -26,6 +28,11 @@ export function MasterSongDetailSheet({
   onSongUpdated,
 }: MasterSongDetailSheetProps) {
   const router = useRouter();
+  const { currentZone } = useZone();
+  
+  // Check if current zone is HQ group - hide practice button for HQ zones
+  // Default to true (hidden) until zone loads to prevent flash
+  const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -108,8 +115,16 @@ export function MasterSongDetailSheet({
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Header / Song Summary (inspired by SongDetailModal) */}
-        <div className="px-5 pb-4 border-b border-gray-100">
+        {/* Header with Close Button */}
+        <div className="px-5 pb-4 border-b border-gray-100 relative">
+          {/* Close Button - Absolute positioned top right, centered in container */}
+          <button
+            onClick={onClose}
+            className="absolute -top-1 right-5 z-10 w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-sm transition-colors flex items-center justify-center"
+          >
+            <X size={16} />
+          </button>
+          
           <div className="relative overflow-hidden rounded-2xl">
             {/* Background image + soft overlay */}
             <div
@@ -123,7 +138,7 @@ export function MasterSongDetailSheet({
             <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
 
             <div className="relative px-4 pt-4 pb-3">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 pr-8">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm">
                   <Music className="w-5 h-5 text-white" />
                 </div>
@@ -135,12 +150,6 @@ export function MasterSongDetailSheet({
                     {song.writer || 'Unknown writer'}
                   </p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-1.5 rounded-full bg-white/70 text-slate-500 hover:bg-white shadow-sm shrink-0"
-                >
-                  <X size={16} />
-                </button>
               </div>
 
               {/* Metadata rows similar to SongDetailModal */}
@@ -155,17 +164,13 @@ export function MasterSongDetailSheet({
                     </span>
                   </div>
                 )}
-                {(song.writer || song.importCount) && (
+                {song.writer && (
                   <div className="flex justify-between border-b border-white/60 pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[10px] text-slate-600">
                       Writer
                     </span>
-                    <span className="flex items-center gap-2 text-slate-900">
-                      <span>{song.writer || 'Unknown'}</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-medium text-emerald-700">
-                        <Download size={12} />
-                        {song.importCount || 0} imports
-                      </span>
+                    <span className="text-slate-900">
+                      {song.writer}
                     </span>
                   </div>
                 )}
@@ -231,28 +236,32 @@ export function MasterSongDetailSheet({
                 </div>
               )}
 
-              {/* Play Controls */}
+              {/* Play Controls - Simple clean design */}
               <div className="flex items-center gap-3">
                 <button
                   onClick={togglePlay}
-                  className="w-11 h-11 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-slate-800 transition-colors shadow-sm"
+                  className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-slate-800 active:scale-95 transition-all shrink-0"
                 >
-                  {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
+                  {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
                 </button>
-                <div className="flex-1">
+                <span className="text-xs text-slate-500 w-9 text-right tabular-nums shrink-0">{formatTime(currentTime)}</span>
+                <div className="flex-1 relative h-6 flex items-center">
+                  <div className="absolute inset-x-0 h-1 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-purple-600 rounded-full"
+                      style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                    />
+                  </div>
                   <input
                     type="range"
                     min={0}
                     max={duration || 100}
                     value={currentTime}
                     onChange={handleSeek}
-                    className="w-full h-1 bg-slate-200 rounded-full appearance-none cursor-pointer accent-purple-600"
+                    className="absolute inset-0 w-full opacity-0 cursor-pointer"
                   />
-                  <div className="flex justify-between text-[11px] text-slate-500 mt-1">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
                 </div>
+                <span className="text-xs text-slate-500 w-9 tabular-nums shrink-0">{formatTime(duration)}</span>
               </div>
             </div>
           )}
@@ -286,16 +295,18 @@ export function MasterSongDetailSheet({
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="shrink-0 p-4 border-t border-slate-200 bg-white rounded-b-3xl">
-          <button
-            onClick={goToAudioLab}
-            className="w-full py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
-          >
-            <Mic size={20} />
-            Practice in AudioLab
-          </button>
-        </div>
+        {/* Footer Actions - Only show for non-HQ zones */}
+        {!isHQ && (
+          <div className="shrink-0 p-4 border-t border-slate-200 bg-white rounded-b-3xl">
+            <button
+              onClick={goToAudioLab}
+              className="w-full py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm"
+            >
+              <Mic size={20} />
+              Practice in AudioLab
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
