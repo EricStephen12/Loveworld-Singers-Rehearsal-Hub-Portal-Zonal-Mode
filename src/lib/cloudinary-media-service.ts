@@ -58,6 +58,76 @@ export interface CloudinaryMediaFile {
   updatedAt: string;
 }
 
+export interface CloudinaryUploadOptions {
+  folder?: string;
+  resourceType?: 'image' | 'video' | 'raw' | 'auto';
+  publicId?: string;
+}
+
+export interface CloudinaryUploadResult {
+  success: boolean;
+  url?: string;
+  publicId?: string;
+  error?: string;
+}
+
+/**
+ * Upload file to Cloudinary via unsigned upload
+ */
+export async function uploadToCloudinary(
+  file: File,
+  options: CloudinaryUploadOptions = {}
+): Promise<CloudinaryUploadResult> {
+  try {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      console.error('[Cloudinary] Missing cloud name or upload preset');
+      return { success: false, error: 'Cloudinary not configured' };
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    
+    if (options.folder) {
+      formData.append('folder', options.folder);
+    }
+    if (options.publicId) {
+      formData.append('public_id', options.publicId);
+    }
+
+    const resourceType = options.resourceType || 'auto';
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Cloudinary] Upload failed:', errorText);
+      return { success: false, error: `Upload failed: ${response.status}` };
+    }
+
+    const data = await response.json();
+    
+    return {
+      success: true,
+      url: data.secure_url,
+      publicId: data.public_id
+    };
+  } catch (error) {
+    console.error('[Cloudinary] Upload error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Upload failed' 
+    };
+  }
+}
+
 /**
  * Get all media files for a zone with caching and limit
  */

@@ -36,6 +36,7 @@ import DashboardSection from '../../components/admin/DashboardSection';
 import MasterLibrarySection from '../../components/admin/MasterLibrarySection';
 import SubGroupsSection from '../../components/admin/SubGroupsSection';
 import AnalyticsSection from '../../components/admin/AnalyticsSection';
+import { AudioLabSongsSection } from '../../components/admin/AudioLabSongsSection';
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
@@ -1618,6 +1619,11 @@ export default function AdminPage() {
         {activeSection === 'Master Library' && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
         {activeSection === 'Sub-Groups' && <SubGroupsSection />}
         {activeSection === 'Notifications' && <SimpleNotificationsSection />}
+        {activeSection === 'AudioLab' && isHQAdmin && (
+          <div className="h-full overflow-auto p-4 lg:p-6 bg-slate-950">
+            <AudioLabSongsSection />
+          </div>
+        )}
       </div>
 
       {/* Modals */}

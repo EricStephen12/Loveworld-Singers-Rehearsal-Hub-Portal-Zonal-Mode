@@ -6,27 +6,33 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { MasterLibraryService, MasterSong } from '@/lib/master-library-service'
 import { useAudio } from '@/contexts/AudioContext'
-import SongDetailModal from '@/components/SongDetailModal'
-import type { PraiseNightSong } from '@/types/supabase'
+import { MasterSongDetailSheet } from '@/components/admin/MasterSongDetailSheet'
 import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup, isBossZone } from '@/config/zones'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 
 export default function AllMinisteredSongsPage() {
   const router = useRouter()
   const { signOut } = useAuth()
+  const { currentZone } = useZone()
   const { currentSong, isPlaying, setCurrentSong } = useAudio()
+  
+  // Check if user can edit (HQ or Boss zone)
+  const isHQ = currentZone ? isHQGroup(currentZone.id) : false
+  const isBoss = currentZone ? isBossZone(currentZone.id) : false
+  const canEdit = isHQ || isBoss
   
   const [songs, setSongs] = useState<MasterSong[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [selectedSong, setSelectedSong] = useState<any>(null)
+  const [selectedSong, setSelectedSong] = useState<MasterSong | null>(null)
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false)
-  const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0)
 
   // Load songs from Master Library
   useEffect(() => {
@@ -92,33 +98,9 @@ export default function AllMinisteredSongsPage() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  // Convert MasterSong to PraiseNightSong format
-  const convertToSongFormat = (song: MasterSong): PraiseNightSong => ({
-    id: song.id,
-    title: song.title,
-    lyrics: song.lyrics || '',
-    solfas: song.solfa || '',
-    key: song.key || '',
-    tempo: song.tempo || '',
-    writer: song.writer || '',
-    leadSinger: song.leadSinger || '',
-    category: song.category || '',
-    audioFile: song.audioUrls?.full || song.audioFile || '',
-    status: 'heard',
-    praiseNightId: '',
-    comments: [],
-    history: []
-  })
-
-  const handleSongClick = (song: MasterSong, index: number) => {
-    setSelectedSongIndex(index)
-    const songForModal = convertToSongFormat(song)
-    setSelectedSong(songForModal)
+  const handleSongClick = (song: MasterSong) => {
+    setSelectedSong(song)
     setIsSongDetailOpen(true)
-    
-    if (currentSong?.id !== song.id) {
-      setCurrentSong(songForModal, false)
-    }
     window.dispatchEvent(new CustomEvent('songDetailOpen'))
   }
 
@@ -128,21 +110,10 @@ export default function AllMinisteredSongsPage() {
     window.dispatchEvent(new CustomEvent('songDetailClose'))
   }
 
-  // Get image for song based on index
-  const getSongImage = (index: number) => {
-    const images = [
-      "/images/DSC_6155_scaled.jpg",
-      "/images/DSC_6303_scaled.jpg",
-      "/images/DSC_6446_scaled.jpg",
-      "/images/DSC_6506_scaled.jpg",
-      "/images/DSC_6516_scaled.jpg",
-      "/images/DSC_6636_1_scaled.jpg",
-      "/images/DSC_6638_scaled.jpg",
-      "/images/DSC_6644_scaled.jpg",
-      "/images/DSC_6658_1_scaled.jpg",
-      "/images/DSC_6676_scaled.jpg"
-    ]
-    return images[index % images.length]
+  // Handle song update from edit
+  const handleSongUpdated = (updatedSong: MasterSong) => {
+    setSongs(prev => prev.map(s => s.id === updatedSong.id ? updatedSong : s))
+    setSelectedSong(updatedSong)
   }
 
   return (
@@ -223,96 +194,71 @@ export default function AllMinisteredSongsPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredSongs.map((song, index) => {
+            <div className="space-y-2">
+              {filteredSongs.map((song) => {
                 const isCurrentSong = currentSong?.id === song.id
                 const hasAudio = song.audioUrls?.full || song.audioFile
                 
                 return (
                   <div
                     key={song.id}
-                    onClick={() => handleSongClick(song, index)}
+                    onClick={() => handleSongClick(song)}
                     className={`
-                      bg-white rounded-2xl p-4 shadow-sm border transition-all duration-200 cursor-pointer
-                      hover:shadow-md hover:scale-[1.01] active:scale-[0.99]
-                      ${isCurrentSong ? 'border-purple-400 ring-2 ring-purple-100' : 'border-gray-100'}
+                      flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border transition-all cursor-pointer
+                      hover:bg-gray-50 active:scale-[0.99]
+                      ${isCurrentSong ? 'border-purple-400 bg-purple-50/50' : 'border-gray-100'}
                     `}
                   >
-                    <div className="flex items-center gap-4">
-                      {/* Song Image */}
-                      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-100 to-pink-100">
-                        <img
-                          src={getSongImage(index)}
-                          alt={song.title}
-                          className="w-full h-full object-cover"
-                        />
-                        {isCurrentSong && isPlaying && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <div className="flex gap-0.5">
-                              {[1, 2, 3].map((i) => (
-                                <div
-                                  key={i}
-                                  className="w-1 bg-white rounded-full animate-pulse"
-                                  style={{
-                                    height: `${12 + Math.random() * 8}px`,
-                                    animationDelay: `${i * 0.1}s`
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Song Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-sm truncate ${isCurrentSong ? 'text-purple-700' : 'text-gray-900'}`}>
-                          {song.title}
-                        </h3>
-                        {song.leadSinger && (
-                          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
-                            <User className="w-3 h-3" />
-                            {song.leadSinger}
-                          </p>
-                        )}
-                        {song.writer && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">
-                            Written by {song.writer}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Play Indicator */}
-                      <div className={`
-                        w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
-                        ${hasAudio 
-                          ? isCurrentSong 
-                            ? 'bg-purple-600 text-white' 
-                            : 'bg-purple-100 text-purple-600'
-                          : 'bg-gray-100 text-gray-400'
-                        }
-                      `}>
-                        {isCurrentSong && isPlaying ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4 ml-0.5" />
-                        )}
-                      </div>
+                    {/* Compact Icon */}
+                    <div className={`
+                      w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
+                      ${isCurrentSong 
+                        ? 'bg-purple-600' 
+                        : 'bg-gradient-to-br from-violet-500 to-purple-600'
+                      }
+                    `}>
+                      {isCurrentSong && isPlaying ? (
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3].map((i) => (
+                            <div
+                              key={i}
+                              className="w-0.5 bg-white rounded-full animate-pulse"
+                              style={{ height: `${8 + i * 3}px`, animationDelay: `${i * 0.1}s` }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <Music className="w-4 h-4 text-white" />
+                      )}
                     </div>
 
-                    {/* Category Badge */}
-                    {song.category && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="px-2 py-1 bg-purple-50 text-purple-600 text-xs rounded-full">
-                          {song.category}
-                        </span>
-                        {song.importCount > 0 && (
-                          <span className="text-xs text-gray-400">
-                            Imported {song.importCount} time{song.importCount !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Song Info - Compact */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`font-medium text-sm truncate ${isCurrentSong ? 'text-purple-700' : 'text-gray-900'}`}>
+                        {song.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 truncate">
+                        {song.writer || 'Unknown writer'}
+                        {song.key && ` • ${song.key}`}
+                      </p>
+                    </div>
+
+                    {/* Play Button */}
+                    <div className={`
+                      w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                      ${hasAudio 
+                        ? isCurrentSong 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-100 text-gray-600'
+                        : 'bg-gray-50 text-gray-300'
+                      }
+                    `}>
+                      {isCurrentSong && isPlaying ? (
+                        <Pause className="w-3.5 h-3.5" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5 ml-0.5" />
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -324,18 +270,14 @@ export default function AllMinisteredSongsPage() {
       {/* Menu Drawer */}
       <SharedDrawer open={isMenuOpen} onClose={toggleMenu} title="Menu" items={menuItems as any} />
 
-      {/* Song Detail Modal */}
+      {/* Song Detail Sheet */}
       {selectedSong && (
-        <SongDetailModal
-          selectedSong={selectedSong}
+        <MasterSongDetailSheet
+          song={selectedSong}
           isOpen={isSongDetailOpen}
           onClose={handleCloseSongDetail}
-          songs={filteredSongs.map(convertToSongFormat)}
-          onSongChange={(song: PraiseNightSong) => {
-            setSelectedSong(song)
-            const idx = filteredSongs.findIndex(s => s.id === song.id)
-            if (idx >= 0) setSelectedSongIndex(idx)
-          }}
+          canEdit={canEdit}
+          onSongUpdated={handleSongUpdated}
         />
       )}
     </div>

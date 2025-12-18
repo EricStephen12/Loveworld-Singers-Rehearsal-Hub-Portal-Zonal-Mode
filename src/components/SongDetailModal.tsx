@@ -82,9 +82,6 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const historyAudioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const [mainPlayerWasPlaying, setMainPlayerWasPlaying] = useState(false);
   
-  // State for fresh song data
-  const [freshSongData, setFreshSongData] = useState<PraiseNightSong | null>(null);
-  
   // Translation state
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<{[key: string]: string}>({});
@@ -98,76 +95,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   // Use global audio context
   const { currentSong, isPlaying, currentTime, duration, isLoading, hasError, togglePlayPause, audioRef, setCurrentSong } = useAudio();
 
-  // Fetch fresh song data when modal opens
-  const fetchFreshSongData = async (songId: string) => {
-    try {
-      console.log('🔄 Fetching fresh song data for:', songId);
-      
-      // Try to get the song directly by ID first
-      try {
-        const directSong = await FirebaseDatabaseService.getDocument('songs', songId);
-        if (directSong) {
-          console.log('✅ Direct song fetch successful:', (directSong as any).title);
-          console.log('📝 Direct song solfas:', (directSong as any).solfas);
-          console.log('💬 Direct song comments:', (directSong as any).comments);
-          setFreshSongData(directSong as unknown as PraiseNightSong);
-          if (onSongChange) {
-            onSongChange(directSong as unknown as PraiseNightSong);
-          }
-          return;
-        }
-      } catch (directError) {
-        console.log('⚠️ Direct fetch failed, trying collection method:', directError);
-      }
-      
-      // Fallback: Try praise_night_songs collection (zone songs)
-      try {
-        const zoneSong = await FirebaseDatabaseService.getDocument('praise_night_songs', songId);
-        if (zoneSong) {
-          console.log('✅ Zone song fetch successful:', (zoneSong as any).title);
-          setFreshSongData(zoneSong as unknown as PraiseNightSong);
-          if (onSongChange) {
-            onSongChange(zoneSong as unknown as PraiseNightSong);
-          }
-          return;
-        }
-      } catch (zoneError) {
-        console.log('⚠️ Zone song fetch failed:', zoneError);
-      }
-      
-      // Final fallback: Use the selectedSong data we already have
-      console.log('⚠️ Could not fetch fresh song data, using existing data');
-      if (selectedSong) {
-        setFreshSongData(selectedSong);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching fresh song data:', error);
-    }
-  };
-
-  // Fetch fresh data when modal opens
-  useEffect(() => {
-    if (selectedSong && isOpen && selectedSong.id) {
-      fetchFreshSongData(selectedSong.id.toString());
-    }
-  }, [selectedSong?.id, isOpen]);
-
-  // Use fresh song data when available, fallback to selectedSong
-  const currentSongData = freshSongData || selectedSong;
-  
-  // Debug logging for current song data
-  useEffect(() => {
-    if (currentSongData) {
-      console.log('🎵 Current song data being used:', {
-        title: currentSongData.title,
-        hasSolfas: !!currentSongData.solfas,
-        solfasLength: currentSongData.solfas?.length || 0,
-        hasComments: !!currentSongData.comments,
-        commentsLength: Array.isArray(currentSongData.comments) ? currentSongData.comments.length : 0,
-        isFreshData: !!freshSongData
-      });
-    }
-  }, [currentSongData, freshSongData]);
+  // Use the selected song as the base; realtime hook will layer live data on top
+  const currentSongData = selectedSong;
 
   // Set the current song when modal opens (only if it's a different song)
   useEffect(() => {
@@ -483,8 +412,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     refreshSongData 
   } = useRealtimeSongData({ 
     songId: currentSongData?.id?.toString() || null,
-    enabled: isOpen // Always enabled when modal is open
+    enabled: isOpen, // Always enabled when modal is open
+    zoneId: currentZone?.id || null, // CRITICAL: read from same collection the admin writes to
   });
+
+  // Single source of truth for what the UI should display (realtime → fresh → initial)
+  const displayedSongData = realtimeSongData || currentSongData;
 
   // Get history data for the current song using the ultra-fast hook
   const getHistoryData = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'metadata'): HistoryEntry[] => {
@@ -891,28 +824,28 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           
           {/* Main Header Row */}
           <div className="flex items-center space-x-4 mb-3">
-            {/* Song Info - Center */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-white text-xl font-black text-center mb-4 font-poppins uppercase">{(realtimeSongData || currentSongData)?.title}</h1>
+          {/* Song Info - Center */}
+          <div className="flex-1 min-w-0">
+              <h1 className="text-white text-xl font-black text-center mb-4 font-poppins uppercase">{displayedSongData?.title}</h1>
               <div className="text-white text-sm space-y-1 font-poppins">
                 <div className="border-b border-white/30 pb-1">
-                  <span className="font-semibold uppercase">LEAD SINGER:</span> {(realtimeSongData || currentSongData)?.leadSinger ? (realtimeSongData || currentSongData)?.leadSinger?.split(',')[0].trim() : 'Unknown'}
+                  <span className="font-semibold uppercase">LEAD SINGER:</span> {displayedSongData?.leadSinger ? displayedSongData.leadSinger.split(',')[0].trim() : 'Unknown'}
                 </div>
                 <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                  <span><span className="font-semibold uppercase">WRITER:</span> {(realtimeSongData || currentSongData)?.writer || ''}</span>
-                  <span className="font-bold">x{(realtimeSongData || currentSongData)?.rehearsalCount || 1}</span>
+                  <span><span className="font-semibold uppercase">WRITER:</span> {displayedSongData?.writer || ''}</span>
+                  <span className="font-bold">x{displayedSongData?.rehearsalCount || 1}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                  <span><span className="font-semibold uppercase">CONDUCTOR:</span> {(realtimeSongData || currentSongData)?.conductor || ''}</span>
-                  <span><span className="font-semibold uppercase">KEY:</span> {(realtimeSongData || currentSongData)?.key || ''}</span>
+                  <span><span className="font-semibold uppercase">CONDUCTOR:</span> {displayedSongData?.conductor || ''}</span>
+                  <span><span className="font-semibold uppercase">KEY:</span> {displayedSongData?.key || ''}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                  <span><span className="font-semibold uppercase">LEAD KEYBOARDIST:</span> {(realtimeSongData || currentSongData)?.leadKeyboardist || ''}</span>
-                  <span><span className="font-semibold uppercase">TEMPO:</span> {(realtimeSongData || currentSongData)?.tempo || ''}</span>
+                  <span><span className="font-semibold uppercase">LEAD KEYBOARDIST:</span> {displayedSongData?.leadKeyboardist || ''}</span>
+                  <span><span className="font-semibold uppercase">TEMPO:</span> {displayedSongData?.tempo || ''}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                  <span><span className="font-semibold uppercase">DRUMMER:</span> {(realtimeSongData || currentSongData)?.drummer || ''}</span>
-                  <span><span className="font-semibold uppercase">BASS GUITARIST:</span> {(realtimeSongData || currentSongData)?.leadGuitarist || ''}</span>
+                  <span><span className="font-semibold uppercase">DRUMMER:</span> {displayedSongData?.drummer || ''}</span>
+                  <span><span className="font-semibold uppercase">BASS GUITARIST:</span> {displayedSongData?.leadGuitarist || ''}</span>
                 </div>
               </div>
             </div>
@@ -981,9 +914,9 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           {activeTab === 'lyrics' && (
             <div className="max-w-none">
               <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
-                {currentSongData?.lyrics ? (
+                {displayedSongData?.lyrics ? (
                   <div 
-                    dangerouslySetInnerHTML={{ __html: currentSongData.lyrics }}
+                    dangerouslySetInnerHTML={{ __html: displayedSongData.lyrics }}
                     dir="ltr"
                     style={{
                       lineHeight: '1.8',
@@ -1005,9 +938,9 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           {activeTab === 'solfas' && (
             <div className="max-w-none">
               <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
-                {currentSongData?.solfas && currentSongData.solfas.trim() !== '' ? (
+                {displayedSongData?.solfas && displayedSongData.solfas.trim() !== '' ? (
                   <div 
-                    dangerouslySetInnerHTML={{ __html: currentSongData.solfas }}
+                    dangerouslySetInnerHTML={{ __html: displayedSongData.solfas }}
                     dir="ltr"
                     style={{
                       lineHeight: '1.8',
@@ -1031,14 +964,14 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           {activeTab === 'comments' && (
             <div className="max-w-none">
               <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
-                {(!currentSongData?.comments || !Array.isArray(currentSongData.comments) || currentSongData.comments.length === 0) ? (
+                {(!displayedSongData?.comments || !Array.isArray(displayedSongData.comments) || displayedSongData.comments.length === 0) ? (
                   <div className="text-center py-8">
                     <div className="text-gray-500 text-sm mb-2">No Comments Available</div>
                     <div className="text-gray-400 text-xs">Comments will be displayed here when available</div>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(Array.isArray(currentSongData.comments) ? currentSongData.comments : []).map((comment: any) => (
+                    {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
                       <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                         <p className="text-gray-900 leading-relaxed mb-2 whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
                         <div className="flex items-center gap-2 text-xs text-gray-500">

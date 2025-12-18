@@ -7,9 +7,10 @@ import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 interface UseRealtimeSongDataProps {
   songId: string | null;
   enabled?: boolean;
+  zoneId?: string | null;
 }
 
-export function useRealtimeSongData({ songId, enabled = true }: UseRealtimeSongDataProps) {
+export function useRealtimeSongData({ songId, enabled = true, zoneId }: UseRealtimeSongDataProps) {
   const [songData, setSongData] = useState<PraiseNightSong | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +25,8 @@ export function useRealtimeSongData({ songId, enabled = true }: UseRealtimeSongD
     try {
       console.log('🔄 [FRESH] Fetching real-time song data for:', songId);
 
-      // Fetch directly from new praise_night_songs table
-      const freshSongData = await PraiseNightSongsService.getSongById(songId);
+      // Fetch directly from correct collection for this zone (HQ vs regular)
+      const freshSongData = await PraiseNightSongsService.getSongById(songId, zoneId || undefined);
 
       if (freshSongData) {
         console.log('✅ [FRESH] Real-time song data fetched:', freshSongData.title);
@@ -40,7 +41,7 @@ export function useRealtimeSongData({ songId, enabled = true }: UseRealtimeSongD
     } finally {
       setLoading(false);
     }
-  }, [songId, enabled]);
+  }, [songId, enabled, zoneId]);
 
   // Real-time refresh every 1 second for song data
   useEffect(() => {

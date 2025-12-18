@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { initializeFirestore, Firestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
+import { getDatabase, Database } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
@@ -52,6 +53,9 @@ export const db: Firestore = (() => {
 })()
 
 export const storage = getStorage(app)
+
+// Realtime Database for live sessions and real-time features
+export const realtimeDb: Database = getDatabase(app)
 
 // Keep user logged in across browser sessions
 if (typeof window !== 'undefined') {

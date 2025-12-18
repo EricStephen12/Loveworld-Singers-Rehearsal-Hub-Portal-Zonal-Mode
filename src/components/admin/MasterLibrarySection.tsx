@@ -8,15 +8,12 @@ import {
   Music, 
   Download,  
   Trash2, 
-  Eye,
   CheckCircle,
   XCircle,
   BarChart3,
   RefreshCw,
   ChevronDown,
-  ChevronUp,
   X,
-  Plus,
   FileText
 } from 'lucide-react';
 import { MasterLibraryService, MasterSong } from '@/lib/master-library-service';
@@ -24,6 +21,7 @@ import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
 import { isHQGroup, isBossZone } from '@/config/zones';
+import { MasterSongDetailSheet } from './MasterSongDetailSheet';
 
 interface MasterLibrarySectionProps {
   isHQAdmin?: boolean;
@@ -481,10 +479,11 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         />
       )}
 
-      {/* Song Details Modal */}
-      {showDetailsModal && selectedSong && (
-        <SongDetailsModal
+      {/* Song Details Sheet */}
+      {selectedSong && (
+        <MasterSongDetailSheet
           song={selectedSong}
+          isOpen={showDetailsModal}
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedSong(null);
@@ -513,7 +512,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
 }
 
 
-// Song Row Component - Instagram Style
+// Song Row Component - Compact Design
 function SongRow({ 
   song, 
   canManage, 
@@ -530,107 +529,49 @@ function SongRow({
   onImport?: () => void;
 }) {
   return (
-    <div className="bg-white hover:bg-slate-50 transition-colors">
-      {/* Main Row - Tappable */}
-      <div 
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-slate-100 lg:active:bg-slate-50"
-        onClick={onView}
-      >
-        {/* Song Icon with gradient */}
-        <div className="w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-lg flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-500 shadow-sm">
-          <Music className="w-6 h-6 lg:w-5 lg:h-5 text-white" />
-        </div>
-        
-        {/* Info */}
-        <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-[15px] lg:text-base text-slate-900 truncate">{song.title}</h3>
-          <p className="text-sm text-slate-500 truncate">
-            {song.writer || 'Unknown writer'}
-            {song.category && ` • ${song.category}`}
-          </p>
-          {/* Mobile badges */}
-          <div className="flex items-center gap-2 mt-1 lg:hidden">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-semibold">
-              <Download className="w-3 h-3" />
-              {song.importCount || 0}
-            </span>
-            {song.key && (
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-semibold">
-                {song.key}
-              </span>
-            )}
-          </div>
-        </div>
-        
-        {/* Desktop Actions */}
-        <div className="hidden lg:flex items-center gap-2 ml-4">
-          {/* Import count badge */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-            <Download className="w-3 h-3" />
-            {song.importCount || 0}
-          </div>
-          
-          {/* Import button (Zone Coordinators only) */}
-          {canImport && onImport && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onImport(); }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-              title="Import to your zone"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Import
-            </button>
-          )}
-          
-          {/* View button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onView(); }}
-            className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-            title="View details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          
-          {/* Delete button (HQ Admin only) */}
-          {canManage && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              title="Remove from Master Library"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        
-        {/* Mobile Import Button */}
+    <div 
+      className="flex items-center gap-3 px-4 py-2.5 bg-white hover:bg-slate-50 cursor-pointer active:bg-slate-100 transition-colors"
+      onClick={onView}
+    >
+      {/* Compact Song Icon */}
+      <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600">
+        <Music className="w-4 h-4 text-white" />
+      </div>
+      
+      {/* Info - Compact */}
+      <div className="min-w-0 flex-1">
+        <h3 className="font-medium text-sm text-slate-900 truncate">{song.title}</h3>
+        <p className="text-xs text-slate-500 truncate">
+          {song.writer || 'Unknown writer'}
+          {song.key && ` • ${song.key}`}
+        </p>
+      </div>
+      
+      {/* Import count - always visible */}
+      <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-medium shrink-0">
+        <Download className="w-3 h-3" />
+        {song.importCount || 0}
+      </div>
+      
+      {/* Actions */}
+      <div className="flex items-center gap-1 shrink-0">
         {canImport && onImport && (
           <button
             onClick={(e) => { e.stopPropagation(); onImport(); }}
-            className="lg:hidden flex-shrink-0 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-full active:scale-95 transition-all"
+            className="px-2.5 py-1 bg-violet-600 text-white text-[11px] font-medium rounded-lg hover:bg-violet-700 active:scale-95 transition-all"
           >
             Import
           </button>
         )}
-      </div>
-      
-      {/* Mobile Action Bar - Only for admins */}
-      {canManage && (
-        <div className="lg:hidden flex items-center justify-end gap-2 px-4 py-2 bg-slate-50/50 border-t border-slate-100">
-          <button
-            onClick={(e) => { e.stopPropagation(); onView(); }}
-            className="px-3 py-1.5 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-100 active:scale-95 transition-all"
-          >
-            View
-          </button>
+        {canManage && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="px-3 py-1.5 text-red-600 text-xs font-medium rounded-lg hover:bg-red-50 active:scale-95 transition-all"
+            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >
-            Remove
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -807,154 +748,7 @@ function PublishModal({
   );
 }
 
-// Song Details Modal
-function SongDetailsModal({
-  song,
-  onClose
-}: {
-  song: MasterSong;
-  onClose: () => void;
-}) {
-  const [expanded, setExpanded] = useState<'lyrics' | 'solfa' | null>(null);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Music className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">{song.title}</h2>
-                <p className="text-sm text-slate-500">
-                  {song.writer || 'Unknown writer'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-slate-500" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {/* Metadata */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {song.category && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Category</p>
-                <p className="font-medium text-slate-900">{song.category}</p>
-              </div>
-            )}
-            {song.key && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Key</p>
-                <p className="font-medium text-slate-900">{song.key}</p>
-              </div>
-            )}
-            {song.tempo && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Tempo</p>
-                <p className="font-medium text-slate-900">{song.tempo}</p>
-              </div>
-            )}
-            {song.leadSinger && (
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Lead Singer</p>
-                <p className="font-medium text-slate-900">{song.leadSinger}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Import Count</p>
-              <p className="font-medium text-green-600">{song.importCount || 0} zones</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Published</p>
-              <p className="font-medium text-slate-900">
-                {song.publishedAt ? new Date(song.publishedAt as any).toLocaleDateString() : 'Unknown'}
-              </p>
-            </div>
-          </div>
-          
-          {/* Lyrics */}
-          {song.lyrics && (
-            <div className="mb-4">
-              <button
-                onClick={() => setExpanded(expanded === 'lyrics' ? null : 'lyrics')}
-                className="w-full flex items-center justify-between p-3 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                <span className="font-medium text-slate-900">Lyrics</span>
-                {expanded === 'lyrics' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              {expanded === 'lyrics' && (
-                <div className="mt-2 p-4 bg-slate-50 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans">
-                    {song.lyrics}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Solfa */}
-          {song.solfa && (
-            <div className="mb-4">
-              <button
-                onClick={() => setExpanded(expanded === 'solfa' ? null : 'solfa')}
-                className="w-full flex items-center justify-between p-3 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                <span className="font-medium text-slate-900">Solfa Notation</span>
-                {expanded === 'solfa' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              {expanded === 'solfa' && (
-                <div className="mt-2 p-4 bg-slate-50 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-sm text-slate-700 font-mono">
-                    {song.solfa}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Audio URLs */}
-          {song.audioUrls && Object.keys(song.audioUrls).length > 0 && (
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Audio Tracks</p>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(song.audioUrls).map(([part, url]) => (
-                  url && (
-                    <span key={part} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm capitalize">
-                      {part}
-                    </span>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Import to Zone Modal (Zone Coordinators)
 function ImportModal({
