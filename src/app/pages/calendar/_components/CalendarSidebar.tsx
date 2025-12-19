@@ -1,6 +1,7 @@
 'use client'
 
-import { Plus, Calendar as CalendarIcon } from 'lucide-react'
+import { useState } from 'react'
+import { Calendar as CalendarIcon, ChevronDown, ChevronRight, Cake, Grid, List, Clock, LayoutList } from 'lucide-react'
 import moment from 'moment'
 
 interface CalendarSidebarProps {
@@ -9,6 +10,8 @@ interface CalendarSidebarProps {
   onCreateEvent: () => void
   themeColor: string
   zoneName: string
+  view?: string
+  onViewChange?: (view: string) => void
   upcomingEvents?: Array<{
     id: string
     title: string
@@ -24,9 +27,13 @@ export default function CalendarSidebar({
   onCreateEvent,
   themeColor,
   zoneName,
+  view = 'month',
+  onViewChange,
   upcomingEvents = []
 }: CalendarSidebarProps) {
-  // Get upcoming events (next 7 days) - ONLY regular events, no birthdays
+  const [ministryCalendarOpen, setMinistryCalendarOpen] = useState(false)
+  
+  // Get upcoming events (next 7 days)
   const today = new Date()
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
   const upcoming = upcomingEvents
@@ -34,95 +41,140 @@ export default function CalendarSidebar({
     .sort((a, b) => a.start.getTime() - b.start.getTime())
     .slice(0, 5)
 
+  const viewOptions = [
+    { id: 'day', label: 'Day', icon: Clock },
+    { id: 'week', label: 'Week', icon: LayoutList },
+    { id: 'month', label: 'Month', icon: Grid },
+  ]
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full shadow-2xl lg:shadow-none">
-      {/* Create Button */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <button
-          onClick={onCreateEvent}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-all active:scale-95 shadow-sm"
-          style={{ backgroundColor: themeColor }}
-        >
-          <Plus className="w-5 h-5" />
-          Create Event
-        </button>
-      </div>
-
-      {/* Today's Date */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div 
-            className="w-12 h-12 rounded-lg flex flex-col items-center justify-center text-white"
-            style={{ backgroundColor: themeColor }}
-          >
-            <span className="text-xs font-medium uppercase">{moment(date).format('MMM')}</span>
-            <span className="text-lg font-bold">{moment(date).format('D')}</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-900">{moment(date).format('dddd')}</p>
-            <p className="text-xs text-gray-500">{moment(date).format('MMMM D, YYYY')}</p>
-          </div>
-        </div>
+        <h1 className="text-xl font-semibold text-gray-900">Calendar</h1>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Upcoming Events List - ONLY regular events */}
-        <div className="p-4">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            Upcoming Events
-          </h3>
-          {upcoming.length === 0 ? (
-            <div className="text-center py-12">
-              <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-900 mb-1">No upcoming events</p>
-              <p className="text-xs text-gray-500">Create your first event to get started</p>
+        {/* Today's Date */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-12 h-12 rounded-lg flex flex-col items-center justify-center"
+              style={{ backgroundColor: themeColor }}
+            >
+              <span className="text-xs font-medium uppercase text-white">{moment(date).format('MMM')}</span>
+              <span className="text-lg font-bold text-white">{moment(date).format('D')}</span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {upcoming.map((event) => (
-                <div
-                  key={event.id}
-                  className="group p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer active:scale-98"
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{moment(date).format('dddd')}</p>
+              <p className="text-xs text-gray-500">{moment(date).format('MMMM D, YYYY')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* View Options */}
+        {onViewChange && (
+          <div className="py-2">
+            {viewOptions.map((option) => {
+              const Icon = option.icon
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => onViewChange(option.id)}
+                  className={`w-full flex items-center gap-4 px-4 py-3 text-sm transition-colors ${
+                    view === option.id 
+                      ? 'text-white' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  style={view === option.id ? { backgroundColor: themeColor } : {}}
                 >
-                  <div className="flex items-start gap-3">
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{option.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className="h-px bg-gray-200 mx-4" />
+
+        {/* Ministry Calendar - Collapsible with Events */}
+        <div className="py-2">
+          <button
+            onClick={() => setMinistryCalendarOpen(!ministryCalendarOpen)}
+            className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            {ministryCalendarOpen ? (
+              <ChevronDown className="w-5 h-5 text-gray-500" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-500" />
+            )}
+            <CalendarIcon className="w-5 h-5" style={{ color: themeColor }} />
+            <span className="font-medium">Ministry Calendar</span>
+            {upcoming.length > 0 && (
+              <span 
+                className="ml-auto px-2 py-0.5 text-xs rounded-full text-white"
+                style={{ backgroundColor: themeColor }}
+              >
+                {upcoming.length}
+              </span>
+            )}
+          </button>
+          
+          {/* Upcoming Events - Shows when expanded */}
+          {ministryCalendarOpen && (
+            <div className="px-4 pb-2">
+              {upcoming.length === 0 ? (
+                <p className="text-xs text-gray-400 py-2 pl-9">No upcoming events</p>
+              ) : (
+                <div className="space-y-1 pl-9">
+                  {upcoming.map((event) => (
                     <div
-                      className="w-1 h-full rounded-full flex-shrink-0"
-                      style={{ backgroundColor: event.color || themeColor, minHeight: '40px' }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-gray-700">
-                        {event.title}
-                      </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <CalendarIcon className="w-3 h-3 text-gray-400" />
-                        <p className="text-xs text-gray-500">
-                          {moment(event.start).format('MMM D, h:mm A')}
+                      key={event.id}
+                      className="flex items-center gap-2 py-2 px-2 rounded hover:bg-gray-100 cursor-pointer transition-colors"
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: event.color || themeColor }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 truncate">{event.title}</p>
+                        <p className="text-xs text-gray-400">
+                          {moment(event.start).format('MMM D')}
                         </p>
                       </div>
-                      {event.end && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {moment(event.start).format('h:mm A')} - {moment(event.end).format('h:mm A')}
-                        </p>
-                      )}
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
 
-        {/* All Events Section */}
-        {upcomingEvents.length > 5 && (
-          <div className="px-4 pb-4">
-            <button 
-              className="w-full py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              View all events ({upcomingEvents.length})
-            </button>
-          </div>
-        )}
+        {/* Birthdays */}
+        <div className="py-2">
+          <button
+            className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            <div className="w-5" />
+            <Cake className="w-5 h-5 text-pink-400" />
+            <span className="font-medium">Birthdays</span>
+          </button>
+        </div>
+
+        {/* Add Event Button */}
+        <div className="p-4">
+          <button
+            onClick={onCreateEvent}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium hover:opacity-90 transition-all active:scale-95 shadow-sm text-white"
+            style={{ backgroundColor: themeColor }}
+          >
+            <span className="text-xl leading-none">+</span>
+            <span>Add Event</span>
+          </button>
+        </div>
       </div>
 
       {/* Zone Info */}

@@ -309,36 +309,19 @@ export default function CalendarPage() {
           </button>
         </div>
         
-        {/* Bottom row: Today + View selector */}
-        <div className="flex items-center justify-between px-2 pb-2">
+        {/* Bottom row: Today button only */}
+        <div className="flex items-center justify-center px-2 pb-2">
           <button
             onClick={() => setDate(new Date())}
-            className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Today
           </button>
-          
-          <div className="flex gap-1">
-            {['month', 'week', 'day'].map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
-                  view === v 
-                    ? 'text-white' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                style={view === v ? { backgroundColor: currentZone?.themeColor || '#10b981' } : {}}
-              >
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
       {/* Google Calendar Style Toolbar - Desktop */}
-      {calendarReady && (
+      {calendarReady && moment && (
         <GoogleCalendarToolbar
           date={date}
           view={view}
@@ -395,6 +378,13 @@ export default function CalendarPage() {
               }}
               themeColor={currentZone.themeColor || '#10b981'}
               zoneName={currentZone.name}
+              view={view}
+              onViewChange={(newView) => {
+                setView(newView)
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(false)
+                }
+              }}
               upcomingEvents={events}
             />
           )}
@@ -423,12 +413,12 @@ export default function CalendarPage() {
               />
             )}
 
-            {!calendarReady || loading ? (
+            {!calendarReady || !moment || loading ? (
               <div className="flex items-center justify-center flex-1 py-20">
                 <div className="text-center">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 border-3 sm:border-4 border-gray-300 border-t-green-600 rounded-full animate-spin mx-auto mb-3"></div>
                   <p className="text-gray-600 text-sm sm:text-base">
-                    {!calendarReady ? 'Initializing...' : 'Loading events...'}
+                    {!calendarReady || !moment ? 'Initializing...' : 'Loading events...'}
                   </p>
                 </div>
               </div>

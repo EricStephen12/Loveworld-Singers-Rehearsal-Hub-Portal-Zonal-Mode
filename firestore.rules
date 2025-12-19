@@ -623,6 +623,12 @@ service cloud.firestore {
       allow write: if true;  // Open for admin panel to manage birthdays
     }
 
+    // ===== UPCOMING EVENTS (Ministry events for calendar) =====
+    match /upcoming_events/{eventId} {
+      allow read: if true;  // Anyone can read upcoming events
+      allow write: if true;  // Open for admin panel to manage events
+    }
+
 
     // ===== DEFAULT DENY ALL =====
     match /{document=**} {

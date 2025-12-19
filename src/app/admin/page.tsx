@@ -36,6 +36,7 @@ import DashboardSection from '../../components/admin/DashboardSection';
 import MasterLibrarySection from '../../components/admin/MasterLibrarySection';
 import SubGroupsSection from '../../components/admin/SubGroupsSection';
 import AnalyticsSection from '../../components/admin/AnalyticsSection';
+import CalendarSection from '../../components/admin/CalendarSection';
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
@@ -1617,6 +1618,7 @@ export default function AdminPage() {
         {activeSection === 'Media Upload' && isHQAdmin && <MediaUploadSection />}
         {activeSection === 'Master Library' && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
         {activeSection === 'Sub-Groups' && <SubGroupsSection />}
+        {activeSection === 'Calendar' && <CalendarSection />}
         {activeSection === 'Notifications' && <SimpleNotificationsSection />}
       </div>
 

@@ -8,6 +8,7 @@ export interface UpcomingEvent {
   date: string
   time?: string
   location?: string
+  image?: string // Ecard/banner image URL
   type: 'announcement' | 'event' | 'reminder' | 'meeting' | 'rehearsal'
   showInCarousel: boolean
   createdAt: string
@@ -111,15 +112,26 @@ export class UpcomingEventsService {
    */
   static async createEvent(eventData: Omit<UpcomingEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<UpcomingEvent> {
     try {
-      const newEvent: UpcomingEvent = {
-        ...eventData,
+      // Clean up undefined values - Firebase doesn't accept undefined
+      const cleanedData: Record<string, any> = {
+        title: eventData.title,
+        date: eventData.date,
+        type: eventData.type,
+        showInCarousel: eventData.showInCarousel,
         id: `upcoming-${Date.now()}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
+      
+      // Only add optional fields if they have values
+      if (eventData.description) cleanedData.description = eventData.description
+      if (eventData.time) cleanedData.time = eventData.time
+      if (eventData.location) cleanedData.location = eventData.location
+      if (eventData.image) cleanedData.image = eventData.image
+      if (eventData.createdBy) cleanedData.createdBy = eventData.createdBy
 
-      await FirebaseDatabaseService.createDocument(this.COLLECTION, newEvent.id, newEvent)
-      return newEvent
+      await FirebaseDatabaseService.createDocument(this.COLLECTION, cleanedData.id, cleanedData)
+      return cleanedData as UpcomingEvent
     } catch (error) {
       console.error('Error creating upcoming event:', error)
       throw error
