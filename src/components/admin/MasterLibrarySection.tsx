@@ -22,6 +22,7 @@ import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
 import { isHQGroup, isBossZone } from '@/config/zones';
 import { MasterSongDetailSheet } from './MasterSongDetailSheet';
+import { MasterEditSongModal } from './MasterEditSongModal';
 
 interface MasterLibrarySectionProps {
   isHQAdmin?: boolean;
@@ -45,6 +46,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedForPublish, setSelectedForPublish] = useState<string[]>([]);
@@ -429,6 +431,10 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
                     setSelectedSong(song);
                     setShowDetailsModal(true);
                   }}
+                  onEdit={canManage ? () => {
+                    setSelectedSong(song);
+                    setShowEditModal(true);
+                  } : undefined}
                   onDelete={() => handleDelete(song.id)}
                   onImport={() => openImportModal(song)}
                 />
@@ -491,6 +497,23 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         />
       )}
 
+      {/* Edit Song Modal */}
+      {selectedSong && showEditModal && (
+        <MasterEditSongModal
+          song={selectedSong}
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedSong(null);
+          }}
+          onSongUpdated={(updatedSong) => {
+            setMasterSongs(prev => prev.map(s => s.id === updatedSong.id ? updatedSong : s));
+            setShowEditModal(false);
+            setSelectedSong(null);
+          }}
+        />
+      )}
+
       {/* Import to Zone Modal (Zone Coordinators only) */}
       {showImportModal && selectedSong && !canManage && (
         <ImportModal
@@ -518,6 +541,7 @@ function SongRow({
   canManage, 
   canImport,
   onView, 
+  onEdit,
   onDelete,
   onImport
 }: { 
@@ -525,6 +549,7 @@ function SongRow({
   canManage: boolean;
   canImport?: boolean;
   onView: () => void; 
+  onEdit?: () => void;
   onDelete: () => void;
   onImport?: () => void;
 }) {
@@ -561,6 +586,14 @@ function SongRow({
             className="px-2.5 py-1 bg-violet-600 text-white text-[11px] font-medium rounded-lg hover:bg-violet-700 active:scale-95 transition-all"
           >
             Import
+          </button>
+        )}
+        {canManage && onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="px-2.5 py-1 bg-purple-100 text-purple-600 text-[11px] font-medium rounded-lg hover:bg-purple-200 active:scale-95 transition-all"
+          >
+            Edit
           </button>
         )}
         {canManage && (

@@ -140,27 +140,27 @@ function ProfilePage() {
     }
   }, [user, currentProfile, router, refreshProfile])
 
-  // Initialize edit form with profile data (only once on mount)
+  // Initialize edit form with profile data when profile loads
   useEffect(() => {
-    if (profileData) {
+    if (currentProfile) {
       setEditForm({
-        firstName: profileData.first_name || '',
-        lastName: profileData.last_name || '',
-        middleName: (profileData as any).middle_name || '',
-        phoneNumber: (profileData as any).phone_number || '',
-        gender: (profileData as any).gender || '',
-        birthday: (profileData as any).birthday || '',
-        region: (profileData as any).region || '',
-        zone: (profileData as any).zone || '',
-        church: (profileData as any).church || '',
-        designation: (profileData as any).designation || '',
-        administration: (profileData as any).administration || ''
+        firstName: currentProfile.first_name || '',
+        lastName: currentProfile.last_name || '',
+        middleName: (currentProfile as any).middle_name || '',
+        phoneNumber: (currentProfile as any).phone_number || '',
+        gender: (currentProfile as any).gender || '',
+        birthday: (currentProfile as any).birthday || '',
+        region: (currentProfile as any).region || '',
+        zone: (currentProfile as any).zone || '',
+        church: (currentProfile as any).church || '',
+        designation: (currentProfile as any).designation || '',
+        administration: (currentProfile as any).administration || ''
       })
-      if ((profileData as any).profile_image_url) {
-        setProfileImage((profileData as any).profile_image_url)
+      if ((currentProfile as any).profile_image_url) {
+        setProfileImage((currentProfile as any).profile_image_url)
       }
     }
-  }, [])
+  }, [currentProfile])
 
   // Don't show anything if no user - prevents flash (MUST be after all hooks)
   if (!user && !currentProfile) {
@@ -389,7 +389,7 @@ function ProfilePage() {
       if (editForm.birthday) updateData.birthday = editForm.birthday
       if (editForm.zone.trim()) updateData.zone = editForm.zone.trim()
       if (editForm.designation) updateData.designation = editForm.designation as 'Soprano' | 'Alto' | 'Tenor' | 'Bass' | 'Instrumentalist' | 'Backup Singer'
-      if (editForm.administration) updateData.administration = editForm.administration as 'Coordinator' | 'Assistant Coordinator' | 'Secretary' | 'Treasurer' | 'Member'
+      if (editForm.administration) updateData.administration = editForm.administration as 'Coordinator' | 'Assistant Coordinator' | 'Admin' | 'Treasurer' | 'Member'
       
       console.log('📤 Sending update data:', updateData)
       
@@ -1149,27 +1149,15 @@ function ProfilePage() {
                 <div className="pt-4 border-t border-gray-100">
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">Location Information</h4>
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm text-gray-700 font-bold">Region</label>
-                        <input
-                          type="text"
-                          value={editForm.region}
-                          onChange={(e) => handleInputChange('region', e.target.value)}
-                          className="w-full mt-1 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Enter region"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm text-gray-700 font-bold">Zone</label>
-                        <input
-                          type="text"
-                          value={editForm.zone}
-                          onChange={(e) => handleInputChange('zone', e.target.value)}
-                          className="w-full mt-1 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="Enter zone"
-                        />
-                      </div>
+                    <div>
+                      <label className="text-sm text-gray-700 font-bold">Region</label>
+                      <input
+                        type="text"
+                        value={editForm.region}
+                        onChange={(e) => handleInputChange('region', e.target.value)}
+                        className="w-full mt-1 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Enter region"
+                      />
                     </div>
 
                     <div>
@@ -1216,7 +1204,7 @@ function ProfilePage() {
                           <option value="" className="text-sm italic">Select administration</option>
                           <option value="Coordinator" className="text-sm italic">Coordinator</option>
                           <option value="Assistant Coordinator" className="text-sm italic">Assistant Coordinator</option>
-                          <option value="Secretary" className="text-sm italic">Secretary</option>
+                          <option value="Admin" className="text-sm italic">Admin</option>
                           <option value="Treasurer" className="text-sm italic">Treasurer</option>
                           <option value="Member" className="text-sm italic">Member</option>
                         </select>
@@ -1376,7 +1364,7 @@ function ProfilePage() {
               </div>
               <div className="text-left">
                 <h3 className="text-sm font-bold text-gray-900">Location</h3>
-                <p className="text-[10px] text-gray-500">Region, zone & church</p>
+                <p className="text-[10px] text-gray-500">Region & church</p>
               </div>
             </div>
             <div className={`transform transition-transform duration-200 ${expandedSections.location ? 'rotate-180' : ''}`}>
@@ -1389,17 +1377,11 @@ function ProfilePage() {
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-2 border border-green-100">
                 <label className="text-[10px] text-green-700 font-semibold uppercase tracking-wide">Region</label>
                 <p className="text-xs font-bold text-gray-900 mt-0.5">{userProfile.region || 'Not set'}</p>
-            </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
-                  <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Zone</label>
-                  <p className="text-xs font-semibold text-gray-900 mt-0.5">{userProfile.zone || 'Not set'}</p>
               </div>
-                <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
-                  <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Church</label>
-                  <p className="text-xs font-semibold text-gray-900 mt-0.5">{userProfile.church || 'Not set'}</p>
-                </div>
+
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                <label className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Church</label>
+                <p className="text-xs font-semibold text-gray-900 mt-0.5">{userProfile.church || 'Not set'}</p>
               </div>
             </div>
           </div>
@@ -1526,27 +1508,20 @@ function ProfilePage() {
                   <p className="text-[10px] text-gray-500">Use your QR code to check in</p>
             </div>
           )}
-          
-              {/* Danger Zone */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                    <h3 className="text-sm font-bold text-red-800">Danger Zone</h3>
-                  </div>
-                  <p className="text-xs text-red-600 mb-3">Deleting your account is permanent and cannot be undone.</p>
-              <button
-                onClick={() => setShowDeleteDialog(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg active:scale-95"
-              >
-                    <Trash2 className="w-4 h-4" />
-                Delete Account
-              </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Delete Account */}
+      <div className="px-4 mt-4">
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete Account
+        </button>
       </div>
 
       {/* Bottom Spacing */}

@@ -17,8 +17,6 @@ import {
   UsersRound,
   Home,
   ChevronLeft,
-  Settings,
-  AudioLines
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
@@ -68,7 +66,6 @@ export default function AdminSidebar({
     { icon: UsersRound, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
     { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqOnly: true },
-    { icon: AudioLines, label: 'AudioLab', active: activeSection === 'AudioLab', hqOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
   ];
   

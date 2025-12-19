@@ -23,7 +23,6 @@ export function MasterSongDetailSheet({
   song, 
   isOpen, 
   onClose,
-  // currently unused but accepted to match callers
   canEdit,
   onSongUpdated,
 }: MasterSongDetailSheetProps) {
@@ -33,6 +32,7 @@ export function MasterSongDetailSheet({
   // Check if current zone is HQ group - hide practice button for HQ zones
   // Default to true (hidden) until zone loads to prevent flash
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
+  
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -40,7 +40,6 @@ export function MasterSongDetailSheet({
   const [duration, setDuration] = useState(0);
   const [selectedPart, setSelectedPart] = useState<string>('full');
   const [showLyrics, setShowLyrics] = useState(true);
-  const [showSolfa, setShowSolfa] = useState(false);
 
   // Get available audio parts
   const audioParts = song.audioUrls ? Object.entries(song.audioUrls).filter(([_, url]) => url) : [];
@@ -117,7 +116,7 @@ export function MasterSongDetailSheet({
 
         {/* Header with Close Button */}
         <div className="px-5 pb-4 border-b border-gray-100 relative">
-          {/* Close Button - Absolute positioned top right, centered in container */}
+          {/* Close Button - Absolute positioned top right */}
           <button
             onClick={onClose}
             className="absolute -top-1 right-5 z-10 w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-sm transition-colors flex items-center justify-center"
