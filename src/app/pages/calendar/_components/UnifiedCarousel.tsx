@@ -90,7 +90,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
         )}
 
         {/* Content */}
-        <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 px-2 sm:px-4">
+        <div className="flex-1 flex flex-row items-center justify-center gap-3 sm:gap-6 px-2 sm:px-4">
           {currentItem.type === 'birthday' ? (
             // Birthday Card - Mobile Optimized
             <>
@@ -116,48 +116,51 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
               </div>
 
               {/* Message Section */}
-              <div className="flex-1 text-center sm:text-left min-w-0">
-                <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                  <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
-                  <h3 className="text-sm sm:text-xl font-bold text-white uppercase tracking-wide truncate">
+              <div className="flex-1 text-left min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+                  <Sparkles className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
+                  <h3 className="text-xs sm:text-xl font-bold text-white uppercase tracking-wide truncate">
                     {(currentItem.data as BirthdayUser).isToday ? 'Happy Birthday!' : 'Upcoming Birthday'}
                   </h3>
-                  <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
                 </div>
-                <p className="text-lg sm:text-3xl font-extrabold text-white mb-0.5 sm:mb-1 drop-shadow-lg truncate">
+                <p className="text-sm sm:text-3xl font-extrabold text-white mb-0.5 sm:mb-1 drop-shadow-lg truncate">
                   {`${(currentItem.data as BirthdayUser).first_name} ${(currentItem.data as BirthdayUser).last_name}`.trim()}
                 </p>
                 <p className="text-xs sm:text-lg text-white/90 font-medium truncate">
                   {(currentItem.data as BirthdayUser).isToday 
-                    ? '🎉 Have an amazing day! 🎉'
-                    : `🎂 ${moment((currentItem.data as BirthdayUser).birthday).format('MMM D')} 🎂`
+                    ? '🎉 Amazing day!'
+                    : `🎂 ${moment((currentItem.data as BirthdayUser).birthday).format('MMM D')}`
                   }
                 </p>
               </div>
             </>
-          ) : (
-            // Event Card - Mobile Optimized
+          ) : (currentItem.data as UpcomingEvent).image ? (
+            // Event Card WITH Image - Image on left, details on right
             <>
-              {/* Event Icon */}
+              {/* Event Image - Bigger */}
               <div className="relative flex-shrink-0">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-sm border-3 sm:border-4 border-white shadow-xl flex items-center justify-center text-3xl sm:text-5xl">
+                <img
+                  src={(currentItem.data as UpcomingEvent).image}
+                  alt={(currentItem.data as UpcomingEvent).title}
+                  className="w-28 h-28 sm:w-40 sm:h-40 rounded-xl object-cover border-2 sm:border-4 border-white shadow-xl"
+                />
+                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-7 h-7 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg text-base sm:text-2xl">
                   {getEventTypeIcon((currentItem.data as UpcomingEvent).type)}
                 </div>
               </div>
 
               {/* Event Details */}
-              <div className="flex-1 text-center sm:text-left min-w-0">
-                <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+              <div className="flex-1 text-left min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
                   <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
-                  <h3 className="text-sm sm:text-xl font-bold text-white uppercase tracking-wide">
+                  <h3 className="text-xs sm:text-lg font-bold text-white uppercase tracking-wide">
                     Upcoming Event
                   </h3>
-                  <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
                 </div>
-                <p className="text-lg sm:text-3xl font-extrabold text-white mb-1 sm:mb-2 drop-shadow-lg truncate">
+                <p className="text-base sm:text-2xl font-extrabold text-white mb-1 sm:mb-2 drop-shadow-lg line-clamp-2">
                   {(currentItem.data as UpcomingEvent).title}
                 </p>
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 text-white/90">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm font-medium">
@@ -173,9 +176,56 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                     </div>
                   )}
                   {(currentItem.data as UpcomingEvent).location && (
-                    <div className="hidden sm:flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="text-xs sm:text-sm font-medium truncate max-w-[120px]">
+                      <span className="text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-[150px]">
+                        {(currentItem.data as UpcomingEvent).location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            // Event Card WITHOUT Image - Icon style
+            <>
+              {/* Event Icon */}
+              <div className="relative flex-shrink-0">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 sm:border-4 border-white shadow-xl flex items-center justify-center text-2xl sm:text-5xl">
+                  {getEventTypeIcon((currentItem.data as UpcomingEvent).type)}
+                </div>
+              </div>
+
+              {/* Event Details */}
+              <div className="flex-1 text-left min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
+                  <Sparkles className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
+                  <h3 className="text-xs sm:text-xl font-bold text-white uppercase tracking-wide">
+                    Upcoming Event
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-3xl font-extrabold text-white mb-1 sm:mb-2 drop-shadow-lg truncate">
+                  {(currentItem.data as UpcomingEvent).title}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/90">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">
+                      {moment((currentItem.data as UpcomingEvent).date).format('MMM D')}
+                    </span>
+                  </div>
+                  {(currentItem.data as UpcomingEvent).time && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-xs sm:text-sm font-medium">
+                        {(currentItem.data as UpcomingEvent).time}
+                      </span>
+                    </div>
+                  )}
+                  {(currentItem.data as UpcomingEvent).location && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-[120px]">
                         {(currentItem.data as UpcomingEvent).location}
                       </span>
                     </div>

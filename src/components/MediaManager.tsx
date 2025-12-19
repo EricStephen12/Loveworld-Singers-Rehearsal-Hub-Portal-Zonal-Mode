@@ -30,6 +30,7 @@ import {
   deleteCloudinaryMedia,
   loadMoreCloudinaryMedia,
   hasMoreCloudinaryMedia,
+  getCloudinaryMediaByType,
   CloudinaryMediaFile
 } from '@/lib/cloudinary-media-service';
 import { useZone } from '@/hooks/useZone';
@@ -115,15 +116,24 @@ export default function MediaManager({
       console.log('🚀 [Cloudinary] Loading media files from Firebase...');
       const startTime = performance.now();
 
-      // Load from zone-aware collection with limit
-      const mediaFiles = await getAllCloudinaryMedia(currentZone?.id, 50);
+      let mediaFiles: CloudinaryMediaFile[] = [];
+
+      // If in selection mode with specific type filter, query by type directly
+      // This ensures we get ALL files of that type, not just the first 50 mixed files
+      if (selectionMode && allowedTypes.length === 1) {
+        const targetType = allowedTypes[0];
+        console.log(`🎯 [Cloudinary] Selection mode: Loading all ${targetType} files directly`);
+        mediaFiles = await getCloudinaryMediaByType(targetType, currentZone?.id);
+        setHasMore(false); // Type-specific query returns all, no pagination needed
+      } else {
+        // Load from zone-aware collection with limit (normal mode)
+        mediaFiles = await getAllCloudinaryMedia(currentZone?.id, 50);
+        setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
+      }
 
       const loadTime = performance.now() - startTime;
       console.log(`⚡ [Cloudinary] Media loaded in ${loadTime.toFixed(2)}ms`);
       console.log(`📊 [Cloudinary] Total media files: ${mediaFiles.length}`);
-
-      // Update hasMore state
-      setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
 
       // Show success message for slow loads
       if (loadTime > 1000 && showLoading) {
@@ -146,6 +156,13 @@ export default function MediaManager({
         createdAt: new Date(dbFile.createdAt),
         updatedAt: new Date(dbFile.updatedAt)
       }));
+
+      // Debug: Log file types breakdown
+      const typeBreakdown = convertedFiles.reduce((acc, f) => {
+        acc[f.type] = (acc[f.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      console.log('📊 [MediaManager] Files by type:', typeBreakdown);
 
       setFiles(convertedFiles);
 
@@ -569,6 +586,12 @@ export default function MediaManager({
     const matchesType = selectedType === 'all' || file.type === selectedType;
     const matchesFolder = selectedFolder === 'all' || file.folder === selectedFolder;
     const matchesAllowedTypes = allowedTypes.includes(file.type);
+    
+    // In selection mode with specific allowedTypes, prioritize allowedTypes filter
+    // and ignore the selectedType dropdown filter
+    if (selectionMode && allowedTypes.length < 4) {
+      return matchesSearch && matchesFolder && matchesAllowedTypes;
+    }
     
     return matchesSearch && matchesType && matchesFolder && matchesAllowedTypes;
   });
