@@ -129,7 +129,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                 </p>
                 <p className="text-xs sm:text-lg text-white/90 font-medium truncate">
                   {(currentItem.data as BirthdayUser).isToday 
-                    ? ((currentItem.data as BirthdayUser).age ? `🎉 Celebrating ${(currentItem.data as BirthdayUser).age} years! 🎉` : '🎉 Have an amazing day! 🎉')
+                    ? '🎉 Have an amazing day! 🎉'
                     : `🎂 ${moment((currentItem.data as BirthdayUser).birthday).format('MMM D')} 🎂`
                   }
                 </p>

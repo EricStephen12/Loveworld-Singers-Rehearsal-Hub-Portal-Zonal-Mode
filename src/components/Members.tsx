@@ -25,7 +25,7 @@ import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 
 // In-memory cache for members data
-const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const CACHE_TTL = 30 * 1000; // 30 seconds - shorter for real-time updates
 interface MembersCache {
   data: Member[];
   timestamp: number;
@@ -47,8 +47,13 @@ interface Member {
   id: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
   email: string;
   phone?: string;
+  gender?: string;
+  birthday?: string;
+  region?: string;
+  church?: string;
   designation?: string;
   administration?: string;
   profile_image_url?: string;
@@ -67,9 +72,7 @@ export default function Members() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterZone, setFilterZone] = useState<string>('current'); // 'current', 'all', or specific zone ID
+  const [filterZone, setFilterZone] = useState<string>('all'); // 'all', or specific zone ID
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [allZones, setAllZones] = useState<any[]>([]);
   const [displayLimit, setDisplayLimit] = useState(50); // Show 50 initially
@@ -96,8 +99,15 @@ export default function Members() {
       return;
     }
 
-    // Check cache first (unless force refresh)
     const cacheKey = getCacheKey(currentZone.id, filterZone);
+    
+    // Clear cache if force refresh
+    if (forceRefresh) {
+      membersCache.delete(cacheKey);
+      console.log('🗑️ [Members] Cache cleared for', cacheKey);
+    }
+
+    // Check cache first (unless force refresh)
     if (!forceRefresh) {
       const cached = membersCache.get(cacheKey);
       if (isCacheValid(cached)) {
@@ -116,18 +126,37 @@ export default function Members() {
       // Check if HQ group or regular zone
       if (isHQGroup(currentZone.id)) {
         if (filterZone === 'all') {
-          // Load ALL zone members from all zones
-          console.log('🌍 Loading ALL zone members from zone_members collection');
+          // Load ALL members from BOTH hq_members AND zone_members collections
+          console.log('🌍 Loading ALL members from hq_members + zone_members collections');
+          
+          // Load all HQ members
+          const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members');
+          const hqMemberships = allHQMembers.map((member: any) => ({
+            ...member,
+            zoneId: member.groupId || member.zoneId,
+            zoneName: allZones.find(z => z.id === (member.groupId || member.zoneId))?.name || member.groupId || 'HQ'
+          }));
+          
+          // Load all zone members
           const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members');
-          zoneMemberships = allZoneMembers.map((member: any) => ({
+          const zoneMembersList = allZoneMembers.map((member: any) => ({
             ...member,
             zoneId: member.zoneId,
             zoneName: allZones.find(z => z.id === member.zoneId)?.name || member.zoneId
           }));
-        } else if (filterZone === 'current') {
-          // Load only HQ members
-          console.log('🏢 Loading HQ members from hq_members collection');
-          zoneMemberships = await HQMembersService.getHQGroupMembers(currentZone.id);
+          
+          // Combine both lists
+          zoneMemberships = [...hqMemberships, ...zoneMembersList];
+          console.log(`📊 Combined: ${hqMemberships.length} HQ + ${zoneMembersList.length} zone = ${zoneMemberships.length} total`);
+        } else if (isHQGroup(filterZone)) {
+          // Load specific HQ group members
+          console.log('🏢 Loading HQ group members:', filterZone);
+          zoneMemberships = await HQMembersService.getHQGroupMembers(filterZone);
+          zoneMemberships = zoneMemberships.map((member: any) => ({
+            ...member,
+            zoneId: filterZone,
+            zoneName: allZones.find(z => z.id === filterZone)?.name || filterZone
+          }));
         } else {
           // Load specific zone members
           console.log('📍 Loading specific zone members:', filterZone);
@@ -183,8 +212,13 @@ export default function Members() {
           id: membership.userId,
           first_name: profile?.first_name || membership.userName?.split(' ')[0] || '',
           last_name: profile?.last_name || membership.userName?.split(' ').slice(1).join(' ') || '',
+          middle_name: profile?.middle_name || '',
           email: profile?.email || membership.userEmail || '',
-          phone: profile?.phone || '',
+          phone: profile?.phone_number || profile?.phone || '',
+          gender: profile?.gender || '',
+          birthday: profile?.birthday || '',
+          region: profile?.region || '',
+          church: profile?.church || '',
           designation: profile?.designation || '',
           administration: profile?.administration || '',
           profile_image_url: profile?.profile_image_url || '',
@@ -219,12 +253,17 @@ export default function Members() {
   // Load members when zone or filter changes
   useEffect(() => {
     if (currentZone) {
+      // For 'all' filter, wait for zones to be loaded first
+      if (filterZone === 'all' && isHQGroup(currentZone.id) && allZones.length === 0) {
+        console.log('⏳ Waiting for zones to load before fetching all members...');
+        return;
+      }
       loadMembers();
       setDisplayLimit(50); // Reset display limit when filters change
     }
-  }, [currentZone, filterZone]);
+  }, [currentZone, filterZone, allZones]);
 
-  // Filter members based on search and filters
+  // Filter members based on search
   const filteredMembers = members.filter(member => {
     const matchesSearch = 
       member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -233,16 +272,8 @@ export default function Members() {
       member.designation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.administration?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRole = filterRole === 'all' || member.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
-      (filterStatus === 'active' && member.is_active) ||
-      (filterStatus === 'inactive' && !member.is_active);
-
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch;
   });
-
-  // Get unique roles for filter
-  const uniqueRoles = Array.from(new Set(members.map(m => m.role).filter(Boolean)));
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -370,114 +401,69 @@ export default function Members() {
         </div>
       </div>
 
-      {/* Search and Filters - Instagram Style */}
+      {/* Search Bar */}
       <div className="flex-shrink-0 bg-white border-b border-gray-100 lg:border-gray-200">
-        {/* Search Bar with integrated filters on desktop */}
         <div className="p-4 lg:px-6">
-          <div className="flex flex-col lg:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search members..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50 lg:bg-white"
-              />
-            </div>
-            
-            {/* Desktop Filters - Inline with search */}
-            <div className="hidden lg:flex items-center gap-2">
-              {/* Zone Filter - Only for HQ Admins */}
-              {currentZone && isHQGroup(currentZone.id) && (
-                <select
-                  value={filterZone}
-                  onChange={(e) => setFilterZone(e.target.value)}
-                  className="px-3 py-2.5 text-sm border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-purple-50 font-medium"
-                >
-                  <option value="current">🏢 HQ Only</option>
-                  <option value="all">🌍 All Zones</option>
-                  <optgroup label="Specific Zones">
-                    {allZones.filter(z => !isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
-                      <option key={zone.id} value={zone.id}>
-                        {zone.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              )}
-              
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-              >
-                <option value="all">All Roles</option>
-                {uniqueRoles.map(role => (
-                  <option key={role} value={role}>
-                    {role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Unknown'}
-                  </option>
-                ))}
-              </select>
-              
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search members..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50 lg:bg-white"
+            />
           </div>
         </div>
         
-        {/* Mobile Filter Pills - Horizontal scroll */}
-        <div className="lg:hidden pb-3 px-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {/* Zone Filter - Only for HQ Admins */}
-            {currentZone && isHQGroup(currentZone.id) && (
-              <select
-                value={filterZone}
-                onChange={(e) => setFilterZone(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 text-xs font-semibold border-2 border-purple-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-purple-50 text-purple-700 appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%239333ea%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
+        {/* Zone Filter Toggle Buttons - Only for HQ Admins */}
+        {currentZone && isHQGroup(currentZone.id) && (
+          <div className="px-4 lg:px-6 pb-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {/* All Members Button */}
+              <button
+                onClick={() => setFilterZone('all')}
+                className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all ${
+                  filterZone === 'all'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                <option value="current">🏢 HQ</option>
-                <option value="all">🌍 All</option>
-                {allZones.filter(z => !isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.name.length > 15 ? zone.name.substring(0, 15) + '...' : zone.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="flex-shrink-0 px-3 py-2 text-xs font-semibold border-2 border-gray-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-700 appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
-            >
-              <option value="all">All Roles</option>
-              {uniqueRoles.map(role => (
-                <option key={role} value={role}>
-                  {role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Unknown'}
-                </option>
+                🌍 All Members
+              </button>
+              
+              {/* HQ Group Buttons */}
+              {allZones.filter(z => isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
+                <button
+                  key={zone.id}
+                  onClick={() => setFilterZone(zone.id)}
+                  className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap ${
+                    filterZone === zone.id
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  }`}
+                >
+                  🏢 {zone.name.replace('Loveworld Singers ', '').replace('LWS ', '')}
+                </button>
               ))}
-            </select>
-            
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="flex-shrink-0 px-3 py-2 text-xs font-semibold border-2 border-gray-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-700 appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
-            >
-              <option value="all">All Status</option>
-              <option value="active">✓ Active</option>
-              <option value="inactive">○ Inactive</option>
-            </select>
+              
+              {/* Regional Zone Buttons */}
+              {allZones.filter(z => !isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
+                <button
+                  key={zone.id}
+                  onClick={() => setFilterZone(zone.id)}
+                  className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap ${
+                    filterZone === zone.id
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {zone.name.replace('Loveworld Singers ', '')}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Members List - Scrollable */}
@@ -561,8 +547,8 @@ export default function Members() {
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">No members found</h3>
               <p className="text-sm text-slate-500">
-                {searchTerm || filterRole !== 'all' || filterStatus !== 'all' 
-                  ? 'Try adjusting your search or filters' 
+                {searchTerm 
+                  ? 'Try adjusting your search' 
                   : 'Members will appear here once they join your zone'}
               </p>
             </div>
@@ -792,152 +778,117 @@ export default function Members() {
         )}
       </div>
 
-      {/* Member Detail Modal - Redesigned */}
+      {/* Member Detail Modal - Full Profile View */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full my-8 shadow-2xl flex flex-col max-h-[calc(100vh-4rem)]">
-            {/* Header with Gradient */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 relative">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
+              <h3 className="text-lg font-semibold text-gray-900">Member Profile</h3>
               <button
                 onClick={() => setSelectedMember(null)}
-                className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-gray-500" />
               </button>
-              
-              <div className="flex items-center gap-4">
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Profile Section */}
+              <div className="p-4 flex items-center gap-4 border-b border-gray-100">
                 {selectedMember.profile_image_url ? (
                   <img
-                    className="h-20 w-20 rounded-full object-cover border-4 border-white/30 shadow-lg"
+                    className="h-16 w-16 rounded-full object-cover"
                     src={selectedMember.profile_image_url}
                     alt={`${selectedMember.first_name} ${selectedMember.last_name}`}
                   />
                 ) : (
-                  <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-2xl">
+                  <div className="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center">
+                    <span className="text-purple-600 font-bold text-xl">
                       {selectedMember.first_name.charAt(0)}{selectedMember.last_name.charAt(0)}
                     </span>
                   </div>
                 )}
-                <div className="flex-1">
-                  <h4 className="text-2xl font-bold text-white mb-1">
-                    {selectedMember.first_name} {selectedMember.last_name}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {selectedMember.first_name} {selectedMember.middle_name ? selectedMember.middle_name + ' ' : ''}{selectedMember.last_name}
                   </h4>
-                  <p className="text-white/90 text-sm mb-2">{selectedMember.email}</p>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                    selectedMember.is_active 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-red-500 text-white'
-                  }`}>
-                    {selectedMember.is_active ? '✓ Active' : '○ Inactive'}
-                  </span>
+                  <p className="text-sm text-gray-500">{selectedMember.email}</p>
+                  {selectedMember.zoneName && (
+                    <p className="text-xs text-purple-600 font-medium mt-1">{selectedMember.zoneName}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="p-4 border-b border-gray-100">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Personal Information</h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Phone</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.phone || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Gender</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.gender || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Birthday</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.birthday || 'Not set'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="p-4 border-b border-gray-100">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Location</h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Region</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.region || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Church</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.church || 'Not set'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Designation Information */}
+              <div className="p-4">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Designation</h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Designation</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.designation || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Administration</span>
+                    <span className="text-sm text-gray-900 font-medium">{selectedMember.administration || 'Not set'}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-6">
-                {/* Contact Information Card */}
-                <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
-                  <h5 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Contact Information
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="bg-white rounded-lg p-3">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Email</label>
-                      <p className="text-sm text-slate-900 font-medium">{selectedMember.email}</p>
-                    </div>
-                    {selectedMember.phone && (
-                      <div className="bg-white rounded-lg p-3">
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Phone</label>
-                        <p className="text-sm text-slate-900 font-medium">{selectedMember.phone}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Role & Designation Card */}
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
-                  <h5 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Role & Designation
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="bg-white rounded-lg p-3">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Designation</label>
-                      <p className="text-sm text-slate-900 font-medium">{selectedMember.designation || 'Member'}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Role</label>
-                      <p className="text-sm text-slate-900 font-medium capitalize">{selectedMember.role || 'member'}</p>
-                    </div>
-                    {selectedMember.administration && (
-                      <div className="bg-white rounded-lg p-3 sm:col-span-2">
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Administration</label>
-                        <p className="text-sm text-slate-900 font-medium">{selectedMember.administration}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Additional Info */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-                  <h5 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Member Since
-                  </h5>
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="text-sm text-slate-900 font-medium">{formatDate(selectedMember.created_at)}</p>
-                  </div>
-                </div>
-
-                {/* Groups */}
-                {selectedMember.groups && selectedMember.groups.length > 0 && (
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                    <h5 className="text-sm font-semibold text-amber-700 mb-3">Groups</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMember.groups.map((group, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-amber-200 text-amber-700"
-                        >
-                          {group}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-3 border-t border-slate-200 flex-shrink-0">
+            {/* Actions */}
+            <div className="p-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+              >
+                Close
+              </button>
               <button
                 onClick={() => {
                   handleDeleteMember(selectedMember);
                   setSelectedMember(null);
                 }}
-                className="px-4 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
+                className="px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm"
               >
-                <Trash2 className="w-4 h-4" />
-                Delete Member
+                Delete
               </button>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setSelectedMember(null)}
-                  className="px-4 py-2.5 text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-                >
-                  Close
-                </button>
-                <button className={`px-4 py-2.5 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors font-medium shadow-sm`}>
-                  Edit Member
-                </button>
-              </div>
             </div>
-          </div>
           </div>
         </div>
       )}

@@ -91,8 +91,20 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
 
     // Continue loading fresh data in background...
     try {
-      // Load members
-      const zoneMembers = await ZoneInvitationService.getZoneMembers(currentZone.id)
+      const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
+      const isHQZone = isHQGroup(currentZone.id)
+      
+      // Load members - for HQ, load from both hq_members and zone_members
+      let zoneMembers: any[] = [];
+      if (isHQZone) {
+        // Load all members from both collections
+        const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members')
+        const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members')
+        zoneMembers = [...allHQMembers, ...allZoneMembers]
+        console.log(`📊 Total members: ${allHQMembers.length} HQ + ${allZoneMembers.length} zones = ${zoneMembers.length}`)
+      } else {
+        zoneMembers = await ZoneInvitationService.getZoneMembers(currentZone.id)
+      }
       setMembers(zoneMembers)
 
       // Generate invite link
@@ -100,18 +112,14 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
       setInviteLink(link)
 
       // Load songs and praise nights count
-      const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service')
       const { ZoneDatabaseService } = await import('@/lib/zone-database-service')
-      const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
-      
-      const isHQ = isHQGroup(currentZone.id)
-      console.log('🔍 Dashboard loading fresh data for zone:', currentZone.id, 'isHQ:', isHQ)
+      console.log('🔍 Dashboard loading fresh data for zone:', currentZone.id, 'isHQ:', isHQZone)
       
       let songsCount = 0;
       let praiseNightsCount = 0;
       
       // Get all songs and praise nights for this zone (HQ-aware)
-      if (isHQ) {
+      if (isHQZone) {
         // HQ groups: get from unfiltered collections
         // OPTIMIZED: Limit queries to prevent massive reads, use counts instead of full fetch
         console.log('🏢 Loading HQ data from unfiltered collections')

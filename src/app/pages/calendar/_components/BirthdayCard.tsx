@@ -78,7 +78,7 @@ export default function BirthdayCard({ user, themeColor }: BirthdayCardProps) {
             {fullName}
           </p>
           <p className="text-xs text-gray-600">
-            {user.age ? `Turning ${user.age} today! 🎉` : 'Celebrating today! 🎉'}
+            Celebrating today! 🎉
           </p>
         </div>
       </div>
