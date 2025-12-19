@@ -385,7 +385,7 @@ export default function CalendarPage() {
                   setSidebarOpen(false)
                 }
               }}
-              upcomingEvents={events}
+              upcomingEvents={upcomingEventsList}
             />
           )}
         </div>
