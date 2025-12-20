@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { Search, Music, Play, Pause, Loader2, ArrowLeft } from 'lucide-react'
+import { Search, Music, Play, Pause, Loader2, ArrowLeft, ArrowUpDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { MasterLibraryService, MasterSong } from '@/lib/master-library-service'
@@ -24,6 +24,7 @@ export default function AllMinisteredSongsPage() {
   const [songs, setSongs] = useState<MasterSong[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [selectedSong, setSelectedSong] = useState<MasterSong | null>(null)
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false)
 
@@ -43,7 +44,7 @@ export default function AllMinisteredSongsPage() {
     loadSongs()
   }, [])
 
-  // Filter songs by search query
+  // Filter and sort songs
   const filteredSongs = useMemo(() => {
     let filtered = songs
     
@@ -58,8 +59,17 @@ export default function AllMinisteredSongsPage() {
       )
     }
     
+    // Sort alphabetically by title
+    filtered = [...filtered].sort((a, b) => {
+      const titleA = (a.title || '').toLowerCase()
+      const titleB = (b.title || '').toLowerCase()
+      return sortOrder === 'asc' 
+        ? titleA.localeCompare(titleB)
+        : titleB.localeCompare(titleA)
+    })
+    
     return filtered
-  }, [songs, searchQuery])
+  }, [songs, searchQuery, sortOrder])
 
 
   const handleBack = () => {
@@ -122,12 +132,19 @@ export default function AllMinisteredSongsPage() {
             />
           </div>
 
-          {/* All Pill Only */}
-          <div className="flex gap-2 mt-3">
+          {/* All Pill and Sort Toggle */}
+          <div className="flex items-center justify-between mt-3">
             <button
               className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-purple-600 text-white shadow-md"
             >
               All
+            </button>
+            <button
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
             </button>
           </div>
         </div>

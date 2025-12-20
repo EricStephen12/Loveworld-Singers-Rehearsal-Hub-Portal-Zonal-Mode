@@ -283,9 +283,9 @@ export function MasterSongDetailSheet({
                 )}
               </button>
               {showLyrics && (
-                <div className="mt-2 p-4 bg-white rounded-xl border border-slate-100">
+                <div className="mt-2 p-4 bg-white rounded-xl border border-slate-100 max-h-[50vh] overflow-y-auto">
                   <div
-                    className="text-slate-800 text-sm leading-relaxed prose prose-sm max-w-none"
+                    className="text-slate-800 text-sm leading-relaxed prose prose-sm max-w-none whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{ __html: song.lyrics }}
                   />
                 </div>
