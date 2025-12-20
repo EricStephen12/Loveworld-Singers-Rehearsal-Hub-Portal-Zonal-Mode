@@ -59,7 +59,7 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
 ## Phase 2: Services (Firebase & API Services)
 
 - [ ] 4. Refactor Firebase services
-  - [ ] 4.1 Refactor `src/lib/firebase-setup.ts`
+  - [-] 4.1 Refactor `src/lib/firebase-setup.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
   - [ ] 4.2 Refactor `src/lib/firebase-database.ts`

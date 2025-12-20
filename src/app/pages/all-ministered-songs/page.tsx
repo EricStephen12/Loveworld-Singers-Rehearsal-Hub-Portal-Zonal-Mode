@@ -14,7 +14,7 @@ import { isHQGroup, isBossZone } from '@/config/zones'
 export default function AllMinisteredSongsPage() {
   const router = useRouter()
   const { currentZone } = useZone()
-  const { currentSong, isPlaying } = useAudio()
+  const { currentSong, isPlaying, setCurrentSong, togglePlayPause } = useAudio()
   
   // Check if user can edit (HQ or Boss zone)
   const isHQ = currentZone ? isHQGroup(currentZone.id) : false
@@ -74,6 +74,25 @@ export default function AllMinisteredSongsPage() {
 
   const handleBack = () => {
     router.back()
+  }
+
+  const handlePlayClick = (e: React.MouseEvent, song: MasterSong) => {
+    e.stopPropagation()
+    const audioUrl = song.audioUrls?.full || song.audioFile
+    if (!audioUrl) return
+    
+    if (currentSong?.id === song.id) {
+      togglePlayPause()
+    } else {
+      const audioSong = {
+        id: song.id,
+        title: song.title,
+        audioFile: audioUrl,
+        writer: song.writer,
+        leadSinger: song.leadSinger,
+      }
+      setCurrentSong(audioSong as any, true)
+    }
   }
 
   const handleSongClick = (song: MasterSong) => {
@@ -220,21 +239,25 @@ export default function AllMinisteredSongsPage() {
                     </div>
 
                     {/* Play Button */}
-                    <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
-                      ${hasAudio 
-                        ? isCurrentSong 
-                          ? 'bg-purple-600 text-white' 
-                          : 'bg-gray-100 text-gray-600'
-                        : 'bg-gray-50 text-gray-300'
-                      }
-                    `}>
+                    <button
+                      onClick={(e) => handlePlayClick(e, song)}
+                      className={`
+                        w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                        ${hasAudio 
+                          ? isCurrentSong 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                        }
+                      `}
+                      disabled={!hasAudio}
+                    >
                       {isCurrentSong && isPlaying ? (
                         <Pause className="w-3.5 h-3.5" />
                       ) : (
                         <Play className="w-3.5 h-3.5 ml-0.5" />
                       )}
-                    </div>
+                    </button>
                   </div>
                 )
               })}

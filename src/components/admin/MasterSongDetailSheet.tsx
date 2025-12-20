@@ -1,20 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { 
-  X, Music, Play, Pause, Key, Clock, 
-  Mic, ChevronDown, ChevronUp, BookOpen
-} from 'lucide-react';
+import { useState } from 'react';
+import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MasterSong } from '@/lib/master-library-service';
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface MasterSongDetailSheetProps {
   song: MasterSong;
   isOpen: boolean;
   onClose: () => void;
-  // Optional props reserved for future editing capabilities
   canEdit?: boolean;
   onSongUpdated?: (updatedSong: MasterSong) => void;
 }
@@ -23,67 +20,40 @@ export function MasterSongDetailSheet({
   song, 
   isOpen, 
   onClose,
-  canEdit,
-  onSongUpdated,
 }: MasterSongDetailSheetProps) {
   const router = useRouter();
   const { currentZone } = useZone();
+  const { currentSong, isPlaying, currentTime, duration, setCurrentSong, togglePlayPause, setCurrentTime: seekTo } = useAudio();
   
-  // Check if current zone is HQ group - hide practice button for HQ zones
-  // Default to true (hidden) until zone loads to prevent flash
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
+  const isCurrentSong = currentSong?.id === song.id;
   
-  const audioRef = useRef<HTMLAudioElement>(null);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [selectedPart, setSelectedPart] = useState<string>('full');
   const [showLyrics, setShowLyrics] = useState(true);
 
-  // Get available audio parts
   const audioParts = song.audioUrls ? Object.entries(song.audioUrls).filter(([_, url]) => url) : [];
   const currentAudioUrl = song.audioUrls?.[selectedPart as keyof typeof song.audioUrls] || song.audioFile;
 
-  useEffect(() => {
-    if (!isOpen) {
-      setIsPlaying(false);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    }
-  }, [isOpen]);
-
-  const togglePlay = () => {
-    if (!audioRef.current || !currentAudioUrl) return;
+  const handlePlayPause = () => {
+    if (!currentAudioUrl) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
+    if (isCurrentSong) {
+      togglePlayPause();
     } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
+      const audioSong = {
+        id: song.id,
+        title: song.title,
+        audioFile: currentAudioUrl,
+        writer: song.writer,
+        leadSinger: song.leadSinger,
+      };
+      setCurrentSong(audioSong as any, true);
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
+    seekTo(time);
   };
 
   const formatTime = (seconds: number) => {
@@ -204,25 +174,12 @@ export function MasterSongDetailSheet({
           {/* Audio Player (Master: keep audio) */}
           {currentAudioUrl && (
             <div className="bg-white rounded-2xl p-4 mb-4 border border-slate-100 shadow-sm">
-              <audio
-                ref={audioRef}
-                src={currentAudioUrl}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onEnded={() => setIsPlaying(false)}
-              />
-
-              {/* Part Selector */}
               {audioParts.length > 1 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {audioParts.map(([part]) => (
                     <button
                       key={part}
-                      onClick={() => {
-                        setSelectedPart(part);
-                        setIsPlaying(false);
-                        if (audioRef.current) audioRef.current.currentTime = 0;
-                      }}
+                      onClick={() => setSelectedPart(part)}
                       className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all ${
                         selectedPart === part
                           ? 'bg-purple-600 text-white shadow-sm'
@@ -235,32 +192,36 @@ export function MasterSongDetailSheet({
                 </div>
               )}
 
-              {/* Play Controls - Simple clean design */}
               <div className="flex items-center gap-3">
                 <button
-                  onClick={togglePlay}
+                  onClick={handlePlayPause}
                   className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-slate-800 active:scale-95 transition-all shrink-0"
                 >
-                  {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
+                  {isCurrentSong && isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
                 </button>
-                <span className="text-xs text-slate-500 w-9 text-right tabular-nums shrink-0">{formatTime(currentTime)}</span>
+                <span className="text-xs text-slate-500 w-9 text-right tabular-nums shrink-0">
+                  {formatTime(isCurrentSong ? currentTime : 0)}
+                </span>
                 <div className="flex-1 relative h-6 flex items-center">
                   <div className="absolute inset-x-0 h-1 bg-slate-200 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-purple-600 rounded-full"
-                      style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                      style={{ width: `${isCurrentSong && duration ? (currentTime / duration) * 100 : 0}%` }}
                     />
                   </div>
                   <input
                     type="range"
                     min={0}
-                    max={duration || 100}
-                    value={currentTime}
+                    max={isCurrentSong ? duration || 100 : 100}
+                    value={isCurrentSong ? currentTime : 0}
                     onChange={handleSeek}
+                    disabled={!isCurrentSong}
                     className="absolute inset-0 w-full opacity-0 cursor-pointer"
                   />
                 </div>
-                <span className="text-xs text-slate-500 w-9 tabular-nums shrink-0">{formatTime(duration)}</span>
+                <span className="text-xs text-slate-500 w-9 tabular-nums shrink-0">
+                  {formatTime(isCurrentSong ? duration : 0)}
+                </span>
               </div>
             </div>
           )}
