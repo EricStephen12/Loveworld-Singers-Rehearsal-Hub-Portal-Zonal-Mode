@@ -1,11 +1,8 @@
-// Firebase Comment Service for Loveworld Praise App
-// Handles comments for songs and pages
-
 import { FirebaseDatabaseService } from './firebase-database'
+
 import type { Comment } from '../types/supabase'
 
 export class FirebaseCommentService {
-  // Create a new comment
   static async createComment(commentData: {
     song_id: number
     user_id: string
@@ -15,7 +12,7 @@ export class FirebaseCommentService {
   }): Promise<Comment | null> {
     try {
       const comment = {
-        id: Date.now(), // Simple ID generation
+        id: Date.now(),
         song_id: commentData.song_id,
         user_id: commentData.user_id,
         user_name: commentData.user_name,
@@ -35,11 +32,8 @@ export class FirebaseCommentService {
     }
   }
 
-  // Get comments for a song
-  // OPTIMIZED: Use Firestore query instead of fetching all comments
   static async getCommentsBySongId(songId: number): Promise<Comment[]> {
     try {
-      // Use query to filter at database level instead of fetching all
       const comments = await FirebaseDatabaseService.getCollectionWhere(
         'comments',
         'song_id',
@@ -47,7 +41,6 @@ export class FirebaseCommentService {
         songId
       )
       
-      // Sort by created_at
       return comments
         .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) as unknown as Comment[]
     } catch (error) {
@@ -56,7 +49,6 @@ export class FirebaseCommentService {
     }
   }
 
-  // Update a comment
   static async updateComment(commentId: number, updates: Partial<Comment>): Promise<boolean> {
     try {
       await FirebaseDatabaseService.updateDocument('comments', commentId.toString(), {
@@ -71,7 +63,6 @@ export class FirebaseCommentService {
     }
   }
 
-  // Delete a comment
   static async deleteComment(commentId: number): Promise<boolean> {
     try {
       await FirebaseDatabaseService.deleteDocument('comments', commentId.toString())
@@ -82,7 +73,6 @@ export class FirebaseCommentService {
     }
   }
 
-  // Like a comment
   static async likeComment(commentId: number, userId: string): Promise<boolean> {
     try {
       const comment = await FirebaseDatabaseService.getDocument('comments', commentId.toString())
@@ -90,8 +80,8 @@ export class FirebaseCommentService {
 
       const commentData = comment as any
       const likedBy = commentData.liked_by || []
+      
       if (likedBy.includes(userId)) {
-        // Unlike
         const updatedLikedBy = likedBy.filter((id: any) => id !== userId)
         await FirebaseDatabaseService.updateDocument('comments', commentId.toString(), {
           likes: commentData.likes - 1,
@@ -99,7 +89,6 @@ export class FirebaseCommentService {
           updated_at: new Date().toISOString()
         })
       } else {
-        // Like
         await FirebaseDatabaseService.updateDocument('comments', commentId.toString(), {
           likes: commentData.likes + 1,
           liked_by: [...likedBy, userId],
@@ -113,6 +102,3 @@ export class FirebaseCommentService {
     }
   }
 }
-
-
-

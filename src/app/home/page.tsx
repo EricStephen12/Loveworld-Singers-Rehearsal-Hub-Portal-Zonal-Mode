@@ -3,26 +3,22 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Music, Settings, Calendar, Users, BarChart3, Download, Search, Menu, X, Home, User, Bell, HelpCircle, FileText, MessageCircle, Newspaper, Flag, Coffee, Play, Heart, Plus, MoreHorizontal, Shuffle, ChevronDown, ChevronUp, Info, Film, Shield } from 'lucide-react'
+
+import { Music, Calendar, Users, BarChart3, Search, X, Home, User, Bell, HelpCircle, Flag, Play, ChevronDown, ChevronUp, Info, Shield, Lock } from 'lucide-react'
+
 import { getMenuItems } from '@/config/menuItems'
 import SharedDrawer from '@/components/SharedDrawer'
 import Tooltip from '@/components/Tooltip'
-
+import ZoneSwitcher from '@/components/ZoneSwitcher'
 import { useHomeGlobalSearch, HomeSearchResult } from '@/hooks/useHomeGlobalSearch'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
-
-import ZoneSwitcher from '@/components/ZoneSwitcher'
 import { handleAppRefresh } from '@/utils/refresh-utils'
-import { Lock } from 'lucide-react'
-import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime'
 
 function HomePageContent() {
   const router = useRouter()
   const { signOut, profile, user, isLoading: authLoading } = useAuth()
-  
-  // Show spinner while checking auth state (no redirect)
   
   // Check if user is Boss (declare early for use in features array)
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
@@ -43,21 +39,16 @@ function HomePageContent() {
   // This prevents the flicker when zone data loads
   const shouldShowLoading = zoneLoading && !currentZone
   
-  // Debug logging for HQ groups
-  useEffect(() => {
-    if (currentZone) {
-      console.log('🏠 Home: Current zone loaded:', {
-        id: currentZone.id,
-        name: currentZone.name,
-        color: currentZone.themeColor,
-        isHQ: currentZone.themeColor === '#9333EA'
-      })
-    }
-    if (!zoneLoading && !currentZone && profile) {
-      console.log('⚠️ Home: No zone found for user:', profile.email)
-    }
-  }, [currentZone, zoneLoading, profile])
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoadComplete(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);  
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)  
   const searchInputRef = useRef<HTMLInputElement | null>(null)
@@ -139,7 +130,6 @@ function HomePageContent() {
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Home: Starting logout process...')
       await signOut()
       console.log('✅ Home: Logout completed')
       // Don't use router.push - signOut already handles redirect
@@ -303,7 +293,7 @@ function HomePageContent() {
   // This prevents the "Checking authentication" spinner on every page load
   
   // After loading completes, if no user, show login prompt (no redirect)
-  if (!authLoading && !user) {
+  if (!authLoading && !user && initialLoadComplete) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50">
         <div className="text-center p-8">
@@ -319,8 +309,7 @@ function HomePageContent() {
         </div>
       </div>
     )
-  }
-  
+  }  
   // Show brief loading only on very first visit when we have NO data at all
   // This is rare - usually we have cached user from Firebase Auth
   if (authLoading && !user && !profile && !currentZone) {
@@ -371,7 +360,7 @@ function HomePageContent() {
   // Only show loading if we're truly loading AND have no zone data at all
 
   // Show join zone prompt if user has no zone (after loading completes)
-  if (!zoneLoading && !currentZone && user) {
+  if (!zoneLoading && !currentZone && user && initialLoadComplete) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-4">
         <div className="text-center max-w-md">
@@ -395,9 +384,7 @@ function HomePageContent() {
         </div>
       </div>
     )
-  }
-
-  return (
+  }  return (
        <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
        {/* Main Content with Apple-style reveal effect */}
        <div 

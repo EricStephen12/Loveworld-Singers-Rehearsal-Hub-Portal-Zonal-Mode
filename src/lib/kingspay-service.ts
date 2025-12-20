@@ -1,13 +1,8 @@
-/**
- * KingsPay Goods & Services Integration
- * Handles Espees payments for LWSRH subscriptions
- */
-
 import { KINGSPAY_CONFIG } from '@/config/subscriptions'
 
 export interface KingsPayInitializeParams {
-  amount: number // Amount in KOBE (cents)
-  currency: string // 'ESP' for Espees
+  amount: number
+  currency: string
   description: string
   merchant_callback_url: string
   merchant_webhook_url: string
@@ -33,14 +28,9 @@ export interface KingsPayPaymentStatus {
   status: 'INITIALIZED' | 'WAITING' | 'SUCCESS' | 'FAILED'
   merchant_name: string
   payment_id: string
-  payment_type: {
-    type: string
-  }
+  payment_type: { type: string }
 }
 
-/**
- * Initialize a payment with KingsPay Goods & Services
- */
 export async function initializeKingsPayPayment(
   params: KingsPayInitializeParams
 ): Promise<KingsPayInitializeResponse> {
@@ -48,11 +38,8 @@ export async function initializeKingsPayPayment(
     const secretKey = process.env.NEXT_PUBLIC_KINGSPAY_SECRET_KEY
     
     if (!secretKey) {
-      console.error('❌ KingsPay secret key not configured')
-      return {
-        success: false,
-        error: 'Payment system not configured'
-      }
+      console.error('KingsPay secret key not configured')
+      return { success: false, error: 'Payment system not configured' }
     }
 
     const response = await fetch(`${KINGSPAY_CONFIG.apiUrl}/initialize`, {
@@ -67,49 +54,28 @@ export async function initializeKingsPayPayment(
     const data = await response.json()
 
     if (response.ok && data.payment_id) {
-      return {
-        success: true,
-        payment_id: data.payment_id,
-        message: data.message
-      }
-    } else {
-      return {
-        success: false,
-        error: data.message || 'Failed to initialize payment'
-      }
+      return { success: true, payment_id: data.payment_id, message: data.message }
     }
+    return { success: false, error: data.message || 'Failed to initialize payment' }
   } catch (error) {
-    console.error('❌ Error initializing KingsPay payment:', error)
-    return {
-      success: false,
-      error: 'Network error. Please try again.'
-    }
+    console.error('Error initializing KingsPay payment:', error)
+    return { success: false, error: 'Network error. Please try again.' }
   }
 }
 
-/**
- * Get payment status from KingsPay
- */
 export async function getKingsPayPaymentStatus(
   paymentId: string
 ): Promise<KingsPayPaymentStatus | null> {
   try {
     const response = await fetch(`${KINGSPAY_CONFIG.apiUrl}/${paymentId}`)
-    
-    if (response.ok) {
-      return await response.json()
-    }
-    
+    if (response.ok) return await response.json()
     return null
   } catch (error) {
-    console.error('❌ Error getting payment status:', error)
+    console.error('Error getting payment status:', error)
     return null
   }
 }
 
-/**
- * Cancel a payment
- */
 export async function cancelKingsPayPayment(
   paymentId: string
 ): Promise<{ success: boolean; message?: string }> {
@@ -118,35 +84,19 @@ export async function cancelKingsPayPayment(
     
     if (response.ok) {
       const data = await response.json()
-      return {
-        success: true,
-        message: data.message
-      }
+      return { success: true, message: data.message }
     }
-    
-    return {
-      success: false,
-      message: 'Failed to cancel payment'
-    }
+    return { success: false, message: 'Failed to cancel payment' }
   } catch (error) {
-    console.error('❌ Error canceling payment:', error)
-    return {
-      success: false,
-      message: 'Network error'
-    }
+    console.error('Error canceling payment:', error)
+    return { success: false, message: 'Network error' }
   }
 }
 
-/**
- * Generate KingsPay payment URL
- */
 export function getKingsPayPaymentUrl(paymentId: string): string {
   return `${KINGSPAY_CONFIG.paymentUrl}?id=${paymentId}`
 }
 
-/**
- * Verify webhook signature
- */
 export function verifyKingsPayWebhookSignature(
   signature: string,
   payload: string,
@@ -157,10 +107,9 @@ export function verifyKingsPayWebhookSignature(
     const hmac = crypto.createHmac('sha256', secretKey)
     hmac.update(payload)
     const expectedSignature = hmac.digest('hex')
-    
     return signature === expectedSignature
   } catch (error) {
-    console.error('❌ Error verifying webhook signature:', error)
+    console.error('Error verifying webhook signature:', error)
     return false
   }
 }

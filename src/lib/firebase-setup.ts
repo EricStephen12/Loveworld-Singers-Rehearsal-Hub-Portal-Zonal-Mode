@@ -1,7 +1,6 @@
-// Firebase initialization and configuration
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApp, FirebaseApp } from 'firebase/app'
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
-import { initializeFirestore, Firestore } from 'firebase/firestore'
+import { initializeFirestore, getFirestore, Firestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getDatabase, Database } from 'firebase/database'
 
@@ -19,14 +18,11 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   throw new Error('Firebase configuration missing. Check .env.local file.')
 }
 
-import type { FirebaseApp } from 'firebase/app'
-
 let app: FirebaseApp
 try {
   app = initializeApp(firebaseConfig)
 } catch (error: any) {
   if (error.code === 'app/duplicate-app') {
-    const { getApp } = require('firebase/app')
     app = getApp()
   } else {
     throw error
@@ -35,7 +31,6 @@ try {
 
 export const auth = getAuth(app)
 
-// Firestore with persistence enabled
 export const db: Firestore = (() => {
   try {
     return initializeFirestore(app, {
@@ -45,7 +40,6 @@ export const db: Firestore = (() => {
     })
   } catch (error: any) {
     if (error.code === 'firestore/already-exists') {
-      const { getFirestore } = require('firebase/firestore')
       return getFirestore(app)
     }
     throw error
@@ -54,10 +48,8 @@ export const db: Firestore = (() => {
 
 export const storage = getStorage(app)
 
-// Realtime Database for live sessions and real-time features
 export const realtimeDb: Database = getDatabase(app)
 
-// Keep user logged in across browser sessions
 if (typeof window !== 'undefined') {
   setPersistence(auth, browserLocalPersistence).catch(console.error)
 }

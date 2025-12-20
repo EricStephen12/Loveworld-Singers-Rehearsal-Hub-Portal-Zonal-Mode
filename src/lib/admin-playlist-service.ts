@@ -52,21 +52,16 @@ export async function getAdminPlaylists(): Promise<AdminPlaylist[]> {
   }
 }
 
-// Get public playlists (for users to see)
-// Excludes playlists that are nested inside other playlists
+// Get public playlists (excludes nested playlists)
 export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: string): Promise<AdminPlaylist[]> {
-  console.log('getPublicAdminPlaylists called, isHQZone:', isHQZone, 'category:', categoryType)
   try {
-    // First try simple query without compound index
     const q = query(
       collection(db, COLLECTION),
       where('isPublic', '==', true),
       orderBy('createdAt', 'desc')
     )
     const snapshot = await getDocs(q)
-    console.log('Found', snapshot.docs.length, 'public admin playlists')
     
-    // Filter by zone type in memory (avoids needing compound index)
     let allPlaylists = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -74,39 +69,27 @@ export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: 
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as AdminPlaylist[]
     
-    // Collect all nested playlist IDs (playlists that are children of other playlists)
+    // Collect nested playlist IDs
     const nestedPlaylistIds = new Set<string>()
     allPlaylists.forEach(p => {
-      if (p.childPlaylistIds?.length) {
-        p.childPlaylistIds.forEach(childId => nestedPlaylistIds.add(childId))
-      }
+      p.childPlaylistIds?.forEach(childId => nestedPlaylistIds.add(childId))
     })
     
-    // Filter by forHQ field and exclude nested playlists
-    let filtered = allPlaylists.filter(p => {
-      // Must match zone
-      if (p.forHQ !== isHQZone) return false
-      // Exclude playlists that are nested inside other playlists
-      if (nestedPlaylistIds.has(p.id)) return false
-      return true
-    })
+    // Filter by zone and exclude nested
+    let filtered = allPlaylists.filter(p => 
+      p.forHQ === isHQZone && !nestedPlaylistIds.has(p.id)
+    )
     
-    // Filter by category if specified
     if (categoryType && categoryType !== 'all') {
       filtered = filtered.filter(p => p.type === categoryType)
     }
-    
-    console.log('After filters:', filtered.length, 'playlists for', isHQZone ? 'HQ' : 'regular zones', categoryType ? `category: ${categoryType}` : '', `(excluded ${nestedPlaylistIds.size} nested)`)
     
     return filtered
   } catch (error) {
     console.error('Error fetching public playlists:', error)
     // Fallback: get all and filter
     try {
-      const q = query(
-        collection(db, COLLECTION),
-        orderBy('createdAt', 'desc')
-      )
+      const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
       const snapshot = await getDocs(q)
       let all = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -115,12 +98,9 @@ export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: 
         updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
       })) as AdminPlaylist[]
       
-      // Collect nested playlist IDs
       const nestedPlaylistIds = new Set<string>()
       all.forEach(p => {
-        if (p.childPlaylistIds?.length) {
-          p.childPlaylistIds.forEach(childId => nestedPlaylistIds.add(childId))
-        }
+        p.childPlaylistIds?.forEach(childId => nestedPlaylistIds.add(childId))
       })
       
       let filtered = all.filter(p => p.isPublic && p.forHQ === isHQZone && !nestedPlaylistIds.has(p.id))

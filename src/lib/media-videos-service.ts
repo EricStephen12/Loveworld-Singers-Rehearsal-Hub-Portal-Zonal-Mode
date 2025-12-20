@@ -1,4 +1,3 @@
-// Video management service for media_videos collection
 import {
   collection,
   doc,
@@ -14,6 +13,7 @@ import {
   Timestamp,
   startAfter
 } from 'firebase/firestore'
+
 import { db } from './firebase-setup'
 
 export interface MediaVideo {
@@ -29,7 +29,7 @@ export interface MediaVideo {
   releaseYear?: number
   featured: boolean
   forHQ: boolean
-  hidden: boolean // When true, video is hidden from main media page but still visible in playlists
+  hidden: boolean
   views: number
   likes: number
   createdAt: Date
@@ -54,7 +54,6 @@ class MediaVideosService {
     return docRef.id
   }
 
-  // Get all videos with pagination
   async getAll(limitCount = 24): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -65,7 +64,6 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Load more videos (pagination)
   async loadMore(lastCreatedAt: Date, limitCount = 12): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -77,17 +75,13 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Get video by ID
   async getById(id: string): Promise<MediaVideo | null> {
     const docRef = doc(db, COLLECTION, id)
     const docSnap = await getDoc(docRef)
-    
     if (!docSnap.exists()) return null
-    
     return this.mapDoc(docSnap)
   }
 
-  // Get videos by type
   async getByType(type: MediaVideo['type']): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -98,7 +92,6 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Get featured videos
   async getFeatured(): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -110,7 +103,6 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Get videos for HQ zones only
   async getForHQ(limitCount = 24): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -122,7 +114,6 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Get videos for regular (non-HQ) zones only
   async getForRegularZones(limitCount = 24): Promise<MediaVideo[]> {
     const q = query(
       collection(db, COLLECTION),
@@ -134,17 +125,14 @@ class MediaVideosService {
     return this.mapDocs(snapshot.docs)
   }
 
-  // Get videos based on zone type
   async getForZoneType(isHQZone: boolean, limitCount = 24): Promise<MediaVideo[]> {
     return isHQZone ? this.getForHQ(limitCount) : this.getForRegularZones(limitCount)
   }
 
-  // Update video
   async update(id: string, data: Partial<MediaVideoInput>): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
-    
-    // Filter out undefined values (Firestore doesn't accept them)
     const cleanData: Record<string, any> = {}
+    
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined) {
         cleanData[key] = value
@@ -157,13 +145,11 @@ class MediaVideosService {
     })
   }
 
-  // Delete video
   async delete(id: string): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
     await deleteDoc(docRef)
   }
 
-  // Increment views
   async incrementViews(id: string): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
     const docSnap = await getDoc(docRef)
@@ -173,7 +159,6 @@ class MediaVideosService {
     }
   }
 
-  // Increment likes
   async incrementLikes(id: string): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
     const docSnap = await getDoc(docRef)
@@ -183,9 +168,7 @@ class MediaVideosService {
     }
   }
 
-  // Search videos
   async search(searchTerm: string): Promise<MediaVideo[]> {
-    // Simple client-side search (for better search, use Algolia)
     const all = await this.getAll(100)
     const term = searchTerm.toLowerCase()
     return all.filter(v => 
@@ -194,7 +177,6 @@ class MediaVideosService {
     )
   }
 
-  // Helper to map Firestore docs
   private mapDocs(docs: any[]): MediaVideo[] {
     return docs.map(doc => this.mapDoc(doc))
   }
@@ -213,8 +195,8 @@ class MediaVideosService {
       duration: data.duration,
       releaseYear: data.releaseYear,
       featured: data.featured || false,
-      forHQ: data.forHQ !== false, // Default to true if not set
-      hidden: data.hidden || false, // Default to false (visible)
+      forHQ: data.forHQ !== false,
+      hidden: data.hidden || false,
       views: data.views || 0,
       likes: data.likes || 0,
       createdAt: data.createdAt?.toDate?.() || new Date(),

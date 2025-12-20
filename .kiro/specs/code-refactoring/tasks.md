@@ -58,67 +58,67 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
 
 ## Phase 2: Services (Firebase & API Services)
 
-- [ ] 4. Refactor Firebase services
-  - [-] 4.1 Refactor `src/lib/firebase-setup.ts`
+- [x] 4. Refactor Firebase services
+  - [x] 4.1 Refactor `src/lib/firebase-setup.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 4.2 Refactor `src/lib/firebase-database.ts`
+  - [x] 4.2 Refactor `src/lib/firebase-database.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 4.3 Refactor `src/lib/firebase-auth.ts`
+  - [x] 4.3 Refactor `src/lib/firebase-auth.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 4.4 Refactor `src/lib/firebase-comment-service.ts`
+  - [x] 4.4 Refactor `src/lib/firebase-comment-service.ts`
     - Remove verbose comments, organize imports, split long functions if needed
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
 
-- [ ] 5. Refactor zone and database services
-  - [ ] 5.1 Refactor `src/lib/zone-database-service.ts`
+- [x] 5. Refactor zone and database services
+  - [x] 5.1 Refactor `src/lib/zone-database-service.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 5.2 Refactor `src/lib/zone-aware-songs-service.ts`
+  - [x] 5.2 Refactor `src/lib/zone-aware-songs-service.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 5.3 Refactor `src/lib/zone-invitation-service.ts`
+  - [x] 5.3 Refactor `src/lib/zone-invitation-service.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 6. Refactor media services
-  - [ ] 6.1 Refactor `src/lib/media-videos-service.ts`
+- [x] 6. Refactor media services
+  - [x] 6.1 Refactor `src/lib/media-videos-service.ts`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 6.2 Refactor `src/lib/media-library-service.ts`
+  - [x] 6.2 Refactor `src/lib/media-library-service.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 6.3 Refactor `src/lib/media-category-service.ts`
+  - [x] 6.3 Refactor `src/lib/media-category-service.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 6.4 Refactor `src/lib/cloudinary-media-service.ts`
+  - [x] 6.4 Refactor `src/lib/cloudinary-media-service.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
 
-- [ ] 7. Refactor notification and analytics services
-  - [ ] 7.1 Refactor `src/lib/simple-notifications-service.ts`
+- [x] 7. Refactor notification and analytics services
+  - [x] 7.1 Refactor `src/lib/simple-notifications-service.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 7.2 Refactor `src/lib/analytics-aggregation-service.ts`
+c  - [x] 7.2 Refactor `src/lib/analytics-aggregation-service.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 8. Refactor remaining services (batch)
-  - [ ] 8.1 Refactor song-related services
+- [x] 8. Refactor remaining services (batch)
+  - [x] 8.1 Refactor song-related services
     - `src/lib/praise-night-songs-service.ts`, `src/lib/songs-database.ts`
     - `src/lib/song-submission-service.ts`, `src/lib/master-library-service.ts`
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
-  - [ ] 8.2 Refactor subscription and payment services
+  - [x] 8.2 Refactor subscription and payment services
     - `src/lib/subscription-service.ts`, `src/lib/subscription-pricing.ts`
     - `src/lib/kingspay-service.ts`, `src/lib/espees-payment-service.ts`
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 8.3 Refactor utility services
+  - [x] 8.3 Refactor utility services
     - `src/lib/error-handler.ts`, `src/lib/smart-cache.ts`, `src/lib/ultra-fast-loader.ts`
     - `src/lib/performance-optimizer.ts`, `src/lib/session-manager.ts`
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 8.4 Refactor remaining lib files
+  - [x] 8.4 Refactor remaining lib files
     - `src/lib/account-linking.ts`, `src/lib/admin-activity-logger.ts`
     - `src/lib/admin-playlist-service.ts`, `src/lib/admin-support-debug.ts`
     - `src/lib/attendance-service.ts`, `src/lib/auto-notifications.ts`
@@ -133,61 +133,61 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
     - `src/lib/videoUploadService.ts`, `src/lib/voice-recording-service.ts`
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
 
-- [ ] 9. Phase 2 Checkpoint
+- [x] 9. Phase 2 Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ---
 
 ## Phase 3: Components (UI & Admin)
 
-- [ ] 10. Refactor base UI components
-  - [ ] 10.1 Refactor `src/components/ui/` directory (batch)
+- [x] 10. Refactor base UI components
+  - [x] 10.1 Refactor `src/components/ui/` directory (batch)
     - Remove verbose comments, organize imports across all UI components
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 11. Refactor core feature components
-  - [ ] 11.1 Refactor `src/components/AuthScreen.tsx`
+- [x] 11. Refactor core feature components
+  - [x] 11.1 Refactor `src/components/AuthScreen.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 11.2 Refactor `src/components/MobileLayout.tsx`
+  - [x] 11.2 Refactor `src/components/MobileLayout.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 11.3 Refactor `src/components/Members.tsx`
+  - [x] 11.3 Refactor `src/components/Members.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 11.4 Refactor `src/components/SongDetailModal.tsx`
+  - [x] 11.4 Refactor `src/components/SongDetailModal.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 11.5 Refactor `src/components/MediaManager.tsx`
+  - [x] 11.5 Refactor `src/components/MediaManager.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 11.6 Refactor `src/components/GlobalMiniPlayer.tsx`
+  - [x] 11.6 Refactor `src/components/GlobalMiniPlayer.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 11.7 Refactor `src/components/ZoneSwitcher.tsx`
+  - [x] 11.7 Refactor `src/components/ZoneSwitcher.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 12. Refactor admin components
-  - [ ] 12.1 Refactor `src/components/admin/DashboardSection.tsx`
+- [x] 12. Refactor admin components
+  - [x] 12.1 Refactor `src/components/admin/DashboardSection.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 12.2 Refactor `src/components/admin/MediaUploadSection.tsx`
+  - [x] 12.2 Refactor `src/components/admin/MediaUploadSection.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 12.3 Refactor `src/components/admin/MasterLibrarySection.tsx`
+  - [x] 12.3 Refactor `src/components/admin/MasterLibrarySection.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 12.4 Refactor `src/components/admin/NotificationsSection.tsx`
+  - [x] 12.4 Refactor `src/components/admin/NotificationsSection.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 12.5 Refactor `src/components/admin/AnalyticsSection.tsx`
+  - [x] 12.5 Refactor `src/components/admin/AnalyticsSection.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 12.6 Refactor `src/components/admin/MembersSection.tsx`
+  - [x] 12.6 Refactor `src/components/admin/MembersSection.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 12.7 Refactor remaining admin components (batch)
+  - [x] 12.7 Refactor remaining admin components (batch)
     - `AdminMobileHeader.tsx`, `AdminMobileNav.tsx`, `AdminModals.tsx`
     - `AdminSidebar.tsx`, `AdminThemeProvider.tsx`, `AudioLabSongsSection.tsx`
     - `BackupManager.tsx`, `CalendarSection.tsx`, `CategoriesSection.tsx`
@@ -196,110 +196,110 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
     - `SimpleNotificationsSection.tsx`, `SongSubmissionBadge.tsx`, `SubGroupsSection.tsx`
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
 
-- [ ] 13. Refactor remaining feature components (batch)
-  - [ ] 13.1 Refactor authentication and profile components
+- [x] 13. Refactor remaining feature components (batch)
+  - [x] 13.1 Refactor authentication and profile components
     - `AuthCheck.tsx`, `AuthModal.tsx`, `ProfileCompletionScreen.tsx`
     - `ProfileRecoveryButton.tsx`, `SubscriptionCheck.tsx`, `SubscriptionOnboardingScreen.tsx`
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 13.2 Refactor notification and realtime components
+  - [x] 13.2 Refactor notification and realtime components
     - `NotificationBanner.tsx`, `NotificationUrlHandler.tsx`, `PushNotificationListener.tsx`
     - `RealtimeNotifications.tsx`, `RealtimeUpdateIndicator.tsx`
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 13.3 Refactor media and player components
+  - [x] 13.3 Refactor media and player components
     - `MiniPlayer.tsx`, `AudioWave.tsx`, `YouTubeThumbnail.tsx`
     - `MediaSelectionModal.tsx`, `OptimizedImage.tsx`, `UltraFastImage.tsx`
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 13.4 Refactor remaining components
+  - [x] 13.4 Refactor remaining components
     - All remaining components in `src/components/`
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 14. Phase 3 Checkpoint
+- [x] 14. Phase 3 Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ---
 
 ## Phase 4: Pages (Feature Pages)
 
-- [ ] 15. Refactor main pages
-  - [ ] 15.1 Refactor `src/app/home/page.tsx`
+- [x] 15. Refactor main pages
+  - [x] 15.1 Refactor `src/app/home/page.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 15.2 Refactor `src/app/auth/page.tsx`
+  - [x] 15.2 Refactor `src/app/auth/page.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 15.3 Refactor `src/app/admin/page.tsx`
+  - [x] 15.3 Refactor `src/app/admin/page.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
 
-- [ ] 16. Refactor feature pages
-  - [ ] 16.1 Refactor `src/app/pages/praise-night/page.tsx`
+- [x] 16. Refactor feature pages
+  - [x] 16.1 Refactor `src/app/pages/praise-night/page.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 16.2 Refactor `src/app/pages/media/page.tsx`
+  - [x] 16.2 Refactor `src/app/pages/media/page.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 16.3 Refactor `src/app/pages/groups/page.tsx`
+  - [x] 16.3 Refactor `src/app/pages/groups/page.tsx`
     - Remove verbose comments, organize imports, split long functions
     - _Requirements: 1.1, 1.2, 4.1, 5.1, 5.2_
-  - [ ] 16.4 Refactor `src/app/pages/profile/page.tsx`
+  - [x] 16.4 Refactor `src/app/pages/profile/page.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 16.5 Refactor `src/app/pages/notifications/page.tsx`
+  - [x] 16.5 Refactor `src/app/pages/notifications/page.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 16.6 Refactor `src/app/pages/calendar/` pages
+  - [x] 16.6 Refactor `src/app/pages/calendar/` pages
     - Remove verbose comments, organize imports across calendar pages
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 16.7 Refactor `src/app/pages/audiolab/` pages
+  - [x] 16.7 Refactor `src/app/pages/audiolab/` pages
     - Remove verbose comments, organize imports across audiolab pages
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
-  - [ ] 16.8 Refactor remaining feature pages
+  - [x] 16.8 Refactor remaining feature pages
     - `src/app/pages/join-zone/`, `src/app/pages/submit-song/`
     - `src/app/pages/rehearsals/`, `src/app/pages/subgroup-rehearsal/`
     - `src/app/pages/all-ministered-songs/`, `src/app/pages/support/`
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 17. Refactor page-specific components and services
-  - [ ] 17.1 Refactor `src/app/pages/media/_components/` and `_lib/`
+- [x] 17. Refactor page-specific components and services
+  - [x] 17.1 Refactor `src/app/pages/media/_components/` and `_lib/`
     - Remove verbose comments, organize imports across media components and services
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
-  - [ ] 17.2 Refactor `src/app/pages/groups/_components/` and `_lib/`
+  - [x] 17.2 Refactor `src/app/pages/groups/_components/` and `_lib/`
     - Remove verbose comments, organize imports across groups components and services
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
-  - [ ] 17.3 Refactor `src/app/pages/audiolab/_components/` and `_lib/`
+  - [x] 17.3 Refactor `src/app/pages/audiolab/_components/` and `_lib/`
     - Remove verbose comments, organize imports across audiolab components and services
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
-  - [ ] 17.4 Refactor `src/app/pages/calendar/_lib/`
+  - [x] 17.4 Refactor `src/app/pages/calendar/_lib/`
     - Remove verbose comments, organize imports across calendar services
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 18. Refactor contexts and stores
-  - [ ] 18.1 Refactor `src/contexts/AuthContext.tsx`
+- [x] 18. Refactor contexts and stores
+  - [x] 18.1 Refactor `src/contexts/AuthContext.tsx`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 18.2 Refactor `src/contexts/SubscriptionContext.tsx`
+  - [x] 18.2 Refactor `src/contexts/SubscriptionContext.tsx`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 18.3 Refactor `src/stores/authStore.ts`
+  - [x] 18.3 Refactor `src/stores/authStore.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 18.4 Refactor `src/stores/zoneStore.ts`
+  - [x] 18.4 Refactor `src/stores/zoneStore.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 18.5 Refactor `src/stores/chatStore.ts`
+  - [x] 18.5 Refactor `src/stores/chatStore.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 19. Refactor utils directory
-  - [ ] 19.1 Refactor `src/utils/analytics.ts`
+- [x] 19. Refactor utils directory
+  - [x] 19.1 Refactor `src/utils/analytics.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 19.2 Refactor remaining utils
+  - [x] 19.2 Refactor remaining utils
     - `media-cache.ts`, `calendar-cache.ts`, `whatsapp-migration.ts`
     - `profile-recovery.ts`, `bulk-profile-recovery.ts`, `migration-permission-check.ts`
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 20. Final Checkpoint
+- [x] 20. Final Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ---

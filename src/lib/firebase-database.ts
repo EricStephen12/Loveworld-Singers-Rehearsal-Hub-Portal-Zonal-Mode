@@ -1,24 +1,10 @@
-// Firebase Database Service - Ultra Fast for Millions of Users
 import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  setDoc,
-  updateDoc, 
-  deleteDoc,
-  query,
-  orderBy,
-  limit,
-  where,
-  onSnapshot,
-  startAfter,
-  QueryDocumentSnapshot,
-  DocumentData
+  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
+  query, orderBy, limit, where, onSnapshot, startAfter,
+  QueryDocumentSnapshot, DocumentData
 } from 'firebase/firestore'
+
 import { db } from './firebase-setup'
-import { IDManager } from '@/utils/idManager'
 
 export class FirebaseDatabaseService {
   // Get all praise nights (pages) - optimized for millions of users

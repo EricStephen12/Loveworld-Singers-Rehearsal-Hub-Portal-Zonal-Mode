@@ -1,19 +1,3 @@
-/**
- * SIMPLE NOTIFICATIONS SERVICE
- * 
- * Admin sends messages → All users see them
- * No automatic notifications, just manual messages
- * 
- * HQ AWARE:
- * - HQ groups use 'admin_messages' collection (unfiltered)
- * - Regular zones use 'zone_admin_messages' collection (filtered by zoneId)
- * 
- * CACHING:
- * - Messages are cached in memory with a 2-minute TTL
- * - Cache is invalidated when sending/deleting messages
- */
-
-import { db } from './firebase-setup';
 import {
   collection,
   doc,
@@ -23,59 +7,47 @@ import {
   query,
   orderBy,
   where,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
-import { isHQGroup } from '@/config/zones';
+  serverTimestamp
+} from 'firebase/firestore'
 
-// Cache configuration
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+import { db } from './firebase-setup'
+import { isHQGroup } from '@/config/zones'
+
+const CACHE_TTL = 2 * 60 * 1000
+
 interface CacheEntry {
-  data: AdminMessage[];
-  timestamp: number;
+  data: AdminMessage[]
+  timestamp: number
 }
-const messagesCache = new Map<string, CacheEntry>();
 
-// Helper to get cache key
+const messagesCache = new Map<string, CacheEntry>()
+
 function getCacheKey(zoneId?: string): string {
-  return `messages_${zoneId || 'default'}`;
+  return `messages_${zoneId || 'default'}`
 }
 
-// Helper to check if cache is valid
 function isCacheValid(entry: CacheEntry | undefined): boolean {
-  if (!entry) return false;
-  return Date.now() - entry.timestamp < CACHE_TTL;
+  if (!entry) return false
+  return Date.now() - entry.timestamp < CACHE_TTL
 }
 
-// Invalidate cache for a zone
 function invalidateCache(zoneId?: string): void {
-  const key = getCacheKey(zoneId);
-  messagesCache.delete(key);
-  console.log('🗑️ [Messages] Cache invalidated for:', key);
+  messagesCache.delete(getCacheKey(zoneId))
 }
 
-// Helper to get correct collection name based on zone
 function getMessagesCollectionName(zoneId?: string): string {
-  if (zoneId && isHQGroup(zoneId)) {
-    console.log('🏢 Using HQ messages collection: admin_messages');
-    return 'admin_messages';
-  }
-  console.log('📍 Using zone messages collection: zone_admin_messages');
-  return 'zone_admin_messages';
+  return (zoneId && isHQGroup(zoneId)) ? 'admin_messages' : 'zone_admin_messages'
 }
 
 export interface AdminMessage {
-  id: string;
-  title: string;
-  message: string;
-  sentBy: string; // Admin username
-  sentAt: string;
-  createdAt: string;
+  id: string
+  title: string
+  message: string
+  sentBy: string
+  sentAt: string
+  createdAt: string
 }
 
-/**
- * Send message to all users in a zone
- */
 export async function sendMessageToAllUsers(
   title: string,
   message: string,
@@ -83,129 +55,80 @@ export async function sendMessageToAllUsers(
   zoneId?: string
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
-    console.log('📤 [Messages] Sending message to all users in zone:', zoneId);
-    
-    const collectionName = getMessagesCollectionName(zoneId);
+    const collectionName = getMessagesCollectionName(zoneId)
     
     const messageData = {
       title: title.trim(),
       message: message.trim(),
       sentBy: adminUsername,
       sentAt: new Date().toISOString(),
-      zoneId: zoneId || '', // Add zoneId for regular zones
+      zoneId: zoneId || '',
       createdAt: serverTimestamp()
-    };
+    }
     
-    const messagesRef = collection(db, collectionName);
-    const docRef = await addDoc(messagesRef, messageData);
+    const messagesRef = collection(db, collectionName)
+    const docRef = await addDoc(messagesRef, messageData)
+    invalidateCache(zoneId)
     
-    console.log('✅ [Messages] Message sent with ID:', docRef.id, 'to collection:', collectionName);
-    
-    // Invalidate cache so next fetch gets fresh data
-    invalidateCache(zoneId);
-    
-    return {
-      success: true,
-      id: docRef.id
-    };
+    return { success: true, id: docRef.id }
   } catch (error) {
-    console.error('❌ [Messages] Error sending message:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to send message'
-    };
+    console.error('Error sending message:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to send message' }
   }
 }
 
-/**
- * Get all messages for a zone (for users and admins)
- * Uses in-memory cache with 2-minute TTL
- */
 export async function getAllMessages(zoneId?: string, forceRefresh = false): Promise<AdminMessage[]> {
   try {
-    const cacheKey = getCacheKey(zoneId);
+    const cacheKey = getCacheKey(zoneId)
     
-    // Check cache first (unless force refresh)
     if (!forceRefresh) {
-      const cached = messagesCache.get(cacheKey);
+      const cached = messagesCache.get(cacheKey)
       if (isCacheValid(cached)) {
-        console.log('📦 [Messages] Returning cached messages for zone:', zoneId, `(${cached!.data.length} items)`);
-        return cached!.data;
+        return cached!.data
       }
     }
     
-    console.log('📖 [Messages] Fetching fresh messages for zone:', zoneId);
+    const collectionName = getMessagesCollectionName(zoneId)
+    const messagesRef = collection(db, collectionName)
     
-    const collectionName = getMessagesCollectionName(zoneId);
-    const messagesRef = collection(db, collectionName);
+    const q = (zoneId && !isHQGroup(zoneId))
+      ? query(messagesRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'))
+      : query(messagesRef, orderBy('createdAt', 'desc'))
     
-    // Build query based on zone type
-    let q;
-    if (zoneId && !isHQGroup(zoneId)) {
-      // Regular zone: filter by zoneId
-      console.log('📍 Filtering messages by zoneId:', zoneId);
-      q = query(
-        messagesRef,
-        where('zoneId', '==', zoneId),
-        orderBy('createdAt', 'desc')
-      );
-    } else {
-      // HQ group: no filter (see all)
-      console.log('🏢 Loading all messages (HQ)');
-      q = query(messagesRef, orderBy('createdAt', 'desc'));
-    }
-    
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q)
     
     const messages = snapshot.docs.map((docSnap) => {
-      const data = docSnap.data();
+      const data = docSnap.data()
       return {
         ...data,
         id: docSnap.id,
         sentAt: data.sentAt || new Date().toISOString(),
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
-      };
-    }) as AdminMessage[];
+      }
+    }) as AdminMessage[]
     
-    // Update cache
-    messagesCache.set(cacheKey, {
-      data: messages,
-      timestamp: Date.now()
-    });
+    messagesCache.set(cacheKey, { data: messages, timestamp: Date.now() })
     
-    console.log(`✅ [Messages] Found ${messages.length} messages from ${collectionName} (cached)`);
-    return messages;
+    return messages
   } catch (error) {
-    console.error('❌ [Messages] Error getting messages:', error);
-    return [];
+    console.error('Error getting messages:', error)
+    return []
   }
 }
 
-/**
- * Delete message (admin only)
- */
-export async function deleteMessage(messageId: string, zoneId?: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteMessage(
+  messageId: string, 
+  zoneId?: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('🗑️ [Messages] Deleting message:', messageId, 'from zone:', zoneId);
+    const collectionName = getMessagesCollectionName(zoneId)
+    const messageRef = doc(db, collectionName, messageId)
+    await deleteDoc(messageRef)
+    invalidateCache(zoneId)
     
-    const collectionName = getMessagesCollectionName(zoneId);
-    const messageRef = doc(db, collectionName, messageId);
-    await deleteDoc(messageRef);
-    
-    console.log('✅ [Messages] Message deleted successfully from', collectionName);
-    
-    // Invalidate cache so next fetch gets fresh data
-    invalidateCache(zoneId);
-    
-    return {
-      success: true
-    };
+    return { success: true }
   } catch (error) {
-    console.error('❌ [Messages] Error deleting message:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete message'
-    };
+    console.error('Error deleting message:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete message' }
   }
 }
-

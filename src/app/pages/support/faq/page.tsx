@@ -100,7 +100,6 @@ export default function FAQPage() {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Don't use router.push - signOut already handles redirect
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -109,112 +108,122 @@ export default function FAQPage() {
   const menuItems = getMenuItems(handleLogout);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50">
-      <ScreenHeader
-        title="FAQ & Help Center"
-        onMenuClick={() => setIsMenuOpen(true)}
-        leftButtons={
-          <button
-            onClick={() => router.push('/pages/support')}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-        }
-        rightImageSrc="/logo.png"
-      />
-
-      <div className="mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <BookOpen className="w-8 h-8 text-white" />
+    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/pages/support')}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-95"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <h1 className="text-lg font-semibold text-gray-900">FAQ & Help Center</h1>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-gray-600">
-            Find quick answers to common questions about the LoveWorld Singers app.
-          </p>
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />
         </div>
+      </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search FAQ..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            />
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide content-bottom-safe pt-16" style={{ 
+        height: '100vh',
+        scrollbarWidth: 'none', 
+        msOverflowStyle: 'none',
+        WebkitOverflowScrolling: 'touch'
+      }}>
+        <div className="mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6 pb-24">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+              <BookOpen className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Frequently Asked Questions
+            </h1>
+            <p className="text-gray-600">
+              Find quick answers to common questions about the LoveWorld Singers app.
+            </p>
           </div>
-        </div>
 
-        {/* FAQ Categories */}
-        {!searchQuery && (
+          {/* Search */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Browse by Category</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center hover:bg-blue-100 transition-colors">
-                <BookOpen className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-blue-700">Account</span>
-              </button>
-              <button className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center hover:bg-orange-100 transition-colors">
-                <HelpCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-                <span className="text-sm font-medium text-orange-700">Technical</span>
-              </button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search FAQ..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white/70 backdrop-blur-sm rounded-2xl ring-1 ring-black/5 shadow-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              />
             </div>
           </div>
-        )}
 
-        {/* FAQ List */}
-        <div>
-          {filteredFAQs.length > 0 ? (
-            <div className="space-y-3">
-              {filteredFAQs.map((faq) => (
-                <div key={faq.id} className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl p-3 shadow-sm hover:shadow-lg hover:bg-white/90 transition-all duration-300 active:scale-[0.97] group ring-1 ring-black/5">
-                  <button
-                    onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
-                    className="w-full text-left flex items-center justify-between"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                        {faq.question}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                          faq.category === 'account' ? 'bg-blue-100 text-blue-700' :
-                          faq.category === 'technical' ? 'bg-orange-100 text-orange-700' :
-                          faq.category === 'general' ? 'bg-green-100 text-green-700' :
-                          'bg-purple-100 text-purple-700'
-                        }`}>
-                          {faq.category}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      className={`w-5 h-5 text-gray-400 transition-transform ml-3 ${
-                        expandedFAQ === faq.id ? 'rotate-90' : ''
-                      }`}
-                    />
-                  </button>
-                  {expandedFAQ === faq.id && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-gray-600 text-sm leading-relaxed">{faq.answer}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium mb-2">No results found</p>
-              <p className="text-gray-400 text-sm">Try searching with different keywords</p>
+          {/* FAQ Categories */}
+          {!searchQuery && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Browse by Category</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <button className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/90 transition-all duration-300 active:scale-[0.97] ring-1 ring-black/5 shadow-sm">
+                  <BookOpen className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-gray-800">Account</span>
+                </button>
+                <button className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/90 transition-all duration-300 active:scale-[0.97] ring-1 ring-black/5 shadow-sm">
+                  <HelpCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-gray-800">Technical</span>
+                </button>
+              </div>
             </div>
           )}
+
+          {/* FAQ List */}
+          <div>
+            {filteredFAQs.length > 0 ? (
+              <div className="space-y-3">
+                {filteredFAQs.map((faq) => (
+                  <div key={faq.id} className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:bg-white/90 transition-all duration-300 active:scale-[0.97] group ring-1 ring-black/5">
+                    <button
+                      onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
+                      className="w-full text-left flex items-center justify-between"
+                    >
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                          {faq.question}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                            faq.category === 'account' ? 'bg-blue-100 text-blue-700' :
+                            faq.category === 'technical' ? 'bg-orange-100 text-orange-700' :
+                            faq.category === 'general' ? 'bg-green-100 text-green-700' :
+                            'bg-purple-100 text-purple-700'
+                          }`}>
+                            {faq.category}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight
+                        className={`w-5 h-5 text-gray-400 transition-transform ml-3 ${
+                          expandedFAQ === faq.id ? 'rotate-90' : ''
+                        }`}
+                      />
+                    </button>
+                    {expandedFAQ === faq.id && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-gray-600 text-sm leading-relaxed">{faq.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium mb-2">No results found</p>
+                <p className="text-gray-400 text-sm">Try searching with different keywords</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

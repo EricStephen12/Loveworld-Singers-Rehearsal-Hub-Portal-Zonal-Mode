@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
-import { AccountLinkingService } from '@/lib/account-linking'
 import AuthCheck from '@/components/AuthCheck'
-// Removed Supabase import - using Firebase now
 
 // Helper function to convert Firebase errors to user-friendly messages
 function sanitizeError(error: string): string {

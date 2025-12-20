@@ -50,7 +50,14 @@ export function useAuth() {
   const [profileLoading, setProfileLoading] = useState(false)
   const lastFetchedUserId = useRef<string | null>(null)
   const isFetching = useRef(false)
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
 
+  // Track when initial load is complete
+  useEffect(() => {
+    if (!loading && initialLoadComplete === false) {
+      setInitialLoadComplete(true)
+    }
+  }, [loading, initialLoadComplete])
   useEffect(() => {
     if (!user?.uid) {
       setProfile(null)
@@ -109,6 +116,7 @@ export function useAuth() {
     // Show content once user exists, even if profile still loading
     isLoading: loading && !user,
     isProfileLoading: profileLoading,
+    initialLoadComplete,
     signOut,
     refreshProfile
   }

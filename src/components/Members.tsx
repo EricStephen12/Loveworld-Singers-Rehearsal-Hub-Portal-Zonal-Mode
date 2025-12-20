@@ -14,7 +14,6 @@ import {
   Download,
   RefreshCw,
   X,
-  Shield,
   ChevronRight
 } from 'lucide-react';
 import { useAdminTheme } from './admin/AdminThemeProvider';

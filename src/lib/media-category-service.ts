@@ -1,6 +1,5 @@
 'use client'
 
-import { db } from '@/lib/firebase-setup'
 import { 
   collection, 
   doc,
@@ -17,6 +16,8 @@ import {
   writeBatch
 } from 'firebase/firestore'
 
+import { db } from '@/lib/firebase-setup'
+
 export interface MediaCategory {
   id: string
   name: string
@@ -29,7 +30,6 @@ export interface MediaCategory {
 
 const COLLECTION = 'media_categories'
 
-// Default categories (used for initial setup)
 export const DEFAULT_CATEGORIES: Omit<MediaCategory, 'id' | 'createdAt' | 'updatedAt'>[] = [
   { name: 'Praise', slug: 'praise', order: 1 },
   { name: 'Worship', slug: 'worship', order: 2 },
@@ -40,15 +40,12 @@ export const DEFAULT_CATEGORIES: Omit<MediaCategory, 'id' | 'createdAt' | 'updat
   { name: 'Other', slug: 'other', order: 99 },
 ]
 
-// Get all categories
 export async function getCategories(): Promise<MediaCategory[]> {
   try {
     const q = query(collection(db, COLLECTION), orderBy('order', 'asc'))
     const snapshot = await getDocs(q)
     
     if (snapshot.empty) {
-      // Initialize with default categories if none exist
-      console.log('📁 No categories found, initializing defaults...')
       await initializeDefaultCategories()
       return getCategories()
     }
@@ -61,8 +58,7 @@ export async function getCategories(): Promise<MediaCategory[]> {
     })) as MediaCategory[]
   } catch (error) {
     console.error('Error fetching categories:', error)
-    // Return default categories as fallback
-    return DEFAULT_CATEGORIES.map((cat, i) => ({
+    return DEFAULT_CATEGORIES.map((cat) => ({
       ...cat,
       id: cat.slug,
       createdAt: new Date(),
@@ -71,7 +67,6 @@ export async function getCategories(): Promise<MediaCategory[]> {
   }
 }
 
-// Initialize default categories
 export async function initializeDefaultCategories(): Promise<void> {
   try {
     for (const cat of DEFAULT_CATEGORIES) {
@@ -81,22 +76,14 @@ export async function initializeDefaultCategories(): Promise<void> {
         updatedAt: serverTimestamp()
       })
     }
-    console.log('📁 Default categories initialized')
   } catch (error) {
     console.error('Error initializing categories:', error)
   }
 }
 
-// Create a new category
-export async function createCategory(
-  name: string,
-  description?: string
-): Promise<string> {
+export async function createCategory(name: string, description?: string): Promise<string> {
   try {
-    // Generate slug from name
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-    
-    // Get max order
     const categories = await getCategories()
     const maxOrder = Math.max(...categories.map(c => c.order), 0)
     
@@ -109,7 +96,6 @@ export async function createCategory(
       updatedAt: serverTimestamp()
     })
     
-    console.log('📁 Created category:', docRef.id)
     return docRef.id
   } catch (error) {
     console.error('Error creating category:', error)
@@ -117,15 +103,12 @@ export async function createCategory(
   }
 }
 
-// Update a category (and update all videos with old slug to new slug)
 export async function updateCategory(
   categoryId: string,
   data: { name?: string; description?: string; order?: number }
 ): Promise<void> {
   try {
     const docRef = doc(db, COLLECTION, categoryId)
-    
-    // Get current category to check if slug is changing
     const currentDoc = await getDoc(docRef)
     const currentSlug = currentDoc.data()?.slug
     
@@ -134,20 +117,15 @@ export async function updateCategory(
       updatedAt: serverTimestamp()
     }
     
-    // Calculate new slug if name changed
     let newSlug: string | null = null
     if (data.name) {
       newSlug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       updateData.slug = newSlug
     }
     
-    // Update the category
     await updateDoc(docRef, updateData)
-    console.log('📁 Updated category:', categoryId)
     
-    // If slug changed, update all videos with the old slug
     if (newSlug && currentSlug && newSlug !== currentSlug) {
-      console.log(`📁 Updating videos from "${currentSlug}" to "${newSlug}"...`)
       await updateVideosCategory(currentSlug, newSlug)
     }
   } catch (error) {
@@ -156,19 +134,14 @@ export async function updateCategory(
   }
 }
 
-// Update all videos from old category slug to new slug
 async function updateVideosCategory(oldSlug: string, newSlug: string): Promise<number> {
   try {
     const videosRef = collection(db, 'media_videos')
     const q = query(videosRef, where('type', '==', oldSlug))
     const snapshot = await getDocs(q)
     
-    if (snapshot.empty) {
-      console.log(`📁 No videos found with category "${oldSlug}"`)
-      return 0
-    }
+    if (snapshot.empty) return 0
     
-    // Use batch writes for efficiency (max 500 per batch)
     const batchSize = 500
     let updatedCount = 0
     
@@ -187,7 +160,6 @@ async function updateVideosCategory(oldSlug: string, newSlug: string): Promise<n
       updatedCount += chunk.length
     }
     
-    console.log(`📁 Updated ${updatedCount} videos from "${oldSlug}" to "${newSlug}"`)
     return updatedCount
   } catch (error) {
     console.error('Error updating videos category:', error)
@@ -195,11 +167,9 @@ async function updateVideosCategory(oldSlug: string, newSlug: string): Promise<n
   }
 }
 
-// Delete a category
 export async function deleteCategory(categoryId: string): Promise<void> {
   try {
     await deleteDoc(doc(db, COLLECTION, categoryId))
-    console.log('📁 Deleted category:', categoryId)
   } catch (error) {
     console.error('Error deleting category:', error)
     throw error

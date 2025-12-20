@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, User, Users, Calendar, CheckCircle, Clock, Award, Settings, Edit, Camera, LogOut, Menu, X, Bell, Music, BarChart3, HelpCircle, Home, Play, Loader2, AlertTriangle, Trash2, ChevronDown, ChevronUp, MapPin, Phone, Mail, Shield, Briefcase, Smartphone, Film } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music } from 'lucide-react'
+
 import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { handleAppRefresh } from '@/utils/refresh-utils'
-
 import { ultraFastUploadProfileImage, ultraFastDeleteImage } from '@/utils/ultraFastImageUpload'
 import { validateImageFile } from '@/utils/imageUpload'
 import { FirebaseAuthService } from '@/lib/firebase-auth'

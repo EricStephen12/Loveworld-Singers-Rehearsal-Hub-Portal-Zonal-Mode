@@ -2,24 +2,21 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, Music, Tag, Users, Menu, ArrowLeft } from "lucide-react";
-import { PraiseNightSong, Comment, PraiseNight, Category } from '../../types/supabase';
+
+import { FileText } from "lucide-react";
+
+import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { useAdminData } from '../../hooks/useAdminData';
 import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
-import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
-import { FirebaseAuthService } from '@/lib/firebase-auth';
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 import { logAdminAction } from '@/lib/admin-activity-logger';
-import { versionManager } from '@/utils/versionManager';
 import { uploadBannerImage } from '@/utils/imageUpload';
 import { ToastContainer, Toast } from '../../components/Toast';
 import ZoneSwitcher from '@/components/ZoneSwitcher';
 import { getRoleTerminology, getFullRoleName, getZoneTheme } from '@/utils/zone-theme';
 import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
-
-// Import admin components
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminMobileNav from '../../components/admin/AdminMobileNav';
 import AdminMobileHeader from '../../components/admin/AdminMobileHeader';

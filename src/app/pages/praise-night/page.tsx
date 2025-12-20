@@ -2,24 +2,25 @@
 
 import React, { useMemo, useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
+
+import { ChevronRight, ChevronLeft, Search, Clock, Music, User, BookOpen, Timer, Mic, ChevronDown, ChevronUp, Play, X, Users, Calendar, Heart, Sparkles, CheckCircle, Info, ArrowLeft, SkipForward, Piano, HandMetal, Volume2, Flag, Archive, RefreshCw } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import Image from "next/image";
-
-import { ChevronRight, ChevronLeft, Search, Clock, Music, User, BookOpen, Timer, Mic, Edit, ChevronDown, ChevronUp, Play, Pause, Menu, X, Bell, Users, Calendar, BarChart3, HelpCircle, Home, Plus, Filter, MoreHorizontal, Heart, Sparkles, CheckCircle, Globe, Info, ArrowLeft, SkipForward, SkipBack, MousePointer2, Hand, MousePointerClick, Piano, Drum, Guitar, HandMetal, Volume2, Flag, Archive, RefreshCw } from "lucide-react";
 import SongDetailModal from "@/components/SongDetailModal";
+import ScreenHeader from "@/components/ScreenHeader";
+import SharedDrawer from "@/components/SharedDrawer";
+import AudioWave from "@/components/AudioWave";
 import { PraiseNightSong, PraiseNight } from "@/types/supabase";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
-import ScreenHeader from "@/components/ScreenHeader";
 import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
-import SharedDrawer from "@/components/SharedDrawer";
 import { getMenuItems } from "@/config/menuItems";
 import { useAudio } from "@/contexts/AudioContext";
 import { usePageSearch, PageSearchResult } from "@/hooks/usePageSearch";
-import AudioWave from "@/components/AudioWave";
 import { useAuth } from "@/hooks/useAuth";
 import { useServerCountdown } from "@/hooks/useServerCountdown";
 import { handleAppRefresh } from "@/utils/refresh-utils";

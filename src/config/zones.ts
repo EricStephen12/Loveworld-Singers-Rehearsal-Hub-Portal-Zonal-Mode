@@ -21,6 +21,9 @@ export const ZONES: Zone[] = [
   { id: 'zone-president', name: 'The President Zone', slug: 'president-zone', region: 'Headquarters', invitationCode: 'ZONEPRES', themeColor: '#9333EA' },
   { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
   { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
+  { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug:'national-zone', region:'Headquarters', invitationCode: 'ZONENATIONAL', themeColor: '#9333EA'},
+  { id: 'zone-international', name: 'Loveworld International Zonal Choir Representatives', slug:'international-zone', region:'Headquarters', invitationCode: 'ZONEINTERNATIONAL', themeColor: '#9333EA'},
+
   
   // South Africa
   { id: 'zone-006', name: 'Loveworld Singers SA Zone 1', slug: 'lws-sa-zone-1', region: 'South Africa', invitationCode: 'ZONE006', themeColor: '#3B82F6' },
@@ -182,7 +185,7 @@ export const BOSS_ZONE_ID = 'zone-boss'
 // HQ groups - these use unfiltered Firebase data
 export const HQ_GROUP_IDS = [
   'zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005',
-  'zone-orchestra', 'zone-president', 'zone-director', 'zone-oftp',
+  'zone-orchestra', 'zone-president', 'zone-director', 'zone-oftp', 'zone-national', 'zone-international'
 ]
 
 export function isHQGroup(zoneId: string | undefined): boolean {

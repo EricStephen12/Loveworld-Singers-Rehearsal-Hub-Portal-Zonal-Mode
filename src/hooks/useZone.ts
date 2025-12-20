@@ -76,7 +76,14 @@ export function useZone() {
   const [currentZoneMembership, setCurrentZoneMembership] = useState<any>(null)
   const lastLoadedUserId = useRef<string | null>(null)
   const isFetching = useRef(false)
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
 
+  // Track when initial load is complete
+  useEffect(() => {
+    if (!isLoading && initialLoadComplete === false) {
+      setInitialLoadComplete(true)
+    }
+  }, [isLoading, initialLoadComplete])
   useEffect(() => {
     if (!user?.uid) {
       setCurrentZone(null)
@@ -278,6 +285,7 @@ export function useZone() {
     hasPermission,
     currentZoneMembership,
     switchZone,
-    refreshZones
+    refreshZones,
+    initialLoadComplete
   }
 }
