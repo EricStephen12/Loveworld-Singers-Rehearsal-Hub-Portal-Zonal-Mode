@@ -19,16 +19,26 @@ import {
   Timestamp
 } from 'firebase/firestore'
 
+export interface PlaylistItem {
+  id: string
+  type: 'video' | 'playlist'
+  addedAt: Date
+}
+
 export interface Playlist {
   id: string
   name: string
   description?: string
   userId: string
-  videoIds: string[]
+  videoIds: string[] // Legacy: just video IDs
+  items?: PlaylistItem[] // New: mixed content (videos + playlists)
+  childPlaylistIds?: string[] // IDs of nested playlists
   thumbnail?: string
   isPublic: boolean
   isSystem?: boolean // For Liked Videos, Watch Later
   systemType?: 'liked' | 'watch_later'
+  type?: string // Category type (same as video categories)
+  totalVideos?: number // Computed: total videos including nested playlists
   createdAt: Date
   updatedAt: Date
 }
@@ -151,10 +161,11 @@ export async function createPlaylist(
   userId: string,
   name: string,
   description?: string,
-  isPublic: boolean = false
+  isPublic: boolean = false,
+  type?: string // Category type
 ): Promise<string> {
   try {
-    console.log('📝 createPlaylist:', { userId, name, isPublic })
+    console.log('📝 createPlaylist:', { userId, name, isPublic, type })
     const docRef = await addDoc(collection(db, COLLECTION), {
       name,
       description: description || '',
@@ -162,6 +173,7 @@ export async function createPlaylist(
       videoIds: [],
       thumbnail: null,
       isPublic,
+      type: type || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
@@ -236,7 +248,7 @@ export async function removeFromPlaylist(playlistId: string, videoId: string): P
 // Update playlist
 export async function updatePlaylist(
   playlistId: string,
-  data: { name?: string; description?: string; isPublic?: boolean }
+  data: { name?: string; description?: string; isPublic?: boolean; type?: string }
 ): Promise<void> {
   const docRef = doc(db, COLLECTION, playlistId)
   await updateDoc(docRef, {
@@ -254,6 +266,96 @@ export async function deletePlaylist(playlistId: string): Promise<void> {
 export async function getPlaylistsContainingVideo(userId: string, videoId: string): Promise<string[]> {
   const playlists = await getUserPlaylists(userId)
   return playlists.filter(p => p.videoIds.includes(videoId)).map(p => p.id)
+}
+
+// Add a playlist to another playlist (nested playlist)
+export async function addPlaylistToPlaylist(parentPlaylistId: string, childPlaylistId: string): Promise<void> {
+  const docRef = doc(db, COLLECTION, parentPlaylistId)
+  const parentPlaylist = await getPlaylist(parentPlaylistId)
+  const childPlaylist = await getPlaylist(childPlaylistId)
+  
+  if (!parentPlaylist || !childPlaylist) {
+    throw new Error('Playlist not found')
+  }
+  
+  // Prevent circular references
+  if (childPlaylist.childPlaylistIds?.includes(parentPlaylistId)) {
+    throw new Error('Cannot add: would create circular reference')
+  }
+  
+  const newItem: PlaylistItem = {
+    id: childPlaylistId,
+    type: 'playlist',
+    addedAt: new Date()
+  }
+  
+  await updateDoc(docRef, {
+    items: arrayUnion(newItem),
+    childPlaylistIds: arrayUnion(childPlaylistId),
+    updatedAt: serverTimestamp()
+  })
+}
+
+// Remove a playlist from another playlist
+export async function removePlaylistFromPlaylist(parentPlaylistId: string, childPlaylistId: string): Promise<void> {
+  const docRef = doc(db, COLLECTION, parentPlaylistId)
+  const parentPlaylist = await getPlaylist(parentPlaylistId)
+  
+  if (!parentPlaylist) return
+  
+  // Remove from items array
+  const updatedItems = (parentPlaylist.items || []).filter(
+    item => !(item.type === 'playlist' && item.id === childPlaylistId)
+  )
+  
+  // Remove from childPlaylistIds
+  const updatedChildIds = (parentPlaylist.childPlaylistIds || []).filter(
+    id => id !== childPlaylistId
+  )
+  
+  await updateDoc(docRef, {
+    items: updatedItems,
+    childPlaylistIds: updatedChildIds,
+    updatedAt: serverTimestamp()
+  })
+}
+
+// Get all items (videos + playlists) for a playlist with full data
+export async function getPlaylistItems(playlistId: string): Promise<{
+  videos: any[]
+  playlists: Playlist[]
+  allVideoIds: string[] // Flattened list of all video IDs including nested
+}> {
+  const playlist = await getPlaylist(playlistId)
+  if (!playlist) return { videos: [], playlists: [], allVideoIds: [] }
+  
+  const { firebaseMediaService } = await import('./firebase-media-service')
+  
+  // Get direct videos
+  const videoPromises = playlist.videoIds.map(id => firebaseMediaService.getMediaById(id))
+  const videos = (await Promise.all(videoPromises)).filter(Boolean)
+  
+  // Get nested playlists
+  const childPlaylistIds = playlist.childPlaylistIds || []
+  const playlistPromises = childPlaylistIds.map(id => getPlaylist(id))
+  const playlists = (await Promise.all(playlistPromises)).filter(Boolean) as Playlist[]
+  
+  // Flatten all video IDs (including from nested playlists)
+  let allVideoIds = [...playlist.videoIds]
+  for (const childPlaylist of playlists) {
+    allVideoIds = [...allVideoIds, ...childPlaylist.videoIds]
+  }
+  
+  return { videos, playlists, allVideoIds: [...new Set(allVideoIds)] }
+}
+
+// Get user's playlists that can be added to another playlist (excludes system playlists and self)
+export async function getAddablePlaylistsForUser(userId: string, excludePlaylistId?: string): Promise<Playlist[]> {
+  const playlists = await getUserPlaylists(userId)
+  return playlists.filter(p => 
+    !p.isSystem && 
+    p.id !== excludePlaylistId
+  )
 }
 
 // Get all public playlists (for browsing)

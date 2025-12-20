@@ -34,6 +34,7 @@ export interface MediaItem {
   views: number
   likes: number
   featured: boolean
+  hidden?: boolean // When true, video is hidden from main media page but still visible in playlists
   isYouTube?: boolean
   createdAt: Date
   updatedAt: Date
@@ -84,32 +85,13 @@ class FirebaseMediaService {
   }
 
   // OPTIMIZED: Added pagination support with default limit
+  // Filters out hidden videos by default
   async getAllMedia(limitCount: number = 24): Promise<MediaItem[]> {
     try {
       const q = query(
         collection(db, this.mediaCollection),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount) // OPTIMIZED: Limit initial load
-      )
-      const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      })) as MediaItem[]
-    } catch (error) {
-      console.error('Error fetching media:', error)
-      return []
-    }
-  }
-
-  // Get media filtered by zone type (HQ or regular zones)
-  async getMediaForZone(isHQZone: boolean, limitCount: number = 24): Promise<MediaItem[]> {
-    try {
-      const q = query(
-        collection(db, this.mediaCollection),
-        where('forHQ', '==', isHQZone),
+        where('hidden', '!=', true), // Filter out hidden videos
+        orderBy('hidden'), // Required for != query
         orderBy('createdAt', 'desc'),
         limit(limitCount)
       )
@@ -120,6 +102,52 @@ class FirebaseMediaService {
         createdAt: doc.data().createdAt?.toDate(),
         updatedAt: doc.data().updatedAt?.toDate()
       })) as MediaItem[]
+    } catch (error) {
+      console.error('Error fetching media:', error)
+      // Fallback: fetch all and filter client-side (for backwards compatibility)
+      try {
+        const fallbackQ = query(
+          collection(db, this.mediaCollection),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        )
+        const snapshot = await getDocs(fallbackQ)
+        return snapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate(),
+            updatedAt: doc.data().updatedAt?.toDate()
+          }))
+          .filter((item: any) => !item.hidden) as MediaItem[]
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError)
+        return []
+      }
+    }
+  }
+
+  // Get media filtered by zone type (HQ or regular zones)
+  // Also filters out hidden videos
+  async getMediaForZone(isHQZone: boolean, limitCount: number = 24): Promise<MediaItem[]> {
+    try {
+      // Firestore doesn't support multiple inequality filters, so we filter hidden client-side
+      const q = query(
+        collection(db, this.mediaCollection),
+        where('forHQ', '==', isHQZone),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount * 2) // Fetch extra to account for hidden videos
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate(),
+          updatedAt: doc.data().updatedAt?.toDate()
+        }))
+        .filter((item: any) => !item.hidden) // Filter out hidden videos
+        .slice(0, limitCount) as MediaItem[]
     } catch (error) {
       console.error('Error fetching zone media:', error)
       // Fallback to all media if zone filtering fails (for backwards compatibility)

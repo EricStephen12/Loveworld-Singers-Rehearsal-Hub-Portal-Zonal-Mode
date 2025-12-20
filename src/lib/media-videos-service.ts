@@ -29,6 +29,7 @@ export interface MediaVideo {
   releaseYear?: number
   featured: boolean
   forHQ: boolean
+  hidden: boolean // When true, video is hidden from main media page but still visible in playlists
   views: number
   likes: number
   createdAt: Date
@@ -213,6 +214,7 @@ class MediaVideosService {
       releaseYear: data.releaseYear,
       featured: data.featured || false,
       forHQ: data.forHQ !== false, // Default to true if not set
+      hidden: data.hidden || false, // Default to false (visible)
       views: data.views || 0,
       likes: data.likes || 0,
       createdAt: data.createdAt?.toDate?.() || new Date(),

@@ -986,14 +986,35 @@ export class FirebaseChatService {
       callback([])
       return () => {}
     }
+
+    // Debug: Log the exact chatId being queried
+    console.log('🔍 [Chat] Querying messages collection with chatId:', JSON.stringify(chatId))
+    console.log('🔍 [Chat] chatId type:', typeof chatId, 'length:', chatId.length)
     
-    // OPTIMIZED: Limit to 100 most recent messages to reduce reads
+    // Simple query without orderBy to avoid index requirement
+    // We'll sort client-side instead
     const q = query(
       collection(db, 'messages'),
       where('chatId', '==', chatId),
-      orderBy('timestamp', 'desc'),
       limit(100)
     )
+    
+    // Also do a one-time fetch to debug
+    getDocs(q).then(snapshot => {
+      console.log('🔍 [Chat] One-time fetch result:', snapshot.docs.length, 'messages')
+      if (snapshot.docs.length === 0) {
+        // Try fetching ALL messages to see what chatIds exist
+        getDocs(query(collection(db, 'messages'), limit(10))).then(allSnapshot => {
+          console.log('🔍 [Chat] Sample of ALL messages in collection:')
+          allSnapshot.docs.forEach(doc => {
+            const data = doc.data()
+            console.log('  - Message ID:', doc.id, 'chatId:', data.chatId, 'text:', data.text?.substring(0, 30))
+          })
+        })
+      }
+    }).catch(err => {
+      console.error('🔍 [Chat] One-time fetch error:', err)
+    })
     
     return onSnapshot(q, (snapshot) => {
         console.log('📨 [Chat] Message snapshot received:', snapshot.docs.length, 'messages for chat:', chatId)
@@ -1002,14 +1023,33 @@ export class FirebaseChatService {
         
         snapshot.docs.forEach(doc => {
           const data = doc.data()
-          console.log('📝 [Chat] Message:', doc.id, 'chatId:', data.chatId, 'text:', data.text?.substring(0, 30))
-          messages.push({ id: doc.id, ...data } as ChatMessage)
+          // Convert Firestore timestamp to Date
+          let timestamp = data.timestamp
+          if (timestamp?.toDate) {
+            timestamp = timestamp.toDate()
+          } else if (timestamp?.seconds) {
+            timestamp = new Date(timestamp.seconds * 1000)
+          } else if (typeof timestamp === 'string') {
+            timestamp = new Date(timestamp)
+          } else {
+            timestamp = new Date()
+          }
+          
+          messages.push({ 
+            id: doc.id, 
+            ...data,
+            timestamp 
+          } as ChatMessage)
         })
         
-        // Reverse to show oldest first (query returns newest first due to desc order)
-        messages.reverse()
+        // Sort by timestamp (oldest first) - client-side sorting
+        messages.sort((a, b) => {
+          const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime()
+          const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime()
+          return timeA - timeB
+        })
         
-        console.log('✅ [Chat] Returning', messages.length, 'messages')
+        console.log('✅ [Chat] Returning', messages.length, 'messages (sorted client-side)')
         callback(messages)
       }, 
       (error) => {
@@ -1018,6 +1058,7 @@ export class FirebaseChatService {
         // Check if it's an index error
         if (error.message?.includes('index')) {
           console.error('🔧 [Chat] This error requires creating a Firestore composite index. Check the Firebase console.')
+          console.error('🔧 [Chat] Create index: messages -> chatId (ASC) + timestamp (DESC)')
         }
         callback([])
       }

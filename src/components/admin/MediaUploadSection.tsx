@@ -25,10 +25,12 @@ import {
   deleteAdminPlaylist,
   addVideoToPlaylist,
   removeVideoFromPlaylist,
+  addChildPlaylist,
+  removeChildPlaylist,
   AdminPlaylist
 } from '@/lib/admin-playlist-service'
 
-type UploadStep = 'list' | 'choose' | 'details' | 'categories' | 'playlists' | 'playlist-form' | 'playlist-videos'
+type UploadStep = 'list' | 'choose' | 'details' | 'categories' | 'playlists' | 'playlist-form' | 'playlist-videos' | 'playlist-nested'
 type ListTab = 'videos' | 'playlists'
 
 export default function MediaUploadSection() {
@@ -457,6 +459,12 @@ export default function MediaUploadSection() {
                           <Play className="w-3 h-3" /> Videos
                         </button>
                         <button
+                          onClick={() => { setSelectedPlaylist(playlist); setStep('playlist-nested') }}
+                          className="flex-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 flex items-center justify-center gap-1"
+                        >
+                          <ListVideo className="w-3 h-3" /> Nested
+                        </button>
+                        <button
                           onClick={() => {
                             setSelectedPlaylist(playlist)
                             setPlaylistName(playlist.name)
@@ -792,6 +800,155 @@ export default function MediaUploadSection() {
                 )
               })
             )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Nested Playlists Management
+  if (step === 'playlist-nested' && selectedPlaylist) {
+    const childIds = selectedPlaylist.childPlaylistIds || []
+    const childPlaylists = playlists.filter(p => childIds.includes(p.id))
+    const availablePlaylists = playlists.filter(p => 
+      p.id !== selectedPlaylist.id && 
+      !childIds.includes(p.id) &&
+      p.name.toLowerCase().includes(playlistSearch.toLowerCase())
+    )
+
+    const handleToggleNested = async (childId: string) => {
+      try {
+        if (childIds.includes(childId)) {
+          await removeChildPlaylist(selectedPlaylist.id, childId)
+          setSelectedPlaylist({
+            ...selectedPlaylist,
+            childPlaylistIds: childIds.filter(id => id !== childId)
+          })
+        } else {
+          await addChildPlaylist(selectedPlaylist.id, childId)
+          setSelectedPlaylist({
+            ...selectedPlaylist,
+            childPlaylistIds: [...childIds, childId]
+          })
+        }
+        loadPlaylists()
+      } catch (e: any) {
+        alert(e.message || 'Failed to update')
+      }
+    }
+
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+        <div className="max-w-3xl mx-auto">
+          <button
+            onClick={() => { setSelectedPlaylist(null); setPlaylistSearch(''); setStep('list') }}
+            className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" /> Back to Playlists
+          </button>
+
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-24 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+              {(() => {
+                const thumbUrl = selectedPlaylist.thumbnail || getPlaylistThumbnail(selectedPlaylist)
+                return thumbUrl ? (
+                  <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ListVideo className="w-8 h-8 text-gray-400" />
+                  </div>
+                )
+              })()}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{selectedPlaylist.name}</h1>
+              <p className="text-sm text-gray-500">{childIds.length} nested playlists</p>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> Nested playlists will only appear inside this playlist. They won't show on the main media page.
+            </p>
+          </div>
+
+          {childPlaylists.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Currently Nested ({childPlaylists.length})</h3>
+              <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                {childPlaylists.map(p => {
+                  const thumbUrl = p.thumbnail || getPlaylistThumbnail(p)
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 p-3 hover:bg-gray-50">
+                      <button
+                        onClick={() => handleToggleNested(p.id)}
+                        className="w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 bg-purple-600 border-purple-600 text-white"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <div className="w-24 h-14 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {thumbUrl ? (
+                          <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ListVideo className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 line-clamp-1">{p.name}</h4>
+                        <p className="text-xs text-gray-500">{p.videoIds.length} videos</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={playlistSearch}
+              onChange={(e) => setPlaylistSearch(e.target.value)}
+              placeholder="Search playlists to add..."
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Available Playlists</h3>
+            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+              {availablePlaylists.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">No playlists available to nest</div>
+              ) : (
+                availablePlaylists.map(p => {
+                  const thumbUrl = p.thumbnail || getPlaylistThumbnail(p)
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 p-3 hover:bg-gray-50">
+                      <button
+                        onClick={() => handleToggleNested(p.id)}
+                        className="w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 border-gray-300"
+                      />
+                      <div className="w-24 h-14 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {thumbUrl ? (
+                          <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ListVideo className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 line-clamp-1">{p.name}</h4>
+                        <p className="text-xs text-gray-500">{p.videoIds.length} videos</p>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>

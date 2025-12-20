@@ -1186,7 +1186,7 @@ export function StudioView() {
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)' }}
       >
         <button 
-          onClick={() => router.push('/pages/audiolab')}
+          onClick={() => router.back()}
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-600 hover:bg-slate-500 active:bg-slate-400 transition-colors"
         >
           <ChevronLeft size={22} className="text-white" />

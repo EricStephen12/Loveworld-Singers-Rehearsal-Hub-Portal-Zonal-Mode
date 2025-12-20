@@ -22,9 +22,11 @@ export interface AdminPlaylist {
   description: string
   thumbnail: string
   videoIds: string[]
+  childPlaylistIds?: string[] // Nested playlists
   isPublic: boolean
   isFeatured: boolean
   forHQ: boolean // Zone targeting
+  type?: string // Category type (same as video categories)
   createdBy: string
   createdByName: string
   createdAt: Date
@@ -51,8 +53,9 @@ export async function getAdminPlaylists(): Promise<AdminPlaylist[]> {
 }
 
 // Get public playlists (for users to see)
-export async function getPublicAdminPlaylists(isHQZone: boolean): Promise<AdminPlaylist[]> {
-  console.log('getPublicAdminPlaylists called, isHQZone:', isHQZone)
+// Excludes playlists that are nested inside other playlists
+export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: string): Promise<AdminPlaylist[]> {
+  console.log('getPublicAdminPlaylists called, isHQZone:', isHQZone, 'category:', categoryType)
   try {
     // First try simple query without compound index
     const q = query(
@@ -64,16 +67,36 @@ export async function getPublicAdminPlaylists(isHQZone: boolean): Promise<AdminP
     console.log('Found', snapshot.docs.length, 'public admin playlists')
     
     // Filter by zone type in memory (avoids needing compound index)
-    const allPlaylists = snapshot.docs.map(doc => ({
+    let allPlaylists = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as AdminPlaylist[]
     
-    // Filter by forHQ field
-    const filtered = allPlaylists.filter(p => p.forHQ === isHQZone)
-    console.log('After zone filter:', filtered.length, 'playlists for', isHQZone ? 'HQ' : 'regular zones')
+    // Collect all nested playlist IDs (playlists that are children of other playlists)
+    const nestedPlaylistIds = new Set<string>()
+    allPlaylists.forEach(p => {
+      if (p.childPlaylistIds?.length) {
+        p.childPlaylistIds.forEach(childId => nestedPlaylistIds.add(childId))
+      }
+    })
+    
+    // Filter by forHQ field and exclude nested playlists
+    let filtered = allPlaylists.filter(p => {
+      // Must match zone
+      if (p.forHQ !== isHQZone) return false
+      // Exclude playlists that are nested inside other playlists
+      if (nestedPlaylistIds.has(p.id)) return false
+      return true
+    })
+    
+    // Filter by category if specified
+    if (categoryType && categoryType !== 'all') {
+      filtered = filtered.filter(p => p.type === categoryType)
+    }
+    
+    console.log('After filters:', filtered.length, 'playlists for', isHQZone ? 'HQ' : 'regular zones', categoryType ? `category: ${categoryType}` : '', `(excluded ${nestedPlaylistIds.size} nested)`)
     
     return filtered
   } catch (error) {
@@ -85,13 +108,26 @@ export async function getPublicAdminPlaylists(isHQZone: boolean): Promise<AdminP
         orderBy('createdAt', 'desc')
       )
       const snapshot = await getDocs(q)
-      const all = snapshot.docs.map(doc => ({
+      let all = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
         updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
       })) as AdminPlaylist[]
-      return all.filter(p => p.isPublic && p.forHQ === isHQZone)
+      
+      // Collect nested playlist IDs
+      const nestedPlaylistIds = new Set<string>()
+      all.forEach(p => {
+        if (p.childPlaylistIds?.length) {
+          p.childPlaylistIds.forEach(childId => nestedPlaylistIds.add(childId))
+        }
+      })
+      
+      let filtered = all.filter(p => p.isPublic && p.forHQ === isHQZone && !nestedPlaylistIds.has(p.id))
+      if (categoryType && categoryType !== 'all') {
+        filtered = filtered.filter(p => p.type === categoryType)
+      }
+      return filtered
     } catch {
       return []
     }
@@ -146,6 +182,7 @@ export async function createAdminPlaylist(data: {
   isPublic?: boolean
   isFeatured?: boolean
   forHQ?: boolean
+  type?: string
   createdBy: string
   createdByName: string
 }): Promise<string> {
@@ -158,6 +195,7 @@ export async function createAdminPlaylist(data: {
       isPublic: data.isPublic ?? true,
       isFeatured: data.isFeatured ?? false,
       forHQ: data.forHQ ?? true,
+      type: data.type || null,
       createdBy: data.createdBy,
       createdByName: data.createdByName,
       createdAt: serverTimestamp(),
@@ -243,5 +281,71 @@ export async function reorderPlaylistVideos(playlistId: string, videoIds: string
   } catch (error) {
     console.error('Error reordering playlist:', error)
     throw error
+  }
+}
+
+// Add child playlist to parent playlist
+export async function addChildPlaylist(parentId: string, childId: string): Promise<void> {
+  try {
+    // Prevent circular references
+    if (parentId === childId) throw new Error('Cannot add playlist to itself')
+    
+    const parent = await getAdminPlaylist(parentId)
+    if (!parent) throw new Error('Parent playlist not found')
+    
+    const child = await getAdminPlaylist(childId)
+    if (!child) throw new Error('Child playlist not found')
+    
+    // Check if child already contains parent (prevent circular)
+    if (child.childPlaylistIds?.includes(parentId)) {
+      throw new Error('Cannot create circular playlist reference')
+    }
+    
+    const currentChildren = parent.childPlaylistIds || []
+    if (!currentChildren.includes(childId)) {
+      await updateAdminPlaylist(parentId, {
+        childPlaylistIds: [...currentChildren, childId]
+      })
+    }
+  } catch (error) {
+    console.error('Error adding child playlist:', error)
+    throw error
+  }
+}
+
+// Remove child playlist from parent
+export async function removeChildPlaylist(parentId: string, childId: string): Promise<void> {
+  try {
+    const parent = await getAdminPlaylist(parentId)
+    if (!parent) throw new Error('Playlist not found')
+    
+    await updateAdminPlaylist(parentId, {
+      childPlaylistIds: (parent.childPlaylistIds || []).filter(id => id !== childId)
+    })
+  } catch (error) {
+    console.error('Error removing child playlist:', error)
+    throw error
+  }
+}
+
+// Get playlists that can be added as children (excludes self and ancestors)
+export async function getAddableChildPlaylists(parentId: string): Promise<AdminPlaylist[]> {
+  try {
+    const allPlaylists = await getAdminPlaylists()
+    const parent = await getAdminPlaylist(parentId)
+    if (!parent) return []
+    
+    const existingChildren = parent.childPlaylistIds || []
+    
+    // Filter out: self, already added, and any that contain this playlist as child
+    return allPlaylists.filter(p => {
+      if (p.id === parentId) return false
+      if (existingChildren.includes(p.id)) return false
+      if (p.childPlaylistIds?.includes(parentId)) return false
+      return true
+    })
+  } catch (error) {
+    console.error('Error getting addable playlists:', error)
+    return []
   }
 }
