@@ -24,7 +24,6 @@ export default function AllMinisteredSongsPage() {
   const [songs, setSongs] = useState<MasterSong[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedSong, setSelectedSong] = useState<MasterSong | null>(null)
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false)
 
@@ -44,25 +43,9 @@ export default function AllMinisteredSongsPage() {
     loadSongs()
   }, [])
 
-  // Get unique categories from songs
-  const categories = useMemo(() => {
-    const cats = new Set<string>()
-    songs.forEach(song => {
-      if (song.category?.trim()) {
-        cats.add(song.category.trim())
-      }
-    })
-    return ['all', ...Array.from(cats).sort()]
-  }, [songs])
-
-  // Filter songs by search query and category
+  // Filter songs by search query
   const filteredSongs = useMemo(() => {
     let filtered = songs
-    
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(song => song.category === selectedCategory)
-    }
     
     // Filter by search query
     if (searchQuery.trim()) {
@@ -76,7 +59,7 @@ export default function AllMinisteredSongsPage() {
     }
     
     return filtered
-  }, [songs, searchQuery, selectedCategory])
+  }, [songs, searchQuery])
 
 
   const handleBack = () => {
@@ -139,26 +122,14 @@ export default function AllMinisteredSongsPage() {
             />
           </div>
 
-          {/* Category Pills */}
-          {categories.length > 1 && (
-            <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`
-                    px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
-                    ${selectedCategory === category
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }
-                  `}
-                >
-                  {category === 'all' ? 'All' : category}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* All Pill Only */}
+          <div className="flex gap-2 mt-3">
+            <button
+              className="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap bg-purple-600 text-white shadow-md"
+            >
+              All
+            </button>
+          </div>
         </div>
 
         {/* Songs List */}

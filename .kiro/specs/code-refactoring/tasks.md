@@ -43,15 +43,15 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
     - `useUltraFastSupabase.ts`, `useWebsiteStyleData.ts`
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
 
-- [-] 2. Refactor utility files
-  - [-] 2.1 Refactor `src/lib/utils.ts`
+- [x] 2. Refactor utility files
+  - [x] 2.1 Refactor `src/lib/utils.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 2.2 Refactor `src/config/zones.ts`
+  - [x] 2.2 Refactor `src/config/zones.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
 
-- [ ] 3. Phase 1 Checkpoint
+- [-] 3. Phase 1 Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ---
