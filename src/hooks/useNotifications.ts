@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { pushNotificationService } from '@/services/pushNotificationService'
 
 interface NotificationSettings {
@@ -32,7 +33,6 @@ export const useNotifications = () => {
     }
   })
 
-  // Initialize notifications on mount
   useEffect(() => {
     const initializeNotifications = async () => {
       const isSupported = pushNotificationService.isNotificationSupported()
@@ -55,11 +55,8 @@ export const useNotifications = () => {
     initializeNotifications()
   }, [])
 
-  // Request notification permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (!state.isSupported) {
-      return false
-    }
+    if (!state.isSupported) return false
 
     const granted = await pushNotificationService.requestPermission()
     const permissionStatus = pushNotificationService.getPermissionStatus()
@@ -77,18 +74,14 @@ export const useNotifications = () => {
     return granted
   }, [state.isSupported])
 
-  // Update notification settings
   const updateSettings = useCallback((newSettings: Partial<NotificationSettings>) => {
     const updatedSettings = { ...state.settings, ...newSettings }
     pushNotificationService.saveNotificationSettings(updatedSettings)
     setState(prev => ({ ...prev, settings: updatedSettings }))
   }, [state.settings])
 
-  // Send a test notification
   const sendTestNotification = useCallback(async (): Promise<boolean> => {
-    if (!state.isInitialized || !state.settings.enabled) {
-      return false
-    }
+    if (!state.isInitialized || !state.settings.enabled) return false
 
     return pushNotificationService.sendSystemNotification({
       title: 'Test Notification',
@@ -97,7 +90,6 @@ export const useNotifications = () => {
     })
   }, [state.isInitialized, state.settings.enabled])
 
-  // Send rehearsal reminder
   const sendRehearsalReminder = useCallback(async (rehearsalData: {
     title: string
     time: string
@@ -107,11 +99,9 @@ export const useNotifications = () => {
     if (!state.isInitialized || !state.settings.enabled || !state.settings.rehearsalReminders) {
       return false
     }
-
     return pushNotificationService.sendRehearsalReminder(rehearsalData)
   }, [state.isInitialized, state.settings.enabled, state.settings.rehearsalReminders])
 
-  // Send announcement
   const sendAnnouncement = useCallback(async (announcement: {
     title: string
     message: string
@@ -120,11 +110,9 @@ export const useNotifications = () => {
     if (!state.isInitialized || !state.settings.enabled || !state.settings.announcements) {
       return false
     }
-
     return pushNotificationService.sendAnnouncement(announcement)
   }, [state.isInitialized, state.settings.enabled, state.settings.announcements])
 
-  // Send system notification
   const sendSystemNotification = useCallback(async (message: {
     title: string
     body: string
@@ -133,37 +121,28 @@ export const useNotifications = () => {
     if (!state.isInitialized || !state.settings.enabled || !state.settings.systemUpdates) {
       return false
     }
-
     return pushNotificationService.sendSystemNotification(message)
   }, [state.isInitialized, state.settings.enabled, state.settings.systemUpdates])
 
-  // Clear all notifications
   const clearAllNotifications = useCallback(async (): Promise<void> => {
     await pushNotificationService.clearAllNotifications()
   }, [])
 
-  // Schedule a notification
   const scheduleNotification = useCallback((payload: {
     title: string
     body: string
     icon?: string
     data?: any
   }, delay: number): void => {
-    if (!state.isInitialized || !state.settings.enabled) {
-      return
-    }
-
+    if (!state.isInitialized || !state.settings.enabled) return
     pushNotificationService.scheduleNotification(payload, delay)
   }, [state.isInitialized, state.settings.enabled])
 
   return {
-    // State
     permission: state.permission,
     isSupported: state.isSupported,
     isInitialized: state.isInitialized,
     settings: state.settings,
-    
-    // Actions
     requestPermission,
     updateSettings,
     sendTestNotification,
@@ -172,11 +151,8 @@ export const useNotifications = () => {
     sendSystemNotification,
     clearAllNotifications,
     scheduleNotification,
-    
-    // Computed
     canSendNotifications: state.isSupported && state.permission === 'granted' && state.isInitialized && state.settings.enabled,
     needsPermission: state.isSupported && state.permission === 'default',
     isBlocked: state.isSupported && state.permission === 'denied'
   }
 }
-

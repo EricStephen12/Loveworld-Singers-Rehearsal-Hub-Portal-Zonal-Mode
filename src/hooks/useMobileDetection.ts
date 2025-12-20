@@ -41,14 +41,11 @@ export function useMobileDetection(): MobileInfo {
       })
     }
 
-    // Initial check
     updateMobileInfo()
 
-    // Update on resize
     window.addEventListener('resize', updateMobileInfo)
     window.addEventListener('orientationchange', updateMobileInfo)
 
-    // Update when visual viewport changes
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateMobileInfo)
     }
@@ -64,6 +61,3 @@ export function useMobileDetection(): MobileInfo {
 
   return mobileInfo
 }
-
-
-

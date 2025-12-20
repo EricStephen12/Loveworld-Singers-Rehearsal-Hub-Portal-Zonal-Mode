@@ -8,32 +8,32 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
 
 ## Phase 1: Foundation (Hooks & Utils)
 
-- [ ] 1. Refactor custom hooks
-  - [ ] 1.1 Refactor `src/hooks/useAuth.ts`
+- [x] 1. Refactor custom hooks
+  - [x] 1.1 Refactor `src/hooks/useAuth.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1, 4.2_
-  - [ ] 1.2 Refactor `src/hooks/useZone.ts`
+  - [x] 1.2 Refactor `src/hooks/useZone.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
-  - [ ] 1.3 Refactor `src/hooks/useNotifications.ts`
+  - [x] 1.3 Refactor `src/hooks/useNotifications.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 1.4 Refactor `src/hooks/useRealtimeNotifications.ts`
+  - [x] 1.4 Refactor `src/hooks/useRealtimeNotifications.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
-  - [ ] 1.5 Refactor `src/hooks/useAnalytics.ts`
+  - [x] 1.5 Refactor `src/hooks/useAnalytics.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 1.6 Refactor `src/hooks/useOfflineStatus.ts`
+  - [x] 1.6 Refactor `src/hooks/useOfflineStatus.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 1.7 Refactor `src/hooks/useRealtimeData.ts`
+  - [x] 1.7 Refactor `src/hooks/useRealtimeData.ts`
     - Remove verbose comments, organize imports, simplify error handling
     - _Requirements: 1.1, 1.2, 3.1, 4.1_
-  - [ ] 1.8 Refactor `src/hooks/useUltraFastData.ts`
+  - [x] 1.8 Refactor `src/hooks/useUltraFastData.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
-  - [ ] 1.9 Refactor remaining hooks (batch)
+  - [x] 1.9 Refactor remaining hooks (batch)
     - `useAdminData.ts`, `useFeatureAccess.ts`, `useGlobalSearch.ts`, `useHomeGlobalSearch.ts`
     - `useInstantUpdates.ts`, `useLowDataOptimized.ts`, `useMemberRehearsals.ts`
     - `useMinimumLoadingTime.ts`, `useMobileDetection.ts`, `usePageSearch.ts`
@@ -43,8 +43,8 @@ This plan organizes the refactoring work into 4 phases, progressing from low-ris
     - `useUltraFastSupabase.ts`, `useWebsiteStyleData.ts`
     - _Requirements: 1.1, 1.2, 4.1, 4.2_
 
-- [ ] 2. Refactor utility files
-  - [ ] 2.1 Refactor `src/lib/utils.ts`
+- [-] 2. Refactor utility files
+  - [-] 2.1 Refactor `src/lib/utils.ts`
     - Remove verbose comments, organize imports
     - _Requirements: 1.1, 1.2, 4.1_
   - [ ] 2.2 Refactor `src/config/zones.ts`

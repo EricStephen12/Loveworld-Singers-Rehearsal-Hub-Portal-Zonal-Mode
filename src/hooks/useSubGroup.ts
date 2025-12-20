@@ -1,11 +1,7 @@
-"use client";
-
-/**
- * useSubGroup Hook
- * Provides sub-group context and utilities for components
- */
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+
 import { useAuth } from './useAuth'
 import { useZone } from './useZone'
 import { SubGroupService, SubGroup, SubGroupRequest } from '@/lib/subgroup-service'
@@ -20,7 +16,6 @@ export function useSubGroup() {
   const [userRequests, setUserRequests] = useState<SubGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
-  // Load user's sub-group data
   useEffect(() => {
     const loadSubGroupData = async () => {
       if (!user?.uid) {
@@ -40,7 +35,6 @@ export function useSubGroup() {
         setCoordinatedSubGroups(coordinated)
         setMemberSubGroups(memberOf)
         
-        // Load user's requests if in a zone
         if (currentZone) {
           const requests = await SubGroupService.getUserSubGroupRequests(currentZone.id, user.uid)
           setUserRequests(requests)
@@ -55,7 +49,6 @@ export function useSubGroup() {
     loadSubGroupData()
   }, [user?.uid, currentZone?.id])
   
-  // Request a new sub-group
   const requestSubGroup = useCallback(async (
     request: SubGroupRequest,
     requesterName: string,
@@ -74,7 +67,6 @@ export function useSubGroup() {
     )
     
     if (result.success) {
-      // Refresh user requests
       const requests = await SubGroupService.getUserSubGroupRequests(currentZone.id, user.uid)
       setUserRequests(requests)
     }
@@ -82,7 +74,6 @@ export function useSubGroup() {
     return result
   }, [user?.uid, currentZone])
   
-  // Refresh sub-group data
   const refresh = useCallback(async () => {
     if (!user?.uid) return
     
@@ -113,9 +104,6 @@ export function useSubGroup() {
   }
 }
 
-/**
- * Hook for Zone Coordinators to manage sub-groups
- */
 export function useZoneSubGroups() {
   const { user, profile } = useAuth()
   const { currentZone, isZoneCoordinator } = useZone()
@@ -124,7 +112,6 @@ export function useZoneSubGroups() {
   const [pendingCount, setPendingCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   
-  // Load zone sub-groups
   useEffect(() => {
     const loadSubGroups = async () => {
       if (!currentZone || !isZoneCoordinator) {
@@ -151,7 +138,6 @@ export function useZoneSubGroups() {
     loadSubGroups()
   }, [currentZone?.id, isZoneCoordinator])
   
-  // Approve a sub-group
   const approveSubGroup = useCallback(async (subGroupId: string) => {
     if (!user?.uid) return { success: false, error: 'Not authenticated' }
     
@@ -162,7 +148,6 @@ export function useZoneSubGroups() {
     const result = await SubGroupService.approveSubGroup(subGroupId, user.uid, approverName)
     
     if (result.success && currentZone) {
-      // Refresh data
       const [groups, count] = await Promise.all([
         SubGroupService.getZoneSubGroups(currentZone.id),
         SubGroupService.getPendingRequestCount(currentZone.id)
@@ -174,7 +159,6 @@ export function useZoneSubGroups() {
     return result
   }, [user?.uid, profile, currentZone])
   
-  // Reject a sub-group
   const rejectSubGroup = useCallback(async (subGroupId: string, reason: string) => {
     if (!user?.uid) return { success: false, error: 'Not authenticated' }
     
@@ -185,7 +169,6 @@ export function useZoneSubGroups() {
     const result = await SubGroupService.rejectSubGroup(subGroupId, user.uid, rejecterName, reason)
     
     if (result.success && currentZone) {
-      // Refresh data
       const [groups, count] = await Promise.all([
         SubGroupService.getZoneSubGroups(currentZone.id),
         SubGroupService.getPendingRequestCount(currentZone.id)
@@ -197,7 +180,6 @@ export function useZoneSubGroups() {
     return result
   }, [user?.uid, profile, currentZone])
   
-  // Refresh data
   const refresh = useCallback(async () => {
     if (!currentZone) return
     

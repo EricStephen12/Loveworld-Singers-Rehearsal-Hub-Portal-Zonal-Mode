@@ -1,38 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 export function useOfflineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
-  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [isOnline, setIsOnline] = useState(true)
+  const [isReconnecting, setIsReconnecting] = useState(false)
 
   useEffect(() => {
-    // Set initial state
-    setIsOnline(navigator.onLine);
+    setIsOnline(navigator.onLine)
 
     const handleOnline = () => {
-      setIsOnline(true);
-      setIsReconnecting(false);
-      console.log('🌐 Connection restored');
-    };
+      setIsOnline(true)
+      setIsReconnecting(false)
+    }
 
     const handleOffline = () => {
-      setIsOnline(false);
-      setIsReconnecting(false);
-      console.log('📴 Working offline');
-    };
+      setIsOnline(false)
+      setIsReconnecting(false)
+    }
 
-    // Listen for connection changes
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
 
-    // Cleanup
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
-  return { isOnline, isReconnecting };
+  return { isOnline, isReconnecting }
 }
-
-
-

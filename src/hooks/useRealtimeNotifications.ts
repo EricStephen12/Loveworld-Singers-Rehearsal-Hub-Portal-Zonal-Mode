@@ -1,241 +1,184 @@
-import { useEffect, useState } from 'react';
-import { FirebaseDatabaseService } from '@/lib/firebase-database';
-import { useAuth } from '@/hooks/useAuth';
-import { useZone } from '@/hooks/useZone';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase-setup';
-import { isHQGroup } from '@/config/zones';
+import { useEffect, useState } from 'react'
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore'
+
+import { FirebaseDatabaseService } from '@/lib/firebase-database'
+import { db } from '@/lib/firebase-setup'
+import { isHQGroup } from '@/config/zones'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 
 export interface NotificationData {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  category: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night';
-  priority: 'low' | 'medium' | 'high';
-  sender_id?: string;
-  sender_name?: string;
-  action_url?: string;
-  created_at: string;
-  read_at?: string;
-  is_read: boolean;
-  target_audience: 'all' | 'group' | 'individual';
-  target_group?: string;
-  target_user_id?: string;
-  zoneId?: string; // Zone ID for filtering (regular zones only)
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  category: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night'
+  priority: 'low' | 'medium' | 'high'
+  sender_id?: string
+  sender_name?: string
+  action_url?: string
+  created_at: string
+  read_at?: string
+  is_read: boolean
+  target_audience: 'all' | 'group' | 'individual'
+  target_group?: string
+  target_user_id?: string
+  zoneId?: string
 }
 
-// Helper to get correct collection name based on zone
 function getNotificationCollectionName(zoneId?: string): string {
-  if (zoneId && isHQGroup(zoneId)) {
-    console.log('🏢 Using HQ notification collection: notifications');
-    return 'notifications';
-  }
-  console.log('📍 Using zone notification collection: zone_notifications');
-  return 'zone_notifications';
+  return zoneId && isHQGroup(zoneId) ? 'notifications' : 'zone_notifications'
 }
 
 export function useRealtimeNotifications() {
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { user, profile } = useAuth();
-  const { currentZone } = useZone();
+  const [notifications, setNotifications] = useState<NotificationData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user, profile } = useAuth()
+  const { currentZone } = useZone()
 
-  // Load notifications with real-time updates (OPTIMIZED: limited to 50 most recent)
   useEffect(() => {
     if (!user?.uid || !currentZone) {
-      setNotifications([]);
-      setLoading(false);
-      return;
+      setNotifications([])
+      setLoading(false)
+      return
     }
 
-    console.log('🔔 Setting up Firebase notifications listener for user:', user.uid, 'zone:', currentZone.id);
-    setLoading(true);
+    setLoading(true)
 
-    // Get zone-aware collection name
-    const collectionName = getNotificationCollectionName(currentZone.id);
-    const notificationsRef = collection(db, collectionName);
+    const collectionName = getNotificationCollectionName(currentZone.id)
+    const notificationsRef = collection(db, collectionName)
 
-    // Build query based on zone type - OPTIMIZED: limit to 50 most recent
-    let q;
-    if (currentZone.id && !isHQGroup(currentZone.id)) {
-      // Regular zone: filter by zoneId, limit to 50
-      q = query(
-        notificationsRef,
-        where('zoneId', '==', currentZone.id),
-        orderBy('created_at', 'desc'),
-        limit(50)
-      );
-    } else {
-      // HQ group: limit to 50 most recent
-      q = query(
-        notificationsRef,
-        orderBy('created_at', 'desc'),
-        limit(50)
-      );
-    }
+    // Limit to 50 most recent for performance
+    const q = currentZone.id && !isHQGroup(currentZone.id)
+      ? query(notificationsRef, where('zoneId', '==', currentZone.id), orderBy('created_at', 'desc'), limit(50))
+      : query(notificationsRef, orderBy('created_at', 'desc'), limit(50))
 
-    // Set up real-time listener
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
-        // Already sorted by Firestore query, no need to sort again
         const allNotifications = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        } as NotificationData));
+        } as NotificationData))
 
-        // Filter notifications for current user
         const userNotifications = allNotifications.filter(notif => {
-          // All users notification
-          if (notif.target_audience === 'all') return true;
-
-          // Individual notification
-          if (notif.target_audience === 'individual' && notif.target_user_id === user.uid) return true;
-
-          // Group notification - check if user is in the group
+          if (notif.target_audience === 'all') return true
+          if (notif.target_audience === 'individual' && notif.target_user_id === user.uid) return true
           if (notif.target_audience === 'group' && notif.target_group && profile) {
-            // Check user's groups from profile or user_groups collection
-            return checkUserInGroup(notif.target_group);
+            return checkUserInGroup(notif.target_group)
           }
+          return false
+        })
 
-          return false;
-        });
-
-        console.log('📊 Filtered to', userNotifications.length, 'notifications for user');
-
-        // Load read status for each notification
-        loadReadStatus(userNotifications);
+        loadReadStatus(userNotifications)
       },
       (err) => {
-        console.error('❌ Error in notifications listener:', err);
-        setError('Failed to load notifications');
-        setLoading(false);
+        console.error('Error in notifications listener:', err)
+        setError('Failed to load notifications')
+        setLoading(false)
       }
-    );
+    )
 
-    return () => {
-      console.log('🔕 Cleaning up notifications listener');
-      unsubscribe();
-    };
-  }, [user?.uid, profile, currentZone?.id]);
+    return () => unsubscribe()
+  }, [user?.uid, profile, currentZone?.id])
 
-  // Check if user is in a specific group
   const checkUserInGroup = async (groupName: string): Promise<boolean> => {
-    if (!user?.uid) return false;
-
+    if (!user?.uid) return false
     try {
-      const userGroups = await FirebaseDatabaseService.getCollectionWhere('user_groups', 'user_id', '==', user.uid);
-      return userGroups.some((ug: any) => ug.group_name === groupName);
+      const userGroups = await FirebaseDatabaseService.getCollectionWhere('user_groups', 'user_id', '==', user.uid)
+      return userGroups.some((ug: any) => ug.group_name === groupName)
     } catch (error) {
-      console.error('Error checking user group:', error);
-      return false;
+      console.error('Error checking user group:', error)
+      return false
     }
-  };
+  }
 
-  // Load read status for notifications
   const loadReadStatus = async (notifs: NotificationData[]) => {
-    if (!user?.uid) return;
+    if (!user?.uid) return
 
     try {
-      // Get user's read notifications
       const readNotifications = await FirebaseDatabaseService.getCollectionWhere(
         'user_notifications',
         'user_id',
         '==',
         user.uid
-      );
+      )
 
       const readMap = new Map(
         readNotifications.map((rn: any) => [rn.notification_id, rn.read_at])
-      );
+      )
 
-      // Update notifications with read status
       const updatedNotifications = notifs.map(notif => ({
         ...notif,
         is_read: readMap.has(notif.id),
         read_at: readMap.get(notif.id) || undefined
-      }));
+      }))
 
-      setNotifications(updatedNotifications);
-      setLoading(false);
+      setNotifications(updatedNotifications)
+      setLoading(false)
     } catch (err) {
-      console.error('❌ Error loading read status:', err);
-      setNotifications(notifs);
-      setLoading(false);
+      console.error('Error loading read status:', err)
+      setNotifications(notifs)
+      setLoading(false)
     }
-  };
+  }
 
   const markAsRead = async (notificationId: string) => {
-    if (!user?.uid) return false;
+    if (!user?.uid) return false
 
     try {
-      console.log('✅ Marking notification as read:', notificationId);
-
-      // Create or update user_notification record
-      const userNotificationId = `${user.uid}_${notificationId}`;
+      const userNotificationId = `${user.uid}_${notificationId}`
       await FirebaseDatabaseService.createDocument('user_notifications', userNotificationId, {
         user_id: user.uid,
         notification_id: notificationId,
         read_at: new Date().toISOString(),
         created_at: new Date().toISOString()
-      });
+      })
 
-      // Update local state immediately
       setNotifications(prev =>
         prev.map(n =>
           n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
         )
-      );
+      )
 
-      return true;
+      return true
     } catch (err) {
-      console.error('❌ Error marking notification as read:', err);
-      return false;
+      console.error('Error marking notification as read:', err)
+      return false
     }
-  };
+  }
 
   const markAllAsRead = async () => {
-    if (!user?.uid) return false;
+    if (!user?.uid) return false
 
     try {
-      console.log('✅ Marking all notifications as read');
-      const unreadNotifications = notifications.filter(n => !n.is_read);
-
+      const unreadNotifications = notifications.filter(n => !n.is_read)
       for (const notification of unreadNotifications) {
-        await markAsRead(notification.id);
+        await markAsRead(notification.id)
       }
-
-      return true;
+      return true
     } catch (err) {
-      console.error('❌ Error marking all notifications as read:', err);
-      return false;
+      console.error('Error marking all notifications as read:', err)
+      return false
     }
-  };
+  }
 
   const deleteNotification = async (notificationId: string) => {
-    if (!user?.uid) return false;
+    if (!user?.uid) return false
 
     try {
-      console.log('🗑️ Deleting notification:', notificationId);
-
-      // Mark as read first
-      await markAsRead(notificationId);
-
-      // Remove from local state
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-
-      return true;
+      await markAsRead(notificationId)
+      setNotifications(prev => prev.filter(n => n.id !== notificationId))
+      return true
     } catch (err) {
-      console.error('❌ Error deleting notification:', err);
-      return false;
+      console.error('Error deleting notification:', err)
+      return false
     }
-  };
+  }
 
   const refresh = async () => {
-    // Refresh is handled automatically by the real-time listener
-    console.log('🔄 Notifications refresh triggered (handled by real-time listener)');
-  };
+    // Handled automatically by real-time listener
+  }
 
   return {
     notifications,
@@ -245,27 +188,24 @@ export function useRealtimeNotifications() {
     markAllAsRead,
     deleteNotification,
     refresh
-  };
+  }
 }
 
-// Hook for admins to create notifications
 export function useNotificationActions() {
-  const { user } = useAuth();
-  const { currentZone } = useZone();
+  const { user } = useAuth()
+  const { currentZone } = useZone()
 
   const createNotificationForAll = async (data: {
-    title: string;
-    message: string;
-    type?: 'info' | 'success' | 'warning' | 'error';
-    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night';
-    priority?: 'low' | 'medium' | 'high';
-    actionUrl?: string;
-    expiresAt?: string;
+    title: string
+    message: string
+    type?: 'info' | 'success' | 'warning' | 'error'
+    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night'
+    priority?: 'low' | 'medium' | 'high'
+    actionUrl?: string
+    expiresAt?: string
   }) => {
     try {
-      console.log('📢 Creating notification for all users in zone:', currentZone?.id, data.title);
-
-      const collectionName = getNotificationCollectionName(currentZone?.id);
+      const collectionName = getNotificationCollectionName(currentZone?.id)
 
       const notificationData = {
         title: data.title,
@@ -277,37 +217,33 @@ export function useNotificationActions() {
         sender_name: user?.email || 'System',
         action_url: data.actionUrl || null,
         target_audience: 'all',
-        zoneId: currentZone?.id || '', // Add zoneId for regular zones
+        zoneId: currentZone?.id || '',
         created_at: new Date().toISOString(),
         is_read: false
-      };
+      }
 
-      // Create notification in Firebase
-      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
+      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData)
 
-      console.log('✅ Notification created successfully in', collectionName, ':', notificationId);
-      return { success: true, notificationId };
+      return { success: true, notificationId }
     } catch (err) {
-      console.error('❌ Error creating notification:', err);
-      return { success: false, error: 'Failed to create notification' };
+      console.error('Error creating notification:', err)
+      return { success: false, error: 'Failed to create notification' }
     }
-  };
+  }
 
   const createNotificationForGroup = async (data: {
-    title: string;
-    message: string;
-    groupName: string;
-    type?: 'info' | 'success' | 'warning' | 'error';
-    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night';
-    priority?: 'low' | 'medium' | 'high';
-    actionUrl?: string;
-    expiresAt?: string;
+    title: string
+    message: string
+    groupName: string
+    type?: 'info' | 'success' | 'warning' | 'error'
+    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night'
+    priority?: 'low' | 'medium' | 'high'
+    actionUrl?: string
+    expiresAt?: string
   }) => {
     try {
-      console.log('📢 Creating notification for group:', data.groupName, 'in zone:', currentZone?.id);
-
-      const collectionName = getNotificationCollectionName(currentZone?.id);
+      const collectionName = getNotificationCollectionName(currentZone?.id)
 
       const notificationData = {
         title: data.title,
@@ -320,36 +256,32 @@ export function useNotificationActions() {
         action_url: data.actionUrl || null,
         target_audience: 'group',
         target_group: data.groupName,
-        zoneId: currentZone?.id || '', // Add zoneId for regular zones
+        zoneId: currentZone?.id || '',
         created_at: new Date().toISOString(),
         is_read: false
-      };
+      }
 
-      // Create notification in Firebase
-      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
+      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData)
 
-      console.log('✅ Group notification created successfully in', collectionName, ':', notificationId);
-      return { success: true, notificationId };
+      return { success: true, notificationId }
     } catch (err) {
-      console.error('❌ Error creating group notification:', err);
-      return { success: false, error: 'Failed to create group notification' };
+      console.error('Error creating group notification:', err)
+      return { success: false, error: 'Failed to create group notification' }
     }
-  };
+  }
 
   const createNotificationForUser = async (data: {
-    title: string;
-    message: string;
-    targetUserId: string;
-    type?: 'info' | 'success' | 'warning' | 'error';
-    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night';
-    priority?: 'low' | 'medium' | 'high';
-    actionUrl?: string;
+    title: string
+    message: string
+    targetUserId: string
+    type?: 'info' | 'success' | 'warning' | 'error'
+    category?: 'rehearsal' | 'announcement' | 'reminder' | 'system' | 'admin' | 'song' | 'praise_night'
+    priority?: 'low' | 'medium' | 'high'
+    actionUrl?: string
   }) => {
     try {
-      console.log('📢 Creating notification for user:', data.targetUserId, 'in zone:', currentZone?.id);
-
-      const collectionName = getNotificationCollectionName(currentZone?.id);
+      const collectionName = getNotificationCollectionName(currentZone?.id)
 
       const notificationData = {
         title: data.title,
@@ -362,27 +294,24 @@ export function useNotificationActions() {
         action_url: data.actionUrl || null,
         target_audience: 'individual',
         target_user_id: data.targetUserId,
-        zoneId: currentZone?.id || '', // Add zoneId for regular zones
+        zoneId: currentZone?.id || '',
         created_at: new Date().toISOString(),
         is_read: false
-      };
+      }
 
-      // Create notification in Firebase
-      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData);
+      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await FirebaseDatabaseService.createDocument(collectionName, notificationId, notificationData)
 
-      console.log('✅ User notification created successfully in', collectionName, ':', notificationId);
-      return { success: true, notificationId };
+      return { success: true, notificationId }
     } catch (err) {
-      console.error('❌ Error creating user notification:', err);
-      return { success: false, error: 'Failed to create user notification' };
+      console.error('Error creating user notification:', err)
+      return { success: false, error: 'Failed to create user notification' }
     }
-  };
+  }
 
   return {
     createNotificationForAll,
     createNotificationForGroup,
     createNotificationForUser
-  };
+  }
 }
-

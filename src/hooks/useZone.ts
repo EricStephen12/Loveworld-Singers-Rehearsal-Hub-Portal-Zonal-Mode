@@ -1,21 +1,10 @@
-// ============================================
-// SIMPLIFIED ZONE HOOK WITH PERSISTENT PREFERENCE
-// ============================================
-// Stores user's selected zone preference permanently.
-// When user switches zones, we save their choice and it persists.
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+
 import { useAuthContext } from '@/contexts/AuthContext'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { HQMembersService } from '@/lib/hq-members-service'
 import { ZONES, Zone, isSuperAdmin, isHQGroup } from '@/config/zones'
 import { UserRole, hasPermission as checkPermission } from '@/config/roles'
-
-// ============================================
-// USER ZONE PREFERENCE - Persistent storage
-// ============================================
-// Key format: lwsrh-user-zone-{userId}
-// This stores the user's selected zone and persists across sessions
 
 const getUserZonePreferenceKey = (userId: string) => `lwsrh-user-zone-${userId}`
 
@@ -32,17 +21,13 @@ function setUserZonePreference(userId: string, zoneId: string) {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(getUserZonePreferenceKey(userId), zoneId)
-    console.log('💾 Zone Preference: Saved', zoneId, 'for user', userId)
   } catch {
-    // Ignore storage errors
+    // Storage quota exceeded or private browsing
   }
 }
 
-// ============================================
-// ZONE DATA CACHE - Short-term cache for zone data
-// ============================================
 const ZONE_CACHE_KEY = 'lwsrh-zone-cache-v6'
-const ZONE_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const ZONE_CACHE_TTL = 5 * 60 * 1000
 
 interface ZoneCacheData {
   userId: string
@@ -92,7 +77,6 @@ export function useZone() {
   const lastLoadedUserId = useRef<string | null>(null)
   const isFetching = useRef(false)
 
-  // Load zones when user changes
   useEffect(() => {
     if (!user?.uid) {
       setCurrentZone(null)
@@ -104,20 +88,15 @@ export function useZone() {
       return
     }
 
-    // Get user's saved zone preference
     const savedZoneId = getUserZonePreference(user.uid)
-    console.log('🔍 Zone: User', user.uid, 'has saved preference:', savedZoneId)
-
-    // Check cache for instant display
     const cached = getZoneCache(user.uid)
+    
     if (cached && cached.userZones.length > 0) {
-      // Use saved preference if available, otherwise use cached zone
       const preferredZoneId = savedZoneId || cached.currentZoneId
       const zone = preferredZoneId 
         ? cached.userZones.find(z => z.id === preferredZoneId) || cached.userZones[0]
         : cached.userZones[0]
       
-      console.log('📦 Zone Cache: Using zone:', zone?.name)
       setCurrentZone(zone || null)
       setUserZones(cached.userZones)
       setUserRole(cached.userRole)
@@ -127,10 +106,8 @@ export function useZone() {
       return
     }
 
-    // Prevent duplicate fetches
     if (isFetching.current && lastLoadedUserId.current === user.uid) return
 
-    // Fetch fresh data
     loadUserZones(user.uid, user.email || '', savedZoneId || undefined)
   }, [user?.uid, user?.email])
 
@@ -165,7 +142,6 @@ export function useZone() {
         return
       }
 
-      // Regular user - fetch memberships
       const [zoneMemberships, hqMemberships] = await Promise.all([
         FirebaseDatabaseService.getCollectionWhere('zone_members', 'userId', '==', userId),
         HQMembersService.getUserHQGroups(userId)
@@ -189,23 +165,14 @@ export function useZone() {
         return
       }
 
-      // Map memberships to zones
       const zones = memberships
         .map((m: any) => ZONES.find(z => z.id === m.zoneId))
         .filter((z): z is Zone => z !== undefined)
 
-      // Use preferred zone if specified and user has access, otherwise use first zone
       const targetZone = preferredZoneId 
         ? zones.find(z => z.id === preferredZoneId) || zones[0]
         : zones[0]
       const targetMembership = memberships.find((m: any) => m.zoneId === targetZone?.id)
-      
-      console.log('🏠 Zone Load:', {
-        preferredZoneId,
-        targetZoneId: targetZone?.id,
-        targetZoneName: targetZone?.name,
-        availableZones: zones.map(z => z.name)
-      })
 
       let role: UserRole = 'zone_member'
       if (targetMembership?.role === 'coordinator') {
@@ -237,23 +204,14 @@ export function useZone() {
     }
   }
 
-  // Switch zone - saves preference and updates state
   const switchZone = useCallback(async (zoneId: string) => {
     const zone = userZones.find(z => z.id === zoneId)
     if (!zone || !user) return false
 
-    console.log('🔄 Zone Switch: Switching to', zone.name)
-    
-    // Save user's zone preference FIRST
     setUserZonePreference(user.uid, zoneId)
-    
-    // Clear the zone cache to force fresh data on next load
     clearZoneCache()
-    
-    // Update current zone immediately
     setCurrentZone(zone)
 
-    // Update membership info
     let membership: any = null
     
     if (isHQGroup(zoneId)) {
@@ -279,7 +237,6 @@ export function useZone() {
     setCurrentZoneMembership(membership)
     setUserRole(role)
 
-    // Update cache with new zone
     setZoneCache({
       userId: user.uid,
       currentZoneId: zoneId,
@@ -288,7 +245,6 @@ export function useZone() {
       isSuperAdmin: isSuperAdminUser
     })
 
-    console.log('✅ Zone Switch: Complete -', zone.name)
     return true
   }, [userZones, user, isSuperAdminUser])
 
