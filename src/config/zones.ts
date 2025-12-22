@@ -21,8 +21,8 @@ export const ZONES: Zone[] = [
   { id: 'zone-president', name: 'The President Zone', slug: 'president-zone', region: 'Headquarters', invitationCode: 'ZONEPRES', themeColor: '#9333EA' },
   { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
   { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
-  { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug:'national-zone', region:'Headquarters', invitationCode: 'ZONENATIONAL', themeColor: '#9333EA'},
-  { id: 'zone-international', name: 'Loveworld International Zonal Choir Representatives', slug:'international-zone', region:'Headquarters', invitationCode: 'ZONEINTERNATIONAL', themeColor: '#9333EA'},
+  { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug:'national-zone', region:'Headquarters', invitationCode: 'ZONENAT', themeColor: '#9333EA'},
+  { id: 'zone-international', name: 'Loveworld International Zonal Choir Representatives', slug:'international-zone', region:'Headquarters', invitationCode: 'ZONEINT', themeColor: '#9333EA'},
 
   
   // South Africa
