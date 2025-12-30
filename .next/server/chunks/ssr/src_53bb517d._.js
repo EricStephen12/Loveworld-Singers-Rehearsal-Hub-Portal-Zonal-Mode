@@ -411,6 +411,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-left.js [app-ssr] (ecmascript) <export default as ChevronLeft>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$book$2d$open$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BookOpen$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/book-open.js [app-ssr] (ecmascript) <export default as BookOpen>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$music$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Music$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/music.js [app-ssr] (ecmascript) <export default as Music>");
@@ -429,6 +430,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$minimize$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Minimize2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/minimize-2.js [app-ssr] (ecmascript) <export default as Minimize2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/rotate-cw.js [app-ssr] (ecmascript) <export default as RotateCw>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$contexts$2f$AudioContext$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/contexts/AudioContext.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-ssr] (ecmascript)");
@@ -445,7 +447,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useRealtimeS
 ;
 ;
 ;
+;
 function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [] }) {
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('lyrics');
     const [activeHistoryTab, setActiveHistoryTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('lyrics');
     const [isRepeating, setIsRepeating] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -455,6 +459,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
     const [isFullscreenLyrics, setIsFullscreenLyrics] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isFullscreenComments, setIsFullscreenComments] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isFullscreenSolfas, setIsFullscreenSolfas] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [isNavigatingToAudioLab, setIsNavigatingToAudioLab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     // Get zone context to determine comment terminology
     const { currentZone } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useZone"])();
     // Get zone color for theming
@@ -663,8 +668,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
         console.log('🔄 Repeat state changed from', isRepeating, 'to', newRepeatState);
     };
     const handleMusicPage = ()=>{
-        // Navigate to music page - you can implement this based on your routing
-        console.log('Navigate to music page');
+        // Navigate to AudioLab library with song title to auto-expand
+        if (currentSongData?.title) {
+            setIsNavigatingToAudioLab(true);
+            // Use encodeURIComponent to handle special characters in song titles
+            router.push(`/pages/audiolab?song=${encodeURIComponent(currentSongData.title)}`);
+            onClose();
+        }
     };
     // History audio player functions
     const handleHistoryAudioPlayPause = (audioId)=>{
@@ -1068,7 +1078,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
       `
             }, void 0, false, {
                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                lineNumber: 712,
+                lineNumber: 720,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1090,12 +1100,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 className: "w-5 h-5 text-gray-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 735,
+                                                lineNumber: 743,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 731,
+                                            lineNumber: 739,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1105,7 +1115,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: currentSongData?.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 738,
+                                                    lineNumber: 746,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1113,24 +1123,24 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: currentSongData?.writer
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 739,
+                                                    lineNumber: 747,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 737,
+                                            lineNumber: 745,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 730,
+                                    lineNumber: 738,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 729,
+                                lineNumber: 737,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1149,7 +1159,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                             className: "prose prose-lg max-w-none"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 752,
+                                            lineNumber: 760,
                                             columnNumber: 21
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "text-center py-12",
@@ -1158,7 +1168,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-16 h-16 text-gray-300 mx-auto mb-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 758,
+                                                    lineNumber: 766,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1166,34 +1176,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: "No lyrics available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 759,
+                                                    lineNumber: 767,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 757,
+                                            lineNumber: 765,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 750,
+                                        lineNumber: 758,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 749,
+                                    lineNumber: 757,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 748,
+                                lineNumber: 756,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                        lineNumber: 727,
+                        lineNumber: 735,
                         columnNumber: 11
                     }, this) : isFullscreenComments && activeTab === 'comments' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "fixed inset-0 bg-white z-[100] flex flex-col",
@@ -1210,12 +1220,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 className: "w-5 h-5 text-gray-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 775,
+                                                lineNumber: 783,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 771,
+                                            lineNumber: 779,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1225,7 +1235,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: currentSongData?.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 778,
+                                                    lineNumber: 786,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1233,24 +1243,24 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: "Comments"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 779,
+                                                    lineNumber: 787,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 777,
+                                            lineNumber: 785,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 770,
+                                    lineNumber: 778,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 769,
+                                lineNumber: 777,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1269,7 +1279,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-16 h-16 text-gray-300 mx-auto mb-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 790,
+                                                    lineNumber: 798,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1277,13 +1287,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: "No comments available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 791,
+                                                    lineNumber: 799,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 789,
+                                            lineNumber: 797,
                                             columnNumber: 21
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "space-y-6",
@@ -1295,7 +1305,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                             children: comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 797,
+                                                            lineNumber: 805,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1306,14 +1316,14 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: comment.author
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 799,
+                                                                    lineNumber: 807,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: "•"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 800,
+                                                                    lineNumber: 808,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1326,45 +1336,45 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 801,
+                                                                    lineNumber: 809,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 798,
+                                                            lineNumber: 806,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, comment.id, true, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 796,
+                                                    lineNumber: 804,
                                                     columnNumber: 25
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 794,
+                                            lineNumber: 802,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 787,
+                                        lineNumber: 795,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 786,
+                                    lineNumber: 794,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 785,
+                                lineNumber: 793,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                        lineNumber: 767,
+                        lineNumber: 775,
                         columnNumber: 11
                     }, this) : isFullscreenSolfas && activeTab === 'solfas' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "fixed inset-0 bg-white z-[100] flex flex-col",
@@ -1381,12 +1391,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 className: "w-5 h-5 text-gray-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 828,
+                                                lineNumber: 836,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 824,
+                                            lineNumber: 832,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1396,7 +1406,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: currentSongData?.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 831,
+                                                    lineNumber: 839,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1404,24 +1414,24 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: "Conductor's Guide"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 832,
+                                                    lineNumber: 840,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 830,
+                                            lineNumber: 838,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 823,
+                                    lineNumber: 831,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 822,
+                                lineNumber: 830,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1444,7 +1454,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 842,
+                                            lineNumber: 850,
                                             columnNumber: 21
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "text-center py-12",
@@ -1453,7 +1463,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-16 h-16 text-gray-300 mx-auto mb-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 852,
+                                                    lineNumber: 860,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1461,34 +1471,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     children: "No conductor's guide available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 853,
+                                                    lineNumber: 861,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 851,
+                                            lineNumber: 859,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 840,
+                                        lineNumber: 848,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 839,
+                                    lineNumber: 847,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 838,
+                                lineNumber: 846,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                        lineNumber: 820,
+                        lineNumber: 828,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                         children: [
@@ -1499,12 +1509,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                     className: "w-8 h-0.5 bg-gray-400 rounded-full cursor-pointer touch-optimized"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 866,
+                                    lineNumber: 874,
                                     columnNumber: 11
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 865,
+                                lineNumber: 873,
                                 columnNumber: 9
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1519,14 +1529,14 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 875,
+                                        lineNumber: 883,
                                         columnNumber: 11
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "absolute inset-0 bg-black/40"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 884,
+                                        lineNumber: 892,
                                         columnNumber: 11
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1541,17 +1551,17 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         className: "w-5 h-5 text-white"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 894,
+                                                        lineNumber: 902,
                                                         columnNumber: 15
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 890,
+                                                    lineNumber: 898,
                                                     columnNumber: 13
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 889,
+                                                lineNumber: 897,
                                                 columnNumber: 11
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1564,7 +1574,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                             children: displayedSongData?.title
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 903,
+                                                            lineNumber: 911,
                                                             columnNumber: 15
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1578,7 +1588,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                             children: "LEAD SINGER:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 906,
+                                                                            lineNumber: 914,
                                                                             columnNumber: 19
                                                                         }, this),
                                                                         " ",
@@ -1586,7 +1596,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 905,
+                                                                    lineNumber: 913,
                                                                     columnNumber: 17
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1599,7 +1609,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                     children: "WRITER:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 909,
+                                                                                    lineNumber: 917,
                                                                                     columnNumber: 25
                                                                                 }, this),
                                                                                 " ",
@@ -1607,7 +1617,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 909,
+                                                                            lineNumber: 917,
                                                                             columnNumber: 19
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1615,96 +1625,6 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                             children: [
                                                                                 "x",
                                                                                 displayedSongData?.rehearsalCount ?? 0
-                                                                            ]
-                                                                        }, void 0, true, {
-                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 910,
-                                                                            columnNumber: 19
-                                                                        }, this)
-                                                                    ]
-                                                                }, void 0, true, {
-                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 908,
-                                                                    columnNumber: 17
-                                                                }, this),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "flex justify-between items-center border-b border-white/30 pb-1 mb-1",
-                                                                    children: [
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                            children: [
-                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                    className: "font-semibold uppercase",
-                                                                                    children: "CONDUCTOR:"
-                                                                                }, void 0, false, {
-                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 913,
-                                                                                    columnNumber: 25
-                                                                                }, this),
-                                                                                " ",
-                                                                                displayedSongData?.conductor || ''
-                                                                            ]
-                                                                        }, void 0, true, {
-                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 913,
-                                                                            columnNumber: 19
-                                                                        }, this),
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                            children: [
-                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                    className: "font-semibold uppercase",
-                                                                                    children: "KEY:"
-                                                                                }, void 0, false, {
-                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 914,
-                                                                                    columnNumber: 25
-                                                                                }, this),
-                                                                                " ",
-                                                                                displayedSongData?.key || ''
-                                                                            ]
-                                                                        }, void 0, true, {
-                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 914,
-                                                                            columnNumber: 19
-                                                                        }, this)
-                                                                    ]
-                                                                }, void 0, true, {
-                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 912,
-                                                                    columnNumber: 17
-                                                                }, this),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "flex justify-between items-center border-b border-white/30 pb-1 mb-1",
-                                                                    children: [
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                            children: [
-                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                    className: "font-semibold uppercase",
-                                                                                    children: "LEAD KEYBOARDIST:"
-                                                                                }, void 0, false, {
-                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 917,
-                                                                                    columnNumber: 25
-                                                                                }, this),
-                                                                                " ",
-                                                                                displayedSongData?.leadKeyboardist || ''
-                                                                            ]
-                                                                        }, void 0, true, {
-                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 917,
-                                                                            columnNumber: 19
-                                                                        }, this),
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                            children: [
-                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                    className: "font-semibold uppercase",
-                                                                                    children: "TEMPO:"
-                                                                                }, void 0, false, {
-                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 918,
-                                                                                    columnNumber: 25
-                                                                                }, this),
-                                                                                " ",
-                                                                                displayedSongData?.tempo || ''
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
@@ -1724,14 +1644,14 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                     className: "font-semibold uppercase",
-                                                                                    children: "DRUMMER:"
+                                                                                    children: "CONDUCTOR:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
                                                                                     lineNumber: 921,
                                                                                     columnNumber: 25
                                                                                 }, this),
                                                                                 " ",
-                                                                                displayedSongData?.drummer || ''
+                                                                                displayedSongData?.conductor || ''
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
@@ -1742,14 +1662,14 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                     className: "font-semibold uppercase",
-                                                                                    children: "BASS GUITARIST:"
+                                                                                    children: "KEY:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
                                                                                     lineNumber: 922,
                                                                                     columnNumber: 25
                                                                                 }, this),
                                                                                 " ",
-                                                                                displayedSongData?.leadGuitarist || ''
+                                                                                displayedSongData?.key || ''
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
@@ -1761,22 +1681,112 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
                                                                     lineNumber: 920,
                                                                     columnNumber: 17
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                    className: "flex justify-between items-center border-b border-white/30 pb-1 mb-1",
+                                                                    children: [
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            children: [
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                    className: "font-semibold uppercase",
+                                                                                    children: "LEAD KEYBOARDIST:"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                                    lineNumber: 925,
+                                                                                    columnNumber: 25
+                                                                                }, this),
+                                                                                " ",
+                                                                                displayedSongData?.leadKeyboardist || ''
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                            lineNumber: 925,
+                                                                            columnNumber: 19
+                                                                        }, this),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            children: [
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                    className: "font-semibold uppercase",
+                                                                                    children: "TEMPO:"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                                    lineNumber: 926,
+                                                                                    columnNumber: 25
+                                                                                }, this),
+                                                                                " ",
+                                                                                displayedSongData?.tempo || ''
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                            lineNumber: 926,
+                                                                            columnNumber: 19
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                    lineNumber: 924,
+                                                                    columnNumber: 17
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                    className: "flex justify-between items-center border-b border-white/30 pb-1 mb-1",
+                                                                    children: [
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            children: [
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                    className: "font-semibold uppercase",
+                                                                                    children: "DRUMMER:"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                                    lineNumber: 929,
+                                                                                    columnNumber: 25
+                                                                                }, this),
+                                                                                " ",
+                                                                                displayedSongData?.drummer || ''
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                            lineNumber: 929,
+                                                                            columnNumber: 19
+                                                                        }, this),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            children: [
+                                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                    className: "font-semibold uppercase",
+                                                                                    children: "BASS GUITARIST:"
+                                                                                }, void 0, false, {
+                                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                                    lineNumber: 930,
+                                                                                    columnNumber: 25
+                                                                                }, this),
+                                                                                " ",
+                                                                                displayedSongData?.leadGuitarist || ''
+                                                                            ]
+                                                                        }, void 0, true, {
+                                                                            fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                            lineNumber: 930,
+                                                                            columnNumber: 19
+                                                                        }, this)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                                    lineNumber: 928,
+                                                                    columnNumber: 17
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 904,
+                                                            lineNumber: 912,
                                                             columnNumber: 15
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 902,
+                                                    lineNumber: 910,
                                                     columnNumber: 11
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 900,
+                                                lineNumber: 908,
                                                 columnNumber: 11
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1792,12 +1802,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 939,
+                                                                    lineNumber: 947,
                                                                     columnNumber: 17
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 934,
+                                                                lineNumber: 942,
                                                                 columnNumber: 15
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1805,13 +1815,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                 children: "Lyrics"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 941,
+                                                                lineNumber: 949,
                                                                 columnNumber: 15
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 930,
+                                                        lineNumber: 938,
                                                         columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1824,12 +1834,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 952,
+                                                                    lineNumber: 960,
                                                                     columnNumber: 17
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 947,
+                                                                lineNumber: 955,
                                                                 columnNumber: 15
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1837,13 +1847,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                 children: "Conductor's Guide"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 954,
+                                                                lineNumber: 962,
                                                                 columnNumber: 15
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 943,
+                                                        lineNumber: 951,
                                                         columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1856,12 +1866,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 965,
+                                                                    lineNumber: 973,
                                                                     columnNumber: 17
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 960,
+                                                                lineNumber: 968,
                                                                 columnNumber: 15
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1869,13 +1879,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                 children: "Comments"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 967,
+                                                                lineNumber: 975,
                                                                 columnNumber: 15
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 956,
+                                                        lineNumber: 964,
                                                         columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1888,12 +1898,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 978,
+                                                                    lineNumber: 986,
                                                                     columnNumber: 17
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 973,
+                                                                lineNumber: 981,
                                                                 columnNumber: 15
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1901,31 +1911,31 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                 children: "History"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 980,
+                                                                lineNumber: 988,
                                                                 columnNumber: 15
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 969,
+                                                        lineNumber: 977,
                                                         columnNumber: 13
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 929,
+                                                lineNumber: 937,
                                                 columnNumber: 11
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 887,
+                                        lineNumber: 895,
                                         columnNumber: 11
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 873,
+                                lineNumber: 881,
                                 columnNumber: 9
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1951,7 +1961,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 992,
+                                                lineNumber: 1000,
                                                 columnNumber: 19
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "text-center py-8",
@@ -1961,7 +1971,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "No Lyrics Available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1004,
+                                                        lineNumber: 1012,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1969,23 +1979,23 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Lyrics will be displayed here when available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1005,
+                                                        lineNumber: 1013,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1003,
+                                                lineNumber: 1011,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 990,
+                                            lineNumber: 998,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 989,
+                                        lineNumber: 997,
                                         columnNumber: 13
                                     }, this),
                                     activeTab === 'solfas' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2007,7 +2017,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1016,
+                                                lineNumber: 1024,
                                                 columnNumber: 19
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "text-center py-8",
@@ -2017,7 +2027,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "No Conductor's Guide Available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1030,
+                                                        lineNumber: 1038,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2025,23 +2035,23 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Conductor's guide notation will be displayed here when available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1031,
+                                                        lineNumber: 1039,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1029,
+                                                lineNumber: 1037,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 1014,
+                                            lineNumber: 1022,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 1013,
+                                        lineNumber: 1021,
                                         columnNumber: 13
                                     }, this),
                                     activeTab === 'comments' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2056,7 +2066,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "No Comments Available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1043,
+                                                        lineNumber: 1051,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2064,13 +2074,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Comments will be displayed here when available"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1044,
+                                                        lineNumber: 1052,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1042,
+                                                lineNumber: 1050,
                                                 columnNumber: 19
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "space-y-4",
@@ -2082,7 +2092,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                 children: comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 1050,
+                                                                lineNumber: 1058,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2093,14 +2103,14 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         children: comment.author
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1052,
+                                                                        lineNumber: 1060,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "•"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1053,
+                                                                        lineNumber: 1061,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2113,34 +2123,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         })
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1054,
+                                                                        lineNumber: 1062,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                lineNumber: 1051,
+                                                                lineNumber: 1059,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, comment.id, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1049,
+                                                        lineNumber: 1057,
                                                         columnNumber: 23
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1047,
+                                                lineNumber: 1055,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                            lineNumber: 1040,
+                                            lineNumber: 1048,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 1039,
+                                        lineNumber: 1047,
                                         columnNumber: 13
                                     }, this),
                                     activeTab === 'history' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2158,7 +2168,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Lyrics"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1076,
+                                                        lineNumber: 1084,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2170,7 +2180,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Audio"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1087,
+                                                        lineNumber: 1095,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2182,7 +2192,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Conductor's Guide"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1098,
+                                                        lineNumber: 1106,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2197,7 +2207,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1109,
+                                                        lineNumber: 1117,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2209,13 +2219,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "Song Details"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1120,
+                                                        lineNumber: 1128,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1075,
+                                                lineNumber: 1083,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2230,7 +2240,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1139,
+                                                                    lineNumber: 1147,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2238,13 +2248,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Loading lyrics history..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1140,
+                                                                    lineNumber: 1148,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1138,
+                                                            lineNumber: 1146,
                                                             columnNumber: 23
                                                         }, this) : getHistoryData('lyrics').length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-center py-8",
@@ -2253,7 +2263,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-12 h-12 text-gray-300 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1144,
+                                                                    lineNumber: 1152,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2261,7 +2271,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "No Lyrics History"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1145,
+                                                                    lineNumber: 1153,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2269,7 +2279,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Changes will appear here"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1146,
+                                                                    lineNumber: 1154,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2280,18 +2290,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1152,
+                                                                        lineNumber: 1160,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1147,
+                                                                    lineNumber: 1155,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1143,
+                                                            lineNumber: 1151,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "space-y-4",
@@ -2315,12 +2325,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                             className: "w-4 h-4 text-white"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                            lineNumber: 1172,
+                                                                                            lineNumber: 1180,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1166,
+                                                                                        lineNumber: 1174,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2334,7 +2344,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.type
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1176,
+                                                                                                        lineNumber: 1184,
                                                                                                         columnNumber: 35
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2346,13 +2356,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1179,
+                                                                                                        lineNumber: 1187,
                                                                                                         columnNumber: 35
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1175,
+                                                                                                lineNumber: 1183,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2363,43 +2373,43 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.title
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1184,
+                                                                                                        lineNumber: 1192,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1186,
+                                                                                                        lineNumber: 1194,
                                                                                                         columnNumber: 41
                                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1188,
+                                                                                                        lineNumber: 1196,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1183,
+                                                                                                lineNumber: 1191,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1174,
+                                                                                        lineNumber: 1182,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1165,
+                                                                                lineNumber: 1173,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1161,
+                                                                            lineNumber: 1169,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         isExpanded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2412,34 +2422,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                     }
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 1197,
+                                                                                    lineNumber: 1205,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1196,
+                                                                                lineNumber: 1204,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1195,
+                                                                            lineNumber: 1203,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, entry.id, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1160,
+                                                                    lineNumber: 1168,
                                                                     columnNumber: 29
                                                                 }, this);
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1156,
+                                                            lineNumber: 1164,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1136,
+                                                        lineNumber: 1144,
                                                         columnNumber: 19
                                                     }, this),
                                                     activeHistoryTab === 'audio' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2451,7 +2461,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1213,
+                                                                    lineNumber: 1221,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2459,13 +2469,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Loading audio history..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1214,
+                                                                    lineNumber: 1222,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1212,
+                                                            lineNumber: 1220,
                                                             columnNumber: 23
                                                         }, this) : getHistoryData('audio').length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-center py-8",
@@ -2474,7 +2484,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-12 h-12 text-gray-300 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1218,
+                                                                    lineNumber: 1226,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2482,7 +2492,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "No Audio History"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1219,
+                                                                    lineNumber: 1227,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2490,7 +2500,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Changes will appear here"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1220,
+                                                                    lineNumber: 1228,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2501,18 +2511,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1226,
+                                                                        lineNumber: 1234,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1221,
+                                                                    lineNumber: 1229,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1217,
+                                                            lineNumber: 1225,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "space-y-4",
@@ -2536,12 +2546,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                             className: "w-4 h-4 text-white"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                            lineNumber: 1246,
+                                                                                            lineNumber: 1254,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1240,
+                                                                                        lineNumber: 1248,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2555,7 +2565,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.type
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1250,
+                                                                                                        lineNumber: 1258,
                                                                                                         columnNumber: 35
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2567,13 +2577,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1253,
+                                                                                                        lineNumber: 1261,
                                                                                                         columnNumber: 35
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1249,
+                                                                                                lineNumber: 1257,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2584,43 +2594,43 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.title
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1258,
+                                                                                                        lineNumber: 1266,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1260,
+                                                                                                        lineNumber: 1268,
                                                                                                         columnNumber: 41
                                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1262,
+                                                                                                        lineNumber: 1270,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1257,
+                                                                                                lineNumber: 1265,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1248,
+                                                                                        lineNumber: 1256,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1239,
+                                                                                lineNumber: 1247,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1235,
+                                                                            lineNumber: 1243,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         isExpanded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2650,18 +2660,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                     className: "w-5 h-5"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                    lineNumber: 1289,
+                                                                                                    lineNumber: 1297,
                                                                                                     columnNumber: 41
                                                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
                                                                                                     className: "w-5 h-5 ml-0.5"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                    lineNumber: 1291,
+                                                                                                    lineNumber: 1299,
                                                                                                     columnNumber: 41
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1272,
+                                                                                                lineNumber: 1280,
                                                                                                 columnNumber: 37
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2672,7 +2682,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: "Previous Audio Version"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1295,
+                                                                                                        lineNumber: 1303,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2684,19 +2694,19 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1296,
+                                                                                                        lineNumber: 1304,
                                                                                                         columnNumber: 39
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1294,
+                                                                                                lineNumber: 1302,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1271,
+                                                                                        lineNumber: 1279,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("audio", {
@@ -2710,35 +2720,35 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                         preload: "metadata"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1301,
+                                                                                        lineNumber: 1309,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1270,
+                                                                                lineNumber: 1278,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1269,
+                                                                            lineNumber: 1277,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, entry.id, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1234,
+                                                                    lineNumber: 1242,
                                                                     columnNumber: 29
                                                                 }, this);
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1230,
+                                                            lineNumber: 1238,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1210,
+                                                        lineNumber: 1218,
                                                         columnNumber: 19
                                                     }, this),
                                                     activeHistoryTab === 'solfas' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2750,7 +2760,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1326,
+                                                                    lineNumber: 1334,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2758,13 +2768,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Loading conductor's guide history..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1327,
+                                                                    lineNumber: 1335,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1325,
+                                                            lineNumber: 1333,
                                                             columnNumber: 23
                                                         }, this) : getHistoryData('solfas').length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-center py-8",
@@ -2773,7 +2783,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-12 h-12 text-gray-300 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1331,
+                                                                    lineNumber: 1339,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2781,7 +2791,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "No Conductor's Guide History"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1332,
+                                                                    lineNumber: 1340,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2789,7 +2799,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Changes will appear here"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1333,
+                                                                    lineNumber: 1341,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2800,18 +2810,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1339,
+                                                                        lineNumber: 1347,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1334,
+                                                                    lineNumber: 1342,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1330,
+                                                            lineNumber: 1338,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "space-y-4",
@@ -2835,12 +2845,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                             className: "w-4 h-4 text-white"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                            lineNumber: 1359,
+                                                                                            lineNumber: 1367,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1353,
+                                                                                        lineNumber: 1361,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2854,7 +2864,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.type
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1363,
+                                                                                                        lineNumber: 1371,
                                                                                                         columnNumber: 35
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2866,13 +2876,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1366,
+                                                                                                        lineNumber: 1374,
                                                                                                         columnNumber: 35
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1362,
+                                                                                                lineNumber: 1370,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2883,43 +2893,43 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.title
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1371,
+                                                                                                        lineNumber: 1379,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1373,
+                                                                                                        lineNumber: 1381,
                                                                                                         columnNumber: 41
                                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1375,
+                                                                                                        lineNumber: 1383,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1370,
+                                                                                                lineNumber: 1378,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1361,
+                                                                                        lineNumber: 1369,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1352,
+                                                                                lineNumber: 1360,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1348,
+                                                                            lineNumber: 1356,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         isExpanded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2932,34 +2942,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                     }
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 1384,
+                                                                                    lineNumber: 1392,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1383,
+                                                                                lineNumber: 1391,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1382,
+                                                                            lineNumber: 1390,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, entry.id, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1347,
+                                                                    lineNumber: 1355,
                                                                     columnNumber: 29
                                                                 }, this);
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1343,
+                                                            lineNumber: 1351,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1323,
+                                                        lineNumber: 1331,
                                                         columnNumber: 19
                                                     }, this),
                                                     activeHistoryTab === 'comments' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2971,7 +2981,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1400,
+                                                                    lineNumber: 1408,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2979,13 +2989,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Loading comments history..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1401,
+                                                                    lineNumber: 1409,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1399,
+                                                            lineNumber: 1407,
                                                             columnNumber: 23
                                                         }, this) : getHistoryData('comments').length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-center py-8",
@@ -2994,7 +3004,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-12 h-12 text-gray-300 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1405,
+                                                                    lineNumber: 1413,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3002,7 +3012,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "No Comments History"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1406,
+                                                                    lineNumber: 1414,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3010,7 +3020,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Changes will appear here"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1407,
+                                                                    lineNumber: 1415,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3021,18 +3031,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1413,
+                                                                        lineNumber: 1421,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1408,
+                                                                    lineNumber: 1416,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1404,
+                                                            lineNumber: 1412,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "space-y-4",
@@ -3056,12 +3066,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                             className: "w-4 h-4 text-white"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                            lineNumber: 1433,
+                                                                                            lineNumber: 1441,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1427,
+                                                                                        lineNumber: 1435,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3075,7 +3085,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.type
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1437,
+                                                                                                        lineNumber: 1445,
                                                                                                         columnNumber: 35
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3087,13 +3097,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1440,
+                                                                                                        lineNumber: 1448,
                                                                                                         columnNumber: 35
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1436,
+                                                                                                lineNumber: 1444,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3104,43 +3114,43 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.title
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1445,
+                                                                                                        lineNumber: 1453,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1447,
+                                                                                                        lineNumber: 1455,
                                                                                                         columnNumber: 41
                                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1449,
+                                                                                                        lineNumber: 1457,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1444,
+                                                                                                lineNumber: 1452,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1435,
+                                                                                        lineNumber: 1443,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1426,
+                                                                                lineNumber: 1434,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1422,
+                                                                            lineNumber: 1430,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         isExpanded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3152,34 +3162,34 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                     children: entry.new_value?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 1458,
+                                                                                    lineNumber: 1466,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1457,
+                                                                                lineNumber: 1465,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1456,
+                                                                            lineNumber: 1464,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, entry.id, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1421,
+                                                                    lineNumber: 1429,
                                                                     columnNumber: 29
                                                                 }, this);
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1417,
+                                                            lineNumber: 1425,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1397,
+                                                        lineNumber: 1405,
                                                         columnNumber: 19
                                                     }, this),
                                                     activeHistoryTab === 'metadata' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3191,7 +3201,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1474,
+                                                                    lineNumber: 1482,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3199,13 +3209,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Loading song details history..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1475,
+                                                                    lineNumber: 1483,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1473,
+                                                            lineNumber: 1481,
                                                             columnNumber: 23
                                                         }, this) : getHistoryData('metadata').length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-center py-8",
@@ -3214,7 +3224,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     className: "w-12 h-12 text-gray-300 mx-auto mb-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1479,
+                                                                    lineNumber: 1487,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3222,7 +3232,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "No Song Details History"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1480,
+                                                                    lineNumber: 1488,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3230,7 +3240,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                     children: "Changes will appear here"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1481,
+                                                                    lineNumber: 1489,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3241,18 +3251,18 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                        lineNumber: 1487,
+                                                                        lineNumber: 1495,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1482,
+                                                                    lineNumber: 1490,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1478,
+                                                            lineNumber: 1486,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "space-y-4",
@@ -3276,12 +3286,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                             className: "w-4 h-4 text-white"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                            lineNumber: 1507,
+                                                                                            lineNumber: 1515,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1501,
+                                                                                        lineNumber: 1509,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3295,7 +3305,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.type
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1511,
+                                                                                                        lineNumber: 1519,
                                                                                                         columnNumber: 35
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3307,13 +3317,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1514,
+                                                                                                        lineNumber: 1522,
                                                                                                         columnNumber: 35
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1510,
+                                                                                                lineNumber: 1518,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3324,43 +3334,43 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                                         children: entry.title
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1519,
+                                                                                                        lineNumber: 1527,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1521,
+                                                                                                        lineNumber: 1529,
                                                                                                         columnNumber: 41
                                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                                         className: "w-5 h-5 text-slate-400 flex-shrink-0"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                        lineNumber: 1523,
+                                                                                                        lineNumber: 1531,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                                lineNumber: 1518,
+                                                                                                lineNumber: 1526,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                        lineNumber: 1509,
+                                                                                        lineNumber: 1517,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1500,
+                                                                                lineNumber: 1508,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1496,
+                                                                            lineNumber: 1504,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         isExpanded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3372,52 +3382,52 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                                                     children: entry.new_value?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                    lineNumber: 1532,
+                                                                                    lineNumber: 1540,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                                lineNumber: 1531,
+                                                                                lineNumber: 1539,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                            lineNumber: 1530,
+                                                                            lineNumber: 1538,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, entry.id, true, {
                                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                                    lineNumber: 1495,
+                                                                    lineNumber: 1503,
                                                                     columnNumber: 29
                                                                 }, this);
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                            lineNumber: 1491,
+                                                            lineNumber: 1499,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1471,
+                                                        lineNumber: 1479,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1134,
+                                                lineNumber: 1142,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 1073,
+                                        lineNumber: 1081,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 987,
+                                lineNumber: 995,
                                 columnNumber: 9
                             }, this),
                             activeTab === 'lyrics' && !isFullscreenLyrics && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3437,12 +3447,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                     className: "w-3.5 h-3.5 sm:w-4 sm:h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 1565,
+                                    lineNumber: 1573,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 1551,
+                                lineNumber: 1559,
                                 columnNumber: 11
                             }, this),
                             activeTab === 'comments' && !isFullscreenComments && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3462,12 +3472,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                     className: "w-3.5 h-3.5 sm:w-4 sm:h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 1584,
+                                    lineNumber: 1592,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 1570,
+                                lineNumber: 1578,
                                 columnNumber: 11
                             }, this),
                             activeTab === 'solfas' && !isFullscreenSolfas && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3487,12 +3497,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                     className: "w-3.5 h-3.5 sm:w-4 sm:h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                    lineNumber: 1603,
+                                    lineNumber: 1611,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 1589,
+                                lineNumber: 1597,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3516,17 +3526,17 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         className: `absolute right-0 top-1/2 transform -translate-y-1/2 rounded-full transition-all duration-200 ${isDragging ? 'w-4 h-4 bg-blue-600' : 'w-3 h-3 bg-gray-600 hover:w-4 hover:h-4'}`
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1623,
+                                                        lineNumber: 1631,
                                                         columnNumber: 17
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1619,
+                                                    lineNumber: 1627,
                                                     columnNumber: 15
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1612,
+                                                lineNumber: 1620,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3537,7 +3547,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: formatTime(currentTime)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1629,
+                                                        lineNumber: 1637,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3545,19 +3555,19 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: formatTime(duration)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1630,
+                                                        lineNumber: 1638,
                                                         columnNumber: 15
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1628,
+                                                lineNumber: 1636,
                                                 columnNumber: 13
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 1611,
+                                        lineNumber: 1619,
                                         columnNumber: 11
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3570,12 +3580,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: `w-3.5 h-3.5 ${isRepeating ? 'fill-current' : ''}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1643,
+                                                    lineNumber: 1651,
                                                     columnNumber: 15
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1637,
+                                                lineNumber: 1645,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3585,12 +3595,12 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-4 h-4 text-gray-600 fill-gray-600"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1651,
+                                                    lineNumber: 1659,
                                                     columnNumber: 15
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1647,
+                                                lineNumber: 1655,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3602,7 +3612,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         className: "w-3 h-3 text-gray-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1660,
+                                                        lineNumber: 1668,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3610,13 +3620,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "10"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1661,
+                                                        lineNumber: 1669,
                                                         columnNumber: 15
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1655,
+                                                lineNumber: 1663,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3663,31 +3673,31 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1716,
+                                                    lineNumber: 1724,
                                                     columnNumber: 17
                                                 }, this) : hasError ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "w-4 h-4 text-white text-xs",
                                                     children: "!"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1718,
+                                                    lineNumber: 1726,
                                                     columnNumber: 17
                                                 }, this) : isPlaying ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pause$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Pause$3e$__["Pause"], {
                                                     className: "w-4 h-4 text-white"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1720,
+                                                    lineNumber: 1728,
                                                     columnNumber: 17
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
                                                     className: "w-4 h-4 text-white ml-0.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1722,
+                                                    lineNumber: 1730,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1665,
+                                                lineNumber: 1673,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3699,7 +3709,7 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         className: "w-3 h-3 text-gray-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1732,
+                                                        lineNumber: 1740,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3707,13 +3717,13 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                         children: "10"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                        lineNumber: 1733,
+                                                        lineNumber: 1741,
                                                         columnNumber: 15
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1727,
+                                                lineNumber: 1735,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3723,21 +3733,6 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                     className: "w-4 h-4 text-gray-600 fill-gray-600"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                    lineNumber: 1741,
-                                                    columnNumber: 15
-                                                }, this)
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/components/SongDetailModal.tsx",
-                                                lineNumber: 1737,
-                                                columnNumber: 13
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                onClick: handleMusicPage,
-                                                className: "w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors",
-                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$music$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Music2$3e$__["Music2"], {
-                                                    className: "w-3.5 h-3.5"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
                                                     lineNumber: 1749,
                                                     columnNumber: 15
                                                 }, this)
@@ -3745,29 +3740,51 @@ function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentF
                                                 fileName: "[project]/src/components/SongDetailModal.tsx",
                                                 lineNumber: 1745,
                                                 columnNumber: 13
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                onClick: handleMusicPage,
+                                                disabled: isNavigatingToAudioLab,
+                                                className: "w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50",
+                                                children: isNavigatingToAudioLab ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                                    className: "w-3.5 h-3.5 animate-spin"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                    lineNumber: 1759,
+                                                    columnNumber: 17
+                                                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$music$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Music2$3e$__["Music2"], {
+                                                    className: "w-3.5 h-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                    lineNumber: 1761,
+                                                    columnNumber: 17
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/SongDetailModal.tsx",
+                                                lineNumber: 1753,
+                                                columnNumber: 13
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/SongDetailModal.tsx",
-                                        lineNumber: 1635,
+                                        lineNumber: 1643,
                                         columnNumber: 11
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                                lineNumber: 1608,
+                                lineNumber: 1616,
                                 columnNumber: 9
                             }, this)
                         ]
                     }, void 0, true)
                 }, void 0, false, {
                     fileName: "[project]/src/components/SongDetailModal.tsx",
-                    lineNumber: 723,
+                    lineNumber: 731,
                     columnNumber: 7
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/SongDetailModal.tsx",
-                lineNumber: 721,
+                lineNumber: 729,
                 columnNumber: 7
             }, this)
         ]

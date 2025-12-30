@@ -35,13 +35,13 @@ export class WebRTCSignaling {
         timestamp: Date.now()
       };
 
-      if (!isRealtimeDbAvailable()) {
+      if (!isRealtimeDbAvailable() || !realtimeDb) {
         console.warn('[WebRTCSignaling] Realtime Database not available');
         return;
       }
       // Send to specific user's signal queue
       const signalPath = `audiolab_sessions/${this.sessionId}/signals/${toUserId}`;
-      const newSignalRef = push(ref(realtimeDb!, signalPath));
+      const newSignalRef = push(ref(realtimeDb, signalPath));
       await set(newSignalRef, signalMessage);
     } catch (error) {
       // Error sending signal
@@ -51,12 +51,12 @@ export class WebRTCSignaling {
   startListening(onMessage: (message: SignalMessage) => void): () => void {
     this.onMessage = onMessage;
     
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[WebRTCSignaling] Realtime Database not available');
       return () => {};
     }
     const mySignalPath = `audiolab_sessions/${this.sessionId}/signals/${this.userId}`;
-    const signalRef = ref(realtimeDb!, mySignalPath);
+    const signalRef = ref(realtimeDb, mySignalPath);
     
     const unsubscribe = onValue(signalRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -67,7 +67,9 @@ export class WebRTCSignaling {
           }
           
           // Remove the signal after processing
-          remove(ref(realtimeDb!, `${mySignalPath}/${key}`));
+          if (realtimeDb) {
+            remove(ref(realtimeDb, `${mySignalPath}/${key}`));
+          }
         });
       }
     });

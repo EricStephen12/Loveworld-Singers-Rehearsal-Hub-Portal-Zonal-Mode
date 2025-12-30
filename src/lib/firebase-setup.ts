@@ -60,27 +60,16 @@ export const realtimeDb: Database | null = (() => {
       return _realtimeDb;
     } catch (error) {
       console.warn('Failed to initialize Realtime Database:', error);
-      // Create a mock object to prevent build failures
-      return {
-        _delegate: {} as any,
-        useEmulator: () => {},
-        ref: () => ({} as any),
-        // Add other required methods as needed
-      } as any;
+      return null;
     }
   } else {
-    // Create a mock object for server-side to prevent build failures
-    return {
-      _delegate: {} as any,
-      useEmulator: () => {},
-      ref: () => ({} as any),
-      // Add other required methods as needed
-    } as any;
+    // Return null on server-side to prevent build failures
+    return null;
   }
 })()
 
 export function isRealtimeDbAvailable(): boolean {
-  return realtimeDb !== null && typeof realtimeDb !== 'string' && 'ref' in realtimeDb;
+  return realtimeDb !== null;
 }
 
 if (typeof window !== 'undefined') {

@@ -83,18 +83,13 @@ const realtimeDb = (()=>{
             return _realtimeDb;
         } catch (error) {
             console.warn('Failed to initialize Realtime Database:', error);
-            // Create a mock object to prevent build failures
-            return {
-                _delegate: {},
-                useEmulator: ()=>{},
-                ref: ()=>({})
-            };
+            return null;
         }
     } else //TURBOPACK unreachable
     ;
 })();
 function isRealtimeDbAvailable() {
-    return realtimeDb !== null && typeof realtimeDb !== 'string' && 'ref' in realtimeDb;
+    return realtimeDb !== null;
 }
 if ("TURBOPACK compile-time truthy", 1) {
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setPersistence"])(auth, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["browserLocalPersistence"]).catch(console.error);

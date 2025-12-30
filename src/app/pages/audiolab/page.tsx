@@ -22,8 +22,17 @@ export default function AudioLabPage() {
   const searchParams = useSearchParams();
 
   // Handle view query parameter (e.g., /pages/audiolab?view=warmup)
+  // Also handle song parameter - auto-switch to library view when song ID is provided
   useEffect(() => {
     const viewParam = searchParams.get('view');
+    const songParam = searchParams.get('song');
+    
+    // If song parameter is provided, switch to library view to show the song
+    if (songParam) {
+      setView('library');
+      return;
+    }
+    
     if (viewParam) {
       const validViews = ['home', 'library', 'practice', 'karaoke', 'warmup', 'studio', 'collab', 'collab-chat', 'live-session'];
       if (validViews.includes(viewParam)) {

@@ -7,6 +7,7 @@ export interface CollapsibleSongCardProps {
   song: Song;
   isExpanded: boolean;
   isPlaying: boolean;
+  isHighlighted?: boolean;
   currentPart: VocalPart | null;
   currentTime: number;
   duration: number;
@@ -56,6 +57,7 @@ export function CollapsibleSongCard({
   song,
   isExpanded,
   isPlaying,
+  isHighlighted,
   currentPart,
   currentTime,
   duration,
@@ -85,7 +87,11 @@ export function CollapsibleSongCard({
   };
 
   return (
-    <div className="rounded-xl bg-[#261933] border border-white/5 overflow-hidden transition-all duration-300">
+    <div className={`rounded-xl bg-[#261933] border overflow-hidden transition-all duration-300 ${
+      isHighlighted 
+        ? 'border-violet-400 ring-4 ring-violet-500/30 shadow-xl shadow-violet-500/30 bg-violet-500/5' 
+        : 'border-white/5'
+    }`}>
       {/* Card Header - Always visible */}
       <button
         onClick={onToggleExpand}
@@ -112,12 +118,6 @@ export function CollapsibleSongCard({
           <p className="text-sm font-bold text-white truncate">{song.title}</p>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <span className="truncate">{song.artist}</span>
-            {song.genre && (
-              <>
-                <span className="h-1 w-1 rounded-full bg-slate-600" />
-                <span className="text-violet-400">{song.genre}</span>
-              </>
-            )}
           </div>
           {/* Part badges */}
           {availableParts.length > 1 && (

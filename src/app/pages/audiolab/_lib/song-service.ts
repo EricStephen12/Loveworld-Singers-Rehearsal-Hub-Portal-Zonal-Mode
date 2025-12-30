@@ -15,14 +15,11 @@ import {
   updateDoc, 
   deleteDoc,
   query,
-  where,
   orderBy,
   limit,
-  serverTimestamp,
-  Timestamp
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
-import { isHQGroup } from '@/config/zones';
 import type { 
   AudioLabSong, 
   CreateSongInput, 
@@ -48,7 +45,7 @@ const CACHE_TTL = 5 * 60 * 1000;
  * Get all songs from Master Library (available to all zones)
  * Master Library contains songs published by HQ with multi-part audio
  */
-export async function getSongs(zoneId?: string, limitCount: number = 100): Promise<AudioLabSong[]> {
+export async function getSongs(zoneId?: string, limitCount: number = 500): Promise<AudioLabSong[]> {
   try {
     const cacheKey = 'master_library';
     const cached = songCache.get(cacheKey);
