@@ -1,0 +1,185 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
+import { useChat } from './_context/ChatContext'
+import { ArrowLeft, MessageCircle, Users, Search, Plus, UserPlus, MessageSquare } from 'lucide-react'
+import { 
+  ChatSidebar,
+  ChatContainer,
+  NoChatSelected,
+  UserSearchModal,
+  CreateGroupModal,
+  FriendRequestsModal
+} from './_components'
+
+export default function GroupsPage() {
+  const router = useRouter()
+  const { user, profile, isLoading: authLoading } = useAuth()
+  const { currentZone, userZones, isLoading: zoneLoading } = useZone()
+  const { selectedChat } = useChat()
+  
+  const [showUserSearch, setShowUserSearch] = useState(false)
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [showFriendRequests, setShowFriendRequests] = useState(false)
+  const [showOverlay, setShowOverlay] = useState(true)
+
+  // Load chats on mount
+  useEffect(() => {
+    console.log('📱 Groups page loaded')
+  }, [])
+
+  // Show loading spinner only while auth is checking (first load)
+  if (authLoading && !profile) {
+    return (
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // If truly logged out (no user AND no cached profile), show login prompt
+  if (!user && !profile) {
+    return (
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center p-8">
+          <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Sign in to view messages</h2>
+          <p className="text-gray-600 mb-6">Connect with your groups and friends</p>
+          <button 
+            onClick={() => router.push('/auth')}
+            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+
+      {/* Header */}
+      <div 
+        className={`flex-shrink-0 p-3 sm:p-4 text-white shadow-lg ${selectedChat ? 'hidden md:block' : ''}`}
+        style={{ 
+          background: currentZone?.themeColor 
+            ? `linear-gradient(135deg, ${currentZone.themeColor} 0%, ${adjustColor(currentZone.themeColor, -20)} 100%)`
+            : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target flex-shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold truncate">Messages</h1>
+              <p className="text-xs sm:text-sm opacity-90 truncate">
+                Chat with all members
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Search Users */}
+            <button
+              onClick={() => setShowUserSearch(true)}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
+              aria-label="Search users"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            
+            {/* Create Group */}
+            <button
+              onClick={() => setShowCreateGroup(true)}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors touch-target"
+              aria-label="Create group"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Banner for upcoming feature */}
+      {showOverlay && (
+      <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+              <MessageSquare className="w-8 h-8 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-blue-900 text-xl mb-2">Feature in Development</h3>
+              <p className="text-blue-800 mb-4">We're working on an enhanced experience for groups.</p>
+              <p className="text-blue-700">Stay tuned for exciting new features coming soon!</p>
+            </div>
+            <button 
+              onClick={() => router.back()}
+              className="mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* Chat Interface */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat List - Hide on mobile when chat is selected */}
+        <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-gray-200 ${selectedChat ? 'hidden md:block' : 'block'}`}>
+          <ChatSidebar />
+        </div>
+
+        {/* Chat Interface - Show on mobile when chat is selected */}
+        <div className={`flex-1 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+          {selectedChat ? (
+            <ChatContainer />
+          ) : (
+            <NoChatSelected />
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      <UserSearchModal 
+        isOpen={showUserSearch} 
+        onClose={() => setShowUserSearch(false)} 
+      />
+      
+      <CreateGroupModal 
+        isOpen={showCreateGroup} 
+        onClose={() => setShowCreateGroup(false)} 
+      />
+
+      <FriendRequestsModal
+        isOpen={showFriendRequests}
+        onClose={() => setShowFriendRequests(false)}
+      />
+
+    </div>
+  )
+}
+
+// Helper function to adjust color brightness
+const adjustColor = (color: string, amount: number) => {
+  const hex = color.replace('#', '')
+  const num = parseInt(hex, 16)
+  const r = Math.max(0, Math.min(255, (num >> 16) + amount))
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount))
+  const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
+}

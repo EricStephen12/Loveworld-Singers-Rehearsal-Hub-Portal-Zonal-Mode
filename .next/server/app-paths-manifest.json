@@ -1,0 +1,9 @@
+{
+  "/admin/page": "app/admin/page.js",
+  "/api/countdown/route": "app/api/countdown/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/home/page": "app/home/page.js",
+  "/page": "app/page.js",
+  "/pages/praise-night/page": "app/pages/praise-night/page.js",
+  "/pages/rehearsals/page": "app/pages/rehearsals/page.js"
+}
