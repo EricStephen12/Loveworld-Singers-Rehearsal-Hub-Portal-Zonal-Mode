@@ -417,9 +417,9 @@ export function LiveSessionView() {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Monitor</span>
           </button>
 
-          {/* End/Leave Session */}
+          {/* End/Leave Session - Host vs Participant */}
           <button 
-            onClick={handleLeaveSession}
+            onClick={user?.uid === currentSession?.hostId ? handleEndSession : handleLeaveSession}
             className="flex flex-col items-center gap-2 group relative -mt-6"
           >
             {/* Outer glow */}
@@ -433,7 +433,7 @@ export function LiveSessionView() {
               <LogOut size={36} className="drop-shadow-md" />
             </div>
             <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide mt-1">
-              Leave
+              {user?.uid === currentSession?.hostId ? 'End' : 'Leave'}
             </span>
           </button>
 
