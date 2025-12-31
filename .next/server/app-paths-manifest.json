@@ -1,11 +1,6 @@
 {
-  "/api/countdown/route": "app/api/countdown/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/auth/page": "app/auth/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/home/page": "app/home/page.js",
-  "/page": "app/page.js",
-  "/pages/all-ministered-songs/page": "app/pages/all-ministered-songs/page.js",
-  "/pages/audiolab/page": "app/pages/audiolab/page.js",
-  "/pages/praise-night/page": "app/pages/praise-night/page.js",
-  "/pages/rehearsals/page": "app/pages/rehearsals/page.js"
+  "/page": "app/page.js"
 }
