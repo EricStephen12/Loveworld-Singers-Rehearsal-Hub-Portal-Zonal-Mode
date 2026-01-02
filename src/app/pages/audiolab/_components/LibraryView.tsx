@@ -367,10 +367,7 @@ export function LibraryView() {
                     onPlayPart={(part) => handlePlayPart(song, part)}
                     onPause={handlePause}
                     onSeek={handleSeek}
-<<<<<<< HEAD
                     onStartKaraoke={() => handleStartKaraoke(song)}
-=======
->>>>>>> 66ef29ba26ffddaebaf4a375357bed8a5549c318
                   />
                 </div>
               );
