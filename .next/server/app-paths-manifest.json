@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "/admin/page": "app/admin/page.js",
   "/auth/page": "app/auth/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
@@ -12,4 +13,10 @@
   "/pages/notifications/page": "app/pages/notifications/page.js",
   "/pages/rehearsals/page": "app/pages/rehearsals/page.js",
   "/pages/submit-song/page": "app/pages/submit-song/page.js"
+=======
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/page": "app/auth/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js"
+>>>>>>> 66ef29ba26ffddaebaf4a375357bed8a5549c318
 }
