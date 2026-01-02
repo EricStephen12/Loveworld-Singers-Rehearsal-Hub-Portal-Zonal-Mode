@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { 
   X, Music, Upload, Loader2, Check, Trash2,
-  Save, AlertCircle, Plus
+  Save, AlertCircle, Plus, Sparkles, Mic
 } from 'lucide-react';
 import { MasterSong, MasterLibraryService } from '@/lib/master-library-service';
 import MediaSelectionModal from '@/components/MediaSelectionModal';
@@ -115,6 +115,8 @@ export function MasterEditSongModal({
   const [success, setSuccess] = useState(false);
   const [showMediaSelector, setShowMediaSelector] = useState(false);
   const [selectingPart, setSelectingPart] = useState<string | null>(null);
+  const [syncingLyrics, setSyncingLyrics] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<string | null>(null);
   
 
   // Update form data when song changes
@@ -217,6 +219,77 @@ export function MasterEditSongModal({
       delete updated[partName];
       return updated;
     });
+  };
+
+  // Generate synced lyrics using AI (AssemblyAI)
+  const handleGenerateSyncedLyrics = async () => {
+    // Get the audio URL to transcribe (prefer full mix)
+    const audioUrl = audioUrls.full || Object.values(audioUrls).find(url => url);
+    
+    if (!audioUrl) {
+      setError('Please upload an audio file first to sync lyrics');
+      return;
+    }
+    
+    if (!formData.lyrics.trim()) {
+      setError('Please enter lyrics first. The AI will sync them with the audio timing.');
+      return;
+    }
+    
+    setSyncingLyrics(true);
+    setSyncProgress('Analyzing audio and aligning lyrics...');
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/lyrics-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          audioUrl,
+          songId: song?.id || 'new',
+          existingLyrics: formData.lyrics, // Pass existing lyrics for alignment
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sync lyrics');
+      }
+      
+      setSyncProgress('Processing... This may take a few minutes.');
+      
+      const data = await response.json();
+      
+      if (data.success && data.lyrics) {
+        // Store the synced lyrics array (with timestamps) for karaoke
+        // The lyrics text stays the same, but we now have timing data
+        setSyncProgress(null);
+        
+        // Show success message
+        window.dispatchEvent(new CustomEvent('showToast', {
+          detail: {
+            message: data.aligned 
+              ? `Lyrics synced! ${data.lyrics.length} lines aligned with audio.`
+              : `Lyrics generated! ${data.wordCount || 0} words transcribed.`,
+            type: 'success'
+          }
+        }));
+        
+        // Note: The synced lyrics array should be saved to the song
+        // For now, we'll update the lyrics text if it was transcribed
+        if (!data.aligned && data.rawText) {
+          setFormData(prev => ({ ...prev, lyrics: data.rawText }));
+        }
+      } else {
+        throw new Error('No lyrics returned from sync');
+      }
+    } catch (err) {
+      console.error('Lyrics sync error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync lyrics');
+      setSyncProgress(null);
+    } finally {
+      setSyncingLyrics(false);
+    }
   };
 
   const handleSave = async () => {
@@ -571,7 +644,36 @@ export function MasterEditSongModal({
 
           {/* Lyrics */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">Lyrics</label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">Lyrics</label>
+              <button
+                onClick={handleGenerateSyncedLyrics}
+                disabled={syncingLyrics || (!audioUrls.full && !Object.values(audioUrls).some(url => url))}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Sync lyrics timing with audio using AI"
+              >
+                {syncingLyrics ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    AI Sync Timing
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {/* Sync Progress */}
+            {syncProgress && (
+              <div className="flex items-center gap-2 p-3 bg-violet-50 text-violet-700 rounded-xl text-sm">
+                <Loader2 size={16} className="animate-spin" />
+                {syncProgress}
+              </div>
+            )}
+            
             <textarea
               value={formData.lyrics}
               onChange={(e) => handleInputChange('lyrics', e.target.value)}
@@ -580,7 +682,7 @@ export function MasterEditSongModal({
               placeholder="Enter song lyrics... Use **text** for bold formatting (e.g., **VERSE 1**)"
             />
             <p className="text-xs text-slate-500">
-              💡 Tip: Wrap text with <strong>**double asterisks**</strong> to make it bold (e.g., <strong>**VERSE 1**</strong>, <strong>**CHORUS**</strong>)
+              💡 Tip: Use <strong>**double asterisks**</strong> for bold. Click "AI Sync Timing" to match lyrics with audio for karaoke.
             </p>
           </div>
         </div>

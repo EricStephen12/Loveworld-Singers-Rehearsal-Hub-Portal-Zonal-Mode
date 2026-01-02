@@ -24,8 +24,10 @@ export function CollabView() {
 
   // Load user's projects and active sessions
   useEffect(() => {
-    loadData();
-    loadRecentCodes();
+    if (user?.uid) {
+      loadData();
+      loadRecentCodes();
+    }
   }, [user?.uid]);
 
   const loadRecentCodes = () => {
@@ -51,10 +53,22 @@ export function CollabView() {
   };
 
   const loadData = async () => {
+    if (!user?.uid) return;
+    
     setIsLoading(true);
     try {
-      const sessions = await getActiveSessions(5);
-      setActiveSessions(sessions);
+      // Get sessions where user is host OR user is a participant
+      const allSessions = await getActiveSessions(50);
+      
+      // Filter to only show sessions where:
+      // 1. User is the host (hostId === user.uid)
+      // 2. User is a participant (participants[user.uid] exists)
+      const userSessions = allSessions.filter(session => 
+        session.hostId === user.uid || 
+        (session.participants && session.participants[user.uid])
+      );
+      
+      setActiveSessions(userSessions);
     } catch (error) {
       console.error('[CollabView] Error loading data:', error);
     } finally {
@@ -263,17 +277,17 @@ export function CollabView() {
           </div>
         )}
 
-        {/* Live Now Section */}
+        {/* My Sessions Section */}
         {activeSessions.length > 0 && (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-white text-lg font-bold leading-tight">Live Now</h3>
+              <h3 className="text-white text-lg font-bold leading-tight">My Sessions</h3>
               <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/10 border border-red-500/20">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">On Air</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">Live</span>
               </span>
             </div>
 
@@ -284,6 +298,7 @@ export function CollabView() {
               const startedAgo = session.startedAt 
                 ? Math.floor((Date.now() - session.startedAt) / 60000)
                 : 0;
+              const isHost = session.hostId === user?.uid;
               
               return (
                 <button 
@@ -303,15 +318,15 @@ export function CollabView() {
                   <div className="relative z-10 flex flex-col gap-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-violet-400 text-xs font-bold uppercase tracking-wider mb-1 block">
-                          Active Session
+                        <span className={`text-xs font-bold uppercase tracking-wider mb-1 block ${isHost ? 'text-emerald-400' : 'text-violet-400'}`}>
+                          {isHost ? 'Hosting' : 'Joined'}
                         </span>
                         <h4 className="text-white text-xl font-bold">{session.title}</h4>
                         <p className="text-slate-400 text-sm mt-1">
                           Started {startedAgo} mins ago • {participantCount} active {participantCount === 1 ? 'user' : 'users'}
                         </p>
                       </div>
-                      <div className="size-10 rounded-full bg-violet-500 flex items-center justify-center text-white shadow-lg shadow-violet-500/30">
+                      <div className={`size-10 rounded-full flex items-center justify-center text-white shadow-lg ${isHost ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-violet-500 shadow-violet-500/30'}`}>
                         <Mic size={20} />
                       </div>
                     </div>

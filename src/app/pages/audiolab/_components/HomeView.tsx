@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Play, Loader2, Music2, Users, AudioLines, ChevronRight, ChevronLeft, Home } from 'lucide-react';
+import { Mic, Play, Loader2, Music2, Users, AudioLines, ChevronRight, ChevronLeft, Home, UserPlus } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ export function HomeView() {
   
   const [recentProject, setRecentProject] = useState<AudioLabProject | null>(null);
   const [allProjects, setAllProjects] = useState<AudioLabProject[]>([]);
+  const [sharedProjects, setSharedProjects] = useState<AudioLabProject[]>([]);
   const [featuredSongs, setFeaturedSongs] = useState<AudioLabSong[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -40,8 +41,20 @@ export function HomeView() {
         const projects = await getUserProjects(user.uid);
         
         if (projects.length > 0) {
-          setRecentProject(projects[0]);
-          setAllProjects(projects);
+          // Separate owned projects from shared projects
+          const owned = projects.filter(p => p.ownerId === user.uid);
+          const shared = projects.filter(p => p.ownerId !== user.uid);
+          
+          // Most recent owned project for "Continue" card
+          if (owned.length > 0) {
+            setRecentProject(owned[0]);
+          } else if (shared.length > 0) {
+            // If no owned projects, show most recent shared
+            setRecentProject(shared[0]);
+          }
+          
+          setAllProjects(owned);
+          setSharedProjects(shared);
         }
         
         if (profile?.zone) {
@@ -233,6 +246,42 @@ export function HomeView() {
                   </p>
                 </div>
                 <Play size={16} className="sm:w-[18px] sm:h-[18px] text-slate-500 group-hover:text-violet-400 transition-colors flex-shrink-0" fill="currentColor" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Shared Projects - Projects where user is a collaborator */}
+      {sharedProjects.length > 0 && (
+        <div className="w-full max-w-sm mt-6 sm:mt-8">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <UserPlus size={18} className="text-emerald-400" />
+            <h2 className="text-base sm:text-lg font-bold text-white">Shared with You</h2>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+              {sharedProjects.length}
+            </span>
+          </div>
+          
+          <div className="space-y-2 sm:space-y-3">
+            {sharedProjects.map((project) => (
+              <button
+                key={project.id}
+                onClick={() => openProject(project.id)}
+                className="w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[#1a2520] border border-emerald-500/20 hover:border-emerald-500/40 transition-all group text-left touch-manipulation"
+              >
+                <div className="size-10 sm:size-12 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/30 transition-colors">
+                  <Users size={18} className="sm:w-5 sm:h-5 text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm sm:text-base font-semibold truncate">
+                    {project.name}
+                  </p>
+                  <p className="text-emerald-400/70 text-xs sm:text-sm">
+                    {project.duration ? formatDuration(project.duration) + ' recorded' : 'Collaboration'}
+                  </p>
+                </div>
+                <Play size={16} className="sm:w-[18px] sm:h-[18px] text-slate-500 group-hover:text-emerald-400 transition-colors flex-shrink-0" fill="currentColor" />
               </button>
             ))}
           </div>

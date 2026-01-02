@@ -77,16 +77,16 @@ export function TrackEffectsSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[75] flex items-end justify-center">
+    <div className="fixed inset-0 z-[150] flex items-end justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[75]"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[150]"
         onClick={onClose}
       />
       
       {/* Sheet */}
       <div 
-        className="relative w-full max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl bg-[#1a1225] rounded-t-3xl max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl z-[75]"
+        className="relative w-full max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-6xl bg-[#1a1225] rounded-t-3xl max-h-[85vh] overflow-hidden animate-slide-up shadow-2xl z-[150]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

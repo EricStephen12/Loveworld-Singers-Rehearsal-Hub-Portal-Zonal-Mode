@@ -1,9 +1,15 @@
 {
   "/admin/page": "app/admin/page.js",
-  "/api/countdown/route": "app/api/countdown/route.js",
+  "/auth/page": "app/auth/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/home/page": "app/home/page.js",
   "/page": "app/page.js",
-  "/pages/praise-night/page": "app/pages/praise-night/page.js",
-  "/pages/rehearsals/page": "app/pages/rehearsals/page.js"
+  "/pages/all-ministered-songs/page": "app/pages/all-ministered-songs/page.js",
+  "/pages/audiolab/page": "app/pages/audiolab/page.js",
+  "/pages/groups/page": "app/pages/groups/page.js",
+  "/pages/media/page": "app/pages/media/page.js",
+  "/pages/media/playlists/admin/[id]/page": "app/pages/media/playlists/admin/[id]/page.js",
+  "/pages/notifications/page": "app/pages/notifications/page.js",
+  "/pages/rehearsals/page": "app/pages/rehearsals/page.js",
+  "/pages/submit-song/page": "app/pages/submit-song/page.js"
 }

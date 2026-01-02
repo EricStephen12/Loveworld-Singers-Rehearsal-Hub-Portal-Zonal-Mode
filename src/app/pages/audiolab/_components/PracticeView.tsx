@@ -58,7 +58,7 @@ const practiceCards: (PracticeCard & { available: boolean; needsSong?: boolean }
 ];
 
 export function PracticeView() {
-  const { state, setView } = useAudioLab();
+  const { state, setView, playSong } = useAudioLab();
   const { practiceStats } = state;
   const { user, profile } = useAuth();
   
@@ -124,6 +124,18 @@ export function PracticeView() {
       // Show coming soon toast for other modes
       setComingSoonMode(mode);
       setTimeout(() => setComingSoonMode(null), 2000);
+    }
+  };
+
+  // Start karaoke with a specific song
+  const handleStartKaraokeWithSong = async (song: AudioLabSong) => {
+    try {
+      // Load the song first
+      await playSong(toLeagcySong(song));
+      // Then navigate to karaoke
+      setView('karaoke');
+    } catch (error) {
+      console.error('[PracticeView] Error starting karaoke:', error);
     }
   };
 
@@ -269,41 +281,58 @@ export function PracticeView() {
         </section>
       )}
 
-      {/* Karaoke Songs */}
+      {/* Karaoke Songs - Direct Start */}
       {featuredSongs.length > 0 && (
-        <section className="relative z-10 px-4 mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white text-xl font-bold tracking-tight">🎤 Karaoke with Songs</h2>
+        <section className="relative z-10 px-3 sm:px-4 mt-4 sm:mt-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-2">
+              <Mic size={18} className="sm:w-5 sm:h-5 text-violet-400" />
+              <h2 className="text-white text-base sm:text-lg font-bold tracking-tight">Karaoke Songs</h2>
+            </div>
             <button 
               onClick={() => setView('library')}
-              className="text-violet-400 text-sm font-medium hover:text-white transition-colors"
+              className="text-violet-400 text-xs sm:text-sm font-medium hover:text-white transition-colors touch-manipulation"
             >
               See All
             </button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 -mx-3 sm:-mx-4 px-3 sm:px-4 scrollbar-hide">
             {featuredSongs.map((song) => (
               <button
                 key={song.id}
-                onClick={() => setView('library')}
-                className="flex-shrink-0 w-32 group"
+                onClick={() => handleStartKaraokeWithSong(song)}
+                className="flex-shrink-0 w-28 sm:w-32 group touch-manipulation"
               >
-                <div className="relative aspect-square rounded-xl overflow-hidden bg-[#261933] mb-2 group-hover:ring-2 group-hover:ring-violet-500 transition-all">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Music2 size={40} className="text-slate-600" />
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-[#261933] mb-1.5 sm:mb-2 group-hover:ring-2 group-hover:ring-violet-500 transition-all">
+                  {song.albumArt ? (
+                    <img 
+                      src={song.albumArt} 
+                      alt={song.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-violet-500/20 to-purple-600/20">
+                      <Music2 size={32} className="sm:w-10 sm:h-10 text-slate-500" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  {/* Play overlay on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                    <div className="size-10 sm:size-12 rounded-full bg-violet-500 flex items-center justify-center shadow-lg">
+                      <Mic size={18} className="sm:w-5 sm:h-5 text-white" />
+                    </div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <div className="flex items-center gap-1 text-white text-xs">
-                      <Play size={12} fill="currentColor" />
-                      <span className="font-medium">Practice</span>
+                  <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 right-1.5 sm:right-2">
+                    <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs bg-violet-500/80 backdrop-blur-sm rounded-full px-2 py-0.5 w-fit">
+                      <Mic size={10} className="sm:w-3 sm:h-3" />
+                      <span className="font-medium">Karaoke</span>
                     </div>
                   </div>
                 </div>
-                <p className="text-white text-sm font-semibold truncate">
+                <p className="text-white text-xs sm:text-sm font-semibold truncate">
                   {song.title}
                 </p>
-                <p className="text-slate-400 text-xs truncate">
+                <p className="text-slate-400 text-[10px] sm:text-xs truncate">
                   {song.artist || 'Unknown'}
                 </p>
               </button>

@@ -14,6 +14,7 @@ import { useHomeGlobalSearch, HomeSearchResult } from '@/hooks/useHomeGlobalSear
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 
 function HomePageContent() {
@@ -34,6 +35,7 @@ function HomePageContent() {
   
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature } = useSubscription()
+  const { hasUnread: hasUnreadNotifications } = useUnreadNotifications()
   
   // Show loading only on first visit (no cached zone data)
   // This prevents the flicker when zone data loads
@@ -693,9 +695,13 @@ function HomePageContent() {
                           />
                         )}
                       </div>
-                      {feature.badge && (
+                      {feature.badge && hasUnreadNotifications && (
                         <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 via-red-500 to-red-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
                           <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                      )}
+                      {feature.badge && !hasUnreadNotifications && (
+                        <div className="absolute -top-1 -right-1 bg-gray-300 text-white text-xs rounded-full w-2.5 h-2.5 flex items-center justify-center font-bold shadow border border-white">
                         </div>
                       )}
                       {isPremiumFeature && !hasAccess && (

@@ -47,12 +47,12 @@ function generateSessionCode(): string {
  * Check if a session code is already in use
  */
 async function isCodeInUse(code: string): Promise<boolean> {
-  if (!isRealtimeDbAvailable()) {
+  if (!isRealtimeDbAvailable() || !realtimeDb) {
     console.warn('[SessionService] Realtime Database not available');
     return false;
   }
   
-  const sessionsRef = ref(realtimeDb!, 'audiolab_sessions');
+  const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
   const snapshot = await get(sessionsRef);
   
   if (!snapshot.exists()) return false;
@@ -94,12 +94,12 @@ export async function createSession(
   try {
       
       
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       return { success: false, error: 'Realtime Database not available' };
     }
-      
+        
     const code = await generateUniqueCode();
-    const sessionRef = push(ref(realtimeDb!, 'audiolab_sessions'));
+    const sessionRef = push(ref(realtimeDb, 'audiolab_sessions'));
     const sessionId = sessionRef.key!;
       
     const session: LiveSession = {
@@ -151,12 +151,12 @@ export async function findSessionByCode(code: string): Promise<LiveSession | nul
   try {
 
     
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return null;
     }
     
-    const sessionsRef = ref(realtimeDb!, 'audiolab_sessions');
+    const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
     const snapshot = await get(sessionsRef);
     
     if (!snapshot.exists()) return null;
@@ -193,9 +193,13 @@ export async function joinSession(
       return { success: false, error: 'Session not found or has ended' };
     }
     
+    if (!realtimeDb) {
+      return { success: false, error: 'Realtime Database not available' };
+    }
+    
     // Add participant
     const participantRef = ref(
-      realtimeDb!, 
+      realtimeDb, 
       `audiolab_sessions/${session.id}/participants/${userId}`
     );
     
@@ -239,11 +243,14 @@ export async function leaveSession(
   userName: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-
+    
+    if (!realtimeDb) {
+      return { success: false, error: 'Realtime Database not available' };
+    }
     
     // Remove participant
     const participantRef = ref(
-      realtimeDb!, 
+      realtimeDb, 
       `audiolab_sessions/${sessionId}/participants/${userId}`
     );
     await remove(participantRef);
@@ -274,11 +281,11 @@ export async function endSession(sessionId: string): Promise<{ success: boolean;
   try {
 
     
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return { success: false, error: 'Realtime Database not available' };
     }
-    const sessionRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}`);
+    const sessionRef = ref(realtimeDb, `audiolab_sessions/${sessionId}`);
     await update(sessionRef, {
       status: 'ended',
       endedAt: Date.now()
@@ -300,11 +307,11 @@ export async function endSession(sessionId: string): Promise<{ success: boolean;
  */
 export async function getSession(sessionId: string): Promise<LiveSession | null> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return null;
     }
-    const sessionRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}`);
+    const sessionRef = ref(realtimeDb, `audiolab_sessions/${sessionId}`);
     const snapshot = await get(sessionRef);
     
     if (!snapshot.exists()) return null;
@@ -337,13 +344,13 @@ export function subscribeToSession(
 ): () => void {
 
   
-  if (!isRealtimeDbAvailable()) {
+  if (!isRealtimeDbAvailable() || !realtimeDb) {
     console.warn('[SessionService] Realtime Database not available');
     return () => {};
   }
-  const participantsRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/participants`);
-  const playbackRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/playback`);
-  const statusRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/status`);
+  const participantsRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/participants`);
+  const playbackRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/playback`);
+  const statusRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/status`);
   
   // Participant joined
   const joinedUnsub = onChildAdded(participantsRef, (snapshot) => {
@@ -397,11 +404,11 @@ export async function updatePlaybackState(
   userId: string
 ): Promise<void> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return;
     }
-    const playbackRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/playback`);
+    const playbackRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/playback`);
     await update(playbackRef, {
       ...state,
       updatedAt: Date.now(),
@@ -446,12 +453,12 @@ export async function updateParticipant(
   updates: Partial<Participant>
 ): Promise<void> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return;
     }
     const participantRef = ref(
-      realtimeDb!, 
+      realtimeDb, 
       `audiolab_sessions/${sessionId}/participants/${userId}`
     );
     await update(participantRef, updates);
@@ -486,11 +493,11 @@ export async function sendMessage(
   message: Omit<ChatMessage, 'id' | 'timestamp' | 'status'>
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return { success: false, error: 'Realtime Database not available' };
     }
-    const messagesRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/messages`);
+    const messagesRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/messages`);
     const newMessageRef = push(messagesRef);
     
     const fullMessage: ChatMessage = {
@@ -519,11 +526,11 @@ export function subscribeToMessages(
   sessionId: string,
   callback: (message: ChatMessage) => void
 ): () => void {
-  if (!isRealtimeDbAvailable()) {
+  if (!isRealtimeDbAvailable() || !realtimeDb) {
     console.warn('[SessionService] Realtime Database not available');
     return () => {};
   }
-  const messagesRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/messages`);
+  const messagesRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/messages`);
   
   const unsub = onChildAdded(messagesRef, (snapshot) => {
     const message = snapshot.val() as ChatMessage;
@@ -538,11 +545,11 @@ export function subscribeToMessages(
  */
 export async function getMessages(sessionId: string): Promise<ChatMessage[]> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return [];
     }
-    const messagesRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/messages`);
+    const messagesRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/messages`);
     const snapshot = await get(messagesRef);
     
     if (!snapshot.exists()) return [];
@@ -569,10 +576,10 @@ export async function deleteMessage(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // First, get the message to check if it belongs to the user
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       return { success: false, error: 'Realtime Database not available' };
     }
-    const messageRef = ref(realtimeDb!, `audiolab_sessions/${sessionId}/messages/${messageId}`);
+    const messageRef = ref(realtimeDb, `audiolab_sessions/${sessionId}/messages/${messageId}`);
     const snapshot = await get(messageRef);
     
     if (!snapshot.exists()) {
@@ -608,11 +615,11 @@ export async function deleteMessage(
  */
 export async function getActiveSessions(limitCount: number = 10): Promise<LiveSession[]> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return [];
     }
-    const sessionsRef = ref(realtimeDb!, 'audiolab_sessions');
+    const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
     const snapshot = await get(sessionsRef);
     
     if (!snapshot.exists()) return [];
@@ -640,11 +647,11 @@ export async function getActiveSessions(limitCount: number = 10): Promise<LiveSe
  */
 export async function getUserSessions(userId: string): Promise<LiveSession[]> {
   try {
-    if (!isRealtimeDbAvailable()) {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[SessionService] Realtime Database not available');
       return [];
     }
-    const sessionsRef = ref(realtimeDb!, 'audiolab_sessions');
+    const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
     const snapshot = await get(sessionsRef);
     
     if (!snapshot.exists()) return [];

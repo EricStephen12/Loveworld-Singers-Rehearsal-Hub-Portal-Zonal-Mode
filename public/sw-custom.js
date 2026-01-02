@@ -240,3 +240,34 @@ self.addEventListener('message', (event) => {
 });
 
 console.log('LWSRH Service Worker loaded');
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event.notification.tag);
+  event.notification.close();
+  
+  const url = event.notification.data?.url || '/pages/notifications';
+  
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window open
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.focus();
+            client.navigate(url);
+            return;
+          }
+        }
+        // If no window is open, open a new one
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(url);
+        }
+      })
+  );
+});
+
+// Handle notification close
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event.notification.tag);
+});

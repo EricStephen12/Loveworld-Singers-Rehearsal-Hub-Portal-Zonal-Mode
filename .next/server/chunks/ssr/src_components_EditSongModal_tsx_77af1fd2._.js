@@ -896,19 +896,19 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                id: "2a50d61c7d6ee991",
-                children: ".hide-toolbar.jsx-2a50d61c7d6ee991{display:none!important}"
+                id: "d3eaaa0de8606e6c",
+                children: ".hide-toolbar.jsx-d3eaaa0de8606e6c{display:none!important}"
             }, void 0, false, void 0, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "jsx-2a50d61c7d6ee991" + " " + "fixed inset-0 bg-white z-50 flex flex-col w-screen h-screen",
+                className: "jsx-d3eaaa0de8606e6c" + " " + "fixed inset-0 bg-white z-50 flex flex-col w-screen h-screen",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white w-full h-full overflow-hidden flex flex-col",
+                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white w-full h-full overflow-hidden flex flex-col",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 flex-shrink-0",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 flex-shrink-0",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-lg sm:text-xl lg:text-2xl font-outfit-semibold text-slate-900 truncate",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-lg sm:text-xl lg:text-2xl font-outfit-semibold text-slate-900 truncate",
                                     children: song ? `Edit Song: ${song.title}` : 'Add New Song'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -917,7 +917,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: onClose,
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-slate-400 hover:text-slate-600 transition-colors p-2 -mr-2",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-slate-400 hover:text-slate-600 transition-colors p-2 -mr-2",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                                         className: "w-6 h-6 sm:w-8 sm:h-8"
                                     }, void 0, false, {
@@ -937,23 +937,23 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "flex-1 overflow-y-auto",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex-1 overflow-y-auto",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-2a50d61c7d6ee991" + " " + "w-full p-3 sm:p-4 lg:p-6",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-full p-3 sm:p-4 lg:p-6",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "lg:col-span-2 space-y-4 sm:space-y-6",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "lg:col-span-2 space-y-4 sm:space-y-6",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between mb-3 sm:mb-4",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between mb-3 sm:mb-4",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900",
                                                                     children: "Song Details"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -962,7 +962,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                     onClick: ()=>handleCreateHistory('song-details'),
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                             className: "w-3 h-3"
@@ -985,13 +985,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "space-y-3 sm:space-y-4",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "space-y-3 sm:space-y-4",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Song Title *"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1009,7 +1009,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 direction: 'ltr'
                                                                             },
                                                                             placeholder: "Enter song title",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + `${inputClasses} text-lg font-medium`
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + `${inputClasses} text-lg font-medium`
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1028,
@@ -1022,13 +1022,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            className: "jsx-2a50d61c7d6ee991",
+                                                                            className: "jsx-d3eaaa0de8606e6c",
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                                     children: "Categories * (Select one or more)"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1036,9 +1036,9 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     columnNumber: 27
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "border-2 border-slate-300 rounded-lg p-3 bg-slate-50 max-h-48 overflow-y-auto",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "border-2 border-slate-300 rounded-lg p-3 bg-slate-50 max-h-48 overflow-y-auto",
                                                                                     children: categories.map((category)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center space-x-3 py-2 hover:bg-slate-100 rounded px-2 cursor-pointer",
+                                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center space-x-3 py-2 hover:bg-slate-100 rounded px-2 cursor-pointer",
                                                                                             children: [
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                                                                                     type: "checkbox",
@@ -1058,14 +1058,14 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                                             setSongCategory(newCategories[0] || '');
                                                                                                         }
                                                                                                     },
-                                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500 focus:ring-2"
+                                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500 focus:ring-2"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                                     lineNumber: 1048,
                                                                                                     columnNumber: 33
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-slate-700",
+                                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-slate-700",
                                                                                                     children: category.name
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1084,7 +1084,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     columnNumber: 27
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mt-2 text-xs text-slate-500",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mt-2 text-xs text-slate-500",
                                                                                     children: [
                                                                                         "Selected: ",
                                                                                         songCategories.length > 0 ? songCategories.join(', ') : 'None'
@@ -1101,10 +1101,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             columnNumber: 25
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            className: "jsx-2a50d61c7d6ee991",
+                                                                            className: "jsx-d3eaaa0de8606e6c",
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                                     children: "Status"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1114,11 +1114,11 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                                                                     value: songStatus,
                                                                                     onChange: (e)=>setSongStatus(e.target.value),
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + (inputClasses || ""),
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + (inputClasses || ""),
                                                                                     children: [
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                                                             value: "heard",
-                                                                                            className: "jsx-2a50d61c7d6ee991",
+                                                                                            className: "jsx-d3eaaa0de8606e6c",
                                                                                             children: "Heard"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1127,7 +1127,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                                                             value: "unheard",
-                                                                                            className: "jsx-2a50d61c7d6ee991",
+                                                                                            className: "jsx-d3eaaa0de8606e6c",
                                                                                             children: "Unheard"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1153,10 +1153,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Praise Night"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1166,11 +1166,11 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                                                             value: songPraiseNight,
                                                                             onChange: (e)=>setSongPraiseNight(e.target.value),
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200",
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                                                     value: "",
-                                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                                     children: "Select Praise Night"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1179,7 +1179,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 }, this),
                                                                                 praiseNightCategories.map((praiseNight)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                                                         value: praiseNight.name,
-                                                                                        className: "jsx-2a50d61c7d6ee991",
+                                                                                        className: "jsx-d3eaaa0de8606e6c",
                                                                                         children: praiseNight.name
                                                                                     }, praiseNight.id, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1211,13 +1211,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between mb-3 sm:mb-4",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between mb-3 sm:mb-4",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900",
                                                                     children: "Music Details"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1226,7 +1226,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                     onClick: ()=>handleCreateHistory('music-details'),
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                             className: "w-3 h-3"
@@ -1249,13 +1249,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Key"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1268,7 +1268,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongKey(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songKey, setSongKey),
                                                                             placeholder: "e.g., C, G, F#",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1124,
@@ -1281,10 +1281,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Tempo"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1297,7 +1297,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongTempo(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songTempo, setSongTempo),
                                                                             placeholder: "e.g., 120 BPM",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1138,
@@ -1310,10 +1310,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Rehearsal Count (Manual)"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1326,7 +1326,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             value: rehearsalCount,
                                                                             onChange: (e)=>setRehearsalCount(parseInt(e.target.value) || 0),
                                                                             placeholder: "Enter rehearsal count manually",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1152,
@@ -1345,13 +1345,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "mt-6",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "mt-6",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between mb-2",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between mb-2",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700",
                                                                             children: "Audio File"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1360,7 +1360,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                             onClick: ()=>handleCreateHistory('audio'),
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + (historyButtonClasses || ""),
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + (historyButtonClasses || ""),
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                                     className: "w-3 h-3"
@@ -1385,7 +1385,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                     type: "button",
                                                                     onClick: ()=>setShowMediaManager(true),
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + (buttonClasses || ""),
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + (buttonClasses || ""),
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$folder$2d$open$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FolderOpen$3e$__["FolderOpen"], {
                                                                             className: "w-4 h-4"
@@ -1402,16 +1402,16 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 audioFile && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mt-3 p-4 bg-slate-50 rounded-lg border border-slate-200",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mt-3 p-4 bg-slate-50 rounded-lg border border-slate-200",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "mb-3",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "mb-3",
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-2 mb-1",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-2 mb-1",
                                                                                     children: [
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"
+                                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                             lineNumber: 1189,
@@ -1419,7 +1419,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                             title: audioFile.name,
-                                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "text-sm font-medium text-slate-700 break-all",
+                                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm font-medium text-slate-700 break-all",
                                                                                             children: audioFile.name
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1433,7 +1433,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     columnNumber: 29
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-xs text-slate-500 ml-4",
+                                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-xs text-slate-500 ml-4",
                                                                                     children: [
                                                                                         "(",
                                                                                         audioFile.size ? `${(audioFile.size / 1024 / 1024).toFixed(2)} MB` : 'From Media Library',
@@ -1455,12 +1455,12 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             style: {
                                                                                 outline: 'none'
                                                                             },
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full h-8",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full h-8",
                                                                             children: [
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                     src: audioFile.url,
                                                                                     type: "audio/mpeg",
-                                                                                    className: "jsx-2a50d61c7d6ee991"
+                                                                                    className: "jsx-d3eaaa0de8606e6c"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                     lineNumber: 1203,
@@ -1469,7 +1469,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                     src: audioFile.url,
                                                                                     type: "audio/wav",
-                                                                                    className: "jsx-2a50d61c7d6ee991"
+                                                                                    className: "jsx-d3eaaa0de8606e6c"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                     lineNumber: 1204,
@@ -1478,7 +1478,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                     src: audioFile.url,
                                                                                     type: "audio/ogg",
-                                                                                    className: "jsx-2a50d61c7d6ee991"
+                                                                                    className: "jsx-d3eaaa0de8606e6c"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                     lineNumber: 1205,
@@ -1487,7 +1487,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                     src: audioFile.url,
                                                                                     type: "audio/mp4",
-                                                                                    className: "jsx-2a50d61c7d6ee991"
+                                                                                    className: "jsx-d3eaaa0de8606e6c"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                     lineNumber: 1206,
@@ -1507,25 +1507,25 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mt-3",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mt-3",
                                                                     children: songAudioFile && !audioFile ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "p-4 bg-slate-50 rounded-lg border border-slate-200",
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 bg-slate-50 rounded-lg border border-slate-200",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between mb-3",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between mb-3",
                                                                                 children: [
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-2",
+                                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-2",
                                                                                         children: [
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-2 h-2 bg-green-500 rounded-full flex-shrink-0"
+                                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-2 h-2 bg-green-500 rounded-full flex-shrink-0"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                                 lineNumber: 1217,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "text-sm font-medium text-slate-700",
+                                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm font-medium text-slate-700",
                                                                                                 children: "Current Audio:"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1548,7 +1548,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                             setAudioFile(null);
                                                                                             console.log('🗑️ Audio deleted, state cleared');
                                                                                         },
-                                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded border border-red-200 hover:border-red-300 transition-colors",
+                                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded border border-red-200 hover:border-red-300 transition-colors",
                                                                                         children: "Delete"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1563,7 +1563,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                 title: songAudioFile,
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-slate-600 break-all mb-3",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-slate-600 break-all mb-3",
                                                                                 children: songAudioFile.split('/').pop() || songAudioFile
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1571,7 +1571,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "text-xs text-gray-500 mb-2",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-xs text-gray-500 mb-2",
                                                                                 children: [
                                                                                     "Source: ",
                                                                                     songAudioFile
@@ -1587,12 +1587,12 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     outline: 'none'
                                                                                 },
                                                                                 preload: "metadata",
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-full h-8",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-full h-8",
                                                                                 children: [
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                         src: songAudioFile,
                                                                                         type: "audio/mpeg",
-                                                                                        className: "jsx-2a50d61c7d6ee991"
+                                                                                        className: "jsx-d3eaaa0de8606e6c"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                         lineNumber: 1247,
@@ -1601,7 +1601,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                         src: songAudioFile,
                                                                                         type: "audio/wav",
-                                                                                        className: "jsx-2a50d61c7d6ee991"
+                                                                                        className: "jsx-d3eaaa0de8606e6c"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                         lineNumber: 1248,
@@ -1610,7 +1610,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                         src: songAudioFile,
                                                                                         type: "audio/ogg",
-                                                                                        className: "jsx-2a50d61c7d6ee991"
+                                                                                        className: "jsx-d3eaaa0de8606e6c"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                         lineNumber: 1249,
@@ -1619,7 +1619,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("source", {
                                                                                         src: songAudioFile,
                                                                                         type: "audio/mp4",
-                                                                                        className: "jsx-2a50d61c7d6ee991"
+                                                                                        className: "jsx-d3eaaa0de8606e6c"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                         lineNumber: 1250,
@@ -1638,10 +1638,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                         lineNumber: 1214,
                                                                         columnNumber: 27
                                                                     }, this) : !songAudioFile && !audioFile ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "p-4 bg-gray-50 rounded-lg border border-gray-200 text-center",
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 bg-gray-50 rounded-lg border border-gray-200 text-center",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "text-gray-500 text-sm",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-gray-500 text-sm",
                                                                                 children: "No audio file selected"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1649,7 +1649,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "text-xs text-gray-400 mt-1",
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-xs text-gray-400 mt-1",
                                                                                 children: 'Click "Browse Media Library" to select an audio file'
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1680,13 +1680,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-slate-50 rounded-lg p-4 sm:p-6",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between mb-3 sm:mb-4",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between mb-3 sm:mb-4",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900",
                                                                     children: "Personnel"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1695,7 +1695,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                     onClick: ()=>handleCreateHistory('personnel'),
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                             className: "w-3 h-3"
@@ -1718,13 +1718,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Lead Singer"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1737,7 +1737,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongLeadSinger(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songLeadSinger, setSongLeadSinger),
                                                                             placeholder: "Enter lead singer name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1285,
@@ -1750,10 +1750,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Writer"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1766,7 +1766,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongWriter(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songWriter, setSongWriter),
                                                                             placeholder: "Enter writer name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1299,
@@ -1779,10 +1779,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Conductor"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1795,7 +1795,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongConductor(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songConductor, setSongConductor),
                                                                             placeholder: "Enter conductor name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1313,
@@ -1808,10 +1808,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Lead Keyboardist"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1824,7 +1824,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongLeadKeyboardist(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songLeadKeyboardist, setSongLeadKeyboardist),
                                                                             placeholder: "Enter lead keyboardist name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1327,
@@ -1837,10 +1837,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Bass Guitarist"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1853,7 +1853,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongLeadGuitarist(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songLeadGuitarist, setSongLeadGuitarist),
                                                                             placeholder: "Enter bass guitarist name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1341,
@@ -1866,10 +1866,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991",
+                                                                    className: "jsx-d3eaaa0de8606e6c",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                                             children: "Drummer"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1882,7 +1882,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             onChange: (e)=>setSongDrummer(e.target.value),
                                                                             onPaste: (e)=>handlePaste(e, songDrummer, setSongDrummer),
                                                                             placeholder: "Enter drummer name",
-                                                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                                                             lineNumber: 1355,
@@ -1913,21 +1913,21 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "lg:col-span-3 space-y-4 sm:space-y-6",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "lg:col-span-3 space-y-4 sm:space-y-6",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between",
+                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between",
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-2 h-2 bg-blue-500 rounded-full"
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-2 h-2 bg-blue-500 rounded-full"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                 lineNumber: 1376,
@@ -1942,7 +1942,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                         onClick: ()=>handleCreateHistory('lyrics'),
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + (historyButtonClasses || ""),
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + (historyButtonClasses || ""),
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                                 className: "w-3 h-3"
@@ -1970,10 +1970,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "p-4 sm:p-6",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 sm:p-6",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
                                                                     children: "Rich text editor - Use the toolbar above to format your lyrics"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -1981,7 +1981,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "relative",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "relative",
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$BasicTextEditor$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                                                         id: "lyrics-editor",
                                                                         value: songLyrics,
@@ -1989,7 +1989,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             console.log('🎵 Lyrics onChange called with:', value);
                                                                             setSongLyrics(value);
                                                                         },
-                                                                        placeholder: "Enter complete song lyrics here...  Example: Verse 1: [Your verse lyrics here]  Chorus: [Your chorus lyrics here]  Verse 2: [Your verse lyrics here]  Bridge: [Your bridge lyrics here]",
+                                                                        placeholder: "Enter complete song lyrics here...      Example:   Verse 1:   [Your verse lyrics here]      Chorus:   [Your chorus lyrics here]      Verse 2:   [Your verse lyrics here]      Bridge:   [Your bridge lyrics here]",
                                                                         className: "w-full"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2014,18 +2014,18 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between",
+                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between",
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-2 h-2 bg-green-500 rounded-full"
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-2 h-2 bg-green-500 rounded-full"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                 lineNumber: 1427,
@@ -2040,7 +2040,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                         onClick: ()=>handleCreateHistory('solfas'),
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + (historyButtonClasses || ""),
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + (historyButtonClasses || ""),
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                                 className: "w-3 h-3"
@@ -2068,10 +2068,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "p-4 sm:p-6",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 sm:p-6",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
                                                                     children: "Rich text editor - Use the toolbar above to format your solfas"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2079,7 +2079,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "relative",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "relative",
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$BasicTextEditor$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                                                         id: "solfas-editor",
                                                                         value: songSolfas,
@@ -2087,7 +2087,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                             console.log("🎵 Conductor's Guide onChange called with:", value);
                                                                             setSongSolfas(value);
                                                                         },
-                                                                        placeholder: "Enter solfas notation here...  Example: Do Re Mi Fa Sol La Ti Do Do Re Mi Fa Sol La Ti Do Do Ti La Sol Fa Mi Re Do  Chorus: Do Re Mi Fa Sol La Ti Do Do Re Mi Fa Sol La Ti Do",
+                                                                        placeholder: "Enter solfas notation here...      Example:   Do Re Mi Fa Sol La Ti Do   Do Re Mi Fa Sol La Ti Do   Do Ti La Sol Fa Mi Re Do      Chorus:   Do Re Mi Fa Sol La Ti Do   Do Re Mi Fa Sol La Ti Do",
                                                                         className: "w-full font-mono"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2112,18 +2112,18 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white border border-slate-200 rounded-lg shadow-sm",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg",
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between",
+                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between",
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-2 h-2 bg-purple-500 rounded-full"
+                                                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-2 h-2 bg-purple-500 rounded-full"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                                                 lineNumber: 1474,
@@ -2139,7 +2139,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                         onClick: ()=>handleCreateHistory('comments'),
-                                                                        className: "jsx-2a50d61c7d6ee991" + " " + (historyButtonClasses || ""),
+                                                                        className: "jsx-d3eaaa0de8606e6c" + " " + (historyButtonClasses || ""),
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                                                 className: "w-3 h-3"
@@ -2167,10 +2167,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "p-4 sm:p-6",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 sm:p-6",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600",
                                                                     children: "Basic rich text - Bold and Italic supported"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2223,11 +2223,11 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 border-t border-slate-200 flex-shrink-0",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 border-t border-slate-200 flex-shrink-0",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: handleUpdate,
-                                    className: "jsx-2a50d61c7d6ee991" + " " + `flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors font-medium`,
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + `flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors font-medium`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$save$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Save$3e$__["Save"], {
                                             className: "w-4 h-4 sm:w-5 sm:h-5"
@@ -2237,7 +2237,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "text-sm sm:text-base",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm sm:text-base",
                                             children: song ? 'Update Song' : 'Add Song'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2251,7 +2251,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex flex-col sm:flex-row gap-3",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex flex-col sm:flex-row gap-3",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: ()=>{
@@ -2261,7 +2261,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 setShowHistoryList(true);
                                             },
                                             disabled: !("TURBOPACK compile-time value", "loveworld-singers-app"),
-                                            className: "jsx-2a50d61c7d6ee991" + " " + `flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium relative ${("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : `${theme.primary} text-white ${theme.primaryHover}`}`,
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + `flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium relative ${("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : `${theme.primary} text-white ${theme.primaryHover}`}`,
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                                     className: "w-4 h-4"
@@ -2271,7 +2271,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-sm sm:text-base",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm sm:text-base",
                                                     children: "View History"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2279,7 +2279,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 17
                                                 }, this),
                                                 historyEntries.length > 0 && ("TURBOPACK compile-time value", "loveworld-singers-app") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center",
                                                     children: historyEntries.length
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2288,7 +2288,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 !("TURBOPACK compile-time value", "loveworld-singers-app") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     title: "Firebase not configured",
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center",
                                                     children: "⚠️"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2303,7 +2303,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: onClose,
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full sm:w-auto px-4 sm:px-6 py-3 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full sm:w-auto px-4 sm:px-6 py-3 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium",
                                             children: "Cancel"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2347,15 +2347,15 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                 columnNumber: 7
             }, this),
             showHistoryForm && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "jsx-2a50d61c7d6ee991" + " " + "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-2 sm:p-4",
+                className: "jsx-d3eaaa0de8606e6c" + " " + "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-2 sm:p-4",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto",
+                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "px-6 py-4 border-b border-slate-200",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-6 py-4 border-b border-slate-200",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-lg font-semibold text-slate-900",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-lg font-semibold text-slate-900",
                                     children: window.currentHistoryEntryId ? 'Update History Entry' : `Save ${historyType.charAt(0).toUpperCase() + historyType.slice(1)} Version`
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2363,7 +2363,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-slate-600 mt-1",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-slate-600 mt-1",
                                     children: window.currentHistoryEntryId ? 'Update the selected history entry' : `Create a history entry for the current ${historyType} content`
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2377,13 +2377,13 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "p-4 sm:p-6 space-y-6 max-h-[60vh] overflow-y-auto",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-4 sm:p-6 space-y-6 max-h-[60vh] overflow-y-auto",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991",
+                                    className: "jsx-d3eaaa0de8606e6c",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                             children: "Version Title"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2395,7 +2395,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             value: historyTitle,
                                             onChange: (e)=>setHistoryTitle(e.target.value),
                                             placeholder: "e.g., Lyrics Version 1.2",
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                             lineNumber: 1587,
@@ -2408,10 +2408,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991",
+                                    className: "jsx-d3eaaa0de8606e6c",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                             children: "Type"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2421,11 +2421,11 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                             value: historyType,
                                             onChange: (e)=>setHistoryType(e.target.value),
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "song-details",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Song Details"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2434,7 +2434,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "personnel",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Personnel"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2443,7 +2443,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "music-details",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Music Details"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2452,7 +2452,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "lyrics",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Lyrics"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2461,7 +2461,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "solfas",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Solfas"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2470,7 +2470,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "audio",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Audio"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2479,7 +2479,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "comments",
-                                                    className: "jsx-2a50d61c7d6ee991",
+                                                    className: "jsx-d3eaaa0de8606e6c",
                                                     children: "Comments"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2499,10 +2499,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991",
+                                    className: "jsx-d3eaaa0de8606e6c",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                             children: "Notes (Optional)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2514,7 +2514,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             onChange: (e)=>setHistoryDescription(e.target.value),
                                             rows: 2,
                                             placeholder: "What changed in this version?",
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/EditSongModal.tsx",
                                             lineNumber: 1619,
@@ -2527,12 +2527,12 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 15
                                 }, this),
                                 window.currentHistoryEntryId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "space-y-6",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "space-y-6",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "jsx-2a50d61c7d6ee991",
+                                        className: "jsx-d3eaaa0de8606e6c",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                className: "jsx-2a50d61c7d6ee991" + " " + "block text-sm font-medium text-slate-700 mb-2",
+                                                className: "jsx-d3eaaa0de8606e6c" + " " + "block text-sm font-medium text-slate-700 mb-2",
                                                 children: "Historical Value"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2672,7 +2672,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 },
                                                 rows: 8,
                                                 placeholder: "Historical value to edit",
-                                                className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                 lineNumber: 1634,
@@ -2690,12 +2690,12 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-blue-50 border border-blue-200 rounded-lg p-4",
+                                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-blue-50 border border-blue-200 rounded-lg p-4",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-blue-800",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-blue-800",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
-                                                className: "jsx-2a50d61c7d6ee991",
+                                                className: "jsx-d3eaaa0de8606e6c",
                                                 children: window.currentHistoryEntryId ? 'History entry will be updated with your changes.' : `Current ${historyType} content will be saved as a new version.`
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2703,7 +2703,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {
-                                                className: "jsx-2a50d61c7d6ee991"
+                                                className: "jsx-d3eaaa0de8606e6c"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/EditSongModal.tsx",
                                                 lineNumber: 1776,
@@ -2730,9 +2730,9 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "px-6 py-4 border-t border-slate-200 flex justify-end",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-6 py-4 border-t border-slate-200 flex justify-end",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-2a50d61c7d6ee991" + " " + "flex gap-2",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex gap-2",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         type: "button",
@@ -2741,7 +2741,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             window.currentHistoryEntryId = null;
                                             setShowHistoryForm(false);
                                         },
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors",
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2758,7 +2758,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                             }, 100); // Small delay to ensure save completes
                                             setShowHistoryForm(false);
                                         },
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors",
                                         children: "Save & Close"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2788,17 +2788,17 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                 columnNumber: 9
             }, this),
             showHistoryList && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "jsx-2a50d61c7d6ee991" + " " + "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4",
+                className: "jsx-d3eaaa0de8606e6c" + " " + "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "jsx-2a50d61c7d6ee991" + " " + "bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto",
+                    className: "jsx-d3eaaa0de8606e6c" + " " + "bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "px-6 py-4 border-b border-slate-200",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-6 py-4 border-b border-slate-200",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center justify-between",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center justify-between",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-lg font-semibold text-slate-900",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-lg font-semibold text-slate-900",
                                         children: [
                                             "Song History - ",
                                             song?.title
@@ -2810,7 +2810,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         onClick: ()=>setShowHistoryList(false),
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-slate-400 hover:text-slate-600",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-slate-400 hover:text-slate-600",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                                             className: "w-6 h-6"
                                         }, void 0, false, {
@@ -2835,9 +2835,9 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "p-6",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-6",
                             children: historyEntries.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-2a50d61c7d6ee991" + " " + "text-center py-8 text-slate-500",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "text-center py-8 text-slate-500",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__["History"], {
                                         className: "w-12 h-12 mx-auto mb-4 text-slate-300"
@@ -2847,7 +2847,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "jsx-2a50d61c7d6ee991",
+                                        className: "jsx-d3eaaa0de8606e6c",
                                         children: "No history entries found for this song."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2855,7 +2855,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "text-sm",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm",
                                         children: 'Create your first history entry using the "Add History" buttons.'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2868,20 +2868,20 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                 lineNumber: 1835,
                                 columnNumber: 17
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-2a50d61c7d6ee991" + " " + "space-y-4",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "space-y-4",
                                 children: historyEntries.map((entry)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "jsx-2a50d61c7d6ee991" + " " + "border border-slate-200 rounded-lg p-4",
+                                        className: "jsx-d3eaaa0de8606e6c" + " " + "border border-slate-200 rounded-lg p-4",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-start justify-between",
+                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-start justify-between",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex-1",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex-1",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "flex items-center gap-2 mb-2",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "flex items-center gap-2 mb-2",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full",
                                                                     children: entry.type
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2889,7 +2889,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-slate-500",
+                                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-slate-500",
                                                                     children: new Date(entry.created_at).toLocaleString()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2903,7 +2903,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "font-medium text-slate-900 mb-1",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "font-medium text-slate-900 mb-1",
                                                             children: entry.title
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2911,7 +2911,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "text-sm text-slate-600 mb-2",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "text-sm text-slate-600 mb-2",
                                                             children: entry.description
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/EditSongModal.tsx",
@@ -2919,7 +2919,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "text-xs text-slate-500",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "text-xs text-slate-500",
                                                             children: [
                                                                 "Created by: ",
                                                                 entry.created_by
@@ -2936,7 +2936,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "jsx-2a50d61c7d6ee991" + " " + "flex gap-2 ml-4",
+                                                    className: "jsx-d3eaaa0de8606e6c" + " " + "flex gap-2 ml-4",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                             onClick: ()=>{
@@ -2954,7 +2954,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                                 window.currentHistoryEntryId = entry.id;
                                                             },
                                                             title: "Edit history entry",
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "p-2 text-green-600 hover:bg-green-50 rounded-md transition-colors",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-2 text-green-600 hover:bg-green-50 rounded-md transition-colors",
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2d$pen$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit$3e$__["Edit"], {
                                                                 className: "w-4 h-4"
                                                             }, void 0, false, {
@@ -2970,7 +2970,7 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                             onClick: ()=>handleDeleteHistory(entry.id),
                                                             title: "Delete history entry",
-                                                            className: "jsx-2a50d61c7d6ee991" + " " + "p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors",
+                                                            className: "jsx-d3eaaa0de8606e6c" + " " + "p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors",
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"], {
                                                                 className: "w-4 h-4"
                                                             }, void 0, false, {
@@ -3011,10 +3011,10 @@ function EditSongModal({ isOpen, onClose, song, categories, praiseNightCategorie
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "jsx-2a50d61c7d6ee991" + " " + "px-6 py-4 border-t border-slate-200",
+                            className: "jsx-d3eaaa0de8606e6c" + " " + "px-6 py-4 border-t border-slate-200",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 onClick: ()=>setShowHistoryList(false),
-                                className: "jsx-2a50d61c7d6ee991" + " " + "w-full px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors",
+                                className: "jsx-d3eaaa0de8606e6c" + " " + "w-full px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors",
                                 children: "Close"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/EditSongModal.tsx",

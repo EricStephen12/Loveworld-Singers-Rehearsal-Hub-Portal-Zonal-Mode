@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MasterSong } from '@/lib/master-library-service';
 import { useZone } from '@/hooks/useZone';
@@ -62,6 +62,7 @@ export function MasterSongDetailSheet({
   const isCurrentSong = currentSong?.id === song.id;
   
   const [showLyrics, setShowLyrics] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Only use Full Mix audio in the detail sheet - other parts are for AudioLab
   const fullMixUrl = song.audioUrls?.full || song.audioFile;
@@ -95,7 +96,9 @@ export function MasterSongDetailSheet({
   };
 
   const goToAudioLab = () => {
-    router.push(`/pages/audiolab?song=${song.id}&source=master`);
+    setIsNavigating(true);
+    // Navigate to AudioLab library with song ID to auto-expand
+    router.push(`/pages/audiolab?song=${song.id}`);
     onClose();
   };
 
@@ -105,12 +108,12 @@ export function MasterSongDetailSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 z-[200] animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/60 z-[200] animate-fadeIn"
         onClick={onClose}
       />
 
       {/* Sheet - Full screen on mobile, bottom sheet on larger screens */}
-      <div className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:left-0 sm:right-0 z-[200] bg-white sm:rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 sm:max-h-[90vh] flex flex-col safe-area-inset-bottom">
+      <div className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:left-0 sm:right-0 z-[200] bg-white sm:rounded-t-3xl shadow-2xl animate-slide-up sm:max-h-[90vh] flex flex-col safe-area-inset-bottom">
         {/* Handle - Only show on larger screens */}
         <div className="hidden sm:flex justify-center pt-3 pb-2 shrink-0">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
@@ -305,10 +308,20 @@ export function MasterSongDetailSheet({
           <div className="shrink-0 p-4 border-t border-slate-200 bg-white sm:rounded-b-3xl safe-area-inset-bottom">
             <button
               onClick={goToAudioLab}
-              className="w-full py-4 sm:py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm text-base sm:text-sm"
+              disabled={isNavigating}
+              className="w-full py-4 sm:py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm text-base sm:text-sm disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Mic size={22} className="sm:w-5 sm:h-5" />
-              Practice in AudioLab
+              {isNavigating ? (
+                <>
+                  <Loader2 size={22} className="sm:w-5 sm:h-5 animate-spin" />
+                  Opening AudioLab...
+                </>
+              ) : (
+                <>
+                  <Mic size={22} className="sm:w-5 sm:h-5" />
+                  Practice in AudioLab
+                </>
+              )}
             </button>
           </div>
         )}

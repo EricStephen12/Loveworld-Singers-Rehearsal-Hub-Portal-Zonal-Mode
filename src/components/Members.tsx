@@ -174,8 +174,20 @@ export default function Members() {
       console.log(`📊 Found ${zoneMemberships.length} memberships`);
       
       // OPTIMIZED: Batch fetch profiles instead of one-by-one (reduces N+1 reads)
-      // First, get unique user IDs
-      const userIds = [...new Set(zoneMemberships.map((m: any) => m.userId))].filter(Boolean);
+      // First, get unique user IDs and DEDUPLICATE members
+      const seenUserIds = new Set<string>();
+      const deduplicatedMemberships: any[] = [];
+      
+      zoneMemberships.forEach((m: any) => {
+        if (m.userId && !seenUserIds.has(m.userId)) {
+          seenUserIds.add(m.userId);
+          deduplicatedMemberships.push(m);
+        }
+      });
+      
+      console.log(`📊 Deduplicated: ${zoneMemberships.length} → ${deduplicatedMemberships.length} unique members`);
+      
+      const userIds = [...seenUserIds];
       
       // Batch fetch profiles (max 30 at a time due to Firestore 'in' query limit)
       const profilesMap = new Map<string, any>();
@@ -203,23 +215,27 @@ export default function Members() {
         }
       }
       
-      // Map memberships to member data using cached profiles
-      const membersData = zoneMemberships.map((membership: any) => {
+      // Map deduplicated memberships to member data using cached profiles
+      const membersData = deduplicatedMemberships.map((membership: any) => {
         const profile = profilesMap.get(membership.userId) as any;
+        
+        // Trim names to remove extra whitespace
+        const firstName = (profile?.first_name || membership.userName?.split(' ')[0] || '').trim();
+        const lastName = (profile?.last_name || membership.userName?.split(' ').slice(1).join(' ') || '').trim();
         
         return {
           id: membership.userId,
-          first_name: profile?.first_name || membership.userName?.split(' ')[0] || '',
-          last_name: profile?.last_name || membership.userName?.split(' ').slice(1).join(' ') || '',
-          middle_name: profile?.middle_name || '',
+          first_name: firstName,
+          last_name: lastName,
+          middle_name: (profile?.middle_name || '').trim(),
           email: profile?.email || membership.userEmail || '',
           phone: profile?.phone_number || profile?.phone || '',
           gender: profile?.gender || '',
           birthday: profile?.birthday || '',
           region: profile?.region || '',
           church: profile?.church || '',
-          designation: profile?.designation || '',
-          administration: profile?.administration || '',
+          designation: (profile?.designation || '').trim(),
+          administration: (profile?.administration || '').trim(),
           profile_image_url: profile?.profile_image_url || '',
           created_at: membership.joinedAt || profile?.created_at || new Date().toISOString(),
           updated_at: profile?.updated_at || new Date().toISOString(),

@@ -121,6 +121,16 @@ export interface Track {
   muted: boolean;
   solo: boolean;
   
+  // Effects (reverb, EQ, compression)
+  effects?: {
+    volume: number;      // 0-100
+    pan: number;         // -100 to 100
+    reverb: number;      // 0-100 (wet/dry mix)
+    bass: number;        // -12 to 12 dB
+    treble: number;      // -12 to 12 dB
+    compression: number; // 0-100
+  };
+  
   // Recording metadata
   recordedAt?: Date | Timestamp;
   duration?: number;

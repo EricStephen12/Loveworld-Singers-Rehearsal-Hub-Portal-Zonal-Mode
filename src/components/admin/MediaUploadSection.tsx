@@ -56,6 +56,8 @@ export default function MediaUploadSection() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<AdminPlaylist | null>(null)
   const [playlistName, setPlaylistName] = useState('')
   const [playlistDescription, setPlaylistDescription] = useState('')
+  const [playlistThumbnail, setPlaylistThumbnail] = useState('')
+  const [playlistType, setPlaylistType] = useState<string>('')
   const [playlistPublic, setPlaylistPublic] = useState(true)
   const [playlistFeatured, setPlaylistFeatured] = useState(false)
   const [playlistForHQ, setPlaylistForHQ] = useState(true)
@@ -118,6 +120,8 @@ export default function MediaUploadSection() {
   const resetPlaylistForm = () => {
     setPlaylistName('')
     setPlaylistDescription('')
+    setPlaylistThumbnail('')
+    setPlaylistType('')
     setPlaylistPublic(true)
     setPlaylistFeatured(false)
     setPlaylistForHQ(true)
@@ -469,6 +473,8 @@ export default function MediaUploadSection() {
                             setSelectedPlaylist(playlist)
                             setPlaylistName(playlist.name)
                             setPlaylistDescription(playlist.description)
+                            setPlaylistThumbnail(playlist.thumbnail || '')
+                            setPlaylistType(playlist.type || '')
                             setPlaylistPublic(playlist.isPublic)
                             setPlaylistFeatured(playlist.isFeatured)
                             setPlaylistForHQ(playlist.forHQ)
@@ -577,6 +583,8 @@ export default function MediaUploadSection() {
           await updateAdminPlaylist(selectedPlaylist.id, {
             name: playlistName.trim(),
             description: playlistDescription.trim(),
+            thumbnail: playlistThumbnail || undefined,
+            type: playlistType || undefined,
             isPublic: playlistPublic,
             isFeatured: playlistFeatured,
             forHQ: playlistForHQ
@@ -585,6 +593,8 @@ export default function MediaUploadSection() {
           await createAdminPlaylist({
             name: playlistName.trim(),
             description: playlistDescription.trim(),
+            thumbnail: playlistThumbnail || undefined,
+            type: playlistType || undefined,
             isPublic: playlistPublic,
             isFeatured: playlistFeatured,
             forHQ: playlistForHQ,
@@ -599,6 +609,45 @@ export default function MediaUploadSection() {
         alert('Failed to save playlist')
       }
       setIsSubmitting(false)
+    }
+
+    const openPlaylistThumbnailWidget = () => {
+      if (typeof window !== 'undefined' && (window as any).cloudinary) {
+        const widget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            folder: 'media/thumbnails',
+            resourceType: 'image',
+            maxFileSize: 10000000,
+            sources: ['local'],
+            multiple: false,
+            styles: {
+              palette: {
+                window: '#1a1a1a',
+                windowBorder: '#333',
+                tabIcon: '#fff',
+                menuIcons: '#fff',
+                textDark: '#000',
+                textLight: '#fff',
+                link: '#8b5cf6',
+                action: '#8b5cf6',
+                inactiveTabIcon: '#666',
+                error: '#ef4444',
+                inProgress: '#8b5cf6',
+                complete: '#22c55e',
+                sourceBg: '#1a1a1a'
+              }
+            }
+          },
+          (error: any, result: any) => {
+            if (!error && result?.event === 'success') {
+              setPlaylistThumbnail(result.info.secure_url)
+            }
+          }
+        )
+        widget.open()
+      }
     }
 
     return (
@@ -638,8 +687,55 @@ export default function MediaUploadSection() {
               />
             </div>
 
+            {/* Thumbnail Upload */}
             <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <p className="text-sm text-gray-500">💡 Thumbnail will use the first video's thumbnail</p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+              {playlistThumbnail ? (
+                <div className="relative">
+                  <img src={playlistThumbnail} alt="Thumbnail" className="w-full aspect-video object-cover rounded-xl" />
+                  <button
+                    onClick={() => setPlaylistThumbnail('')}
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    onClick={openPlaylistThumbnailWidget}
+                    className="w-full py-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                  >
+                    <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 font-medium text-sm">Upload custom thumbnail</p>
+                    <p className="text-gray-400 text-xs">Or leave empty to use first video's thumbnail</p>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Category Selector */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <button
+                  onClick={() => setStep('categories')}
+                  className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                >
+                  <Settings className="w-3 h-3" />
+                  Manage
+                </button>
+              </div>
+              <select
+                value={playlistType}
+                onChange={(e) => setPlaylistType(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">No category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

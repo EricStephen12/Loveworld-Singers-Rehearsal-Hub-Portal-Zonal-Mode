@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Mic, Music, Loader2, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Search, Mic, Music, Loader2, RefreshCw, ChevronDown } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
-import { getSongs, toLeagcySong } from '../_lib/song-service';
+import { getSongs, toLeagcySong, clearSongCache } from '../_lib/song-service';
 import { useZone } from '@/hooks/useZone';
 import { CollapsibleSongCard } from './CollapsibleSongCard';
 import type { Song, VocalPart } from '../_types';
@@ -14,17 +15,30 @@ export function LibraryView() {
     state, 
     pause, 
     seek, 
-    switchPart 
+    switchPart,
+    setView
   } = useAudioLab();
   const { currentZone } = useZone();
+  const searchParams = useSearchParams();
   
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Accordion state - only one song expanded at a time
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+  
+  // Track highlighted song (from URL navigation)
+  const [highlightedSongId, setHighlightedSongId] = useState<string | null>(null);
+  
+  // Track if we've handled the URL song param
+  const handledSongParamRef = useRef<string | null>(null);
+  
+  // Track if we're currently loading after navigation
+  const [isNavigatingFromDetail, setIsNavigatingFromDetail] = useState(false);
   
   // Local playback state for inline controls
   const [playingSongId, setPlayingSongId] = useState<string | null>(null);
@@ -33,6 +47,62 @@ export function LibraryView() {
   // Get playback state from context
   const { currentTime, duration, isPlaying } = state.player;
   const currentSong = state.player.currentSong;
+
+  // Check for song parameter in URL to auto-expand
+  useEffect(() => {
+    const songParam = searchParams.get('song');
+    console.log('[LibraryView] Checking song param:', songParam, 'songs loaded:', songs.length, 'already handled:', handledSongParamRef.current);
+    
+    // Only handle if we have a song param, songs are loaded, and we haven't handled this specific param yet
+    if (songParam && songs.length > 0 && handledSongParamRef.current !== songParam) {
+      // Set loading state to show user we're navigating
+      setIsNavigatingFromDetail(true);
+      
+      // First try to find by ID (for backward compatibility)
+      let song = songs.find(s => String(s.id) === String(songParam));
+      
+      // If not found by ID, try to find by title (decoded from URL)
+      if (!song) {
+        const decodedTitle = decodeURIComponent(songParam);
+        song = songs.find(s => s.title.toLowerCase() === decodedTitle.toLowerCase());
+      }
+      
+      console.log('[LibraryView] Found song:', song?.title, 'searching for param:', songParam);
+      
+      if (song) {
+        handledSongParamRef.current = songParam;
+        setExpandedSongId(song.id); // Use the actual song ID from the found song
+        
+        // Set highlighted song ID to highlight the specific song
+        setHighlightedSongId(song.id);
+        
+        // Set search query to the song title to highlight it, but only if search is currently empty
+        if (!searchQuery) {
+          setSearchQuery(song.title);
+        }
+        
+        // Scroll to the song after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          const element = document.getElementById(`song-${song.id}`);
+          console.log('[LibraryView] Scrolling to element:', element);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Remove loading state after scroll is complete
+            setTimeout(() => {
+              setIsNavigatingFromDetail(false);
+            }, 600); // 600ms to account for smooth scroll
+          } else {
+            // If element not found, still remove loading state
+            setIsNavigatingFromDetail(false);
+          }
+        }, 500);
+      } else {
+        console.log('[LibraryView] Song not found in library. Available titles:', songs.slice(0, 5).map(s => s.title));
+        setIsNavigatingFromDetail(false);
+      }
+    }
+  }, [searchParams, songs]);
 
   // Fetch songs on mount and when zone changes
   useEffect(() => {
@@ -49,22 +119,51 @@ export function LibraryView() {
     }
   }, [currentSong, isPlaying, state.player.currentPart]);
 
-  const loadSongs = async () => {
+  const loadSongs = async (forceRefresh = false) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const audioLabSongs = await getSongs(currentZone?.id);
+      // Clear cache if force refresh
+      if (forceRefresh) {
+        clearSongCache();
+      }
+      
+      const audioLabSongs = await getSongs(currentZone?.id, 500);
       const legacySongs = audioLabSongs.map(toLeagcySong);
       setSongs(legacySongs);
+      // Show Load More if we got a reasonable number of songs (there might be more)
+      // Since we filter for songs with audio, the actual count might be less than limit
+      setHasMore(legacySongs.length >= 100);
       
-      console.log('[LibraryView] Loaded', legacySongs.length, 'songs from Master Library');
+      console.log('[LibraryView] Loaded', legacySongs.length, 'songs from Master Library. First 5 titles:', legacySongs.slice(0, 5).map(s => s.title));
     } catch (err) {
       console.error('[LibraryView] Error loading songs:', err);
       setError('Failed to load songs from Master Library');
       setSongs([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load more songs
+  const loadMoreSongs = async () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    try {
+      // For now, we load all at once since Firebase doesn't have easy cursor pagination
+      // In the future, implement proper pagination with startAfter
+      const audioLabSongs = await getSongs(currentZone?.id, 1000);
+      const legacySongs = audioLabSongs.map(toLeagcySong);
+      setSongs(legacySongs);
+      setHasMore(false); // We loaded everything
+      
+      console.log('[LibraryView] Loaded more songs, total:', legacySongs.length);
+    } catch (err) {
+      console.error('[LibraryView] Error loading more songs:', err);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -83,6 +182,14 @@ export function LibraryView() {
     
     return result;
   }, [songs, searchQuery]);
+
+  // Auto-load more songs when search query changes
+  useEffect(() => {
+    if (searchQuery && songs.length === 0) {
+      // If search query is present but no songs loaded, try to load more
+      loadMoreSongs();
+    }
+  }, [searchQuery]);
 
   // Handle expand/collapse with accordion behavior
   const handleToggleExpand = useCallback((songId: string) => {
@@ -129,13 +236,28 @@ export function LibraryView() {
     seek(time);
   }, [seek]);
 
+  // Handle start karaoke with song
+  const handleStartKaraoke = useCallback(async (song: Song) => {
+    await playSong(song);
+    setView('karaoke');
+  }, [playSong, setView]);
+
   return (
     <div className="flex flex-col pb-24">
       {/* Decorative Background Glow */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-violet-500/10 via-transparent to-transparent pointer-events-none z-0" />
 
       <main className="relative z-10 flex flex-col gap-4 sm:gap-6 px-3 sm:px-4 pt-4 sm:pt-6">
-        {/* Headline */}
+        {/* Loading indicator when navigating from SongDetailModal */}
+        {isNavigatingFromDetail && (
+          <div className="absolute inset-0 bg-[#191022] bg-opacity-90 flex items-center justify-center z-50">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-white text-lg font-medium">Loading song details...</p>
+              <p className="text-slate-400 text-sm text-center max-w-xs">Locating and highlighting your selected song</p>
+            </div>
+          </div>
+        )}        {/* Headline */}
         <div className="flex flex-col gap-1.5 sm:gap-2 mb-2">
           <div className="flex items-center justify-between">
             <h1 className="text-white text-2xl sm:text-[28px] font-bold leading-tight tracking-tight">
@@ -155,9 +277,14 @@ export function LibraryView() {
             <input 
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                // Clear the highlighted song ID when user starts typing a new search
+                setHighlightedSongId(null);
+                setSearchQuery(e.target.value);
+              }}
               className="flex-1 bg-transparent border-none p-0 text-sm sm:text-base text-white placeholder:text-slate-400 focus:ring-0 focus:outline-none"
               placeholder="Search titles, artists..."
+              autoComplete="off"
             />
             <button className="text-slate-400 hover:text-violet-400 transition-colors touch-manipulation">
               <Mic size={18} className="sm:w-5 sm:h-5" />
@@ -168,7 +295,7 @@ export function LibraryView() {
         {/* Refresh Button & Count */}
         <div className="flex items-center gap-1.5 sm:gap-2 py-1">
           <button 
-            onClick={loadSongs}
+            onClick={() => loadSongs(true)}
             disabled={isLoading}
             className="flex shrink-0 h-8 sm:h-9 w-8 sm:w-9 items-center justify-center rounded-lg bg-[#261933] border border-white/10 text-slate-300 hover:text-white hover:border-violet-500/50 transition-colors disabled:opacity-50 touch-manipulation"
           >
@@ -226,22 +353,48 @@ export function LibraryView() {
               const isThisSongExpanded = expandedSongId === song.id;
               
               return (
-                <CollapsibleSongCard
-                  key={song.id}
-                  song={song}
-                  isExpanded={isThisSongExpanded}
-                  isPlaying={isThisSongPlaying}
-                  currentPart={isThisSongPlaying ? playingPart : null}
-                  currentTime={isThisSongPlaying ? currentTime : 0}
-                  duration={isThisSongPlaying ? duration : song.duration}
-                  onToggleExpand={() => handleToggleExpand(song.id)}
-                  onPlayAll={() => handlePlayAll(song)}
-                  onPlayPart={(part) => handlePlayPart(song, part)}
-                  onPause={handlePause}
-                  onSeek={handleSeek}
-                />
+                <div key={song.id} id={`song-${song.id}`}>
+                  <CollapsibleSongCard
+                    song={song}
+                    isExpanded={isThisSongExpanded}
+                    isPlaying={isThisSongPlaying}
+                    isHighlighted={!!(highlightedSongId === song.id || (searchQuery && song.title.toLowerCase().includes(searchQuery.toLowerCase())))}
+                    currentPart={isThisSongPlaying ? playingPart : null}
+                    currentTime={isThisSongPlaying ? currentTime : 0}
+                    duration={isThisSongPlaying ? duration : song.duration}
+                    onToggleExpand={() => handleToggleExpand(song.id)}
+                    onPlayAll={() => handlePlayAll(song)}
+                    onPlayPart={(part) => handlePlayPart(song, part)}
+                    onPause={handlePause}
+                    onSeek={handleSeek}
+                    onStartKaraoke={() => handleStartKaraoke(song)}
+                  />
+                </div>
               );
             })}
+            
+            {/* Load More Button */}
+            {hasMore && !searchQuery && (
+              <div className="pt-4 pb-2">
+                <button
+                  onClick={loadMoreSongs}
+                  disabled={isLoadingMore}
+                  className="w-full py-3 bg-[#261933] text-violet-400 font-medium rounded-xl hover:bg-[#2d1f3d] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 border border-white/10"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Loading more songs...
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown size={16} />
+                      Load More Songs
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

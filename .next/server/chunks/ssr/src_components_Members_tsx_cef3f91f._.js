@@ -148,10 +148,19 @@ function Members() {
             }
             console.log(`📊 Found ${zoneMemberships.length} memberships`);
             // OPTIMIZED: Batch fetch profiles instead of one-by-one (reduces N+1 reads)
-            // First, get unique user IDs
+            // First, get unique user IDs and DEDUPLICATE members
+            const seenUserIds = new Set();
+            const deduplicatedMemberships = [];
+            zoneMemberships.forEach((m)=>{
+                if (m.userId && !seenUserIds.has(m.userId)) {
+                    seenUserIds.add(m.userId);
+                    deduplicatedMemberships.push(m);
+                }
+            });
+            console.log(`📊 Deduplicated: ${zoneMemberships.length} → ${deduplicatedMemberships.length} unique members`);
             const userIds = [
-                ...new Set(zoneMemberships.map((m)=>m.userId))
-            ].filter(Boolean);
+                ...seenUserIds
+            ];
             // Batch fetch profiles (max 30 at a time due to Firestore 'in' query limit)
             const profilesMap = new Map();
             const batchSize = 30;
@@ -176,22 +185,25 @@ function Members() {
                     }
                 }
             }
-            // Map memberships to member data using cached profiles
-            const membersData = zoneMemberships.map((membership)=>{
+            // Map deduplicated memberships to member data using cached profiles
+            const membersData = deduplicatedMemberships.map((membership)=>{
                 const profile = profilesMap.get(membership.userId);
+                // Trim names to remove extra whitespace
+                const firstName = (profile?.first_name || membership.userName?.split(' ')[0] || '').trim();
+                const lastName = (profile?.last_name || membership.userName?.split(' ').slice(1).join(' ') || '').trim();
                 return {
                     id: membership.userId,
-                    first_name: profile?.first_name || membership.userName?.split(' ')[0] || '',
-                    last_name: profile?.last_name || membership.userName?.split(' ').slice(1).join(' ') || '',
-                    middle_name: profile?.middle_name || '',
+                    first_name: firstName,
+                    last_name: lastName,
+                    middle_name: (profile?.middle_name || '').trim(),
                     email: profile?.email || membership.userEmail || '',
                     phone: profile?.phone_number || profile?.phone || '',
                     gender: profile?.gender || '',
                     birthday: profile?.birthday || '',
                     region: profile?.region || '',
                     church: profile?.church || '',
-                    designation: profile?.designation || '',
-                    administration: profile?.administration || '',
+                    designation: (profile?.designation || '').trim(),
+                    administration: (profile?.administration || '').trim(),
                     profile_image_url: profile?.profile_image_url || '',
                     created_at: membership.joinedAt || profile?.created_at || new Date().toISOString(),
                     updated_at: profile?.updated_at || new Date().toISOString(),
@@ -323,7 +335,7 @@ function Members() {
                         children: "Members"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 352,
+                        lineNumber: 368,
                         columnNumber: 9
                     }, this),
                     members.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -335,7 +347,7 @@ function Members() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 354,
+                        lineNumber: 370,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -347,12 +359,12 @@ function Members() {
                             className: `w-4 h-4 ${loading ? 'animate-spin' : ''}`
                         }, void 0, false, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 364,
+                            lineNumber: 380,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 358,
+                        lineNumber: 374,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -363,18 +375,18 @@ function Members() {
                             className: "w-4 h-4"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 371,
+                            lineNumber: 387,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 366,
+                        lineNumber: 382,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Members.tsx",
-                lineNumber: 351,
+                lineNumber: 367,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -389,12 +401,12 @@ function Members() {
                                     className: "w-5 h-5 text-white"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 379,
+                                    lineNumber: 395,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 378,
+                                lineNumber: 394,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -404,7 +416,7 @@ function Members() {
                                         children: "Total Members"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 382,
+                                        lineNumber: 398,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -412,19 +424,19 @@ function Members() {
                                         children: members.length
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 383,
+                                        lineNumber: 399,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 381,
+                                lineNumber: 397,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 377,
+                        lineNumber: 393,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -438,12 +450,12 @@ function Members() {
                                     className: `w-4 h-4 ${loading ? 'animate-spin' : ''}`
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 392,
+                                    lineNumber: 408,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 387,
+                                lineNumber: 403,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -453,24 +465,24 @@ function Members() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 398,
+                                    lineNumber: 414,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 394,
+                                lineNumber: 410,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 386,
+                        lineNumber: 402,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Members.tsx",
-                lineNumber: 376,
+                lineNumber: 392,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -485,7 +497,7 @@ function Members() {
                                     className: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 407,
+                                    lineNumber: 423,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -496,18 +508,18 @@ function Members() {
                                     className: "w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50 lg:bg-white"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 408,
+                                    lineNumber: 424,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 406,
+                            lineNumber: 422,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 405,
+                        lineNumber: 421,
                         columnNumber: 9
                     }, this),
                     currentZone && (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(currentZone.id) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -521,7 +533,7 @@ function Members() {
                                     children: "🌍 All Members"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 423,
+                                    lineNumber: 439,
                                     columnNumber: 15
                                 }, this),
                                 allZones.filter((z)=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(z.id) && z.id !== 'zone-boss').map((zone)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -533,7 +545,7 @@ function Members() {
                                         ]
                                     }, zone.id, true, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 436,
+                                        lineNumber: 452,
                                         columnNumber: 17
                                     }, this)),
                                 allZones.filter((z)=>!(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(z.id) && z.id !== 'zone-boss').map((zone)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -542,24 +554,24 @@ function Members() {
                                         children: zone.name.replace('Loveworld Singers ', '')
                                     }, zone.id, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 451,
+                                        lineNumber: 467,
                                         columnNumber: 17
                                     }, this))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 421,
+                            lineNumber: 437,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 420,
+                        lineNumber: 436,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Members.tsx",
-                lineNumber: 404,
+                lineNumber: 420,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -584,7 +596,7 @@ function Members() {
                                             className: "w-14 h-14 bg-slate-200 rounded-full animate-pulse"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 476,
+                                            lineNumber: 492,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -594,38 +606,38 @@ function Members() {
                                                     className: "h-4 w-32 bg-slate-200 rounded animate-pulse mb-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 478,
+                                                    lineNumber: 494,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "h-3 w-48 bg-slate-200 rounded animate-pulse"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 479,
+                                                    lineNumber: 495,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 477,
+                                            lineNumber: 493,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "h-6 w-16 bg-slate-200 rounded-full animate-pulse"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 481,
+                                            lineNumber: 497,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, i, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 475,
+                                    lineNumber: 491,
                                     columnNumber: 15
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 473,
+                            lineNumber: 489,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -643,12 +655,12 @@ function Members() {
                                                         className: "h-4 w-24 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 492,
+                                                        lineNumber: 508,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 491,
+                                                    lineNumber: 507,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -657,12 +669,12 @@ function Members() {
                                                         className: "h-4 w-20 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 495,
+                                                        lineNumber: 511,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 494,
+                                                    lineNumber: 510,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -671,12 +683,12 @@ function Members() {
                                                         className: "h-4 w-16 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 498,
+                                                        lineNumber: 514,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 497,
+                                                    lineNumber: 513,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -685,12 +697,12 @@ function Members() {
                                                         className: "h-4 w-24 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 501,
+                                                        lineNumber: 517,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 500,
+                                                    lineNumber: 516,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -699,23 +711,23 @@ function Members() {
                                                         className: "h-4 w-20 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 504,
+                                                        lineNumber: 520,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 503,
+                                                    lineNumber: 519,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 490,
+                                            lineNumber: 506,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 489,
+                                        lineNumber: 505,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -740,7 +752,7 @@ function Members() {
                                                                     className: "w-10 h-10 bg-gray-200 rounded-full animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 513,
+                                                                    lineNumber: 529,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -750,31 +762,31 @@ function Members() {
                                                                             className: "h-4 w-32 bg-gray-200 rounded animate-pulse mb-2"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 515,
+                                                                            lineNumber: 531,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             className: "h-3 w-48 bg-gray-200 rounded animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 516,
+                                                                            lineNumber: 532,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 514,
+                                                                    lineNumber: 530,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 512,
+                                                            lineNumber: 528,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 511,
+                                                        lineNumber: 527,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -783,12 +795,12 @@ function Members() {
                                                             className: "h-6 w-20 bg-gray-200 rounded-full animate-pulse"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 521,
+                                                            lineNumber: 537,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 520,
+                                                        lineNumber: 536,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -797,12 +809,12 @@ function Members() {
                                                             className: "h-6 w-16 bg-gray-200 rounded-full animate-pulse"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 524,
+                                                            lineNumber: 540,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 523,
+                                                        lineNumber: 539,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -811,12 +823,12 @@ function Members() {
                                                             className: "h-4 w-24 bg-gray-200 rounded animate-pulse"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 527,
+                                                            lineNumber: 543,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 526,
+                                                        lineNumber: 542,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -828,47 +840,47 @@ function Members() {
                                                                     className: "h-8 w-8 bg-gray-200 rounded animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 531,
+                                                                    lineNumber: 547,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "h-8 w-8 bg-gray-200 rounded animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 532,
+                                                                    lineNumber: 548,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 530,
+                                                            lineNumber: 546,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 529,
+                                                        lineNumber: 545,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, i, true, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 510,
+                                                lineNumber: 526,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 508,
+                                        lineNumber: 524,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 488,
+                                lineNumber: 504,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 487,
+                            lineNumber: 503,
                             columnNumber: 11
                         }, this)
                     ]
@@ -883,12 +895,12 @@ function Members() {
                                     className: "w-10 h-10 text-purple-400"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 545,
+                                    lineNumber: 561,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 544,
+                                lineNumber: 560,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -896,7 +908,7 @@ function Members() {
                                 children: "No members found"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 547,
+                                lineNumber: 563,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -904,18 +916,18 @@ function Members() {
                                 children: searchTerm ? 'Try adjusting your search' : 'Members will appear here once they join your zone'
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Members.tsx",
-                                lineNumber: 548,
+                                lineNumber: 564,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Members.tsx",
-                        lineNumber: 543,
+                        lineNumber: 559,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Members.tsx",
-                    lineNumber: 542,
+                    lineNumber: 558,
                     columnNumber: 11
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                     children: [
@@ -934,7 +946,7 @@ function Members() {
                                                         children: "Member"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 562,
+                                                        lineNumber: 578,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -942,7 +954,7 @@ function Members() {
                                                         children: "Contact"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 565,
+                                                        lineNumber: 581,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -950,7 +962,7 @@ function Members() {
                                                         children: "Role & Designation"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 568,
+                                                        lineNumber: 584,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -958,7 +970,7 @@ function Members() {
                                                         children: "Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 571,
+                                                        lineNumber: 587,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -966,7 +978,7 @@ function Members() {
                                                         children: "Joined"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 574,
+                                                        lineNumber: 590,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -974,18 +986,18 @@ function Members() {
                                                         children: "Actions"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Members.tsx",
-                                                        lineNumber: 577,
+                                                        lineNumber: 593,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 561,
+                                                lineNumber: 577,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 560,
+                                            lineNumber: 576,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -1006,7 +1018,7 @@ function Members() {
                                                                             alt: `${member.first_name} ${member.last_name}`
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 589,
+                                                                            lineNumber: 605,
                                                                             columnNumber: 29
                                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             className: `h-10 w-10 rounded-full ${theme.primaryLight} flex items-center justify-center`,
@@ -1018,17 +1030,17 @@ function Members() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                                lineNumber: 596,
+                                                                                lineNumber: 612,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 595,
+                                                                            lineNumber: 611,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 587,
+                                                                        lineNumber: 603,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1043,7 +1055,7 @@ function Members() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                                lineNumber: 603,
+                                                                                lineNumber: 619,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1054,24 +1066,24 @@ function Members() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                                lineNumber: 606,
+                                                                                lineNumber: 622,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 602,
+                                                                        lineNumber: 618,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 586,
+                                                                lineNumber: 602,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 585,
+                                                            lineNumber: 601,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1086,14 +1098,14 @@ function Members() {
                                                                                 className: "w-3 h-3 text-gray-400"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                                lineNumber: 615,
+                                                                                lineNumber: 631,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             member.email
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 614,
+                                                                        lineNumber: 630,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     member.phone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1103,25 +1115,25 @@ function Members() {
                                                                                 className: "w-3 h-3 text-gray-400"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                                lineNumber: 620,
+                                                                                lineNumber: 636,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             member.phone
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 619,
+                                                                        lineNumber: 635,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 613,
+                                                                lineNumber: 629,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 612,
+                                                            lineNumber: 628,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1134,7 +1146,7 @@ function Members() {
                                                                         children: member.designation || 'Member'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 628,
+                                                                        lineNumber: 644,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     member.administration && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1142,7 +1154,7 @@ function Members() {
                                                                         children: member.administration
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 630,
+                                                                        lineNumber: 646,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1150,18 +1162,18 @@ function Members() {
                                                                         children: member.role || 'member'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 632,
+                                                                        lineNumber: 648,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 627,
+                                                                lineNumber: 643,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 626,
+                                                            lineNumber: 642,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1174,7 +1186,7 @@ function Members() {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 645,
+                                                                            lineNumber: 661,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         "Active"
@@ -1185,7 +1197,7 @@ function Members() {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 650,
+                                                                            lineNumber: 666,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         "Inactive"
@@ -1193,12 +1205,12 @@ function Members() {
                                                                 }, void 0, true)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 638,
+                                                                lineNumber: 654,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 637,
+                                                            lineNumber: 653,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1210,19 +1222,19 @@ function Members() {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 658,
+                                                                        lineNumber: 674,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     formatDate(member.created_at)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 657,
+                                                                lineNumber: 673,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 656,
+                                                            lineNumber: 672,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1238,12 +1250,12 @@ function Members() {
                                                                             className: "w-4 h-4"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 669,
+                                                                            lineNumber: 685,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 664,
+                                                                        lineNumber: 680,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1254,40 +1266,40 @@ function Members() {
                                                                             className: "w-4 h-4"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/Members.tsx",
-                                                                            lineNumber: 676,
+                                                                            lineNumber: 692,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 671,
+                                                                        lineNumber: 687,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 663,
+                                                                lineNumber: 679,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 662,
+                                                            lineNumber: 678,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, member.id, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 584,
+                                                    lineNumber: 600,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 582,
+                                            lineNumber: 598,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 559,
+                                    lineNumber: 575,
                                     columnNumber: 13
                                 }, this),
                                 filteredMembers.length > displayLimit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1300,7 +1312,7 @@ function Members() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 692,
+                                                lineNumber: 708,
                                                 columnNumber: 19
                                             }, this),
                                             "Load More Members (",
@@ -1309,18 +1321,18 @@ function Members() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 688,
+                                        lineNumber: 704,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 687,
+                                    lineNumber: 703,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 558,
+                            lineNumber: 574,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1337,7 +1349,7 @@ function Members() {
                                                 children: Math.min(displayLimit, filteredMembers.length)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 704,
+                                                lineNumber: 720,
                                                 columnNumber: 25
                                             }, this),
                                             " of ",
@@ -1346,19 +1358,19 @@ function Members() {
                                                 children: filteredMembers.length
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 704,
+                                                lineNumber: 720,
                                                 columnNumber: 131
                                             }, this),
                                             " members"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 703,
+                                        lineNumber: 719,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 702,
+                                    lineNumber: 718,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1376,7 +1388,7 @@ function Members() {
                                                             alt: `${member.first_name} ${member.last_name}`
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 718,
+                                                            lineNumber: 734,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: `h-14 w-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center ring-2 ring-white shadow-sm`,
@@ -1388,25 +1400,25 @@ function Members() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Members.tsx",
-                                                                lineNumber: 725,
+                                                                lineNumber: 741,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 724,
+                                                            lineNumber: 740,
                                                             columnNumber: 23
                                                         }, this),
                                                         member.is_active && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 732,
+                                                            lineNumber: 748,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 716,
+                                                    lineNumber: 732,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1424,7 +1436,7 @@ function Members() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 739,
+                                                                    lineNumber: 755,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 member.role === 'coordinator' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1434,18 +1446,18 @@ function Members() {
                                                                         children: "✓"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/Members.tsx",
-                                                                        lineNumber: 744,
+                                                                        lineNumber: 760,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/Members.tsx",
-                                                                    lineNumber: 743,
+                                                                    lineNumber: 759,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 738,
+                                                            lineNumber: 754,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1453,7 +1465,7 @@ function Members() {
                                                             children: member.designation || member.email
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 748,
+                                                            lineNumber: 764,
                                                             columnNumber: 21
                                                         }, this),
                                                         member.zoneName && filterZone === 'all' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1461,31 +1473,31 @@ function Members() {
                                                             children: member.zoneName
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 750,
+                                                            lineNumber: 766,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 737,
+                                                    lineNumber: 753,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
                                                     className: "w-5 h-5 text-slate-300 flex-shrink-0"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 757,
+                                                    lineNumber: 773,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, member.id, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 710,
+                                            lineNumber: 726,
                                             columnNumber: 17
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 708,
+                                    lineNumber: 724,
                                     columnNumber: 13
                                 }, this),
                                 filteredMembers.length > displayLimit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1498,7 +1510,7 @@ function Members() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 769,
+                                                lineNumber: 785,
                                                 columnNumber: 19
                                             }, this),
                                             "Load More (",
@@ -1507,25 +1519,25 @@ function Members() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 765,
+                                        lineNumber: 781,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 764,
+                                    lineNumber: 780,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 700,
+                            lineNumber: 716,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true)
             }, void 0, false, {
                 fileName: "[project]/src/components/Members.tsx",
-                lineNumber: 469,
+                lineNumber: 485,
                 columnNumber: 7
             }, this),
             selectedMember && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1541,7 +1553,7 @@ function Members() {
                                     children: "Member Profile"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 786,
+                                    lineNumber: 802,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1551,18 +1563,18 @@ function Members() {
                                         className: "w-5 h-5 text-gray-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Members.tsx",
-                                        lineNumber: 791,
+                                        lineNumber: 807,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 787,
+                                    lineNumber: 803,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 785,
+                            lineNumber: 801,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1577,7 +1589,7 @@ function Members() {
                                             alt: `${selectedMember.first_name} ${selectedMember.last_name}`
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 800,
+                                            lineNumber: 816,
                                             columnNumber: 19
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center",
@@ -1589,12 +1601,12 @@ function Members() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Members.tsx",
-                                                lineNumber: 807,
+                                                lineNumber: 823,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 806,
+                                            lineNumber: 822,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1609,7 +1621,7 @@ function Members() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 813,
+                                                    lineNumber: 829,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1617,7 +1629,7 @@ function Members() {
                                                     children: selectedMember.email
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 816,
+                                                    lineNumber: 832,
                                                     columnNumber: 19
                                                 }, this),
                                                 selectedMember.zoneName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1625,19 +1637,19 @@ function Members() {
                                                     children: selectedMember.zoneName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 818,
+                                                    lineNumber: 834,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 812,
+                                            lineNumber: 828,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 798,
+                                    lineNumber: 814,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1648,7 +1660,7 @@ function Members() {
                                             children: "Personal Information"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 825,
+                                            lineNumber: 841,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1662,7 +1674,7 @@ function Members() {
                                                             children: "Phone"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 828,
+                                                            lineNumber: 844,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1670,13 +1682,13 @@ function Members() {
                                                             children: selectedMember.phone || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 829,
+                                                            lineNumber: 845,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 827,
+                                                    lineNumber: 843,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1687,7 +1699,7 @@ function Members() {
                                                             children: "Gender"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 832,
+                                                            lineNumber: 848,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1695,13 +1707,13 @@ function Members() {
                                                             children: selectedMember.gender || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 833,
+                                                            lineNumber: 849,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 831,
+                                                    lineNumber: 847,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1712,7 +1724,7 @@ function Members() {
                                                             children: "Birthday"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 836,
+                                                            lineNumber: 852,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1720,25 +1732,25 @@ function Members() {
                                                             children: selectedMember.birthday || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 837,
+                                                            lineNumber: 853,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 835,
+                                                    lineNumber: 851,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 826,
+                                            lineNumber: 842,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 824,
+                                    lineNumber: 840,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1749,7 +1761,7 @@ function Members() {
                                             children: "Location"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 844,
+                                            lineNumber: 860,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1763,7 +1775,7 @@ function Members() {
                                                             children: "Region"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 847,
+                                                            lineNumber: 863,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1771,13 +1783,13 @@ function Members() {
                                                             children: selectedMember.region || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 848,
+                                                            lineNumber: 864,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 846,
+                                                    lineNumber: 862,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1788,7 +1800,7 @@ function Members() {
                                                             children: "Church"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 851,
+                                                            lineNumber: 867,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1796,25 +1808,25 @@ function Members() {
                                                             children: selectedMember.church || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 852,
+                                                            lineNumber: 868,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 850,
+                                                    lineNumber: 866,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 845,
+                                            lineNumber: 861,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 843,
+                                    lineNumber: 859,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1825,7 +1837,7 @@ function Members() {
                                             children: "Designation"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 859,
+                                            lineNumber: 875,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1839,7 +1851,7 @@ function Members() {
                                                             children: "Designation"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 862,
+                                                            lineNumber: 878,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1847,13 +1859,13 @@ function Members() {
                                                             children: selectedMember.designation || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 863,
+                                                            lineNumber: 879,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 861,
+                                                    lineNumber: 877,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1864,7 +1876,7 @@ function Members() {
                                                             children: "Administration"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 866,
+                                                            lineNumber: 882,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1872,31 +1884,31 @@ function Members() {
                                                             children: selectedMember.administration || 'Not set'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Members.tsx",
-                                                            lineNumber: 867,
+                                                            lineNumber: 883,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/Members.tsx",
-                                                    lineNumber: 865,
+                                                    lineNumber: 881,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Members.tsx",
-                                            lineNumber: 860,
+                                            lineNumber: 876,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 858,
+                                    lineNumber: 874,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 796,
+                            lineNumber: 812,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1908,7 +1920,7 @@ function Members() {
                                     children: "Close"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 875,
+                                    lineNumber: 891,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1920,30 +1932,30 @@ function Members() {
                                     children: "Delete"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Members.tsx",
-                                    lineNumber: 881,
+                                    lineNumber: 897,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Members.tsx",
-                            lineNumber: 874,
+                            lineNumber: 890,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Members.tsx",
-                    lineNumber: 783,
+                    lineNumber: 799,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Members.tsx",
-                lineNumber: 782,
+                lineNumber: 798,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/Members.tsx",
-        lineNumber: 349,
+        lineNumber: 365,
         columnNumber: 5
     }, this);
 }

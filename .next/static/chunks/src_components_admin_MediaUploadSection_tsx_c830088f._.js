@@ -67,6 +67,8 @@ function MediaUploadSection() {
     const [selectedPlaylist, setSelectedPlaylist] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [playlistName, setPlaylistName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [playlistDescription, setPlaylistDescription] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [playlistThumbnail, setPlaylistThumbnail] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [playlistType, setPlaylistType] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [playlistPublic, setPlaylistPublic] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const [playlistFeatured, setPlaylistFeatured] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [playlistForHQ, setPlaylistForHQ] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
@@ -125,6 +127,8 @@ function MediaUploadSection() {
     const resetPlaylistForm = ()=>{
         setPlaylistName('');
         setPlaylistDescription('');
+        setPlaylistThumbnail('');
+        setPlaylistType('');
         setPlaylistPublic(true);
         setPlaylistFeatured(false);
         setPlaylistForHQ(true);
@@ -284,7 +288,7 @@ function MediaUploadSection() {
                                     children: "Media"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 285,
+                                    lineNumber: 289,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -292,13 +296,13 @@ function MediaUploadSection() {
                                     children: listTab === 'videos' ? "".concat(videos.length, " videos") : "".concat(playlists.length, " playlists")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 286,
+                                    lineNumber: 290,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 284,
+                            lineNumber: 288,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -314,7 +318,7 @@ function MediaUploadSection() {
                                                 className: "w-5 h-5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 298,
+                                                lineNumber: 302,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -322,13 +326,13 @@ function MediaUploadSection() {
                                                 children: "Categories"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 299,
+                                                lineNumber: 303,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 293,
+                                        lineNumber: 297,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -339,7 +343,7 @@ function MediaUploadSection() {
                                                 className: "w-5 h-5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 305,
+                                                lineNumber: 309,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -347,13 +351,13 @@ function MediaUploadSection() {
                                                 children: "Add Video"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 306,
+                                                lineNumber: 310,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 301,
+                                        lineNumber: 305,
                                         columnNumber: 17
                                     }, this)
                                 ]
@@ -368,7 +372,7 @@ function MediaUploadSection() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 314,
+                                        lineNumber: 318,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -376,24 +380,24 @@ function MediaUploadSection() {
                                         children: "New Playlist"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 315,
+                                        lineNumber: 319,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 310,
+                                lineNumber: 314,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 290,
+                            lineNumber: 294,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 283,
+                    lineNumber: 287,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -407,14 +411,14 @@ function MediaUploadSection() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 329,
+                                    lineNumber: 333,
                                     columnNumber: 13
                                 }, this),
                                 "Videos"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 323,
+                            lineNumber: 327,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -425,20 +429,20 @@ function MediaUploadSection() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 338,
+                                    lineNumber: 342,
                                     columnNumber: 13
                                 }, this),
                                 "Playlists"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 332,
+                            lineNumber: 336,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 322,
+                    lineNumber: 326,
                     columnNumber: 9
                 }, this),
                 listTab === 'videos' ? // Videos Tab
@@ -458,7 +462,7 @@ function MediaUploadSection() {
                                     className: "aspect-video bg-gray-200"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 350,
+                                    lineNumber: 354,
                                     columnNumber: 19
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -468,31 +472,31 @@ function MediaUploadSection() {
                                             className: "h-4 bg-gray-200 rounded w-3/4 mb-2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 352,
+                                            lineNumber: 356,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "h-3 bg-gray-200 rounded w-1/2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 353,
+                                            lineNumber: 357,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 351,
+                                    lineNumber: 355,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, i, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 349,
+                            lineNumber: 353,
                             columnNumber: 17
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 347,
+                    lineNumber: 351,
                     columnNumber: 13
                 }, this) : videos.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "flex flex-col items-center justify-center py-20",
@@ -503,12 +507,12 @@ function MediaUploadSection() {
                                 className: "w-10 h-10 text-purple-600"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 361,
+                                lineNumber: 365,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 360,
+                            lineNumber: 364,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -516,7 +520,7 @@ function MediaUploadSection() {
                             children: "No videos yet"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 363,
+                            lineNumber: 367,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -524,7 +528,7 @@ function MediaUploadSection() {
                             children: "Add your first video to get started"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 364,
+                            lineNumber: 368,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -533,13 +537,13 @@ function MediaUploadSection() {
                             children: "Add Video"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 365,
+                            lineNumber: 369,
                             columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 359,
+                    lineNumber: 363,
                     columnNumber: 13
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
@@ -555,7 +559,7 @@ function MediaUploadSection() {
                                             className: "w-full h-full object-cover"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 377,
+                                            lineNumber: 381,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -568,12 +572,12 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4 text-gray-700"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 380,
+                                                        lineNumber: 384,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 379,
+                                                    lineNumber: 383,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -583,18 +587,18 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4 text-red-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 383,
+                                                        lineNumber: 387,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 382,
+                                                    lineNumber: 386,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 378,
+                                            lineNumber: 382,
                                             columnNumber: 21
                                         }, this),
                                         video.isYouTube && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -604,14 +608,14 @@ function MediaUploadSection() {
                                                     className: "w-3 h-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 388,
+                                                    lineNumber: 392,
                                                     columnNumber: 25
                                                 }, this),
                                                 " YouTube"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 387,
+                                            lineNumber: 391,
                                             columnNumber: 23
                                         }, this),
                                         video.featured && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -619,13 +623,13 @@ function MediaUploadSection() {
                                             children: "Featured"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 392,
+                                            lineNumber: 396,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 376,
+                                    lineNumber: 380,
                                     columnNumber: 19
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -636,7 +640,7 @@ function MediaUploadSection() {
                                             children: video.title
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 396,
+                                            lineNumber: 400,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -649,14 +653,14 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 398,
+                                                            lineNumber: 402,
                                                             columnNumber: 65
                                                         }, this),
                                                         video.views || 0
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 398,
+                                                    lineNumber: 402,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -666,14 +670,14 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 399,
+                                                            lineNumber: 403,
                                                             columnNumber: 65
                                                         }, this),
                                                         video.likes || 0
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 399,
+                                                    lineNumber: 403,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -681,30 +685,30 @@ function MediaUploadSection() {
                                                     children: video.type
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 400,
+                                                    lineNumber: 404,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 397,
+                                            lineNumber: 401,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 395,
+                                    lineNumber: 399,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, video.id, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 375,
+                            lineNumber: 379,
                             columnNumber: 17
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 373,
+                    lineNumber: 377,
                     columnNumber: 13
                 }, this) : // Playlists Tab
                 playlists.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -716,12 +720,12 @@ function MediaUploadSection() {
                                 className: "w-10 h-10 text-purple-600"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 412,
+                                lineNumber: 416,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 411,
+                            lineNumber: 415,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -729,7 +733,7 @@ function MediaUploadSection() {
                             children: "No playlists yet"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 414,
+                            lineNumber: 418,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -737,7 +741,7 @@ function MediaUploadSection() {
                             children: "Create your first curated playlist"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 415,
+                            lineNumber: 419,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -749,13 +753,13 @@ function MediaUploadSection() {
                             children: "Create Playlist"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 416,
+                            lineNumber: 420,
                             columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 410,
+                    lineNumber: 414,
                     columnNumber: 13
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
@@ -773,7 +777,7 @@ function MediaUploadSection() {
                                             className: "w-full h-full object-cover"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 431,
+                                            lineNumber: 435,
                                             columnNumber: 25
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "w-full h-full flex items-center justify-center",
@@ -781,12 +785,12 @@ function MediaUploadSection() {
                                                 className: "w-12 h-12 text-gray-300"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 434,
+                                                lineNumber: 438,
                                                 columnNumber: 27
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 433,
+                                            lineNumber: 437,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -797,7 +801,7 @@ function MediaUploadSection() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 437,
+                                            lineNumber: 441,
                                             columnNumber: 23
                                         }, this),
                                         playlist.isFeatured && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -807,14 +811,14 @@ function MediaUploadSection() {
                                                     className: "w-3 h-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 442,
+                                                    lineNumber: 446,
                                                     columnNumber: 27
                                                 }, this),
                                                 " Featured"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 441,
+                                            lineNumber: 445,
                                             columnNumber: 25
                                         }, this),
                                         playlist.isPublic && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -823,18 +827,18 @@ function MediaUploadSection() {
                                                 className: "w-3 h-3"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 447,
+                                                lineNumber: 451,
                                                 columnNumber: 27
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 446,
+                                            lineNumber: 450,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 429,
+                                    lineNumber: 433,
                                     columnNumber: 21
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -845,7 +849,7 @@ function MediaUploadSection() {
                                             children: playlist.name
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 452,
+                                            lineNumber: 456,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -853,7 +857,7 @@ function MediaUploadSection() {
                                             children: playlist.description || 'No description'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 453,
+                                            lineNumber: 457,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -870,14 +874,14 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 459,
+                                                            lineNumber: 463,
                                                             columnNumber: 27
                                                         }, this),
                                                         " Videos"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 455,
+                                                    lineNumber: 459,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -891,14 +895,14 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 465,
+                                                            lineNumber: 469,
                                                             columnNumber: 27
                                                         }, this),
                                                         " Nested"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 461,
+                                                    lineNumber: 465,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -906,6 +910,8 @@ function MediaUploadSection() {
                                                         setSelectedPlaylist(playlist);
                                                         setPlaylistName(playlist.name);
                                                         setPlaylistDescription(playlist.description);
+                                                        setPlaylistThumbnail(playlist.thumbnail || '');
+                                                        setPlaylistType(playlist.type || '');
                                                         setPlaylistPublic(playlist.isPublic);
                                                         setPlaylistFeatured(playlist.isFeatured);
                                                         setPlaylistForHQ(playlist.forHQ);
@@ -916,12 +922,12 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4 text-gray-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 479,
+                                                        lineNumber: 485,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 467,
+                                                    lineNumber: 471,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -935,42 +941,42 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4 text-red-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 489,
+                                                        lineNumber: 495,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 481,
+                                                    lineNumber: 487,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 454,
+                                            lineNumber: 458,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 451,
+                                    lineNumber: 455,
                                     columnNumber: 21
                                 }, this)
                             ]
                         }, playlist.id, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 428,
+                            lineNumber: 432,
                             columnNumber: 19
                         }, this);
                     })
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 424,
+                    lineNumber: 428,
                     columnNumber: 13
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 281,
+            lineNumber: 285,
             columnNumber: 7
         }, this);
     }
@@ -992,14 +998,14 @@ function MediaUploadSection() {
                                 className: "w-5 h-5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 513,
+                                lineNumber: 519,
                                 columnNumber: 13
                             }, this),
                             "Cancel"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 509,
+                        lineNumber: 515,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -1007,7 +1013,7 @@ function MediaUploadSection() {
                         children: "Add New Video"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 517,
+                        lineNumber: 523,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1015,7 +1021,7 @@ function MediaUploadSection() {
                         children: "Choose how you want to add your video"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 518,
+                        lineNumber: 524,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1036,12 +1042,12 @@ function MediaUploadSection() {
                                                 className: "w-7 h-7 text-red-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 529,
+                                                lineNumber: 535,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 528,
+                                            lineNumber: 534,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1052,7 +1058,7 @@ function MediaUploadSection() {
                                                     children: "YouTube Link"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 532,
+                                                    lineNumber: 538,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1060,7 +1066,7 @@ function MediaUploadSection() {
                                                     children: "Paste a YouTube video URL. Free and unlimited."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 533,
+                                                    lineNumber: 539,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1070,31 +1076,31 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 535,
+                                                            lineNumber: 541,
                                                             columnNumber: 21
                                                         }, this),
                                                         "Recommended"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 534,
+                                                    lineNumber: 540,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 531,
+                                            lineNumber: 537,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 527,
+                                    lineNumber: 533,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 523,
+                                lineNumber: 529,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1112,12 +1118,12 @@ function MediaUploadSection() {
                                                 className: "w-7 h-7 text-purple-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 549,
+                                                lineNumber: 555,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 548,
+                                            lineNumber: 554,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1128,7 +1134,7 @@ function MediaUploadSection() {
                                                     children: "Upload Video"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 552,
+                                                    lineNumber: 558,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1136,7 +1142,7 @@ function MediaUploadSection() {
                                                     children: "Upload from your device. Uses storage quota."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 553,
+                                                    lineNumber: 559,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1146,48 +1152,48 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 555,
+                                                            lineNumber: 561,
                                                             columnNumber: 21
                                                         }, this),
                                                         "Max 500MB per video"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 554,
+                                                    lineNumber: 560,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 551,
+                                            lineNumber: 557,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 547,
+                                    lineNumber: 553,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 543,
+                                lineNumber: 549,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 521,
+                        lineNumber: 527,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                lineNumber: 507,
+                lineNumber: 513,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 506,
+            lineNumber: 512,
             columnNumber: 7
         }, this);
     }
@@ -1204,6 +1210,8 @@ function MediaUploadSection() {
                     await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$admin$2d$playlist$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateAdminPlaylist"])(selectedPlaylist.id, {
                         name: playlistName.trim(),
                         description: playlistDescription.trim(),
+                        thumbnail: playlistThumbnail || undefined,
+                        type: playlistType || undefined,
                         isPublic: playlistPublic,
                         isFeatured: playlistFeatured,
                         forHQ: playlistForHQ
@@ -1212,6 +1220,8 @@ function MediaUploadSection() {
                     await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$admin$2d$playlist$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createAdminPlaylist"])({
                         name: playlistName.trim(),
                         description: playlistDescription.trim(),
+                        thumbnail: playlistThumbnail || undefined,
+                        type: playlistType || undefined,
                         isPublic: playlistPublic,
                         isFeatured: playlistFeatured,
                         forHQ: playlistForHQ,
@@ -1226,6 +1236,43 @@ function MediaUploadSection() {
                 alert('Failed to save playlist');
             }
             setIsSubmitting(false);
+        };
+        const openPlaylistThumbnailWidget = ()=>{
+            if ("object" !== 'undefined' && window.cloudinary) {
+                const widget = window.cloudinary.createUploadWidget({
+                    cloudName: ("TURBOPACK compile-time value", "dvtjjt3js"),
+                    uploadPreset: ("TURBOPACK compile-time value", "loveworld-singers"),
+                    folder: 'media/thumbnails',
+                    resourceType: 'image',
+                    maxFileSize: 10000000,
+                    sources: [
+                        'local'
+                    ],
+                    multiple: false,
+                    styles: {
+                        palette: {
+                            window: '#1a1a1a',
+                            windowBorder: '#333',
+                            tabIcon: '#fff',
+                            menuIcons: '#fff',
+                            textDark: '#000',
+                            textLight: '#fff',
+                            link: '#8b5cf6',
+                            action: '#8b5cf6',
+                            inactiveTabIcon: '#666',
+                            error: '#ef4444',
+                            inProgress: '#8b5cf6',
+                            complete: '#22c55e',
+                            sourceBg: '#1a1a1a'
+                        }
+                    }
+                }, (error, result)=>{
+                    if (!error && (result === null || result === void 0 ? void 0 : result.event) === 'success') {
+                        setPlaylistThumbnail(result.info.secure_url);
+                    }
+                });
+                widget.open();
+            }
         };
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "h-full overflow-auto bg-gray-50 p-4 lg:p-6",
@@ -1243,14 +1290,14 @@ function MediaUploadSection() {
                                 className: "w-5 h-5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 611,
+                                lineNumber: 660,
                                 columnNumber: 13
                             }, this),
                             " Cancel"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 607,
+                        lineNumber: 656,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -1258,7 +1305,7 @@ function MediaUploadSection() {
                         children: selectedPlaylist ? 'Edit Playlist' : 'Create Playlist'
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 614,
+                        lineNumber: 663,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1272,7 +1319,7 @@ function MediaUploadSection() {
                                         children: "Name"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 620,
+                                        lineNumber: 669,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1283,13 +1330,13 @@ function MediaUploadSection() {
                                         className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 621,
+                                        lineNumber: 670,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 619,
+                                lineNumber: 668,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1300,7 +1347,7 @@ function MediaUploadSection() {
                                         children: "Description"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 631,
+                                        lineNumber: 680,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1311,28 +1358,172 @@ function MediaUploadSection() {
                                         className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 632,
+                                        lineNumber: 681,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 630,
+                                lineNumber: 679,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "bg-white rounded-xl p-4 border border-gray-200",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-sm text-gray-500",
-                                    children: "💡 Thumbnail will use the first video's thumbnail"
-                                }, void 0, false, {
-                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 642,
-                                    columnNumber: 15
-                                }, this)
-                            }, void 0, false, {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                        className: "block text-sm font-medium text-gray-700 mb-2",
+                                        children: "Thumbnail"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                        lineNumber: 692,
+                                        columnNumber: 15
+                                    }, this),
+                                    playlistThumbnail ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "relative",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                                                src: playlistThumbnail,
+                                                alt: "Thumbnail",
+                                                className: "w-full aspect-video object-cover rounded-xl"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                lineNumber: 695,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                onClick: ()=>setPlaylistThumbnail(''),
+                                                className: "absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70",
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                                    className: "w-4 h-4"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                    lineNumber: 700,
+                                                    columnNumber: 21
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                lineNumber: 696,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                        lineNumber: 694,
+                                        columnNumber: 17
+                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            onClick: openPlaylistThumbnailWidget,
+                                            className: "w-full py-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-colors",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$upload$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Upload$3e$__["Upload"], {
+                                                    className: "w-6 h-6 text-gray-400 mx-auto mb-2"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                    lineNumber: 709,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-gray-600 font-medium text-sm",
+                                                    children: "Upload custom thumbnail"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                    lineNumber: 710,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-gray-400 text-xs",
+                                                    children: "Or leave empty to use first video's thumbnail"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                    lineNumber: 711,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                            lineNumber: 705,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                        lineNumber: 704,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 641,
+                                lineNumber: 691,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-white rounded-xl p-4 border border-gray-200",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex items-center justify-between mb-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                className: "block text-sm font-medium text-gray-700",
+                                                children: "Category"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                lineNumber: 720,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                onClick: ()=>setStep('categories'),
+                                                className: "text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$settings$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Settings$3e$__["Settings"], {
+                                                        className: "w-3 h-3"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                        lineNumber: 725,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    "Manage"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                lineNumber: 721,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                        lineNumber: 719,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                        value: playlistType,
+                                        onChange: (e)=>setPlaylistType(e.target.value),
+                                        className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                value: "",
+                                                children: "No category"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                lineNumber: 734,
+                                                columnNumber: 17
+                                            }, this),
+                                            categories.map((cat)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                    value: cat.slug,
+                                                    children: cat.name
+                                                }, cat.id, false, {
+                                                    fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                                    lineNumber: 736,
+                                                    columnNumber: 19
+                                                }, this))
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                        lineNumber: 729,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
+                                lineNumber: 718,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1346,7 +1537,7 @@ function MediaUploadSection() {
                                                 children: "Visibility"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 647,
+                                                lineNumber: 743,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1357,20 +1548,20 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 654,
+                                                        lineNumber: 750,
                                                         columnNumber: 19
                                                     }, this),
                                                     playlistPublic ? 'Public' : 'Private'
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 648,
+                                                lineNumber: 744,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 646,
+                                        lineNumber: 742,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1381,7 +1572,7 @@ function MediaUploadSection() {
                                                 children: "Featured"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 660,
+                                                lineNumber: 756,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1392,26 +1583,26 @@ function MediaUploadSection() {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 667,
+                                                        lineNumber: 763,
                                                         columnNumber: 19
                                                     }, this),
                                                     playlistFeatured ? 'Featured' : 'Not Featured'
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 661,
+                                                lineNumber: 757,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 659,
+                                        lineNumber: 755,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 645,
+                                lineNumber: 741,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1422,7 +1613,7 @@ function MediaUploadSection() {
                                         children: "Zone Targeting"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 674,
+                                        lineNumber: 770,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1434,7 +1625,7 @@ function MediaUploadSection() {
                                                 children: "🏢 HQ Zones"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 676,
+                                                lineNumber: 772,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1443,19 +1634,19 @@ function MediaUploadSection() {
                                                 children: "🌍 Regular Zones"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 684,
+                                                lineNumber: 780,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 675,
+                                        lineNumber: 771,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 673,
+                                lineNumber: 769,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1467,31 +1658,31 @@ function MediaUploadSection() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 700,
+                                        lineNumber: 796,
                                         columnNumber: 15
                                     }, this),
                                     isSubmitting ? 'Saving...' : selectedPlaylist ? 'Save Changes' : 'Create Playlist'
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 695,
+                                lineNumber: 791,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 618,
+                        lineNumber: 667,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                lineNumber: 606,
+                lineNumber: 655,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 605,
+            lineNumber: 654,
             columnNumber: 7
         }, this);
     }
@@ -1538,14 +1729,14 @@ function MediaUploadSection() {
                                 className: "w-5 h-5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 743,
+                                lineNumber: 839,
                                 columnNumber: 13
                             }, this),
                             " Back to Playlists"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 739,
+                        lineNumber: 835,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1561,7 +1752,7 @@ function MediaUploadSection() {
                                         className: "w-full h-full object-cover"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 751,
+                                        lineNumber: 847,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "w-full h-full flex items-center justify-center",
@@ -1569,18 +1760,18 @@ function MediaUploadSection() {
                                             className: "w-8 h-8 text-gray-400"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 754,
+                                            lineNumber: 850,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 753,
+                                        lineNumber: 849,
                                         columnNumber: 19
                                     }, this);
                                 })()
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 747,
+                                lineNumber: 843,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1590,7 +1781,7 @@ function MediaUploadSection() {
                                         children: selectedPlaylist.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 760,
+                                        lineNumber: 856,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1601,19 +1792,19 @@ function MediaUploadSection() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 761,
+                                        lineNumber: 857,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 759,
+                                lineNumber: 855,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 746,
+                        lineNumber: 842,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1623,7 +1814,7 @@ function MediaUploadSection() {
                                 className: "absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 766,
+                                lineNumber: 862,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1634,13 +1825,13 @@ function MediaUploadSection() {
                                 className: "w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 767,
+                                lineNumber: 863,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 765,
+                        lineNumber: 861,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1650,7 +1841,7 @@ function MediaUploadSection() {
                             children: "No videos found"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 778,
+                            lineNumber: 874,
                             columnNumber: 15
                         }, this) : filteredVideos.map((video)=>{
                             const isInPlaylist = selectedPlaylist.videoIds.includes(video.id);
@@ -1664,12 +1855,12 @@ function MediaUploadSection() {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 790,
+                                            lineNumber: 886,
                                             columnNumber: 40
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 784,
+                                        lineNumber: 880,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1680,12 +1871,12 @@ function MediaUploadSection() {
                                             className: "w-full h-full object-cover"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 793,
+                                            lineNumber: 889,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 792,
+                                        lineNumber: 888,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1696,7 +1887,7 @@ function MediaUploadSection() {
                                                 children: video.title
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 796,
+                                                lineNumber: 892,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1709,36 +1900,36 @@ function MediaUploadSection() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 797,
+                                                lineNumber: 893,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 795,
+                                        lineNumber: 891,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, video.id, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 783,
+                                lineNumber: 879,
                                 columnNumber: 19
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 776,
+                        lineNumber: 872,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                lineNumber: 738,
+                lineNumber: 834,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 737,
+            lineNumber: 833,
             columnNumber: 7
         }, this);
     }
@@ -1787,14 +1978,14 @@ function MediaUploadSection() {
                                 className: "w-5 h-5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 847,
+                                lineNumber: 943,
                                 columnNumber: 13
                             }, this),
                             " Back to Playlists"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 843,
+                        lineNumber: 939,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1810,7 +2001,7 @@ function MediaUploadSection() {
                                         className: "w-full h-full object-cover"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 855,
+                                        lineNumber: 951,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "w-full h-full flex items-center justify-center",
@@ -1818,18 +2009,18 @@ function MediaUploadSection() {
                                             className: "w-8 h-8 text-gray-400"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 858,
+                                            lineNumber: 954,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 857,
+                                        lineNumber: 953,
                                         columnNumber: 19
                                     }, this);
                                 })()
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 851,
+                                lineNumber: 947,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1839,7 +2030,7 @@ function MediaUploadSection() {
                                         children: selectedPlaylist.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 864,
+                                        lineNumber: 960,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1850,19 +2041,19 @@ function MediaUploadSection() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 865,
+                                        lineNumber: 961,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 863,
+                                lineNumber: 959,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 850,
+                        lineNumber: 946,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1874,19 +2065,19 @@ function MediaUploadSection() {
                                     children: "Note:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 871,
+                                    lineNumber: 967,
                                     columnNumber: 15
                                 }, this),
                                 " Nested playlists will only appear inside this playlist. They won't show on the main media page."
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 870,
+                            lineNumber: 966,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 869,
+                        lineNumber: 965,
                         columnNumber: 11
                     }, this),
                     childPlaylists.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1901,7 +2092,7 @@ function MediaUploadSection() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 877,
+                                lineNumber: 973,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1918,12 +2109,12 @@ function MediaUploadSection() {
                                                     className: "w-4 h-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 887,
+                                                    lineNumber: 983,
                                                     columnNumber: 25
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 883,
+                                                lineNumber: 979,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1934,7 +2125,7 @@ function MediaUploadSection() {
                                                     className: "w-full h-full object-cover"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 891,
+                                                    lineNumber: 987,
                                                     columnNumber: 27
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "w-full h-full flex items-center justify-center",
@@ -1942,17 +2133,17 @@ function MediaUploadSection() {
                                                         className: "w-6 h-6 text-gray-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 894,
+                                                        lineNumber: 990,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 893,
+                                                    lineNumber: 989,
                                                     columnNumber: 27
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 889,
+                                                lineNumber: 985,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1963,7 +2154,7 @@ function MediaUploadSection() {
                                                         children: p.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 899,
+                                                        lineNumber: 995,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1974,31 +2165,31 @@ function MediaUploadSection() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 900,
+                                                        lineNumber: 996,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 898,
+                                                lineNumber: 994,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, p.id, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 882,
+                                        lineNumber: 978,
                                         columnNumber: 21
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 878,
+                                lineNumber: 974,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 876,
+                        lineNumber: 972,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2008,7 +2199,7 @@ function MediaUploadSection() {
                                 className: "absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 910,
+                                lineNumber: 1006,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2019,13 +2210,13 @@ function MediaUploadSection() {
                                 className: "w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 911,
+                                lineNumber: 1007,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 909,
+                        lineNumber: 1005,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2035,7 +2226,7 @@ function MediaUploadSection() {
                                 children: "Available Playlists"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 921,
+                                lineNumber: 1017,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2045,7 +2236,7 @@ function MediaUploadSection() {
                                     children: "No playlists available to nest"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 924,
+                                    lineNumber: 1020,
                                     columnNumber: 17
                                 }, this) : availablePlaylists.map((p)=>{
                                     const thumbUrl = p.thumbnail || getPlaylistThumbnail(p);
@@ -2057,7 +2248,7 @@ function MediaUploadSection() {
                                                 className: "w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 border-gray-300"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 930,
+                                                lineNumber: 1026,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2068,7 +2259,7 @@ function MediaUploadSection() {
                                                     className: "w-full h-full object-cover"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 936,
+                                                    lineNumber: 1032,
                                                     columnNumber: 27
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "w-full h-full flex items-center justify-center",
@@ -2076,17 +2267,17 @@ function MediaUploadSection() {
                                                         className: "w-6 h-6 text-gray-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 939,
+                                                        lineNumber: 1035,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 938,
+                                                    lineNumber: 1034,
                                                     columnNumber: 27
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 934,
+                                                lineNumber: 1030,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2097,7 +2288,7 @@ function MediaUploadSection() {
                                                         children: p.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 944,
+                                                        lineNumber: 1040,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2108,42 +2299,42 @@ function MediaUploadSection() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 945,
+                                                        lineNumber: 1041,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 943,
+                                                lineNumber: 1039,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, p.id, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 929,
+                                        lineNumber: 1025,
                                         columnNumber: 21
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 922,
+                                lineNumber: 1018,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 920,
+                        lineNumber: 1016,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                lineNumber: 842,
+                lineNumber: 938,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 841,
+            lineNumber: 937,
             columnNumber: 7
         }, this);
     }
@@ -2194,14 +2385,14 @@ function MediaUploadSection() {
                                 className: "w-5 h-5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 1001,
+                                lineNumber: 1097,
                                 columnNumber: 13
                             }, this),
                             "Back to Videos"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 997,
+                        lineNumber: 1093,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -2209,7 +2400,7 @@ function MediaUploadSection() {
                         children: "Manage Categories"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 1005,
+                        lineNumber: 1101,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2217,7 +2408,7 @@ function MediaUploadSection() {
                         children: "Add, edit, or remove video categories"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 1006,
+                        lineNumber: 1102,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2228,7 +2419,7 @@ function MediaUploadSection() {
                                 children: "Add New Category"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 1010,
+                                lineNumber: 1106,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2243,7 +2434,7 @@ function MediaUploadSection() {
                                         onKeyDown: (e)=>e.key === 'Enter' && handleAddCategory()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1012,
+                                        lineNumber: 1108,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2255,26 +2446,26 @@ function MediaUploadSection() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1025,
+                                                lineNumber: 1121,
                                                 columnNumber: 17
                                             }, this),
                                             "Add"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1020,
+                                        lineNumber: 1116,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 1011,
+                                lineNumber: 1107,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 1009,
+                        lineNumber: 1105,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2291,12 +2482,12 @@ function MediaUploadSection() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1034,
+                                    lineNumber: 1130,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 1033,
+                                lineNumber: 1129,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2321,7 +2512,7 @@ function MediaUploadSection() {
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1041,
+                                                        lineNumber: 1137,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2331,12 +2522,12 @@ function MediaUploadSection() {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 1056,
+                                                            lineNumber: 1152,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1052,
+                                                        lineNumber: 1148,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2349,12 +2540,12 @@ function MediaUploadSection() {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 1062,
+                                                            lineNumber: 1158,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1058,
+                                                        lineNumber: 1154,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
@@ -2365,7 +2556,7 @@ function MediaUploadSection() {
                                                         children: cat.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1067,
+                                                        lineNumber: 1163,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2373,7 +2564,7 @@ function MediaUploadSection() {
                                                         children: cat.slug
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1068,
+                                                        lineNumber: 1164,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2386,12 +2577,12 @@ function MediaUploadSection() {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 1073,
+                                                            lineNumber: 1169,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1069,
+                                                        lineNumber: 1165,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2401,19 +2592,19 @@ function MediaUploadSection() {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 1079,
+                                                            lineNumber: 1175,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1075,
+                                                        lineNumber: 1171,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true)
                                         }, cat.id, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1038,
+                                            lineNumber: 1134,
                                             columnNumber: 17
                                         }, this)),
                                     categories.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2421,30 +2612,30 @@ function MediaUploadSection() {
                                         children: "No categories yet. Add one above."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1086,
+                                        lineNumber: 1182,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                lineNumber: 1036,
+                                lineNumber: 1132,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                        lineNumber: 1032,
+                        lineNumber: 1128,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                lineNumber: 995,
+                lineNumber: 1091,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 994,
+            lineNumber: 1090,
             columnNumber: 7
         }, this);
     }
@@ -2469,14 +2660,14 @@ function MediaUploadSection() {
                             className: "w-5 h-5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1106,
+                            lineNumber: 1202,
                             columnNumber: 11
                         }, this),
                         editingVideo ? 'Cancel' : 'Back'
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 1102,
+                    lineNumber: 1198,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -2484,7 +2675,7 @@ function MediaUploadSection() {
                     children: editingVideo ? 'Edit Video' : sourceType === 'youtube' ? 'Add YouTube Video' : 'Upload Video'
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 1110,
+                    lineNumber: 1206,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2498,7 +2689,7 @@ function MediaUploadSection() {
                                     children: sourceType === 'youtube' ? 'YouTube URL' : 'Video File'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1117,
+                                    lineNumber: 1213,
                                     columnNumber: 13
                                 }, this),
                                 sourceType === 'youtube' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2511,7 +2702,7 @@ function MediaUploadSection() {
                                             className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1123,
+                                            lineNumber: 1219,
                                             columnNumber: 17
                                         }, this),
                                         urlError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2519,13 +2710,13 @@ function MediaUploadSection() {
                                             children: urlError
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1130,
+                                            lineNumber: 1226,
                                             columnNumber: 30
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1122,
+                                    lineNumber: 1218,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     children: videoUrl ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2535,7 +2726,7 @@ function MediaUploadSection() {
                                                 className: "w-5 h-5 text-green-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1136,
+                                                lineNumber: 1232,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2543,7 +2734,7 @@ function MediaUploadSection() {
                                                 children: "Video uploaded"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1137,
+                                                lineNumber: 1233,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2553,18 +2744,18 @@ function MediaUploadSection() {
                                                     className: "w-4 h-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 1139,
+                                                    lineNumber: 1235,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1138,
+                                                lineNumber: 1234,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1135,
+                                        lineNumber: 1231,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         onClick: ()=>openCloudinaryWidget('video'),
@@ -2574,7 +2765,7 @@ function MediaUploadSection() {
                                                 className: "w-8 h-8 text-gray-400 mx-auto mb-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1147,
+                                                lineNumber: 1243,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2582,7 +2773,7 @@ function MediaUploadSection() {
                                                 children: "Click to upload video"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1148,
+                                                lineNumber: 1244,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2590,24 +2781,24 @@ function MediaUploadSection() {
                                                 children: "MP4, MOV up to 500MB"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1149,
+                                                lineNumber: 1245,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1143,
+                                        lineNumber: 1239,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1133,
+                                    lineNumber: 1229,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1116,
+                            lineNumber: 1212,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2618,7 +2809,7 @@ function MediaUploadSection() {
                                     children: "Thumbnail"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1158,
+                                    lineNumber: 1254,
                                     columnNumber: 13
                                 }, this),
                                 thumbnail ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2630,7 +2821,7 @@ function MediaUploadSection() {
                                             className: "w-full aspect-video object-cover rounded-xl"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1162,
+                                            lineNumber: 1258,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2640,12 +2831,12 @@ function MediaUploadSection() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                lineNumber: 1167,
+                                                lineNumber: 1263,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1163,
+                                            lineNumber: 1259,
                                             columnNumber: 17
                                         }, this),
                                         sourceType === 'youtube' && thumbnail.includes('ytimg') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2653,13 +2844,13 @@ function MediaUploadSection() {
                                             children: "Auto-fetched from YouTube"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1170,
+                                            lineNumber: 1266,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1161,
+                                    lineNumber: 1257,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: ()=>openCloudinaryWidget('image'),
@@ -2669,7 +2860,7 @@ function MediaUploadSection() {
                                             className: "w-8 h-8 text-gray-400 mx-auto mb-2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1180,
+                                            lineNumber: 1276,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2677,7 +2868,7 @@ function MediaUploadSection() {
                                             children: "Upload thumbnail"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1181,
+                                            lineNumber: 1277,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2685,19 +2876,19 @@ function MediaUploadSection() {
                                             children: "16:9 ratio recommended"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1182,
+                                            lineNumber: 1278,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1176,
+                                    lineNumber: 1272,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1157,
+                            lineNumber: 1253,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2708,7 +2899,7 @@ function MediaUploadSection() {
                                     children: "Title"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1189,
+                                    lineNumber: 1285,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2719,13 +2910,13 @@ function MediaUploadSection() {
                                     className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1190,
+                                    lineNumber: 1286,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1188,
+                            lineNumber: 1284,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2736,7 +2927,7 @@ function MediaUploadSection() {
                                     children: "Description (optional)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1201,
+                                    lineNumber: 1297,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -2747,13 +2938,13 @@ function MediaUploadSection() {
                                     className: "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1202,
+                                    lineNumber: 1298,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1200,
+                            lineNumber: 1296,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2770,7 +2961,7 @@ function MediaUploadSection() {
                                                     children: "Category"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 1215,
+                                                    lineNumber: 1311,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2781,20 +2972,20 @@ function MediaUploadSection() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                            lineNumber: 1220,
+                                                            lineNumber: 1316,
                                                             columnNumber: 19
                                                         }, this),
                                                         "Manage"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 1216,
+                                                    lineNumber: 1312,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1214,
+                                            lineNumber: 1310,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2809,7 +3000,7 @@ function MediaUploadSection() {
                                                         children: "Praise"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1232,
+                                                        lineNumber: 1328,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2817,7 +3008,7 @@ function MediaUploadSection() {
                                                         children: "Worship"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1233,
+                                                        lineNumber: 1329,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2825,7 +3016,7 @@ function MediaUploadSection() {
                                                         children: "Medley"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1234,
+                                                        lineNumber: 1330,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2833,7 +3024,7 @@ function MediaUploadSection() {
                                                         children: "Other"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                        lineNumber: 1235,
+                                                        lineNumber: 1331,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
@@ -2842,18 +3033,18 @@ function MediaUploadSection() {
                                                     children: cat.name
                                                 }, cat.id, false, {
                                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                                    lineNumber: 1239,
+                                                    lineNumber: 1335,
                                                     columnNumber: 21
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1224,
+                                            lineNumber: 1320,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1213,
+                                    lineNumber: 1309,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2864,7 +3055,7 @@ function MediaUploadSection() {
                                             children: "Featured"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1246,
+                                            lineNumber: 1342,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2873,19 +3064,19 @@ function MediaUploadSection() {
                                             children: featured ? '⭐ Featured' : 'Not Featured'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1247,
+                                            lineNumber: 1343,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1245,
+                                    lineNumber: 1341,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1212,
+                            lineNumber: 1308,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2896,7 +3087,7 @@ function MediaUploadSection() {
                                     children: "Zone Targeting"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1262,
+                                    lineNumber: 1358,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2908,7 +3099,7 @@ function MediaUploadSection() {
                                             children: "🏢 HQ Zones"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1264,
+                                            lineNumber: 1360,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2917,13 +3108,13 @@ function MediaUploadSection() {
                                             children: "🌍 Regular Zones"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                            lineNumber: 1274,
+                                            lineNumber: 1370,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1263,
+                                    lineNumber: 1359,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2931,13 +3122,13 @@ function MediaUploadSection() {
                                     children: forHQ ? 'Video will be visible to HQ zones (Zone 1-5, Orchestra, etc.)' : 'Video will be visible to regular zones (Zone 6+)'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                    lineNumber: 1285,
+                                    lineNumber: 1381,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1261,
+                            lineNumber: 1357,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2950,7 +3141,7 @@ function MediaUploadSection() {
                                         className: "w-5 h-5 animate-spin"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1298,
+                                        lineNumber: 1394,
                                         columnNumber: 17
                                     }, this),
                                     editingVideo ? 'Saving...' : 'Publishing...'
@@ -2961,7 +3152,7 @@ function MediaUploadSection() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                                        lineNumber: 1303,
+                                        lineNumber: 1399,
                                         columnNumber: 17
                                     }, this),
                                     editingVideo ? 'Save Changes' : 'Publish Video'
@@ -2969,28 +3160,28 @@ function MediaUploadSection() {
                             }, void 0, true)
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                            lineNumber: 1291,
+                            lineNumber: 1387,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-                    lineNumber: 1114,
+                    lineNumber: 1210,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-            lineNumber: 1100,
+            lineNumber: 1196,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/admin/MediaUploadSection.tsx",
-        lineNumber: 1099,
+        lineNumber: 1195,
         columnNumber: 5
     }, this);
 }
-_s(MediaUploadSection, "WaGMqyvDsL4L+VV8KYqZsTTeShw=", false, function() {
+_s(MediaUploadSection, "ujhJhG3b19rXVzlYPbYRbhu7VbE=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"]

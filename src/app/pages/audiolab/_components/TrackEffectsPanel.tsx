@@ -29,11 +29,12 @@ export function TrackEffectsPanel({
   const [effects, setEffects] = useState<TrackEffects>(initialEffects || DEFAULT_EFFECTS);
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
+  // Reset effects when panel opens for a different track or when initialEffects change
   useEffect(() => {
-    if (initialEffects) {
+    if (isOpen && initialEffects) {
       setEffects(initialEffects);
     }
-  }, [initialEffects]);
+  }, [isOpen, trackId, initialEffects]);
 
   const handleEffectChange = (key: keyof TrackEffects, value: number) => {
     const newEffects = { ...effects, [key]: value };
@@ -66,7 +67,7 @@ export function TrackEffectsPanel({
       />
       
       {/* Panel */}
-      <div className="relative w-full max-w-lg bg-[#1a1225] rounded-t-3xl border-t border-white/10 animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#1a1225] rounded-t-3xl border-t border-white/10 animate-slide-up max-h-[85vh] overflow-y-auto">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 rounded-full bg-white/20" />

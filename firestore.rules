@@ -377,6 +377,19 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // ===== NEW CHAT SYSTEM V2 =====
+    // Chats V2 (new clean chat system)
+    match /chats_v2/{chatId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Messages V2 (new clean messages)
+    match /messages_v2/{messageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
     // Legacy chat users (backward compatibility)
     match /chat_users/{userId} {
       allow read: if request.auth != null;

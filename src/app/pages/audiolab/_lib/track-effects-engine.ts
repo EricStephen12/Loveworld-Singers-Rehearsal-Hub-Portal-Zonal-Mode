@@ -48,6 +48,8 @@ interface TrackNodes {
   convolver: ConvolverNode;
 }
 
+// Track which audio elements already have source nodes
+const audioElementSources = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
 
 class TrackEffectsEngine {
   private context: AudioContext | null = null;
@@ -124,7 +126,14 @@ class TrackEffectsEngine {
     // Create source if audio element provided
     let source: MediaElementAudioSourceNode | null = null;
     if (audioElement) {
-      source = this.context.createMediaElementSource(audioElement);
+      // Check if this audio element already has a source node
+      const existingSource = audioElementSources.get(audioElement);
+      if (existingSource) {
+        source = existingSource;
+      } else {
+        source = this.context.createMediaElementSource(audioElement);
+        audioElementSources.set(audioElement, source);
+      }
     }
 
     // Connect chain: source -> gain -> pan -> bass -> treble -> compressor -> dry/wet -> destination

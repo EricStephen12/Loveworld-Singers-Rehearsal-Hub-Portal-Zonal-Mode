@@ -15,6 +15,7 @@ export interface PeerConnection {
   dataChannel?: RTCDataChannel;
   audioStream?: MediaStream;
   isHost: boolean;
+  pendingCandidates: RTCIceCandidateInit[]; // Queue for ICE candidates before remote description
 }
 
 export class WebRTCService {
@@ -23,15 +24,36 @@ export class WebRTCService {
   private config: WebRTCConfig;
   private onRemoteStreamAdded: ((userId: string, stream: MediaStream) => void) | null = null;
   private onDataReceived: ((userId: string, data: any) => void) | null = null;
+  private onConnectionStateChanged: ((userId: string, state: string) => void) | null = null;
   private signalingService: WebRTCSignaling | null = null;
   private sessionId: string | null = null;
   private userId: string | null = null;
 
   constructor(config?: Partial<WebRTCConfig>) {
+    // Use multiple STUN servers and free TURN servers for better connectivity
     this.config = {
       iceServers: config?.iceServers || [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        // Free TURN servers from Open Relay Project (for NAT traversal)
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
       ]
     };
   }
@@ -65,33 +87,65 @@ export class WebRTCService {
 
   private async handleSignalMessage(message: SignalMessage): Promise<void> {
     const { type, from, payload } = message;
+    console.log(`[WebRTC] Received signal: ${type} from ${from}`);
     
     if (!this.peerConnections.has(from)) {
       // Create peer connection if it doesn't exist
       this.createPeerConnection(from, false);
     }
     
-    const pc = this.getPeerConnection(from);
+    const peer = this.peerConnections.get(from);
+    const pc = peer?.connection;
     if (!pc) return;
     
     try {
       switch (type) {
         case 'offer':
-          await this.setRemoteDescription(from, payload);
-          const answer = await this.createAnswer(from);
+          console.log('[WebRTC] Processing offer...');
+          await pc.setRemoteDescription(new RTCSessionDescription(payload));
+          
+          // Process any queued ICE candidates
+          if (peer.pendingCandidates.length > 0) {
+            console.log(`[WebRTC] Processing ${peer.pendingCandidates.length} queued ICE candidates`);
+            for (const candidate of peer.pendingCandidates) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+            peer.pendingCandidates = [];
+          }
+          
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
           await this.signalingService?.sendSignal(from, 'answer', answer);
+          console.log('[WebRTC] Sent answer');
           break;
           
         case 'answer':
-          await this.setRemoteDescription(from, payload);
+          console.log('[WebRTC] Processing answer...');
+          await pc.setRemoteDescription(new RTCSessionDescription(payload));
+          
+          // Process any queued ICE candidates
+          if (peer.pendingCandidates.length > 0) {
+            console.log(`[WebRTC] Processing ${peer.pendingCandidates.length} queued ICE candidates`);
+            for (const candidate of peer.pendingCandidates) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+            peer.pendingCandidates = [];
+          }
           break;
           
         case 'ice-candidate':
-          await this.addIceCandidate(from, payload);
+          // Queue ICE candidates if remote description not set yet
+          if (!pc.remoteDescription) {
+            console.log('[WebRTC] Queuing ICE candidate (no remote description yet)');
+            peer.pendingCandidates.push(payload);
+          } else {
+            console.log('[WebRTC] Adding ICE candidate');
+            await pc.addIceCandidate(new RTCIceCandidate(payload));
+          }
           break;
       }
     } catch (error) {
-      console.error('Error handling signal message:', error);
+      console.error('[WebRTC] Error handling signal message:', error);
     }
   }
 
@@ -164,7 +218,8 @@ export class WebRTCService {
       id: userId,
       connection: pc,
       dataChannel,
-      isHost
+      isHost,
+      pendingCandidates: []
     });
 
     return pc;

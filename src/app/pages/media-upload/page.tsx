@@ -11,6 +11,7 @@ import { ArrowLeft, Upload, Shield, Loader2 } from 'lucide-react';
 const SOUND_TEAM_EMAILS: string[] = [
   'greatedafekome@gmail.com',
   'oyeghe@gmail.com',
+  'legacyd77@gmail.com',
 ];
 
 // List of allowed sound team user IDs (from Firebase Auth)

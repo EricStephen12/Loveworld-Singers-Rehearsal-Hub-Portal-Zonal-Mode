@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, ChevronDown, ChevronUp, Trash2, Music, X } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, Trash2, Music, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { submitSong, getAllSubmittedSongs, deleteUserSubmission, SongSubmission } from '@/lib/song-submission-service'
 import { useZone } from '@/hooks/useZone'
 import { getZoneTheme } from '@/utils/zone-theme'
 import { uploadAudio } from '@/lib/cloudinary-setup'
 import { isHQGroup } from '@/config/zones'
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
+import { db } from '@/lib/firebase-setup'
 
 interface SongSubmissionForm {
   title: string
@@ -35,7 +37,6 @@ export default function SubmitSongPage() {
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
   const [activeTab, setActiveTab] = useState<'submit' | 'submitted'>('submit')
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [showOverlay, setShowOverlay] = useState(true)
   
   // Generate focus ring color based on zone color
   const getFocusClasses = () => {
@@ -73,6 +74,50 @@ export default function SubmitSongPage() {
     if (user && currentZone?.id) {
       loadMySubmissions()
     }
+  }, [user?.uid, user?.email, currentZone?.id])
+
+  // Set up real-time listener for user's submissions
+  useEffect(() => {
+    if (!user?.uid || !currentZone?.id) return
+    
+    const submissionsRef = collection(db, 'submitted_songs')
+    const q = query(
+      submissionsRef,
+      where('submittedBy.userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    )
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.metadata.hasPendingWrites) {
+        const isCurrentZoneHQ = isHQGroup(currentZone.id)
+        const emailLower = (user.email || '').toLowerCase()
+        
+        const submissions = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data()
+          return {
+            id: docSnap.id,
+            ...data,
+            zoneId: data.zoneId || 'unknown',
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
+          } as SongSubmission
+        }).filter((submission) => {
+          // If not HQ, also check zone match
+          if (!isCurrentZoneHQ && submission.zoneId !== currentZone.id) {
+            return false
+          }
+          return true
+        })
+        
+        setMySubmissions(submissions)
+        setLoadingSubmissions(false)
+      }
+    }, (error) => {
+      console.log('[SubmitSong] Real-time listener error:', error)
+      loadMySubmissions() // Fallback to manual load
+    })
+    
+    return () => unsubscribe()
   }, [user?.uid, user?.email, currentZone?.id])
 
   const loadMySubmissions = async () => {
@@ -332,29 +377,6 @@ export default function SubmitSongPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-32 scroll-smooth">
-        {/* Banner for upcoming feature */}
-        {showOverlay && (
-        <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-blue-900 text-xl mb-2">Feature in Development</h3>
-                <p className="text-blue-800 mb-4">We're working on an enhanced experience for song submissions.</p>
-                <p className="text-blue-700">Stay tuned for exciting new features coming soon!</p>
-              </div>
-              <button 
-                onClick={() => router.back()}
-                className="mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        </div>
-        )}
         {/* Tabs */}
         <div className="px-4 pt-5 pb-3">
           <div className="inline-flex items-center rounded-2xl bg-gray-100 p-1.5 shadow-inner">

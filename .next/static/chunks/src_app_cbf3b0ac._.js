@@ -27,9 +27,14 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$t
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$AdminThemeProvider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/admin/AdminThemeProvider.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$firestore$2f$dist$2f$esm$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/firebase/firestore/dist/esm/index.esm.js [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/firebase/node_modules/@firebase/firestore/dist/index.esm.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/firebase-setup.ts [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 'use client';
+;
+;
 ;
 ;
 ;
@@ -61,6 +66,22 @@ function SubmittedSongsPage() {
     const audioRefsRef = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].useRef(new Map());
     // Check if current zone is HQ (can see all submissions)
     const isHQ = (currentZone === null || currentZone === void 0 ? void 0 : currentZone.id) ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isHQGroup"])(currentZone.id) : false;
+    // Cleanup audio refs on unmount
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "SubmittedSongsPage.useEffect": ()=>{
+            return ({
+                "SubmittedSongsPage.useEffect": ()=>{
+                    audioRefsRef.current.forEach({
+                        "SubmittedSongsPage.useEffect": (audio)=>{
+                            audio.pause();
+                            audio.src = '';
+                        }
+                    }["SubmittedSongsPage.useEffect"]);
+                    audioRefsRef.current.clear();
+                }
+            })["SubmittedSongsPage.useEffect"];
+        }
+    }["SubmittedSongsPage.useEffect"], []);
     const handleAudioPlay = (songId, audioUrl)=>{
         // Stop any currently playing audio
         audioRefsRef.current.forEach((audio, id)=>{
@@ -107,6 +128,32 @@ function SubmittedSongsPage() {
     }["SubmittedSongsPage.useEffect"], [
         filter,
         currentZone === null || currentZone === void 0 ? void 0 : currentZone.id
+    ]);
+    // Set up real-time listener for submitted songs
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "SubmittedSongsPage.useEffect": ()=>{
+            if (!(currentZone === null || currentZone === void 0 ? void 0 : currentZone.id)) return;
+            const submissionsRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["db"], 'submitted_songs');
+            const q = isHQ ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(submissionsRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc')) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(submissionsRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["where"])('zoneId', '==', currentZone.id), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc'));
+            const unsubscribe = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["onSnapshot"])(q, {
+                "SubmittedSongsPage.useEffect.unsubscribe": (snapshot)=>{
+                    // Only refresh if there are actual changes (not just metadata)
+                    if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
+                        loadSongs();
+                    }
+                }
+            }["SubmittedSongsPage.useEffect.unsubscribe"], {
+                "SubmittedSongsPage.useEffect.unsubscribe": (error)=>{
+                    console.log('[SubmittedSongs] Real-time listener error:', error);
+                }
+            }["SubmittedSongsPage.useEffect.unsubscribe"]);
+            return ({
+                "SubmittedSongsPage.useEffect": ()=>unsubscribe()
+            })["SubmittedSongsPage.useEffect"];
+        }
+    }["SubmittedSongsPage.useEffect"], [
+        currentZone === null || currentZone === void 0 ? void 0 : currentZone.id,
+        isHQ
     ]);
     const loadSongs = async ()=>{
         setLoading(true);
@@ -247,12 +294,12 @@ function SubmittedSongsPage() {
                                             className: "w-5 h-5 text-gray-600"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 248,
+                                            lineNumber: 282,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 244,
+                                        lineNumber: 278,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -261,12 +308,12 @@ function SubmittedSongsPage() {
                                             className: "w-6 h-6 text-white"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 251,
+                                            lineNumber: 285,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 250,
+                                        lineNumber: 284,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -276,7 +323,7 @@ function SubmittedSongsPage() {
                                                 children: "Submitted Songs"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 254,
+                                                lineNumber: 288,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -284,19 +331,19 @@ function SubmittedSongsPage() {
                                                 children: "Review and manage song submissions"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 255,
+                                                lineNumber: 289,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 253,
+                                        lineNumber: 287,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 243,
+                                lineNumber: 277,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -307,23 +354,23 @@ function SubmittedSongsPage() {
                                     className: "w-5 h-5 text-gray-600 ".concat(loading ? 'animate-spin' : '')
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 265,
+                                    lineNumber: 299,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 260,
+                                lineNumber: 294,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                        lineNumber: 242,
+                        lineNumber: 276,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 241,
+                    lineNumber: 275,
                     columnNumber: 9
                 }, this),
                 embedded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -338,12 +385,12 @@ function SubmittedSongsPage() {
                                         className: "w-5 h-5 text-white"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 275,
+                                        lineNumber: 309,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 274,
+                                    lineNumber: 308,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -353,7 +400,7 @@ function SubmittedSongsPage() {
                                             children: "Submitted Songs"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 278,
+                                            lineNumber: 312,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -361,19 +408,19 @@ function SubmittedSongsPage() {
                                             children: "Review and manage song submissions"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 279,
+                                            lineNumber: 313,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 277,
+                                    lineNumber: 311,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 273,
+                            lineNumber: 307,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -384,18 +431,18 @@ function SubmittedSongsPage() {
                                 className: "w-5 h-5 text-gray-600 ".concat(loading ? 'animate-spin' : '')
                             }, void 0, false, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 289,
+                                lineNumber: 323,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 284,
+                            lineNumber: 318,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 272,
+                    lineNumber: 306,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -413,7 +460,7 @@ function SubmittedSongsPage() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 297,
+                                lineNumber: 331,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -424,7 +471,7 @@ function SubmittedSongsPage() {
                                         className: "w-3 h-3 sm:w-4 sm:h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 315,
+                                        lineNumber: 349,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -432,7 +479,7 @@ function SubmittedSongsPage() {
                                         children: "Pending"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 316,
+                                        lineNumber: 350,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -440,14 +487,14 @@ function SubmittedSongsPage() {
                                         children: "Pend."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 317,
+                                        lineNumber: 351,
                                         columnNumber: 15
                                     }, this),
                                     pendingCount > 0 && " (".concat(pendingCount, ")")
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 307,
+                                lineNumber: 341,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -459,7 +506,7 @@ function SubmittedSongsPage() {
                                         children: "Approved"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 328,
+                                        lineNumber: 362,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -467,7 +514,7 @@ function SubmittedSongsPage() {
                                         children: "Appr."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 329,
+                                        lineNumber: 363,
                                         columnNumber: 15
                                     }, this),
                                     "(",
@@ -476,7 +523,7 @@ function SubmittedSongsPage() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 320,
+                                lineNumber: 354,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -488,7 +535,7 @@ function SubmittedSongsPage() {
                                         children: "Rejected"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 340,
+                                        lineNumber: 374,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -496,7 +543,7 @@ function SubmittedSongsPage() {
                                         children: "Rej."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 341,
+                                        lineNumber: 375,
                                         columnNumber: 15
                                     }, this),
                                     "(",
@@ -505,18 +552,18 @@ function SubmittedSongsPage() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 332,
+                                lineNumber: 366,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                        lineNumber: 296,
+                        lineNumber: 330,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 295,
+                    lineNumber: 329,
                     columnNumber: 9
                 }, this),
                 loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -526,7 +573,7 @@ function SubmittedSongsPage() {
                             className: "w-8 h-8 ".concat(theme.text, " animate-spin mx-auto mb-4")
                         }, void 0, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 350,
+                            lineNumber: 384,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -534,13 +581,13 @@ function SubmittedSongsPage() {
                             children: "Loading submitted songs..."
                         }, void 0, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 351,
+                            lineNumber: 385,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 349,
+                    lineNumber: 383,
                     columnNumber: 11
                 }, this) : filteredSongs.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "bg-white rounded-xl shadow-lg p-12 text-center",
@@ -549,7 +596,7 @@ function SubmittedSongsPage() {
                             className: "w-16 h-16 text-gray-300 mx-auto mb-4"
                         }, void 0, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 355,
+                            lineNumber: 389,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -557,13 +604,13 @@ function SubmittedSongsPage() {
                             children: "No songs found"
                         }, void 0, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 356,
+                            lineNumber: 390,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 354,
+                    lineNumber: 388,
                     columnNumber: 11
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 gap-4",
@@ -582,7 +629,7 @@ function SubmittedSongsPage() {
                                                     children: song.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 368,
+                                                    lineNumber: 402,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -590,13 +637,13 @@ function SubmittedSongsPage() {
                                                     children: song.status.toUpperCase()
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 369,
+                                                    lineNumber: 403,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 367,
+                                            lineNumber: 401,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -609,7 +656,7 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4 flex-shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 384,
+                                                            lineNumber: 418,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -617,7 +664,7 @@ function SubmittedSongsPage() {
                                                             children: "Writer:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 385,
+                                                            lineNumber: 419,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -625,13 +672,13 @@ function SubmittedSongsPage() {
                                                             children: song.writer || 'N/A'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 386,
+                                                            lineNumber: 420,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 383,
+                                                    lineNumber: 417,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -641,7 +688,7 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4 flex-shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 389,
+                                                            lineNumber: 423,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -649,7 +696,7 @@ function SubmittedSongsPage() {
                                                             children: "Category:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 390,
+                                                            lineNumber: 424,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -657,13 +704,13 @@ function SubmittedSongsPage() {
                                                             children: song.category || 'N/A'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 391,
+                                                            lineNumber: 425,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 388,
+                                                    lineNumber: 422,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -673,7 +720,7 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4 flex-shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 394,
+                                                            lineNumber: 428,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -681,7 +728,7 @@ function SubmittedSongsPage() {
                                                             children: "Submitted:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 395,
+                                                            lineNumber: 429,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -689,13 +736,13 @@ function SubmittedSongsPage() {
                                                             children: new Date(song.createdAt).toLocaleDateString()
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 396,
+                                                            lineNumber: 430,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 393,
+                                                    lineNumber: 427,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -705,7 +752,7 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4 flex-shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 399,
+                                                            lineNumber: 433,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -713,7 +760,7 @@ function SubmittedSongsPage() {
                                                             children: "By:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 400,
+                                                            lineNumber: 434,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -721,13 +768,13 @@ function SubmittedSongsPage() {
                                                             children: song.submittedBy.userName
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 401,
+                                                            lineNumber: 435,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 398,
+                                                    lineNumber: 432,
                                                     columnNumber: 23
                                                 }, this),
                                                 (isHQ || isSuperAdmin) && song.zoneName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -738,7 +785,7 @@ function SubmittedSongsPage() {
                                                             children: "Zone:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 406,
+                                                            lineNumber: 440,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -746,19 +793,19 @@ function SubmittedSongsPage() {
                                                             children: song.zoneName
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 407,
+                                                            lineNumber: 441,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 405,
+                                                    lineNumber: 439,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 382,
+                                            lineNumber: 416,
                                             columnNumber: 21
                                         }, this),
                                         song.audioUrl && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -769,7 +816,7 @@ function SubmittedSongsPage() {
                                                     children: "Audio:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 415,
+                                                    lineNumber: 449,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -784,18 +831,18 @@ function SubmittedSongsPage() {
                                                                     className: "w-6 h-6 text-white"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 427,
+                                                                    lineNumber: 461,
                                                                     columnNumber: 33
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
                                                                     className: "w-6 h-6 text-purple-600"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 429,
+                                                                    lineNumber: 463,
                                                                     columnNumber: 33
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 421,
+                                                                lineNumber: 455,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -806,7 +853,7 @@ function SubmittedSongsPage() {
                                                                         children: playingAudioId === song.id ? 'Playing...' : 'Play Audio'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                        lineNumber: 433,
+                                                                        lineNumber: 467,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -817,30 +864,30 @@ function SubmittedSongsPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                        lineNumber: 436,
+                                                                        lineNumber: 470,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 432,
+                                                                lineNumber: 466,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 417,
+                                                        lineNumber: 451,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 416,
+                                                    lineNumber: 450,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 414,
+                                            lineNumber: 448,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -851,7 +898,7 @@ function SubmittedSongsPage() {
                                                     children: "Preview:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 445,
+                                                    lineNumber: 479,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -864,18 +911,18 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 447,
+                                                        lineNumber: 481,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 446,
+                                                    lineNumber: 480,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 444,
+                                            lineNumber: 478,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -891,7 +938,7 @@ function SubmittedSongsPage() {
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 461,
+                                                                    lineNumber: 495,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -899,7 +946,7 @@ function SubmittedSongsPage() {
                                                                     children: "View Details"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 462,
+                                                                    lineNumber: 496,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -907,13 +954,13 @@ function SubmittedSongsPage() {
                                                                     children: "View"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 463,
+                                                                    lineNumber: 497,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 457,
+                                                            lineNumber: 491,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -925,14 +972,14 @@ function SubmittedSongsPage() {
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 470,
+                                                                    lineNumber: 504,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 "Approve"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 465,
+                                                            lineNumber: 499,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -947,14 +994,14 @@ function SubmittedSongsPage() {
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 481,
+                                                                    lineNumber: 515,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 "Reject"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 473,
+                                                            lineNumber: 507,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -969,7 +1016,7 @@ function SubmittedSongsPage() {
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 489,
+                                                                    lineNumber: 523,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -977,13 +1024,13 @@ function SubmittedSongsPage() {
                                                                     children: "Reply"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                    lineNumber: 490,
+                                                                    lineNumber: 524,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 484,
+                                                            lineNumber: 518,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
@@ -996,7 +1043,7 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 499,
+                                                            lineNumber: 533,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1004,7 +1051,7 @@ function SubmittedSongsPage() {
                                                             children: "View Details"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 500,
+                                                            lineNumber: 534,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1012,13 +1059,13 @@ function SubmittedSongsPage() {
                                                             children: "View"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 501,
+                                                            lineNumber: 535,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 495,
+                                                    lineNumber: 529,
                                                     columnNumber: 25
                                                 }, this),
                                                 song.id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1030,13 +1077,13 @@ function SubmittedSongsPage() {
                                                             className: "w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 512,
+                                                            lineNumber: 546,
                                                             columnNumber: 29
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__["XCircle"], {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 514,
+                                                            lineNumber: 548,
                                                             columnNumber: 29
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1044,7 +1091,7 @@ function SubmittedSongsPage() {
                                                             children: "Delete"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 516,
+                                                            lineNumber: 550,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1052,40 +1099,40 @@ function SubmittedSongsPage() {
                                                             children: "Del"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                            lineNumber: 517,
+                                                            lineNumber: 551,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 506,
+                                                    lineNumber: 540,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 454,
+                                            lineNumber: 488,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 366,
+                                    lineNumber: 400,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 365,
+                                lineNumber: 399,
                                 columnNumber: 17
                             }, this)
                         }, song.id, false, {
                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                            lineNumber: 361,
+                            lineNumber: 395,
                             columnNumber: 15
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 359,
+                    lineNumber: 393,
                     columnNumber: 11
                 }, this),
                 selectedSong && !showRejectModal && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1101,7 +1148,7 @@ function SubmittedSongsPage() {
                                         children: selectedSong.title
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 533,
+                                        lineNumber: 567,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1111,18 +1158,18 @@ function SubmittedSongsPage() {
                                             className: "w-5 h-5 text-gray-600"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                            lineNumber: 538,
+                                            lineNumber: 572,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 534,
+                                        lineNumber: 568,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 532,
+                                lineNumber: 566,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1138,7 +1185,7 @@ function SubmittedSongsPage() {
                                                         children: "Writer"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 546,
+                                                        lineNumber: 580,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1146,13 +1193,13 @@ function SubmittedSongsPage() {
                                                         children: selectedSong.writer || 'N/A'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 547,
+                                                        lineNumber: 581,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 545,
+                                                lineNumber: 579,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1162,7 +1209,7 @@ function SubmittedSongsPage() {
                                                         children: "Category"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 550,
+                                                        lineNumber: 584,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1170,13 +1217,13 @@ function SubmittedSongsPage() {
                                                         children: selectedSong.category || 'N/A'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 551,
+                                                        lineNumber: 585,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 549,
+                                                lineNumber: 583,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1186,7 +1233,7 @@ function SubmittedSongsPage() {
                                                         children: "Key"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 554,
+                                                        lineNumber: 588,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1194,13 +1241,13 @@ function SubmittedSongsPage() {
                                                         children: selectedSong.key || 'N/A'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 555,
+                                                        lineNumber: 589,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 553,
+                                                lineNumber: 587,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1210,7 +1257,7 @@ function SubmittedSongsPage() {
                                                         children: "Tempo"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 558,
+                                                        lineNumber: 592,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1218,19 +1265,19 @@ function SubmittedSongsPage() {
                                                         children: selectedSong.tempo || 'N/A'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 559,
+                                                        lineNumber: 593,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 557,
+                                                lineNumber: 591,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 544,
+                                        lineNumber: 578,
                                         columnNumber: 17
                                     }, this),
                                     (selectedSong.leadSinger || selectedSong.conductor || selectedSong.leadKeyboardist) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1240,7 +1287,7 @@ function SubmittedSongsPage() {
                                                 children: "Team Members"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 566,
+                                                lineNumber: 600,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1253,7 +1300,7 @@ function SubmittedSongsPage() {
                                                                 children: "Lead Singer:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 568,
+                                                                lineNumber: 602,
                                                                 columnNumber: 54
                                                             }, this),
                                                             " ",
@@ -1261,7 +1308,7 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 568,
+                                                        lineNumber: 602,
                                                         columnNumber: 51
                                                     }, this),
                                                     selectedSong.conductor && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1271,7 +1318,7 @@ function SubmittedSongsPage() {
                                                                 children: "Conductor:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 569,
+                                                                lineNumber: 603,
                                                                 columnNumber: 53
                                                             }, this),
                                                             " ",
@@ -1279,7 +1326,7 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 569,
+                                                        lineNumber: 603,
                                                         columnNumber: 50
                                                     }, this),
                                                     selectedSong.leadKeyboardist && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1289,7 +1336,7 @@ function SubmittedSongsPage() {
                                                                 children: "Keyboardist:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 570,
+                                                                lineNumber: 604,
                                                                 columnNumber: 59
                                                             }, this),
                                                             " ",
@@ -1297,7 +1344,7 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 570,
+                                                        lineNumber: 604,
                                                         columnNumber: 56
                                                     }, this),
                                                     selectedSong.leadGuitarist && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1307,7 +1354,7 @@ function SubmittedSongsPage() {
                                                                 children: "Guitarist:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 571,
+                                                                lineNumber: 605,
                                                                 columnNumber: 57
                                                             }, this),
                                                             " ",
@@ -1315,7 +1362,7 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 571,
+                                                        lineNumber: 605,
                                                         columnNumber: 54
                                                     }, this),
                                                     selectedSong.drummer && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1325,7 +1372,7 @@ function SubmittedSongsPage() {
                                                                 children: "Drummer:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                                lineNumber: 572,
+                                                                lineNumber: 606,
                                                                 columnNumber: 51
                                                             }, this),
                                                             " ",
@@ -1333,19 +1380,19 @@ function SubmittedSongsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 572,
+                                                        lineNumber: 606,
                                                         columnNumber: 48
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 567,
+                                                lineNumber: 601,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 565,
+                                        lineNumber: 599,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1355,7 +1402,7 @@ function SubmittedSongsPage() {
                                                 children: "Lyrics"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 579,
+                                                lineNumber: 613,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1365,18 +1412,18 @@ function SubmittedSongsPage() {
                                                     children: selectedSong.lyrics
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 581,
+                                                    lineNumber: 615,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 580,
+                                                lineNumber: 614,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 578,
+                                        lineNumber: 612,
                                         columnNumber: 17
                                     }, this),
                                     selectedSong.solfas && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1386,7 +1433,7 @@ function SubmittedSongsPage() {
                                                 children: "Solfas"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 590,
+                                                lineNumber: 624,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1396,18 +1443,18 @@ function SubmittedSongsPage() {
                                                     children: selectedSong.solfas
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 592,
+                                                    lineNumber: 626,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 591,
+                                                lineNumber: 625,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 589,
+                                        lineNumber: 623,
                                         columnNumber: 19
                                     }, this),
                                     selectedSong.audioUrl && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1417,7 +1464,7 @@ function SubmittedSongsPage() {
                                                 children: "Audio"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 602,
+                                                lineNumber: 636,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1432,18 +1479,18 @@ function SubmittedSongsPage() {
                                                     children: "Your browser does not support the audio element."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 604,
+                                                    lineNumber: 638,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 603,
+                                                lineNumber: 637,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 601,
+                                        lineNumber: 635,
                                         columnNumber: 19
                                     }, this),
                                     selectedSong.notes && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1453,7 +1500,7 @@ function SubmittedSongsPage() {
                                                 children: "Additional Notes"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 621,
+                                                lineNumber: 655,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1463,18 +1510,18 @@ function SubmittedSongsPage() {
                                                     children: selectedSong.notes
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                    lineNumber: 623,
+                                                    lineNumber: 657,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 622,
+                                                lineNumber: 656,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 620,
+                                        lineNumber: 654,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1488,7 +1535,7 @@ function SubmittedSongsPage() {
                                                         children: "Submitted by:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 631,
+                                                        lineNumber: 665,
                                                         columnNumber: 21
                                                     }, this),
                                                     " ",
@@ -1499,7 +1546,7 @@ function SubmittedSongsPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 630,
+                                                lineNumber: 664,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1510,7 +1557,7 @@ function SubmittedSongsPage() {
                                                         children: "Date:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 634,
+                                                        lineNumber: 668,
                                                         columnNumber: 21
                                                     }, this),
                                                     " ",
@@ -1518,13 +1565,13 @@ function SubmittedSongsPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 633,
+                                                lineNumber: 667,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 629,
+                                        lineNumber: 663,
                                         columnNumber: 17
                                     }, this),
                                     selectedSong.status === 'pending' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1542,14 +1589,14 @@ function SubmittedSongsPage() {
                                                         className: "w-5 h-5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 649,
+                                                        lineNumber: 683,
                                                         columnNumber: 23
                                                     }, this),
                                                     "Approve Song"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 641,
+                                                lineNumber: 675,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1561,37 +1608,37 @@ function SubmittedSongsPage() {
                                                         className: "w-5 h-5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                        lineNumber: 657,
+                                                        lineNumber: 691,
                                                         columnNumber: 23
                                                     }, this),
                                                     "Reject Song"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                                lineNumber: 652,
+                                                lineNumber: 686,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 640,
+                                        lineNumber: 674,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 542,
+                                lineNumber: 576,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                        lineNumber: 531,
+                        lineNumber: 565,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 530,
+                    lineNumber: 564,
                     columnNumber: 11
                 }, this),
                 showRejectModal && selectedSong && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1607,7 +1654,7 @@ function SubmittedSongsPage() {
                                         children: "Reject Song"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 672,
+                                        lineNumber: 706,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1615,13 +1662,13 @@ function SubmittedSongsPage() {
                                         children: "Provide a reason for rejection"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 673,
+                                        lineNumber: 707,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 671,
+                                lineNumber: 705,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1635,12 +1682,12 @@ function SubmittedSongsPage() {
                                     required: true
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 676,
+                                    lineNumber: 710,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 675,
+                                lineNumber: 709,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1655,7 +1702,7 @@ function SubmittedSongsPage() {
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 686,
+                                        lineNumber: 720,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1665,24 +1712,24 @@ function SubmittedSongsPage() {
                                         children: "Reject"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 695,
+                                        lineNumber: 729,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 685,
+                                lineNumber: 719,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                        lineNumber: 670,
+                        lineNumber: 704,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 669,
+                    lineNumber: 703,
                     columnNumber: 11
                 }, this),
                 showReplyModal && selectedSong && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1701,7 +1748,7 @@ function SubmittedSongsPage() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 712,
+                                        lineNumber: 746,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1709,13 +1756,13 @@ function SubmittedSongsPage() {
                                         children: "This message will be sent to the submitter"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 713,
+                                        lineNumber: 747,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 711,
+                                lineNumber: 745,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1729,12 +1776,12 @@ function SubmittedSongsPage() {
                                     required: true
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                    lineNumber: 716,
+                                    lineNumber: 750,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 715,
+                                lineNumber: 749,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1749,7 +1796,7 @@ function SubmittedSongsPage() {
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 726,
+                                        lineNumber: 760,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1759,39 +1806,39 @@ function SubmittedSongsPage() {
                                         children: "Send Reply"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                        lineNumber: 735,
+                                        lineNumber: 769,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                                lineNumber: 725,
+                                lineNumber: 759,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                        lineNumber: 710,
+                        lineNumber: 744,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-                    lineNumber: 709,
+                    lineNumber: 743,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-            lineNumber: 238,
+            lineNumber: 272,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/pages/admin/submitted-songs/page.tsx",
-        lineNumber: 237,
+        lineNumber: 271,
         columnNumber: 5
     }, this);
 }
-_s(SubmittedSongsPage, "vJU6LF7mvann0CuZukHwKiGgNYc=", false, function() {
+_s(SubmittedSongsPage, "aJeM3VTNuZe77Loa23Q6anouNPk=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
@@ -1856,7 +1903,7 @@ const COLLECTION_NAME = AUDIOLAB_SONGS_COLLECTION; // Default collection for CRU
 const songCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 async function getSongs(zoneId) {
-    let limitCount = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 100;
+    let limitCount = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 500;
     try {
         const cacheKey = 'master_library';
         const cached = songCache.get(cacheKey);
@@ -1870,8 +1917,13 @@ async function getSongs(zoneId) {
         const q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(masterSongsRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('publishedAt', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["limit"])(limitCount));
         const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getDocs"])(q);
         const songs = snapshot.docs.map((doc)=>masterSongToAudioLabSong(doc));
-        // Filter to only songs that have audio files
-        const songsWithAudio = songs.filter((song)=>song.audioUrls && (song.audioUrls.full || song.audioUrls.soprano || song.audioUrls.alto || song.audioUrls.tenor || song.audioUrls.bass));
+        // Filter to only songs that have audio files (including custom parts)
+        const songsWithAudio = songs.filter((song)=>{
+            if (!song.audioUrls) return false;
+            // Check if any audio URL exists
+            const hasAudio = Object.values(song.audioUrls).some((url)=>url && url.length > 0);
+            return hasAudio;
+        });
         // Update cache
         songCache.set(cacheKey, {
             data: songsWithAudio,
@@ -4230,7 +4282,7 @@ function AdminPage() {
         columnNumber: 5
     }, this);
 }
-_s(AdminPage, "SQcPC1t1KnSm4k/FVhb4sZyWu3I=", false, function() {
+_s(AdminPage, "FG6N3IK7khyrMWphGV1e+Y3ZJcA=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],

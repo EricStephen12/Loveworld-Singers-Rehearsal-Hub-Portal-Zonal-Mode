@@ -70,12 +70,13 @@ export default function AdminSidebar({
     { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqOnly: true },
     { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar' },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
-    { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs' },
+    { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
   ];
   
   // Filter items based on role
   const filterItems = (items: any[]) => items.filter(item => {
     if (item.hqOnly && !isHQAdmin) return false;
+    if (item.hqZoneOnly && !isHQ) return false; // Hide for non-HQ zones
     if (item.zoneOnly && !isZoneCoordinator) return false;
     return true;
   });

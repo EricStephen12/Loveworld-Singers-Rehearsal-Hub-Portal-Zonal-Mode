@@ -1,12 +1,13 @@
 'use client';
 
-import { Music, Play, Pause, ChevronDown } from 'lucide-react';
+import { Music, Play, Pause, ChevronDown, Mic } from 'lucide-react';
 import type { Song, VocalPart } from '../_types';
 
 export interface CollapsibleSongCardProps {
   song: Song;
   isExpanded: boolean;
   isPlaying: boolean;
+  isHighlighted?: boolean;
   currentPart: VocalPart | null;
   currentTime: number;
   duration: number;
@@ -15,6 +16,7 @@ export interface CollapsibleSongCardProps {
   onPlayPart: (part: VocalPart) => void;
   onPause: () => void;
   onSeek: (time: number) => void;
+  onStartKaraoke?: () => void; // New: direct karaoke start
 }
 
 const partColors: Record<string, { bg: string; text: string; activeBg: string }> = {
@@ -56,6 +58,7 @@ export function CollapsibleSongCard({
   song,
   isExpanded,
   isPlaying,
+  isHighlighted,
   currentPart,
   currentTime,
   duration,
@@ -64,6 +67,7 @@ export function CollapsibleSongCard({
   onPlayPart,
   onPause,
   onSeek,
+  onStartKaraoke,
 }: CollapsibleSongCardProps) {
   const isThisSongPlaying = isPlaying && currentPart !== null;
   const availableParts = song.availableParts || ['full'];
@@ -85,7 +89,11 @@ export function CollapsibleSongCard({
   };
 
   return (
-    <div className="rounded-xl bg-[#261933] border border-white/5 overflow-hidden transition-all duration-300">
+    <div className={`rounded-xl bg-[#261933] border overflow-hidden transition-all duration-300 ${
+      isHighlighted 
+        ? 'border-violet-400 ring-4 ring-violet-500/30 shadow-xl shadow-violet-500/30 bg-violet-500/5' 
+        : 'border-white/5'
+    }`}>
       {/* Card Header - Always visible */}
       <button
         onClick={onToggleExpand}
@@ -112,12 +120,6 @@ export function CollapsibleSongCard({
           <p className="text-sm font-bold text-white truncate">{song.title}</p>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <span className="truncate">{song.artist}</span>
-            {song.genre && (
-              <>
-                <span className="h-1 w-1 rounded-full bg-slate-600" />
-                <span className="text-violet-400">{song.genre}</span>
-              </>
-            )}
           </div>
           {/* Part badges */}
           {availableParts.length > 1 && (
@@ -152,29 +154,45 @@ export function CollapsibleSongCard({
       >
         <div className="px-3 pb-3 pt-1 border-t border-white/5">
           {/* Play All Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isThisSongPlaying && currentPart === 'full') {
-                onPause();
-              } else {
-                onPlayAll();
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-lg bg-violet-500 hover:bg-violet-600 text-white font-bold text-sm transition-colors"
-          >
-            {isThisSongPlaying && currentPart === 'full' ? (
-              <>
-                <Pause size={18} fill="currentColor" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play size={18} fill="currentColor" />
-                <span>Play All</span>
-              </>
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isThisSongPlaying && currentPart === 'full') {
+                  onPause();
+                } else {
+                  onPlayAll();
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-violet-500 hover:bg-violet-600 text-white font-bold text-sm transition-colors"
+            >
+              {isThisSongPlaying && currentPart === 'full' ? (
+                <>
+                  <Pause size={18} fill="currentColor" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play size={18} fill="currentColor" />
+                  <span>Play All</span>
+                </>
+              )}
+            </button>
+            
+            {/* Karaoke Button */}
+            {onStartKaraoke && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStartKaraoke();
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm transition-colors"
+              >
+                <Mic size={18} />
+                <span>Karaoke</span>
+              </button>
             )}
-          </button>
+          </div>
 
           {/* Vocal Parts List */}
           <div className="space-y-1">

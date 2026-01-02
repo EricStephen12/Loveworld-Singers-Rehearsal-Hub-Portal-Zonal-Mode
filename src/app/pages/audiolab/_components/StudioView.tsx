@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { NextRouter } from 'next/router';
 import { 
   ChevronLeft, Settings, Save, Mic, 
   PlusCircle, SkipBack, Play, Pause, Square, Circle,
-  AudioLines, Loader2, Check, Trash2, Piano, Guitar, RefreshCw, Sparkles,
+  AudioLines, Loader2, Check, Trash2,
   Sliders, Download, Pencil, Timer, Upload
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
@@ -14,7 +13,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { createProject, getProject, updateProject } from '../_lib/project-service';
 import { audioEngine } from '../_lib/audio-engine';
 import { uploadRecording, generateRecordingFileName } from '../_lib/upload-service';
-import { accompanimentEngine, type AccompanimentTrack, type DetectedKey } from '../_lib/accompaniment-engine';
+import { saveRecordingToIndexedDB, getRecordingFromIndexedDB, deleteRecordingFromIndexedDB, getProjectRecordings } from '../_lib/indexeddb-storage';
+
 import { trackEffectsEngine, type TrackEffects, DEFAULT_EFFECTS } from '../_lib/track-effects-engine';
 import { NextActionPrompt } from './NextActionPrompt';
 import { ProjectSettingsSheet } from './ProjectSettingsSheet';
@@ -72,19 +72,19 @@ export function StudioView() {
   
   const [showSettings, setShowSettings] = useState(false);
   
-  const [detectedKey, setDetectedKey] = useState<DetectedKey | null>(null);
-  const [accompanimentTracks, setAccompanimentTracks] = useState<AccompanimentTrack[]>([]);
-  const [isGeneratingAccompaniment, setIsGeneratingAccompaniment] = useState(false);
-  const [isAccompanimentPlaying, setIsAccompanimentPlaying] = useState(false);
-  
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [effectsTrackId, setEffectsTrackId] = useState<string | null>(null);
-  const [isAddingAccompanimentToProject, setIsAddingAccompanimentToProject] = useState(false);
   
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editingTrackName, setEditingTrackName] = useState('');
   
+  const [failedUploads, setFailedUploads] = useState<Map<string, number>>(new Map()); // trackId -> retry count
+  const [showRecoveryPrompt, setShowRecoveryPrompt] = useState(false);
+  const [recoveredTracks, setRecoveredTracks] = useState<string[]>([]);  
   const [metronomeEnabled, setMetronomeEnabled] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const [metronomeTempo, setMetronomeTempo] = useState(120);
   const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const metronomeAudioRef = useRef<AudioContext | null>(null);
@@ -100,6 +100,42 @@ export function StudioView() {
   
   const trackAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   const playbackIntervalRef = useRef<number | null>(null);
+  const isPlayingRef = useRef(false); // Track playing state for cleanup
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Stop metronome
+      if (metronomeIntervalRef.current) {
+        clearInterval(metronomeIntervalRef.current);
+      }
+      if (metronomeAudioRef.current) {
+        metronomeAudioRef.current.close();
+      }
+      
+      // Stop playback
+      if (playbackIntervalRef.current) {
+        cancelAnimationFrame(playbackIntervalRef.current);
+      }
+      
+      // Cleanup audio elements and blob URLs
+      trackAudioRefs.current.forEach((audio, id) => {
+        audio.pause();
+        if (audio.src?.startsWith('blob:')) {
+          URL.revokeObjectURL(audio.src);
+        }
+      });
+      trackAudioRefs.current.clear();
+      
+      // Cleanup effects engine
+      trackEffectsEngine.dispose();
+      
+      // Cleanup recording interval
+      if (recordingInterval.current) {
+        clearInterval(recordingInterval.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (backingTrack?.audioUrl && !backingTrackRef.current) {
@@ -160,6 +196,63 @@ export function StudioView() {
     }
   }, []);
 
+  // Check for unsaved recordings on mount (recovery feature)
+  useEffect(() => {
+    const checkForUnsavedRecordings = async () => {
+      if (currentProject?.id) {
+        const savedRecordings = await getProjectRecordings(currentProject.id);
+        if (savedRecordings.size > 0) {
+          const trackIds = Array.from(savedRecordings.keys());
+          setRecoveredTracks(trackIds);
+          setShowRecoveryPrompt(true);
+        }
+      }
+    };
+    
+    // Only check after project is loaded
+    if (currentProject && !isLoading) {
+      checkForUnsavedRecordings();
+    }
+  }, [currentProject?.id, isLoading]);
+
+  // Recover unsaved recordings
+  const recoverUnsavedRecordings = async () => {
+    if (!currentProject?.id) return;
+    
+    const savedRecordings = await getProjectRecordings(currentProject.id);
+    
+    for (const [trackId, blob] of savedRecordings) {
+      // Check if track exists
+      const existingTrack = tracks.find(t => t.id === trackId);
+      
+      if (existingTrack && !existingTrack.audioUrl) {
+        // Recover to existing track
+        const blobUrl = URL.createObjectURL(blob);
+        setTracks(prev => prev.map(t => 
+          t.id === trackId 
+            ? { ...t, audioBlob: blob, localStored: true, waveformHeights: generateSimpleWaveform(50) }
+            : t
+        ));
+        
+        const audio = new Audio(blobUrl);
+        audio.crossOrigin = 'anonymous';
+        trackAudioRefs.current.set(trackId, audio);
+      }
+    }
+    
+    setShowRecoveryPrompt(false);
+    setHasFirstRecording(true);
+  };
+
+  const dismissRecovery = async () => {
+    // Clear recovered recordings from IndexedDB
+    for (const trackId of recoveredTracks) {
+      await deleteRecordingFromIndexedDB(trackId);
+    }
+    setShowRecoveryPrompt(false);
+    setRecoveredTracks([]);
+  };
+
   const loadSpecificProject = async (projectId: string) => {
     setIsLoading(true);
     try {
@@ -184,7 +277,23 @@ export function StudioView() {
             isRecording: false,
             waveformHeights: t.waveform || [],
             audioUrl: t.audioUrl,
-            localStored: !!t.audioUrl
+            localStored: !!t.audioUrl,
+            // Load effects if they exist, otherwise use defaults
+            effects: t.effects ? {
+              volume: t.effects.volume ?? 80,
+              pan: t.effects.pan ?? 0,
+              reverb: t.effects.reverb ?? 20,
+              bass: t.effects.bass ?? 0,
+              treble: t.effects.treble ?? 0,
+              compression: t.effects.compression ?? 30
+            } : {
+              volume: 80,
+              pan: 0,
+              reverb: 20,
+              bass: 0,
+              treble: 0,
+              compression: 30
+            }
           }));
           
           setTracks(loadedTracks);
@@ -373,134 +482,87 @@ export function StudioView() {
     }
   };
 
-  const deleteAccompanimentTrack = (trackId: string) => {
-    setAccompanimentTracks(prev => prev.filter(t => t.id !== trackId));
-    accompanimentEngine.stopAccompaniment();
-    setIsAccompanimentPlaying(false);
-  };
-
-  const generatePiano = async () => {
-    setIsGeneratingAccompaniment(true);
+  const handleImportAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/webm', 'audio/m4a', 'audio/aac'];
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|webm|m4a|aac)$/i)) {
+      alert('Please select a valid audio file (MP3, WAV, OGG, WebM, M4A, AAC)');
+      return;
+    }
+    
+    setIsImporting(true);
+    
     try {
-      const trackWithAudio = tracks.find(t => t.audioBlob);
-      if (trackWithAudio?.audioBlob) {
-        const arrayBuffer = await trackWithAudio.audioBlob.arrayBuffer();
-        const audioContext = new AudioContext();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        const key = await accompanimentEngine.detectKeyFromAudio(audioBuffer);
-        setDetectedKey(key);
-      }
-      const track = await accompanimentEngine.generatePianoAccompaniment();
-      setAccompanimentTracks(prev => [...prev.filter(t => t.type !== 'piano'), track]);
-    } catch (error) {
-      console.error('Failed to generate piano:', error);
-    } finally {
-      setIsGeneratingAccompaniment(false);
-    }
-  };
-
-  const generateGuitar = async () => {
-    setIsGeneratingAccompaniment(true);
-    try {
-      const trackWithAudio = tracks.find(t => t.audioBlob);
-      if (trackWithAudio?.audioBlob && !detectedKey) {
-        const arrayBuffer = await trackWithAudio.audioBlob.arrayBuffer();
-        const audioContext = new AudioContext();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        const key = await accompanimentEngine.detectKeyFromAudio(audioBuffer);
-        setDetectedKey(key);
-      }
-      const track = await accompanimentEngine.generateGuitarAccompaniment();
-      setAccompanimentTracks(prev => [...prev.filter(t => t.type !== 'guitar'), track]);
-    } catch (error) {
-      console.error('Failed to generate guitar:', error);
-    } finally {
-      setIsGeneratingAccompaniment(false);
-    }
-  };
-
-  const regenerateAccompaniment = async (type: 'piano' | 'guitar') => {
-    if (type === 'piano') await generatePiano();
-    else await generateGuitar();
-  };
-
-  const toggleAccompanimentPlayback = () => {
-    if (isAccompanimentPlaying) {
-      accompanimentEngine.stopAccompaniment();
-      setIsAccompanimentPlaying(false);
-    } else {
-      accompanimentEngine.startAccompaniment();
-      setIsAccompanimentPlaying(true);
-    }
-  };
-
-  // Sync accompaniment with main playback
-  useEffect(() => {
-    if (isPlaying) {
-      if (!isAccompanimentPlaying && accompanimentTracks.length > 0) {
-        accompanimentEngine.startAccompaniment();
-        setIsAccompanimentPlaying(true);
-      }
-    } else {
-      if (isAccompanimentPlaying) {
-        accompanimentEngine.stopAccompaniment();
-        setIsAccompanimentPlaying(false);
-      }
-    }
-  }, [isPlaying, isAccompanimentPlaying, accompanimentTracks.length]);
-
-  // Update accompaniment when tracks change
-  useEffect(() => {
-    if (accompanimentTracks.length > 0 && tracks.length > 0) {
-      // Ensure accompaniment is in sync with main playback
-      if (isPlaying && !isAccompanimentPlaying) {
-        accompanimentEngine.startAccompaniment();
-        setIsAccompanimentPlaying(true);
-      }
-    }
-  }, [accompanimentTracks.length, tracks.length, isPlaying, isAccompanimentPlaying]);
-
-  const addAccompanimentToProject = async (aTrack: AccompanimentTrack) => {
-    setIsAddingAccompanimentToProject(true);
-    try {
-      const offlineCtx = new OfflineAudioContext(2, 44100 * 8, 44100);
+      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+      const blobUrl = URL.createObjectURL(blob);
       
-      const oscillator = offlineCtx.createOscillator();
-      const gain = offlineCtx.createGain();
-      oscillator.type = aTrack.type === 'piano' ? 'triangle' : 'sawtooth';
-      oscillator.frequency.value = 261.63;
-      gain.gain.value = 0.3;
-      oscillator.connect(gain);
-      gain.connect(offlineCtx.destination);
-      oscillator.start();
-      oscillator.stop(8);
+      // Create audio element to get duration
+      const audio = new Audio(blobUrl);
       
-      const renderedBuffer = await offlineCtx.startRendering();
-      const blob = audioBufferToWav(renderedBuffer);
-      const audioUrl = URL.createObjectURL(blob);
+      await new Promise<void>((resolve, reject) => {
+        audio.onloadedmetadata = () => resolve();
+        audio.onerror = () => reject(new Error('Failed to load audio file'));
+        setTimeout(() => resolve(), 5000); // Timeout fallback
+      });
+      
+      const audioDuration = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
+      
+      // Generate waveform from audio
+      const waveform = generateSimpleWaveform(50);
+      
+      // Create new track with imported audio
+      const trackNumber = tracks.length + 1;
+      const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      const newTrackId = `track-${Date.now()}`;
       
       const newTrack: Track = {
-        id: `track-${Date.now()}`,
-        name: `${aTrack.type === 'piano' ? 'Piano' : 'Guitar'} (${aTrack.key} ${aTrack.mode})`,
+        id: newTrackId,
+        name: fileName || `Import ${trackNumber}`,
         icon: Mic,
-        volume: aTrack.volume,
+        volume: 80,
         muted: false,
         solo: false,
-        isActive: false,
+        isActive: true,
         isRecording: false,
-        waveformHeights: generateSimpleWaveform(50),
-        audioBlob: new Blob([blob], { type: blob.type }),
-        audioUrl: audioUrl
+        waveformHeights: waveform,
+        audioBlob: blob,
+        localStored: false
       };
       
-      setTracks(prev => [...prev, newTrack]);
-      setAccompanimentTracks(prev => prev.filter(t => t.id !== aTrack.id));
-      accompanimentEngine.stopAccompaniment();
-      setIsAccompanimentPlaying(false);
+      // Add track and set it as active
+      setTracks(prev => [...prev.map(t => ({ ...t, isActive: false })), newTrack]);
+      
+      // Store audio reference
+      audio.crossOrigin = 'anonymous';
+      trackAudioRefs.current.set(newTrackId, audio);
+      
+      // Update duration if this is longer than current
+      if (audioDuration > duration) {
+        setDuration(audioDuration);
+      }
+      
+      setHasFirstRecording(true);
+      
+      // Save locally
+      await saveRecordingLocally(newTrackId, blob);
+      
+      // Upload to cloud if project exists
+      if (currentProject) {
+        uploadRecordingToCloud(blob, newTrackId);
+      }
+      
     } catch (error) {
-      console.error('Failed to add accompaniment:', error);
+      console.error('Failed to import audio:', error);
+      alert('Failed to import audio file. Please try again.');
     } finally {
-      setIsAddingAccompanimentToProject(false);
+      setIsImporting(false);
+      // Reset input so same file can be selected again
+      if (importInputRef.current) {
+        importInputRef.current.value = '';
+      }
     }
   };
 
@@ -716,23 +778,14 @@ export function StudioView() {
 
   const saveRecordingLocally = async (trackId: string, blob: Blob) => {
     try {
-      const arrayBuffer = await blob.arrayBuffer();
+      // Use IndexedDB for better storage (supports large files, no 5MB limit)
+      const success = await saveRecordingToIndexedDB(trackId, blob, currentProject?.id);
       
-      const recordingData = {
-        data: arrayBuffer,
-        timestamp: Date.now(),
-        type: blob.type
-      };
-      
-      localStorage.setItem(`audiolab_recording_${trackId}`, JSON.stringify({
-        data: Array.from(new Uint8Array(arrayBuffer)),
-        timestamp: recordingData.timestamp,
-        type: recordingData.type
-      }));
-      
-      setTracks(prev => prev.map(t => 
-        t.id === trackId ? { ...t, localStored: true } : t
-      ));
+      if (success) {
+        setTracks(prev => prev.map(t => 
+          t.id === trackId ? { ...t, localStored: true } : t
+        ));
+      }
     } catch (error) {
       console.error('Failed to save recording locally:', error);
     }
@@ -740,29 +793,25 @@ export function StudioView() {
 
   const getRecordingFromLocal = async (trackId: string): Promise<Blob | null> => {
     try {
-      const stored = localStorage.getItem(`audiolab_recording_${trackId}`);
-      if (stored) {
-        const recordingData = JSON.parse(stored);
-        const blob = new Blob([new Uint8Array(recordingData.data)], { type: recordingData.type });
-        return blob;
-      }
-      return null;
+      return await getRecordingFromIndexedDB(trackId);
     } catch (error) {
       console.error('Failed to retrieve recording:', error);
       return null;
     }
   };
 
-  const removeRecordingFromLocal = (trackId: string) => {
+  const removeRecordingFromLocal = async (trackId: string) => {
     try {
-      localStorage.removeItem(`audiolab_recording_${trackId}`);
+      await deleteRecordingFromIndexedDB(trackId);
     } catch (error) {
       console.error('Failed to remove recording:', error);
     }
   };
 
-  const uploadRecordingToCloud = async (blob: Blob, trackId: string) => {
+  const uploadRecordingToCloud = async (blob: Blob, trackId: string, retryCount = 0) => {
     if (!currentProject) return;
+    
+    const MAX_RETRIES = 3;
     
     setIsUploading(true);
     setUploadProgress(0);
@@ -794,12 +843,58 @@ export function StudioView() {
         audio.load();
         
         removeRecordingFromLocal(trackId);
+        
+        // Clear from failed uploads if it was there
+        setFailedUploads(prev => {
+          const next = new Map(prev);
+          next.delete(trackId);
+          return next;
+        });
+      } else {
+        throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload failed:', error);
+      
+      // Retry logic
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying upload for track ${trackId}, attempt ${retryCount + 1}/${MAX_RETRIES}`);
+        
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, retryCount) * 1000;
+        
+        setTimeout(() => {
+          uploadRecordingToCloud(blob, trackId, retryCount + 1);
+        }, delay);
+      } else {
+        // Mark as failed after max retries
+        setFailedUploads(prev => {
+          const next = new Map(prev);
+          next.set(trackId, retryCount);
+          return next;
+        });
+        
+        // Keep the blob for manual retry
+        setTracks(prev => prev.map(t => 
+          t.id === trackId ? { ...t, localStored: true } : t
+        ));
+      }
     } finally {
       setIsUploading(false);
       setUploadProgress(100);
+    }
+  };
+
+  // Manual retry for failed uploads
+  const retryFailedUpload = async (trackId: string) => {
+    const track = tracks.find(t => t.id === trackId);
+    if (track?.audioBlob) {
+      setFailedUploads(prev => {
+        const next = new Map(prev);
+        next.delete(trackId);
+        return next;
+      });
+      await uploadRecordingToCloud(track.audioBlob, trackId, 0);
     }
   };
 
@@ -1058,7 +1153,7 @@ export function StudioView() {
       }
     }
     
-    if (anyPlaying || accompanimentTracks.length > 0) {
+    if (anyPlaying) {
       setIsPlaying(true);
       
       // Cancel any existing animation frame to prevent multiple loops
@@ -1067,8 +1162,6 @@ export function StudioView() {
       }
       
       const updateTime = () => {
-        if (!isPlaying) return;
-        
         // Calculate time based on all playing tracks
         let currentTimeValue = 0;
         let hasPlayingTracks = false;
@@ -1105,7 +1198,7 @@ export function StudioView() {
           return;
         }
         
-        if (hasPlayingTracks || accompanimentTracks.length > 0) {
+        if (hasPlayingTracks) {
           // Always update the time to ensure the UI updates
           setCurrentTime(currentTimeValue);
           playbackIntervalRef.current = requestAnimationFrame(updateTime);
@@ -1139,12 +1232,6 @@ export function StudioView() {
     }
     setIsPlaying(false);
     setCurrentTime(0);
-    
-    // Also stop accompaniment
-    if (isAccompanimentPlaying) {
-      accompanimentEngine.stopAccompaniment();
-      setIsAccompanimentPlaying(false);
-    }
   };
 
   const handleAddLayer = () => {
@@ -1210,7 +1297,16 @@ export function StudioView() {
         solo: t.solo,
         audioUrl: t.audioUrl,
         waveform: t.waveformHeights,
-        duration: duration
+        duration: duration,
+        // Save effects if they exist
+        effects: t.effects ? {
+          volume: t.effects.volume,
+          pan: t.effects.pan,
+          reverb: t.effects.reverb,
+          bass: t.effects.bass,
+          treble: t.effects.treble,
+          compression: t.effects.compression
+        } : undefined
       }));
       
       const result = await updateProject(currentProject.id, {
@@ -1442,16 +1538,6 @@ export function StudioView() {
           ) : null}
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          {hasRecordings && (
-            <button 
-              onClick={uploadAllRecordingsToCloud}
-              disabled={isUploading || !tracks.some(t => t.audioBlob && !t.audioUrl)}
-              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-400 transition-colors disabled:opacity-50 disabled:bg-slate-600 touch-manipulation"
-              title="Upload recordings to cloud"
-            >
-              {isUploading ? <Loader2 size={14} className="sm:w-[18px] sm:h-[18px] text-white animate-spin" /> : <Upload size={14} className="sm:w-[18px] sm:h-[18px] text-white" />}
-            </button>
-          )}
           <button 
             onClick={handleSave}
             disabled={isSaving}
@@ -1469,6 +1555,64 @@ export function StudioView() {
       </div>
 
       <main className="absolute top-[60px] sm:top-[72px] left-0 right-0 bottom-0 overflow-y-auto overflow-x-hidden pb-40 sm:pb-48" style={{ top: 'calc(60px + env(safe-area-inset-top, 0px))', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 40px)' }}>
+        {/* Recovery prompt for unsaved recordings */}
+        {showRecoveryPrompt && recoveredTracks.length > 0 && (
+          <div className="mx-3 sm:mx-4 mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <div className="flex items-start gap-3">
+              <div className="size-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                <AudioLines size={16} className="text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold text-amber-400">Unsaved Recordings Found</h4>
+                <p className="text-xs text-amber-400/70 mt-0.5">
+                  {recoveredTracks.length} recording{recoveredTracks.length > 1 ? 's' : ''} from a previous session
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={recoverUnsavedRecordings}
+                    className="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-xs font-semibold hover:bg-amber-400 transition-colors"
+                  >
+                    Recover
+                  </button>
+                  <button
+                    onClick={dismissRecovery}
+                    className="px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-600 transition-colors"
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Failed uploads indicator */}
+        {failedUploads.size > 0 && (
+          <div className="mx-3 sm:mx-4 mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+            <div className="flex items-start gap-3">
+              <div className="size-8 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0">
+                <Upload size={16} className="text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold text-red-400">Upload Failed</h4>
+                <p className="text-xs text-red-400/70 mt-0.5">
+                  {failedUploads.size} recording{failedUploads.size > 1 ? 's' : ''} failed to upload
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => {
+                      failedUploads.forEach((_, trackId) => retryFailedUpload(trackId));
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-400 transition-colors"
+                  >
+                    Retry All
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3">
@@ -1555,16 +1699,61 @@ export function StudioView() {
               <div className="px-3 sm:px-4 pt-3 sm:pt-4">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h3 className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Tracks</h3>
-                  {hasRecordings && (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    {/* Import Audio button - always visible */}
+                    <input
+                      ref={importInputRef}
+                      type="file"
+                      accept="audio/*,.mp3,.wav,.ogg,.webm,.m4a,.aac"
+                      onChange={handleImportAudio}
+                      className="hidden"
+                      id="import-audio-input"
+                    />
                     <button 
-                      onClick={addNewTrack}
-                      className="flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1 rounded-md text-[10px] sm:text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors min-h-[32px] sm:min-h-0 touch-manipulation"
+                      onClick={() => importInputRef.current?.click()}
+                      disabled={isImporting}
+                      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${
+                        isImporting 
+                          ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' 
+                          : 'bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 active:bg-violet-500/40'
+                      }`}
                     >
-                      <PlusCircle size={12} className="sm:w-[14px] sm:h-[14px]" />
-                      <span className="hidden xs:inline">Add Layer</span>
-                      <span className="xs:hidden">Add</span>
+                      {isImporting ? (
+                        <Loader2 size={12} className="sm:w-[14px] sm:h-[14px] animate-spin" />
+                      ) : (
+                        <Download size={12} className="sm:w-[14px] sm:h-[14px] rotate-180" />
+                      )}
+                      <span>{isImporting ? 'Importing' : 'Import'}</span>
                     </button>
-                  )}
+                    {/* Upload indicator - next to Add button */}
+                    {tracks.some(t => t.audioBlob && !t.audioUrl) && (
+                      <button 
+                        onClick={uploadAllRecordingsToCloud}
+                        disabled={isUploading}
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${
+                          isUploading 
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 active:bg-emerald-500/40'
+                        }`}
+                      >
+                        {isUploading ? (
+                          <Loader2 size={12} className="sm:w-[14px] sm:h-[14px] animate-spin" />
+                        ) : (
+                          <Upload size={12} className="sm:w-[14px] sm:h-[14px]" />
+                        )}
+                        <span>{isUploading ? 'Uploading' : 'Upload'}</span>
+                      </button>
+                    )}
+                    {hasRecordings && (
+                      <button 
+                        onClick={addNewTrack}
+                        className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors min-h-[32px] sm:min-h-0 touch-manipulation"
+                      >
+                        <PlusCircle size={12} className="sm:w-[14px] sm:h-[14px]" />
+                        <span>Add</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {hasRecordings && duration > 0 && (
@@ -1636,6 +1825,21 @@ export function StudioView() {
                                   {track.name}
                                   <Pencil size={9} className="sm:w-[10px] sm:h-[10px] opacity-0 group-hover:opacity-50 transition-opacity" />
                                 </button>
+                              )}
+                              {/* Storage status indicator */}
+                              {(track.audioBlob || track.audioUrl || track.localStored) && (
+                                <span 
+                                  className={`text-[8px] sm:text-[9px] px-1 py-0.5 rounded font-medium ${
+                                    track.audioUrl 
+                                      ? 'bg-emerald-500/20 text-emerald-400' 
+                                      : track.localStored || track.audioBlob
+                                        ? 'bg-amber-500/20 text-amber-400'
+                                        : ''
+                                  }`}
+                                  title={track.audioUrl ? 'Saved to cloud' : 'Saved locally'}
+                                >
+                                  {track.audioUrl ? '☁️' : '💾'}
+                                </span>
                               )}
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
@@ -1782,117 +1986,21 @@ export function StudioView() {
                             />
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
+          )}
+        </div>
+      )}
+    </main>
 
-            {hasRecordings && (
-              <div className="px-3 sm:px-4 pt-4 sm:pt-6 pb-3 sm:pb-4">
-                <div className="flex items-center justify-between mb-2 sm:mb-3">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <Sparkles size={12} className="sm:w-[14px] sm:h-[14px] text-slate-500" />
-                    <h3 className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Accompaniment</h3>
-                    {detectedKey && (
-                      <span className="text-[9px] sm:text-[10px] bg-[#1e1e24] text-slate-400 px-1.5 sm:px-2 py-0.5 rounded font-mono">
-                        {detectedKey.key} {detectedKey.mode}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <button
-                    onClick={generatePiano}
-                    disabled={isGeneratingAccompaniment}
-                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1e1e24] hover:bg-[#252530] text-white font-medium text-sm transition-colors disabled:opacity-50"
-                  >
-                    {isGeneratingAccompaniment ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Piano size={16} />
-                    )}
-                    Piano
-                  </button>
-                  <button
-                    onClick={generateGuitar}
-                    disabled={isGeneratingAccompaniment}
-                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1e1e24] hover:bg-[#252530] text-white font-medium text-sm transition-colors disabled:opacity-50"
-                  >
-                    {isGeneratingAccompaniment ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Guitar size={16} />
-                    )}
-                    Guitar
-                  </button>
-                </div>
-
-                {accompanimentTracks.length > 0 && (
-                  <div className="space-y-2">
-                    {accompanimentTracks.map((aTrack) => (
-                      <div 
-                        key={aTrack.id}
-                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-[#1e1e24]"
-                      >
-                        <div className="size-7 sm:size-9 rounded-lg flex items-center justify-center bg-slate-700 text-slate-300">
-                          {aTrack.type === 'piano' ? <Piano size={14} className="sm:w-[18px] sm:h-[18px]" /> : <Guitar size={14} className="sm:w-[18px] sm:h-[18px]" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs sm:text-sm font-medium text-white capitalize">{aTrack.type}</p>
-                          <p className="text-[10px] sm:text-xs text-slate-500 truncate">
-                            {aTrack.key} {aTrack.mode} • {aTrack.pattern}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-0.5 sm:gap-1">
-                          <button
-                            onClick={toggleAccompanimentPlayback}
-                            className={`size-5 sm:size-6 flex items-center justify-center rounded-lg transition-colors touch-manipulation ${
-                              isAccompanimentPlaying 
-                                ? 'bg-emerald-500 text-white' 
-                                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
-                            }`}
-                          >
-                            {isAccompanimentPlaying ? <Pause size={9} className="sm:w-[10px] sm:h-[10px]" /> : <Play size={9} className="sm:w-[10px] sm:h-[10px]" />}
-                          </button>
-                          <button
-                            onClick={() => addAccompanimentToProject(aTrack)}
-                            disabled={isAddingAccompanimentToProject}
-                            className="size-5 sm:size-6 flex items-center justify-center rounded-lg bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500 transition-colors disabled:opacity-50 touch-manipulation"
-                            title="Add"
-                          >
-                            {isAddingAccompanimentToProject ? <Loader2 size={7} className="sm:w-2 sm:h-2 animate-spin" /> : <Download size={9} className="sm:w-[10px] sm:h-[10px]" />}
-                          </button>
-                          <button
-                            onClick={() => regenerateAccompaniment(aTrack.type)}
-                            className="size-5 sm:size-6 flex items-center justify-center rounded-lg bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500 transition-colors touch-manipulation"
-                          >
-                            <RefreshCw size={9} className="sm:w-[10px] sm:h-[10px]" />
-                          </button>
-                          <button
-                            onClick={() => deleteAccompanimentTrack(aTrack.id)}
-                            className="size-5 sm:size-6 flex items-center justify-center rounded-lg bg-slate-700 text-slate-400 hover:text-red-400 hover:bg-slate-600 active:bg-slate-500 transition-colors touch-manipulation"
-                          >
-                            <Trash2 size={9} className="sm:w-[10px] sm:h-[10px]" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      <div className="absolute bottom-0 left-0 right-0 z-[110] bg-[#131318]/95 backdrop-blur-xl border-t border-white/5">
-        <div className="px-4 pt-4 pb-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}>
-          <div className="flex justify-between items-center mb-5">
-            <div className="flex items-baseline gap-1.5">
-              <span className={`text-3xl font-bold tabular-nums font-mono tracking-tight ${isRecording ? 'text-red-500' : 'text-white'}`}>
+    <div className="absolute bottom-0 left-0 right-0 z-[110] bg-[#131318]/95 backdrop-blur-xl border-t border-white/5">
+      <div className="px-4 pt-4 pb-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}>
+        <div className="flex justify-between items-center mb-5">
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold tabular-nums font-mono tracking-tight ${isRecording ? 'text-red-500' : 'text-white'}`}>
                 {formatTime(currentTime)}
               </span>
               {duration > 0 && !isRecording && (
@@ -1903,19 +2011,36 @@ export function StudioView() {
             </div>
             
             <div className="flex items-center gap-3">
-              <button
-                onClick={toggleMetronome}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
-                  metronomeEnabled 
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                    : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'
-                }`}
-              >
-                <Timer size={16} />
-                {metronomeEnabled && (
+              {/* Metronome with tempo control */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={toggleMetronome}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-l-xl transition-all ${
+                    metronomeEnabled 
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 border-r-0' 
+                      : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <Timer size={16} />
                   <span className="text-sm font-mono font-semibold">{metronomeTempo}</span>
+                </button>
+                {metronomeEnabled && (
+                  <div className="flex">
+                    <button
+                      onClick={() => updateMetronomeTempo(Math.max(40, metronomeTempo - 5))}
+                      className="px-2 py-2 bg-amber-500/10 text-amber-400 border-y border-amber-500/30 hover:bg-amber-500/20 transition-colors text-sm font-bold"
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={() => updateMetronomeTempo(Math.min(240, metronomeTempo + 5))}
+                      className="px-2 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 border-l-0 rounded-r-xl hover:bg-amber-500/20 transition-colors text-sm font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
                 )}
-              </button>
+              </div>
               
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${isRecording ? 'text-red-400' : 'text-slate-500'}`}>
@@ -2043,6 +2168,13 @@ export function StudioView() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         project={currentProject}
+        currentTracks={tracks.map(t => ({
+          id: t.id,
+          name: t.name,
+          audioUrl: t.audioUrl,
+          muted: t.muted,
+          effects: t.effects
+        }))}
         onProjectUpdated={(updated) => setCurrentProject(updated)}
         onProjectDeleted={() => {
           setCurrentProject(null);

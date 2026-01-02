@@ -159,12 +159,14 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
         {
             icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"],
             label: 'Activity Logs',
-            active: activeSection === 'Activity Logs'
+            active: activeSection === 'Activity Logs',
+            hqZoneOnly: true
         }
     ];
     // Filter items based on role
     const filterItems = (items)=>items.filter((item)=>{
             if (item.hqOnly && !isHQAdmin) return false;
+            if (item.hqZoneOnly && !isHQ) return false; // Hide for non-HQ zones
             if (item.zoneOnly && !isZoneCoordinator) return false;
             return true;
         });
@@ -189,7 +191,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     className: `w-5 h-5 flex-shrink-0 ${item.active ? 'text-white' : ''}`
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 106,
+                    lineNumber: 107,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -197,7 +199,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     children: item.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 107,
+                    lineNumber: 108,
                     columnNumber: 9
                 }, this),
                 item.badge && item.badge > 0 && !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -205,20 +207,20 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     children: item.badge
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 111,
+                    lineNumber: 112,
                     columnNumber: 11
                 }, this),
                 item.active && !item.badge && !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
                     className: `w-4 h-4 ml-auto ${item.active ? 'text-white/70' : 'text-slate-400'}`
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 116,
+                    lineNumber: 117,
                     columnNumber: 11
                 }, this)
             ]
         }, index, true, {
             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-            lineNumber: 90,
+            lineNumber: 91,
             columnNumber: 7
         }, this);
     };
@@ -229,7 +231,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                 onClick: ()=>setSidebarCollapsed(true)
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                lineNumber: 126,
+                lineNumber: 127,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -253,12 +255,12 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         className: "w-6 h-6 text-slate-600"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 148,
+                                        lineNumber: 149,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 144,
+                                    lineNumber: 145,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -273,12 +275,12 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                 className: "w-7 h-7 object-contain"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                lineNumber: 157,
+                                                lineNumber: 158,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                            lineNumber: 156,
+                                            lineNumber: 157,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -289,7 +291,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                     children: "Admin Panel"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                    lineNumber: 164,
+                                                    lineNumber: 165,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -297,37 +299,37 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                     children: currentZone?.name || 'Loveworld Singers'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                    lineNumber: 165,
+                                                    lineNumber: 166,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                            lineNumber: 163,
+                                            lineNumber: 164,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 152,
+                                    lineNumber: 153,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "w-10 lg:hidden"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 169,
+                                    lineNumber: 170,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                            lineNumber: 142,
+                            lineNumber: 143,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 141,
+                        lineNumber: 142,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -341,14 +343,14 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Overview"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 178,
+                                        lineNumber: 179,
                                         columnNumber: 15
                                     }, this),
                                     filteredMainItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 176,
+                                lineNumber: 177,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -359,21 +361,21 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Content"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 188,
+                                        lineNumber: 189,
                                         columnNumber: 15
                                     }, this),
                                     sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "hidden lg:block h-px bg-slate-200 my-3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 192,
+                                        lineNumber: 193,
                                         columnNumber: 34
                                     }, this),
                                     filteredContentItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 186,
+                                lineNumber: 187,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -384,27 +386,27 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Management"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 200,
                                         columnNumber: 15
                                     }, this),
                                     sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "hidden lg:block h-px bg-slate-200 my-3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 203,
+                                        lineNumber: 204,
                                         columnNumber: 34
                                     }, this),
                                     filteredManagementItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 197,
+                                lineNumber: 198,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 174,
+                        lineNumber: 175,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -418,14 +420,14 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 215,
+                                        lineNumber: 216,
                                         columnNumber: 13
                                     }, this),
                                     "Back to Home"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 211,
+                                lineNumber: 212,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -437,7 +439,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         className: `w-4 h-4 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 225,
+                                        lineNumber: 226,
                                         columnNumber: 13
                                     }, this),
                                     !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -445,25 +447,25 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Collapse"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 226,
+                                        lineNumber: 227,
                                         columnNumber: 35
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 220,
+                                lineNumber: 221,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 209,
+                        lineNumber: 210,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                lineNumber: 133,
+                lineNumber: 134,
                 columnNumber: 7
             }, this)
         ]
@@ -1558,7 +1560,14 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$simple$2d$noti
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useAuth.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$AdminThemeProvider$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/admin/AdminThemeProvider.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$firestore$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/firebase/firestore/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/firebase/node_modules/@firebase/firestore/dist/index.node.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/firebase-setup.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-ssr] (ecmascript)");
 "use client";
+;
+;
+;
 ;
 ;
 ;
@@ -1583,6 +1592,35 @@ function SimpleNotificationsSection() {
         }
     }, [
         currentZone
+    ]);
+    // Set up real-time listener for messages
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!currentZone?.id) return;
+        const isHQ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(currentZone.id);
+        const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages';
+        const messagesRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], collectionName);
+        const q = isHQ ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["query"])(messagesRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc')) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["query"])(messagesRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["where"])('zoneId', '==', currentZone.id), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc'));
+        const unsubscribe = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["onSnapshot"])(q, (snapshot)=>{
+            if (!snapshot.metadata.hasPendingWrites) {
+                const msgs = snapshot.docs.map((docSnap)=>{
+                    const data = docSnap.data();
+                    return {
+                        ...data,
+                        id: docSnap.id,
+                        sentAt: data.sentAt || new Date().toISOString(),
+                        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+                    };
+                });
+                setMessages(msgs);
+                setLoading(false);
+            }
+        }, (error)=>{
+            console.log('[AdminNotifications] Real-time listener error:', error);
+            loadMessages(); // Fallback to manual load
+        });
+        return ()=>unsubscribe();
+    }, [
+        currentZone?.id
     ]);
     const loadMessages = async ()=>{
         setLoading(true);
@@ -1647,7 +1685,7 @@ function SimpleNotificationsSection() {
                                 children: "Messages to Users"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                lineNumber: 98,
+                                lineNumber: 135,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1655,13 +1693,13 @@ function SimpleNotificationsSection() {
                                 children: "Send messages that all users will see in their notifications"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                lineNumber: 99,
+                                lineNumber: 136,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                        lineNumber: 97,
+                        lineNumber: 134,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1672,20 +1710,20 @@ function SimpleNotificationsSection() {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                lineNumber: 107,
+                                lineNumber: 144,
                                 columnNumber: 11
                             }, this),
                             "Send Message"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                        lineNumber: 103,
+                        lineNumber: 140,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                lineNumber: 96,
+                lineNumber: 133,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1713,63 +1751,63 @@ function SimpleNotificationsSection() {
                                                         className: "w-4 h-4 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 121,
+                                                        lineNumber: 158,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "h-5 w-48 bg-gray-200 rounded animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 122,
+                                                        lineNumber: 159,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 120,
+                                                lineNumber: 157,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "h-4 w-full bg-gray-200 rounded animate-pulse mb-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 124,
+                                                lineNumber: 161,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "h-3 w-64 bg-gray-200 rounded animate-pulse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 125,
+                                                lineNumber: 162,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 119,
+                                        lineNumber: 156,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "w-8 h-8 bg-gray-200 rounded-lg animate-pulse"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 127,
+                                        lineNumber: 164,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                lineNumber: 118,
+                                lineNumber: 155,
                                 columnNumber: 17
                             }, this)
                         }, i, false, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 117,
+                            lineNumber: 154,
                             columnNumber: 15
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                    lineNumber: 115,
+                    lineNumber: 152,
                     columnNumber: 11
                 }, this) : messages.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "p-12 text-center",
@@ -1778,7 +1816,7 @@ function SimpleNotificationsSection() {
                             className: "w-12 h-12 text-slate-300 mx-auto mb-3"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 134,
+                            lineNumber: 171,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -1786,7 +1824,7 @@ function SimpleNotificationsSection() {
                             children: "No messages yet"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 135,
+                            lineNumber: 172,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1794,13 +1832,13 @@ function SimpleNotificationsSection() {
                             children: "Send your first message to all users!"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 136,
+                            lineNumber: 173,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                    lineNumber: 133,
+                    lineNumber: 170,
                     columnNumber: 11
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "divide-y divide-slate-200",
@@ -1819,7 +1857,7 @@ function SimpleNotificationsSection() {
                                                         className: `w-4 h-4 ${theme.text} flex-shrink-0`
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 147,
+                                                        lineNumber: 184,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -1827,13 +1865,13 @@ function SimpleNotificationsSection() {
                                                         children: msg.title
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 148,
+                                                        lineNumber: 185,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 146,
+                                                lineNumber: 183,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1841,7 +1879,7 @@ function SimpleNotificationsSection() {
                                                 children: msg.message
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 150,
+                                                lineNumber: 187,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1855,7 +1893,7 @@ function SimpleNotificationsSection() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 152,
+                                                        lineNumber: 189,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1863,7 +1901,7 @@ function SimpleNotificationsSection() {
                                                         children: "•"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 153,
+                                                        lineNumber: 190,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1871,19 +1909,19 @@ function SimpleNotificationsSection() {
                                                         children: formatDate(msg.sentAt)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 154,
+                                                        lineNumber: 191,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 151,
+                                                lineNumber: 188,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 145,
+                                        lineNumber: 182,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1894,33 +1932,33 @@ function SimpleNotificationsSection() {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 162,
+                                            lineNumber: 199,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 157,
+                                        lineNumber: 194,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                lineNumber: 144,
+                                lineNumber: 181,
                                 columnNumber: 17
                             }, this)
                         }, msg.id, false, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 143,
+                            lineNumber: 180,
                             columnNumber: 15
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                    lineNumber: 141,
+                    lineNumber: 178,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                lineNumber: 113,
+                lineNumber: 150,
                 columnNumber: 7
             }, this),
             showModal && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1936,7 +1974,7 @@ function SimpleNotificationsSection() {
                                     children: "Send Message to All Users"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 176,
+                                    lineNumber: 213,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1946,18 +1984,18 @@ function SimpleNotificationsSection() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 181,
+                                        lineNumber: 218,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 177,
+                                    lineNumber: 214,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 175,
+                            lineNumber: 212,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1970,7 +2008,7 @@ function SimpleNotificationsSection() {
                                             children: "Title"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 187,
+                                            lineNumber: 224,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1982,13 +2020,24 @@ function SimpleNotificationsSection() {
                                             maxLength: 100
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 190,
+                                            lineNumber: 227,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                            className: "text-xs text-slate-500 mt-1",
+                                            children: [
+                                                title.length,
+                                                "/100 characters"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
+                                            lineNumber: 235,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 186,
+                                    lineNumber: 223,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1998,7 +2047,7 @@ function SimpleNotificationsSection() {
                                             children: "Message"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 201,
+                                            lineNumber: 241,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -2010,7 +2059,7 @@ function SimpleNotificationsSection() {
                                             maxLength: 500
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 204,
+                                            lineNumber: 244,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2021,13 +2070,13 @@ function SimpleNotificationsSection() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 212,
+                                            lineNumber: 252,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 200,
+                                    lineNumber: 240,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2039,19 +2088,19 @@ function SimpleNotificationsSection() {
                                                 children: "Note:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                lineNumber: 219,
+                                                lineNumber: 259,
                                                 columnNumber: 19
                                             }, this),
                                             " This message will be sent to all users and will appear in their notifications page."
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                        lineNumber: 218,
+                                        lineNumber: 258,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 217,
+                                    lineNumber: 257,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2067,7 +2116,7 @@ function SimpleNotificationsSection() {
                                                         className: "animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 231,
+                                                        lineNumber: 271,
                                                         columnNumber: 23
                                                     }, this),
                                                     "Sending..."
@@ -2078,7 +2127,7 @@ function SimpleNotificationsSection() {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                                        lineNumber: 236,
+                                                        lineNumber: 276,
                                                         columnNumber: 23
                                                     }, this),
                                                     "Send to All Users"
@@ -2086,7 +2135,7 @@ function SimpleNotificationsSection() {
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 224,
+                                            lineNumber: 264,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2096,36 +2145,36 @@ function SimpleNotificationsSection() {
                                             children: "Cancel"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                            lineNumber: 241,
+                                            lineNumber: 281,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                                    lineNumber: 223,
+                                    lineNumber: 263,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                            lineNumber: 185,
+                            lineNumber: 222,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                    lineNumber: 174,
+                    lineNumber: 211,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-                lineNumber: 173,
+                lineNumber: 210,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/admin/SimpleNotificationsSection.tsx",
-        lineNumber: 94,
+        lineNumber: 131,
         columnNumber: 5
     }, this);
 }
@@ -5801,6 +5850,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-up.js [app-ssr] (ecmascript) <export default as ChevronUp>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$book$2d$open$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BookOpen$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/book-open.js [app-ssr] (ecmascript) <export default as BookOpen>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-ssr] (ecmascript)");
@@ -5835,6 +5885,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
     const isHQ = currentZone ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(currentZone.id) : true;
     const isCurrentSong = currentSong?.id === song.id;
     const [showLyrics, setShowLyrics] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
+    const [isNavigating, setIsNavigating] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     // Only use Full Mix audio in the detail sheet - other parts are for AudioLab
     const fullMixUrl = song.audioUrls?.full || song.audioFile;
     const handlePlayPause = ()=>{
@@ -5862,22 +5913,24 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
     const goToAudioLab = ()=>{
-        router.push(`/pages/audiolab?song=${song.id}&source=master`);
+        setIsNavigating(true);
+        // Navigate to AudioLab library with song ID to auto-expand
+        router.push(`/pages/audiolab?song=${song.id}`);
         onClose();
     };
     if (!isOpen) return null;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "fixed inset-0 bg-black/60 z-[200] animate-in fade-in duration-200",
+                className: "fixed inset-0 bg-black/60 z-[200] animate-fadeIn",
                 onClick: onClose
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                lineNumber: 107,
+                lineNumber: 110,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "fixed inset-0 sm:inset-auto sm:bottom-0 sm:left-0 sm:right-0 z-[200] bg-white sm:rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 sm:max-h-[90vh] flex flex-col safe-area-inset-bottom",
+                className: "fixed inset-0 sm:inset-auto sm:bottom-0 sm:left-0 sm:right-0 z-[200] bg-white sm:rounded-t-3xl shadow-2xl animate-slide-up sm:max-h-[90vh] flex flex-col safe-area-inset-bottom",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "hidden sm:flex justify-center pt-3 pb-2 shrink-0",
@@ -5885,12 +5938,12 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                             className: "w-10 h-1 bg-gray-300 rounded-full"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                            lineNumber: 116,
+                            lineNumber: 119,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                        lineNumber: 115,
+                        lineNumber: 118,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5904,12 +5957,12 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                     className: "sm:w-4 sm:h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                    lineNumber: 126,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                lineNumber: 122,
+                                lineNumber: 125,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5924,14 +5977,14 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                        lineNumber: 131,
+                                        lineNumber: 134,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "absolute inset-0 bg-white/70 backdrop-blur-sm"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                        lineNumber: 139,
+                                        lineNumber: 142,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5946,12 +5999,12 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                             className: "w-6 h-6 sm:w-5 sm:h-5 text-white"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                            lineNumber: 144,
+                                                            lineNumber: 147,
                                                             columnNumber: 19
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 143,
+                                                        lineNumber: 146,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5962,7 +6015,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: song.title
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 147,
+                                                                lineNumber: 150,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5970,19 +6023,19 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: song.writer || 'Unknown writer'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 150,
+                                                                lineNumber: 153,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 146,
+                                                        lineNumber: 149,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 142,
+                                                lineNumber: 145,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5996,7 +6049,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: "Lead Singer"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 160,
+                                                                lineNumber: 163,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6004,13 +6057,13 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: song.leadSinger
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 163,
+                                                                lineNumber: 166,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 159,
+                                                        lineNumber: 162,
                                                         columnNumber: 19
                                                     }, this),
                                                     song.writer && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6021,7 +6074,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: "Writer"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 170,
+                                                                lineNumber: 173,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6029,13 +6082,13 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: song.writer
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 173,
+                                                                lineNumber: 176,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 169,
+                                                        lineNumber: 172,
                                                         columnNumber: 19
                                                     }, this),
                                                     song.category && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6046,7 +6099,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: "Category"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 180,
+                                                                lineNumber: 183,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6054,13 +6107,13 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: song.category
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 183,
+                                                                lineNumber: 186,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 179,
+                                                        lineNumber: 182,
                                                         columnNumber: 19
                                                     }, this),
                                                     (song.key || song.tempo) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6071,7 +6124,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                 children: "Key / Tempo"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 190,
+                                                                lineNumber: 193,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6085,14 +6138,14 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                                 className: "sm:w-3 sm:h-3 text-violet-500"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                                lineNumber: 196,
+                                                                                lineNumber: 199,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             song.key
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                        lineNumber: 195,
+                                                                        lineNumber: 198,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     song.tempo && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6103,50 +6156,50 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                                                 className: "sm:w-3 sm:h-3 text-violet-500"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                                lineNumber: 202,
+                                                                                lineNumber: 205,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             song.tempo
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                        lineNumber: 201,
+                                                                        lineNumber: 204,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                                lineNumber: 193,
+                                                                lineNumber: 196,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 189,
+                                                        lineNumber: 192,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 157,
+                                                lineNumber: 160,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                        lineNumber: 141,
+                                        lineNumber: 144,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                lineNumber: 129,
+                                lineNumber: 132,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                        lineNumber: 120,
+                        lineNumber: 123,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6165,19 +6218,19 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                 className: "sm:w-[18px] sm:h-[18px]"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 224,
+                                                lineNumber: 227,
                                                 columnNumber: 49
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
                                                 size: 20,
                                                 className: "sm:w-[18px] sm:h-[18px] ml-0.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 224,
+                                                lineNumber: 227,
                                                 columnNumber: 107
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                            lineNumber: 220,
+                                            lineNumber: 223,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6185,7 +6238,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                             children: formatTime(isCurrentSong ? currentTime : 0)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                            lineNumber: 226,
+                                            lineNumber: 229,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6200,12 +6253,12 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 231,
+                                                        lineNumber: 234,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                    lineNumber: 230,
+                                                    lineNumber: 233,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6218,13 +6271,13 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                     className: "absolute inset-0 w-full opacity-0 cursor-pointer"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                    lineNumber: 236,
+                                                    lineNumber: 239,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                            lineNumber: 229,
+                                            lineNumber: 232,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6232,18 +6285,18 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                             children: formatTime(isCurrentSong ? duration : 0)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                            lineNumber: 246,
+                                            lineNumber: 249,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                    lineNumber: 219,
+                                    lineNumber: 222,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                lineNumber: 218,
+                                lineNumber: 221,
                                 columnNumber: 13
                             }, this),
                             song.lyrics && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6261,7 +6314,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                         className: "sm:w-[18px] sm:h-[18px] text-purple-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 261,
+                                                        lineNumber: 264,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6269,13 +6322,13 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                         children: "Lyrics"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                        lineNumber: 262,
+                                                        lineNumber: 265,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 260,
+                                                lineNumber: 263,
                                                 columnNumber: 17
                                             }, this),
                                             showLyrics ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
@@ -6283,20 +6336,20 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                 className: "sm:w-[18px] sm:h-[18px] text-slate-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 265,
+                                                lineNumber: 268,
                                                 columnNumber: 19
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                 size: 20,
                                                 className: "sm:w-[18px] sm:h-[18px] text-slate-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 267,
+                                                lineNumber: 270,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                        lineNumber: 256,
+                                        lineNumber: 259,
                                         columnNumber: 15
                                     }, this),
                                     showLyrics && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6326,7 +6379,7 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                   `
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 272,
+                                                lineNumber: 275,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("pre", {
@@ -6336,57 +6389,72 @@ function MasterSongDetailSheet({ song, isOpen, onClose }) {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                                lineNumber: 293,
+                                                lineNumber: 296,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                        lineNumber: 271,
+                                        lineNumber: 274,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                lineNumber: 255,
+                                lineNumber: 258,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                        lineNumber: 215,
+                        lineNumber: 218,
                         columnNumber: 9
                     }, this),
                     !isHQ && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "shrink-0 p-4 border-t border-slate-200 bg-white sm:rounded-b-3xl safe-area-inset-bottom",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                             onClick: goToAudioLab,
-                            className: "w-full py-4 sm:py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm text-base sm:text-sm",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$mic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Mic$3e$__["Mic"], {
-                                    size: 22,
-                                    className: "sm:w-5 sm:h-5"
-                                }, void 0, false, {
-                                    fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                                    lineNumber: 310,
-                                    columnNumber: 15
-                                }, this),
-                                "Practice in AudioLab"
-                            ]
-                        }, void 0, true, {
+                            disabled: isNavigating,
+                            className: "w-full py-4 sm:py-3.5 bg-slate-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm text-base sm:text-sm disabled:opacity-70 disabled:cursor-not-allowed",
+                            children: isNavigating ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                        size: 22,
+                                        className: "sm:w-5 sm:h-5 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
+                                        lineNumber: 316,
+                                        columnNumber: 19
+                                    }, this),
+                                    "Opening AudioLab..."
+                                ]
+                            }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$mic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Mic$3e$__["Mic"], {
+                                        size: 22,
+                                        className: "sm:w-5 sm:h-5"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
+                                        lineNumber: 321,
+                                        columnNumber: 19
+                                    }, this),
+                                    "Practice in AudioLab"
+                                ]
+                            }, void 0, true)
+                        }, void 0, false, {
                             fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                            lineNumber: 306,
+                            lineNumber: 309,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                        lineNumber: 305,
+                        lineNumber: 308,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/MasterSongDetailSheet.tsx",
-                lineNumber: 113,
+                lineNumber: 116,
                 columnNumber: 7
             }, this)
         ]
@@ -10849,6 +10917,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/trash-2.js [app-ssr] (ecmascript) <export default as Trash2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/plus.js [app-ssr] (ecmascript) <export default as Plus>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$upload$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Upload$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/upload.js [app-ssr] (ecmascript) <export default as Upload>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-ssr] (ecmascript) <export default as RefreshCw>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$format$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/date-fns/format.js [app-ssr] (ecmascript) <locals>");
@@ -10867,21 +10936,36 @@ function ActivityLogsPage() {
     const [searchTerm, setSearchTerm] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const [actionFilter, setActionFilter] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const [sectionFilter, setSectionFilter] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
-    const { currentZone } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useZone"])();
+    const { currentZone, isLoading: zoneLoading } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useZone"])();
     const isHQ = currentZone ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["isHQGroup"])(currentZone.id) : false;
+    // Wait for zone to load before fetching logs
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        loadActivityLogs();
-    }, []);
+        if (!zoneLoading && currentZone?.id) {
+            loadActivityLogs();
+        }
+    }, [
+        currentZone?.id,
+        zoneLoading
+    ]);
     const loadActivityLogs = async ()=>{
+        if (!currentZone?.id) return;
         try {
             setLoading(true);
-            let q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["query"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'activity_logs'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["orderBy"])('timestamp', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["limit"])(500));
-            // If not HQ, only load current zone's logs
-            if (!isHQ && currentZone) {
+            // Get all HQ zone IDs for filtering
+            const hqZoneIds = [
+                ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["HQ_GROUP_IDS"],
+                __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BOSS_ZONE_ID"]
+            ];
+            let q;
+            if (isHQ) {
+                // HQ zones: only see logs from HQ zones (not from regular zones like Zone A, Zone B)
+                q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["query"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'activity_logs'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["orderBy"])('timestamp', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["limit"])(500));
+            } else {
+                // Regular zones: only see their own zone's logs
                 q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["query"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'activity_logs'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["where"])('zoneId', '==', currentZone.id), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["orderBy"])('timestamp', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["limit"])(500));
             }
             const querySnapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getDocs"])(q);
-            const logsData = querySnapshot.docs.map((doc)=>{
+            let logsData = querySnapshot.docs.map((doc)=>{
                 const data = doc.data();
                 return {
                     id: doc.id,
@@ -10889,6 +10973,10 @@ function ActivityLogsPage() {
                     timestamp: data.timestamp?.toDate() || new Date()
                 };
             });
+            // For HQ zones, filter to only show HQ zone logs (not regular zone logs)
+            if (isHQ) {
+                logsData = logsData.filter((log)=>hqZoneIds.includes(log.zoneId));
+            }
             setLogs(logsData);
         } catch (error) {
             console.error('Error loading activity logs:', error);
@@ -10909,7 +10997,7 @@ function ActivityLogsPage() {
                     className: "w-4 h-4 text-blue-600"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 89,
+                    lineNumber: 105,
                     columnNumber: 30
                 }, this);
             case 'created':
@@ -10917,7 +11005,7 @@ function ActivityLogsPage() {
                     className: "w-4 h-4 text-green-600"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 90,
+                    lineNumber: 106,
                     columnNumber: 30
                 }, this);
             case 'deleted':
@@ -10925,7 +11013,7 @@ function ActivityLogsPage() {
                     className: "w-4 h-4 text-red-600"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 91,
+                    lineNumber: 107,
                     columnNumber: 30
                 }, this);
             case 'uploaded':
@@ -10933,7 +11021,7 @@ function ActivityLogsPage() {
                     className: "w-4 h-4 text-purple-600"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 92,
+                    lineNumber: 108,
                     columnNumber: 31
                 }, this);
             default:
@@ -10941,7 +11029,7 @@ function ActivityLogsPage() {
                     className: "w-4 h-4 text-gray-600"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 93,
+                    lineNumber: 109,
                     columnNumber: 23
                 }, this);
         }
@@ -10994,7 +11082,7 @@ function ActivityLogsPage() {
         a.download = `activity-logs-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
     };
-    if (loading) {
+    if (loading || zoneLoading) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "p-6 max-w-7xl mx-auto",
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11004,7 +11092,7 @@ function ActivityLogsPage() {
                         className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 134,
+                        lineNumber: 150,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -11012,18 +11100,18 @@ function ActivityLogsPage() {
                         children: "Loading activity logs..."
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 135,
+                        lineNumber: 151,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                lineNumber: 133,
+                lineNumber: 149,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-            lineNumber: 132,
+            lineNumber: 148,
             columnNumber: 7
         }, this);
     }
@@ -11044,65 +11132,99 @@ function ActivityLogsPage() {
                                         children: "Activity Logs"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 148,
+                                        lineNumber: 164,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-gray-600 mt-1",
-                                        children: isHQ ? 'View all activity across all zones' : 'View activity for your zone'
+                                        children: isHQ ? 'View all HQ activity' : `View activity for ${currentZone?.name || 'your zone'}`
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 149,
+                                        lineNumber: 165,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 147,
+                                lineNumber: 163,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                onClick: exportLogs,
-                                className: "px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center gap-2 shadow-lg",
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex gap-2",
                                 children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Download$3e$__["Download"], {
-                                        className: "w-4 h-4"
-                                    }, void 0, false, {
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: loadActivityLogs,
+                                        className: "px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center gap-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__["RefreshCw"], {
+                                                className: "w-4 h-4"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
+                                                lineNumber: 174,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "hidden sm:inline",
+                                                children: "Refresh"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
+                                                lineNumber: 175,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 157,
+                                        lineNumber: 170,
                                         columnNumber: 15
                                     }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "hidden sm:inline",
-                                        children: "Export Logs"
-                                    }, void 0, false, {
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: exportLogs,
+                                        className: "px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center gap-2 shadow-lg",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Download$3e$__["Download"], {
+                                                className: "w-4 h-4"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
+                                                lineNumber: 181,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "hidden sm:inline",
+                                                children: "Export Logs"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
+                                                lineNumber: 182,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "sm:hidden",
+                                                children: "Export"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
+                                                lineNumber: 183,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 158,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "sm:hidden",
-                                        children: "Export"
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 159,
+                                        lineNumber: 177,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 153,
+                                lineNumber: 169,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 146,
+                        lineNumber: 162,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 145,
+                    lineNumber: 161,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11117,7 +11239,7 @@ function ActivityLogsPage() {
                                         className: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 168,
+                                        lineNumber: 193,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -11128,13 +11250,13 @@ function ActivityLogsPage() {
                                         className: "w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 169,
+                                        lineNumber: 194,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 167,
+                                lineNumber: 192,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11147,7 +11269,7 @@ function ActivityLogsPage() {
                                         children: "All Actions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 183,
+                                        lineNumber: 208,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11155,7 +11277,7 @@ function ActivityLogsPage() {
                                         children: "Created"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 184,
+                                        lineNumber: 209,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11163,7 +11285,7 @@ function ActivityLogsPage() {
                                         children: "Updated"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 185,
+                                        lineNumber: 210,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11171,13 +11293,13 @@ function ActivityLogsPage() {
                                         children: "Deleted"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 186,
+                                        lineNumber: 211,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 178,
+                                lineNumber: 203,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11190,7 +11312,7 @@ function ActivityLogsPage() {
                                         children: "All Sections"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 194,
+                                        lineNumber: 219,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11198,7 +11320,7 @@ function ActivityLogsPage() {
                                         children: "Songs"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 195,
+                                        lineNumber: 220,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11206,7 +11328,7 @@ function ActivityLogsPage() {
                                         children: "Pages"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 196,
+                                        lineNumber: 221,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11214,7 +11336,7 @@ function ActivityLogsPage() {
                                         children: "Categories"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 197,
+                                        lineNumber: 222,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11222,7 +11344,7 @@ function ActivityLogsPage() {
                                         children: "Subgroups"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 198,
+                                        lineNumber: 223,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11230,7 +11352,7 @@ function ActivityLogsPage() {
                                         children: "Master Library"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 224,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11238,24 +11360,24 @@ function ActivityLogsPage() {
                                         children: "Media"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 200,
+                                        lineNumber: 225,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 189,
+                                lineNumber: 214,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 166,
+                        lineNumber: 191,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 165,
+                    lineNumber: 190,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11267,7 +11389,7 @@ function ActivityLogsPage() {
                                 className: "w-16 h-16 text-gray-300 mx-auto mb-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 209,
+                                lineNumber: 234,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -11275,7 +11397,7 @@ function ActivityLogsPage() {
                                 children: "No activity logs found"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 210,
+                                lineNumber: 235,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -11283,13 +11405,13 @@ function ActivityLogsPage() {
                                 children: "Try adjusting your filters or check back later"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 211,
+                                lineNumber: 236,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 208,
+                        lineNumber: 233,
                         columnNumber: 13
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "max-h-96 lg:max-h-[500px] overflow-y-auto",
@@ -11306,7 +11428,7 @@ function ActivityLogsPage() {
                                                     children: "Timestamp"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 219,
+                                                    lineNumber: 244,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11314,7 +11436,7 @@ function ActivityLogsPage() {
                                                     children: "Zone"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 220,
+                                                    lineNumber: 245,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11322,7 +11444,7 @@ function ActivityLogsPage() {
                                                     children: "User"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 221,
+                                                    lineNumber: 246,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11330,7 +11452,7 @@ function ActivityLogsPage() {
                                                     children: "Message"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 222,
+                                                    lineNumber: 247,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11338,7 +11460,7 @@ function ActivityLogsPage() {
                                                     children: "Action"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 223,
+                                                    lineNumber: 248,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11346,7 +11468,7 @@ function ActivityLogsPage() {
                                                     children: "Section"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 224,
+                                                    lineNumber: 249,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -11354,18 +11476,18 @@ function ActivityLogsPage() {
                                                     children: "Details"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                    lineNumber: 225,
+                                                    lineNumber: 250,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                            lineNumber: 218,
+                                            lineNumber: 243,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 217,
+                                        lineNumber: 242,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -11378,7 +11500,7 @@ function ActivityLogsPage() {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$format$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["format"])(new Date(log.timestamp), 'MMM d, yyyy h:mm a')
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 231,
+                                                        lineNumber: 256,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11386,7 +11508,7 @@ function ActivityLogsPage() {
                                                         children: log.zoneName || 'Unknown'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 234,
+                                                        lineNumber: 259,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11394,7 +11516,7 @@ function ActivityLogsPage() {
                                                         children: log.userName || 'Unknown'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 237,
+                                                        lineNumber: 262,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11402,7 +11524,7 @@ function ActivityLogsPage() {
                                                         children: log.message
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 240,
+                                                        lineNumber: 265,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11412,12 +11534,12 @@ function ActivityLogsPage() {
                                                             children: log.action?.toUpperCase() || 'UNKNOWN'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                            lineNumber: 244,
+                                                            lineNumber: 269,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 268,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11425,7 +11547,7 @@ function ActivityLogsPage() {
                                                         children: log.section || '-'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 248,
+                                                        lineNumber: 273,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -11433,24 +11555,24 @@ function ActivityLogsPage() {
                                                         children: log.itemName || '-'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 251,
+                                                        lineNumber: 276,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, log.id, true, {
                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                lineNumber: 230,
+                                                lineNumber: 255,
                                                 columnNumber: 21
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 228,
+                                        lineNumber: 253,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 216,
+                                lineNumber: 241,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11469,7 +11591,7 @@ function ActivityLogsPage() {
                                                                 children: log.message
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 265,
+                                                                lineNumber: 290,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -11477,13 +11599,13 @@ function ActivityLogsPage() {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$format$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["format"])(new Date(log.timestamp), 'MMM d, h:mm a')
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 266,
+                                                                lineNumber: 291,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 264,
+                                                        lineNumber: 289,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11491,13 +11613,13 @@ function ActivityLogsPage() {
                                                         children: log.action?.toUpperCase() || 'UNKNOWN'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 270,
+                                                        lineNumber: 295,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                lineNumber: 263,
+                                                lineNumber: 288,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11510,7 +11632,7 @@ function ActivityLogsPage() {
                                                                 children: "User:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 276,
+                                                                lineNumber: 301,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11518,13 +11640,13 @@ function ActivityLogsPage() {
                                                                 children: log.userName || 'Unknown'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 277,
+                                                                lineNumber: 302,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 275,
+                                                        lineNumber: 300,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11534,7 +11656,7 @@ function ActivityLogsPage() {
                                                                 children: "Zone:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 280,
+                                                                lineNumber: 305,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11542,13 +11664,13 @@ function ActivityLogsPage() {
                                                                 children: log.zoneName || 'Unknown'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 281,
+                                                                lineNumber: 306,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 279,
+                                                        lineNumber: 304,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11558,7 +11680,7 @@ function ActivityLogsPage() {
                                                                 children: "Section:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 284,
+                                                                lineNumber: 309,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11566,13 +11688,13 @@ function ActivityLogsPage() {
                                                                 children: log.section || '-'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 285,
+                                                                lineNumber: 310,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 283,
+                                                        lineNumber: 308,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11582,7 +11704,7 @@ function ActivityLogsPage() {
                                                                 children: "Details:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 288,
+                                                                lineNumber: 313,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11590,52 +11712,52 @@ function ActivityLogsPage() {
                                                                 children: log.itemName || '-'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                                lineNumber: 289,
+                                                                lineNumber: 314,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                        lineNumber: 287,
+                                                        lineNumber: 312,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                                lineNumber: 274,
+                                                lineNumber: 299,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, log.id, true, {
                                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                        lineNumber: 262,
+                                        lineNumber: 287,
                                         columnNumber: 19
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                                lineNumber: 260,
+                                lineNumber: 285,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                        lineNumber: 214,
+                        lineNumber: 239,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-                    lineNumber: 206,
+                    lineNumber: 231,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-            lineNumber: 143,
+            lineNumber: 159,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/admin/ActivityLogsPage.tsx",
-        lineNumber: 142,
+        lineNumber: 158,
         columnNumber: 5
     }, this);
 }

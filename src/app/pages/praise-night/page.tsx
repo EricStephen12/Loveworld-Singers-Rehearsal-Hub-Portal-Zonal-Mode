@@ -1947,7 +1947,7 @@ function PraiseNightPageContent() {
           />
 
           {/* Drawer */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 transform transition-transform duration-300 animate-in slide-in-from-bottom modal-bottom-safe">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 transform transition-transform duration-300 animate-slide-up modal-bottom-safe">
             <div className="px-6 py-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">

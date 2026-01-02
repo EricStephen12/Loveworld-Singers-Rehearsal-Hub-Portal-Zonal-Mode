@@ -800,16 +800,12 @@ const realtimeDb = (()=>{
     if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
     ;
     else {
-        // Create a mock object for server-side to prevent build failures
-        return {
-            _delegate: {},
-            useEmulator: ()=>{},
-            ref: ()=>({})
-        };
+        // Return null on server-side to prevent build failures
+        return null;
     }
 })();
 function isRealtimeDbAvailable() {
-    return realtimeDb !== null && typeof realtimeDb !== 'string' && 'ref' in realtimeDb;
+    return realtimeDb !== null;
 }
 if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
 ;

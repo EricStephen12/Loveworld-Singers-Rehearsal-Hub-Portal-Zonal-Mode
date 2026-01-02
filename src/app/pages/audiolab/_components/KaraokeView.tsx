@@ -3,23 +3,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   X, Settings, Flame, Star, Play, Pause, 
-  RotateCcw, RotateCw, Maximize, Mic, MicOff
+  RotateCcw, RotateCw, Maximize, Mic, MicOff, Loader2, AlertCircle
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { audioEngine } from '../_lib/audio-engine';
 import { endSession, startSession } from '../_lib/practice-service';
+import { getSongLyrics, parseAutoTimedLyrics } from '../_lib/lyrics-service';
 
-// Sample lyrics for demo (in real app, these come from song data)
-const sampleLyrics = [
-  { time: 0, text: "♪ Get ready to sing ♪", targetPitch: 440 },
-  { time: 4, text: "Follow the melody", targetPitch: 494 },
-  { time: 8, text: "Let your voice shine", targetPitch: 523 },
-  { time: 12, text: "Feel the rhythm flow", targetPitch: 587 },
-  { time: 16, text: "Sing from your heart", targetPitch: 659 },
-  { time: 20, text: "Let the music guide you", targetPitch: 698 },
-  { time: 24, text: "Every note matters", targetPitch: 784 },
-  { time: 28, text: "You're doing great!", targetPitch: 880 },
+// Default lyrics when no lyrics available
+const defaultLyrics = [
+  { time: 0, text: "♪ No lyrics available ♪" },
+  { time: 5, text: "Add lyrics in admin panel" },
+  { time: 10, text: "or generate with AI sync" },
 ];
 
 export function KaraokeView() {
@@ -30,14 +26,150 @@ export function KaraokeView() {
   const currentSong = player.currentSong;
   const hasSong = !!currentSong;
   
-  // Parse lyrics from song or use samples
-  const songLyrics = currentSong?.lyricsUrl 
-    ? sampleLyrics // TODO: Fetch and parse actual lyrics
-    : sampleLyrics;
-  
   const songTitle = currentSong?.title || 'Practice Mode';
   const songArtist = currentSong?.artist || 'AudioLab';
   const songDuration = currentSong?.duration || 60;
+  
+  // Lyrics state - fetched from song data or URL
+  const [songLyrics, setSongLyrics] = useState<{ time: number; text: string; targetPitch?: number }[]>(defaultLyrics);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [lyricsError, setLyricsError] = useState<string | null>(null);
+  const [hasSyncedLyrics, setHasSyncedLyrics] = useState(false);
+  
+  // Fetch and parse lyrics when song changes
+  useEffect(() => {
+    const loadLyrics = async () => {
+      if (!currentSong) {
+        setSongLyrics(defaultLyrics);
+        setHasSyncedLyrics(false);
+        return;
+      }
+      
+      setLyricsLoading(true);
+      setLyricsError(null);
+      
+      try {
+        // First, try to get lyrics from Firestore (audiolab_songs collection)
+        if (currentSong.id) {
+          const { lyrics, lyricsText, hasSyncedLyrics: synced } = await getSongLyrics(currentSong.id);
+          
+          if (lyrics && lyrics.length > 0) {
+            // Use synced lyrics with timestamps
+            setSongLyrics(lyrics.map(line => ({
+              time: line.time,
+              text: line.text,
+              targetPitch: 440 // Default pitch
+            })));
+            setHasSyncedLyrics(true);
+            setLyricsLoading(false);
+            return;
+          }
+          
+          if (lyricsText) {
+            // Use plain text lyrics with auto-timing
+            const autoTimed = parseAutoTimedLyrics(lyricsText, songDuration);
+            if (autoTimed.length > 0) {
+              setSongLyrics(autoTimed.map(line => ({
+                time: line.time,
+                text: line.text,
+                targetPitch: 440
+              })));
+              setHasSyncedLyrics(false);
+              setLyricsLoading(false);
+              return;
+            }
+          }
+        }
+        
+        // Check if song has embedded lyrics array (from AudioLabSong type)
+        const songWithLyrics = currentSong as any;
+        if (songWithLyrics.lyrics && Array.isArray(songWithLyrics.lyrics) && songWithLyrics.lyrics.length > 0) {
+          // Use embedded lyrics directly
+          setSongLyrics(songWithLyrics.lyrics.map((line: { time: number; text: string; pitch?: number }) => ({
+            time: line.time,
+            text: line.text,
+            targetPitch: line.pitch || 440
+          })));
+          setHasSyncedLyrics(true);
+          setLyricsLoading(false);
+          return;
+        }
+        
+        // Check if song has lyrics URL (LRC file or plain text)
+        if (currentSong.lyricsUrl) {
+          try {
+            const response = await fetch(currentSong.lyricsUrl);
+            if (response.ok) {
+              const content = await response.text();
+              
+              // Detect if it's LRC format (has timestamps)
+              if (content.includes('[') && /\[\d{2}:\d{2}/.test(content)) {
+                const parsed = parseLRCLyrics(content);
+                if (parsed.length > 0) {
+                  setSongLyrics(parsed);
+                  setHasSyncedLyrics(true);
+                  setLyricsLoading(false);
+                  return;
+                }
+              }
+              
+              // Fall back to plain text parsing with auto-timing
+              const parsed = parseAutoTimedLyrics(content, songDuration);
+              if (parsed.length > 0) {
+                setSongLyrics(parsed.map(line => ({
+                  time: line.time,
+                  text: line.text,
+                  targetPitch: 440
+                })));
+                setHasSyncedLyrics(false);
+                setLyricsLoading(false);
+                return;
+              }
+            }
+          } catch (error) {
+            console.error('[KaraokeView] Error loading lyrics from URL:', error);
+          }
+        }
+        
+        // No lyrics available - show placeholder
+        setSongLyrics(defaultLyrics);
+        setHasSyncedLyrics(false);
+        setLyricsError('No lyrics found for this song');
+        
+      } catch (error) {
+        console.error('[KaraokeView] Error loading lyrics:', error);
+        setSongLyrics(defaultLyrics);
+        setLyricsError('Failed to load lyrics');
+      }
+      
+      setLyricsLoading(false);
+    };
+    
+    loadLyrics();
+  }, [currentSong, songDuration]);
+
+  // Helper to parse LRC format
+  const parseLRCLyrics = (lrcContent: string): { time: number; text: string; targetPitch?: number }[] => {
+    const lines = lrcContent.split('\n');
+    const lyrics: { time: number; text: string; targetPitch?: number }[] = [];
+    
+    for (const line of lines) {
+      const match = line.match(/\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/);
+      if (match) {
+        const minutes = parseInt(match[1], 10);
+        const seconds = parseInt(match[2], 10);
+        const ms = match[3] ? parseInt(match[3].padEnd(3, '0'), 10) : 0;
+        const text = match[4].trim();
+        
+        if (text) {
+          const time = minutes * 60 + seconds + ms / 1000;
+          lyrics.push({ time, text, targetPitch: 440 });
+        }
+      }
+    }
+    
+    return lyrics.sort((a, b) => a.time - b.time);
+  };
   
   // State
   const [currentLine, setCurrentLine] = useState(0);
@@ -298,8 +430,29 @@ export function KaraokeView() {
         </div>
       )}
 
+      {/* Loading Lyrics State */}
+      {hasSong && lyricsLoading && (
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
+          <Loader2 size={32} className="animate-spin text-violet-500 mb-4" />
+          <p className="text-slate-400 text-sm">Loading lyrics...</p>
+        </div>
+      )}
+
+      {/* Lyrics Error/Warning Banner */}
+      {hasSong && !lyricsLoading && lyricsError && (
+        <div className="relative z-20 mx-4 mb-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <AlertCircle size={16} className="text-amber-400 flex-shrink-0" />
+            <p className="text-amber-400 text-xs">{lyricsError}</p>
+            {!hasSyncedLyrics && (
+              <span className="text-amber-400/60 text-xs ml-auto">Auto-timed</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Lyrics Stage */}
-      {hasSong && (
+      {hasSong && !lyricsLoading && (
         <main 
           className="relative z-10 flex-1 w-full max-w-lg mx-auto flex flex-col items-center justify-center overflow-hidden py-8"
           style={{

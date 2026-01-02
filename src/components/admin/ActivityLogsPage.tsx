@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, getDocs, where, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
-import { Search, Filter, Download, Users, Clock, Music, Edit, Trash2, Plus, Upload } from 'lucide-react';
+import { Search, Filter, Download, Users, Clock, Music, Edit, Trash2, Plus, Upload, RefreshCw } from 'lucide-react';
 import { useZone } from '@/hooks/useZone';
-import { isHQGroup } from '@/config/zones';
+import { isHQGroup, HQ_GROUP_IDS, BOSS_ZONE_ID } from '@/config/zones';
 import { format } from 'date-fns';
 
 interface ActivityLog {
@@ -28,24 +28,35 @@ export default function ActivityLogsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [sectionFilter, setSectionFilter] = useState('');
-  const { currentZone } = useZone();
+  const { currentZone, isLoading: zoneLoading } = useZone();
   const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
 
+  // Wait for zone to load before fetching logs
   useEffect(() => {
-    loadActivityLogs();
-  }, []);
+    if (!zoneLoading && currentZone?.id) {
+      loadActivityLogs();
+    }
+  }, [currentZone?.id, zoneLoading]);
 
   const loadActivityLogs = async () => {
+    if (!currentZone?.id) return;
+    
     try {
       setLoading(true);
-      let q = query(
-        collection(db, 'activity_logs'),
-        orderBy('timestamp', 'desc'),
-        limit(500)
-      );
-
-      // If not HQ, only load current zone's logs
-      if (!isHQ && currentZone) {
+      
+      // Get all HQ zone IDs for filtering
+      const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID];
+      
+      let q;
+      if (isHQ) {
+        // HQ zones: only see logs from HQ zones (not from regular zones like Zone A, Zone B)
+        q = query(
+          collection(db, 'activity_logs'),
+          orderBy('timestamp', 'desc'),
+          limit(500)
+        );
+      } else {
+        // Regular zones: only see their own zone's logs
         q = query(
           collection(db, 'activity_logs'),
           where('zoneId', '==', currentZone.id),
@@ -55,7 +66,7 @@ export default function ActivityLogsPage() {
       }
 
       const querySnapshot = await getDocs(q);
-      const logsData = querySnapshot.docs.map(doc => {
+      let logsData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -63,6 +74,11 @@ export default function ActivityLogsPage() {
           timestamp: data.timestamp?.toDate() || new Date()
         } as ActivityLog;
       });
+
+      // For HQ zones, filter to only show HQ zone logs (not regular zone logs)
+      if (isHQ) {
+        logsData = logsData.filter(log => hqZoneIds.includes(log.zoneId));
+      }
 
       setLogs(logsData);
     } catch (error) {
@@ -127,7 +143,7 @@ export default function ActivityLogsPage() {
     a.click();
   };
 
-  if (loading) {
+  if (loading || zoneLoading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="text-center">
@@ -147,17 +163,26 @@ export default function ActivityLogsPage() {
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Activity Logs</h1>
               <p className="text-gray-600 mt-1">
-                {isHQ ? 'View all activity across all zones' : 'View activity for your zone'}
+                {isHQ ? 'View all HQ activity' : `View activity for ${currentZone?.name || 'your zone'}`}
               </p>
             </div>
-            <button
-              onClick={exportLogs}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export Logs</span>
-              <span className="sm:hidden">Export</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={loadActivityLogs}
+                className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+              <button
+                onClick={exportLogs}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 flex items-center gap-2 shadow-lg"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export Logs</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            </div>
           </div>
         </div>
 

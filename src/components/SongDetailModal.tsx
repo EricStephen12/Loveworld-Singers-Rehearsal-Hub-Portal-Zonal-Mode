@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, RefreshCw, Loader2 } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
 import { useZone } from "@/hooks/useZone";
@@ -22,6 +23,7 @@ interface SongDetailModalProps {
 }
 
 export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [] }: SongDetailModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'comments' | 'history'>('lyrics');
   const [activeHistoryTab, setActiveHistoryTab] = useState<'lyrics' | 'audio' | 'solfas' | 'comments' | 'metadata'>('lyrics');
   const [isRepeating, setIsRepeating] = useState(false);
@@ -32,6 +34,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
   const [isFullscreenComments, setIsFullscreenComments] = useState(false);
   const [isFullscreenSolfas, setIsFullscreenSolfas] = useState(false);
+  const [isNavigatingToAudioLab, setIsNavigatingToAudioLab] = useState(false);
 
   // Get zone context to determine comment terminology
   const { currentZone } = useZone();
@@ -251,8 +254,13 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   };
 
   const handleMusicPage = () => {
-    // Navigate to music page - you can implement this based on your routing
-    console.log('Navigate to music page');
+    // Navigate to AudioLab library with song title to auto-expand
+    if (currentSongData?.title) {
+      setIsNavigatingToAudioLab(true);
+      // Use encodeURIComponent to handle special characters in song titles
+      router.push(`/pages/audiolab?song=${encodeURIComponent(currentSongData.title)}`);
+      onClose();
+    }
   };
 
   
@@ -1744,9 +1752,14 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
             {/* Music Page Button */}
             <button
               onClick={handleMusicPage}
-              className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+              disabled={isNavigatingToAudioLab}
+              className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
             >
-              <Music2 className="w-3.5 h-3.5" />
+              {isNavigatingToAudioLab ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Music2 className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
           

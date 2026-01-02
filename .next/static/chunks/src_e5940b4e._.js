@@ -83,18 +83,13 @@ const realtimeDb = (()=>{
             return _realtimeDb;
         } catch (error) {
             console.warn('Failed to initialize Realtime Database:', error);
-            // Create a mock object to prevent build failures
-            return {
-                _delegate: {},
-                useEmulator: ()=>{},
-                ref: ()=>({})
-            };
+            return null;
         }
     } else //TURBOPACK unreachable
     ;
 })();
 function isRealtimeDbAvailable() {
-    return realtimeDb !== null && typeof realtimeDb !== 'string' && 'ref' in realtimeDb;
+    return realtimeDb !== null;
 }
 if ("TURBOPACK compile-time truthy", 1) {
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setPersistence"])(auth, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["browserLocalPersistence"]).catch(console.error);
@@ -7604,41 +7599,147 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useAuth.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$firestore$2f$dist$2f$esm$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/firebase/firestore/dist/esm/index.esm.js [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/firebase/node_modules/@firebase/firestore/dist/index.esm.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/firebase-setup.ts [app-client] (ecmascript)");
 var _s = __turbopack_context__.k.signature();
 'use client';
 ;
 ;
+;
+;
+;
 function PushNotificationListener() {
     _s();
-    const { user } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
+    const { user, profile } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
+    const { currentZone } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useZone"])();
+    const lastNotifTime = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(Date.now());
+    const registrationRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    // Request permission and get service worker
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "PushNotificationListener.useEffect": ()=>{
             if (!user) return;
-            // Request notification permission
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then({
-                    "PushNotificationListener.useEffect": (permission)=>{
-                        console.log('Notification permission:', permission);
+            const init = {
+                "PushNotificationListener.useEffect.init": async ()=>{
+                    // Request notification permission
+                    if ('Notification' in window && Notification.permission === 'default') {
+                        await Notification.requestPermission();
                     }
-                }["PushNotificationListener.useEffect"]);
-            }
-            // Listen for push notifications
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then({
-                    "PushNotificationListener.useEffect": (registration)=>{
-                        console.log('Service Worker ready for push notifications');
+                    // Get service worker registration
+                    if ('serviceWorker' in navigator) {
+                        registrationRef.current = await navigator.serviceWorker.ready;
                     }
-                }["PushNotificationListener.useEffect"]);
-            }
+                }
+            }["PushNotificationListener.useEffect.init"];
+            init();
         }
     }["PushNotificationListener.useEffect"], [
         user
     ]);
+    // Show browser notification
+    const showNotification = async (title, body, tag, url)=>{
+        if (Notification.permission !== 'granted') return;
+        if (document.visibilityState === 'visible') return; // Don't show if app is focused
+        try {
+            if (registrationRef.current) {
+                await registrationRef.current.showNotification(title, {
+                    body,
+                    icon: '/logo.png',
+                    badge: '/logo.png',
+                    tag,
+                    data: {
+                        url
+                    },
+                    requireInteraction: false
+                });
+            }
+        } catch (e) {
+            console.log('Notification error:', e);
+        }
+    };
+    // Listen for new zone messages
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "PushNotificationListener.useEffect": ()=>{
+            if (!(currentZone === null || currentZone === void 0 ? void 0 : currentZone.id)) return;
+            const { isHQGroup } = __turbopack_context__.r("[project]/src/config/zones.ts [app-client] (ecmascript)");
+            const isHQ = isHQGroup(currentZone.id);
+            const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages';
+            const messagesRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["db"], collectionName);
+            const q = isHQ ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(messagesRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["limit"])(1)) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(messagesRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["where"])('zoneId', '==', currentZone.id), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('createdAt', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["limit"])(1));
+            const unsubscribe = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["onSnapshot"])(q, {
+                "PushNotificationListener.useEffect.unsubscribe": (snapshot)=>{
+                    snapshot.docChanges().forEach({
+                        "PushNotificationListener.useEffect.unsubscribe": (change)=>{
+                            if (change.type === 'added') {
+                                var _data_createdAt_toDate, _data_createdAt_toDate1, _data_createdAt;
+                                const data = change.doc.data();
+                                const createdAt = ((_data_createdAt = data.createdAt) === null || _data_createdAt === void 0 ? void 0 : (_data_createdAt_toDate1 = _data_createdAt.toDate) === null || _data_createdAt_toDate1 === void 0 ? void 0 : (_data_createdAt_toDate = _data_createdAt_toDate1.call(_data_createdAt)) === null || _data_createdAt_toDate === void 0 ? void 0 : _data_createdAt_toDate.getTime()) || 0;
+                                if (createdAt > lastNotifTime.current) {
+                                    var _data_message;
+                                    showNotification(data.title || 'New Announcement', ((_data_message = data.message) === null || _data_message === void 0 ? void 0 : _data_message.substring(0, 100)) || '', "zone-".concat(change.doc.id), '/pages/notifications');
+                                    lastNotifTime.current = Date.now();
+                                }
+                            }
+                        }
+                    }["PushNotificationListener.useEffect.unsubscribe"]);
+                }
+            }["PushNotificationListener.useEffect.unsubscribe"]);
+            return ({
+                "PushNotificationListener.useEffect": ()=>unsubscribe()
+            })["PushNotificationListener.useEffect"];
+        }
+    }["PushNotificationListener.useEffect"], [
+        currentZone === null || currentZone === void 0 ? void 0 : currentZone.id
+    ]);
+    // Listen for new chat messages
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "PushNotificationListener.useEffect": ()=>{
+            const userId = (user === null || user === void 0 ? void 0 : user.uid) || (profile === null || profile === void 0 ? void 0 : profile.id);
+            if (!userId) return;
+            const chatsRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["db"], 'chats_v2');
+            const q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])(chatsRef, (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["where"])('participantIds', 'array-contains', userId), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["orderBy"])('lastMessageAt', 'desc'), (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["limit"])(5));
+            const unsubscribe = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["onSnapshot"])(q, {
+                "PushNotificationListener.useEffect.unsubscribe": (snapshot)=>{
+                    snapshot.docChanges().forEach({
+                        "PushNotificationListener.useEffect.unsubscribe": (change)=>{
+                            if (change.type === 'modified') {
+                                var _chat_lastMessageAt_toDate, _chat_lastMessageAt_toDate1, _chat_lastMessageAt, _chat_lastMessage;
+                                const chat = change.doc.data();
+                                const lastMessageAt = ((_chat_lastMessageAt = chat.lastMessageAt) === null || _chat_lastMessageAt === void 0 ? void 0 : (_chat_lastMessageAt_toDate1 = _chat_lastMessageAt.toDate) === null || _chat_lastMessageAt_toDate1 === void 0 ? void 0 : (_chat_lastMessageAt_toDate = _chat_lastMessageAt_toDate1.call(_chat_lastMessageAt)) === null || _chat_lastMessageAt_toDate === void 0 ? void 0 : _chat_lastMessageAt_toDate.getTime()) || 0;
+                                const lastSenderId = (_chat_lastMessage = chat.lastMessage) === null || _chat_lastMessage === void 0 ? void 0 : _chat_lastMessage.senderId;
+                                // Only notify if message is from someone else and is recent
+                                if (lastSenderId !== userId && lastMessageAt > lastNotifTime.current) {
+                                    var _chat_participantDetails_lastSenderId, _chat_participantDetails, _chat_lastMessage1, _chat_lastMessage2;
+                                    const senderName = ((_chat_participantDetails = chat.participantDetails) === null || _chat_participantDetails === void 0 ? void 0 : (_chat_participantDetails_lastSenderId = _chat_participantDetails[lastSenderId]) === null || _chat_participantDetails_lastSenderId === void 0 ? void 0 : _chat_participantDetails_lastSenderId.userName) || 'Someone';
+                                    const isGroup = chat.type === 'group';
+                                    const chatName = isGroup ? chat.name : senderName;
+                                    let preview = ((_chat_lastMessage1 = chat.lastMessage) === null || _chat_lastMessage1 === void 0 ? void 0 : _chat_lastMessage1.text) || '';
+                                    if ((_chat_lastMessage2 = chat.lastMessage) === null || _chat_lastMessage2 === void 0 ? void 0 : _chat_lastMessage2.attachment) {
+                                        preview = chat.lastMessage.attachment.type === 'image' ? '📷 Photo' : '📎 Document';
+                                    }
+                                    showNotification(chatName || 'New Message', isGroup ? "".concat(senderName, ": ").concat(preview) : preview, "chat-".concat(change.doc.id), "/pages/groups?chat=".concat(change.doc.id));
+                                    lastNotifTime.current = Date.now();
+                                }
+                            }
+                        }
+                    }["PushNotificationListener.useEffect.unsubscribe"]);
+                }
+            }["PushNotificationListener.useEffect.unsubscribe"]);
+            return ({
+                "PushNotificationListener.useEffect": ()=>unsubscribe()
+            })["PushNotificationListener.useEffect"];
+        }
+    }["PushNotificationListener.useEffect"], [
+        user === null || user === void 0 ? void 0 : user.uid,
+        profile === null || profile === void 0 ? void 0 : profile.id
+    ]);
     return null;
 }
-_s(PushNotificationListener, "C72XnuyhUicbE3VR7b9HBnFV5hM=", false, function() {
+_s(PushNotificationListener, "I/gHbdhrQH60QT8S4j75e9NrBF4=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useAuth$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useZone"]
     ];
 });
 _c = PushNotificationListener;

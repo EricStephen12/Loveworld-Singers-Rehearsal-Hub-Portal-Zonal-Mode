@@ -31,7 +31,7 @@ export function NextActionPrompt({
       />
       
       {/* Content */}
-      <div className="relative w-full max-w-md mx-4 mb-4 p-6 rounded-2xl bg-[#261933] border border-white/10 shadow-2xl animate-in slide-in-from-bottom duration-300">
+      <div className="relative w-full max-w-md mx-4 mb-4 p-6 rounded-2xl bg-[#261933] border border-white/10 shadow-2xl animate-slide-up">
         {/* Close button */}
         <button
           onClick={onClose}

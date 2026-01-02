@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ChevronLeft, Wifi, Eye, Headphones, MicOff, 
   StopCircle, Volume2, VolumeX, Users, Copy, Check, LogOut
@@ -25,6 +25,7 @@ export function LiveSessionView() {
   
   const [webrtcService] = useState(() => new WebRTCService());
   const [audioElements, setAudioElements] = useState<Record<string, HTMLAudioElement>>({});
+  const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
   
   const [isLive, setIsLive] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -48,6 +49,8 @@ export function LiveSessionView() {
         
         // Create peer connection for new participant
         if (user?.uid && participant.id !== user.uid) {
+          console.log('[LiveSession] New participant joined:', participant.id);
+          
           // Create peer connection
           webrtcService.createPeerConnection(participant.id, participant.id === currentSession.hostId);
           
@@ -55,10 +58,11 @@ export function LiveSessionView() {
           if (user.uid === currentSession.hostId) {
             setTimeout(async () => {
               try {
+                console.log('[LiveSession] Host creating offer for:', participant.id);
                 const offer = await webrtcService.createOffer(participant.id);
                 await webrtcService.sendSignal(participant.id, 'offer', offer);
               } catch (error) {
-                console.error('Error creating offer:', error);
+                console.error('[LiveSession] Error creating offer:', error);
               }
             }, 1000); // Small delay to ensure connection is ready
           }
@@ -94,17 +98,55 @@ export function LiveSessionView() {
       // Initialize local audio stream
       const success = await webrtcService.initializeLocalStream();
       if (!success) {
-        console.error('Failed to initialize local audio stream');
+        console.error('[LiveSession] Failed to initialize local audio stream');
         return;
       }
       
+      console.log('[LiveSession] Local audio stream initialized');
+      
       // Set up callbacks
       webrtcService.setOnRemoteStreamAdded((userId, stream) => {
-        // Create audio element for remote stream
-        const audio = new Audio();
-        audio.srcObject = stream;
-        audio.play().catch(e => console.error('Error playing remote audio:', e));
+        console.log('[LiveSession] Remote stream added from:', userId);
         
+        // Check if we already have an audio element for this user
+        if (audioElementsRef.current[userId]) {
+          console.log('[LiveSession] Updating existing audio element for:', userId);
+          const existingAudio = audioElementsRef.current[userId];
+          existingAudio.srcObject = stream;
+          existingAudio.play().catch(e => console.error('[LiveSession] Error playing updated audio:', e));
+          return;
+        }
+        
+        // Create new audio element for remote stream
+        const audio = new Audio();
+        audio.autoplay = true;
+        (audio as any).playsInline = true;
+        
+        // Set the stream as source
+        audio.srcObject = stream;
+        
+        // Handle audio element events
+        audio.onloadedmetadata = () => {
+          console.log('[LiveSession] Audio metadata loaded for:', userId);
+          audio.play()
+            .then(() => console.log('[LiveSession] Audio playing for:', userId))
+            .catch(e => {
+              console.error('[LiveSession] Error playing remote audio:', e);
+              // Try to play on user interaction
+              const playOnInteraction = () => {
+                audio.play().catch(err => console.error('[LiveSession] Still cannot play:', err));
+                document.removeEventListener('click', playOnInteraction);
+              };
+              document.addEventListener('click', playOnInteraction, { once: true });
+            });
+        };
+        
+        audio.onerror = (e) => {
+          console.error('[LiveSession] Audio element error:', e);
+        };
+        
+        // Store reference
+        audioElementsRef.current[userId] = audio;
         setAudioElements(prev => ({
           ...prev,
           [userId]: audio
@@ -112,8 +154,21 @@ export function LiveSessionView() {
       });
       
       webrtcService.setOnDataReceived((userId, data) => {
-        // Handle received data (chat, commands, etc.)
+        console.log('[LiveSession] Data received from:', userId, data);
       });
+      
+      // Connect to existing participants (for users joining an existing session)
+      // Wait a bit for participants list to be populated
+      setTimeout(() => {
+        const existingPeers = webrtcService.getAllPeerIds();
+        console.log('[LiveSession] Existing peers:', existingPeers);
+        
+        // If we're not the host and there are participants, we need to wait for offers
+        // The host will send offers to us
+        if (user.uid !== currentSession.hostId) {
+          console.log('[LiveSession] Waiting for offers from host...');
+        }
+      }, 2000);
     };
     
     setupWebRTC();
@@ -123,12 +178,13 @@ export function LiveSessionView() {
       webrtcService.closeAllConnections();
       
       // Stop all audio elements
-      Object.values(audioElements).forEach(audio => {
+      Object.values(audioElementsRef.current).forEach(audio => {
         audio.pause();
         audio.srcObject = null;
       });
+      audioElementsRef.current = {};
     };
-  }, [user?.uid, currentSession?.id, webrtcService, audioElements]);
+  }, [user?.uid, currentSession?.id, currentSession?.hostId, webrtcService]);
 
   // Subscribe to messages
   useEffect(() => {
@@ -173,6 +229,15 @@ export function LiveSessionView() {
     if (!currentSession?.id || !user?.uid) return;
     const newMuted = !isMuted;
     setIsMuted(newMuted);
+    
+    // Actually mute/unmute the local audio track
+    const localStream = webrtcService.getLocalStream();
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => {
+        track.enabled = !newMuted;
+      });
+    }
+    
     await toggleMuteService(currentSession.id, user.uid, newMuted);
   };
 
@@ -417,9 +482,9 @@ export function LiveSessionView() {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Monitor</span>
           </button>
 
-          {/* End/Leave Session */}
+          {/* End/Leave Session - Host vs Participant */}
           <button 
-            onClick={handleLeaveSession}
+            onClick={user?.uid === currentSession?.hostId ? handleEndSession : handleLeaveSession}
             className="flex flex-col items-center gap-2 group relative -mt-6"
           >
             {/* Outer glow */}
@@ -433,7 +498,7 @@ export function LiveSessionView() {
               <LogOut size={36} className="drop-shadow-md" />
             </div>
             <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide mt-1">
-              Leave
+              {user?.uid === currentSession?.hostId ? 'End' : 'Leave'}
             </span>
           </button>
 

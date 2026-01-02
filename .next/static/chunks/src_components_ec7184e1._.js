@@ -1963,16 +1963,16 @@ function BasicTextEditor(param) {
         }, this);
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "jsx-ed7f0e82840e249" + " " + "border border-gray-300 rounded-lg ".concat(className),
+        className: "jsx-b542bb621f8c0b99" + " " + "border border-gray-300 rounded-lg ".concat(className),
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "jsx-ed7f0e82840e249" + " " + "flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 rounded-t-lg",
+                className: "jsx-b542bb621f8c0b99" + " " + "flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 rounded-t-lg",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         type: "button",
                         onClick: ()=>formatText('bold'),
                         title: "Bold",
-                        className: "jsx-ed7f0e82840e249" + " " + "px-3 py-1 rounded hover:bg-gray-100 text-gray-600 font-bold text-sm",
+                        className: "jsx-b542bb621f8c0b99" + " " + "px-3 py-1 rounded hover:bg-gray-100 text-gray-600 font-bold text-sm",
                         children: "B"
                     }, void 0, false, {
                         fileName: "[project]/src/components/BasicTextEditor.tsx",
@@ -1983,7 +1983,7 @@ function BasicTextEditor(param) {
                         type: "button",
                         onClick: ()=>formatText('italic'),
                         title: "Italic",
-                        className: "jsx-ed7f0e82840e249" + " " + "px-3 py-1 rounded hover:bg-gray-100 text-gray-600 italic text-sm",
+                        className: "jsx-b542bb621f8c0b99" + " " + "px-3 py-1 rounded hover:bg-gray-100 text-gray-600 italic text-sm",
                         children: "I"
                     }, void 0, false, {
                         fileName: "[project]/src/components/BasicTextEditor.tsx",
@@ -1991,21 +1991,21 @@ function BasicTextEditor(param) {
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "jsx-ed7f0e82840e249" + " " + "flex-1"
+                        className: "jsx-b542bb621f8c0b99" + " " + "flex-1"
                     }, void 0, false, {
                         fileName: "[project]/src/components/BasicTextEditor.tsx",
                         lineNumber: 277,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "jsx-ed7f0e82840e249" + " " + "relative",
+                        className: "jsx-b542bb621f8c0b99" + " " + "relative",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 type: "button",
                                 onClick: ()=>setShowLanguageMenu(!showLanguageMenu),
                                 disabled: isTranslating,
                                 title: isTranslating ? 'Translating...' : 'Translate text',
-                                className: "jsx-ed7f0e82840e249" + " " + "flex items-center gap-2 px-3 py-1 rounded transition-colors text-sm font-medium ".concat(isTranslating ? 'bg-yellow-500 text-white cursor-wait' : selectedLanguage === 'en' ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-green-600 text-white hover:bg-green-700'),
+                                className: "jsx-b542bb621f8c0b99" + " " + "flex items-center gap-2 px-3 py-1 rounded transition-colors text-sm font-medium ".concat(isTranslating ? 'bg-yellow-500 text-white cursor-wait' : selectedLanguage === 'en' ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-green-600 text-white hover:bg-green-700'),
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$languages$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Languages$3e$__["Languages"], {
                                         className: "w-4 h-4"
@@ -2015,7 +2015,7 @@ function BasicTextEditor(param) {
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "jsx-ed7f0e82840e249" + " " + "text-xs",
+                                        className: "jsx-b542bb621f8c0b99" + " " + "text-xs",
                                         children: isTranslating ? 'Translating...' : ((_translationService_LANGUAGES_find = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$translation$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["translationService"].LANGUAGES.find((l)=>l.code === selectedLanguage)) === null || _translationService_LANGUAGES_find === void 0 ? void 0 : _translationService_LANGUAGES_find.flag) || '🌐'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BasicTextEditor.tsx",
@@ -2029,14 +2029,14 @@ function BasicTextEditor(param) {
                                 columnNumber: 11
                             }, this),
                             showLanguageMenu && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-ed7f0e82840e249" + " " + "absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 max-h-80 overflow-y-auto z-20",
+                                className: "jsx-b542bb621f8c0b99" + " " + "absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 w-48 max-h-80 overflow-y-auto z-20",
                                 children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$translation$2d$service$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["translationService"].LANGUAGES.map((lang)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         type: "button",
                                         onClick: ()=>handleTranslate(lang.code),
-                                        className: "jsx-ed7f0e82840e249" + " " + "w-full px-4 py-2 text-left text-sm hover:bg-purple-50 transition-colors flex items-center gap-2 ".concat(selectedLanguage === lang.code ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-700'),
+                                        className: "jsx-b542bb621f8c0b99" + " " + "w-full px-4 py-2 text-left text-sm hover:bg-purple-50 transition-colors flex items-center gap-2 ".concat(selectedLanguage === lang.code ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-700'),
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "jsx-ed7f0e82840e249" + " " + "text-lg",
+                                                className: "jsx-b542bb621f8c0b99" + " " + "text-lg",
                                                 children: lang.flag
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BasicTextEditor.tsx",
@@ -2044,7 +2044,7 @@ function BasicTextEditor(param) {
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "jsx-ed7f0e82840e249",
+                                                className: "jsx-b542bb621f8c0b99",
                                                 children: lang.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BasicTextEditor.tsx",
@@ -2086,15 +2086,15 @@ function BasicTextEditor(param) {
                 },
                 "data-placeholder": placeholder,
                 suppressContentEditableWarning: true,
-                className: "jsx-ed7f0e82840e249" + " " + "min-h-[200px] max-h-[400px] overflow-y-auto p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className: "jsx-b542bb621f8c0b99" + " " + "min-h-[200px] max-h-[400px] overflow-y-auto p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             }, void 0, false, {
                 fileName: "[project]/src/components/BasicTextEditor.tsx",
                 lineNumber: 322,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                id: "ed7f0e82840e249",
-                children: "[contenteditable].jsx-ed7f0e82840e249:empty:before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none}[contenteditable].jsx-ed7f0e82840e249 h1.jsx-ed7f0e82840e249{margin:1rem 0 .5rem;font-size:2rem;font-weight:700}[contenteditable].jsx-ed7f0e82840e249 h2.jsx-ed7f0e82840e249{margin:.8rem 0 .4rem;font-size:1.5rem;font-weight:700}[contenteditable].jsx-ed7f0e82840e249 h3.jsx-ed7f0e82840e249{margin:.6rem 0 .3rem;font-size:1.25rem;font-weight:700}[contenteditable].jsx-ed7f0e82840e249 p.jsx-ed7f0e82840e249{margin:.5rem 0}[contenteditable].jsx-ed7f0e82840e249 strong.jsx-ed7f0e82840e249,[contenteditable].jsx-ed7f0e82840e249 b.jsx-ed7f0e82840e249{font-weight:700}[contenteditable].jsx-ed7f0e82840e249 em.jsx-ed7f0e82840e249,[contenteditable].jsx-ed7f0e82840e249 i.jsx-ed7f0e82840e249{font-style:italic}"
+                id: "b542bb621f8c0b99",
+                children: "[contenteditable].jsx-b542bb621f8c0b99:empty:before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none}[contenteditable].jsx-b542bb621f8c0b99 h1.jsx-b542bb621f8c0b99{margin:1rem 0 .5rem;font-size:2rem;font-weight:700}[contenteditable].jsx-b542bb621f8c0b99 h2.jsx-b542bb621f8c0b99{margin:.8rem 0 .4rem;font-size:1.5rem;font-weight:700}[contenteditable].jsx-b542bb621f8c0b99 h3.jsx-b542bb621f8c0b99{margin:.6rem 0 .3rem;font-size:1.25rem;font-weight:700}[contenteditable].jsx-b542bb621f8c0b99 p.jsx-b542bb621f8c0b99{margin:.5rem 0}[contenteditable].jsx-b542bb621f8c0b99 strong.jsx-b542bb621f8c0b99,[contenteditable].jsx-b542bb621f8c0b99 b.jsx-b542bb621f8c0b99{font-weight:700}[contenteditable].jsx-b542bb621f8c0b99 em.jsx-b542bb621f8c0b99,[contenteditable].jsx-b542bb621f8c0b99 i.jsx-b542bb621f8c0b99{font-style:italic}"
             }, void 0, false, void 0, this)
         ]
     }, void 0, true, {

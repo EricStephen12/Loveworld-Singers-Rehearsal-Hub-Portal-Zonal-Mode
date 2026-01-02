@@ -6,6 +6,9 @@ import { sendMessageToAllUsers, getAllMessages, deleteMessage, AdminMessage } fr
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
 import { useAdminTheme } from './AdminThemeProvider';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase-setup';
+import { isHQGroup } from '@/config/zones';
 
 export default function SimpleNotificationsSection() {
   const { user } = useAuth();
@@ -24,6 +27,40 @@ export default function SimpleNotificationsSection() {
       loadMessages();
     }
   }, [currentZone]);
+
+  // Set up real-time listener for messages
+  useEffect(() => {
+    if (!currentZone?.id) return;
+    
+    const isHQ = isHQGroup(currentZone.id);
+    const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages';
+    const messagesRef = collection(db, collectionName);
+    
+    const q = isHQ 
+      ? query(messagesRef, orderBy('createdAt', 'desc'))
+      : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.metadata.hasPendingWrites) {
+        const msgs = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            ...data,
+            id: docSnap.id,
+            sentAt: data.sentAt || new Date().toISOString(),
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+          } as AdminMessage;
+        });
+        setMessages(msgs);
+        setLoading(false);
+      }
+    }, (error) => {
+      console.log('[AdminNotifications] Real-time listener error:', error);
+      loadMessages(); // Fallback to manual load
+    });
+    
+    return () => unsubscribe();
+  }, [currentZone?.id]);
 
   const loadMessages = async () => {
     setLoading(true);
@@ -195,6 +232,9 @@ export default function SimpleNotificationsSection() {
                   placeholder="e.g., Rehearsal Update"
                   maxLength={100}
                 />
+                <p className="text-xs text-slate-500 mt-1">
+                  {title.length}/100 characters
+                </p>
               </div>
 
               <div>

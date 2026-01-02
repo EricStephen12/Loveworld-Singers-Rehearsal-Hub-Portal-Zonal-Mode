@@ -19,6 +19,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAdminTheme } from '@/components/admin/AdminThemeProvider'
 import { useZone } from '@/hooks/useZone'
 import { isHQGroup } from '@/config/zones'
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase-setup'
 
 interface SubmittedSongsPageProps {
   embedded?: boolean
@@ -44,6 +46,17 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   
   // Check if current zone is HQ (can see all submissions)
   const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
+
+  // Cleanup audio refs on unmount
+  useEffect(() => {
+    return () => {
+      audioRefsRef.current.forEach((audio) => {
+        audio.pause()
+        audio.src = ''
+      })
+      audioRefsRef.current.clear()
+    }
+  }, [])
 
   const handleAudioPlay = (songId: string, audioUrl: string) => {
     // Stop any currently playing audio
@@ -86,6 +99,27 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       loadSongs()
     }
   }, [filter, currentZone?.id])
+
+  // Set up real-time listener for submitted songs
+  useEffect(() => {
+    if (!currentZone?.id) return
+    
+    const submissionsRef = collection(db, 'submitted_songs')
+    const q = isHQ 
+      ? query(submissionsRef, orderBy('createdAt', 'desc'))
+      : query(submissionsRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'))
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Only refresh if there are actual changes (not just metadata)
+      if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
+        loadSongs()
+      }
+    }, (error) => {
+      console.log('[SubmittedSongs] Real-time listener error:', error)
+    })
+    
+    return () => unsubscribe()
+  }, [currentZone?.id, isHQ])
 
   const loadSongs = async () => {
     setLoading(true)

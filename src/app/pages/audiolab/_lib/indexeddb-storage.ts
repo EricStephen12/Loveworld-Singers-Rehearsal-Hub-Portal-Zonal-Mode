@@ -135,6 +135,40 @@ export async function getProjectRecordings(projectId: string): Promise<Map<strin
 }
 
 /**
+ * Get all recordings (for recovery on app restart)
+ */
+export async function getAllRecordings(): Promise<Map<string, { blob: Blob; projectId?: string; timestamp: number }>> {
+  try {
+    const db = await openDB();
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    
+    const recordings = await new Promise<StoredRecording[]>((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+    
+    db.close();
+    
+    const map = new Map<string, { blob: Blob; projectId?: string; timestamp: number }>();
+    recordings.forEach(rec => {
+      map.set(rec.trackId, { 
+        blob: rec.blob, 
+        projectId: rec.projectId,
+        timestamp: rec.timestamp 
+      });
+    });
+    
+    console.log('[IndexedDB] Found', map.size, 'total recordings');
+    return map;
+  } catch (error) {
+    console.error('[IndexedDB] Failed to get all recordings:', error);
+    return new Map();
+  }
+}
+
+/**
  * Delete recording from IndexedDB
  */
 export async function deleteRecordingFromIndexedDB(trackId: string): Promise<boolean> {
