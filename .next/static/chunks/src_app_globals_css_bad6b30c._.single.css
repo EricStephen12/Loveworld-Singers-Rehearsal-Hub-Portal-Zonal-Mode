@@ -10512,16 +10512,6 @@
     background-color: var(--color-yellow-100);
   }
 
-  .active\:from-purple-800:active {
-    --tw-gradient-from: var(--color-purple-800);
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  }
-
-  .active\:to-pink-800:active {
-    --tw-gradient-to: var(--color-pink-800);
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  }
-
   .active\:opacity-60:active {
     opacity: .6;
   }
@@ -11111,12 +11101,6 @@
   @media (min-width: 40rem) {
     .sm\:h-\[60px\] {
       height: 60px;
-    }
-  }
-
-  @media (min-width: 40rem) {
-    .sm\:h-auto {
-      height: auto;
     }
   }
 

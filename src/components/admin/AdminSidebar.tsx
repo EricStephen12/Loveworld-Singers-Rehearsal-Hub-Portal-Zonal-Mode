@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   FileText,
   Tag,
@@ -158,8 +159,8 @@ export default function AdminSidebar({
             </button>
             
             {/* Logo & Title */}
-            <button
-              onClick={() => router.push('/home')}
+            <Link
+              href="/home"
               className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''}`}
             >
               <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-200">
@@ -173,7 +174,7 @@ export default function AdminSidebar({
                 <h1 className="text-base font-bold text-slate-900">Admin Panel</h1>
                 <p className="text-xs text-slate-500 truncate max-w-[140px]">{currentZone?.name || 'Loveworld Singers'}</p>
               </div>
-            </button>
+            </Link>
             
             <div className="w-10 lg:hidden" />
           </div>
@@ -217,13 +218,13 @@ export default function AdminSidebar({
         {/* Footer */}
         <div className={`p-4 border-t border-slate-100 ${sidebarCollapsed ? 'lg:p-2' : ''}`}>
           {/* Mobile: Back to Home */}
-          <button
-            onClick={() => router.push('/home')}
+          <Link
+            href="/home"
             className="lg:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm hover:bg-slate-200 active:scale-[0.98] transition-all"
           >
             <Home className="w-4 h-4" />
             Back to Home
-          </button>
+          </Link>
           
           {/* Desktop: Collapse toggle */}
           <button

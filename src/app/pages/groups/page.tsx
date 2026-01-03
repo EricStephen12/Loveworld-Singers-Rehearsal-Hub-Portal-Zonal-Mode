@@ -12,7 +12,6 @@ import {
   Settings, UserPlus, UserMinus, LogOut, Paperclip, Image, FileText, Download, Maximize2
 } from 'lucide-react'
 import type { ChatUser, ReactionType } from './_lib/chat-service'
-import { sendCallMessage as sendCallMessageToChat } from './_lib/chat-service'
 import { VoiceCallService, CallData } from './_lib/voice-call-service'
 
 // Reaction options - more variety
@@ -286,51 +285,19 @@ function GroupsContent() {
         setIsInCall(true)
         setIsCalling(false)
       },
-      onCallEnded: async (call, reason) => {
-        console.log('[Groups] Call ended:', reason, 'chatId:', call.chatId)
-        
-        // Play end sound
-        service.playCallEndSound(reason)
-        
-        // Send call message to chat history
-        if (call.chatId) {
-          try {
-            if (reason === 'missed' || reason === 'timeout') {
-              console.log('[Groups] Sending missed call message')
-              await sendCallMessageToChat(call.chatId, 'missed', call.callerName)
-            } else if (reason === 'declined') {
-              console.log('[Groups] Sending declined call message')
-              await sendCallMessageToChat(call.chatId, 'declined', call.callerName)
-            } else if (reason === 'ended' && call.answeredAt) {
-              const duration = call.duration || Math.floor((Date.now() - call.answeredAt) / 1000)
-              console.log('[Groups] Sending answered call message, duration:', duration)
-              await sendCallMessageToChat(call.chatId, 'answered', call.callerName, duration)
-            }
-          } catch (error) {
-            console.error('[Groups] Error sending call message:', error)
-          }
-        }
-        
+      onCallEnded: (call, reason) => {
+        console.log('[Groups] Call ended:', reason)
+        // Note: Call messages are sent by GlobalCallOverlay to avoid duplicates
+        // Just update local UI state here
         setIsInCall(false)
         setIsCalling(false)
         setIncomingCall(null)
         setCallDuration(0)
       },
-      onCallTimeout: async (call) => {
-        console.log('[Groups] Call timeout, chatId:', call.chatId)
-        
-        // Play timeout sound
-        service.playCallEndSound('timeout')
-        
-        // Send missed call message
-        if (call.chatId) {
-          try {
-            await sendCallMessageToChat(call.chatId, 'missed', call.callerName)
-          } catch (error) {
-            console.error('[Groups] Error sending timeout call message:', error)
-          }
-        }
-        
+      onCallTimeout: (call) => {
+        console.log('[Groups] Call timeout')
+        // Note: Call messages are sent by GlobalCallOverlay to avoid duplicates
+        // Just update local UI state here
         setIsCalling(false)
         setIncomingCall(null)
       },
@@ -404,15 +371,7 @@ function GroupsContent() {
     voiceCallService.playCallEndSound('declined')
     
     await voiceCallService.declineCall(incomingCall)
-    
-    // Send declined message to chat
-    if (incomingCall.chatId) {
-      try {
-        await sendCallMessageToChat(incomingCall.chatId, 'declined', incomingCall.callerName)
-      } catch (error) {
-        console.error('[Groups] Error sending decline message:', error)
-      }
-    }
+    // Note: Declined message is sent by GlobalCallOverlay to avoid duplicates
     
     setIncomingCall(null)
   }
@@ -424,17 +383,8 @@ function GroupsContent() {
     // Play end sound
     voiceCallService.playCallEndSound('ended')
     
-    const endedCall = await voiceCallService.endCall()
-    
-    // Send call ended message to chat
-    if (endedCall?.chatId && endedCall.answeredAt) {
-      const duration = endedCall.duration || callDuration
-      try {
-        await sendCallMessageToChat(endedCall.chatId, 'answered', endedCall.callerName, duration)
-      } catch (error) {
-        console.error('[Groups] Error sending end call message:', error)
-      }
-    }
+    await voiceCallService.endCall()
+    // Note: Call ended message is sent by GlobalCallOverlay to avoid duplicates
     
     setIsInCall(false)
     setIsCalling(false)

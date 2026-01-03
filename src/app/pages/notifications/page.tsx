@@ -11,6 +11,7 @@ import ScreenHeader from '@/components/ScreenHeader'
 import { getAllMessages } from '@/lib/simple-notifications-service'
 import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
 import { getUserSongNotifications, SongNotification } from '@/lib/song-submission-service'
+import { BirthdayService } from '@/app/pages/calendar/_lib/birthday-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
@@ -448,7 +449,32 @@ export default function NotificationsPage() {
         }
       }
       
-      // 7. Chat messages - show chats with unread messages
+      // 7. Birthdays - upcoming birthdays in next 7 days
+      try {
+        console.log('[Notifications] Loading birthday notifications')
+        const birthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
+        console.log('[Notifications] Found', birthdays.length, 'upcoming birthdays')
+        
+        birthdays.forEach(bday => {
+          const title = bday.isToday 
+            ? `🎂 ${bday.first_name}'s Birthday Today!` 
+            : `🎂 Upcoming Birthday`
+          const message = bday.isToday
+            ? `${bday.first_name} ${bday.last_name} is celebrating their birthday today!`
+            : `${bday.first_name} ${bday.last_name}'s birthday is coming up`
+          
+          allNotifications.push({
+            id: `birthday-${bday.id}`,
+            title,
+            message,
+            sentAt: new Date().toISOString(),
+            type: 'birthday',
+            eventDate: bday.birthday
+          })
+        })
+      } catch (e) { console.log('Birthday notifications error:', e) }
+      
+      // 8. Chat messages - show chats with unread messages
       try {
         console.log('[Notifications] Loading chat notifications for user:', userId)
         const chatsRef = collection(db, 'chats_v2')

@@ -5,12 +5,15 @@ import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import { BirthdayService } from '@/app/pages/calendar/_lib/birthday-service'
 
 export function useUnreadNotifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [hasNewZoneMessage, setHasNewZoneMessage] = useState(false)
   const [hasNewMedia, setHasNewMedia] = useState(false)
   const [hasNewCalendar, setHasNewCalendar] = useState(false)
+  const [hasUpcomingBirthday, setHasUpcomingBirthday] = useState(false)
+  const [hasUnseenBirthday, setHasUnseenBirthday] = useState(false)
   const { user, profile } = useAuth()
   const { currentZone } = useZone()
   const lastZoneMessageTime = useRef<number>(0)
@@ -23,6 +26,7 @@ export function useUnreadNotifications() {
       setHasNewZoneMessage(false)
       setHasNewMedia(false)
       setHasNewCalendar(false)
+      setHasUpcomingBirthday(false)
       return
     }
 
@@ -30,10 +34,12 @@ export function useUnreadNotifications() {
     const storageKey = `lastSeenNotifications_${userId}`
     const mediaSeenKey = `lastSeenMedia_${userId}`
     const calendarSeenKey = `lastSeenCalendar_${userId}`
+    const birthdaySeenKey = `lastSeenBirthday_${userId}`
     lastSeenKey.current = storageKey
     const lastSeen = parseInt(localStorage.getItem(storageKey) || '0', 10)
     const lastMediaSeen = parseInt(localStorage.getItem(mediaSeenKey) || '0', 10)
     const lastCalendarSeen = parseInt(localStorage.getItem(calendarSeenKey) || '0', 10)
+    const lastBirthdaySeen = localStorage.getItem(birthdaySeenKey) || ''
     lastZoneMessageTime.current = lastSeen
 
     const unsubscribers: (() => void)[] = []
@@ -163,6 +169,29 @@ export function useUnreadNotifications() {
     }
     checkNewCalendar()
 
+    // Check for upcoming birthdays
+    const checkBirthdays = async () => {
+      try {
+        const birthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
+        setHasUpcomingBirthday(birthdays.length > 0)
+        
+        // Check if user has seen today's birthdays
+        // We use today's date as the key so it resets each day
+        const today = new Date().toDateString()
+        const hasSeenToday = lastBirthdaySeen === today
+        
+        if (birthdays.length > 0 && !hasSeenToday) {
+          setHasUnseenBirthday(true)
+          setHasNewCalendar(true)
+        } else {
+          setHasUnseenBirthday(false)
+        }
+      } catch (e) {
+        console.log('Birthday check error:', e)
+      }
+    }
+    checkBirthdays()
+
     return () => {
       unsubscribers.forEach(unsub => unsub())
     }
@@ -191,7 +220,10 @@ export function useUnreadNotifications() {
     const userId = user?.uid || profile?.id
     if (userId) {
       localStorage.setItem(`lastSeenCalendar_${userId}`, Date.now().toString())
+      // Also mark birthdays as seen for today
+      localStorage.setItem(`lastSeenBirthday_${userId}`, new Date().toDateString())
       setHasNewCalendar(false)
+      setHasUnseenBirthday(false)
     }
   }
 
@@ -200,7 +232,8 @@ export function useUnreadNotifications() {
     hasUnread: unreadCount > 0 || hasNewZoneMessage,
     hasNewZoneMessage,
     hasNewMedia,
-    hasNewCalendar,
+    hasNewCalendar: hasNewCalendar || hasUnseenBirthday,
+    hasUpcomingBirthday,
     markAsSeen,
     markMediaSeen,
     markCalendarSeen
