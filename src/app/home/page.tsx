@@ -39,7 +39,7 @@ function HomePageContent() {
   
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature } = useSubscription()
-  const { hasUnread: hasUnreadNotifications, hasNewMedia, hasNewCalendar, markMediaSeen, markCalendarSeen } = useUnreadNotifications()
+  const { hasUnread: hasUnreadNotifications, hasNewMedia, hasNewCalendar, unreadCount: chatUnreadCount, markMediaSeen, markCalendarSeen } = useUnreadNotifications()
   
   // Show loading only on first visit (no cached zone data)
   // This prevents the flicker when zone data loads
@@ -249,7 +249,7 @@ function HomePageContent() {
       icon: Users,
       title: 'Groups',
       href: '/pages/groups',
-      badge: null,
+      badge: 'chat',
       premium: false,
     },
     {
@@ -716,6 +716,11 @@ function HomePageContent() {
                       {feature.badge === 'calendar' && hasNewCalendar && (
                         <div className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
                           <div className="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                      )}
+                      {feature.badge === 'chat' && chatUnreadCount > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
+                          <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-75"></div>
                         </div>
                       )}
                       {isPremiumFeature && !hasAccess && (

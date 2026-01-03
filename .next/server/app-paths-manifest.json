@@ -1,7 +1,7 @@
 {
+  "/admin/page": "app/admin/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/home/page": "app/home/page.js",
   "/page": "app/page.js",
-  "/pages/calendar/page": "app/pages/calendar/page.js",
-  "/pages/notifications/page": "app/pages/notifications/page.js"
+  "/pages/groups/page": "app/pages/groups/page.js"
 }

@@ -194,6 +194,82 @@ export class SimplifiedAnalyticsService {
     }
   }
 
+  static async trackLocation(country: string, city: string) {
+    if (!country) return;
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    const docId = this.getMonthlyDocId(year, month);
+    const docRef = doc(db, 'simplified_analytics', docId);
+    
+    // Sanitize keys for Firestore (replace dots and slashes)
+    const safeCountry = country.replace(/[.\/]/g, '_');
+    const safeCity = city ? city.replace(/[.\/]/g, '_') : 'Unknown';
+    
+    const updateData: any = {
+      [`countries.${safeCountry}`]: increment(1),
+      [`cities.${safeCity}`]: increment(1),
+      updatedAt: new Date()
+    };
+    
+    try {
+      await updateDoc(docRef, updateData);
+    } catch (error) {
+      // If document doesn't exist, create it
+      const newRecord: SimplifiedAnalyticsRecord = {
+        id: docId,
+        year,
+        month,
+        totalSignups: 0,
+        totalLogins: 0,
+        totalFeatureEngagements: 0,
+        totalSongMinistries: 0,
+        uniqueUsers: 0,
+        pageViews: {},
+        countries: { [safeCountry]: 1 },
+        cities: { [safeCity]: 1 },
+        browsers: {},
+        featureEngagements: {},
+        songMinistries: {},
+        updatedAt: new Date(),
+        createdAt: new Date()
+      };
+      await setDoc(docRef, newRecord);
+    }
+  }
+
+  // Get user's location using IP geolocation API
+  static async getUserLocation(): Promise<{ country: string; city: string } | null> {
+    try {
+      // Using ip-api.com (free, no API key needed, 45 requests/minute limit)
+      const response = await fetch('http://ip-api.com/json/?fields=country,city');
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      return {
+        country: data.country || 'Unknown',
+        city: data.city || 'Unknown'
+      };
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      return null;
+    }
+  }
+
+  // Track location on login/signup
+  static async trackUserLocation() {
+    try {
+      const location = await this.getUserLocation();
+      if (location) {
+        await this.trackLocation(location.country, location.city);
+      }
+    } catch (error) {
+      console.error('Error tracking user location:', error);
+    }
+  }
+
   static async getMonthlySummary(year: number, month: number): Promise<SimplifiedAnalyticsRecord | null> {
     const docId = this.getMonthlyDocId(year, month);
     const docRef = doc(db, 'simplified_analytics', docId);

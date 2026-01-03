@@ -50,6 +50,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$tag$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Tag$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/tag.js [app-ssr] (ecmascript) <export default as Tag>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-ssr] (ecmascript) <export default as Users>");
@@ -69,6 +70,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useZone$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/hooks/useZone.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$config$2f$zones$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/config/zones.ts [app-ssr] (ecmascript)");
 "use client";
+;
 ;
 ;
 ;
@@ -194,7 +196,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     className: `w-5 h-5 flex-shrink-0 ${item.active ? 'text-white' : ''}`
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 110,
+                    lineNumber: 111,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -202,7 +204,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     children: item.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 111,
+                    lineNumber: 112,
                     columnNumber: 9
                 }, this),
                 item.badge && item.badge > 0 && !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -210,7 +212,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     children: item.badge
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 115,
+                    lineNumber: 116,
                     columnNumber: 11
                 }, this),
                 item.badge && item.badge > 0 && sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -218,20 +220,20 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                     children: item.badge
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 120,
+                    lineNumber: 121,
                     columnNumber: 11
                 }, this),
                 item.active && !item.badge && !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
                     className: `w-4 h-4 ml-auto ${item.active ? 'text-white/70' : 'text-slate-400'}`
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                    lineNumber: 125,
+                    lineNumber: 126,
                     columnNumber: 11
                 }, this)
             ]
         }, index, true, {
             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-            lineNumber: 91,
+            lineNumber: 92,
             columnNumber: 7
         }, this);
     };
@@ -242,7 +244,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                 onClick: ()=>setSidebarCollapsed(true)
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                lineNumber: 135,
+                lineNumber: 136,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -266,16 +268,16 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         className: "w-6 h-6 text-slate-600"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 157,
+                                        lineNumber: 158,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 153,
+                                    lineNumber: 154,
                                     columnNumber: 13
                                 }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                    onClick: ()=>router.push('/home'),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                                    href: "/home",
                                     className: `flex items-center gap-3 hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''}`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -286,12 +288,12 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                 className: "w-7 h-7 object-contain"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                lineNumber: 166,
+                                                lineNumber: 167,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                            lineNumber: 165,
+                                            lineNumber: 166,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -302,7 +304,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                     children: "Admin Panel"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                    lineNumber: 173,
+                                                    lineNumber: 174,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -310,37 +312,37 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                                     children: currentZone?.name || 'Loveworld Singers'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                                    lineNumber: 174,
+                                                    lineNumber: 175,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                            lineNumber: 172,
+                                            lineNumber: 173,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 161,
+                                    lineNumber: 162,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "w-10 lg:hidden"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                    lineNumber: 178,
+                                    lineNumber: 179,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                            lineNumber: 151,
+                            lineNumber: 152,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 150,
+                        lineNumber: 151,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -354,14 +356,14 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Overview"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 187,
+                                        lineNumber: 188,
                                         columnNumber: 15
                                     }, this),
                                     filteredMainItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 185,
+                                lineNumber: 186,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -372,21 +374,21 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Content"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 197,
+                                        lineNumber: 198,
                                         columnNumber: 15
                                     }, this),
                                     sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "hidden lg:block h-px bg-slate-200 my-3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 201,
+                                        lineNumber: 202,
                                         columnNumber: 34
                                     }, this),
                                     filteredContentItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 195,
+                                lineNumber: 196,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -397,48 +399,48 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Management"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 208,
+                                        lineNumber: 209,
                                         columnNumber: 15
                                     }, this),
                                     sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "hidden lg:block h-px bg-slate-200 my-3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 212,
+                                        lineNumber: 213,
                                         columnNumber: 34
                                     }, this),
                                     filteredManagementItems.map(renderNavItem)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 206,
+                                lineNumber: 207,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 183,
+                        lineNumber: 184,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: `p-4 border-t border-slate-100 ${sidebarCollapsed ? 'lg:p-2' : ''}`,
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                onClick: ()=>router.push('/home'),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                                href: "/home",
                                 className: "lg:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm hover:bg-slate-200 active:scale-[0.98] transition-all",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$house$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Home$3e$__["Home"], {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 224,
+                                        lineNumber: 225,
                                         columnNumber: 13
                                     }, this),
                                     "Back to Home"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 220,
+                                lineNumber: 221,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -450,7 +452,7 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         className: `w-4 h-4 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 234,
+                                        lineNumber: 235,
                                         columnNumber: 13
                                     }, this),
                                     !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -458,25 +460,25 @@ function AdminSidebar({ sidebarCollapsed, setSidebarCollapsed, activeSection, se
                                         children: "Collapse"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                        lineNumber: 235,
+                                        lineNumber: 236,
                                         columnNumber: 35
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                                lineNumber: 229,
+                                lineNumber: 230,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                        lineNumber: 218,
+                        lineNumber: 219,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/AdminSidebar.tsx",
-                lineNumber: 142,
+                lineNumber: 143,
                 columnNumber: 7
             }, this)
         ]
@@ -9074,6 +9076,15 @@ function SimplifiedAnalyticsDashboard() {
             songId: songId.replace(/_/g, ' '),
             count
         }));
+    const topCountries = Object.entries(selectedRecord.countries || {}).sort((a, b)=>b[1] - a[1]).slice(0, 10).map(([country, count])=>({
+            country: country.replace(/_/g, ' '),
+            count
+        }));
+    const topCities = Object.entries(selectedRecord.cities || {}).sort((a, b)=>b[1] - a[1]).slice(0, 10).map(([city, count])=>({
+            city: city.replace(/_/g, ' '),
+            count
+        }));
+    const totalCountryVisits = Object.values(selectedRecord.countries || {}).reduce((a, b)=>a + b, 0);
     if (loading) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "space-y-6",
@@ -9082,7 +9093,7 @@ function SimplifiedAnalyticsDashboard() {
                     className: "h-8 w-48 bg-gray-200 rounded animate-pulse"
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                    lineNumber: 161,
+                    lineNumber: 171,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9096,18 +9107,18 @@ function SimplifiedAnalyticsDashboard() {
                             className: "h-32 bg-gray-100 rounded-xl animate-pulse"
                         }, i, false, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 163,
+                            lineNumber: 173,
                             columnNumber: 31
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                    lineNumber: 162,
+                    lineNumber: 172,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-            lineNumber: 160,
+            lineNumber: 170,
             columnNumber: 7
         }, this);
     }
@@ -9124,7 +9135,7 @@ function SimplifiedAnalyticsDashboard() {
                                 children: "Analytics Dashboard"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 174,
+                                lineNumber: 184,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9132,13 +9143,13 @@ function SimplifiedAnalyticsDashboard() {
                                 children: "Track signups, logins, and feature usage"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 175,
+                                lineNumber: 185,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 173,
+                        lineNumber: 183,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9152,7 +9163,7 @@ function SimplifiedAnalyticsDashboard() {
                                     className: `w-4 h-4 ${refreshing ? 'animate-spin' : ''}`
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 180,
+                                    lineNumber: 190,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9160,24 +9171,24 @@ function SimplifiedAnalyticsDashboard() {
                                     children: refreshing ? 'Refreshing...' : 'Refresh'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 181,
+                                    lineNumber: 191,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 178,
+                            lineNumber: 188,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 177,
+                        lineNumber: 187,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 172,
+                lineNumber: 182,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9192,7 +9203,7 @@ function SimplifiedAnalyticsDashboard() {
                                     className: "w-4 h-4 text-gray-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 190,
+                                    lineNumber: 200,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9200,13 +9211,13 @@ function SimplifiedAnalyticsDashboard() {
                                     children: "Filter by:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 191,
+                                    lineNumber: 201,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 189,
+                            lineNumber: 199,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9219,12 +9230,12 @@ function SimplifiedAnalyticsDashboard() {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 195,
+                                        lineNumber: 205,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 194,
+                                    lineNumber: 204,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9236,12 +9247,12 @@ function SimplifiedAnalyticsDashboard() {
                                             children: month
                                         }, idx, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 199,
+                                            lineNumber: 209,
                                             columnNumber: 43
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 197,
+                                    lineNumber: 207,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9253,12 +9264,12 @@ function SimplifiedAnalyticsDashboard() {
                                             children: year
                                         }, year, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 203,
+                                            lineNumber: 213,
                                             columnNumber: 40
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 201,
+                                    lineNumber: 211,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -9268,18 +9279,18 @@ function SimplifiedAnalyticsDashboard() {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 206,
+                                        lineNumber: 216,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 205,
+                                    lineNumber: 215,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 193,
+                            lineNumber: 203,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -9291,18 +9302,18 @@ function SimplifiedAnalyticsDashboard() {
                             children: "Today"
                         }, void 0, false, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 209,
+                            lineNumber: 219,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                    lineNumber: 188,
+                    lineNumber: 198,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 187,
+                lineNumber: 197,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9316,7 +9327,7 @@ function SimplifiedAnalyticsDashboard() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 218,
+                        lineNumber: 228,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9333,17 +9344,17 @@ function SimplifiedAnalyticsDashboard() {
                                                 className: "w-5 h-5 text-purple-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 223,
+                                                lineNumber: 233,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 222,
+                                            lineNumber: 232,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 221,
+                                        lineNumber: 231,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -9351,7 +9362,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: selectedRecord.totalSignups.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 226,
+                                        lineNumber: 236,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9359,13 +9370,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Signups"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 227,
+                                        lineNumber: 237,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 220,
+                                lineNumber: 230,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9379,17 +9390,17 @@ function SimplifiedAnalyticsDashboard() {
                                                 className: "w-5 h-5 text-green-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 232,
+                                                lineNumber: 242,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 231,
+                                            lineNumber: 241,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 230,
+                                        lineNumber: 240,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -9397,7 +9408,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: selectedRecord.totalLogins.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 235,
+                                        lineNumber: 245,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9405,13 +9416,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Logins"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 236,
+                                        lineNumber: 246,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 229,
+                                lineNumber: 239,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9425,17 +9436,17 @@ function SimplifiedAnalyticsDashboard() {
                                                 className: "w-5 h-5 text-blue-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 241,
+                                                lineNumber: 251,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 240,
+                                            lineNumber: 250,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 239,
+                                        lineNumber: 249,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -9443,7 +9454,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: selectedRecord.totalFeatureEngagements.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 244,
+                                        lineNumber: 254,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9451,13 +9462,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Features Used"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 245,
+                                        lineNumber: 255,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 238,
+                                lineNumber: 248,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9471,17 +9482,17 @@ function SimplifiedAnalyticsDashboard() {
                                                 className: "w-5 h-5 text-yellow-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 250,
+                                                lineNumber: 260,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 249,
+                                            lineNumber: 259,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 248,
+                                        lineNumber: 258,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -9489,7 +9500,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: selectedRecord.totalSongMinistries.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 253,
+                                        lineNumber: 263,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9497,25 +9508,25 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Song Ministries"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 254,
+                                        lineNumber: 264,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 247,
+                                lineNumber: 257,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 219,
+                        lineNumber: 229,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 217,
+                lineNumber: 227,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9526,7 +9537,7 @@ function SimplifiedAnalyticsDashboard() {
                         children: "All Time Totals"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 261,
+                        lineNumber: 271,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9539,7 +9550,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: allTimeTotals.signups.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 264,
+                                        lineNumber: 274,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9547,13 +9558,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Total Signups"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 265,
+                                        lineNumber: 275,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 263,
+                                lineNumber: 273,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9563,7 +9574,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: allTimeTotals.logins.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 268,
+                                        lineNumber: 278,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9571,13 +9582,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Total Logins"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 279,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 267,
+                                lineNumber: 277,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9587,7 +9598,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: allTimeTotals.features.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 272,
+                                        lineNumber: 282,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9595,13 +9606,13 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Features Used"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 273,
+                                        lineNumber: 283,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 271,
+                                lineNumber: 281,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9611,7 +9622,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: allTimeTotals.ministries.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 276,
+                                        lineNumber: 286,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9619,25 +9630,25 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Song Ministries"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 277,
+                                        lineNumber: 287,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 275,
+                                lineNumber: 285,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 262,
+                        lineNumber: 272,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 260,
+                lineNumber: 270,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9648,7 +9659,7 @@ function SimplifiedAnalyticsDashboard() {
                         children: "Log Song Ministry"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 284,
+                        lineNumber: 294,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -9663,7 +9674,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Song"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 287,
+                                        lineNumber: 297,
                                         columnNumber: 13
                                     }, this),
                                     songsLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9671,7 +9682,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Loading..."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 289,
+                                        lineNumber: 299,
                                         columnNumber: 15
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                         value: newMinistry.songId,
@@ -9691,7 +9702,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Select song..."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 295,
+                                                lineNumber: 305,
                                                 columnNumber: 17
                                             }, this),
                                             allSongs.map((song)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9703,19 +9714,19 @@ function SimplifiedAnalyticsDashboard() {
                                                     ]
                                                 }, song.id, true, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 296,
+                                                    lineNumber: 306,
                                                     columnNumber: 39
                                                 }, this))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 291,
+                                        lineNumber: 301,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 286,
+                                lineNumber: 296,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9725,7 +9736,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Type"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 301,
+                                        lineNumber: 311,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9741,7 +9752,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Rehearsal"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 304,
+                                                lineNumber: 314,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9749,7 +9760,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Service"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 305,
+                                                lineNumber: 315,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9757,7 +9768,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Meeting"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 306,
+                                                lineNumber: 316,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9765,19 +9776,19 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Other"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 307,
+                                                lineNumber: 317,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 302,
+                                        lineNumber: 312,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 300,
+                                lineNumber: 310,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9787,7 +9798,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Date"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 311,
+                                        lineNumber: 321,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9801,13 +9812,13 @@ function SimplifiedAnalyticsDashboard() {
                                         required: true
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 312,
+                                        lineNumber: 322,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 310,
+                                lineNumber: 320,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9818,7 +9829,7 @@ function SimplifiedAnalyticsDashboard() {
                                         children: "Notes"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 316,
+                                        lineNumber: 326,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9832,13 +9843,13 @@ function SimplifiedAnalyticsDashboard() {
                                         placeholder: "Optional notes"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 317,
+                                        lineNumber: 327,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 315,
+                                lineNumber: 325,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9851,31 +9862,31 @@ function SimplifiedAnalyticsDashboard() {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 322,
+                                            lineNumber: 332,
                                             columnNumber: 15
                                         }, this),
                                         " Record"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 321,
+                                    lineNumber: 331,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 320,
+                                lineNumber: 330,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 285,
+                        lineNumber: 295,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 283,
+                lineNumber: 293,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9889,7 +9900,7 @@ function SimplifiedAnalyticsDashboard() {
                                 children: "Top Features Used"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 331,
+                                lineNumber: 341,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9902,7 +9913,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: item.feature
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 335,
+                                                lineNumber: 345,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9910,31 +9921,31 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: item.count
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 336,
+                                                lineNumber: 346,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, idx, true, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 334,
+                                        lineNumber: 344,
                                         columnNumber: 15
                                     }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-sm text-gray-500 text-center py-4",
                                     children: "No feature data for this month"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 338,
+                                    lineNumber: 348,
                                     columnNumber: 18
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 332,
+                                lineNumber: 342,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 330,
+                        lineNumber: 340,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9945,7 +9956,7 @@ function SimplifiedAnalyticsDashboard() {
                                 children: "Top Ministered Songs"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 342,
+                                lineNumber: 352,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9958,7 +9969,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: item.songId
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 346,
+                                                lineNumber: 356,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9969,37 +9980,37 @@ function SimplifiedAnalyticsDashboard() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 347,
+                                                lineNumber: 357,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, idx, true, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 345,
+                                        lineNumber: 355,
                                         columnNumber: 15
                                     }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-sm text-gray-500 text-center py-4",
                                     children: "No ministry data for this month"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 349,
+                                    lineNumber: 359,
                                     columnNumber: 18
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 343,
+                                lineNumber: 353,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 341,
+                        lineNumber: 351,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 329,
+                lineNumber: 339,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10010,7 +10021,7 @@ function SimplifiedAnalyticsDashboard() {
                         children: "Monthly Breakdown"
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 356,
+                        lineNumber: 366,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10027,7 +10038,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Month"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 361,
+                                                lineNumber: 371,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -10035,7 +10046,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Signups"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 362,
+                                                lineNumber: 372,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -10043,7 +10054,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Logins"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 363,
+                                                lineNumber: 373,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -10051,7 +10062,7 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Features"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 364,
+                                                lineNumber: 374,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -10059,18 +10070,18 @@ function SimplifiedAnalyticsDashboard() {
                                                 children: "Ministries"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                lineNumber: 365,
+                                                lineNumber: 375,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 360,
+                                        lineNumber: 370,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 359,
+                                    lineNumber: 369,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -10089,7 +10100,7 @@ function SimplifiedAnalyticsDashboard() {
                                                     children: monthName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 375,
+                                                    lineNumber: 385,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -10097,7 +10108,7 @@ function SimplifiedAnalyticsDashboard() {
                                                     children: record.totalSignups
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 376,
+                                                    lineNumber: 386,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -10105,7 +10116,7 @@ function SimplifiedAnalyticsDashboard() {
                                                     children: record.totalLogins
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 377,
+                                                    lineNumber: 387,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -10113,7 +10124,7 @@ function SimplifiedAnalyticsDashboard() {
                                                     children: record.totalFeatureEngagements
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 378,
+                                                    lineNumber: 388,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -10121,13 +10132,13 @@ function SimplifiedAnalyticsDashboard() {
                                                     children: record.totalSongMinistries
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                                    lineNumber: 379,
+                                                    lineNumber: 389,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, idx, true, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 373,
+                                            lineNumber: 383,
                                             columnNumber: 19
                                         }, this);
                                     }) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -10137,34 +10148,34 @@ function SimplifiedAnalyticsDashboard() {
                                             children: "No analytics data yet. Data will appear as users interact with the app."
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                            lineNumber: 383,
+                                            lineNumber: 393,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                        lineNumber: 383,
+                                        lineNumber: 393,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                    lineNumber: 368,
+                                    lineNumber: 378,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                            lineNumber: 358,
+                            lineNumber: 368,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 357,
+                        lineNumber: 367,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 355,
+                lineNumber: 365,
                 columnNumber: 7
             }, this),
             toasts.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10176,31 +10187,31 @@ function SimplifiedAnalyticsDashboard() {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 395,
+                                lineNumber: 405,
                                 columnNumber: 43
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__["XCircle"], {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                                lineNumber: 395,
+                                lineNumber: 405,
                                 columnNumber: 81
                             }, this),
                             toast.message
                         ]
                     }, toast.id, true, {
                         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                        lineNumber: 394,
+                        lineNumber: 404,
                         columnNumber: 13
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-                lineNumber: 392,
+                lineNumber: 402,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/admin/SimplifiedAnalyticsDashboard.tsx",
-        lineNumber: 170,
+        lineNumber: 180,
         columnNumber: 5
     }, this);
 }

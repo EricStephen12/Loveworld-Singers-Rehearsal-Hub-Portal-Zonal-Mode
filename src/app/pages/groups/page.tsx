@@ -9,7 +9,8 @@ import { ChatProviderV2, useChatV2 } from './_context/ChatContextV2'
 import { 
   ArrowLeft, MessageCircle, Users, Search, Plus, Send, 
   Trash2, X, Check, Loader2, ChevronLeft, Phone, PhoneOff, Mic, MicOff,
-  Settings, UserPlus, UserMinus, LogOut, Paperclip, Image, FileText, Download, Maximize2
+  Settings, UserPlus, UserMinus, LogOut, Image, FileText, Download, Maximize2,
+  Reply, Copy
 } from 'lucide-react'
 import type { ChatUser, ReactionType } from './_lib/chat-service'
 import { VoiceCallService, CallData } from './_lib/voice-call-service'
@@ -72,7 +73,6 @@ function GroupsContent() {
   const [messageText, setMessageText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [showAttachMenu, setShowAttachMenu] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Group creation state
@@ -95,6 +95,7 @@ function GroupsContent() {
   const [messageSearchTerm, setMessageSearchTerm] = useState('')
   const [showMessageSearch, setShowMessageSearch] = useState(false)
   const [viewingImage, setViewingImage] = useState<string | null>(null)
+  const [replyingTo, setReplyingTo] = useState<{ id: string; text: string; senderName: string } | null>(null)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -221,11 +222,12 @@ function GroupsContent() {
     if (!messageText.trim() || isSending) return
     
     setIsSending(true)
-    const success = await sendMessage(messageText.trim())
+    const success = await sendMessage(messageText.trim(), replyingTo || undefined)
     setIsSending(false)
     
     if (success) {
       setMessageText('')
+      setReplyingTo(null)
       inputRef.current?.focus()
     }
   }
@@ -248,7 +250,6 @@ function GroupsContent() {
     }
     
     setIsUploading(true)
-    setShowAttachMenu(false)
     
     const success = await sendMediaMessage(file)
     
@@ -850,23 +851,53 @@ function GroupsContent() {
                                   </button>
                                 ))}
                                 
+                                <div className="w-px h-6 bg-gray-200 mx-1 flex-shrink-0" />
+                                
+                                {/* Reply button */}
+                                <button
+                                  onClick={() => {
+                                    setReplyingTo({
+                                      id: msg.id,
+                                      text: msg.text || (msg.type === 'image' ? '📷 Image' : '📄 Document'),
+                                      senderName: msg.senderName
+                                    })
+                                    setSelectedMessageId(null)
+                                    inputRef.current?.focus()
+                                  }}
+                                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center hover:bg-blue-50 rounded-full"
+                                  title="Reply"
+                                >
+                                  <Reply className="w-5 h-5 text-blue-500" />
+                                </button>
+                                
+                                {/* Copy button - only for text messages */}
+                                {msg.type === 'text' && msg.text && (
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(msg.text)
+                                      setSelectedMessageId(null)
+                                    }}
+                                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center hover:bg-gray-100 rounded-full"
+                                    title="Copy"
+                                  >
+                                    <Copy className="w-5 h-5 text-gray-500" />
+                                  </button>
+                                )}
+                                
                                 {/* Delete button inline - only for own messages */}
                                 {isOwn && (
-                                  <>
-                                    <div className="w-px h-6 bg-gray-200 mx-1 flex-shrink-0" />
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (confirm('Delete this message?')) {
-                                          deleteMessage(msg.id)
-                                          setSelectedMessageId(null)
-                                        }
-                                      }}
-                                      className="flex-shrink-0 w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-full"
-                                    >
-                                      <Trash2 className="w-5 h-5 text-red-500" />
-                                    </button>
-                                  </>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      if (confirm('Delete this message?')) {
+                                        deleteMessage(msg.id)
+                                        setSelectedMessageId(null)
+                                      }
+                                    }}
+                                    className="flex-shrink-0 w-9 h-9 flex items-center justify-center hover:bg-red-50 rounded-full"
+                                  >
+                                    <Trash2 className="w-5 h-5 text-red-500" />
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -892,6 +923,23 @@ function GroupsContent() {
               
               {/* Message input - expandable textarea */}
               <div className="flex-shrink-0 p-3 bg-white border-t border-gray-200">
+                {/* Reply preview */}
+                {replyingTo && (
+                  <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-gray-100 rounded-lg border-l-4" style={{ borderLeftColor: primaryColor }}>
+                    <Reply className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-600">{replyingTo.senderName}</p>
+                      <p className="text-sm text-gray-500 truncate">{replyingTo.text}</p>
+                    </div>
+                    <button
+                      onClick={() => setReplyingTo(null)}
+                      className="p-1 hover:bg-gray-200 rounded-full flex-shrink-0"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                )}
+                
                 {/* Uploading indicator */}
                 {isUploading && (
                   <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-gray-100 rounded-lg">
@@ -901,48 +949,21 @@ function GroupsContent() {
                 )}
                 
                 <div className="flex items-end gap-2">
-                  {/* Attachment button */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowAttachMenu(!showAttachMenu)}
-                      className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
-                      disabled={isUploading}
-                    >
-                      <Paperclip className="w-5 h-5 text-gray-500" />
-                    </button>
-                    
-                    {/* Attachment menu */}
-                    {showAttachMenu && (
-                      <div className="absolute bottom-12 left-0 bg-white rounded-xl shadow-lg border border-gray-200 py-2 min-w-[140px] z-10">
-                        <button
-                          onClick={() => {
-                            const input = document.createElement('input')
-                            input.type = 'file'
-                            input.accept = 'image/*'
-                            input.onchange = (e) => handleFileSelect(e as any, 'image')
-                            input.click()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-left"
-                        >
-                          <Image className="w-5 h-5" style={{ color: primaryColor }} />
-                          <span className="text-sm font-medium">Image</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            const input = document.createElement('input')
-                            input.type = 'file'
-                            input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip'
-                            input.onchange = (e) => handleFileSelect(e as any, 'document')
-                            input.click()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-left"
-                        >
-                          <FileText className="w-5 h-5 text-blue-500" />
-                          <span className="text-sm font-medium">Document</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {/* Image attachment button */}
+                  <button
+                    onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'
+                      input.accept = 'image/*'
+                      input.onchange = (e) => handleFileSelect(e as any, 'image')
+                      input.click()
+                    }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+                    disabled={isUploading}
+                    title="Send image"
+                  >
+                    <Image className="w-5 h-5 text-gray-500" />
+                  </button>
                   
                   <textarea
                     ref={inputRef as React.RefObject<HTMLTextAreaElement>}

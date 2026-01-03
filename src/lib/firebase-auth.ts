@@ -41,6 +41,8 @@ export class FirebaseAuthService {
       // Track login analytics
       try {
         await SimplifiedAnalyticsService.incrementLogins(1)
+        // Track user location
+        SimplifiedAnalyticsService.trackUserLocation() // Fire and forget
       } catch (analyticsError) {
         console.error('Analytics tracking failed:', analyticsError)
       }
@@ -74,6 +76,8 @@ export class FirebaseAuthService {
       // Track signup analytics
       try {
         await SimplifiedAnalyticsService.incrementSignups(1)
+        // Track user location
+        SimplifiedAnalyticsService.trackUserLocation() // Fire and forget
       } catch (analyticsError) {
         console.error('Analytics tracking failed:', analyticsError)
       }

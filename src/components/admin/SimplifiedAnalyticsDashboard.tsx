@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Users, Activity, Eye, Music, Calendar, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { Users, Activity, Eye, Music, Calendar, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, XCircle, Filter, MapPin, Globe } from 'lucide-react';
 import { SimplifiedAnalyticsService } from '@/lib/simplified-analytics-service';
 import { SongMinistryService } from '@/lib/song-ministry-service';
 
@@ -154,6 +154,16 @@ export default function SimplifiedAnalyticsDashboard() {
   const topSongs = Object.entries(selectedRecord.songMinistries)
     .sort((a, b) => b[1] - a[1]).slice(0, 5)
     .map(([songId, count]) => ({ songId: songId.replace(/_/g, ' '), count }));
+
+  const topCountries = Object.entries(selectedRecord.countries || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 10)
+    .map(([country, count]) => ({ country: country.replace(/_/g, ' '), count }));
+
+  const topCities = Object.entries(selectedRecord.cities || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 10)
+    .map(([city, count]) => ({ city: city.replace(/_/g, ' '), count }));
+
+  const totalCountryVisits = Object.values(selectedRecord.countries || {}).reduce((a, b) => a + b, 0);
 
   if (loading) {
     return (
@@ -347,6 +357,62 @@ export default function SimplifiedAnalyticsDashboard() {
                 <span className="text-sm font-semibold text-gray-900">{item.count}x</span>
               </div>
             )) : <p className="text-sm text-gray-500 text-center py-4">No ministry data for this month</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Geographic Location */}
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe className="w-5 h-5 text-purple-600" />
+          <h3 className="text-lg font-bold text-gray-900">Geographic Distribution</h3>
+          {totalCountryVisits > 0 && (
+            <span className="text-sm text-gray-500 ml-auto">{totalCountryVisits} total visits</span>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Countries */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Top Countries
+            </h4>
+            <div className="space-y-2">
+              {topCountries.length > 0 ? topCountries.map((item, idx) => {
+                const percentage = totalCountryVisits > 0 ? Math.round((item.count / totalCountryVisits) * 100) : 0;
+                return (
+                  <div key={idx} className="relative">
+                    <div className="flex items-center justify-between relative z-10 py-1.5 px-2">
+                      <span className="text-sm text-gray-700 font-medium">{item.country}</span>
+                      <span className="text-sm text-gray-600">{item.count} ({percentage}%)</span>
+                    </div>
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-purple-100 rounded"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                );
+              }) : (
+                <p className="text-sm text-gray-500 text-center py-4">No location data yet. Data will appear as users log in.</p>
+              )}
+            </div>
+          </div>
+          
+          {/* Cities */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> Top Cities
+            </h4>
+            <div className="space-y-2">
+              {topCities.length > 0 ? topCities.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between py-1.5 px-2 hover:bg-gray-50 rounded">
+                  <span className="text-sm text-gray-700">{item.city}</span>
+                  <span className="text-sm font-semibold text-gray-900">{item.count}</span>
+                </div>
+              )) : (
+                <p className="text-sm text-gray-500 text-center py-4">No city data yet</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
