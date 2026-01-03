@@ -224,13 +224,13 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
     }
   };
 
+  // State for delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   // Delete from Master Library
   const handleDelete = async (songId: string) => {
-    if (!confirm('Are you sure you want to remove this song from the Master Library?')) return;
-    
     const result = await MasterLibraryService.deleteMasterSong(songId);
     if (result.success) {
-      // Get real user info
       const userName = localStorage.getItem('userName') || 
                      localStorage.getItem('userEmail') || 
                      'Admin';
@@ -245,6 +245,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
           itemName: 'Song'
         }
       }));
+      setDeleteConfirmId(null);
       loadData();
     } else {
       window.dispatchEvent(new CustomEvent('showToast', {
@@ -349,7 +350,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
     <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white lg:bg-gradient-to-br lg:from-slate-50 lg:via-white lg:to-purple-50">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
           toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
         }`}>
           {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
@@ -529,7 +530,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
                     setSelectedSong(song);
                     setShowEditModal(true);
                   } : undefined}
-                  onDelete={() => handleDelete(song.id)}
+                  onDelete={() => setDeleteConfirmId(song.id)}
                   onImport={() => openImportModal(song)}
                 />
               ))}
@@ -659,6 +660,40 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
           importing={importing}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Remove Song</h3>
+                <p className="text-sm text-gray-500">This cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to remove this song from the Master Library?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirmId)}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -772,7 +807,7 @@ function PublishModal({
   }, [songs, searchTerm]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-slate-200">
@@ -931,7 +966,7 @@ function ImportModal({
   importing: boolean;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
       <div className="bg-white rounded-2xl w-full max-w-md">
         {/* Header */}
         <div className="p-6 border-b border-slate-200">

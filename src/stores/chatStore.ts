@@ -34,7 +34,7 @@ interface ChatState {
   clearChatData: () => void
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+export const useChatStore = create<ChatState>((set) => ({
   // Initial state
   chats: [],
   selectedChat: null,

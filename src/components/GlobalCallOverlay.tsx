@@ -38,18 +38,30 @@ export function GlobalCallOverlay() {
         callStartTimeRef.current = Date.now()
       },
       onCallEnded: async (call, reason) => {
-        console.log('[GlobalCall] Call ended:', reason)
+        console.log('[GlobalCall] Call ended:', reason, 'chatId:', call.chatId)
         
-        // Send call message to chat
+        // Play end sound
+        service.playCallEndSound(reason)
+        
+        // Send call message to chat - only if we have a chatId
         if (call.chatId) {
-          if (reason === 'missed' || reason === 'timeout') {
-            await sendCallMessage(call.chatId, 'missed', call.callerName)
-          } else if (reason === 'declined') {
-            await sendCallMessage(call.chatId, 'declined', call.callerName)
-          } else if (reason === 'ended' && call.answeredAt) {
-            const duration = call.duration || Math.floor((Date.now() - call.answeredAt) / 1000)
-            await sendCallMessage(call.chatId, 'answered', call.callerName, duration)
+          try {
+            if (reason === 'missed' || reason === 'timeout') {
+              console.log('[GlobalCall] Sending missed call message to chat:', call.chatId)
+              await sendCallMessage(call.chatId, 'missed', call.callerName)
+            } else if (reason === 'declined') {
+              console.log('[GlobalCall] Sending declined call message to chat:', call.chatId)
+              await sendCallMessage(call.chatId, 'declined', call.callerName)
+            } else if (reason === 'ended' && call.answeredAt) {
+              const duration = call.duration || Math.floor((Date.now() - call.answeredAt) / 1000)
+              console.log('[GlobalCall] Sending answered call message to chat:', call.chatId, 'duration:', duration)
+              await sendCallMessage(call.chatId, 'answered', call.callerName, duration)
+            }
+          } catch (error) {
+            console.error('[GlobalCall] Error sending call message:', error)
           }
+        } else {
+          console.warn('[GlobalCall] No chatId available for call message')
         }
         
         resetCallState()
@@ -62,9 +74,18 @@ export function GlobalCallOverlay() {
         }
       },
       onCallTimeout: async (call) => {
-        console.log('[GlobalCall] Call timeout')
+        console.log('[GlobalCall] Call timeout, chatId:', call.chatId)
+        
+        // Play timeout sound
+        service.playCallEndSound('timeout')
+        
         if (call.chatId) {
-          await sendCallMessage(call.chatId, 'missed', call.callerName)
+          try {
+            console.log('[GlobalCall] Sending missed call message (timeout) to chat:', call.chatId)
+            await sendCallMessage(call.chatId, 'missed', call.callerName)
+          } catch (error) {
+            console.error('[GlobalCall] Error sending timeout call message:', error)
+          }
         }
         resetCallState()
       }
@@ -115,6 +136,9 @@ export function GlobalCallOverlay() {
   const handleDecline = async () => {
     if (!voiceCallService || !incomingCall) return
     
+    // Play decline sound
+    voiceCallService.playCallEndSound('declined')
+    
     await voiceCallService.declineCall(incomingCall)
     
     // Send declined message
@@ -128,6 +152,9 @@ export function GlobalCallOverlay() {
   // End call
   const handleEndCall = async () => {
     if (!voiceCallService) return
+    
+    // Play end sound
+    voiceCallService.playCallEndSound('ended')
     
     const endedCall = await voiceCallService.endCall()
     

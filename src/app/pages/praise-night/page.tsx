@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useServerCountdown } from "@/hooks/useServerCountdown";
 import { handleAppRefresh } from "@/utils/refresh-utils";
 import { lowDataOptimizer } from "@/utils/low-data-optimizer";
+import { useFeatureTracking } from "@/hooks/useAnalyticsTracking";
 
 function PraiseNightPageContent() {
   const searchParams = useSearchParams();
@@ -33,6 +34,9 @@ function PraiseNightPageContent() {
   const categoryFilter = searchParams.get('category');
   const pageParam = searchParams.get('page');
   const songParam = searchParams.get('song');
+  
+  // Track praise night usage
+  useFeatureTracking('praise_night');
   
   // Get zone color for theming
   const zoneColor = currentZone?.themeColor || '#9333EA';

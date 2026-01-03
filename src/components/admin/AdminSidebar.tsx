@@ -92,12 +92,15 @@ export default function AdminSidebar({
         key={index}
         onClick={() => {
           setActiveSection(item.label);
-          setSidebarCollapsed(true);
+          // On mobile, close sidebar after selection
+          if (window.innerWidth < 1024) {
+            setSidebarCollapsed(true);
+          }
         }}
         className={`
-          w-full flex items-center gap-3 px-4 py-3 lg:px-3 lg:py-2.5 rounded-xl lg:rounded-lg transition-all duration-200 active:scale-[0.98]
+          relative w-full flex items-center gap-3 px-4 py-3 lg:px-3 lg:py-2.5 rounded-xl lg:rounded-lg transition-all duration-200 active:scale-[0.98]
           ${item.active
-            ? 'bg-gray-900 text-white lg:bg-gradient-to-r lg:from-purple-600 lg:to-purple-500 lg:text-white lg:shadow-md lg:shadow-purple-200'
+            ? 'bg-purple-600 text-white lg:bg-gradient-to-r lg:from-purple-600 lg:to-purple-500 lg:text-white lg:shadow-md lg:shadow-purple-200'
             : 'text-slate-600 hover:bg-slate-100 lg:hover:bg-slate-50 active:bg-slate-100'
           }
           ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''}
@@ -113,6 +116,11 @@ export default function AdminSidebar({
             {item.badge}
           </span>
         )}
+        {item.badge && item.badge > 0 && sidebarCollapsed && (
+          <span className="hidden lg:flex absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold bg-yellow-400 text-yellow-900 rounded-full items-center justify-center">
+            {item.badge}
+          </span>
+        )}
         {item.active && !item.badge && !sidebarCollapsed && (
           <ChevronRight className={`w-4 h-4 ml-auto ${item.active ? 'text-white/70' : 'text-slate-400'}`} />
         )}
@@ -125,14 +133,14 @@ export default function AdminSidebar({
       {/* Mobile Overlay */}
       {!sidebarCollapsed && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-[65]"
           onClick={() => setSidebarCollapsed(true)}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:relative inset-y-0 right-0 lg:left-0 lg:right-auto z-50 lg:z-auto
+        fixed lg:relative inset-y-0 right-0 lg:left-0 lg:right-auto z-[70] lg:z-auto
         w-[85%] max-w-[320px] bg-white border-l lg:border-l-0 lg:border-r border-slate-200
         transform transition-all duration-300 ease-out
         ${sidebarCollapsed ? 'translate-x-full lg:translate-x-0 lg:w-[72px]' : 'translate-x-0 lg:w-64'}

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { CalendarEvent, CalendarService } from './_lib/firebase-calendar-service'
 import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 import CalendarStyles from './_components/CalendarStyles'
@@ -50,6 +51,7 @@ export default function CalendarPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone } = useZone()
+  const { markCalendarSeen } = useUnreadNotifications()
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [showEventModal, setShowEventModal] = useState(false)
@@ -65,6 +67,11 @@ export default function CalendarPage() {
   const [upcomingEventsList, setUpcomingEventsList] = useState<any[]>([])
 
   const calendarService = new CalendarService()
+
+  // Mark calendar as seen when page loads
+  useEffect(() => {
+    markCalendarSeen()
+  }, [markCalendarSeen])
 
   // Initialize moment and localizer
   useEffect(() => {

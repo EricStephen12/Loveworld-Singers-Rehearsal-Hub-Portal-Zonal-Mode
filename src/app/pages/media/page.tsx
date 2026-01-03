@@ -11,6 +11,7 @@ import { getPublicPlaylists, Playlist } from './_lib/playlist-service'
 import { getPublicAdminPlaylists, AdminPlaylist } from '@/lib/admin-playlist-service'
 import { useZone } from '@/hooks/useZone'
 import { isHQGroup } from '@/config/zones'
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 
 // Combined playlist type for display
 interface DisplayPlaylist {
@@ -28,12 +29,18 @@ export default function MediaPage() {
   const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone } = useZone()
   const { isLoading, refreshMedia } = useMedia()
+  const { markMediaSeen } = useUnreadNotifications()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [categories, setCategories] = useState<MediaCategory[]>([])
   const [allPlaylists, setAllPlaylists] = useState<DisplayPlaylist[]>([])
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true)
+
+  // Mark media as seen when page loads
+  useEffect(() => {
+    markMediaSeen()
+  }, [markMediaSeen])
 
   useEffect(() => {
     document.body.style.overflow = 'auto'

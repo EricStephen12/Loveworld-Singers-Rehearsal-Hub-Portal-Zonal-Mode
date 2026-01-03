@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Send, Trash2, MessageSquare, X } from 'lucide-react';
+import { Bell, Send, Trash2, MessageSquare, X, CheckCircle, XCircle } from 'lucide-react';
 import { sendMessageToAllUsers, getAllMessages, deleteMessage, AdminMessage } from '@/lib/simple-notifications-service';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
@@ -20,6 +20,13 @@ export default function SimpleNotificationsSection() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  const showToast = (type: 'success' | 'error', msg: string) => {
+    setToast({ type, message: msg });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Load messages when zone changes
   useEffect(() => {
@@ -71,12 +78,12 @@ export default function SimpleNotificationsSection() {
 
   const handleSendMessage = async () => {
     if (!title.trim() || !message.trim()) {
-      alert('Please fill in both title and message');
+      showToast('error', 'Please fill in both title and message');
       return;
     }
 
     if (!user) {
-      alert('You must be logged in to send messages');
+      showToast('error', 'You must be logged in to send messages');
       return;
     }
 
@@ -91,16 +98,16 @@ export default function SimpleNotificationsSection() {
       );
 
       if (result.success) {
-        alert('✅ Message sent to all users in your zone!');
+        showToast('success', 'Message sent to all users!');
         setTitle('');
         setMessage('');
         setShowModal(false);
-        loadMessages(); // Refresh list
+        loadMessages();
       } else {
-        alert('❌ Failed to send message: ' + result.error);
+        showToast('error', 'Failed to send message: ' + result.error);
       }
     } catch (error) {
-      alert('❌ Error sending message');
+      showToast('error', 'Error sending message');
       console.error(error);
     } finally {
       setSending(false);
@@ -108,17 +115,14 @@ export default function SimpleNotificationsSection() {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm('Are you sure you want to delete this message?')) {
-      return;
-    }
-
     const result = await deleteMessage(messageId, currentZone?.id);
 
     if (result.success) {
-      alert('✅ Message deleted!');
-      loadMessages(); // Refresh list
+      showToast('success', 'Message deleted!');
+      setShowDeleteConfirm(null);
+      loadMessages();
     } else {
-      alert('❌ Failed to delete message: ' + result.error);
+      showToast('error', 'Failed to delete message: ' + result.error);
     }
   };
 
@@ -129,6 +133,16 @@ export default function SimpleNotificationsSection() {
 
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -192,7 +206,7 @@ export default function SimpleNotificationsSection() {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDeleteMessage(msg.id)}
+                    onClick={() => setShowDeleteConfirm(msg.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
                     title="Delete message"
                   >
@@ -207,7 +221,7 @@ export default function SimpleNotificationsSection() {
 
       {/* Send Message Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-lg w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-slate-900">Send Message to All Users</h3>
@@ -286,6 +300,40 @@ export default function SimpleNotificationsSection() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Message</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete this message?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteMessage(showDeleteConfirm)}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

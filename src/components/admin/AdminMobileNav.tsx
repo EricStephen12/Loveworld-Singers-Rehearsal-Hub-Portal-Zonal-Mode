@@ -6,7 +6,9 @@ import {
   FileText,
   Users,
   Bell,
-  Menu
+  Menu,
+  Music,
+  Calendar
 } from "lucide-react";
 
 interface AdminMobileNavProps {
@@ -20,22 +22,51 @@ export default function AdminMobileNav({
   setActiveSection,
   onMenuOpen
 }: AdminMobileNavProps) {
+  // Map sections to their nav item for highlighting
+  const getSectionNavItem = (section: string): string => {
+    switch (section) {
+      case 'Dashboard':
+      case 'Analytics':
+        return 'Dashboard';
+      case 'Pages':
+      case 'Categories':
+      case 'Page Categories':
+      case 'Submitted Songs':
+      case 'Master Library':
+        return 'Pages';
+      case 'Members':
+      case 'Sub-Groups':
+        return 'Members';
+      case 'Notifications':
+        return 'Notifications';
+      case 'Media':
+      case 'Media Upload':
+      case 'Calendar':
+      case 'Activity Logs':
+        return 'More';
+      default:
+        return 'Dashboard';
+    }
+  };
+
+  const currentNavItem = getSectionNavItem(activeSection);
+
   const navItems = [
     { icon: Home, label: 'Home', section: 'Dashboard' },
     { icon: FileText, label: 'Pages', section: 'Pages' },
     { icon: Users, label: 'Members', section: 'Members' },
-    { icon: Bell, label: 'Activity', section: 'Notifications' },
-    { icon: Menu, label: 'Menu', section: 'menu' },
+    { icon: Bell, label: 'Alerts', section: 'Notifications' },
+    { icon: Menu, label: 'More', section: 'menu' },
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-gray-200 safe-area-bottom">
       <div className="flex items-center justify-around h-14">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.section === 'menu' 
-            ? false 
-            : activeSection === item.section;
+            ? currentNavItem === 'More'
+            : currentNavItem === item.section;
           
           return (
             <button
@@ -50,10 +81,10 @@ export default function AdminMobileNav({
               className="flex flex-col items-center justify-center flex-1 h-full active:opacity-60 transition-opacity"
             >
               <Icon 
-                className={`w-6 h-6 ${isActive ? 'text-black' : 'text-gray-400'}`}
+                className={`w-6 h-6 ${isActive ? 'text-purple-600' : 'text-gray-400'}`}
                 strokeWidth={isActive ? 2.5 : 1.5}
               />
-              <span className={`text-[10px] mt-0.5 ${isActive ? 'text-black font-semibold' : 'text-gray-400'}`}>
+              <span className={`text-[10px] mt-0.5 ${isActive ? 'text-purple-600 font-semibold' : 'text-gray-400'}`}>
                 {item.label}
               </span>
             </button>

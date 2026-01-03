@@ -119,14 +119,33 @@ export default function NotificationsSection() {
     setNotifGroup('');
   };
 
+  // Toast helper
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-green-500 text-white' :
+      type === 'error' ? 'bg-red-500 text-white' :
+      type === 'warning' ? 'bg-yellow-500 text-white' :
+      'bg-gray-800 text-white'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  };
+
   const handleSendNotification = async () => {
     if (!notifTitle.trim() || !notifMessage.trim()) {
-      alert('Please enter both title and message');
+      showToast('Please enter both title and message', 'warning');
       return;
     }
 
     if (modalType === 'group' && !notifGroup.trim()) {
-      alert('Please enter group name');
+      showToast('Please select a group', 'warning');
       return;
     }
 
@@ -154,34 +173,38 @@ export default function NotificationsSection() {
       }
 
       if (result.success) {
-        alert(modalType === 'all' ? '✅ Notification sent to all users!' : `✅ Notification sent to ${notifGroup} group!`);
+        showToast(modalType === 'all' ? '✅ Notification sent to all users!' : `✅ Notification sent to ${notifGroup} group!`, 'success');
         closeModal();
       } else {
-        alert('❌ Failed to send notification: ' + result.error);
+        showToast('❌ Failed to send notification: ' + result.error, 'error');
       }
     } catch (error) {
-      alert('❌ Error sending notification');
+      showToast('❌ Error sending notification', 'error');
       console.error(error);
     } finally {
       setSending(false);
     }
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+
   const handleDeleteAll = async () => {
-    if (confirm('⚠️ Delete ALL notifications? This cannot be undone!')) {
-      try {
-        // OPTIMIZED: Delete only the notifications we already have loaded
-        // instead of fetching the entire collection again
-        for (const notif of notifications) {
-          await FirebaseDatabaseService.deleteDocument('notifications', notif.id);
-        }
-        
-        alert('✅ All notifications deleted!');
-        window.location.reload();
-      } catch (error) {
-        console.error('Error deleting notifications:', error);
-        alert('❌ Failed to delete notifications');
+    setIsDeleting(true);
+    try {
+      let deleted = 0;
+      for (const notif of notifications) {
+        await FirebaseDatabaseService.deleteDocument('notifications', notif.id);
+        deleted++;
       }
+      
+      showToast(`✅ ${deleted} notifications deleted!`, 'success');
+      setShowDeleteAllConfirm(false);
+    } catch (error) {
+      console.error('Error deleting notifications:', error);
+      showToast('❌ Failed to delete notifications', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -285,11 +308,16 @@ export default function NotificationsSection() {
             <span>Group</span>
           </button>
           <button
-            onClick={handleDeleteAll}
-            className="bg-white border border-red-200 text-red-600 py-2.5 px-3 rounded-xl hover:bg-red-50 transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs"
+            onClick={() => setShowDeleteAllConfirm(true)}
+            disabled={isDeleting}
+            className="bg-white border border-red-200 text-red-600 py-2.5 px-3 rounded-xl hover:bg-red-50 transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs disabled:opacity-50"
           >
-            <Trash2 className="w-4 h-4" />
-            <span>Clear</span>
+            {isDeleting ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>{isDeleting ? '...' : 'Clear'}</span>
           </button>
         </div>
       </div>
@@ -401,7 +429,7 @@ export default function NotificationsSection() {
 
       {/* Send Notification Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             {/* Modal Header */}
             <div className="border-b border-gray-200 px-6 py-4">
@@ -492,6 +520,48 @@ export default function NotificationsSection() {
                   </>
                 ) : (
                   'Send Notification'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Confirmation Modal */}
+      {showDeleteAllConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Clear All Notifications</h3>
+                <p className="text-sm text-gray-500">This cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete all {notifications.length} notifications?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteAllConfirm(false)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete All'
                 )}
               </button>
             </div>

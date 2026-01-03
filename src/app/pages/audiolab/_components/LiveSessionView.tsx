@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
-  ChevronLeft, Wifi, Eye, Headphones, MicOff, 
-  StopCircle, Volume2, VolumeX, Users, Copy, Check, LogOut
+  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,29 +11,48 @@ import {
   leaveSession, 
   endSession,
   toggleMute as toggleMuteService,
-  sendMessage,
   subscribeToMessages
 } from '../_lib/session-service';
 import { WebRTCService } from '../_lib/webrtc-service';
 import type { Participant, ChatMessage } from '../_types';
 
+// Play a subtle join sound
+function playJoinSound() {
+  if (typeof window === 'undefined') return;
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880; // A5
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+    setTimeout(() => ctx.close(), 300);
+  } catch (e) {}
+}
+
 export function LiveSessionView() {
-  const { goBack, state, clearSession, setView } = useAudioLab();
+  const { state, clearSession, setView } = useAudioLab();
   const { user, profile } = useAuth();
   const currentSession = state.session.currentSession;
   
   const [webrtcService] = useState(() => new WebRTCService());
-  const [audioElements, setAudioElements] = useState<Record<string, HTMLAudioElement>>({});
   const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
   
   const [isLive, setIsLive] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [isMonitoring, setIsMonitoring] = useState(false);
-  const [micGain, setMicGain] = useState(75);
-  const [elapsedTime, setElapsedTime] = useState({ hours: 0, mins: 0, secs: 0 });
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copied, setCopied] = useState(false);
+  const [speakingUsers, setSpeakingUsers] = useState<Set<string>>(new Set());
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
 
   // Subscribe to session updates
   useEffect(() => {
@@ -44,32 +62,34 @@ export function LiveSessionView() {
       onParticipantJoined: (participant) => {
         setParticipants(prev => {
           if (prev.find(p => p.id === participant.id)) return prev;
+          // Play join sound for new participants (not self)
+          if (participant.id !== user?.uid) {
+            playJoinSound();
+          }
           return [...prev, participant];
         });
         
-        // Create peer connection for new participant
         if (user?.uid && participant.id !== user.uid) {
-          console.log('[LiveSession] New participant joined:', participant.id);
+          webrtcService.createPeerConnection(participant.id, false);
           
-          // Create peer connection
-          webrtcService.createPeerConnection(participant.id, participant.id === currentSession.hostId);
-          
-          // If we're the host, initiate the connection
           if (user.uid === currentSession.hostId) {
             setTimeout(async () => {
               try {
-                console.log('[LiveSession] Host creating offer for:', participant.id);
-                const offer = await webrtcService.createOffer(participant.id);
-                await webrtcService.sendSignal(participant.id, 'offer', offer);
+                await webrtcService.initiateConnection(participant.id);
               } catch (error) {
-                console.error('[LiveSession] Error creating offer:', error);
+                console.error('[LiveSession] Error initiating connection:', error);
               }
-            }, 1000); // Small delay to ensure connection is ready
+            }, 1500);
           }
         }
       },
       onParticipantLeft: (participantId) => {
         setParticipants(prev => prev.filter(p => p.id !== participantId));
+        setConnectedPeers(prev => {
+          const next = new Set(prev);
+          next.delete(participantId);
+          return next;
+        });
         webrtcService.removePeerConnection(participantId);
       },
       onParticipantUpdated: (participant) => {
@@ -91,93 +111,57 @@ export function LiveSessionView() {
   useEffect(() => {
     if (!user?.uid || !currentSession?.id) return;
     
-    // Initialize signaling
     webrtcService.initializeSignaling(currentSession.id, user.uid);
     
     const setupWebRTC = async () => {
-      // Initialize local audio stream
       const success = await webrtcService.initializeLocalStream();
       if (!success) {
-        console.error('[LiveSession] Failed to initialize local audio stream');
+        setConnectionStatus('failed');
         return;
       }
       
-      console.log('[LiveSession] Local audio stream initialized');
+      // Set connection status to connected once local stream is ready
+      setConnectionStatus('connected');
       
-      // Set up callbacks
       webrtcService.setOnRemoteStreamAdded((userId, stream) => {
         console.log('[LiveSession] Remote stream added from:', userId);
         
-        // Check if we already have an audio element for this user
+        // Track connected peer
+        setConnectedPeers(prev => new Set(prev).add(userId));
+        
         if (audioElementsRef.current[userId]) {
-          console.log('[LiveSession] Updating existing audio element for:', userId);
-          const existingAudio = audioElementsRef.current[userId];
-          existingAudio.srcObject = stream;
-          existingAudio.play().catch(e => console.error('[LiveSession] Error playing updated audio:', e));
+          audioElementsRef.current[userId].srcObject = stream;
+          audioElementsRef.current[userId].play().catch(() => {});
           return;
         }
         
-        // Create new audio element for remote stream
         const audio = new Audio();
         audio.autoplay = true;
         (audio as any).playsInline = true;
-        
-        // Set the stream as source
+        audio.volume = 1.0;
         audio.srcObject = stream;
         
-        // Handle audio element events
         audio.onloadedmetadata = () => {
-          console.log('[LiveSession] Audio metadata loaded for:', userId);
-          audio.play()
-            .then(() => console.log('[LiveSession] Audio playing for:', userId))
-            .catch(e => {
-              console.error('[LiveSession] Error playing remote audio:', e);
-              // Try to play on user interaction
-              const playOnInteraction = () => {
-                audio.play().catch(err => console.error('[LiveSession] Still cannot play:', err));
-                document.removeEventListener('click', playOnInteraction);
-              };
-              document.addEventListener('click', playOnInteraction, { once: true });
-            });
+          audio.play().catch(() => {
+            document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+          });
         };
         
-        audio.onerror = (e) => {
-          console.error('[LiveSession] Audio element error:', e);
-        };
-        
-        // Store reference
         audioElementsRef.current[userId] = audio;
-        setAudioElements(prev => ({
-          ...prev,
-          [userId]: audio
-        }));
       });
       
-      webrtcService.setOnDataReceived((userId, data) => {
-        console.log('[LiveSession] Data received from:', userId, data);
-      });
-      
-      // Connect to existing participants (for users joining an existing session)
-      // Wait a bit for participants list to be populated
-      setTimeout(() => {
-        const existingPeers = webrtcService.getAllPeerIds();
-        console.log('[LiveSession] Existing peers:', existingPeers);
-        
-        // If we're not the host and there are participants, we need to wait for offers
-        // The host will send offers to us
-        if (user.uid !== currentSession.hostId) {
-          console.log('[LiveSession] Waiting for offers from host...');
-        }
-      }, 2000);
+      if (user.uid !== currentSession.hostId) {
+        setTimeout(async () => {
+          webrtcService.createPeerConnection(currentSession.hostId, true);
+          await webrtcService.requestOfferFrom(currentSession.hostId);
+        }, 2000);
+      }
     };
     
     setupWebRTC();
     
-    // Cleanup on unmount
     return () => {
       webrtcService.closeAllConnections();
-      
-      // Stop all audio elements
       Object.values(audioElementsRef.current).forEach(audio => {
         audio.pause();
         audio.srcObject = null;
@@ -189,34 +173,25 @@ export function LiveSessionView() {
   // Subscribe to messages
   useEffect(() => {
     if (!currentSession?.id) return;
-    
     const unsubscribe = subscribeToMessages(currentSession.id, (message) => {
       setMessages(prev => [...prev, message]);
     });
-    
     return () => unsubscribe();
   }, [currentSession?.id]);
 
-  // Timer effect
+  // Timer
   useEffect(() => {
     if (!isLive) return;
-    
-    const interval = setInterval(() => {
-      setElapsedTime(prev => {
-        let { hours, mins, secs } = prev;
-        secs++;
-        if (secs >= 60) { secs = 0; mins++; }
-        if (mins >= 60) { mins = 0; hours++; }
-        return { hours, mins, secs };
-      });
-    }, 1000);
-
+    const interval = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
     return () => clearInterval(interval);
   }, [isLive]);
 
-  const formatNum = (n: number) => n.toString().padStart(2, '0');
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
-  // Copy session code
   const handleCopyCode = async () => {
     if (!currentSession?.code) return;
     await navigator.clipboard.writeText(currentSession.code);
@@ -224,13 +199,11 @@ export function LiveSessionView() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Toggle mute
   const handleToggleMute = async () => {
     if (!currentSession?.id || !user?.uid) return;
     const newMuted = !isMuted;
     setIsMuted(newMuted);
     
-    // Actually mute/unmute the local audio track
     const localStream = webrtcService.getLocalStream();
     if (localStream) {
       localStream.getAudioTracks().forEach(track => {
@@ -241,23 +214,18 @@ export function LiveSessionView() {
     await toggleMuteService(currentSession.id, user.uid, newMuted);
   };
 
-  // Leave session
-  const handleLeaveSession = async () => {
+  const handleEndOrLeave = async () => {
     if (!currentSession?.id || !user?.uid) return;
-    await leaveSession(currentSession.id, user.uid, profile?.display_name || 'User');
+    
+    if (user.uid === currentSession.hostId) {
+      await endSession(currentSession.id);
+    } else {
+      await leaveSession(currentSession.id, user.uid, profile?.display_name || 'User');
+    }
     clearSession();
     setView('collab');
   };
 
-  // End session (host only)
-  const handleEndSession = async () => {
-    if (!currentSession?.id) return;
-    await endSession(currentSession.id);
-    clearSession();
-    setView('collab');
-  };
-
-  // If no session, show empty state
   if (!currentSession) {
     return (
       <div className="fixed inset-0 z-50 bg-[#191022] flex flex-col items-center justify-center text-white">
@@ -266,261 +234,197 @@ export function LiveSessionView() {
           onClick={() => setView('collab')}
           className="px-6 py-3 bg-violet-500 rounded-xl font-bold"
         >
-          Go to Collab
+          Go Back
         </button>
       </div>
     );
   }
 
-  // Waveform bars data - animate when live
-  const [waveformBars, setWaveformBars] = useState([
-    { h: 10, opacity: 0.4 },
-    { h: 16, opacity: 0.6 },
-    { h: 20, opacity: 1, glow: true },
-    { h: 14, opacity: 0.8 },
-    { h: 24, opacity: 1, glow: true },
-    { h: 32, opacity: 1, glow: true },
-    { h: 20, opacity: 0.9 },
-    { h: 36, opacity: 1, glow: true },
-    { h: 24, opacity: 0.8 },
-    { h: 28, opacity: 1, glow: true },
-    { h: 16, opacity: 0.6 },
-    { h: 12, opacity: 0.4 },
-    { h: 8, opacity: 0.3 },
-  ]);
-
-  // Animate waveform when live
-  useEffect(() => {
-    if (!isLive) return;
-    
-    const interval = setInterval(() => {
-      setWaveformBars(prev => prev.map(bar => ({
-        ...bar,
-        h: Math.max(4, Math.min(40, bar.h + (Math.random() - 0.5) * 8))
-      })));
-    }, 150);
-    
-    return () => clearInterval(interval);
-  }, [isLive]);
+  const isHost = user?.uid === currentSession.hostId;
+  const participantCount = participants.length || 1;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#191022] flex flex-col overflow-hidden text-white select-none">
-      {/* Header & Status Area */}
-      <div className="flex flex-col w-full z-20 bg-[#191022]/95 backdrop-blur-sm">
-        {/* Top Bar */}
-        <header className="flex items-center p-4 pb-2 justify-between">
-          <div className="flex items-center justify-start w-12">
-            <button 
-              onClick={goBack}
-              className="flex size-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-            >
-              <ChevronLeft size={24} />
-            </button>
-          </div>
-          <h2 className="text-lg font-bold leading-tight tracking-tight">Live Session</h2>
-          <div className="flex w-12 items-center justify-end">
-            <button className="flex items-center justify-center gap-2" title="Connection Strength">
-              <Wifi size={20} className="text-green-400" />
-            </button>
-          </div>
-        </header>
-
-        {/* Status Chips */}
-        <div className="flex justify-center gap-3 px-4 pb-4 pt-1">
-          <div 
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full pl-3 pr-4 ${
-              isLive ? 'bg-red-600' : 'bg-slate-600'
-            }`}
-            style={{ boxShadow: isLive ? '0 0 15px rgba(220, 38, 38, 0.5)' : 'none' }}
-          >
-            <span className={`w-2 h-2 rounded-full bg-white ${isLive ? 'animate-pulse' : ''}`} />
-            <p className="text-white text-sm font-bold leading-normal tracking-wider">
-              {isLive ? 'LIVE' : 'ENDED'}
-            </p>
-          </div>
-          {/* Session Code - Tap to copy */}
-          <button 
-            onClick={handleCopyCode}
-            className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-violet-500/20 backdrop-blur-md pl-3 pr-4 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
-          >
-            {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} className="text-violet-400" />}
-            <p className="text-violet-300 text-sm font-bold leading-normal tracking-wider">
-              {currentSession.code}
-            </p>
-          </button>
-          <div className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white/10 backdrop-blur-md pl-3 pr-4 border border-white/5">
-            <Users size={16} className="text-slate-200" />
-            <p className="text-slate-200 text-sm font-medium leading-normal">{participants.length || 1}</p>
-          </div>
-        </div>
-
-        {/* Timer */}
-        <div className="flex justify-center gap-2 px-6 py-2">
-          {/* Hours */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#362348] border border-white/5 shadow-sm">
-              <p className="text-white text-xl font-bold">{formatNum(elapsedTime.hours)}</p>
-            </div>
-            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Hrs</p>
-          </div>
-          <div className="h-12 flex items-center text-slate-600 font-bold">:</div>
-          {/* Minutes */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#362348] border border-white/5 shadow-sm">
-              <p className="text-white text-xl font-bold">{formatNum(elapsedTime.mins)}</p>
-            </div>
-            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Min</p>
-          </div>
-          <div className="h-12 flex items-center text-slate-600 font-bold">:</div>
-          {/* Seconds */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#362348] border border-white/5 shadow-sm">
-              <p className="text-violet-500 text-xl font-bold">{formatNum(elapsedTime.secs)}</p>
-            </div>
-            <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Sec</p>
-          </div>
-        </div>
+    <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#1a1025] to-[#0f0a14] flex flex-col text-white">
+      {/* Ambient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Visualizer Area */}
-      <div className="flex-1 relative flex flex-col items-center justify-center w-full min-h-0 overflow-hidden">
-        {/* Ambient Glow */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent opacity-50 pointer-events-none" />
-
-        {/* Status Text */}
-        <div className="absolute top-4 w-full text-center z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 backdrop-blur-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-            <p className="text-[#ad92c9] text-xs font-bold tracking-wide uppercase">High Quality Audio</p>
-          </div>
-        </div>
-
-        {/* Waveform Visualization */}
-        <div className="flex items-center justify-center gap-1.5 h-40 w-full px-8">
-          {waveformBars.map((bar, i) => (
-            <div
-              key={i}
-              className="w-2 rounded-full transition-all duration-300"
-              style={{
-                height: `${bar.h * 4}px`,
-                backgroundColor: `rgba(127, 19, 236, ${bar.opacity})`,
-                boxShadow: bar.glow ? '0 0 15px #7f13ec' : 'none',
-                transition: 'height 150ms ease-out',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Chat Overlay */}
-        <div className="w-full mt-auto px-4 pb-4 z-10 relative">
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#191022] to-transparent -z-10" />
-          <div className="flex w-full flex-col gap-2 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/5 shadow-lg max-h-32 overflow-y-auto">
-            {messages.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center">
-                No messages yet
-              </p>
+      {/* Connection Status Bar */}
+      <div className="relative z-10 px-4 pt-12 pb-2">
+        <div className="flex items-center justify-between">
+          {/* Back to Chat */}
+          <button
+            onClick={() => setView('collab-chat')}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <MessageCircle size={18} className="text-violet-400" />
+            <span className="text-sm text-white/80">Chat</span>
+          </button>
+          
+          {/* Connection Status */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+            connectionStatus === 'connected' 
+              ? 'bg-green-500/20 text-green-400' 
+              : connectionStatus === 'connecting'
+              ? 'bg-yellow-500/20 text-yellow-400'
+              : 'bg-red-500/20 text-red-400'
+          }`}>
+            {connectionStatus === 'connecting' ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Connecting...</span>
+              </>
+            ) : connectionStatus === 'connected' ? (
+              <>
+                <Wifi size={14} />
+                <span>Connected</span>
+              </>
             ) : (
-              messages.slice(-5).map((msg) => (
-                <div key={msg.id} className={`text-sm ${msg.type === 'system' ? 'text-slate-500 italic text-center' : 'text-white'}`}>
-                  {msg.type !== 'system' && (
-                    <span className="text-violet-400 font-medium">{msg.senderName}: </span>
-                  )}
-                  {msg.content}
-                </div>
-              ))
+              <>
+                <WifiOff size={14} />
+                <span>Connection failed</span>
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Bottom Control Deck */}
-      <div className="relative bg-[#251833] rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] p-6 pb-10 z-30">
-        {/* Handle */}
-        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6" />
+      {/* Main Content */}
+      <div className="relative flex-1 flex flex-col items-center justify-center px-6 py-4">
+        
+        {/* Session Code - Prominent & Easy to Share */}
+        <button 
+          onClick={handleCopyCode}
+          className="mb-8 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+        >
+          <span className="text-2xl font-bold tracking-[0.3em] text-white">
+            {currentSession.code}
+          </span>
+          {copied ? (
+            <Check size={20} className="text-green-400" />
+          ) : (
+            <Copy size={20} className="text-violet-400" />
+          )}
+        </button>
 
-        {/* Gain Control */}
-        <div className="flex flex-col gap-3 mb-8">
-          <div className="flex justify-between items-center px-1">
-            <label className="text-[#ad92c9] text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 12h4l3-9 6 18 3-9h4" />
-              </svg>
-              Mic Gain
-            </label>
-            <span className="text-violet-500 font-bold text-xs bg-violet-500/10 px-2 py-0.5 rounded">
-              {micGain}%
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <VolumeX size={20} className="text-slate-400" />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={micGain}
-              onChange={(e) => setMicGain(parseInt(e.target.value))}
-              className="flex-1 h-2 bg-black/30 rounded-lg appearance-none cursor-pointer accent-violet-500"
-            />
-            <Volume2 size={20} className="text-white" />
+        {/* Participants Circle */}
+        <div className="relative mb-6">
+          {/* Pulsing ring when live - properly centered */}
+          <div className="absolute inset-[-12px] rounded-full border-2 border-violet-500/20 animate-pulse" style={{ animationDuration: '2s' }} />
+          <div className="absolute inset-[-6px] rounded-full border border-violet-500/30" />
+          
+          {/* Main circle with participant avatars */}
+          <div className="relative w-48 h-48 rounded-full bg-[#251833] border border-white/10 flex items-center justify-center overflow-hidden">
+            {participantCount <= 4 ? (
+              // Show individual avatars for small groups
+              <div className="flex flex-wrap items-center justify-center gap-2 p-4">
+                {/* Current user */}
+                <div className={`relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ${
+                  isMuted ? 'bg-red-500/20 text-red-400' : 'bg-violet-500/30 text-violet-300'
+                }`}>
+                  {profile?.first_name?.charAt(0) || 'Y'}
+                  {!isMuted && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                      <Mic size={12} />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Other participants */}
+                {participants.filter(p => p.id !== user?.uid).slice(0, 3).map((p) => {
+                  const isConnected = connectedPeers.has(p.id);
+                  return (
+                    <div 
+                      key={p.id}
+                      className={`relative w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold transition-all ${
+                        p.isMuted ? 'bg-slate-700 text-slate-400' : 'bg-violet-500/20 text-violet-300'
+                      } ${!isConnected ? 'opacity-50' : ''}`}
+                    >
+                      {p.name?.charAt(0) || '?'}
+                      {/* Connection/Mute indicator */}
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ${
+                        !isConnected ? 'bg-yellow-500/80' : p.isMuted ? 'bg-slate-600' : 'bg-green-500/80'
+                      }`}>
+                        {!isConnected ? (
+                          <Loader2 size={10} className="animate-spin" />
+                        ) : p.isMuted ? (
+                          <MicOff size={8} />
+                        ) : (
+                          <Volume2 size={10} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              // Show count for larger groups
+              <div className="text-center">
+                <Users size={40} className="text-violet-400 mx-auto mb-2" />
+                <span className="text-3xl font-bold">{participantCount}</span>
+                <p className="text-xs text-slate-400 mt-1">Connected</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Main Actions */}
-        <div className="flex items-center justify-between gap-6 px-2">
-          {/* Monitor Toggle */}
-          <button 
-            onClick={() => setIsMonitoring(!isMonitoring)}
-            className="flex flex-col items-center gap-2 group w-20"
-          >
-            <div className={`w-14 h-14 rounded-full border flex items-center justify-center transition-all active:scale-95 ${
-              isMonitoring 
-                ? 'bg-violet-500/20 border-violet-500 text-violet-400' 
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-            }`}>
-              <Headphones size={24} />
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Monitor</span>
-          </button>
+        {/* Timer - Simple */}
+        <div className="text-4xl font-mono font-light text-white/80 mb-2">
+          {formatTime(elapsedTime)}
+        </div>
+        
+        {/* Status */}
+        <p className="text-sm text-slate-400 mb-8">
+          {isHost ? 'You\'re hosting' : `Hosted by ${currentSession.title?.replace("'s Session", '') || 'Host'}`}
+        </p>
 
-          {/* End/Leave Session - Host vs Participant */}
-          <button 
-            onClick={user?.uid === currentSession?.hostId ? handleEndSession : handleLeaveSession}
-            className="flex flex-col items-center gap-2 group relative -mt-6"
-          >
-            {/* Outer glow */}
-            {isLive && (
-              <div className="absolute inset-0 bg-red-500/30 rounded-full blur-xl animate-pulse" />
-            )}
-            {/* Main button */}
-            <div 
-              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-xl shadow-red-500/30 active:scale-95 transition-all border-[6px] border-[#251833]"
-            >
-              <LogOut size={36} className="drop-shadow-md" />
+        {/* Recent Activity */}
+        {messages.length > 0 && (
+          <div className="w-full max-w-sm">
+            <div className="text-center text-sm text-slate-500 py-2">
+              {messages[messages.length - 1]?.content}
             </div>
-            <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide mt-1">
-              {user?.uid === currentSession?.hostId ? 'End' : 'Leave'}
-            </span>
-          </button>
+          </div>
+        )}
+      </div>
 
-          {/* Mute Toggle */}
+      {/* Bottom Controls - Simplified */}
+      <div className="relative px-6 pb-10 pt-4">
+        <div className="flex items-center justify-center gap-6">
+          
+          {/* Mute Button */}
           <button 
             onClick={handleToggleMute}
-            className="flex flex-col items-center gap-2 group w-20"
-          >
-            <div className={`w-14 h-14 rounded-full border flex items-center justify-center transition-all active:scale-95 ${
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95 ${
               isMuted 
-                ? 'bg-red-500/20 border-red-500 text-red-400' 
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-            }`}>
-              <MicOff size={24} />
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-              {isMuted ? 'Unmute' : 'Mute'}
-            </span>
+                ? 'bg-white text-slate-900' 
+                : 'bg-white/10 text-white border border-white/20'
+            }`}
+          >
+            {isMuted ? <MicOff size={28} /> : <Mic size={28} />}
           </button>
-        </div>
-      </div>
 
+          {/* End/Leave Button */}
+          <button 
+            onClick={handleEndOrLeave}
+            className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all active:scale-95 shadow-lg shadow-red-500/30"
+          >
+            <PhoneOff size={32} />
+          </button>
+
+          {/* Participants Count */}
+          <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex flex-col items-center justify-center">
+            <Users size={20} className="text-white/80" />
+            <span className="text-xs font-bold mt-0.5">{participantCount}</span>
+          </div>
+        </div>
+
+        {/* Mute hint */}
+        <p className="text-center text-xs text-slate-500 mt-4">
+          {isMuted ? 'Tap mic to unmute' : 'You\'re unmuted'}
+        </p>
+      </div>
     </div>
   );
 }

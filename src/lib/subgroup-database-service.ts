@@ -657,23 +657,48 @@ export class SubGroupDatabaseService {
   /**
    * Get notifications for a user (including sub-group notifications)
    */
-  static async getUserNotifications(userId: string, limit = 20): Promise<any[]> {
+  static async getUserNotifications(userId: string, limitCount = 20): Promise<any[]> {
     try {
       const notificationsRef = collection(db, 'user_notifications');
-      const q = query(
-        notificationsRef,
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
-      );
+      
+      // Try with orderBy first
+      try {
+        const q = query(
+          notificationsRef,
+          where('userId', '==', userId),
+          orderBy('createdAt', 'desc')
+        );
 
-      const snapshot = await getDocs(q);
-      const notifications = snapshot.docs.slice(0, limit).map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }));
+        const snapshot = await getDocs(q);
+        const notifications = snapshot.docs.slice(0, limitCount).map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date()
+        }));
 
-      return notifications;
+        return notifications;
+      } catch (indexError) {
+        // Fallback: query without orderBy and sort client-side
+        console.log('[SubGroupDB] Index not ready, using fallback query');
+        const fallbackQ = query(
+          notificationsRef,
+          where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(fallbackQ);
+        const notifications = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date()
+        }));
+
+        // Sort client-side
+        notifications.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        return notifications.slice(0, limitCount);
+      }
     } catch (error) {
       console.error('Error getting user notifications:', error);
       return [];

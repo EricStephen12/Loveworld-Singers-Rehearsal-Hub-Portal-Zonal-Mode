@@ -13,7 +13,6 @@ const nextConfig = {
   
   // Production optimizations
   productionBrowserSourceMaps: false, // Disable source maps for faster builds
-  swcMinify: true, // Use SWC for faster minification
   
   // Turbopack configuration (moved from experimental)
   turbopack: {

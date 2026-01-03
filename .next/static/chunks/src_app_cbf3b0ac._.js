@@ -3951,9 +3951,7 @@ function AdminPage() {
                     className: "flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0",
                     children: [
                         !(activeSection === 'Pages' && selectedPage) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$AdminMobileHeader$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                            title: activeSection,
-                            showBack: true,
-                            onBack: ()=>router.push('/home')
+                            title: activeSection
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
                             lineNumber: 1519,
@@ -3963,12 +3961,12 @@ function AdminPage() {
                             onSectionChange: setActiveSection
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1526,
+                            lineNumber: 1524,
                             columnNumber: 43
                         }, this),
                         activeSection === 'Analytics' && isHQAdmin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$AnalyticsSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1527,
+                            lineNumber: 1525,
                             columnNumber: 56
                         }, this),
                         activeSection === 'Pages' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$PagesSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4035,7 +4033,7 @@ function AdminPage() {
                             addToast: addToast
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1530,
+                            lineNumber: 1528,
                             columnNumber: 11
                         }, this),
                         activeSection === 'Categories' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$CategoriesSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4071,7 +4069,7 @@ function AdminPage() {
                             addToast: addToast
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1596,
+                            lineNumber: 1594,
                             columnNumber: 11
                         }, this),
                         activeSection === 'Page Categories' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$PageCategoriesSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4111,7 +4109,7 @@ function AdminPage() {
                             addToast: addToast
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1631,
+                            lineNumber: 1629,
                             columnNumber: 11
                         }, this),
                         activeSection === 'Submitted Songs' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4120,54 +4118,54 @@ function AdminPage() {
                                 embedded: true
                             }, void 0, false, {
                                 fileName: "[project]/src/app/admin/page.tsx",
-                                lineNumber: 1671,
+                                lineNumber: 1669,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1670,
+                            lineNumber: 1668,
                             columnNumber: 11
                         }, this),
                         activeSection === 'Members' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$MembersSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1674,
+                            lineNumber: 1672,
                             columnNumber: 41
                         }, this),
                         activeSection === 'Media' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$MediaSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1675,
+                            lineNumber: 1673,
                             columnNumber: 39
                         }, this),
                         activeSection === 'Media Upload' && isHQAdmin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$MediaUploadSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1676,
+                            lineNumber: 1674,
                             columnNumber: 59
                         }, this),
                         activeSection === 'Master Library' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$MasterLibrarySection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                             isHQAdmin: isHQAdmin
                         }, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1677,
+                            lineNumber: 1675,
                             columnNumber: 48
                         }, this),
                         activeSection === 'Sub-Groups' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$SubGroupsSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1678,
+                            lineNumber: 1676,
                             columnNumber: 44
                         }, this),
                         activeSection === 'Calendar' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$CalendarSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1679,
+                            lineNumber: 1677,
                             columnNumber: 42
                         }, this),
                         activeSection === 'Notifications' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$SimpleNotificationsSection$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1680,
+                            lineNumber: 1678,
                             columnNumber: 47
                         }, this),
                         activeSection === 'Activity Logs' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$ActivityLogsPage$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                             fileName: "[project]/src/app/admin/page.tsx",
-                            lineNumber: 1681,
+                            lineNumber: 1679,
                             columnNumber: 47
                         }, this)
                     ]
@@ -4250,7 +4248,7 @@ function AdminPage() {
                     pageCategories: pageCategories
                 }, void 0, false, {
                     fileName: "[project]/src/app/admin/page.tsx",
-                    lineNumber: 1685,
+                    lineNumber: 1683,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$admin$2f$AdminMobileNav$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4259,7 +4257,7 @@ function AdminPage() {
                     onMenuOpen: ()=>setIsSidebarOpen(true)
                 }, void 0, false, {
                     fileName: "[project]/src/app/admin/page.tsx",
-                    lineNumber: 1760,
+                    lineNumber: 1758,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Toast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ToastContainer"], {
@@ -4267,7 +4265,7 @@ function AdminPage() {
                     onRemove: removeToast
                 }, void 0, false, {
                     fileName: "[project]/src/app/admin/page.tsx",
-                    lineNumber: 1767,
+                    lineNumber: 1765,
                     columnNumber: 7
                 }, this)
             ]

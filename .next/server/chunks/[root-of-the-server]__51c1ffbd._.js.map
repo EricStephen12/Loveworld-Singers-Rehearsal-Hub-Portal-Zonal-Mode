@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
-    {"offset": {"line": 49, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/api/countdown/route.ts"],"sourcesContent":["import { NextRequest, NextResponse } from 'next/server';\r\n\r\nexport async function GET(request: NextRequest) {\r\n  try {\r\n    // Get the current server time\r\n    const serverTime = new Date();\r\n    \r\n    // Return server time with timezone info\r\n    return NextResponse.json({\r\n      serverTime: serverTime.toISOString(),\r\n      timestamp: serverTime.getTime(),\r\n      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,\r\n      unix: Math.floor(serverTime.getTime() / 1000)\r\n    });\r\n  } catch (error) {\r\n    console.error('Error getting server time:', error);\r\n    return NextResponse.json(\r\n      { error: 'Failed to get server time' },\r\n      { status: 500 }\r\n    );\r\n  }\r\n}"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe,IAAI,OAAoB;IAC5C,IAAI;QACF,8BAA8B;QAC9B,MAAM,aAAa,IAAI;QAEvB,wCAAwC;QACxC,OAAO,gJAAY,CAAC,IAAI,CAAC;YACvB,YAAY,WAAW,WAAW;YAClC,WAAW,WAAW,OAAO;YAC7B,UAAU,KAAK,cAAc,GAAG,eAAe,GAAG,QAAQ;YAC1D,MAAM,KAAK,KAAK,CAAC,WAAW,OAAO,KAAK;QAC1C;IACF,EAAE,OAAO,OAAO;QACd,QAAQ,KAAK,CAAC,8BAA8B;QAC5C,OAAO,gJAAY,CAAC,IAAI,CACtB;YAAE,OAAO;QAA4B,GACrC;YAAE,QAAQ;QAAI;IAElB;AACF","debugId":null}}]
-}

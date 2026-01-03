@@ -159,7 +159,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
               setNewPageCategoryImage('');
               setShowPageCategoryModal(true);
             }}
-            className={`lg:hidden fixed bottom-20 right-4 z-40 w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
+            className={`lg:hidden fixed bottom-20 right-4 z-[45] w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
           >
             <Plus className="w-6 h-6" />
           </button>
@@ -382,7 +382,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
 
       {/* Add/Edit Page Category Modal */}
       {showPageCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -516,7 +516,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
 
       {/* Delete Confirmation Dialog */}
       {showDeletePageCategoryDialog && pageCategoryToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">

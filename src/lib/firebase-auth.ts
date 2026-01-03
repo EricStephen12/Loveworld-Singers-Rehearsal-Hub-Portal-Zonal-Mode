@@ -8,6 +8,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from './firebase-setup'
 import { SessionManager } from './session-manager'
 import { ErrorHandler } from './error-handler'
+import { SimplifiedAnalyticsService } from './simplified-analytics-service'
 
 export class FirebaseAuthService {
   static async signIn(email: string, password: string, rememberMe: boolean = true) {
@@ -37,6 +38,13 @@ export class FirebaseAuthService {
       
       await SessionManager.createSession(result.user)
       
+      // Track login analytics
+      try {
+        await SimplifiedAnalyticsService.incrementLogins(1)
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed:', analyticsError)
+      }
+      
       if (rememberMe && typeof window !== 'undefined') {
         const token = await result.user.getIdToken()
         localStorage.setItem('authToken', token)
@@ -62,6 +70,13 @@ export class FirebaseAuthService {
         createdAt: new Date(),
         updatedAt: new Date()
       })
+      
+      // Track signup analytics
+      try {
+        await SimplifiedAnalyticsService.incrementSignups(1)
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed:', analyticsError)
+      }
       
       return { user: result.user, error: null }
     } catch (error: any) {
@@ -168,6 +183,14 @@ export class FirebaseAuthService {
           }
           await setDoc(doc(db, 'profiles', result.user.uid), profileData)
         }
+        
+        // Track signup analytics
+        try {
+          await SimplifiedAnalyticsService.incrementSignups(1)
+        } catch (analyticsError) {
+          console.error('Analytics tracking failed:', analyticsError)
+        }
+        
         return { user: result.user, error: null }
       } catch (profileError: any) {
         try {
@@ -286,6 +309,7 @@ export class FirebaseAuthService {
       const result = await signInWithPopup(auth, provider)
       
       const userProfile = await this.getUserProfile(result.user.uid)
+      
       if (!userProfile) {
         const displayName = result.user.displayName || ''
         const nameParts = displayName.split(' ')

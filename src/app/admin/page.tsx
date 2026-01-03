@@ -1518,8 +1518,6 @@ export default function AdminPage() {
         {!(activeSection === 'Pages' && selectedPage) && (
           <AdminMobileHeader
             title={activeSection}
-            showBack={true}
-            onBack={() => router.push('/home')}
           />
         )}
 

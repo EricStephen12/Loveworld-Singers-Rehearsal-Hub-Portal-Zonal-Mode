@@ -189,7 +189,7 @@ export default function AdminModals(props: AdminModalsProps) {
     <>
       {/* Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        <div className="fixed inset-0 bg-white z-[80] flex flex-col">
           <div className="bg-white w-full h-full overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 flex-shrink-0">
@@ -268,7 +268,7 @@ export default function AdminModals(props: AdminModalsProps) {
 
       {/* Page Modal */}
       {showPageModal && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        <div className="fixed inset-0 bg-white z-[80] flex flex-col">
           <div className="bg-white w-full h-full overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 flex-shrink-0">
@@ -605,7 +605,7 @@ export default function AdminModals(props: AdminModalsProps) {
 
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && pageToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -648,7 +648,7 @@ export default function AdminModals(props: AdminModalsProps) {
 
       {/* Delete Song Confirmation Dialog */}
       {showDeleteSongDialog && songToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -691,7 +691,7 @@ export default function AdminModals(props: AdminModalsProps) {
 
       {/* Delete Category Confirmation Dialog */}
       {showDeleteCategoryDialog && categoryToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">

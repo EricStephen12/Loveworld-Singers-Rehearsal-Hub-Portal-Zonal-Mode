@@ -17,8 +17,7 @@ import {
   onSnapshot, 
   getDocs, 
   getDoc,
-  serverTimestamp,
-  Timestamp
+  serverTimestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
@@ -135,13 +134,54 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
 }
 
 // Protected senior zones - members only visible to their own zone or boss users
+// These zone IDs should match exactly what's in the database
+// Also check for common variations and role-based names
 const SENIOR_ZONES = ['zone-president', 'zone-director', 'zone-oftp']
+
+// Also check for role/title in user name to catch senior members regardless of zone ID
+const SENIOR_TITLES = ['president', 'director', 'oftp']
+
+/**
+ * Check if a user is a senior/protected member based on zone ID or name/role
+ */
+function isSeniorMember(zoneId: string, groupId: string, userName: string): boolean {
+  const lowerZoneId = (zoneId || '').toLowerCase()
+  const lowerGroupId = (groupId || '').toLowerCase()
+  const lowerName = (userName || '').toLowerCase()
+  
+  // Check if zone/group ID matches senior zones
+  if (SENIOR_ZONES.includes(zoneId) || SENIOR_ZONES.includes(groupId)) {
+    return true
+  }
+  
+  // Check if zone/group ID contains senior keywords
+  for (const title of SENIOR_TITLES) {
+    if (lowerZoneId.includes(title) || lowerGroupId.includes(title)) {
+      return true
+    }
+  }
+  
+  // Check if user name contains senior titles (e.g., "The President", "Zone Director")
+  // Only match if it's clearly a title, not just part of a name
+  if (lowerName.includes('the president') || 
+      lowerName.includes('zone president') ||
+      lowerName.includes('zone director') ||
+      lowerName.includes('the director') ||
+      lowerName.includes('zone oftp') ||
+      lowerName === 'president' ||
+      lowerName === 'director' ||
+      lowerName === 'oftp') {
+    return true
+  }
+  
+  return false
+}
 
 /**
  * Search users across ALL zones with protected zone filtering
  * - Searches all zones (cross-zone search) from BOTH zone_members AND hq_members
  * - Deduplicates users by userId
- * - Hides senior zone members UNLESS user has existing chat with them
+ * - Hides senior zone members UNLESS user is in senior zone, is boss, or has existing chat
  */
 export async function searchZoneUsers(
   searchTerm: string, 
@@ -155,12 +195,22 @@ export async function searchZoneUsers(
     const seenIds = new Set<string>()
     
     // Check if current user is in a senior zone (they can see everyone)
-    const isInSeniorZone = currentUserZoneId ? SENIOR_ZONES.includes(currentUserZoneId) : false
+    // First check by zone ID, then we'll also check by user's own name/role
+    const isInSeniorZone = currentUserZoneId ? 
+      (SENIOR_ZONES.includes(currentUserZoneId) || 
+       SENIOR_TITLES.some(title => currentUserZoneId.toLowerCase().includes(title))) : false
     
     // Convert existing chat user IDs to a Set for fast lookup
     const existingChatUsers = new Set(existingChatUserIds)
     
-    console.log('[ChatService] Searching ALL members from zone_members + hq_members...')
+    console.log('[ChatService] Search params:', {
+      searchTerm,
+      currentUserId,
+      currentUserZoneId,
+      isBoss,
+      isInSeniorZone,
+      existingChatCount: existingChatUserIds.length
+    })
     
     // Get ALL zone members
     const zoneMembersRef = collection(db, 'zone_members')
@@ -178,15 +228,29 @@ export async function searchZoneUsers(
       if (data.userId === currentUserId) return
       if (seenIds.has(data.userId)) return
       
-      const memberZoneId = data.zoneId
-      const isInProtectedZone = SENIOR_ZONES.includes(memberZoneId)
+      const memberZoneId = data.zoneId || ''
+      const memberGroupId = data.groupId || ''
+      const name = (data.userName || '').trim()
+      
+      // Use the new helper function to check if this is a senior member
+      const isInProtectedZone = isSeniorMember(memberZoneId, memberGroupId, name)
       const hasExistingChat = existingChatUsers.has(data.userId)
       
+      // Log senior members for debugging
+      if (isInProtectedZone) {
+        console.log('[ChatService] Senior zone_member detected:', {
+          name,
+          zoneId: memberZoneId,
+          groupId: memberGroupId,
+          willBeHidden: !isInSeniorZone && !isBoss && !hasExistingChat
+        })
+      }
+      
+      // Hide protected zone members from regular users
       if (isInProtectedZone && !isInSeniorZone && !isBoss && !hasExistingChat) {
         return
       }
       
-      const name = (data.userName || '').trim()
       const matchesSearch = !searchTerm || 
         name.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -207,15 +271,29 @@ export async function searchZoneUsers(
       if (data.userId === currentUserId) return
       if (seenIds.has(data.userId)) return
       
-      const memberZoneId = data.groupId || data.zoneId
-      const isInProtectedZone = SENIOR_ZONES.includes(memberZoneId)
+      const memberZoneId = data.zoneId || ''
+      const memberGroupId = data.groupId || ''
+      const name = (data.userName || '').trim()
+      
+      // Use the new helper function to check if this is a senior member
+      const isInProtectedZone = isSeniorMember(memberZoneId, memberGroupId, name)
       const hasExistingChat = existingChatUsers.has(data.userId)
       
+      // Log senior members for debugging
+      if (isInProtectedZone) {
+        console.log('[ChatService] Senior HQ member detected:', {
+          name,
+          zoneId: memberZoneId,
+          groupId: memberGroupId,
+          willBeHidden: !isInSeniorZone && !isBoss && !hasExistingChat
+        })
+      }
+      
+      // Hide protected zone members from regular users
       if (isInProtectedZone && !isInSeniorZone && !isBoss && !hasExistingChat) {
         return
       }
       
-      const name = (data.userName || '').trim()
       const matchesSearch = !searchTerm || 
         name.toLowerCase().includes(searchTerm.toLowerCase())
       
@@ -224,7 +302,7 @@ export async function searchZoneUsers(
         users.push({
           id: data.userId,
           name: name,
-          zoneId: memberZoneId,
+          zoneId: memberGroupId || memberZoneId,
           zoneName: data.groupName || data.zoneName
         })
       }
@@ -469,6 +547,8 @@ export async function sendCallMessage(
   duration?: number // in seconds
 ): Promise<boolean> {
   try {
+    console.log('[ChatService] sendCallMessage called:', { chatId, callType, callerName, duration })
+    
     let text = ''
     if (callType === 'missed') {
       text = `📞 Missed call from ${callerName}`
@@ -488,7 +568,9 @@ export async function sendCallMessage(
       timestamp: serverTimestamp()
     }
 
-    await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
+    console.log('[ChatService] Adding call message to Firestore:', messageData)
+    const docRef = await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
+    console.log('[ChatService] Call message added with ID:', docRef.id)
 
     // Update chat's last message
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
@@ -498,6 +580,7 @@ export async function sendCallMessage(
         timestamp: serverTimestamp()
       }
     })
+    console.log('[ChatService] Chat last message updated')
 
     return true
   } catch (error) {

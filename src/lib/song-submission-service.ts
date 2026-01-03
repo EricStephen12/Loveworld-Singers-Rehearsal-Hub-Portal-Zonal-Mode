@@ -448,22 +448,48 @@ export async function getUserSubmissionsByEmail(userEmail: string): Promise<Song
 export async function getUserSongNotifications(userEmail: string): Promise<SongNotification[]> {
   try {
     const notificationsRef = collection(db, SONG_NOTIFICATIONS_COLLECTION)
-    const q = query(
-      notificationsRef,
-      where('submittedByEmail', '==', userEmail),
-      where('type', 'in', ['approved', 'rejected', 'replied']),
-      orderBy('timestamp', 'desc')
-    )
-    const snapshot = await getDocs(q)
     
-    return snapshot.docs.map((docSnap) => {
-      const data = docSnap.data()
-      return {
-        id: docSnap.id,
-        ...data,
-        createdAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
-      } as SongNotification
-    })
+    // Try with compound query first
+    try {
+      const q = query(
+        notificationsRef,
+        where('submittedByEmail', '==', userEmail),
+        where('type', 'in', ['approved', 'rejected', 'replied']),
+        orderBy('timestamp', 'desc')
+      )
+      const snapshot = await getDocs(q)
+      
+      return snapshot.docs.map((docSnap) => {
+        const data = docSnap.data()
+        return {
+          id: docSnap.id,
+          ...data,
+          createdAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
+        } as SongNotification
+      })
+    } catch (indexError) {
+      // Fallback: simpler query without orderBy, filter and sort client-side
+      console.log('[SongSubmission] Index not ready, using fallback query')
+      const fallbackQ = query(
+        notificationsRef,
+        where('submittedByEmail', '==', userEmail)
+      )
+      const snapshot = await getDocs(fallbackQ)
+      
+      const notifications = snapshot.docs
+        .map((docSnap) => {
+          const data = docSnap.data()
+          return {
+            id: docSnap.id,
+            ...data,
+            createdAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
+          } as SongNotification
+        })
+        .filter(n => ['approved', 'rejected', 'replied'].includes(n.type))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      
+      return notifications
+    }
   } catch (error) {
     console.error('Error getting user notifications:', error)
     return []

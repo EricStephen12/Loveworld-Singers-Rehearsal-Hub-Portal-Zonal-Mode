@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Plus, Edit2, Trash2, Search, Clock, MapPin, X, Eye, EyeOff, Image, FolderOpen } from 'lucide-react'
+import { Calendar, Plus, Edit2, Trash2, Search, Clock, MapPin, X, Eye, EyeOff, FolderOpen } from 'lucide-react'
 import { useZone } from '@/hooks/useZone'
 import { UpcomingEvent, UpcomingEventsService } from '@/app/pages/calendar/_lib/upcoming-events-service'
 import MediaSelectionModal from '../MediaSelectionModal'
@@ -93,12 +93,12 @@ export default function CalendarSection() {
     console.log('handleSaveEvent called', formData)
     
     if (!formData.title.trim()) {
-      alert('Please enter a title')
+      showToast('Please enter a title', 'warning')
       return
     }
     
     if (!formData.date) {
-      alert('Please select a date')
+      showToast('Please select a date', 'warning')
       return
     }
 
@@ -122,9 +122,11 @@ export default function CalendarSection() {
       if (editingEvent) {
         await UpcomingEventsService.updateEvent(editingEvent.id, eventData)
         console.log('Event updated successfully')
+        showToast('Event updated successfully!', 'success')
       } else {
         const result = await UpcomingEventsService.createEvent(eventData)
         console.log('Event created successfully:', result)
+        showToast('Event created successfully!', 'success')
       }
 
       // Clear cache to refresh data
@@ -135,10 +137,28 @@ export default function CalendarSection() {
       await loadEvents()
     } catch (error) {
       console.error('Error saving event:', error)
-      alert('Failed to save event. Please try again.')
+      showToast('Failed to save event. Please try again.', 'error')
     } finally {
       setSaving(false)
     }
+  }
+
+  // Toast helper
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    const toast = document.createElement('div')
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-green-500 text-white' :
+      type === 'error' ? 'bg-red-500 text-white' :
+      type === 'warning' ? 'bg-yellow-500 text-white' :
+      'bg-gray-800 text-white'
+    }`
+    toast.textContent = message
+    document.body.appendChild(toast)
+    
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      setTimeout(() => toast.remove(), 300)
+    }, 3000)
   }
 
   const handleDeleteEvent = async () => {
@@ -148,11 +168,13 @@ export default function CalendarSection() {
       await UpcomingEventsService.deleteEvent(eventToDelete.id)
       // Clear cache
       localStorage.removeItem('lwsrh-upcoming-events-cache')
+      showToast('Event deleted successfully!', 'success')
       setShowDeleteDialog(false)
       setEventToDelete(null)
       loadEvents()
     } catch (error) {
       console.error('Error deleting event:', error)
+      showToast('Failed to delete event', 'error')
     }
   }
 
@@ -162,9 +184,11 @@ export default function CalendarSection() {
         showInCarousel: !event.showInCarousel
       })
       localStorage.removeItem('lwsrh-upcoming-events-cache')
+      showToast(event.showInCarousel ? 'Hidden from carousel' : 'Added to carousel', 'success')
       loadEvents()
     } catch (error) {
       console.error('Error toggling visibility:', error)
+      showToast('Failed to update visibility', 'error')
     }
   }
 
@@ -184,132 +208,156 @@ export default function CalendarSection() {
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Calendar Management</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage ministry events and schedules</p>
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">Calendar</h1>
+            <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Manage events and schedules</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg font-medium hover:opacity-90 transition-all"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-white rounded-xl font-medium hover:opacity-90 transition-all flex-shrink-0"
             style={{ backgroundColor: themeColor }}
           >
             <Plus className="w-5 h-5" />
-            Add Event
+            <span className="hidden sm:inline">Add Event</span>
           </button>
         </div>
 
         {/* Search */}
-        <div className="mt-4 relative">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search events..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
           />
         </div>
       </div>
 
       {/* Events List */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+      <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-purple-600 rounded-full animate-spin" />
+          <div className="space-y-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+                <div className="flex gap-3">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-lg flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
-            <p className="text-gray-500 mb-4">Create your first event to get started</p>
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No events found</h3>
+            <p className="text-gray-500 text-sm mb-4">Create your first event to get started</p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-2 text-white rounded-lg font-medium"
+              className="px-4 py-2 text-white rounded-xl font-medium"
               style={{ backgroundColor: themeColor }}
             >
               Add Event
             </button>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="space-y-3">
             {filteredEvents.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex gap-3">
+                  {/* Image or Color Bar */}
                   {event.image ? (
                     <img 
                       src={event.image} 
                       alt={event.title}
-                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0"
                     />
                   ) : (
                     <div
-                      className="w-1 rounded-full self-stretch"
+                      className="w-2 sm:w-1.5 rounded-full self-stretch flex-shrink-0"
                       style={{ backgroundColor: getTypeColor(event.type), minHeight: '60px' }}
                     />
                   )}
+                  
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 truncate">{event.title}</h3>
+                    {/* Title & Type */}
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-1">{event.title}</h3>
                       <span 
-                        className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
+                        className="px-1.5 py-0.5 text-[10px] sm:text-xs font-medium rounded-full text-white flex-shrink-0"
                         style={{ backgroundColor: getTypeColor(event.type) }}
                       >
                         {event.type}
                       </span>
                       {event.showInCarousel && (
-                        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                          In Carousel
+                        <span className="px-1.5 py-0.5 text-[10px] sm:text-xs font-medium rounded-full bg-green-100 text-green-700 flex-shrink-0">
+                          Carousel
                         </span>
                       )}
                     </div>
+                    
+                    {/* Description */}
                     {event.description && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{event.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 line-clamp-1 mb-2">{event.description}</p>
                     )}
-                    <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-500">
+                    
+                    {/* Date & Location */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{moment(event.date).format('MMM D, YYYY')}{event.time ? ` at ${event.time}` : ''}</span>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{moment(event.date).format('MMM D')}{event.time ? ` • ${event.time}` : ''}</span>
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{event.location}</span>
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span className="truncate max-w-[120px]">{event.location}</span>
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => toggleCarouselVisibility(event)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        event.showInCarousel 
-                          ? 'text-green-600 hover:bg-green-50' 
-                          : 'text-gray-400 hover:bg-gray-100'
-                      }`}
-                      title={event.showInCarousel ? 'Hide from carousel' : 'Show in carousel'}
-                    >
-                      {event.showInCarousel ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => handleOpenModal(event)}
-                      className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEventToDelete(event)
-                        setShowDeleteDialog(true)
-                      }}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    
+                    {/* Actions - Mobile Friendly */}
+                    <div className="flex items-center gap-1 mt-3">
+                      <button
+                        onClick={() => toggleCarouselVisibility(event)}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          event.showInCarousel 
+                            ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                            : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
+                        }`}
+                      >
+                        {event.showInCarousel ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                        <span className="hidden sm:inline">{event.showInCarousel ? 'Visible' : 'Hidden'}</span>
+                      </button>
+                      <button
+                        onClick={() => handleOpenModal(event)}
+                        className="flex items-center gap-1 px-2 py-1.5 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEventToDelete(event)
+                          setShowDeleteDialog(true)
+                        }}
+                        className="flex items-center gap-1 px-2 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -318,11 +366,12 @@ export default function CalendarSection() {
         )}
       </div>
 
-      {/* Event Modal */}
+      {/* Event Modal - Full Screen on Mobile */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[80]">
+          <div className="bg-white w-full sm:rounded-2xl sm:w-full sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col rounded-t-2xl sm:mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-900">
                 {editingEvent ? 'Edit Event' : 'Add Event'}
               </h2>
@@ -333,79 +382,86 @@ export default function CalendarSection() {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="p-4 space-y-4">
+            
+            {/* Modal Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
                   placeholder="Event title"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base resize-none"
                   rows={3}
                   placeholder="Event description"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Type</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as UpcomingEvent['type'] })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base bg-white"
                 >
                   {EVENT_TYPES.map((type) => (
                     <option key={type.id} value={type.id}>{type.label}</option>
                   ))}
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
                   placeholder="Event location"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              
+              {/* Date & Time - Stack on mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Date *</label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Time</label>
                   <input
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
                   />
                 </div>
               </div>
               
               {/* Image/Ecard from Media Library */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Event Ecard/Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Image</label>
                 {formData.image ? (
                   <div className="relative">
                     <img 
                       src={formData.image} 
                       alt="Event ecard" 
-                      className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                      className="w-full h-36 sm:h-40 object-cover rounded-xl border border-gray-200"
                     />
                     <div className="absolute top-2 right-2 flex gap-2">
                       <button
@@ -428,38 +484,39 @@ export default function CalendarSection() {
                   <button
                     type="button"
                     onClick={() => setShowMediaLibrary(true)}
-                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-purple-400 hover:bg-purple-50/50 transition-colors"
+                    className="w-full h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-purple-400 hover:bg-purple-50/50 transition-colors"
                   >
-                    <FolderOpen className="w-8 h-8 text-gray-400" />
+                    <FolderOpen className="w-7 h-7 text-gray-400" />
                     <span className="text-sm text-gray-500">Select from Media Library</span>
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <label className="flex items-center gap-3 cursor-pointer py-2">
                 <input
                   type="checkbox"
-                  id="showInCarousel"
                   checked={formData.showInCarousel}
                   onChange={(e) => setFormData({ ...formData, showInCarousel: e.target.checked })}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-5 h-5 rounded border-gray-300"
                   style={{ accentColor: themeColor }}
                 />
-                <label htmlFor="showInCarousel" className="text-sm text-gray-700">Show in calendar carousel</label>
-              </div>
+                <span className="text-sm text-gray-700">Show in calendar carousel</span>
+              </label>
             </div>
-            <div className="flex gap-3 p-4 border-t border-gray-200">
+            
+            {/* Modal Footer - Fixed */}
+            <div className="flex gap-3 p-4 border-t border-gray-200 flex-shrink-0 bg-white">
               <button
                 onClick={() => setShowModal(false)}
                 disabled={saving}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEvent}
                 disabled={saving || !formData.title.trim() || !formData.date}
-                className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 text-white rounded-xl font-medium hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ backgroundColor: themeColor }}
               >
                 {saving ? (
@@ -478,11 +535,14 @@ export default function CalendarSection() {
 
       {/* Delete Confirmation */}
       {showDeleteDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Event</h3>
-            <p className="text-gray-500 mb-6">
-              Are you sure you want to delete "{eventToDelete?.title}"? This action cannot be undone.
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Delete Event?</h3>
+            <p className="text-gray-500 text-center text-sm mb-6">
+              "{eventToDelete?.title}" will be permanently deleted.
             </p>
             <div className="flex gap-3">
               <button
@@ -490,13 +550,13 @@ export default function CalendarSection() {
                   setShowDeleteDialog(false)
                   setEventToDelete(null)
                 }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteEvent}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>

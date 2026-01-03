@@ -1,10 +1,7 @@
 {
+  "/admin/page": "app/admin/page.js",
   "/auth/page": "app/auth/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/home/page": "app/home/page.js",
-  "/page": "app/page.js",
-  "/pages/audiolab/page": "app/pages/audiolab/page.js",
-  "/pages/groups/page": "app/pages/groups/page.js",
-  "/pages/notifications/page": "app/pages/notifications/page.js",
-  "/pages/submit-song/page": "app/pages/submit-song/page.js"
+  "/page": "app/page.js"
 }

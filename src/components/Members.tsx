@@ -76,6 +76,24 @@ export default function Members() {
   const [allZones, setAllZones] = useState<any[]>([]);
   const [displayLimit, setDisplayLimit] = useState(50); // Show 50 initially
 
+  // Toast helper
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-green-500 text-white' :
+      type === 'error' ? 'bg-red-500 text-white' :
+      type === 'warning' ? 'bg-yellow-500 text-white' :
+      'bg-gray-800 text-white'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  };
+
   // Load all zones for HQ admin filter
   useEffect(() => {
     const loadZones = async () => {
@@ -345,7 +363,7 @@ export default function Members() {
       // Note: Deleting auth users requires special permissions
       // For now, we'll just mark as inactive
       
-      alert(`Successfully deleted ${member.first_name} ${member.last_name}`);
+      showToast(`✅ ${member.first_name} ${member.last_name} deleted successfully`, 'success');
       
       // Invalidate cache and reload
       if (currentZone) {
@@ -355,7 +373,7 @@ export default function Members() {
       loadMembers(true); // Force reload the list
     } catch (error) {
       console.error('Error deleting member:', error);
-      alert('Failed to delete member. Please try again.');
+      showToast('❌ Failed to delete member. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAudioLab } from './_context/AudioLabContext';
+import { useFeatureTracking } from '@/hooks/useAnalyticsTracking';
 import {
   BottomNav,
   LibraryView,
@@ -20,6 +21,9 @@ export default function AudioLabPage() {
   const { state, setView } = useAudioLab();
   const { currentView } = state;
   const searchParams = useSearchParams();
+  
+  // Track audiolab usage
+  useFeatureTracking('audiolab');
 
   // Handle view query parameter (e.g., /pages/audiolab?view=warmup)
   // Also handle song parameter - auto-switch to library view when song ID is provided

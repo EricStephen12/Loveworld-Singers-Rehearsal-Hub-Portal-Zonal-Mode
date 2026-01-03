@@ -87,12 +87,88 @@ export class VoiceCallService {
   private ringtoneOscillator: OscillatorNode | null = null
   private ringtoneGain: GainNode | null = null
   private ringtoneInterval: NodeJS.Timeout | null = null
+  private outgoingToneContext: AudioContext | null = null
+  private outgoingToneInterval: NodeJS.Timeout | null = null
+  private callEndContext: AudioContext | null = null
 
   constructor(userId: string) {
     this.userId = userId
   }
 
-  // Play ringtone using Web Audio API
+  // Play a short pleasant sound when call ends/declines/times out
+  playCallEndSound(type: 'ended' | 'declined' | 'missed' | 'timeout' = 'ended') {
+    if (typeof window === 'undefined') return
+    
+    try {
+      // Close any existing context
+      if (this.callEndContext) {
+        this.callEndContext.close().catch(() => {})
+      }
+      
+      this.callEndContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      
+      if (this.callEndContext.state === 'suspended') {
+        this.callEndContext.resume()
+      }
+      
+      const ctx = this.callEndContext
+      const now = ctx.currentTime
+      
+      // Create a pleasant two-tone sound (descending for end, different for missed)
+      const osc1 = ctx.createOscillator()
+      const osc2 = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      osc1.type = 'sine'
+      osc2.type = 'sine'
+      
+      if (type === 'missed' || type === 'timeout') {
+        // Lower, softer tone for missed/timeout
+        osc1.frequency.value = 392 // G4
+        osc2.frequency.value = 330 // E4
+      } else if (type === 'declined') {
+        // Quick descending tone for declined
+        osc1.frequency.value = 440 // A4
+        osc2.frequency.value = 349 // F4
+      } else {
+        // Pleasant end tone
+        osc1.frequency.value = 523 // C5
+        osc2.frequency.value = 392 // G4
+      }
+      
+      // Very soft volume
+      gainNode.gain.setValueAtTime(0, now)
+      gainNode.gain.linearRampToValueAtTime(0.1, now + 0.05)
+      gainNode.gain.linearRampToValueAtTime(0.1, now + 0.15)
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.4)
+      
+      osc1.connect(gainNode)
+      osc2.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      // Play first tone
+      osc1.start(now)
+      osc1.stop(now + 0.2)
+      
+      // Play second tone slightly after
+      osc2.start(now + 0.15)
+      osc2.stop(now + 0.4)
+      
+      // Cleanup after sound finishes
+      setTimeout(() => {
+        if (this.callEndContext) {
+          this.callEndContext.close().catch(() => {})
+          this.callEndContext = null
+        }
+      }, 500)
+      
+      console.log('[VoiceCall] Played call end sound:', type)
+    } catch (error) {
+      console.error('[VoiceCall] Error playing call end sound:', error)
+    }
+  }
+
+  // Play ringtone using Web Audio API - soft and pleasant
   private playRingtone() {
     if (typeof window === 'undefined') return
     
@@ -101,30 +177,39 @@ export class VoiceCallService {
       this.ringtoneContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       this.ringtoneGain = this.ringtoneContext.createGain()
       this.ringtoneGain.connect(this.ringtoneContext.destination)
-      this.ringtoneGain.gain.value = 0.3
+      this.ringtoneGain.gain.value = 0.15 // Very soft volume (15%)
 
-      // Play ring pattern: beep-beep, pause, beep-beep
-      const playBeep = (frequency: number, duration: number) => {
+      // Play gentle ring pattern
+      const playTone = (frequency: number, duration: number, delay: number = 0) => {
         if (!this.ringtoneContext || !this.ringtoneGain) return
         
         const osc = this.ringtoneContext.createOscillator()
-        osc.type = 'sine'
+        const gainNode = this.ringtoneContext.createGain()
+        
+        osc.type = 'sine' // Smooth sine wave
         osc.frequency.value = frequency
-        osc.connect(this.ringtoneGain)
-        osc.start()
-        setTimeout(() => osc.stop(), duration)
+        
+        // Fade in and out for smoother sound
+        gainNode.gain.setValueAtTime(0, this.ringtoneContext.currentTime + delay)
+        gainNode.gain.linearRampToValueAtTime(0.15, this.ringtoneContext.currentTime + delay + 0.05)
+        gainNode.gain.linearRampToValueAtTime(0, this.ringtoneContext.currentTime + delay + duration)
+        
+        osc.connect(gainNode)
+        gainNode.connect(this.ringtoneGain!)
+        
+        osc.start(this.ringtoneContext.currentTime + delay)
+        osc.stop(this.ringtoneContext.currentTime + delay + duration)
       }
 
+      // Gentle two-tone pattern (like a soft doorbell)
       const ringPattern = () => {
-        playBeep(440, 200) // A4
-        setTimeout(() => playBeep(554, 200), 250) // C#5
-        setTimeout(() => playBeep(440, 200), 600)
-        setTimeout(() => playBeep(554, 200), 850)
+        playTone(523, 0.3, 0)      // C5 - first note
+        playTone(659, 0.3, 0.35)   // E5 - second note (pleasant interval)
       }
 
-      // Play immediately and repeat
+      // Play immediately and repeat every 2.5 seconds
       ringPattern()
-      this.ringtoneInterval = setInterval(ringPattern, 2000)
+      this.ringtoneInterval = setInterval(ringPattern, 2500)
     } catch (error) {
       console.error('[VoiceCall] Error playing ringtone:', error)
     }
@@ -141,6 +226,74 @@ export class VoiceCallService {
       this.ringtoneContext = null
     }
     this.ringtoneGain = null
+  }
+
+  // Play outgoing call tone (ringback) - subtle beep for caller
+  private playOutgoingTone() {
+    if (typeof window === 'undefined') {
+      console.log('[VoiceCall] Cannot play tone - not in browser')
+      return
+    }
+    
+    // Stop any existing tone first
+    this.stopOutgoingTone()
+    
+    try {
+      console.log('[VoiceCall] Creating AudioContext for outgoing tone')
+      this.outgoingToneContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      console.log('[VoiceCall] AudioContext state:', this.outgoingToneContext.state)
+      
+      // Resume context if suspended (required by some browsers)
+      if (this.outgoingToneContext.state === 'suspended') {
+        console.log('[VoiceCall] Resuming suspended AudioContext')
+        this.outgoingToneContext.resume()
+      }
+      
+      const playBeep = () => {
+        if (!this.outgoingToneContext || this.outgoingToneContext.state === 'closed') {
+          console.log('[VoiceCall] AudioContext closed, stopping beep')
+          return
+        }
+        
+        console.log('[VoiceCall] Playing outgoing beep')
+        const osc = this.outgoingToneContext.createOscillator()
+        const gainNode = this.outgoingToneContext.createGain()
+        
+        osc.type = 'sine'
+        osc.frequency.value = 440 // A4 note - standard ringback tone
+        
+        // Very soft and short beep
+        gainNode.gain.setValueAtTime(0, this.outgoingToneContext.currentTime)
+        gainNode.gain.linearRampToValueAtTime(0.08, this.outgoingToneContext.currentTime + 0.05)
+        gainNode.gain.linearRampToValueAtTime(0.08, this.outgoingToneContext.currentTime + 0.8)
+        gainNode.gain.linearRampToValueAtTime(0, this.outgoingToneContext.currentTime + 1)
+        
+        osc.connect(gainNode)
+        gainNode.connect(this.outgoingToneContext.destination)
+        
+        osc.start(this.outgoingToneContext.currentTime)
+        osc.stop(this.outgoingToneContext.currentTime + 1)
+      }
+
+      // Play immediately and repeat every 3 seconds (standard ringback pattern)
+      playBeep()
+      this.outgoingToneInterval = setInterval(playBeep, 3000)
+      console.log('[VoiceCall] Outgoing tone started successfully')
+    } catch (error) {
+      console.error('[VoiceCall] Error playing outgoing tone:', error)
+    }
+  }
+
+  // Stop outgoing tone
+  private stopOutgoingTone() {
+    if (this.outgoingToneInterval) {
+      clearInterval(this.outgoingToneInterval)
+      this.outgoingToneInterval = null
+    }
+    if (this.outgoingToneContext) {
+      this.outgoingToneContext.close().catch(() => {})
+      this.outgoingToneContext = null
+    }
   }
 
   // Start call timeout
@@ -215,23 +368,27 @@ export class VoiceCallService {
           if (callData.status === 'answered' && this.currentCall?.status !== 'answered') {
             this.clearCallTimeout()
             this.stopRingtone()
+            this.stopOutgoingTone()
             this.currentCall = { ...callData, id: callId }
             this.callbacks.onCallAnswered?.(this.currentCall!)
           } else if (callData.status === 'declined' && this.currentCall?.status !== 'declined') {
             this.clearCallTimeout()
             this.stopRingtone()
+            this.stopOutgoingTone()
             this.currentCall = { ...callData, id: callId }
             this.callbacks.onCallEnded?.(this.currentCall!, 'declined')
             this.cleanup()
           } else if (callData.status === 'ended' && this.currentCall?.status !== 'ended') {
             this.clearCallTimeout()
             this.stopRingtone()
+            this.stopOutgoingTone()
             this.currentCall = { ...callData, id: callId }
             this.callbacks.onCallEnded?.(this.currentCall!, 'ended')
             this.cleanup()
           } else if (callData.status === 'missed' && this.currentCall?.status !== 'missed') {
             this.clearCallTimeout()
             this.stopRingtone()
+            this.stopOutgoingTone()
             this.currentCall = { ...callData, id: callId }
             this.callbacks.onCallEnded?.(this.currentCall!, 'missed')
             this.cleanup()
@@ -314,10 +471,16 @@ export class VoiceCallService {
         return null
       }
 
+      // Start outgoing tone IMMEDIATELY (while still in user gesture context)
+      // This ensures AudioContext is created before any async operations
+      console.log('[VoiceCall] Starting outgoing tone immediately')
+      this.playOutgoingTone()
+
       // Initialize local stream
       const hasStream = await this.initLocalStream()
       if (!hasStream) {
         console.error('[VoiceCall] Failed to initialize local stream')
+        this.stopOutgoingTone() // Stop tone if we fail
         return null
       }
 
@@ -328,7 +491,7 @@ export class VoiceCallService {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // Create call data
+      // Create call data - Firebase doesn't allow undefined values
       const callRef = push(ref(realtimeDb, `voice_calls/${receiverId}`))
       const callId = callRef.key!
       this.currentCallId = callId
@@ -338,14 +501,16 @@ export class VoiceCallService {
         chatId,
         callerId: this.userId,
         callerName,
-        callerAvatar,
         receiverId,
-        receiverName,
-        receiverAvatar,
         status: 'ringing',
         startedAt: Date.now(),
         offer: offer
       }
+      
+      // Only add optional fields if they have values
+      if (callerAvatar) callData.callerAvatar = callerAvatar
+      if (receiverName) callData.receiverName = receiverName
+      if (receiverAvatar) callData.receiverAvatar = receiverAvatar
 
       this.currentCall = callData
 
@@ -417,6 +582,16 @@ export class VoiceCallService {
       // Set remote description (offer)
       if (callData.offer) {
         await pc.setRemoteDescription(new RTCSessionDescription(callData.offer))
+        
+        // Process any pending ICE candidates
+        for (const candidate of this.pendingCandidates) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate))
+          } catch (e) {
+            console.warn('[VoiceCall] Error adding pending ICE candidate:', e)
+          }
+        }
+        this.pendingCandidates = []
       }
 
       // Create answer
@@ -569,8 +744,9 @@ export class VoiceCallService {
 
   // Cleanup
   cleanup() {
-    // Stop ringtone
+    // Stop ringtone and outgoing tone
     this.stopRingtone()
+    this.stopOutgoingTone()
     
     // Clear timeout
     this.clearCallTimeout()

@@ -243,7 +243,7 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
             setNewPageCategoryName('');
             setShowCategoryModal(true);
           }}
-          className={`lg:hidden fixed bottom-20 right-4 z-40 w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
+          className={`lg:hidden fixed bottom-20 right-4 z-[45] w-14 h-14 ${theme.primary} text-white rounded-full shadow-lg ${theme.primaryHover} transition-all active:scale-95 flex items-center justify-center`}
         >
           <Plus className="w-6 h-6" />
         </button>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
+import { useFeatureTracking } from '@/hooks/useAnalyticsTracking'
 import { ChatProviderV2, useChatV2 } from './_context/ChatContextV2'
 import { 
   ArrowLeft, MessageCircle, Users, Search, Plus, Send, 
@@ -11,6 +12,7 @@ import {
   Settings, UserPlus, UserMinus, LogOut, Paperclip, Image, FileText, Download, Maximize2
 } from 'lucide-react'
 import type { ChatUser, ReactionType } from './_lib/chat-service'
+import { sendCallMessage as sendCallMessageToChat } from './_lib/chat-service'
 import { VoiceCallService, CallData } from './_lib/voice-call-service'
 
 // Reaction options - more variety
@@ -29,6 +31,10 @@ function GroupsContent() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
   const { currentZone } = useZone()
+  
+  // Track groups/chat usage
+  useFeatureTracking('groups_chat')
+  
   const {
     chats,
     selectedChat,
@@ -280,11 +286,53 @@ function GroupsContent() {
         setIsInCall(true)
         setIsCalling(false)
       },
-      onCallEnded: () => {
+      onCallEnded: async (call, reason) => {
+        console.log('[Groups] Call ended:', reason, 'chatId:', call.chatId)
+        
+        // Play end sound
+        service.playCallEndSound(reason)
+        
+        // Send call message to chat history
+        if (call.chatId) {
+          try {
+            if (reason === 'missed' || reason === 'timeout') {
+              console.log('[Groups] Sending missed call message')
+              await sendCallMessageToChat(call.chatId, 'missed', call.callerName)
+            } else if (reason === 'declined') {
+              console.log('[Groups] Sending declined call message')
+              await sendCallMessageToChat(call.chatId, 'declined', call.callerName)
+            } else if (reason === 'ended' && call.answeredAt) {
+              const duration = call.duration || Math.floor((Date.now() - call.answeredAt) / 1000)
+              console.log('[Groups] Sending answered call message, duration:', duration)
+              await sendCallMessageToChat(call.chatId, 'answered', call.callerName, duration)
+            }
+          } catch (error) {
+            console.error('[Groups] Error sending call message:', error)
+          }
+        }
+        
         setIsInCall(false)
         setIsCalling(false)
         setIncomingCall(null)
         setCallDuration(0)
+      },
+      onCallTimeout: async (call) => {
+        console.log('[Groups] Call timeout, chatId:', call.chatId)
+        
+        // Play timeout sound
+        service.playCallEndSound('timeout')
+        
+        // Send missed call message
+        if (call.chatId) {
+          try {
+            await sendCallMessageToChat(call.chatId, 'missed', call.callerName)
+          } catch (error) {
+            console.error('[Groups] Error sending timeout call message:', error)
+          }
+        }
+        
+        setIsCalling(false)
+        setIncomingCall(null)
       },
       onRemoteStream: (stream) => {
         if (remoteAudioRef.current) {
@@ -351,14 +399,43 @@ function GroupsContent() {
   // Decline incoming call
   const handleDeclineCall = async () => {
     if (!voiceCallService || !incomingCall) return
+    
+    // Play decline sound
+    voiceCallService.playCallEndSound('declined')
+    
     await voiceCallService.declineCall(incomingCall)
+    
+    // Send declined message to chat
+    if (incomingCall.chatId) {
+      try {
+        await sendCallMessageToChat(incomingCall.chatId, 'declined', incomingCall.callerName)
+      } catch (error) {
+        console.error('[Groups] Error sending decline message:', error)
+      }
+    }
+    
     setIncomingCall(null)
   }
   
   // End call
   const handleEndCall = async () => {
     if (!voiceCallService) return
-    await voiceCallService.endCall()
+    
+    // Play end sound
+    voiceCallService.playCallEndSound('ended')
+    
+    const endedCall = await voiceCallService.endCall()
+    
+    // Send call ended message to chat
+    if (endedCall?.chatId && endedCall.answeredAt) {
+      const duration = endedCall.duration || callDuration
+      try {
+        await sendCallMessageToChat(endedCall.chatId, 'answered', endedCall.callerName, duration)
+      } catch (error) {
+        console.error('[Groups] Error sending end call message:', error)
+      }
+    }
+    
     setIsInCall(false)
     setIsCalling(false)
     setCallDuration(0)

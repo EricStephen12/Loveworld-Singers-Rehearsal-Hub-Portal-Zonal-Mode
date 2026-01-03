@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { 
   Plus, Edit2, Trash2, ListVideo, Globe, Star, 
-  X, Check, Search, GripVertical, Play, Eye
+  X, Check, Search, GripVertical, Play, Eye, CheckCircle, XCircle
 } from 'lucide-react'
 import { 
   getAdminPlaylists, 
@@ -37,6 +37,15 @@ export default function PlaylistsSection() {
   
   // Video selection
   const [videoSearch, setVideoSearch] = useState('')
+  
+  // Toast and delete confirmation
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 3000)
+  }
   
   // Helper to get thumbnail from first video in playlist
   const getPlaylistThumbnail = (playlist: AdminPlaylist): string => {
@@ -77,7 +86,7 @@ export default function PlaylistsSection() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      alert('Please enter a playlist name')
+      showToast('error', 'Please enter a playlist name')
       return
     }
     setIsSubmitting(true)
@@ -85,18 +94,19 @@ export default function PlaylistsSection() {
       await createAdminPlaylist({
         name: name.trim(),
         description: description.trim(),
-        thumbnail: '', // Will be auto-set from first video
+        thumbnail: '',
         isPublic,
         isFeatured,
         forHQ,
         createdBy: user?.uid || 'admin',
         createdByName: profile?.first_name || 'Admin'
       })
+      showToast('success', 'Playlist created!')
       resetForm()
       setViewMode('list')
       loadData()
     } catch (e) {
-      alert('Failed to create playlist')
+      showToast('error', 'Failed to create playlist')
     }
     setIsSubmitting(false)
   }
@@ -112,22 +122,24 @@ export default function PlaylistsSection() {
         isFeatured,
         forHQ
       })
+      showToast('success', 'Playlist updated!')
       resetForm()
       setViewMode('list')
       loadData()
     } catch (e) {
-      alert('Failed to update playlist')
+      showToast('error', 'Failed to update playlist')
     }
     setIsSubmitting(false)
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this playlist?')) return
     try {
       await deleteAdminPlaylist(id)
+      showToast('success', 'Playlist deleted!')
+      setDeleteConfirm(null)
       loadData()
     } catch (e) {
-      alert('Failed to delete playlist')
+      showToast('error', 'Failed to delete playlist')
     }
   }
 
@@ -164,7 +176,7 @@ export default function PlaylistsSection() {
       }
       loadData()
     } catch (e) {
-      alert('Failed to update playlist')
+      showToast('error', 'Failed to update playlist')
     }
   }
 
@@ -176,6 +188,47 @@ export default function PlaylistsSection() {
   if (viewMode === 'list') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+        {/* Toast */}
+        {toast && (
+          <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
+            {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+            {toast.message}
+          </div>
+        )}
+
+        {/* Delete Confirmation */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Playlist</h3>
+                  <p className="text-sm text-gray-500">This cannot be undone</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm)}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Playlists</h1>
@@ -257,7 +310,7 @@ export default function PlaylistsSection() {
                       <Edit2 className="w-4 h-4 text-gray-500" />
                     </button>
                     <button
-                      onClick={() => handleDelete(playlist.id)}
+                      onClick={() => setDeleteConfirm(playlist.id)}
                       className="p-2 hover:bg-red-50 rounded-lg"
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />

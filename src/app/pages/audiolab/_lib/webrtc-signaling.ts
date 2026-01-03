@@ -7,7 +7,7 @@ import { ref, set, onValue, remove, push } from 'firebase/database';
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup';
 
 export interface SignalMessage {
-  type: 'offer' | 'answer' | 'ice-candidate';
+  type: 'offer' | 'answer' | 'ice-candidate' | 'request-offer';
   from: string;
   to: string;
   payload: any;

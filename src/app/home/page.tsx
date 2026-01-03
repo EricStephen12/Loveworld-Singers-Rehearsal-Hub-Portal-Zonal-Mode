@@ -16,10 +16,14 @@ import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { handleAppRefresh } from '@/utils/refresh-utils'
+import { useFeatureTracking } from '@/hooks/useAnalyticsTracking'
 
 function HomePageContent() {
   const router = useRouter()
   const { signOut, profile, user, isLoading: authLoading } = useAuth()
+  
+  // Track home page usage
+  useFeatureTracking('home_page')
   
   // Check if user is Boss (declare early for use in features array)
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
@@ -35,7 +39,7 @@ function HomePageContent() {
   
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
   const { hasFeature } = useSubscription()
-  const { hasUnread: hasUnreadNotifications } = useUnreadNotifications()
+  const { hasUnread: hasUnreadNotifications, hasNewMedia, hasNewCalendar, markMediaSeen, markCalendarSeen } = useUnreadNotifications()
   
   // Show loading only on first visit (no cached zone data)
   // This prevents the flicker when zone data loads
@@ -259,14 +263,14 @@ function HomePageContent() {
       icon: Play,
       title: 'Media',
       href: '/pages/media',
-      badge: null,
+      badge: 'media',
       premium: false,
     },
     {
       icon: Calendar,
       title: 'Ministry Calendar',
       href: '/pages/calendar',
-      badge: null,
+      badge: 'calendar',
       premium: false,
     },
     {
@@ -695,13 +699,23 @@ function HomePageContent() {
                           />
                         )}
                       </div>
-                      {feature.badge && hasUnreadNotifications && (
+                      {feature.badge === true && hasUnreadNotifications && (
                         <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 via-red-500 to-red-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
                           <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-75"></div>
                         </div>
                       )}
-                      {feature.badge && !hasUnreadNotifications && (
+                      {feature.badge === true && !hasUnreadNotifications && (
                         <div className="absolute -top-1 -right-1 bg-gray-300 text-white text-xs rounded-full w-2.5 h-2.5 flex items-center justify-center font-bold shadow border border-white">
+                        </div>
+                      )}
+                      {feature.badge === 'media' && hasNewMedia && (
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-emerald-500 via-emerald-500 to-emerald-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
+                          <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                      )}
+                      {feature.badge === 'calendar' && hasNewCalendar && (
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
+                          <div className="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-75"></div>
                         </div>
                       )}
                       {isPremiumFeature && !hasAccess && (

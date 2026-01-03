@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  ChevronLeft, Play, Send, Mic, Users, MoreVertical,
-  Smile, Check, CheckCheck, Clock, X, 
+  ChevronLeft, Play, Send, Mic, Users,
+  Smile, Check, CheckCheck, Clock, 
   Trash2, LogOut, Copy, Loader2, Pause, StopCircle
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
@@ -42,7 +42,6 @@ export function CollabChatView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -225,34 +224,16 @@ export function CollabChatView() {
             </div>
           </div>
 
-          {/* Header Actions */}
-          <div className="flex items-center gap-1">
-            <button onClick={() => setView('live-session')} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-full flex items-center gap-1.5 transition-colors">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              Live
+          {/* Header Actions - Simplified */}
+          <div className="flex items-center gap-2">
+            <button onClick={() => setView('live-session')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-emerald-500/20">
+              <Mic className="w-4 h-4" />
+              Voice
             </button>
             
-            <div className="relative">
-              <button onClick={() => setShowMenu(!showMenu)} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                <MoreVertical className="w-5 h-5" />
-              </button>
-              
-              {showMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#2a1f35] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
-                    <button onClick={() => { copyCode(); setShowMenu(false); }} className="w-full px-4 py-3 text-left text-white hover:bg-white/5 flex items-center gap-3 transition-colors">
-                      <Copy className="w-4 h-4 text-gray-400" />
-                      <span>Copy Code</span>
-                    </button>
-                    <button onClick={() => { handleEndSession(); setShowMenu(false); }} className="w-full px-4 py-3 text-left text-red-400 hover:bg-white/5 flex items-center gap-3 transition-colors">
-                      <LogOut className="w-4 h-4" />
-                      <span>{isHost ? 'End Session' : 'Leave Session'}</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <button onClick={handleEndSession} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors" title={isHost ? 'End Session' : 'Leave Session'}>
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
