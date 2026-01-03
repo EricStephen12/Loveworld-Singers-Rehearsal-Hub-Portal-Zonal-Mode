@@ -26,6 +26,7 @@ import { EmergencyRecovery } from '@/utils/emergency-recovery'
 import FeatureUpdateChecker from '@/components/FeatureUpdateChecker'
 import OfflineIndicator from '@/components/OfflineIndicator'
 import ForceUpdateButton from '@/components/ForceUpdateButton'
+import { GlobalCallOverlay } from '@/components/GlobalCallOverlay'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import '@/utils/safeAreaManager'
 import { disableConsoleLogs } from '@/utils/disable-logs'
@@ -201,6 +202,7 @@ export default function RootLayout({
                       <RealtimeNotifications />
                       <PushNotificationListener />
                       <NotificationUrlHandler />
+                      <GlobalCallOverlay />
                       <OfflineIndicator />
                       <FeatureUpdateChecker />
                       <ForceUpdateButton />

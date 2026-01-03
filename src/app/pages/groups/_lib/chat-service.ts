@@ -460,6 +460,60 @@ export async function deleteChat(chatId: string, userId: string): Promise<boolea
 // ============================================
 
 /**
+ * Send a call system message to chat
+ */
+export async function sendCallMessage(
+  chatId: string,
+  callType: 'missed' | 'answered' | 'declined',
+  callerName: string,
+  duration?: number // in seconds
+): Promise<boolean> {
+  try {
+    let text = ''
+    if (callType === 'missed') {
+      text = `📞 Missed call from ${callerName}`
+    } else if (callType === 'declined') {
+      text = `📞 Call declined`
+    } else if (callType === 'answered') {
+      const durationStr = duration ? formatCallDuration(duration) : '0:00'
+      text = `📞 Voice call • ${durationStr}`
+    }
+
+    const messageData = {
+      chatId,
+      senderId: 'system',
+      senderName: 'System',
+      text,
+      type: 'system',
+      timestamp: serverTimestamp()
+    }
+
+    await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
+
+    // Update chat's last message
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      lastMessage: {
+        text,
+        senderId: 'system',
+        timestamp: serverTimestamp()
+      }
+    })
+
+    return true
+  } catch (error) {
+    console.error('[ChatService] sendCallMessage error:', error)
+    return false
+  }
+}
+
+// Helper to format call duration
+function formatCallDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+/**
  * Send message
  */
 export async function sendMessage(
