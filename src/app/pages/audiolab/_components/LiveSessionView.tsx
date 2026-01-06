@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2, Radio, AlertCircle, Settings
+  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,35 +25,6 @@ function darkenColor(hex: string, percent: number): string {
   const G = Math.max((num >> 8 & 0x00FF) - amt, 0)
   const B = Math.max((num & 0x0000FF) - amt, 0)
   return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`
-}
-
-// Check if running in native app (React Native WebView)
-function isNativeApp(): boolean {
-  if (typeof window === 'undefined') return false
-  return !!(
-    localStorage.getItem('isNativeApp') === 'true' ||
-    (window as any).isNativeApp ||
-    (window as any).ReactNativeWebView
-  )
-}
-
-// Check microphone permission
-async function checkMicrophonePermission(): Promise<'granted' | 'denied' | 'prompt'> {
-  // Skip permission check for native apps - permissions are handled natively
-  if (isNativeApp()) {
-    console.log('[LiveSession] Native app detected - skipping permission check')
-    return 'granted'
-  }
-  
-  try {
-    if (navigator.permissions) {
-      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-      return result.state as 'granted' | 'denied' | 'prompt';
-    }
-    return 'prompt';
-  } catch {
-    return 'prompt';
-  }
 }
 
 // Play a subtle join sound
@@ -96,9 +67,8 @@ export function LiveSessionView() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copied, setCopied] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed' | 'permission-denied'>('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
   const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
 
   // Subscribe to session updates
   useEffect(() => {
@@ -159,31 +129,15 @@ export function LiveSessionView() {
     webrtcService.initializeSignaling(currentSession.id, user.uid);
     
     const setupWebRTC = async () => {
-      // Check permission first
-      const permissionStatus = await checkMicrophonePermission();
-      
-      if (permissionStatus === 'denied') {
-        setConnectionStatus('permission-denied');
-        setShowPermissionPrompt(true);
-        return;
-      }
-      
+      // Just initialize - browser will show native permission prompt if needed
+      // Native apps handle permissions on their side
       const success = await webrtcService.initializeLocalStream();
       if (!success) {
-        // Check if it was a permission error
-        const newStatus = await checkMicrophonePermission();
-        if (newStatus === 'denied') {
-          setConnectionStatus('permission-denied');
-          setShowPermissionPrompt(true);
-        } else {
-          setConnectionStatus('failed');
-          setShowPermissionPrompt(true);
-        }
+        setConnectionStatus('failed');
         return;
       }
       
       setConnectionStatus('connected');
-      setShowPermissionPrompt(false);
       
       webrtcService.setOnRemoteStreamAdded((userId, stream) => {
         console.log('[LiveSession] Remote stream added from:', userId);
@@ -229,53 +183,6 @@ export function LiveSessionView() {
       audioElementsRef.current = {};
     };
   }, [user?.uid, currentSession?.id, currentSession?.hostId, webrtcService]);
-
-  // Retry microphone permission
-  const handleRetryPermission = async () => {
-    setConnectionStatus('connecting');
-    setShowPermissionPrompt(false);
-    
-    try {
-      const success = await webrtcService.initializeLocalStream();
-      if (success) {
-        setConnectionStatus('connected');
-        
-        // Re-setup remote stream handler
-        webrtcService.setOnRemoteStreamAdded((userId, stream) => {
-          setConnectedPeers(prev => new Set(prev).add(userId));
-          
-          if (audioElementsRef.current[userId]) {
-            audioElementsRef.current[userId].srcObject = stream;
-            audioElementsRef.current[userId].play().catch(() => {});
-            return;
-          }
-          
-          const audio = new Audio();
-          audio.autoplay = true;
-          (audio as any).playsInline = true;
-          audio.volume = 1.0;
-          audio.srcObject = stream;
-          audio.onloadedmetadata = () => {
-            audio.play().catch(() => {});
-          };
-          audioElementsRef.current[userId] = audio;
-        });
-        
-        // Connect to host if not host
-        if (user?.uid && currentSession?.hostId && user.uid !== currentSession.hostId) {
-          webrtcService.createPeerConnection(currentSession.hostId, true);
-          await webrtcService.requestOfferFrom(currentSession.hostId);
-        }
-      } else {
-        const status = await checkMicrophonePermission();
-        setConnectionStatus(status === 'denied' ? 'permission-denied' : 'failed');
-        setShowPermissionPrompt(true);
-      }
-    } catch (error) {
-      setConnectionStatus('failed');
-      setShowPermissionPrompt(true);
-    }
-  };
 
   // Subscribe to messages
   useEffect(() => {
@@ -382,8 +289,6 @@ export function LiveSessionView() {
               ? 'bg-green-500/20 text-green-300' 
               : connectionStatus === 'connecting'
               ? 'bg-yellow-500/20 text-yellow-300'
-              : connectionStatus === 'permission-denied'
-              ? 'bg-orange-500/20 text-orange-300'
               : 'bg-red-500/20 text-red-300'
           }`}>
             {connectionStatus === 'connecting' ? (
@@ -396,11 +301,6 @@ export function LiveSessionView() {
                 <Wifi size={14} />
                 <span>Live</span>
               </>
-            ) : connectionStatus === 'permission-denied' ? (
-              <>
-                <MicOff size={14} />
-                <span>No Mic</span>
-              </>
             ) : (
               <>
                 <WifiOff size={14} />
@@ -410,56 +310,6 @@ export function LiveSessionView() {
           </div>
         </div>
       </div>
-
-      {/* Microphone Permission Prompt */}
-      {showPermissionPrompt && (
-        <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
-            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
-              <MicOff size={32} className="text-orange-500" />
-            </div>
-            
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Microphone Access Required
-            </h3>
-            
-            <p className="text-gray-600 text-sm mb-6">
-              {connectionStatus === 'permission-denied' 
-                ? 'Microphone permission was denied. Please enable it in your browser settings to join the live session.'
-                : 'We need access to your microphone to join the live session. Please allow microphone access when prompted.'
-              }
-            </p>
-            
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleRetryPermission}
-                className="w-full py-3 rounded-xl font-semibold text-white"
-                style={{ backgroundColor: primaryColor }}
-              >
-                {connectionStatus === 'permission-denied' ? 'Try Again' : 'Enable Microphone'}
-              </button>
-              
-              {connectionStatus === 'permission-denied' && (
-                <p className="text-xs text-gray-500">
-                  On iOS: Settings → Safari → Microphone
-                  <br />
-                  On Android: Settings → Apps → Browser → Permissions
-                </p>
-              )}
-              
-              <button
-                onClick={() => {
-                  clearSession();
-                  setView('collab');
-                }}
-                className="w-full py-3 rounded-xl font-semibold text-gray-600 bg-gray-100"
-              >
-                Leave Session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6">

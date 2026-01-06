@@ -12,8 +12,6 @@ export type CallState =
   | 'connecting'     // Call answered, establishing connection
   | 'connected'      // Call active and audio flowing
   | 'ending'         // Call ending
-  | 'permission-needed' // Need to request microphone permission
-  | 'permission-denied' // Microphone permission denied
 
 // Check if running in native app (React Native WebView)
 function isNativeApp(): boolean {
@@ -25,25 +23,6 @@ function isNativeApp(): boolean {
   )
 }
 
-// Check microphone permission
-async function checkMicrophonePermission(): Promise<'granted' | 'denied' | 'prompt'> {
-  // Skip permission check for native apps - permissions are handled natively
-  if (isNativeApp()) {
-    console.log('[CallContext] Native app detected - skipping permission check')
-    return 'granted'
-  }
-  
-  try {
-    if (navigator.permissions) {
-      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-      return result.state as 'granted' | 'denied' | 'prompt';
-    }
-    return 'prompt';
-  } catch {
-    return 'prompt';
-  }
-}
-
 interface CallContextType {
   // State
   callState: CallState
@@ -51,8 +30,6 @@ interface CallContextType {
   isMuted: boolean
   callDuration: number
   remoteStream: MediaStream | null
-  permissionError: boolean
-  showPermissionModal: boolean
   
   // Actions
   startCall: (chatId: string, receiverId: string, callerName: string, receiverName: string, callerAvatar?: string, receiverAvatar?: string) => Promise<boolean>
@@ -60,10 +37,6 @@ interface CallContextType {
   declineCall: () => Promise<void>
   endCall: () => Promise<void>
   toggleMute: () => void
-  retryPermission: () => Promise<boolean>
-  onPermissionGranted: () => void
-  onPermissionDenied: () => void
-  closePermissionModal: () => void
 }
 
 const CallContext = createContext<CallContextType | null>(null)
@@ -85,21 +58,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [isMuted, setIsMuted] = useState(false)
   const [callDuration, setCallDuration] = useState(0)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
-  const [permissionError, setPermissionError] = useState(false)
-  const [showPermissionModal, setShowPermissionModal] = useState(false)
   
   // Refs
   const serviceRef = useRef<VoiceCallService | null>(null)
   const callStartTimeRef = useRef<number | null>(null)
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const pendingCallRef = useRef<{
-    chatId: string
-    receiverId: string
-    callerName: string
-    receiverName: string
-    callerAvatar?: string
-    receiverAvatar?: string
-  } | null>(null)
   
   // Initialize service
   useEffect(() => {
@@ -157,12 +120,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         setCallState('connected')
       },
       
-      // onCallTimeout is handled by onCallEnded with reason 'timeout'
-      // No need to send message here - it would cause duplicates
       onCallTimeout: async (call) => {
         console.log('[CallContext] Call timeout - handled by onCallEnded')
-        // Don't send message here - onCallEnded already handles it
-        // Just reset state (sound is played by onCallEnded)
         resetState()
       }
     })
@@ -203,11 +162,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setIsMuted(false)
     setCallDuration(0)
     setRemoteStream(null)
-    setPermissionError(false)
     callStartTimeRef.current = null
   }, [])
   
-  // Actions
+  // Actions - simplified, no permission modal
   const startCall = useCallback(async (
     chatId: string,
     receiverId: string,
@@ -221,22 +179,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       return false
     }
     
-    // Check microphone permission first
-    const permStatus = await checkMicrophonePermission()
-    
-    // If permission not granted, show our custom modal
-    if (permStatus !== 'granted') {
-      console.log('[CallContext] Microphone permission needed, showing modal')
-      // Store pending call info
-      pendingCallRef.current = { chatId, receiverId, callerName, receiverName, callerAvatar, receiverAvatar }
-      setCallState('permission-needed')
-      setShowPermissionModal(true)
-      return false
-    }
-    
     console.log('[CallContext] Starting call to:', receiverName)
     setCallState('outgoing')
     
+    // Just start the call - browser will show native permission prompt if needed
+    // Native apps handle permissions on their side
     const call = await serviceRef.current.startCall(
       chatId,
       receiverId,
@@ -248,73 +195,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     
     if (call) {
       setCurrentCall(call)
-      setPermissionError(false)
       return true
     } else {
-      // Check if it was a permission error
-      const newStatus = await checkMicrophonePermission()
-      if (newStatus === 'denied') {
-        setCallState('permission-denied')
-        setPermissionError(true)
-        setCurrentCall({ 
-          id: '', chatId, callerId: '', callerName, receiverId, receiverName, 
-          status: 'ringing', startedAt: Date.now() 
-        })
-      } else {
-        resetState()
-      }
+      // Call failed to start (could be permission denied or other error)
+      console.log('[CallContext] Failed to start call')
+      resetState()
       return false
     }
   }, [callState, resetState])
-  
-  // Handle permission granted from modal
-  const onPermissionGranted = useCallback(async () => {
-    setShowPermissionModal(false)
-    setPermissionError(false)
-    
-    // If we have a pending call, start it now
-    if (pendingCallRef.current && serviceRef.current) {
-      const { chatId, receiverId, callerName, receiverName, callerAvatar, receiverAvatar } = pendingCallRef.current
-      pendingCallRef.current = null
-      
-      console.log('[CallContext] Permission granted, starting pending call')
-      setCallState('outgoing')
-      
-      const call = await serviceRef.current.startCall(
-        chatId, receiverId, callerName, receiverName, callerAvatar, receiverAvatar
-      )
-      
-      if (call) {
-        setCurrentCall(call)
-      } else {
-        resetState()
-      }
-    } else {
-      setCallState('idle')
-    }
-  }, [resetState])
-  
-  // Handle permission denied from modal
-  const onPermissionDenied = useCallback(() => {
-    setShowPermissionModal(false)
-    setPermissionError(true)
-    pendingCallRef.current = null
-    setCallState('idle')
-  }, [])
-  
-  // Close permission modal
-  const closePermissionModal = useCallback(() => {
-    setShowPermissionModal(false)
-    pendingCallRef.current = null
-    setCallState('idle')
-  }, [])
-  
-  // Retry permission for calls
-  const retryPermission = useCallback(async (): Promise<boolean> => {
-    setPermissionError(false)
-    setShowPermissionModal(true)
-    return true
-  }, [])
   
   const answerCall = useCallback(async (): Promise<boolean> => {
     if (!serviceRef.current || !currentCall || callState !== 'incoming') {
@@ -341,9 +229,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     serviceRef.current.playCallEndSound('declined')
     await serviceRef.current.declineCall(currentCall)
     
-    // Don't send message here - the caller will send it via onCallEnded callback
-    // This prevents duplicate messages
-    
     resetState()
   }, [currentCall, resetState])
   
@@ -356,8 +241,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     
     const endedCall = await serviceRef.current.endCall()
     
-    // Only send message if this user is the caller to prevent duplicates
-    // The other party will get notified via onCallEnded but won't send a message
     if (endedCall?.chatId && endedCall.answeredAt && endedCall.callerId === user?.uid) {
       const duration = endedCall.duration || callDuration
       await sendCallMessage(endedCall.chatId, 'answered', endedCall.callerName, duration)
@@ -379,17 +262,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       isMuted,
       callDuration,
       remoteStream,
-      permissionError,
-      showPermissionModal,
       startCall,
       answerCall,
       declineCall,
       endCall,
-      toggleMute,
-      retryPermission,
-      onPermissionGranted,
-      onPermissionDenied,
-      closePermissionModal
+      toggleMute
     }}>
       {children}
     </CallContext.Provider>
