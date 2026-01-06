@@ -15,8 +15,24 @@ export type CallState =
   | 'permission-needed' // Need to request microphone permission
   | 'permission-denied' // Microphone permission denied
 
+// Check if running in native app (React Native WebView)
+function isNativeApp(): boolean {
+  if (typeof window === 'undefined') return false
+  return !!(
+    localStorage.getItem('isNativeApp') === 'true' ||
+    (window as any).isNativeApp ||
+    (window as any).ReactNativeWebView
+  )
+}
+
 // Check microphone permission
 async function checkMicrophonePermission(): Promise<'granted' | 'denied' | 'prompt'> {
+  // Skip permission check for native apps - permissions are handled natively
+  if (isNativeApp()) {
+    console.log('[CallContext] Native app detected - skipping permission check')
+    return 'granted'
+  }
+  
   try {
     if (navigator.permissions) {
       const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });

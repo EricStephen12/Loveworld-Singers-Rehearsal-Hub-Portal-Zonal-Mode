@@ -27,8 +27,24 @@ function darkenColor(hex: string, percent: number): string {
   return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`
 }
 
+// Check if running in native app (React Native WebView)
+function isNativeApp(): boolean {
+  if (typeof window === 'undefined') return false
+  return !!(
+    localStorage.getItem('isNativeApp') === 'true' ||
+    (window as any).isNativeApp ||
+    (window as any).ReactNativeWebView
+  )
+}
+
 // Check microphone permission
 async function checkMicrophonePermission(): Promise<'granted' | 'denied' | 'prompt'> {
+  // Skip permission check for native apps - permissions are handled natively
+  if (isNativeApp()) {
+    console.log('[LiveSession] Native app detected - skipping permission check')
+    return 'granted'
+  }
+  
   try {
     if (navigator.permissions) {
       const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
