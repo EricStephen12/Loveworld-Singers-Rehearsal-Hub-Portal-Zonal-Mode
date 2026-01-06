@@ -271,3 +271,55 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event.notification.tag);
 });
+
+// Handle push events (for FCM or native shell push)
+self.addEventListener('push', (event) => {
+  console.log('Push event received:', event);
+  
+  let data = { title: 'New Notification', body: '', url: '/pages/notifications' };
+  
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    console.log('Push data parse error:', e);
+    if (event.data) {
+      data.body = event.data.text();
+    }
+  }
+  
+  const options = {
+    body: data.body || data.message || '',
+    icon: '/APP ICON/pwa_192_filled.png',
+    badge: '/APP ICON/pwa_192_filled.png',
+    tag: data.tag || `push-${Date.now()}`,
+    data: { url: data.url || data.click_action || '/pages/notifications' },
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    actions: data.actions || []
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Handle push subscription change
+self.addEventListener('pushsubscriptionchange', (event) => {
+  console.log('Push subscription changed');
+  // Re-subscribe and update server
+  event.waitUntil(
+    self.registration.pushManager.subscribe({ userVisibleOnly: true })
+      .then((subscription) => {
+        console.log('Re-subscribed to push:', subscription.endpoint);
+        // Send new subscription to your server
+        return fetch('/api/push/update-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        });
+      })
+      .catch((e) => console.log('Re-subscribe failed:', e))
+  );
+});

@@ -1,12 +1,16 @@
 /**
  * WebRTC Service for AudioLab
  * Handles peer-to-peer audio connections for live sessions
+ * Optimized for low latency and reliable connections
  */
 
 import { WebRTCSignaling, SignalMessage } from './webrtc-signaling';
 
 export interface WebRTCConfig {
   iceServers: RTCIceServer[];
+  iceCandidatePoolSize?: number;
+  bundlePolicy?: RTCBundlePolicy;
+  rtcpMuxPolicy?: RTCRtcpMuxPolicy;
 }
 
 export interface PeerConnection {
@@ -30,14 +34,12 @@ export class WebRTCService {
   private userId: string | null = null;
 
   constructor(config?: Partial<WebRTCConfig>) {
-    // Use multiple STUN servers and free TURN servers for better connectivity
+    // Optimized ICE servers - prioritize faster STUN servers
     this.config = {
       iceServers: config?.iceServers || [
+        // Google STUN servers (fastest, most reliable)
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' },
         // Free TURN servers from Open Relay Project (for NAT traversal)
         {
           urls: 'turn:openrelay.metered.ca:80',
@@ -54,7 +56,11 @@ export class WebRTCService {
           username: 'openrelayproject',
           credential: 'openrelayproject'
         }
-      ]
+      ],
+      // Optimization settings for faster connection
+      iceCandidatePoolSize: 10, // Pre-gather candidates
+      bundlePolicy: 'max-bundle', // Bundle all media for efficiency
+      rtcpMuxPolicy: 'require' // Multiplex RTP and RTCP
     };
   }
 
@@ -75,7 +81,10 @@ export class WebRTCService {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          // Optimize for voice
+          sampleRate: 48000,
+          channelCount: 1
         }
       });
       return true;
@@ -214,7 +223,13 @@ export class WebRTCService {
   }
 
   createPeerConnection(userId: string, isHost: boolean): RTCPeerConnection {
-    const pc = new RTCPeerConnection(this.config);
+    // Create peer connection with optimized config
+    const pc = new RTCPeerConnection({
+      iceServers: this.config.iceServers,
+      iceCandidatePoolSize: this.config.iceCandidatePoolSize || 10,
+      bundlePolicy: this.config.bundlePolicy || 'max-bundle',
+      rtcpMuxPolicy: this.config.rtcpMuxPolicy || 'require'
+    });
 
     // Add local stream tracks
     if (this.localStream) {
@@ -225,6 +240,7 @@ export class WebRTCService {
 
     // Handle remote streams
     pc.ontrack = (event) => {
+      console.log('[WebRTC] Remote track received from:', userId);
       if (this.onRemoteStreamAdded) {
         this.onRemoteStreamAdded(userId, event.streams[0]);
       }
@@ -238,10 +254,23 @@ export class WebRTCService {
       }
     };
 
+    // Monitor ICE connection state for faster feedback
+    pc.oniceconnectionstatechange = () => {
+      console.log('[WebRTC] ICE connection state:', pc.iceConnectionState, 'for:', userId);
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        console.log('[WebRTC] ICE connected to:', userId);
+      }
+      if (this.onConnectionStateChanged) {
+        this.onConnectionStateChanged(userId, pc.iceConnectionState);
+      }
+    };
+
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
-      
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      console.log('[WebRTC] Connection state:', pc.connectionState, 'for:', userId);
+      if (pc.connectionState === 'connected') {
+        console.log('[WebRTC] Peer connection established with:', userId);
+      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
         this.removePeerConnection(userId);
       }
     };
@@ -293,7 +322,11 @@ export class WebRTCService {
     const pc = this.getPeerConnection(userId);
     if (!pc) throw new Error('Peer connection not found');
 
-    const offer = await pc.createOffer();
+    // Optimized offer settings for audio
+    const offer = await pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: false
+    });
     await pc.setLocalDescription(offer);
     return offer;
   }

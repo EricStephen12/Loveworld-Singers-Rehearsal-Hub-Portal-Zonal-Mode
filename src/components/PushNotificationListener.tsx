@@ -1,30 +1,66 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
-import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, orderBy, limit, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+
+// Store FCM token in Firestore for server-side push
+async function savePushToken(userId: string, token: string) {
+  try {
+    await setDoc(doc(db, 'push_tokens', userId), {
+      token,
+      platform: 'web',
+      updatedAt: new Date(),
+      userId
+    }, { merge: true })
+    console.log('[Push] Token saved to Firestore')
+  } catch (e) {
+    console.error('[Push] Error saving token:', e)
+  }
+}
 
 export default function PushNotificationListener() {
   const { user, profile } = useAuth()
   const { currentZone } = useZone()
   const lastNotifTime = useRef<number>(Date.now())
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default')
 
   // Request permission and get service worker
   useEffect(() => {
     if (!user) return
 
     const init = async () => {
-      // Request notification permission
-      if ('Notification' in window && Notification.permission === 'default') {
-        await Notification.requestPermission()
+      // Check current permission
+      if ('Notification' in window) {
+        setPermissionStatus(Notification.permission)
+        
+        // Request permission if not decided
+        if (Notification.permission === 'default') {
+          const result = await Notification.requestPermission()
+          setPermissionStatus(result)
+        }
       }
 
       // Get service worker registration
       if ('serviceWorker' in navigator) {
-        registrationRef.current = await navigator.serviceWorker.ready
+        try {
+          registrationRef.current = await navigator.serviceWorker.ready
+          console.log('[Push] Service worker ready')
+          
+          // Try to get push subscription for native shell communication
+          if (registrationRef.current.pushManager) {
+            const subscription = await registrationRef.current.pushManager.getSubscription()
+            if (subscription) {
+              console.log('[Push] Existing subscription found')
+              // Save endpoint for server-side push (if you set up FCM later)
+            }
+          }
+        } catch (e) {
+          console.log('[Push] Service worker error:', e)
+        }
       }
     }
     init()
@@ -39,17 +75,40 @@ export default function PushNotificationListener() {
       if (registrationRef.current) {
         await registrationRef.current.showNotification(title, {
           body,
-          icon: '/logo.png',
-          badge: '/logo.png',
-          tag,
+          icon: '/APP ICON/pwa_192_filled.png',
+          badge: '/APP ICON/pwa_192_filled.png',
+          tag, // Prevents duplicate notifications with same tag
           data: { url },
           requireInteraction: false,
-        })
+          silent: false
+        } as NotificationOptions)
+        console.log('[Push] Notification shown:', title)
       }
     } catch (e) {
-      console.log('Notification error:', e)
+      console.log('[Push] Notification error:', e)
     }
   }
+
+  // Expose function for native shell to call
+  useEffect(() => {
+    // This allows your native shell to trigger notifications
+    (window as any).showPushNotification = showNotification;
+    
+    // Listen for messages from native shell
+    const handleNativeMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NATIVE_PUSH') {
+        const { title, body, tag, url } = event.data
+        showNotification(title, body, tag, url)
+      }
+    }
+    
+    window.addEventListener('message', handleNativeMessage)
+    
+    return () => {
+      window.removeEventListener('message', handleNativeMessage)
+      delete (window as any).showPushNotification
+    }
+  }, [])
 
   // Listen for new zone messages
   useEffect(() => {
@@ -79,34 +138,55 @@ export default function PushNotificationListener() {
           }
         }
       })
+    }, (error) => {
+      console.log('[Push] Zone messages listener error:', error)
     })
     return () => unsubscribe()
   }, [currentZone?.id])
 
-  // Listen for new chat messages
+  // Listen for new chat messages - FIXED: use 'participants' not 'participantIds'
   useEffect(() => {
     const userId = user?.uid || profile?.id
     if (!userId) return
     
     const chatsRef = collection(db, 'chats_v2')
-    const q = query(chatsRef, where('participantIds', 'array-contains', userId), orderBy('lastMessageAt', 'desc'), limit(5))
+    // Fixed: use 'participants' field which is what chat-service.ts uses
+    const q = query(
+      chatsRef, 
+      where('participants', 'array-contains', userId),
+      limit(20)
+    )
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach(change => {
         if (change.type === 'modified') {
           const chat = change.doc.data()
-          const lastMessageAt = chat.lastMessageAt?.toDate?.()?.getTime() || 0
-          const lastSenderId = chat.lastMessage?.senderId
+          const lastMessage = chat.lastMessage
+          if (!lastMessage) return
+          
+          // Get timestamp - handle different formats
+          let lastMessageAt = 0
+          if (lastMessage.timestamp) {
+            if (typeof lastMessage.timestamp.toDate === 'function') {
+              lastMessageAt = lastMessage.timestamp.toDate().getTime()
+            } else if (lastMessage.timestamp.seconds) {
+              lastMessageAt = lastMessage.timestamp.seconds * 1000
+            }
+          }
+          
+          const lastSenderId = lastMessage.senderId
           
           // Only notify if message is from someone else and is recent
-          if (lastSenderId !== userId && lastMessageAt > lastNotifTime.current) {
-            const senderName = chat.participantDetails?.[lastSenderId]?.userName || 'Someone'
+          if (lastSenderId && lastSenderId !== userId && lastSenderId !== 'system' && lastMessageAt > lastNotifTime.current) {
+            const senderName = chat.participantDetails?.[lastSenderId]?.name || 'Someone'
             const isGroup = chat.type === 'group'
             const chatName = isGroup ? chat.name : senderName
-            let preview = chat.lastMessage?.text || ''
-            if (chat.lastMessage?.attachment) {
-              preview = chat.lastMessage.attachment.type === 'image' ? '📷 Photo' : '📎 Document'
-            }
+            
+            let preview = lastMessage.text || ''
+            if (preview.startsWith('📷')) preview = '📷 Photo'
+            else if (preview.startsWith('📄')) preview = '📄 Document'
+            else if (preview.startsWith('📞')) preview = '📞 Call'
+            else if (preview.length > 50) preview = preview.substring(0, 50) + '...'
             
             showNotification(
               chatName || 'New Message',
@@ -118,6 +198,8 @@ export default function PushNotificationListener() {
           }
         }
       })
+    }, (error) => {
+      console.log('[Push] Chat listener error:', error)
     })
     return () => unsubscribe()
   }, [user?.uid, profile?.id])

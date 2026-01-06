@@ -21,7 +21,8 @@ import {
   addGroupMembers as addGroupMembersService,
   removeGroupMember as removeGroupMemberService,
   leaveGroup as leaveGroupService,
-  deleteGroup as deleteGroupService
+  deleteGroup as deleteGroupService,
+  markChatAsRead
 } from '../_lib/chat-service'
 
 interface ChatContextType {
@@ -130,8 +131,13 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   // Actions
   const selectChat = useCallback((chat: Chat | null) => {
     setSelectedChat(chat)
-    if (!chat) setMessages([])
-  }, [])
+    if (!chat) {
+      setMessages([])
+    } else if (user?.uid) {
+      // Mark chat as read when selected
+      markChatAsRead(chat.id, user.uid)
+    }
+  }, [user?.uid])
   
   const sendMessage = useCallback(async (
     text: string, 

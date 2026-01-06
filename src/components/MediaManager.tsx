@@ -99,6 +99,7 @@ export default function MediaManager({
   const [runningDiagnostics, setRunningDiagnostics] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [expandedFileId, setExpandedFileId] = useState<string | null>(null);
 
   // Track which type we're filtering by for pagination
   const [currentFilterType, setCurrentFilterType] = useState<string | null>(null);
@@ -865,7 +866,16 @@ export default function MediaManager({
 
                 {/* File Info - Compact */}
                 <div className="p-1.5 sm:p-2">
-                  <h3 className="font-medium text-[10px] sm:text-xs text-gray-900 truncate" title={file.name}>
+                  <h3 
+                    className={`font-medium text-[10px] sm:text-xs text-gray-900 break-words group-hover:line-clamp-none cursor-pointer ${
+                      expandedFileId === file.id ? '' : 'line-clamp-2'
+                    }`}
+                    title={file.name}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedFileId(expandedFileId === file.id ? null : file.id);
+                    }}
+                  >
                     {file.name}
                   </h3>
                   <p className="text-[9px] sm:text-xs text-gray-400">

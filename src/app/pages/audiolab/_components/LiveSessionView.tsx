@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2
+  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2, Radio, AlertCircle, Settings
 } from 'lucide-react';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useZone } from '@/hooks/useZone';
 import { 
   subscribeToSession, 
   leaveSession, 
@@ -15,6 +16,29 @@ import {
 } from '../_lib/session-service';
 import { WebRTCService } from '../_lib/webrtc-service';
 import type { Participant, ChatMessage } from '../_types';
+
+// Helper to darken color
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16)
+  const amt = Math.round(2.55 * percent)
+  const R = Math.max((num >> 16) - amt, 0)
+  const G = Math.max((num >> 8 & 0x00FF) - amt, 0)
+  const B = Math.max((num & 0x0000FF) - amt, 0)
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`
+}
+
+// Check microphone permission
+async function checkMicrophonePermission(): Promise<'granted' | 'denied' | 'prompt'> {
+  try {
+    if (navigator.permissions) {
+      const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      return result.state as 'granted' | 'denied' | 'prompt';
+    }
+    return 'prompt';
+  } catch {
+    return 'prompt';
+  }
+}
 
 // Play a subtle join sound
 function playJoinSound() {
@@ -26,7 +50,7 @@ function playJoinSound() {
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.type = 'sine';
-    osc.frequency.value = 880; // A5
+    osc.frequency.value = 880;
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.05);
     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
@@ -39,7 +63,13 @@ function playJoinSound() {
 export function LiveSessionView() {
   const { state, clearSession, setView } = useAudioLab();
   const { user, profile } = useAuth();
+  const { currentZone } = useZone();
   const currentSession = state.session.currentSession;
+  
+  // Zone colors
+  const primaryColor = currentZone?.themeColor || '#8B5CF6';
+  const darkColor = darkenColor(primaryColor, 30);
+  const darkerColor = darkenColor(primaryColor, 50);
   
   const [webrtcService] = useState(() => new WebRTCService());
   const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
@@ -50,9 +80,9 @@ export function LiveSessionView() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copied, setCopied] = useState(false);
-  const [speakingUsers, setSpeakingUsers] = useState<Set<string>>(new Set());
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed' | 'permission-denied'>('connecting');
   const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
 
   // Subscribe to session updates
   useEffect(() => {
@@ -62,7 +92,6 @@ export function LiveSessionView() {
       onParticipantJoined: (participant) => {
         setParticipants(prev => {
           if (prev.find(p => p.id === participant.id)) return prev;
-          // Play join sound for new participants (not self)
           if (participant.id !== user?.uid) {
             playJoinSound();
           }
@@ -114,19 +143,34 @@ export function LiveSessionView() {
     webrtcService.initializeSignaling(currentSession.id, user.uid);
     
     const setupWebRTC = async () => {
-      const success = await webrtcService.initializeLocalStream();
-      if (!success) {
-        setConnectionStatus('failed');
+      // Check permission first
+      const permissionStatus = await checkMicrophonePermission();
+      
+      if (permissionStatus === 'denied') {
+        setConnectionStatus('permission-denied');
+        setShowPermissionPrompt(true);
         return;
       }
       
-      // Set connection status to connected once local stream is ready
+      const success = await webrtcService.initializeLocalStream();
+      if (!success) {
+        // Check if it was a permission error
+        const newStatus = await checkMicrophonePermission();
+        if (newStatus === 'denied') {
+          setConnectionStatus('permission-denied');
+          setShowPermissionPrompt(true);
+        } else {
+          setConnectionStatus('failed');
+          setShowPermissionPrompt(true);
+        }
+        return;
+      }
+      
       setConnectionStatus('connected');
+      setShowPermissionPrompt(false);
       
       webrtcService.setOnRemoteStreamAdded((userId, stream) => {
         console.log('[LiveSession] Remote stream added from:', userId);
-        
-        // Track connected peer
         setConnectedPeers(prev => new Set(prev).add(userId));
         
         if (audioElementsRef.current[userId]) {
@@ -170,6 +214,53 @@ export function LiveSessionView() {
     };
   }, [user?.uid, currentSession?.id, currentSession?.hostId, webrtcService]);
 
+  // Retry microphone permission
+  const handleRetryPermission = async () => {
+    setConnectionStatus('connecting');
+    setShowPermissionPrompt(false);
+    
+    try {
+      const success = await webrtcService.initializeLocalStream();
+      if (success) {
+        setConnectionStatus('connected');
+        
+        // Re-setup remote stream handler
+        webrtcService.setOnRemoteStreamAdded((userId, stream) => {
+          setConnectedPeers(prev => new Set(prev).add(userId));
+          
+          if (audioElementsRef.current[userId]) {
+            audioElementsRef.current[userId].srcObject = stream;
+            audioElementsRef.current[userId].play().catch(() => {});
+            return;
+          }
+          
+          const audio = new Audio();
+          audio.autoplay = true;
+          (audio as any).playsInline = true;
+          audio.volume = 1.0;
+          audio.srcObject = stream;
+          audio.onloadedmetadata = () => {
+            audio.play().catch(() => {});
+          };
+          audioElementsRef.current[userId] = audio;
+        });
+        
+        // Connect to host if not host
+        if (user?.uid && currentSession?.hostId && user.uid !== currentSession.hostId) {
+          webrtcService.createPeerConnection(currentSession.hostId, true);
+          await webrtcService.requestOfferFrom(currentSession.hostId);
+        }
+      } else {
+        const status = await checkMicrophonePermission();
+        setConnectionStatus(status === 'denied' ? 'permission-denied' : 'failed');
+        setShowPermissionPrompt(true);
+      }
+    } catch (error) {
+      setConnectionStatus('failed');
+      setShowPermissionPrompt(true);
+    }
+  };
+
   // Subscribe to messages
   useEffect(() => {
     if (!currentSession?.id) return;
@@ -187,8 +278,12 @@ export function LiveSessionView() {
   }, [isLive]);
 
   const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
     const s = secs % 60;
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -228,11 +323,15 @@ export function LiveSessionView() {
 
   if (!currentSession) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#191022] flex flex-col items-center justify-center text-white">
-        <p className="text-slate-400 mb-4">No active session</p>
+      <div 
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center text-white"
+        style={{ background: `linear-gradient(180deg, ${darkColor} 0%, ${darkerColor} 100%)` }}
+      >
+        <p className="text-white/60 mb-4">No active session</p>
         <button
           onClick={() => setView('collab')}
-          className="px-6 py-3 bg-violet-500 rounded-xl font-bold"
+          className="px-6 py-3 rounded-xl font-bold text-white"
+          style={{ backgroundColor: primaryColor }}
         >
           Go Back
         </button>
@@ -242,61 +341,116 @@ export function LiveSessionView() {
 
   const isHost = user?.uid === currentSession.hostId;
   const participantCount = participants.length || 1;
+  const otherParticipants = participants.filter(p => p.id !== user?.uid);
 
   return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#1a1025] to-[#0f0a14] flex flex-col text-white">
-      {/* Ambient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px]" />
-      </div>
-
-      {/* Connection Status Bar */}
-      <div className="relative z-10 px-4 pt-12 pb-2">
+    <div 
+      className="fixed inset-0 z-50 flex flex-col text-white"
+      style={{ background: `linear-gradient(180deg, ${primaryColor} 0%, ${darkColor} 50%, ${darkerColor} 100%)` }}
+    >
+      {/* Top Bar */}
+      <div className="relative z-10 px-4 pt-12 pb-4">
         <div className="flex items-center justify-between">
-          {/* Back to Chat */}
+          {/* Chat Button */}
           <button
             onClick={() => setView('collab-chat')}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
-            <MessageCircle size={18} className="text-violet-400" />
-            <span className="text-sm text-white/80">Chat</span>
+            <MessageCircle size={18} />
+            <span className="text-sm">Chat</span>
           </button>
           
           {/* Connection Status */}
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
             connectionStatus === 'connected' 
-              ? 'bg-green-500/20 text-green-400' 
+              ? 'bg-green-500/20 text-green-300' 
               : connectionStatus === 'connecting'
-              ? 'bg-yellow-500/20 text-yellow-400'
-              : 'bg-red-500/20 text-red-400'
+              ? 'bg-yellow-500/20 text-yellow-300'
+              : connectionStatus === 'permission-denied'
+              ? 'bg-orange-500/20 text-orange-300'
+              : 'bg-red-500/20 text-red-300'
           }`}>
             {connectionStatus === 'connecting' ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>Connecting...</span>
+                <span>Connecting</span>
               </>
             ) : connectionStatus === 'connected' ? (
               <>
                 <Wifi size={14} />
-                <span>Connected</span>
+                <span>Live</span>
+              </>
+            ) : connectionStatus === 'permission-denied' ? (
+              <>
+                <MicOff size={14} />
+                <span>No Mic</span>
               </>
             ) : (
               <>
                 <WifiOff size={14} />
-                <span>Connection failed</span>
+                <span>Failed</span>
               </>
             )}
           </div>
         </div>
       </div>
 
+      {/* Microphone Permission Prompt */}
+      {showPermissionPrompt && (
+        <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+              <MicOff size={32} className="text-orange-500" />
+            </div>
+            
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Microphone Access Required
+            </h3>
+            
+            <p className="text-gray-600 text-sm mb-6">
+              {connectionStatus === 'permission-denied' 
+                ? 'Microphone permission was denied. Please enable it in your browser settings to join the live session.'
+                : 'We need access to your microphone to join the live session. Please allow microphone access when prompted.'
+              }
+            </p>
+            
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleRetryPermission}
+                className="w-full py-3 rounded-xl font-semibold text-white"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {connectionStatus === 'permission-denied' ? 'Try Again' : 'Enable Microphone'}
+              </button>
+              
+              {connectionStatus === 'permission-denied' && (
+                <p className="text-xs text-gray-500">
+                  On iOS: Settings → Safari → Microphone
+                  <br />
+                  On Android: Settings → Apps → Browser → Permissions
+                </p>
+              )}
+              
+              <button
+                onClick={() => {
+                  clearSession();
+                  setView('collab');
+                }}
+                className="w-full py-3 rounded-xl font-semibold text-gray-600 bg-gray-100"
+              >
+                Leave Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="relative flex-1 flex flex-col items-center justify-center px-6 py-4">
-        
-        {/* Session Code - Prominent & Easy to Share */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        {/* Session Code */}
         <button 
           onClick={handleCopyCode}
-          className="mb-8 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+          className="mb-10 flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all active:scale-95"
         >
           <span className="text-2xl font-bold tracking-[0.3em] text-white">
             {currentSession.code}
@@ -304,54 +458,62 @@ export function LiveSessionView() {
           {copied ? (
             <Check size={20} className="text-green-400" />
           ) : (
-            <Copy size={20} className="text-violet-400" />
+            <Copy size={20} className="text-white/60" />
           )}
         </button>
 
-        {/* Participants Circle */}
-        <div className="relative mb-6">
-          {/* Pulsing ring when live - properly centered */}
-          <div className="absolute inset-[-12px] rounded-full border-2 border-violet-500/20 animate-pulse" style={{ animationDuration: '2s' }} />
-          <div className="absolute inset-[-6px] rounded-full border border-violet-500/30" />
+        {/* Participants Circle with Pulsing Rings */}
+        <div className="relative w-48 h-48 flex items-center justify-center mb-8">
+          {/* Pulsing rings */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-20 animate-ping"
+            style={{ border: `3px solid white` }}
+          />
+          <div 
+            className="absolute inset-3 rounded-full opacity-30 animate-pulse"
+            style={{ border: `2px solid white` }}
+          />
+          <div 
+            className="absolute inset-6 rounded-full opacity-40"
+            style={{ border: `2px solid white` }}
+          />
           
-          {/* Main circle with participant avatars */}
-          <div className="relative w-48 h-48 rounded-full bg-[#251833] border border-white/10 flex items-center justify-center overflow-hidden">
+          {/* Main circle */}
+          <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
             {participantCount <= 4 ? (
-              // Show individual avatars for small groups
-              <div className="flex flex-wrap items-center justify-center gap-2 p-4">
+              <div className="flex flex-wrap items-center justify-center gap-1 p-2">
                 {/* Current user */}
-                <div className={`relative w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ${
-                  isMuted ? 'bg-red-500/20 text-red-400' : 'bg-violet-500/30 text-violet-300'
+                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                  isMuted ? 'bg-red-500/30 text-red-300' : 'bg-white/20 text-white'
                 }`}>
                   {profile?.first_name?.charAt(0) || 'Y'}
                   {!isMuted && (
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                      <Mic size={12} />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                      <Mic size={10} />
                     </div>
                   )}
                 </div>
                 
                 {/* Other participants */}
-                {participants.filter(p => p.id !== user?.uid).slice(0, 3).map((p) => {
+                {otherParticipants.slice(0, 3).map((p) => {
                   const isConnected = connectedPeers.has(p.id);
                   return (
                     <div 
                       key={p.id}
-                      className={`relative w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold transition-all ${
-                        p.isMuted ? 'bg-slate-700 text-slate-400' : 'bg-violet-500/20 text-violet-300'
+                      className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                        p.isMuted ? 'bg-white/10 text-white/50' : 'bg-white/20 text-white'
                       } ${!isConnected ? 'opacity-50' : ''}`}
                     >
                       {p.name?.charAt(0) || '?'}
-                      {/* Connection/Mute indicator */}
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ${
-                        !isConnected ? 'bg-yellow-500/80' : p.isMuted ? 'bg-slate-600' : 'bg-green-500/80'
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${
+                        !isConnected ? 'bg-yellow-500' : p.isMuted ? 'bg-white/30' : 'bg-green-500'
                       }`}>
                         {!isConnected ? (
-                          <Loader2 size={10} className="animate-spin" />
+                          <Loader2 size={8} className="animate-spin" />
                         ) : p.isMuted ? (
-                          <MicOff size={8} />
+                          <MicOff size={7} />
                         ) : (
-                          <Volume2 size={10} />
+                          <Volume2 size={8} />
                         )}
                       </div>
                     </div>
@@ -359,71 +521,69 @@ export function LiveSessionView() {
                 })}
               </div>
             ) : (
-              // Show count for larger groups
               <div className="text-center">
-                <Users size={40} className="text-violet-400 mx-auto mb-2" />
-                <span className="text-3xl font-bold">{participantCount}</span>
-                <p className="text-xs text-slate-400 mt-1">Connected</p>
+                <Users size={32} className="text-white/80 mx-auto mb-1" />
+                <span className="text-2xl font-bold">{participantCount}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Timer - Simple */}
-        <div className="text-4xl font-mono font-light text-white/80 mb-2">
+        {/* Timer */}
+        <div className="text-5xl font-mono font-light text-white mb-2 flex items-center gap-3">
+          <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
           {formatTime(elapsedTime)}
         </div>
         
         {/* Status */}
-        <p className="text-sm text-slate-400 mb-8">
-          {isHost ? 'You\'re hosting' : `Hosted by ${currentSession.title?.replace("'s Session", '') || 'Host'}`}
+        <p className="text-white/60 text-sm mb-2">
+          {isHost ? 'You\'re hosting this session' : `Hosted by ${currentSession.title?.replace("'s Session", '') || 'Host'}`}
         </p>
-
-        {/* Recent Activity */}
-        {messages.length > 0 && (
-          <div className="w-full max-w-sm">
-            <div className="text-center text-sm text-slate-500 py-2">
-              {messages[messages.length - 1]?.content}
-            </div>
-          </div>
-        )}
+        
+        {/* Participant count */}
+        <p className="text-white/40 text-xs">
+          {participantCount} participant{participantCount !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      {/* Bottom Controls - Simplified */}
-      <div className="relative px-6 pb-10 pt-4">
-        <div className="flex items-center justify-center gap-6">
-          
+      {/* Bottom Controls */}
+      <div className="relative px-6 pb-12 pt-6">
+        <div className="flex items-center justify-center gap-8">
           {/* Mute Button */}
-          <button 
-            onClick={handleToggleMute}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all active:scale-95 ${
-              isMuted 
-                ? 'bg-white text-slate-900' 
-                : 'bg-white/10 text-white border border-white/20'
-            }`}
-          >
-            {isMuted ? <MicOff size={28} /> : <Mic size={28} />}
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <button 
+              onClick={handleToggleMute}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
+                isMuted 
+                  ? 'bg-white text-slate-900' 
+                  : 'bg-white/10 text-white border border-white/20'
+              }`}
+            >
+              {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
+            <span className="text-white/60 text-xs">{isMuted ? 'Unmute' : 'Mute'}</span>
+          </div>
 
           {/* End/Leave Button */}
-          <button 
-            onClick={handleEndOrLeave}
-            className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all active:scale-95 shadow-lg shadow-red-500/30"
-          >
-            <PhoneOff size={32} />
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <button 
+              onClick={handleEndOrLeave}
+              className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-white transition-all active:scale-95 shadow-lg shadow-red-500/30"
+            >
+              <PhoneOff size={28} />
+            </button>
+            <span className="text-white/60 text-xs">{isHost ? 'End' : 'Leave'}</span>
+          </div>
 
-          {/* Participants Count */}
-          <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex flex-col items-center justify-center">
-            <Users size={20} className="text-white/80" />
-            <span className="text-xs font-bold mt-0.5">{participantCount}</span>
+          {/* Participants Button */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex flex-col items-center justify-center">
+              <Users size={18} className="text-white/80" />
+              <span className="text-xs font-bold">{participantCount}</span>
+            </div>
+            <span className="text-white/60 text-xs">People</span>
           </div>
         </div>
-
-        {/* Mute hint */}
-        <p className="text-center text-xs text-slate-500 mt-4">
-          {isMuted ? 'Tap mic to unmute' : 'You\'re unmuted'}
-        </p>
       </div>
     </div>
   );

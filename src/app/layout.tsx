@@ -26,8 +26,10 @@ import { EmergencyRecovery } from '@/utils/emergency-recovery'
 import FeatureUpdateChecker from '@/components/FeatureUpdateChecker'
 import OfflineIndicator from '@/components/OfflineIndicator'
 import ForceUpdateButton from '@/components/ForceUpdateButton'
-import { GlobalCallOverlay } from '@/components/GlobalCallOverlay'
+import { CallProvider } from '@/contexts/CallContext'
+import { CallOverlay } from '@/components/CallOverlay'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
+import { PermissionProvider } from '@/contexts/PermissionContext'
 import '@/utils/safeAreaManager'
 import { disableConsoleLogs } from '@/utils/disable-logs'
 
@@ -188,11 +190,13 @@ export default function RootLayout({
         )}
         <ErrorBoundary>
           <AuthProvider>
+            <CallProvider>
             <AudioProvider>
             <MediaProvider>
               <SubscriptionProvider>
                 <ChatProvider>
                   <AnalyticsProvider>
+                    <PermissionProvider>
                     <ActivityLogger>
                       {/* <ScreenshotPrevention /> */}
                       <main className="h-full w-full bg-gray-50">
@@ -202,16 +206,18 @@ export default function RootLayout({
                       <RealtimeNotifications />
                       <PushNotificationListener />
                       <NotificationUrlHandler />
-                      <GlobalCallOverlay />
+                      <CallOverlay />
                       <OfflineIndicator />
                       <FeatureUpdateChecker />
                       <ForceUpdateButton />
                     </ActivityLogger>
+                    </PermissionProvider>
                   </AnalyticsProvider>
                 </ChatProvider>
               </SubscriptionProvider>
             </MediaProvider>
             </AudioProvider>
+            </CallProvider>
           </AuthProvider>
         </ErrorBoundary>
       </body>

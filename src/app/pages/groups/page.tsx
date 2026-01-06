@@ -13,7 +13,7 @@ import {
   Reply, Copy
 } from 'lucide-react'
 import type { ChatUser, ReactionType } from './_lib/chat-service'
-import { VoiceCallService, CallData } from './_lib/voice-call-service'
+import { useCall } from '@/contexts/CallContext'
 
 // Reaction options - more variety
 const REACTIONS: ReactionType[] = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '💯', '🎉']
@@ -81,14 +81,8 @@ function GroupsContent() {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false)
   const [groupStep, setGroupStep] = useState<1 | 2>(1) // Step 1: Name, Step 2: Members
   
-  // Voice call state
-  const [voiceCallService, setVoiceCallService] = useState<VoiceCallService | null>(null)
-  const [isInCall, setIsInCall] = useState(false)
-  const [isCalling, setIsCalling] = useState(false)
-  const [incomingCall, setIncomingCall] = useState<CallData | null>(null)
-  const [isMuted, setIsMuted] = useState(false)
-  const [callDuration, setCallDuration] = useState(0)
-  const remoteAudioRef = useRef<HTMLAudioElement>(null)
+  // Voice call - use shared context
+  const { callState, startCall } = useCall()
   
   // Message actions state
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
@@ -273,137 +267,25 @@ function GroupsContent() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
   
-  // Initialize voice call service
-  useEffect(() => {
-    if (!user?.uid) return
-    
-    const service = new VoiceCallService(user.uid)
-    service.setCallbacks({
-      onIncomingCall: (call) => {
-        setIncomingCall(call)
-      },
-      onCallAnswered: () => {
-        setIsInCall(true)
-        setIsCalling(false)
-      },
-      onCallEnded: (call, reason) => {
-        console.log('[Groups] Call ended:', reason)
-        // Note: Call messages are sent by GlobalCallOverlay to avoid duplicates
-        // Just update local UI state here
-        setIsInCall(false)
-        setIsCalling(false)
-        setIncomingCall(null)
-        setCallDuration(0)
-      },
-      onCallTimeout: (call) => {
-        console.log('[Groups] Call timeout')
-        // Note: Call messages are sent by GlobalCallOverlay to avoid duplicates
-        // Just update local UI state here
-        setIsCalling(false)
-        setIncomingCall(null)
-      },
-      onRemoteStream: (stream) => {
-        if (remoteAudioRef.current) {
-          remoteAudioRef.current.srcObject = stream
-          remoteAudioRef.current.play().catch(console.error)
-        }
-      }
-    })
-    
-    const cleanup = service.startListening()
-    setVoiceCallService(service)
-    
-    return () => {
-      cleanup()
-      service.cleanup()
-    }
-  }, [user?.uid])
-  
-  // Call duration timer
-  useEffect(() => {
-    if (!isInCall) return
-    
-    const interval = setInterval(() => {
-      setCallDuration(prev => prev + 1)
-    }, 1000)
-    
-    return () => clearInterval(interval)
-  }, [isInCall])
-  
-  // Start voice call
+  // Start voice call using shared context
   const handleStartCall = async () => {
-    if (!voiceCallService || !selectedChat || !currentUser || selectedChat.type === 'group') return
+    if (!selectedChat || !currentUser || selectedChat.type === 'group' || callState !== 'idle') return
     
     const otherUserId = selectedChat.participants.find(id => id !== user?.uid)
     if (!otherUserId) return
     
     const otherUserName = getChatDisplayName(selectedChat)
     
-    setIsCalling(true)
-    const call = await voiceCallService.startCall(
+    const success = await startCall(
       selectedChat.id,
       otherUserId,
       currentUser.name,
       otherUserName
     )
     
-    if (!call) {
-      setIsCalling(false)
+    if (!success) {
       alert('Failed to start call. Please check microphone permissions.')
     }
-  }
-  
-  // Answer incoming call
-  const handleAnswerCall = async () => {
-    if (!voiceCallService || !incomingCall) return
-    
-    const success = await voiceCallService.answerCall(incomingCall)
-    if (success) {
-      setIsInCall(true)
-      setIncomingCall(null)
-    }
-  }
-  
-  // Decline incoming call
-  const handleDeclineCall = async () => {
-    if (!voiceCallService || !incomingCall) return
-    
-    // Play decline sound
-    voiceCallService.playCallEndSound('declined')
-    
-    await voiceCallService.declineCall(incomingCall)
-    // Note: Declined message is sent by GlobalCallOverlay to avoid duplicates
-    
-    setIncomingCall(null)
-  }
-  
-  // End call
-  const handleEndCall = async () => {
-    if (!voiceCallService) return
-    
-    // Play end sound
-    voiceCallService.playCallEndSound('ended')
-    
-    await voiceCallService.endCall()
-    // Note: Call ended message is sent by GlobalCallOverlay to avoid duplicates
-    
-    setIsInCall(false)
-    setIsCalling(false)
-    setCallDuration(0)
-  }
-  
-  // Toggle mute
-  const handleToggleMute = () => {
-    if (!voiceCallService) return
-    const muted = voiceCallService.toggleMute()
-    setIsMuted(muted)
-  }
-  
-  // Format call duration
-  const formatCallDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
   
   // Format time
@@ -631,7 +513,7 @@ function GroupsContent() {
                 </button>
                 
                 {/* Voice Call Button - Only for direct chats */}
-                {selectedChat.type === 'direct' && !isInCall && !isCalling && (
+                {selectedChat.type === 'direct' && callState === 'idle' && (
                   <button
                     onClick={handleStartCall}
                     className="p-2 hover:bg-white/20 rounded-lg"
@@ -1286,92 +1168,6 @@ function GroupsContent() {
           </div>
         </div>
       )}
-
-      {/* Incoming Call Modal */}
-      {incomingCall && (
-        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
-            <div 
-              className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center text-white text-3xl font-bold animate-pulse"
-              style={{ backgroundColor: primaryColor }}
-            >
-              {incomingCall.callerName.charAt(0).toUpperCase()}
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{incomingCall.callerName}</h2>
-            <p className="text-gray-500 mb-8">Incoming voice call...</p>
-            
-            <div className="flex justify-center gap-6">
-              <button
-                onClick={handleDeclineCall}
-                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
-              >
-                <PhoneOff className="w-7 h-7" />
-              </button>
-              <button
-                onClick={handleAnswerCall}
-                className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors animate-bounce"
-              >
-                <Phone className="w-7 h-7" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Active Call / Calling UI */}
-      {(isInCall || isCalling) && (
-        <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: adjustColor(primaryColor, -40) }}>
-          {/* Call Header */}
-          <div className="flex-1 flex flex-col items-center justify-center p-8">
-            <div 
-              className="w-32 h-32 rounded-full mb-6 flex items-center justify-center text-white text-4xl font-bold"
-              style={{ backgroundColor: primaryColor }}
-            >
-              {selectedChat ? getChatDisplayName(selectedChat).charAt(0).toUpperCase() : '?'}
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {selectedChat ? getChatDisplayName(selectedChat) : 'Unknown'}
-            </h2>
-            <p className="text-white/70 text-lg">
-              {isCalling ? 'Calling...' : formatCallDuration(callDuration)}
-            </p>
-            
-            {isCalling && (
-              <div className="mt-4 flex gap-1">
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            )}
-          </div>
-          
-          {/* Call Controls */}
-          <div className="p-8 pb-12">
-            <div className="flex justify-center gap-8">
-              {/* Mute Button */}
-              <button
-                onClick={handleToggleMute}
-                className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
-                  isMuted ? 'bg-red-500 text-white' : 'bg-white/20 text-white'
-                }`}
-              >
-                {isMuted ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-              </button>
-              
-              {/* End Call Button */}
-              <button
-                onClick={handleEndCall}
-                className="w-20 h-20 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
-              >
-                <PhoneOff className="w-9 h-9" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hidden audio element for remote stream */}
-      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
 
       {/* Image Viewer Modal */}
       {viewingImage && (

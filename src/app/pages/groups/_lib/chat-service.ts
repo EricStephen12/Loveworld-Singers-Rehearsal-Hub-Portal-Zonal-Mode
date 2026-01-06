@@ -17,7 +17,8 @@ import {
   onSnapshot, 
   getDocs, 
   getDoc,
-  serverTimestamp
+  serverTimestamp,
+  increment
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
@@ -572,14 +573,40 @@ export async function sendCallMessage(
     const docRef = await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
     console.log('[ChatService] Call message added with ID:', docRef.id)
 
-    // Update chat's last message
-    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
-      lastMessage: {
-        text,
-        senderId: 'system',
-        timestamp: serverTimestamp()
+    // Get chat to update unread counts for participants (for missed/declined calls)
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (chatDoc.exists()) {
+      const chatData = chatDoc.data()
+      const participants = chatData.participants || []
+      
+      // For missed calls, increment unread for all participants
+      // For answered calls, don't increment (both parties were on the call)
+      const unreadUpdates: { [key: string]: any } = {}
+      if (callType === 'missed' || callType === 'declined') {
+        participants.forEach((participantId: string) => {
+          unreadUpdates[`unreadCount.${participantId}`] = increment(1)
+        })
       }
-    })
+      
+      // Update chat's last message and unread counts
+      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+        lastMessage: {
+          text,
+          senderId: 'system',
+          timestamp: serverTimestamp()
+        },
+        ...unreadUpdates
+      })
+    } else {
+      // Fallback: just update last message
+      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+        lastMessage: {
+          text,
+          senderId: 'system',
+          timestamp: serverTimestamp()
+        }
+      })
+    }
     console.log('[ChatService] Chat last message updated')
 
     return true
@@ -594,6 +621,22 @@ function formatCallDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+/**
+ * Mark chat as read for a user (reset unread count to 0)
+ */
+export async function markChatAsRead(chatId: string, userId: string): Promise<boolean> {
+  try {
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      [`unreadCount.${userId}`]: 0
+    })
+    console.log('[ChatService] Marked chat as read for user:', userId)
+    return true
+  } catch (error) {
+    console.error('[ChatService] markChatAsRead error:', error)
+    return false
+  }
 }
 
 /**
@@ -640,15 +683,41 @@ export async function sendMessage(
     
     await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
     
-    // Update chat's last message
-    const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
-    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
-      lastMessage: {
-        text: lastMessageText,
-        senderId: sender.id,
-        timestamp: serverTimestamp()
-      }
-    })
+    // Get chat to update unread counts for other participants
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (chatDoc.exists()) {
+      const chatData = chatDoc.data()
+      const participants = chatData.participants || []
+      
+      // Use atomic increment for unread counts - prevents race conditions
+      const unreadUpdates: { [key: string]: any } = {}
+      participants.forEach((participantId: string) => {
+        if (participantId !== sender.id) {
+          unreadUpdates[`unreadCount.${participantId}`] = increment(1)
+        }
+      })
+      
+      // Update chat's last message and unread counts
+      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
+      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+        lastMessage: {
+          text: lastMessageText,
+          senderId: sender.id,
+          timestamp: serverTimestamp()
+        },
+        ...unreadUpdates
+      })
+    } else {
+      // Fallback: just update last message if chat doc not found
+      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
+      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+        lastMessage: {
+          text: lastMessageText,
+          senderId: sender.id,
+          timestamp: serverTimestamp()
+        }
+      })
+    }
     
     return true
   } catch (error) {

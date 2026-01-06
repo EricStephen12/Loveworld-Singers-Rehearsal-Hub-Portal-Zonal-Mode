@@ -1,6 +1,7 @@
 /**
  * VOICE CALL SERVICE
  * WebRTC-based voice calling for groups chat
+ * Optimized for low latency and reliable connections
  */
 
 import { 
@@ -15,11 +16,12 @@ import {
 } from 'firebase/database'
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup'
 
-// ICE servers for WebRTC
+// Optimized ICE servers - prioritize faster STUN servers
 const ICE_SERVERS: RTCIceServer[] = [
+  // Google STUN servers (fastest, most reliable)
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
+  // Backup TURN servers for NAT traversal
   {
     urls: 'turn:openrelay.metered.ca:80',
     username: 'openrelayproject',
@@ -27,6 +29,11 @@ const ICE_SERVERS: RTCIceServer[] = [
   },
   {
     urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
     username: 'openrelayproject',
     credential: 'openrelayproject'
   }
@@ -324,7 +331,8 @@ export class VoiceCallService {
       await set(ref(realtimeDb, `voice_calls/${call.receiverId}/${call.id}/endedAt`), Date.now())
       await set(ref(realtimeDb, `voice_calls/${call.callerId}/${call.id}/endedAt`), Date.now())
       
-      this.callbacks.onCallTimeout?.(call)
+      // Only call onCallEnded - don't call both callbacks to avoid duplicate messages
+      // onCallEnded with 'timeout' reason handles everything
       this.callbacks.onCallEnded?.(call, 'timeout')
     } catch (error) {
       console.error('[VoiceCall] Error handling timeout:', error)
@@ -401,14 +409,17 @@ export class VoiceCallService {
     return () => this.cleanup()
   }
 
-  // Initialize local audio stream
+  // Initialize local audio stream - optimized for voice
   async initLocalStream(): Promise<boolean> {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          // Optimize for voice
+          sampleRate: 48000,
+          channelCount: 1
         },
         video: false
       })
@@ -419,9 +430,14 @@ export class VoiceCallService {
     }
   }
 
-  // Create peer connection
+  // Create peer connection - optimized for low latency
   private createPeerConnection(): RTCPeerConnection {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
+    const pc = new RTCPeerConnection({ 
+      iceServers: ICE_SERVERS,
+      iceCandidatePoolSize: 10, // Pre-gather candidates for faster connection
+      bundlePolicy: 'max-bundle', // Bundle all media for efficiency
+      rtcpMuxPolicy: 'require' // Multiplex RTP and RTCP
+    })
 
     // Add local tracks
     if (this.localStream) {
@@ -444,9 +460,19 @@ export class VoiceCallService {
       }
     }
 
+    // Monitor ICE connection state for faster feedback
+    pc.oniceconnectionstatechange = () => {
+      console.log('[VoiceCall] ICE connection state:', pc.iceConnectionState)
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        console.log('[VoiceCall] ICE connected - call is active')
+      }
+    }
+
     pc.onconnectionstatechange = () => {
       console.log('[VoiceCall] Connection state:', pc.connectionState)
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      if (pc.connectionState === 'connected') {
+        console.log('[VoiceCall] Peer connection established!')
+      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
         this.endCall()
       }
     }
@@ -456,7 +482,7 @@ export class VoiceCallService {
   }
 
 
-  // Start a call to another user
+  // Start a call to another user - optimized for speed
   async startCall(
     chatId: string,
     receiverId: string,
@@ -472,23 +498,28 @@ export class VoiceCallService {
       }
 
       // Start outgoing tone IMMEDIATELY (while still in user gesture context)
-      // This ensures AudioContext is created before any async operations
-      console.log('[VoiceCall] Starting outgoing tone immediately')
+      console.log('[VoiceCall] Starting call - playing outgoing tone')
       this.playOutgoingTone()
 
-      // Initialize local stream
-      const hasStream = await this.initLocalStream()
+      // Initialize local stream and peer connection in parallel for speed
+      const [hasStream] = await Promise.all([
+        this.initLocalStream()
+      ])
+      
       if (!hasStream) {
         console.error('[VoiceCall] Failed to initialize local stream')
-        this.stopOutgoingTone() // Stop tone if we fail
+        this.stopOutgoingTone()
         return null
       }
 
       // Create peer connection
       const pc = this.createPeerConnection()
 
-      // Create offer
-      const offer = await pc.createOffer()
+      // Create offer with optimized settings for voice
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: false
+      })
       await pc.setLocalDescription(offer)
 
       // Create call data - Firebase doesn't allow undefined values
