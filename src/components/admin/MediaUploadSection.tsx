@@ -210,8 +210,8 @@ export default function MediaUploadSection() {
         <h3 className="text-lg font-bold text-center mb-2">Delete {deleteConfirm.type}?</h3>
         <p className="text-gray-500 text-center mb-6">"{deleteConfirm.name}"</p>
         <div className="flex gap-3">
-          <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 bg-gray-100 rounded-xl font-medium">Cancel</button>
-          <button onClick={() => deleteConfirm.type === 'video' ? handleDeleteVideo(deleteConfirm.id) : handleDeletePlaylist(deleteConfirm.id)} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-medium">Delete</button>
+          <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl font-medium transition-colors">Cancel</button>
+          <button onClick={() => deleteConfirm.type === 'video' ? handleDeleteVideo(deleteConfirm.id) : handleDeletePlaylist(deleteConfirm.id)} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors">Delete</button>
         </div>
       </div>
     </div>
@@ -418,7 +418,29 @@ export default function MediaUploadSection() {
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">{videoForm.isYouTube ? 'YouTube URL' : 'Video File'}</label>
             {videoForm.isYouTube ? (
-              <input type="url" value={videoForm.videoUrl} onChange={(e) => handleVideoUrlChange(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
+              <div className="flex gap-2">
+                <input type="url" value={videoForm.videoUrl} onChange={(e) => handleVideoUrlChange(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="flex-1 px-4 py-3 border border-gray-200 rounded-xl" />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText()
+                        handleVideoUrlChange(text)
+                      } else {
+                        alert('Please long-press the input field and select Paste')
+                      }
+                    } catch (err) {
+                      alert('Please long-press the input field and select Paste')
+                    }
+                  }}
+                  className="px-4 py-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-colors flex items-center gap-2"
+                  title="Paste from clipboard"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                  <span className="hidden sm:inline">Paste</span>
+                </button>
+              </div>
             ) : (
               videoForm.videoUrl ? (
                 <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">

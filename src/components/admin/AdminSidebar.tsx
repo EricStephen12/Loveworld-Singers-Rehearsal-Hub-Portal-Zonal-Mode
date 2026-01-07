@@ -53,7 +53,7 @@ export default function AdminSidebar({
   // Group sidebar items by category
   const mainItems = [
     { icon: Home, label: 'Dashboard', active: activeSection === 'Dashboard' },
-    { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqOnly: true },
+    { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqZoneOnly: true },
   ];
 
   const contentItems = [
@@ -61,15 +61,15 @@ export default function AdminSidebar({
     { icon: Tag, label: 'Categories', active: activeSection === 'Categories' },
     { icon: FolderOpen, label: 'Page Categories', active: activeSection === 'Page Categories' },
     { icon: Upload, label: 'Submitted Songs', active: activeSection === 'Submitted Songs' },
-    { icon: Library, label: 'Master Library', active: activeSection === 'Master Library' },
+    { icon: Library, label: 'Master Library', active: activeSection === 'Master Library', hqZoneOnly: true },
   ];
 
   const managementItems = [
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: UsersRound, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
-    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqOnly: true },
-    { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar' },
+    { icon: Upload, label: 'Media Upload', active: activeSection === 'Media Upload', hqZoneOnly: true },
+    { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar', hqZoneOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
     { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
   ];

@@ -111,17 +111,39 @@ export default function EventModal({
     }
   }, [event, defaultStart, defaultEnd, themeColor, isOpen])
 
+  // Toast helper
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    const toast = document.createElement('div')
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`
+    toast.textContent = message
+    document.body.appendChild(toast)
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      setTimeout(() => toast.remove(), 300)
+    }, 3000)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !formData.title.trim()) return
+
+    // Validate end time is after start time
+    const startDate = new Date(formData.start)
+    const endDate = new Date(formData.end)
+    if (endDate <= startDate && !formData.allDay) {
+      showToast('End time must be after start time', 'error')
+      return
+    }
 
     setLoading(true)
     try {
       const eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'> = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        start: new Date(formData.start),
-        end: new Date(formData.end),
+        start: startDate,
+        end: endDate,
         allDay: formData.allDay,
         type: formData.type,
         color: formData.color,
@@ -143,6 +165,7 @@ export default function EventModal({
         // Update existing event
         await calendarService.updateEvent(event.id, eventData)
         onSave({ ...event, ...eventData })
+        showToast('Event updated successfully')
       } else {
         // Create new event
         const eventId = await calendarService.createEvent(eventData)
@@ -152,9 +175,19 @@ export default function EventModal({
           createdAt: new Date(), 
           updatedAt: new Date() 
         })
+        showToast('Event created successfully')
+      }
+      
+      // Clear calendar cache so new event shows on refresh
+      try {
+        const { CalendarCache } = await import('@/utils/calendar-cache')
+        CalendarCache.clearEvents(zoneId)
+      } catch {
+        // Cache util might not exist, ignore
       }
     } catch (error) {
       console.error('Error saving event:', error)
+      showToast('Failed to save event. Please try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -186,7 +219,7 @@ export default function EventModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div 

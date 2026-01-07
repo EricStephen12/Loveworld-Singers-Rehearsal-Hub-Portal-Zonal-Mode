@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Languages } from 'lucide-react';
+import { Languages, Clipboard } from 'lucide-react';
 import { translationService } from '@/lib/translation-service';
 
 interface BasicTextEditorProps {
@@ -246,6 +246,78 @@ export default function BasicTextEditor({
     }
   };
 
+  // Handle paste from clipboard button (for mobile users)
+  const handlePasteFromClipboard = async () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    
+    try {
+      // Check if clipboard API is available
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        // Fallback: use execCommand (deprecated but works on more browsers)
+        if (editorRef.current) {
+          document.execCommand('paste');
+          // Force trigger input event after execCommand
+          setTimeout(() => {
+            handleInput();
+          }, 100);
+        }
+        return;
+      }
+      
+      const text = await navigator.clipboard.readText();
+      if (text && editorRef.current) {
+        // Get current selection or create one at the end
+        const selection = window.getSelection();
+        let range: Range;
+        
+        if (selection && selection.rangeCount > 0) {
+          range = selection.getRangeAt(0);
+        } else {
+          range = document.createRange();
+          range.selectNodeContents(editorRef.current);
+          range.collapse(false); // Collapse to end
+        }
+        
+        // Delete any selected content
+        range.deleteContents();
+        
+        // Insert text with line breaks preserved
+        const textWithBreaks = text.replace(/\n/g, '<br>');
+        const fragment = range.createContextualFragment(textWithBreaks);
+        range.insertNode(fragment);
+        
+        // Move cursor to end of inserted content
+        range.setStartAfter(fragment);
+        range.setEndAfter(fragment);
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+        
+        // Immediately update state with new content
+        const content = editorRef.current.innerHTML;
+        onChange(content);
+      }
+    } catch (err) {
+      // Clipboard API failed, try execCommand fallback
+      console.log('Clipboard API not available, using fallback');
+      if (editorRef.current) {
+        try {
+          document.execCommand('paste');
+          // Force trigger input event after execCommand
+          setTimeout(() => {
+            handleInput();
+          }, 100);
+        } catch (e) {
+          // Last resort: show native paste dialog by triggering focus
+          alert('Please use long-press and select "Paste" from the menu');
+        }
+      }
+    }
+  };
+
   if (!isMounted) {
     return (
       <div className={`border border-gray-300 rounded-lg ${className}`}>
@@ -274,6 +346,18 @@ export default function BasicTextEditor({
         >
           I
         </button>
+        
+        {/* Paste Button */}
+        <button
+          type="button"
+          onClick={handlePasteFromClipboard}
+          className="flex items-center gap-1 px-3 py-1 rounded hover:bg-gray-100 text-gray-600 text-sm"
+          title="Paste from clipboard"
+        >
+          <Clipboard className="w-4 h-4" />
+          <span className="hidden sm:inline">Paste</span>
+        </button>
+        
         <div className="flex-1"></div>
         
         {/* Translation Button with Dropdown */}

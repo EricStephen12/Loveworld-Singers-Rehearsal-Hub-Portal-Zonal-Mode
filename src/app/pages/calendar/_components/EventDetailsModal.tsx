@@ -54,16 +54,41 @@ export default function EventDetailsModal({
 
   const calendarService = new CalendarService()
 
+  // Toast helper
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    const toast = document.createElement('div')
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`
+    toast.textContent = message
+    document.body.appendChild(toast)
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      setTimeout(() => toast.remove(), 300)
+    }, 3000)
+  }
+
   const handleDelete = async () => {
     if (!event) return
 
     setDeleting(true)
     try {
       await calendarService.deleteEvent(event.id)
+      
+      // Clear calendar cache
+      try {
+        const { CalendarCache } = await import('@/utils/calendar-cache')
+        CalendarCache.clearEvents(event.zoneId)
+      } catch {
+        // Cache util might not exist, ignore
+      }
+      
+      showToast('Event deleted successfully')
       onDelete(event.id)
       setShowDeleteConfirm(false)
     } catch (error) {
       console.error('Error deleting event:', error)
+      showToast('Failed to delete event. Please try again.', 'error')
     } finally {
       setDeleting(false)
     }
@@ -78,7 +103,7 @@ export default function EventDetailsModal({
     : `${duration}m`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div 

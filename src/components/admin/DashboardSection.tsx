@@ -100,10 +100,31 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
         // Load all members from both collections
         const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members')
         const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members')
-        zoneMembers = [...allHQMembers, ...allZoneMembers]
-        console.log(`📊 Total members: ${allHQMembers.length} HQ + ${allZoneMembers.length} zones = ${zoneMembers.length}`)
+        const combinedMembers = [...allHQMembers, ...allZoneMembers]
+        
+        // Deduplicate by userId (same user can be in multiple zones)
+        const seenUserIds = new Set<string>();
+        zoneMembers = combinedMembers.filter((m: any) => {
+          if (m.userId && !seenUserIds.has(m.userId)) {
+            seenUserIds.add(m.userId);
+            return true;
+          }
+          return false;
+        });
+        
+        console.log(`📊 Total members: ${allHQMembers.length} HQ + ${allZoneMembers.length} zones = ${combinedMembers.length} combined → ${zoneMembers.length} unique`)
       } else {
-        zoneMembers = await ZoneInvitationService.getZoneMembers(currentZone.id)
+        const rawMembers = await ZoneInvitationService.getZoneMembers(currentZone.id)
+        
+        // Deduplicate by userId
+        const seenUserIds = new Set<string>();
+        zoneMembers = rawMembers.filter((m: any) => {
+          if (m.userId && !seenUserIds.has(m.userId)) {
+            seenUserIds.add(m.userId);
+            return true;
+          }
+          return false;
+        });
       }
       setMembers(zoneMembers)
 
@@ -407,22 +428,28 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
           </div>
 
           <div className="divide-y divide-gray-100">
-            {members.slice(0, 5).map((member) => (
-              <div key={member.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors active:bg-gray-100">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm">
-                  {member.userName?.charAt(0)?.toUpperCase() || '?'}
+            {members.slice(0, 5).map((member) => {
+              // Trim name to remove extra whitespace
+              const displayName = (member.userName || '').trim();
+              const displayEmail = (member.userEmail || '').trim();
+              
+              return (
+                <div key={member.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors active:bg-gray-100">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm">
+                    {displayName.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-gray-900 truncate">{displayName}</p>
+                    <p className="text-xs text-gray-500 truncate">{displayEmail}</p>
+                  </div>
+                  {member.role === 'coordinator' && (
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full">
+                      Admin
+                    </span>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-gray-900 truncate">{member.userName}</p>
-                  <p className="text-xs text-gray-500 truncate">{member.userEmail}</p>
-                </div>
-                {member.role === 'coordinator' && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full">
-                    Admin
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {members.length > 5 && (

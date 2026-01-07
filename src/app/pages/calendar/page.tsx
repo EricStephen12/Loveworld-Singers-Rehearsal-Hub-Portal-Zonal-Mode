@@ -129,12 +129,14 @@ export default function CalendarPage() {
     loadEvents()
   }, [user, profile, currentZone])
 
-  // Load all birthdays for carousel only
+  // Load all birthdays for carousel only (zone-aware)
   useEffect(() => {
+    if (!currentZone) return
+    
     const loadBirthdays = async () => {
       try {
         const { BirthdayService } = await import('./_lib/birthday-service')
-        const allBirthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
+        const allBirthdays = await BirthdayService.getTodayAndUpcomingBirthdays(currentZone.id)
         setTodaysBirthdays(allBirthdays)
       } catch (error) {
         console.error('Error loading birthdays:', error)
@@ -142,7 +144,7 @@ export default function CalendarPage() {
     }
 
     loadBirthdays()
-  }, [])
+  }, [currentZone])
 
   // Load upcoming events for carousel and calendar
   useEffect(() => {

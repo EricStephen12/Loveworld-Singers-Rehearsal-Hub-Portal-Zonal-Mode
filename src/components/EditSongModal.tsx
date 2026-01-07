@@ -1631,6 +1631,78 @@ Do Re Mi Fa Sol La Ti Do"
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Historical Value
                     </label>
+                    {/* For audio type, show audio player instead of textarea */}
+                    {historyType === 'audio' ? (
+                      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        {originalHistoryValues.new_value ? (
+                          <audio
+                            controls
+                            className="w-full"
+                            src={originalHistoryValues.new_value}
+                          >
+                            Your browser does not support the audio element.
+                          </audio>
+                        ) : (
+                          <p className="text-sm text-slate-400 italic">No audio file in history</p>
+                        )}
+                      </div>
+                    ) : (historyType === 'song-details' || historyType === 'personnel' || historyType === 'music-details') ? (
+                      // For structured data types, show all fields in a formatted way
+                      <div className="space-y-3">
+                        {(() => {
+                          try {
+                            const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
+                            if (typeof parsed !== 'object') return null;
+                            
+                            const fields: { label: string; key: string }[] = [];
+                            
+                            if (historyType === 'song-details') {
+                              fields.push(
+                                { label: 'Title', key: 'title' },
+                                { label: 'Category', key: 'category' },
+                                { label: 'Key', key: 'key' },
+                                { label: 'Tempo', key: 'tempo' }
+                              );
+                            } else if (historyType === 'personnel') {
+                              fields.push(
+                                { label: 'Lead Singer', key: 'leadSinger' },
+                                { label: 'Writer', key: 'writer' },
+                                { label: 'Conductor', key: 'conductor' },
+                                { label: 'Lead Keyboardist', key: 'leadKeyboardist' },
+                                { label: 'Bass Guitarist', key: 'leadGuitarist' },
+                                { label: 'Drummer', key: 'drummer' }
+                              );
+                            } else if (historyType === 'music-details') {
+                              fields.push(
+                                { label: 'Key', key: 'key' },
+                                { label: 'Tempo', key: 'tempo' }
+                              );
+                            }
+                            
+                            return fields.map(field => (
+                              <div key={field.key}>
+                                <label className="block text-xs font-medium text-slate-600 mb-1">{field.label}</label>
+                                <input
+                                  type="text"
+                                  value={parsed[field.key] || ''}
+                                  onChange={(e) => {
+                                    const updated = { ...parsed, [field.key]: e.target.value };
+                                    setOriginalHistoryValues({
+                                      ...originalHistoryValues,
+                                      old_value: JSON.stringify(updated)
+                                    });
+                                  }}
+                                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  placeholder={`Enter ${field.label.toLowerCase()}`}
+                                />
+                              </div>
+                            ));
+                          } catch {
+                            return <p className="text-sm text-slate-400">Unable to parse history data</p>;
+                          }
+                        })()}
+                      </div>
+                    ) : (
                     <textarea
                       value={(() => {
                         // Check if originalHistoryValues is properly set
@@ -1643,124 +1715,40 @@ Do Re Mi Fa Sol La Ti Do"
                           // Try to parse as JSON, otherwise return as string
                           const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
                                               
-                          if (typeof parsed === 'object' && historyType !== 'lyrics' && historyType !== 'solfas' && historyType !== 'comments') {
-                            // For non-lyrics content, extract the specific field value
-                            switch (historyType) {
-                              case 'song-details':
-                                if (parsed.title !== undefined) return parsed.title;
-                                if (parsed.category !== undefined) return parsed.category;
-                                if (parsed.key !== undefined) return parsed.key;
-                                if (parsed.tempo !== undefined) return parsed.tempo;
-                                break;
-                              case 'personnel':
-                                if (parsed.leadSinger !== undefined) return parsed.leadSinger;
-                                if (parsed.writer !== undefined) return parsed.writer;
-                                if (parsed.conductor !== undefined) return parsed.conductor;
-                                if (parsed.leadKeyboardist !== undefined) return parsed.leadKeyboardist;
-                                if (parsed.leadGuitarist !== undefined) return parsed.leadGuitarist;
-                                if (parsed.drummer !== undefined) return parsed.drummer;
-                                break;
-                              case 'music-details':
-                                if (parsed.key !== undefined) return parsed.key;
-                                if (parsed.tempo !== undefined) return parsed.tempo;
-                                break;
-                              case 'audio':
-                                return parsed.toString();
-                                default:
-                                return JSON.stringify(parsed, null, 2);
-                            }
-                          } else {
-                            // For lyrics and solfas, convert HTML to readable text
-                            const rawValue = typeof parsed === 'string' ? parsed : originalHistoryValues.old_value || '';
-                            // Convert HTML to readable format for editing
-                            return rawValue
-                              .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n') // Convert <div> to text with double newlines (paragraph breaks)
-                              .replace(/<br\s*\/?>/gi, '\n') // Convert <br> to newlines
-                              .replace(/<b>(.*?)<\/b>/gi, '**$1**') // Convert <b> to **bold**
-                              .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
-                              .trim();
-                          }
+                          // For lyrics, solfas, comments - convert HTML to readable text
+                          const rawValue = typeof parsed === 'string' ? parsed : originalHistoryValues.old_value || '';
+                          return rawValue
+                            .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                            .replace(/<[^>]*>/g, '')
+                            .trim();
                         } catch {
                           // If parsing fails, convert HTML to readable text
                           const rawValue = originalHistoryValues.old_value || '';
                           return rawValue
-                            .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n') // Convert <div> to text with double newlines (paragraph breaks)
-                            .replace(/<br\s*\/?>/gi, '\n') // Convert <br> to newlines
-                            .replace(/<b>(.*?)<\/b>/gi, '**$1**') // Convert <b> to **bold**
-                            .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
+                            .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                            .replace(/<[^>]*>/g, '')
                             .trim();
                         }
                       })()}
                       onChange={(e) => {
-                        // For structured data types, we need to reconstruct the object
-                        if (historyType === 'song-details' || historyType === 'personnel' || historyType === 'music-details') {
-                          try {
-                            const currentParsed = JSON.parse(originalHistoryValues?.old_value || '{}');
-                                                
-                            if (typeof currentParsed === 'object') {
-                              // Update the appropriate field based on historyType
-                              switch (historyType) {
-                                case 'song-details':
-                                  if (currentParsed.title !== undefined) {
-                                    currentParsed.title = e.target.value;
-                                  } else if (currentParsed.category !== undefined) {
-                                    currentParsed.category = e.target.value;
-                                  } else if (currentParsed.key !== undefined) {
-                                    currentParsed.key = e.target.value;
-                                  } else if (currentParsed.tempo !== undefined) {
-                                    currentParsed.tempo = e.target.value;
-                                  }
-                                  break;
-                                case 'personnel':
-                                  if (currentParsed.leadSinger !== undefined) {
-                                    currentParsed.leadSinger = e.target.value;
-                                  } else if (currentParsed.writer !== undefined) {
-                                    currentParsed.writer = e.target.value;
-                                  } else if (currentParsed.conductor !== undefined) {
-                                    currentParsed.conductor = e.target.value;
-                                  } else if (currentParsed.leadKeyboardist !== undefined) {
-                                    currentParsed.leadKeyboardist = e.target.value;
-                                  } else if (currentParsed.leadGuitarist !== undefined) {
-                                    currentParsed.leadGuitarist = e.target.value;
-                                  } else if (currentParsed.drummer !== undefined) {
-                                    currentParsed.drummer = e.target.value;
-                                  }
-                                  break;
-                                case 'music-details':
-                                  if (currentParsed.key !== undefined) {
-                                    currentParsed.key = e.target.value;
-                                  } else if (currentParsed.tempo !== undefined) {
-                                    currentParsed.tempo = e.target.value;
-                                  }
-                                  break;
-                              }
-                              setOriginalHistoryValues({...originalHistoryValues, old_value: JSON.stringify(currentParsed)});
-                            } else {
-                              // If it's not an object, just update the string value
-                              setOriginalHistoryValues({...originalHistoryValues, old_value: e.target.value});
-                            }
-                          } catch {
-                            // If parsing fails, just update the string value
-                            setOriginalHistoryValues({...originalHistoryValues, old_value: e.target.value});
-                          }
-                        } else {
-                          // For lyrics and solfas, convert readable format back to HTML for saving
-                          // First convert double newlines to paragraph breaks (<div>), then single newlines to <br>
-                          let convertedValue = e.target.value;
-                          // Split by double newlines to identify paragraph breaks
-                          const paragraphs = convertedValue.split('\n\n');
-                          // Wrap each paragraph in div tags and join with empty div for spacing
-                          convertedValue = paragraphs
-                            .filter(p => p.trim() !== '') // Remove empty paragraphs
-                            .map(p => `<div>${p.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`)
-                            .join('');
-                          setOriginalHistoryValues({...originalHistoryValues, old_value: convertedValue});
-                        }
+                        // For lyrics, solfas, comments - convert readable format back to HTML for saving
+                        let convertedValue = e.target.value;
+                        const paragraphs = convertedValue.split('\n\n');
+                        convertedValue = paragraphs
+                          .filter(p => p.trim() !== '')
+                          .map(p => `<div>${p.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`)
+                          .join('');
+                        setOriginalHistoryValues({...originalHistoryValues, old_value: convertedValue});
                       }}
                       className="w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                       rows={8}
                       placeholder="Historical value to edit"
                     />
+                    )}
                   </div>
                                 
                 </div>

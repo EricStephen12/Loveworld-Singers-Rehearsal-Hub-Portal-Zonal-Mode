@@ -106,18 +106,38 @@ export function useUnreadNotifications() {
         const isHQ = isHQGroup(currentZone.id)
         const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         
+        // Get the list of media IDs user has already seen
+        const seenMediaKey = `seenMediaItems_${userId}`
+        const seenMediaStr = localStorage.getItem(seenMediaKey) || '[]'
+        let seenMedia: string[] = []
+        try {
+          seenMedia = JSON.parse(seenMediaStr)
+        } catch {
+          seenMedia = []
+        }
+        
         const videosRef = collection(db, 'media_videos')
-        const videosQuery = query(videosRef, where('forHQ', '==', isHQ), limit(5))
+        const videosQuery = query(videosRef, where('forHQ', '==', isHQ), limit(20))
         const snapshot = await getDocs(videosQuery)
         
         let hasNew = false
+        const currentMediaIds: string[] = []
+        
         snapshot.docs.forEach(doc => {
           const video = doc.data()
           const createdAt = video.createdAt?.toDate?.()?.getTime() || 0
-          if (createdAt > lastMediaSeen && createdAt > lastWeek.getTime()) {
-            hasNew = true
+          // Only consider videos from last week
+          if (createdAt > lastWeek.getTime()) {
+            currentMediaIds.push(doc.id)
+            // Check if user hasn't seen this media
+            if (!seenMedia.includes(doc.id)) {
+              hasNew = true
+            }
           }
         })
+        
+        // Store current media IDs for marking as seen later
+        localStorage.setItem(`currentMediaItems_${userId}`, JSON.stringify(currentMediaIds))
         setHasNewMedia(hasNew)
       } catch (e) {
         console.log('Media check error:', e)
@@ -131,20 +151,32 @@ export function useUnreadNotifications() {
         const now = new Date()
         const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
         
+        // Get the list of event IDs user has already seen
+        const seenEventsKey = `seenCalendarEvents_${userId}`
+        const seenEventsStr = localStorage.getItem(seenEventsKey) || '[]'
+        let seenEvents: string[] = []
+        try {
+          seenEvents = JSON.parse(seenEventsStr)
+        } catch {
+          seenEvents = []
+        }
+        
+        let hasNewEvent = false
+        const currentEventIds: string[] = []
+        
         // Check zone_praise_nights for upcoming rehearsals
         const rehearsalsRef = collection(db, 'zone_praise_nights')
         const rehearsalsQuery = query(rehearsalsRef, where('zoneId', '==', currentZone.id), limit(10))
         const snapshot = await getDocs(rehearsalsQuery)
         
-        let hasUpcoming = false
         snapshot.docs.forEach(doc => {
           const rehearsal = doc.data()
           const eventDate = new Date(rehearsal.date || rehearsal.eventDate)
           if (!isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
+            currentEventIds.push(doc.id)
             // Check if user hasn't seen this event
-            const eventTime = eventDate.getTime()
-            if (eventTime > lastCalendarSeen) {
-              hasUpcoming = true
+            if (!seenEvents.includes(doc.id)) {
+              hasNewEvent = true
             }
           }
         })
@@ -158,11 +190,17 @@ export function useUnreadNotifications() {
           const event = doc.data()
           const eventDate = new Date(event.date || event.eventDate)
           if (!isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
-            hasUpcoming = true
+            currentEventIds.push(doc.id)
+            if (!seenEvents.includes(doc.id)) {
+              hasNewEvent = true
+            }
           }
         })
         
-        setHasNewCalendar(hasUpcoming)
+        // Store current event IDs for marking as seen later
+        localStorage.setItem(`currentCalendarEvents_${userId}`, JSON.stringify(currentEventIds))
+        
+        setHasNewCalendar(hasNewEvent)
       } catch (e) {
         console.log('Calendar check error:', e)
       }
@@ -210,6 +248,28 @@ export function useUnreadNotifications() {
   const markMediaSeen = () => {
     const userId = user?.uid || profile?.id
     if (userId) {
+      // Get current media IDs and mark them as seen
+      const currentMediaStr = localStorage.getItem(`currentMediaItems_${userId}`) || '[]'
+      const seenMediaStr = localStorage.getItem(`seenMediaItems_${userId}`) || '[]'
+      
+      let currentMedia: string[] = []
+      let seenMedia: string[] = []
+      
+      try {
+        currentMedia = JSON.parse(currentMediaStr)
+        seenMedia = JSON.parse(seenMediaStr)
+      } catch {
+        currentMedia = []
+        seenMedia = []
+      }
+      
+      // Merge current media into seen media (avoid duplicates)
+      const allSeenMedia = [...new Set([...seenMedia, ...currentMedia])]
+      
+      // Keep only the last 100 seen items to prevent localStorage bloat
+      const trimmedSeenMedia = allSeenMedia.slice(-100)
+      
+      localStorage.setItem(`seenMediaItems_${userId}`, JSON.stringify(trimmedSeenMedia))
       localStorage.setItem(`lastSeenMedia_${userId}`, Date.now().toString())
       setHasNewMedia(false)
     }
@@ -219,6 +279,28 @@ export function useUnreadNotifications() {
   const markCalendarSeen = () => {
     const userId = user?.uid || profile?.id
     if (userId) {
+      // Get current event IDs and mark them as seen
+      const currentEventsStr = localStorage.getItem(`currentCalendarEvents_${userId}`) || '[]'
+      const seenEventsStr = localStorage.getItem(`seenCalendarEvents_${userId}`) || '[]'
+      
+      let currentEvents: string[] = []
+      let seenEvents: string[] = []
+      
+      try {
+        currentEvents = JSON.parse(currentEventsStr)
+        seenEvents = JSON.parse(seenEventsStr)
+      } catch {
+        currentEvents = []
+        seenEvents = []
+      }
+      
+      // Merge current events into seen events (avoid duplicates)
+      const allSeenEvents = [...new Set([...seenEvents, ...currentEvents])]
+      
+      // Keep only the last 100 seen events to prevent localStorage bloat
+      const trimmedSeenEvents = allSeenEvents.slice(-100)
+      
+      localStorage.setItem(`seenCalendarEvents_${userId}`, JSON.stringify(trimmedSeenEvents))
       localStorage.setItem(`lastSeenCalendar_${userId}`, Date.now().toString())
       // Also mark birthdays as seen for today
       localStorage.setItem(`lastSeenBirthday_${userId}`, new Date().toDateString())

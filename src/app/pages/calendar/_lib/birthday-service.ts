@@ -10,9 +10,10 @@ export interface BirthdayUser {
   profile_image_url?: string
   age?: number
   isToday: boolean
+  zoneId?: string
 }
 
-// OPTIMIZED: Cache birthdays for 1 hour to reduce reads
+// OPTIMIZED: Cache birthdays for 1 hour to reduce reads (per zone)
 const BIRTHDAY_CACHE_KEY = 'lwsrh-birthday-cache'
 const BIRTHDAY_CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
@@ -20,17 +21,18 @@ interface BirthdayCache {
   data: BirthdayUser[]
   timestamp: number
   dateKey: string // To invalidate when day changes
+  zoneId: string // Cache per zone
 }
 
-function getBirthdayCache(): BirthdayCache | null {
+function getBirthdayCache(zoneId: string): BirthdayCache | null {
   if (typeof window === 'undefined') return null
   try {
-    const cached = localStorage.getItem(BIRTHDAY_CACHE_KEY)
+    const cached = localStorage.getItem(`${BIRTHDAY_CACHE_KEY}-${zoneId}`)
     if (!cached) return null
     const data: BirthdayCache = JSON.parse(cached)
     const today = moment().format('YYYY-MM-DD')
-    // Invalidate if day changed or TTL expired
-    if (data.dateKey !== today || Date.now() - data.timestamp > BIRTHDAY_CACHE_TTL) {
+    // Invalidate if day changed, zone changed, or TTL expired
+    if (data.dateKey !== today || data.zoneId !== zoneId || Date.now() - data.timestamp > BIRTHDAY_CACHE_TTL) {
       return null
     }
     return data
@@ -39,15 +41,16 @@ function getBirthdayCache(): BirthdayCache | null {
   }
 }
 
-function setBirthdayCache(data: BirthdayUser[]) {
+function setBirthdayCache(zoneId: string, data: BirthdayUser[]) {
   if (typeof window === 'undefined') return
   try {
     const cache: BirthdayCache = {
       data,
       timestamp: Date.now(),
-      dateKey: moment().format('YYYY-MM-DD')
+      dateKey: moment().format('YYYY-MM-DD'),
+      zoneId
     }
-    localStorage.setItem(BIRTHDAY_CACHE_KEY, JSON.stringify(cache))
+    localStorage.setItem(`${BIRTHDAY_CACHE_KEY}-${zoneId}`, JSON.stringify(cache))
   } catch {
     // Ignore storage errors
   }
@@ -55,15 +58,31 @@ function setBirthdayCache(data: BirthdayUser[]) {
 
 export class BirthdayService {
   /**
-   * Get users with birthdays today and upcoming (next 7 days)
+   * Get users with birthdays today and upcoming (next 7 days) for a specific zone
    * OPTIMIZED: Uses caching to reduce Firebase reads
+   * @param zoneId - The zone ID to filter birthdays by
    */
-  static async getTodayAndUpcomingBirthdays(): Promise<BirthdayUser[]> {
+  static async getTodayAndUpcomingBirthdays(zoneId?: string): Promise<BirthdayUser[]> {
     try {
-      // Check cache first
-      const cached = getBirthdayCache()
-      if (cached) {
-        return cached.data
+      // Check cache first (zone-specific)
+      if (zoneId) {
+        const cached = getBirthdayCache(zoneId)
+        if (cached) {
+          return cached.data
+        }
+      }
+
+      // Get zone members if zoneId provided
+      let memberUserIds: Set<string> | null = null
+      if (zoneId) {
+        try {
+          const zoneMembers = await FirebaseDatabaseService.getCollection(`zones/${zoneId}/members`, 500) as any[]
+          if (zoneMembers && zoneMembers.length > 0) {
+            memberUserIds = new Set(zoneMembers.map(m => m.userId || m.id))
+          }
+        } catch (error) {
+          console.error('Error fetching zone members for birthdays:', error)
+        }
       }
 
       // Get profiles with limit (birthday data doesn't need all profiles)
@@ -77,7 +96,13 @@ export class BirthdayService {
       const nextWeek = moment().add(7, 'days')
       
       const birthdayUsers: BirthdayUser[] = profiles
-        .filter(profile => profile.birthday) // Only users with birthdays
+        .filter(profile => {
+          // Must have birthday
+          if (!profile.birthday) return false
+          // If zone filtering, only include zone members
+          if (memberUserIds && !memberUserIds.has(profile.id)) return false
+          return true
+        })
         .map(profile => {
           const birthday = moment(profile.birthday)
           
@@ -104,7 +129,8 @@ export class BirthdayService {
             birthday: profile.birthday,
             profile_image_url: profile.profile_image_url,
             age,
-            isToday
+            isToday,
+            zoneId
           }
         })
         .filter(Boolean) as BirthdayUser[]
@@ -119,8 +145,10 @@ export class BirthdayService {
         return dateA - dateB
       })
 
-      // Cache the results
-      setBirthdayCache(sortedBirthdays)
+      // Cache the results (zone-specific)
+      if (zoneId) {
+        setBirthdayCache(zoneId, sortedBirthdays)
+      }
       
       return sortedBirthdays
     } catch (error) {
@@ -130,10 +158,11 @@ export class BirthdayService {
   }
 
   /**
-   * Get only today's birthdays
+   * Get only today's birthdays for a specific zone
+   * @param zoneId - The zone ID to filter birthdays by
    */
-  static async getTodaysBirthdays(): Promise<BirthdayUser[]> {
-    const allBirthdays = await this.getTodayAndUpcomingBirthdays()
+  static async getTodaysBirthdays(zoneId?: string): Promise<BirthdayUser[]> {
+    const allBirthdays = await this.getTodayAndUpcomingBirthdays(zoneId)
     return allBirthdays.filter(user => user.isToday)
   }
 }

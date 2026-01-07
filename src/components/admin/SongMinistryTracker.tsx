@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Music, Calendar, Plus, Trash2, Search } from 'lucide-react';
+import { Music, Calendar, Plus, Trash2, Search, CheckCircle, XCircle } from 'lucide-react';
 import { SongMinistryService } from '@/lib/song-ministry-service';
 
 interface SongMinistryRecord {
@@ -33,6 +33,12 @@ export default function SongMinistryTracker() {
     notes: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     loadAllData();
@@ -78,7 +84,7 @@ export default function SongMinistryTracker() {
       });
       loadAllData(); // Reload data after adding
     } else {
-      alert(`Error: ${result.error}`);
+      showToast('error', result.error || 'Failed to add record');
     }
   };
 
@@ -95,6 +101,16 @@ export default function SongMinistryTracker() {
 
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+          {toast.message}
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -612,6 +612,12 @@ service cloud.firestore {
       allow write: if true;  // Open for admin panel to manage events
     }
 
+    // ===== EVENT ATTENDEES (Calendar event attendees) =====
+    match /event_attendees/{attendeeId} {
+      allow read: if request.auth != null;  // All authenticated users can read
+      allow write: if true;  // Open for admin panel to manage attendees
+    }
+
     // ===== BIRTHDAYS (Member birthdays) =====
     match /birthdays/{birthdayId} {
       allow read: if request.auth != null;  // All authenticated users can read

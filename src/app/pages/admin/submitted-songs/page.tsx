@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Music, CheckCircle, XCircle, Clock, Eye, MessageSquare, 
-  User, Calendar, ArrowLeft, RefreshCw, FileText, Play, Pause
+  User, Calendar, ArrowLeft, RefreshCw, FileText, Play, Pause, Trash2
 } from 'lucide-react'
 import { 
   getAllSubmittedSongs, 
@@ -43,6 +43,20 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
   const audioRefsRef = React.useRef<Map<string, HTMLAudioElement>>(new Map())
+  
+  // Toast and confirmation modal state
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [confirmModal, setConfirmModal] = useState<{ 
+    type: 'approve' | 'delete'; 
+    song: SongSubmission | null;
+    title: string;
+    message: string;
+  } | null>(null)
+  
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 3000)
+  }
   
   // Check if current zone is HQ (can see all submissions)
   const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
@@ -160,8 +174,6 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const handleApprove = async (song: SongSubmission) => {
     if (!user || !song.id) return
     
-    if (!confirm(`Approve "${song.title}" by ${song.writer}?`)) return
-    
     setProcessing(song.id)
     try {
       const result = await approveSong(
@@ -171,23 +183,33 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       )
       
       if (result.success) {
-        alert('✅ Song approved and added to main collection!')
+        showToast('success', 'Song approved and added to main collection!')
+        setConfirmModal(null)
         loadSongs()
       } else {
-        alert(`❌ Failed to approve song: ${result.error}`)
+        showToast('error', `Failed to approve song: ${result.error}`)
       }
     } catch (error) {
-      alert('❌ Error approving song')
+      showToast('error', 'Error approving song')
     } finally {
       setProcessing(null)
     }
+  }
+  
+  const openApproveConfirm = (song: SongSubmission) => {
+    setConfirmModal({
+      type: 'approve',
+      song,
+      title: 'Approve Song',
+      message: `Approve "${song.title}" by ${song.writer}?`
+    })
   }
 
   const handleReject = async (song: SongSubmission) => {
     if (!user || !song.id) return
     
     if (!rejectNotes.trim()) {
-      alert('Please provide a reason for rejection')
+      showToast('error', 'Please provide a reason for rejection')
       return
     }
     
@@ -201,16 +223,16 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       )
       
       if (result.success) {
-        alert('✅ Song rejected')
+        showToast('success', 'Song rejected')
         setShowRejectModal(false)
         setRejectNotes('')
         setSelectedSong(null)
         loadSongs()
       } else {
-        alert(`❌ Failed to reject song: ${result.error}`)
+        showToast('error', `Failed to reject song: ${result.error}`)
       }
     } catch (error) {
-      alert('❌ Error rejecting song')
+      showToast('error', 'Error rejecting song')
     } finally {
       setProcessing(null)
     }
@@ -219,22 +241,23 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const handleReply = async (song: SongSubmission) => {
     if (!user || !song.id) return
     if (!replyMessage.trim()) {
-      alert('Please enter a reply message')
+      showToast('error', 'Please enter a reply message')
       return
     }
     setProcessing(song.id)
     try {
       const result = await replyToSubmission(song.id, getUserName(), replyMessage)
       if (result.success) {
+        showToast('success', 'Reply sent successfully')
         setShowReplyModal(false)
         setReplyMessage('')
         setSelectedSong(null)
         loadSongs()
       } else {
-        alert(`❌ Failed to send reply: ${result.error}`)
+        showToast('error', `Failed to send reply: ${result.error}`)
       }
     } catch (e) {
-      alert('❌ Error sending reply')
+      showToast('error', 'Error sending reply')
     } finally {
       setProcessing(null)
     }
@@ -249,26 +272,94 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
   const handleDeleteAsAdmin = async (song: SongSubmission) => {
     if (!song.id) return
-    if (!confirm(`Delete the submission "${song.title}"? This cannot be undone.`)) return
     
     setDeletingId(song.id)
     try {
       const result = await deleteSubmissionAsAdmin(song.id)
       if (result.success) {
-        alert('✅ Submission deleted')
+        showToast('success', 'Submission deleted')
+        setConfirmModal(null)
         loadSongs()
       } else {
-        alert(`❌ Failed to delete submission: ${result.error}`)
+        showToast('error', `Failed to delete submission: ${result.error}`)
       }
     } catch (e) {
-      alert('❌ Error deleting submission')
+      showToast('error', 'Error deleting submission')
     } finally {
       setDeletingId(null)
     }
   }
+  
+  const openDeleteConfirm = (song: SongSubmission) => {
+    setConfirmModal({
+      type: 'delete',
+      song,
+      title: 'Delete Submission',
+      message: `Delete the submission "${song.title}"? This cannot be undone.`
+    })
+  }
 
   return (
     <div className={`${embedded ? 'h-full' : 'min-h-screen'} bg-gradient-to-br from-slate-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8`}>
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${
+          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`}>
+          {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+          {toast.message}
+        </div>
+      )}
+      
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.song && (
+        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                confirmModal.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {confirmModal.type === 'approve' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">{confirmModal.title}</h3>
+                <p className="text-sm text-gray-500">This action requires confirmation</p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-6">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.type === 'approve') {
+                    handleApprove(confirmModal.song!)
+                  } else {
+                    handleDeleteAsAdmin(confirmModal.song!)
+                  }
+                }}
+                disabled={processing === confirmModal.song.id || deletingId === confirmModal.song.id}
+                className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                  confirmModal.type === 'approve' 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {confirmModal.type === 'approve' ? 'Approve' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         {!embedded && (
@@ -497,7 +588,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                             <span className="sm:hidden">View</span>
                           </button>
                           <button
-                            onClick={() => handleApprove(song)}
+                            onClick={() => openApproveConfirm(song)}
                             disabled={processing === song.id}
                             className="px-3 sm:px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
                           >
@@ -538,7 +629,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       {/* Admin delete action */}
                       {song.id && (
                         <button
-                          onClick={() => handleDeleteAsAdmin(song)}
+                          onClick={() => openDeleteConfirm(song)}
                           disabled={deletingId === song.id}
                           className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
                         >
@@ -675,7 +766,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                     <button
                       onClick={() => {
                         setSelectedSong(null)
-                        handleApprove(selectedSong)
+                        openApproveConfirm(selectedSong)
                       }}
                       disabled={processing === selectedSong.id}
                       className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"

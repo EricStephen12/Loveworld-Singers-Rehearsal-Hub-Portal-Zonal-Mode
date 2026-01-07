@@ -7231,10 +7231,6 @@
     color: var(--color-lime-800);
   }
 
-  .text-orange-300 {
-    color: var(--color-orange-300);
-  }
-
   .text-orange-400 {
     color: var(--color-orange-400);
   }
@@ -7247,10 +7243,6 @@
     .text-orange-400\/50 {
       color: color-mix(in oklab, var(--color-orange-400) 50%, transparent);
     }
-  }
-
-  .text-orange-500 {
-    color: var(--color-orange-500);
   }
 
   .text-orange-600 {

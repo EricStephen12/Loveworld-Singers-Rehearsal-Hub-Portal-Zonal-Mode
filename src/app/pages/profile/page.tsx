@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music } from 'lucide-react'
+import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut } from 'lucide-react'
 
 import ScreenHeader from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
@@ -19,6 +19,8 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
 import { AccountLinkingService } from '@/lib/account-linking'
 import { isZoneLeader } from '@/lib/user-role-utils'
+import { ZoneInvitationService } from '@/lib/zone-invitation-service'
+import { isHQGroup } from '@/config/zones'
 
 // Helper function to adjust color brightness for gradient
 const adjustColor = (color: string, amount: number) => {
@@ -69,6 +71,9 @@ function ProfilePage() {
   const [kingsChatLinked, setKingsChatLinked] = useState(false)
   const [linkingMessage, setLinkingMessage] = useState('')
   const [isCoordinator, setIsCoordinator] = useState(false)
+  const [isLeavingZone, setIsLeavingZone] = useState(false)
+  const [showLeaveZoneDialog, setShowLeaveZoneDialog] = useState(false)
+  const [zoneToLeave, setZoneToLeave] = useState<{ id: string; name: string; memberId?: string } | null>(null)
 
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
@@ -529,6 +534,69 @@ function ProfilePage() {
     }
   }
 
+  // Leave zone function
+  const handleLeaveZone = async () => {
+    if (!zoneToLeave || !user?.uid) return
+    
+    setIsLeavingZone(true)
+    try {
+      console.log('🚪 Leaving zone:', zoneToLeave.name, 'Zone ID:', zoneToLeave.id)
+      
+      const isHQ = isHQGroup(zoneToLeave.id)
+      console.log('🔍 Is HQ group:', isHQ)
+      
+      if (isHQ) {
+        // For HQ groups, use HQMembersService directly
+        // The document ID format is userId_hqGroupId
+        const { HQMembersService } = await import('@/lib/hq-members-service')
+        await HQMembersService.removeMember(user.uid, zoneToLeave.id)
+        console.log('✅ Removed from HQ group')
+      } else {
+        // For regular zones, find the membership document
+        const memberships = await FirebaseDatabaseService.getCollectionWhere('zone_members', 'userId', '==', user.uid)
+        console.log('🔍 Found memberships:', memberships)
+        
+        // Find the one matching this zone
+        const membership = memberships.find((m: any) => m.zoneId === zoneToLeave.id)
+        console.log('🔍 Matching membership:', membership)
+        
+        if (!membership) {
+          throw new Error('Membership not found for this zone')
+        }
+        
+        // Delete the membership document
+        await FirebaseDatabaseService.deleteDocument('zone_members', membership.id)
+        console.log('✅ Deleted membership:', membership.id)
+        
+        // Update zone member count
+        const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneToLeave.id) as { id: string; memberCount?: number } | null
+        if (zoneData) {
+          await FirebaseDatabaseService.updateDocument('zones', zoneToLeave.id, {
+            memberCount: Math.max(0, (zoneData.memberCount || 1) - 1),
+            updatedAt: new Date()
+          })
+        }
+      }
+      
+      console.log('✅ Left zone successfully')
+      alert(`You have left ${zoneToLeave.name}. The page will reload.`)
+      
+      // Clear any cached zone data from localStorage
+      localStorage.removeItem('currentZoneId')
+      localStorage.removeItem('zoneCache')
+      
+      // Force a hard reload to clear all state
+      window.location.href = '/pages/profile'
+    } catch (error) {
+      console.error('❌ Leave zone error:', error)
+      alert(`Failed to leave zone: ${error instanceof Error ? error.message : 'Please try again.'}`)
+    } finally {
+      setIsLeavingZone(false)
+      setShowLeaveZoneDialog(false)
+      setZoneToLeave(null)
+    }
+  }
+
   // Delete account function
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'DELETE') {
@@ -924,6 +992,19 @@ function ProfilePage() {
                     Current
                   </span>
                 </div>
+                {/* Leave Zone Button */}
+                {userZones.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setZoneToLeave({ id: currentZone.id, name: currentZone.name })
+                      setShowLeaveZoneDialog(true)
+                    }}
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-red-600 text-xs font-medium rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    Leave Zone
+                  </button>
+                )}
               </div>
             )}
 
@@ -1598,6 +1679,68 @@ function ProfilePage() {
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Account
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Zone Dialog */}
+      {showLeaveZoneDialog && zoneToLeave && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                <LogOut className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Leave Zone</h3>
+                <p className="text-sm text-gray-500">{zoneToLeave.name}</p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Are you sure you want to leave <strong>{zoneToLeave.name}</strong>? 
+                You can rejoin later using the zone's invitation code.
+              </p>
+              
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-sm text-orange-800 font-medium mb-2">What happens when you leave:</p>
+                <ul className="text-xs text-orange-700 space-y-1">
+                  <li>• You'll be removed from the zone member list</li>
+                  <li>• You won't receive zone notifications</li>
+                  <li>• You can rejoin anytime with the invitation code</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowLeaveZoneDialog(false)
+                  setZoneToLeave(null)
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLeaveZone}
+                disabled={isLeavingZone}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                {isLeavingZone ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Leaving...
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Leave Zone
                   </>
                 )}
               </button>
