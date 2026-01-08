@@ -1,3 +1,5 @@
+'use client'
+
 // Firebase Web FCM Integration
 // Uses existing Firebase app from firebase-setup.ts
 import { getMessaging, getToken, onMessage } from 'firebase/messaging'

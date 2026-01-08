@@ -32,13 +32,8 @@ import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import { PermissionProvider } from '@/contexts/PermissionContext'
 import '@/utils/safeAreaManager'
 import { disableConsoleLogs } from "@/utils/disable-logs"
-import { useWebFCM } from "@/lib/fcm-web"
 
-// Initialize FCM for web background notifications
-function FCMInitializer() {
-  useWebFCM();
-  return null;
-}
+// FCM will be initialized in a client component instead
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -221,7 +216,7 @@ export default function RootLayout({
                   <AnalyticsProvider>
                     <PermissionProvider>
                     <ActivityLogger>
-                      <FCMInitializer />
+                      {/* FCM initialized in client components */}
                       {/* <ScreenshotPrevention /> */}
                       <main className="h-full w-full bg-gray-50">
                         {children}

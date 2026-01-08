@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/contexts/AuthContext'
+import { useWebFCM } from '@/lib/fcm-web'
 
 export default function SplashPage() {
   const router = useRouter()
   const { user, loading } = useAuthContext()
   
+  // Initialize FCM for web background notifications
+  useWebFCM();
   const [delayPassed, setDelayPassed] = useState(false)
 
   useEffect(() => {
