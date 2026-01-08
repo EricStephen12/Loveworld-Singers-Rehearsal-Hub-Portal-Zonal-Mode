@@ -93,8 +93,6 @@ class WebFCMService {
   // Save token to your server/backend
   private async saveTokenToServer(token: string) {
     try {
-      // TODO: Replace with your actual endpoint
-      /*
       await fetch('/api/save-fcm-token', {
         method: 'POST',
         headers: {
@@ -105,8 +103,7 @@ class WebFCMService {
           platform: 'web'
         })
       });
-      */
-      console.log('✅ FCM token ready for server (implement save endpoint)');
+      console.log('✅ FCM token saved to server');
     } catch (error) {
       console.error('❌ Error saving token to server:', error);
     }

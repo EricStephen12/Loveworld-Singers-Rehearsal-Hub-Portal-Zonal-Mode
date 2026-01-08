@@ -6,13 +6,13 @@ import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
 // Use the same Firebase configuration as your main app
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Replace with actual values from your .env
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID", 
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyBkpkvkV82ILc8R_BjDK9OBDPqDaCbM9lM",
+  authDomain: "loveworld-singers-app.firebaseapp.com",
+  projectId: "loveworld-singers-app",
+  storageBucket: "loveworld-singers-app.firebasestorage.app",
+  messagingSenderId: "155599595615",
+  appId: "1:155599595615:web:f431ecd7276a22a33f53ea",
+  measurementId: "G-0SN10RN806"
 };
 
 // Initialize Firebase app
