@@ -22,8 +22,8 @@ function ResetPasswordContent() {
   // Verify the password reset code from the email link
   useEffect(() => {
     const verifyCode = async () => {
-      const oobCode = searchParams.get('oobCode')
-      const mode = searchParams.get('mode')
+      const oobCode = searchParams?.get('oobCode')
+      const mode = searchParams?.get('mode')
       if (!oobCode || mode !== 'resetPassword') {
         setError('Invalid or missing reset link. Please request a new password reset.')
         return
@@ -56,7 +56,7 @@ function ResetPasswordContent() {
       }
 
       // Confirm password reset using the oobCode from the link
-      const oobCode = searchParams.get('oobCode')
+      const oobCode = searchParams?.get('oobCode')
       if (!oobCode) {
         setError('Missing reset code. Please use the link from your email again.')
         return

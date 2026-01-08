@@ -8,7 +8,7 @@ export const useAnalytics = () => {
 
   useEffect(() => {
     // Track feature engagement when navigating to different pages
-    trackFeatureEngagement('page_navigation', pathname);
+    trackFeatureEngagement('page_navigation', pathname || '');
   }, [pathname])
 
   return {

@@ -31,9 +31,9 @@ function PraiseNightPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { currentZone } = useZone();
-  const categoryFilter = searchParams.get('category');
-  const pageParam = searchParams.get('page');
-  const songParam = searchParams.get('song');
+  const categoryFilter = searchParams?.get('category');
+  const pageParam = searchParams?.get('page');
+  const songParam = searchParams?.get('song');
   
   // Track praise night usage
   useFeatureTracking('praise_night');

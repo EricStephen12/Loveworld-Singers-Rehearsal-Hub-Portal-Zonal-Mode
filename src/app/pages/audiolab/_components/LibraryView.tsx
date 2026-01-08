@@ -50,7 +50,7 @@ export function LibraryView() {
 
   // Check for song parameter in URL to auto-expand
   useEffect(() => {
-    const songParam = searchParams.get('song');
+    const songParam = searchParams?.get('song');
     console.log('[LibraryView] Checking song param:', songParam, 'songs loaded:', songs.length, 'already handled:', handledSongParamRef.current);
     
     // Only handle if we have a song param, songs are loaded, and we haven't handled this specific param yet

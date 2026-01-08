@@ -26,7 +26,7 @@ interface MediaVideo {
 export default function AdminPlaylistDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const playlistId = params.id as string
+  const playlistId = params?.id as string
   const { profile, isLoading: authLoading } = useAuth()
   const [playlist, setPlaylist] = useState<AdminPlaylist | null>(null)
   const [videos, setVideos] = useState<MediaVideo[]>([])

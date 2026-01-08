@@ -21,7 +21,7 @@ import {
 export default function PlaylistDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const playlistId = params.id as string
+  const playlistId = params?.id as string
   const { user, profile, isLoading: authLoading } = useAuth()
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [videos, setVideos] = useState<MediaItem[]>([])

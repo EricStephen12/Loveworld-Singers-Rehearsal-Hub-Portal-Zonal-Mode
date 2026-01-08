@@ -53,7 +53,7 @@ export default function PlayerPage() {
   // Related videos
   const [relatedVideos, setRelatedVideos] = useState<MediaItem[]>([])
 
-  const mediaId = params.id as string
+  const mediaId = params?.id as string
 
   useEffect(() => {
     loadMedia()

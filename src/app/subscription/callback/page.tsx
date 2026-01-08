@@ -13,7 +13,7 @@ function SubscriptionCallbackContent() {
 
   useEffect(() => {
     const verifyPayment = async () => {
-      const paymentId = searchParams.get('id')
+      const paymentId = searchParams?.get('id')
       
       if (!paymentId) {
         setStatus('failed')

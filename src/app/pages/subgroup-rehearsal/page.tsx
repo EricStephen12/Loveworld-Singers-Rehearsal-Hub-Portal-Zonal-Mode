@@ -20,7 +20,7 @@ function SubGroupRehearsalContent() {
   const router = useRouter();
   const { currentZone } = useZone();
   
-  const rehearsalId = searchParams.get('id');
+  const rehearsalId = searchParams?.get('id');
   
   const [rehearsal, setRehearsal] = useState<SubGroupRehearsal | null>(null);
   const [songs, setSongs] = useState<any[]>([]);

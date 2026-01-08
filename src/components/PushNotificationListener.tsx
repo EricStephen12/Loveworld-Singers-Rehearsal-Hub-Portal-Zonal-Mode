@@ -97,7 +97,24 @@ export default function PushNotificationListener() {
     // Listen for messages from native shell
     const handleNativeMessage = (event: MessageEvent) => {
       if (event.data?.type === 'NATIVE_PUSH') {
-        const { title, body, tag, url } = event.data
+        const { title, body, tag, url, data } = event.data
+        
+        // Handle voice call notifications specially
+        if (data?.type === 'VOICE_CALL') {
+          // Dispatch custom event for voice call handling
+          window.dispatchEvent(new CustomEvent('incomingVoiceCall', {
+            detail: {
+              callId: data.callId,
+              callerName: data.callerName,
+              callerAvatar: data.callerAvatar,
+              timestamp: Date.now()
+            }
+          }));
+          console.log('[Push] Voice call notification handled');
+          return;
+        }
+        
+        // Handle regular notifications
         showNotification(title, body, tag, url)
       }
     }

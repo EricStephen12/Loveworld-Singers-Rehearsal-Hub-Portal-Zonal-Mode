@@ -559,6 +559,29 @@ export class VoiceCallService {
       // Start call timeout
       this.startCallTimeout(callData)
 
+      // ✅ ENTERPRISE FEATURE - Send push notification to offline users
+      try {
+        await fetch('/api/send-call-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            receiverId,
+            title: "Incoming Call",
+            body: `${callerName} is calling you`,
+            data: {
+              type: "VOICE_CALL",
+              callId: callId,
+              callerName: callerName,
+              callerAvatar: callerAvatar
+            }
+          })
+        });
+        console.log('[VoiceCall] Notification sent to:', receiverId);
+      } catch (notifyError) {
+        console.error('[VoiceCall] Failed to send notification:', notifyError);
+        // Continue with call even if notification fails
+      }
+
       return callData
     } catch (error) {
       console.error('[VoiceCall] Error starting call:', error)

@@ -10,7 +10,7 @@ function SuccessContent() {
   const [countdown, setCountdown] = useState(2)
 
   // Get the action type from URL params
-  const action = searchParams.get('action') || 'login'
+  const action = searchParams?.get('action') || 'login'
 
   const getMessage = () => {
     switch (action) {

@@ -1,3 +1,227 @@
-module.exports=[35774,a=>{"use strict";a.s(["AnalyticsAggregationService",()=>d]),a.i(69387);var b=a.i(59389),c=a.i(23631);class d{static getMonthlyDocId(a,b){return`${a}-${String(b+1).padStart(2,"0")}`}static async getOrCreateMonthlySummary(a,d){let e=this.getMonthlyDocId(a,d),f=(0,b.doc)(c.db,"analytics_monthly",e),g=await (0,b.getDoc)(f);if(g.exists()){let a=g.data();return{year:a.year,month:a.month,totalEvents:a.totalEvents||0,totalSignups:a.totalSignups||0,totalLogins:a.totalLogins||0,totalFeatureEngagements:a.totalFeatureEngagements||0,uniqueUsers:a.uniqueUsers||0,pageViews:a.pageViews||{},countries:a.countries||{},cities:a.cities||{},browsers:a.browsers||{},featureEngagements:a.featureEngagements||{},songAccesses:a.songAccesses||{},updatedAt:a.updatedAt||new Date,createdAt:a.createdAt||new Date,totalSessions:a.totalSessions,totalPageViews:a.totalPageViews,desktopSessions:a.desktopSessions,mobileSessions:a.mobileSessions,tabletSessions:a.tabletSessions}}let h={year:a,month:d,totalEvents:0,totalSignups:0,totalLogins:0,totalFeatureEngagements:0,uniqueUsers:0,pageViews:{},countries:{},cities:{},browsers:{},featureEngagements:{},songAccesses:{},updatedAt:new Date,createdAt:new Date};return await (0,b.setDoc)(f,h),h}static async incrementEvent(a,d,e,f,g){let h=new Date(a),i=this.getMonthlyDocId(h.getFullYear(),h.getMonth()),j=(0,b.doc)(c.db,"analytics_monthly",i);try{let a={totalEvents:(0,b.increment)(1),updatedAt:new Date};switch(d){case"signup":a.totalSignups=(0,b.increment)(1);break;case"login":a.totalLogins=(0,b.increment)(1);break;case"feature_engagement":a.totalFeatureEngagements=(0,b.increment)(1),e&&(a[`pageViews.${e.replace(/\//g,"_")}`]=(0,b.increment)(1)),f&&(a[`featureEngagements.${f.replace(/\//g,"_")}`]=(0,b.increment)(1)),g&&(a[`songAccesses.${g.replace(/\//g,"_")}`]=(0,b.increment)(1))}await (0,b.updateDoc)(j,a)}catch(b){await this.getOrCreateMonthlySummary(h.getFullYear(),h.getMonth()),await this.incrementEvent(a,d,e,f,g)}}static async getAllMonthlySummaries(){try{return(await (0,b.getDocs)((0,b.collection)(c.db,"analytics_monthly"))).docs.map(a=>{let b=a.data();return{year:b.year,month:b.month,totalEvents:b.totalEvents||0,totalSignups:b.totalSignups||0,totalLogins:b.totalLogins||0,totalFeatureEngagements:b.totalFeatureEngagements||0,uniqueUsers:b.uniqueUsers||0,pageViews:b.pageViews||{},countries:b.countries||{},cities:b.cities||{},browsers:b.browsers||{},featureEngagements:b.featureEngagements||{},songAccesses:b.songAccesses||{},updatedAt:b.updatedAt||new Date,createdAt:b.createdAt||new Date,totalSessions:b.totalSessions,totalPageViews:b.totalPageViews,desktopSessions:b.desktopSessions,mobileSessions:b.mobileSessions,tabletSessions:b.tabletSessions}}).sort((a,b)=>a.year!==b.year?b.year-a.year:b.month-a.month)}catch(a){return[]}}static async getMonthlySummary(a,d){let e=this.getMonthlyDocId(a,d),f=(0,b.doc)(c.db,"analytics_monthly",e),g=await (0,b.getDoc)(f);if(!g.exists())return null;let h=g.data();return{year:h.year,month:h.month,totalEvents:h.totalEvents||0,totalSignups:h.totalSignups||0,totalLogins:h.totalLogins||0,totalFeatureEngagements:h.totalFeatureEngagements||0,uniqueUsers:h.uniqueUsers||0,pageViews:h.pageViews||{},countries:h.countries||{},cities:h.cities||{},browsers:h.browsers||{},featureEngagements:h.featureEngagements||{},songAccesses:h.songAccesses||{},updatedAt:h.updatedAt,createdAt:h.createdAt,totalSessions:h.totalSessions,totalPageViews:h.totalPageViews,desktopSessions:h.desktopSessions,mobileSessions:h.mobileSessions,tabletSessions:h.tabletSessions}}static async refreshMonth(a,b){try{let c=await fetch("/api/analytics/migrate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({year:a,month:b})}),d=await c.json();return{success:d.success,message:d.message||d.error}}catch(a){return{success:!1,message:a instanceof Error?a.message:"Unknown error"}}}static async migrateAllData(){try{let a=await fetch("/api/analytics/migrate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({autoDetect:!0})}),b=await a.json();return{success:b.success,message:b.message||b.error}}catch(a){return{success:!1,message:a instanceof Error?a.message:"Unknown error"}}}}}];
+module.exports = [
+"[project]/src/lib/analytics-aggregation-service.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AnalyticsAggregationService",
+    ()=>AnalyticsAggregationService
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$firestore$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/firebase/firestore/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/firebase/node_modules/@firebase/firestore/dist/index.node.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/firebase-setup.ts [app-ssr] (ecmascript)");
+;
+;
+class AnalyticsAggregationService {
+    static getMonthlyDocId(year, month) {
+        return `${year}-${String(month + 1).padStart(2, '0')}`;
+    }
+    static async getOrCreateMonthlySummary(year, month) {
+        const docId = this.getMonthlyDocId(year, month);
+        const docRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["doc"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'analytics_monthly', docId);
+        const docSnap = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getDoc"])(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            // Migrate old data structure to new structure if needed
+            const migratedSummary = {
+                year: data.year,
+                month: data.month,
+                totalEvents: data.totalEvents || 0,
+                totalSignups: data.totalSignups || 0,
+                totalLogins: data.totalLogins || 0,
+                totalFeatureEngagements: data.totalFeatureEngagements || 0,
+                uniqueUsers: data.uniqueUsers || 0,
+                pageViews: data.pageViews || {},
+                countries: data.countries || {},
+                cities: data.cities || {},
+                browsers: data.browsers || {},
+                featureEngagements: data.featureEngagements || {},
+                songAccesses: data.songAccesses || {},
+                updatedAt: data.updatedAt || new Date(),
+                createdAt: data.createdAt || new Date(),
+                // Keep old fields for compatibility
+                totalSessions: data.totalSessions,
+                totalPageViews: data.totalPageViews,
+                desktopSessions: data.desktopSessions,
+                mobileSessions: data.mobileSessions,
+                tabletSessions: data.tabletSessions
+            };
+            return migratedSummary;
+        }
+        const newSummary = {
+            year,
+            month,
+            totalEvents: 0,
+            totalSignups: 0,
+            totalLogins: 0,
+            totalFeatureEngagements: 0,
+            uniqueUsers: 0,
+            pageViews: {},
+            countries: {},
+            cities: {},
+            browsers: {},
+            featureEngagements: {},
+            songAccesses: {},
+            updatedAt: new Date(),
+            createdAt: new Date()
+        };
+        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setDoc"])(docRef, newSummary);
+        return newSummary;
+    }
+    static async incrementEvent(timestamp, eventType, page, featureName, songId) {
+        const date = new Date(timestamp);
+        const docId = this.getMonthlyDocId(date.getFullYear(), date.getMonth());
+        const docRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["doc"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'analytics_monthly', docId);
+        try {
+            const updates = {
+                totalEvents: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1),
+                updatedAt: new Date()
+            };
+            switch(eventType){
+                case 'signup':
+                    updates.totalSignups = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    break;
+                case 'login':
+                    updates.totalLogins = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    break;
+                case 'feature_engagement':
+                    updates.totalFeatureEngagements = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    if (page) {
+                        updates[`pageViews.${page.replace(/\//g, '_')}`] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    }
+                    if (featureName) {
+                        updates[`featureEngagements.${featureName.replace(/\//g, '_')}`] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    }
+                    if (songId) {
+                        updates[`songAccesses.${songId.replace(/\//g, '_')}`] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["increment"])(1);
+                    }
+                    break;
+            }
+            await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["updateDoc"])(docRef, updates);
+        } catch (error) {
+            await this.getOrCreateMonthlySummary(date.getFullYear(), date.getMonth());
+            await this.incrementEvent(timestamp, eventType, page, featureName, songId);
+        }
+    }
+    static async getAllMonthlySummaries() {
+        try {
+            const snapshot = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getDocs"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["collection"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'analytics_monthly'));
+            const summaries = snapshot.docs.map((doc)=>{
+                const data = doc.data();
+                // Migrate old data structure to new structure if needed
+                return {
+                    year: data.year,
+                    month: data.month,
+                    totalEvents: data.totalEvents || 0,
+                    totalSignups: data.totalSignups || 0,
+                    totalLogins: data.totalLogins || 0,
+                    totalFeatureEngagements: data.totalFeatureEngagements || 0,
+                    uniqueUsers: data.uniqueUsers || 0,
+                    pageViews: data.pageViews || {},
+                    countries: data.countries || {},
+                    cities: data.cities || {},
+                    browsers: data.browsers || {},
+                    featureEngagements: data.featureEngagements || {},
+                    songAccesses: data.songAccesses || {},
+                    updatedAt: data.updatedAt || new Date(),
+                    createdAt: data.createdAt || new Date(),
+                    // Keep old fields for compatibility
+                    totalSessions: data.totalSessions,
+                    totalPageViews: data.totalPageViews,
+                    desktopSessions: data.desktopSessions,
+                    mobileSessions: data.mobileSessions,
+                    tabletSessions: data.tabletSessions
+                };
+            });
+            return summaries.sort((a, b)=>{
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            });
+        } catch (error) {
+            console.error('Error fetching monthly summaries:', error);
+            return [];
+        }
+    }
+    static async getMonthlySummary(year, month) {
+        const docId = this.getMonthlyDocId(year, month);
+        const docRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["doc"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$firebase$2d$setup$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["db"], 'analytics_monthly', docId);
+        const docSnap = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$firebase$2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$node$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getDoc"])(docRef);
+        if (!docSnap.exists()) return null;
+        const data = docSnap.data();
+        // Ensure the data has the new structure, migrate old data if needed
+        const summary = {
+            year: data.year,
+            month: data.month,
+            totalEvents: data.totalEvents || 0,
+            totalSignups: data.totalSignups || 0,
+            totalLogins: data.totalLogins || 0,
+            totalFeatureEngagements: data.totalFeatureEngagements || 0,
+            uniqueUsers: data.uniqueUsers || 0,
+            pageViews: data.pageViews || {},
+            countries: data.countries || {},
+            cities: data.cities || {},
+            browsers: data.browsers || {},
+            featureEngagements: data.featureEngagements || {},
+            songAccesses: data.songAccesses || {},
+            updatedAt: data.updatedAt,
+            createdAt: data.createdAt,
+            // Ensure old fields are handled properly for compatibility
+            totalSessions: data.totalSessions,
+            totalPageViews: data.totalPageViews,
+            desktopSessions: data.desktopSessions,
+            mobileSessions: data.mobileSessions,
+            tabletSessions: data.tabletSessions
+        };
+        return summary;
+    }
+    static async refreshMonth(year, month) {
+        try {
+            const response = await fetch('/api/analytics/migrate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    year,
+                    month
+                })
+            });
+            const result = await response.json();
+            return {
+                success: result.success,
+                message: result.message || result.error
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
+    static async migrateAllData() {
+        try {
+            const response = await fetch('/api/analytics/migrate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    autoDetect: true
+                })
+            });
+            const result = await response.json();
+            return {
+                success: result.success,
+                message: result.message || result.error
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
+    }
+}
+}),
+];
 
 //# sourceMappingURL=src_lib_analytics-aggregation-service_ts_10566f12._.js.map

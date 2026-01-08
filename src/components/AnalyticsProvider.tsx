@@ -13,7 +13,7 @@ export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
 
   useEffect(() => {
     // Track feature engagement when pathname changes
-    trackFeatureEngagement('page_navigation', pathname);
+    trackFeatureEngagement('page_navigation', pathname || '');
   }, [pathname]);
 
   return <>{children}</>;
