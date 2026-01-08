@@ -581,12 +581,42 @@ function ProfilePage() {
       console.log('✅ Left zone successfully')
       alert(`You have left ${zoneToLeave.name}. The page will reload.`)
       
-      // Clear any cached zone data from localStorage
-      localStorage.removeItem('currentZoneId')
-      localStorage.removeItem('zoneCache')
+      // Clear ALL zone-related caches comprehensively
+      try {
+        // Clear user zone preference
+        localStorage.removeItem(`lwsrh-user-zone-${user.uid}`)
+        
+        // Clear main zone cache
+        localStorage.removeItem('lwsrh-zone-cache-v6')
+        localStorage.removeItem('lwsrh-zone-cache-v5')
+        
+        // Clear legacy zone keys
+        localStorage.removeItem('currentZoneId')
+        localStorage.removeItem('zoneCache')
+        
+        // Clear all zone-specific data caches (calendar, media, etc)
+        const keysToRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (
+            key.startsWith('calendar-cache-') ||
+            key.startsWith('media-cache-') ||
+            key.startsWith('lwsrh-media-') ||
+            key.startsWith('birthday-cache-') ||
+            key.includes('-zone-') ||
+            key.includes('Zone')
+          )) {
+            keysToRemove.push(key)
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k))
+        console.log('🗑️ Cleared', keysToRemove.length + 5, 'zone-related caches')
+      } catch (cacheError) {
+        console.error('Error clearing caches:', cacheError)
+      }
       
-      // Force a hard reload to clear all state
-      window.location.href = '/pages/profile'
+      // Force a hard reload with cache bypass to ensure fresh data
+      window.location.href = '/pages/profile?refresh=' + Date.now()
     } catch (error) {
       console.error('❌ Leave zone error:', error)
       alert(`Failed to leave zone: ${error instanceof Error ? error.message : 'Please try again.'}`)

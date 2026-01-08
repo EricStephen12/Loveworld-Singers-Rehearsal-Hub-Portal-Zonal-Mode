@@ -263,6 +263,11 @@ function PraiseNightPageContent() {
         const songIndex = allSongsFromFirebase.indexOf(targetSong);
         handleSongClick(targetSong, songIndex);
         console.log('🎯 Opened song from search:', targetSong.title);
+        
+        // Remove song parameter from URL after opening modal to prevent re-opening on close
+        const url = new URL(window.location.href);
+        url.searchParams.delete('song');
+        window.history.replaceState({}, '', url.toString());
       }
     }
   }, [songParam, currentPraiseNight, allSongsFromFirebase]);
@@ -542,6 +547,13 @@ function PraiseNightPageContent() {
   const handleCloseSongDetail = () => {
     setIsSongDetailOpen(false);
     setSelectedSong(null);
+
+    // Clean up URL parameters if they exist (from global search)
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('song')) {
+      url.searchParams.delete('song');
+      window.history.replaceState({}, '', url.toString());
+    }
 
     // Dispatch event to show mini player (if song is playing)
     window.dispatchEvent(new CustomEvent('songDetailClose'));

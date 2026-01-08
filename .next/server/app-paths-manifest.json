@@ -1,11 +1,11 @@
 {
-  "/admin/page": "app/admin/page.js",
+  "/api/countdown/route": "app/api/countdown/route.js",
   "/auth/page": "app/auth/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/home/page": "app/home/page.js",
   "/page": "app/page.js",
-  "/pages/calendar/page": "app/pages/calendar/page.js",
-  "/pages/groups/page": "app/pages/groups/page.js",
-  "/pages/notifications/page": "app/pages/notifications/page.js",
-  "/subscription/page": "app/subscription/page.js"
+  "/pages/join-zone/page": "app/pages/join-zone/page.js",
+  "/pages/praise-night/page": "app/pages/praise-night/page.js",
+  "/pages/profile/page": "app/pages/profile/page.js",
+  "/pages/rehearsals/page": "app/pages/rehearsals/page.js"
 }
