@@ -155,6 +155,12 @@ export default function RootLayout({
         
         {/* Cloudinary Upload Widget */}
         <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
+        
+        {/* Android WebView Notification Bridge */}
+        <script src="/android-notification-bridge.js"></script>
+        
+        {/* Firebase Cloud Messaging Handler for Android */}
+        <script src="/fcm-handler.js"></script>
       </head>
       <body className="font-sans">
         {isProduction && (
