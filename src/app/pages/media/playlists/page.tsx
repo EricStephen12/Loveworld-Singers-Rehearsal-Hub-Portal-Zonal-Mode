@@ -104,7 +104,7 @@ export default function PlaylistsPage() {
             <ListVideo className="w-10 h-10 text-gray-500" />
           </div>
           <h3 className="text-lg font-medium mb-2">Sign in to view playlists</h3>
-          <p className="text-gray-400 text-sm text-center mb-6">Create playlists, save videos, and access your liked videos</p>
+          <p className="text-gray-400 text-sm text-center mb-4">Save your favorite videos</p>
           <button onClick={() => router.push('/auth')} className="px-6 py-2.5 bg-white text-black rounded-full font-medium hover:bg-gray-200">
             Sign In
           </button>
@@ -225,8 +225,8 @@ export default function PlaylistsPage() {
               <div className="w-16 h-16 bg-[#272727] rounded-full flex items-center justify-center mb-4">
                 <Plus className="w-8 h-8 text-gray-500" />
               </div>
-              <h3 className="text-base font-medium mb-1">Create your first playlist</h3>
-              <p className="text-gray-400 text-sm text-center mb-4">Organize your favorite videos and playlists</p>
+              <h3 className="text-base font-medium mb-1">No playlists yet</h3>
+              <p className="text-gray-400 text-sm text-center mb-4">Create one to save videos</p>
               <button onClick={() => setShowCreateModal(true)} className="px-5 py-2.5 bg-white text-black rounded-full font-medium hover:bg-gray-200 text-sm">
                 Create playlist
               </button>

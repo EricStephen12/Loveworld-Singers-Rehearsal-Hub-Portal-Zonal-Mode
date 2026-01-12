@@ -36,7 +36,7 @@ function HomePageContent() {
     'nnennawealth@gmail.com'
   ].includes(profile.email.toLowerCase())
   
-  const { currentZone, isLoading: zoneLoading, isZoneCoordinator } = useZone()
+  const { currentZone, isLoading: zoneLoading, isZoneCoordinator, refreshZones } = useZone()
   const { hasFeature } = useSubscription()
   const { hasUnread: hasUnreadNotifications, hasNewMedia, hasNewCalendar, unreadCount: chatUnreadCount, markMediaSeen, markCalendarSeen } = useUnreadNotifications()
   
@@ -45,6 +45,8 @@ function HomePageContent() {
   const shouldShowLoading = zoneLoading && !currentZone
   
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -53,6 +55,32 @@ function HomePageContent() {
     
     return () => clearTimeout(timer);
   }, []);  
+
+  // Auto-retry loading zone if it fails (up to 2 times)
+  useEffect(() => {
+    if (!zoneLoading && !currentZone && user && initialLoadComplete && retryCount < 2) {
+      const retryTimer = setTimeout(() => {
+        console.log('🔄 Auto-retrying zone load, attempt:', retryCount + 1);
+        setRetryCount(prev => prev + 1);
+        if (refreshZones) {
+          refreshZones();
+        }
+      }, 1500);
+      return () => clearTimeout(retryTimer);
+    }
+  }, [zoneLoading, currentZone, user, initialLoadComplete, retryCount, refreshZones]);
+
+  const handleRetryZoneLoad = async () => {
+    setIsRetrying(true);
+    setRetryCount(0);
+    if (refreshZones) {
+      await refreshZones();
+    }
+    // Give it time to load
+    setTimeout(() => {
+      setIsRetrying(false);
+    }, 2000);
+  };
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)  
@@ -364,28 +392,54 @@ function HomePageContent() {
   // Zone data is cached, so this should be instant most of the time
   // Only show loading if we're truly loading AND have no zone data at all
 
-  // Show join zone prompt if user has no zone (after loading completes)
+  // Show join zone prompt if user has no zone (after loading completes and retries exhausted)
   if (!zoneLoading && !currentZone && user && initialLoadComplete) {
+    // If still retrying or haven't exhausted retries, show loading/retry screen
+    if (isRetrying || retryCount < 2) {
+      return (
+        <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-4">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-6"></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading your zone...</h2>
+            <p className="text-gray-500 text-sm">Please wait while we connect</p>
+          </div>
+        </div>
+      )
+    }
+    
+    // After retries exhausted, show options
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Users className="w-10 h-10 text-amber-600" />
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-amber-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Join a Zone</h2>
-          <p className="text-gray-600 mb-6">
-            You're not part of any zone yet. Enter your zone invitation code to join your LoveWorld Singers zone.
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Can't connect</h2>
+          <p className="text-gray-500 text-sm mb-5">Check your connection and try again</p>
+          
+          {/* Primary action - Retry */}
+          <button 
+            onClick={handleRetryZoneLoad}
+            disabled={isRetrying}
+            className="w-full mb-3 inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium rounded-xl transition-colors"
+          >
+            {isRetrying ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Retrying...
+              </>
+            ) : (
+              'Retry'
+            )}
+          </button>
+          
+          {/* Secondary action - Join Zone */}
           <Link 
             href="/pages/join-zone"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 text-purple-600 font-medium rounded-xl hover:bg-purple-50 transition-colors"
           >
-            <Users className="w-5 h-5" />
             Join a Zone
           </Link>
-          <p className="text-sm text-gray-500 mt-4">
-            Don't have a code? Contact your zone coordinator.
-          </p>
         </div>
       </div>
     )

@@ -243,8 +243,8 @@ export default function AdminPlaylistDetailPage() {
                 <div className="w-20 h-20 bg-[#272727] rounded-full flex items-center justify-center mb-4">
                   <ListVideo className="w-10 h-10 text-gray-500" />
                 </div>
-                <h3 className="text-lg font-medium mb-1">This playlist is empty</h3>
-                <p className="text-gray-400 text-sm text-center">No videos or playlists added yet</p>
+                <h3 className="text-lg font-medium mb-1">Empty playlist</h3>
+                <p className="text-gray-400 text-sm text-center">No content yet</p>
               </div>
             )}
           </div>

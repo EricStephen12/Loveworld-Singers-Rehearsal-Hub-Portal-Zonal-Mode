@@ -27,7 +27,7 @@ interface DisplayPlaylist {
 export default function MediaPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
-  const { currentZone } = useZone()
+  const { currentZone, isLoading: zoneLoading } = useZone()
   const { isLoading, refreshMedia } = useMedia()
   const { markMediaSeen } = useUnreadNotifications()
   const [searchQuery, setSearchQuery] = useState('')
@@ -36,6 +36,7 @@ export default function MediaPage() {
   const [categories, setCategories] = useState<MediaCategory[]>([])
   const [allPlaylists, setAllPlaylists] = useState<DisplayPlaylist[]>([])
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
 
   // Mark media as seen when page loads
   useEffect(() => {
@@ -60,11 +61,17 @@ export default function MediaPage() {
     loadCats()
   }, [])
 
-  // Load public playlists (both admin and user playlists)
+  // Load public playlists - don't wait for zone, load immediately
+  // Big companies like YouTube/Netflix show content first, then personalize
   useEffect(() => {
     const loadPlaylists = async () => {
-      try {
+      // Don't show loading spinner on subsequent loads
+      if (!hasLoadedOnce) {
         setIsLoadingPlaylists(true)
+      }
+      
+      try {
+        // Default to showing all content (HQ=true) if zone not loaded yet
         const isHQ = currentZone ? isHQGroup(currentZone.id) : true
         
         // Load both admin and user public playlists
@@ -96,22 +103,28 @@ export default function MediaPage() {
         
         // Combine: admin playlists first
         setAllPlaylists([...adminDisplay, ...userDisplay])
+        setHasLoadedOnce(true)
       } catch (e) {
         console.error('Error loading public playlists:', e)
       } finally {
         setIsLoadingPlaylists(false)
       }
     }
+    
+    // Load immediately on mount, then reload when zone changes
     loadPlaylists()
-  }, [currentZone])
+  }, [currentZone?.id]) // Only depend on zone ID, not the whole object
 
   // Refresh on mount
   useEffect(() => {
     refreshMedia()
   }, [])
 
-  // Show loading only while auth is checking AND we have no cached profile (like groups page)
-  if (authLoading && !profile) {
+  // Show loading only on first visit with no data
+  // Don't block on auth or zone - show content immediately like YouTube does
+  const showInitialLoading = isLoadingPlaylists && !hasLoadedOnce && allPlaylists.length === 0
+  
+  if (showInitialLoading) {
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
         <div className="text-center">
@@ -122,8 +135,8 @@ export default function MediaPage() {
     )
   }
 
-  // If we have cached profile, show content even if user is still loading
-  // This prevents blank screen on revisits
+  // Show content immediately - no auth/zone blocking
+  // Users can browse media without being signed in (like YouTube)
 
   // Create category map for efficient lookup
   const categoryMap = useMemo(() => {
@@ -224,7 +237,7 @@ export default function MediaPage() {
 
       {/* Playlist Grid */}
       <div className="p-4 pb-6">
-          {isLoading || isLoadingPlaylists ? (
+          {(isLoading || isLoadingPlaylists) && allPlaylists.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="animate-pulse">

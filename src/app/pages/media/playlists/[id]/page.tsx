@@ -304,8 +304,8 @@ export default function PlaylistDetailPage() {
                 <div className="w-16 h-16 bg-[#272727] rounded-full flex items-center justify-center mb-4">
                   <ListVideo className="w-8 h-8 text-gray-500" />
                 </div>
-                <h3 className="text-base font-medium mb-1">This playlist is empty</h3>
-                <p className="text-gray-400 text-sm text-center">Add videos or playlists to get started</p>
+                <h3 className="text-base font-medium mb-1">Empty playlist</h3>
+                <p className="text-gray-400 text-sm text-center">Add videos to get started</p>
               </div>
             )}
           </div>
@@ -364,8 +364,7 @@ export default function PlaylistDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">No playlists available to add</p>
-                  <p className="text-xs mt-1">Create more playlists first</p>
+                  <p className="text-sm">No playlists to add</p>
                 </div>
               )}
             </div>

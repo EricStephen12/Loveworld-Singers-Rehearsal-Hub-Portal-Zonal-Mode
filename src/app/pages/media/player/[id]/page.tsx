@@ -294,8 +294,8 @@ export default function PlayerPage() {
             className="flex items-center gap-3 px-4 py-3 bg-[#272727] text-white rounded-xl shadow-lg border border-white/10 cursor-pointer"
             onClick={() => router.push('/auth')}
           >
-            <span className="text-sm">Sign in to like, save, and comment</span>
-            <span className="text-xs text-blue-400 font-medium">Sign In →</span>
+            <span className="text-sm">Sign in to interact</span>
+            <span className="text-xs text-blue-400 font-medium">Sign In</span>
           </div>
         </div>
       )}
