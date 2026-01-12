@@ -427,12 +427,18 @@ export default function MediaUploadSection() {
         ) : (
           <div className="space-y-3">
             {filteredPlaylists.map(playlist => (
-              <div key={playlist.id} onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md cursor-pointer">
+              <div key={playlist.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div 
+                    onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }}
+                    className="w-20 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                  >
                     {getPlaylistThumb(playlist) ? <img src={getPlaylistThumb(playlist)} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ListVideo className="w-6 h-6 text-gray-300" /></div>}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div 
+                    onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }}
+                    className="flex-1 min-w-0 cursor-pointer"
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 line-clamp-1">{playlist.name}</h3>
                       {playlist.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
@@ -440,7 +446,29 @@ export default function MediaUploadSection() {
                     </div>
                     <p className="text-sm text-gray-500">{playlist.videoIds.length} videos</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleEditPlaylist(playlist) }} 
+                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'playlist', id: playlist.id, name: playlist.name }) }} 
+                      className="p-2 hover:bg-red-50 rounded-lg"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                    <button
+                      onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }}
+                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      title="View"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -649,10 +677,10 @@ export default function MediaUploadSection() {
                 <p className="text-sm text-gray-500">{selectedPlaylist.videoIds.length} videos in this playlist</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEditPlaylist(selectedPlaylist)} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
+                <button onClick={(e) => { e.stopPropagation(); handleEditPlaylist(selectedPlaylist) }} className="p-2 hover:bg-gray-100 rounded-lg" title="Edit">
                   <Edit2 className="w-5 h-5 text-gray-500" />
                 </button>
-                <button onClick={() => setDeleteConfirm({ type: 'playlist', id: selectedPlaylist.id, name: selectedPlaylist.name })} className="p-2 hover:bg-red-50 rounded-lg" title="Delete">
+                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'playlist', id: selectedPlaylist.id, name: selectedPlaylist.name }) }} className="p-2 hover:bg-red-50 rounded-lg" title="Delete">
                   <Trash2 className="w-5 h-5 text-red-500" />
                 </button>
               </div>

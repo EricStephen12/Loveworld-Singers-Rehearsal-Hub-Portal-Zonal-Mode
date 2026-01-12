@@ -294,6 +294,19 @@ export default function AdminPage() {
       return
     }
 
+    // Blocklist - users who should never have admin access even if they're coordinators
+    const BLOCKED_ADMIN_EMAILS = [
+      'lliamzelvin@gmail.com'
+    ]
+    
+    const isBlocked = Boolean(profile?.email && BLOCKED_ADMIN_EMAILS.includes(profile.email.toLowerCase()))
+    
+    if (isBlocked) {
+      console.log('❌ User is blocked from admin access:', profile?.email)
+      router.push('/home')
+      return
+    }
+
     // Check if user has admin access (zone coordinator OR HQ admin)
     const isHQAdminCheck = Boolean(profile?.email && [
       'ihenacho23@gmail.com', 
