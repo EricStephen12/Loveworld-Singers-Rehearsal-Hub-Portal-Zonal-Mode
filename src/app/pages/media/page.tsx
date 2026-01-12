@@ -120,6 +120,29 @@ export default function MediaPage() {
     refreshMedia()
   }, [])
 
+  // Create category map for efficient lookup - must be before any early returns
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>()
+    categories.forEach(cat => map.set(cat.slug, cat.name))
+    return map
+  }, [categories])
+
+  // Filter playlists by category and search - must be before any early returns
+  const filteredPlaylists = useMemo(() => {
+    let filtered = allPlaylists
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(playlist => playlist.type === selectedCategory)
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(playlist =>
+        playlist.name.toLowerCase().includes(query) ||
+        playlist.description?.toLowerCase().includes(query)
+      )
+    }
+    return filtered
+  }, [allPlaylists, selectedCategory, searchQuery])
+
   // Show loading only on first visit with no data
   // Don't block on auth or zone - show content immediately like YouTube does
   const showInitialLoading = isLoadingPlaylists && !hasLoadedOnce && allPlaylists.length === 0
@@ -137,29 +160,6 @@ export default function MediaPage() {
 
   // Show content immediately - no auth/zone blocking
   // Users can browse media without being signed in (like YouTube)
-
-  // Create category map for efficient lookup
-  const categoryMap = useMemo(() => {
-    const map = new Map<string, string>()
-    categories.forEach(cat => map.set(cat.slug, cat.name))
-    return map
-  }, [categories])
-
-  // Filter playlists by category and search
-  const filteredPlaylists = useMemo(() => {
-    let filtered = allPlaylists
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(playlist => playlist.type === selectedCategory)
-    }
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(playlist =>
-        playlist.name.toLowerCase().includes(query) ||
-        playlist.description?.toLowerCase().includes(query)
-      )
-    }
-    return filtered
-  }, [allPlaylists, selectedCategory, searchQuery])
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
