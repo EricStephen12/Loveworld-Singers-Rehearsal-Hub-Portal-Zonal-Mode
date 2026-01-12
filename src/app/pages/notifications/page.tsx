@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { 
   Bell, Users, Building2, ArrowLeft, Calendar, 
   Mic, Gift, Image, RefreshCw, Music, MessageCircle,
-  ChevronRight, Clock, Trash2
+  ChevronRight, Clock, Trash2, AlertCircle
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import ScreenHeader from '@/components/ScreenHeader'
@@ -15,6 +15,7 @@ import { BirthdayService } from '@/app/pages/calendar/_lib/birthday-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
+import { isHQGroup } from '@/config/zones'
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
@@ -47,7 +48,7 @@ interface CombinedNotification {
 }
 
 // Filter tabs
-const FILTER_TABS: { id: string; label: string; icon: any }[] = [
+const FILTER_TABS: { id: string; label: string; icon: React.ElementType }[] = [
   { id: 'all', label: 'All', icon: Bell },
   { id: 'chat', label: 'Chats', icon: MessageCircle },
   { id: 'zone', label: 'Zone', icon: Building2 },
@@ -59,18 +60,25 @@ const FILTER_TABS: { id: string; label: string; icon: any }[] = [
 
 type FilterType = string
 
+// Simple cache for notifications
+const notificationCache = new Map<string, { data: CombinedNotification[]; timestamp: number }>()
+const CACHE_TTL = 30000 // 30 seconds
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<CombinedNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<FilterType>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { user, profile } = useAuth()
   const { currentZone, isLoading: zoneLoading } = useZone()
   const { markAsSeen } = useUnreadNotifications()
   
   const zoneColor = currentZone?.themeColor || '#9333EA'
+  const userId = user?.uid || profile?.id
+  const userEmail = user?.email || profile?.email
 
   // Mark notifications as seen when page loads
   useEffect(() => {
@@ -81,381 +89,278 @@ export default function NotificationsPage() {
   const handleDelete = async (notif: CombinedNotification, e: React.MouseEvent) => {
     e.stopPropagation()
     setDeletingId(notif.id)
+    setError(null)
     
     try {
-      // Extract the real ID (remove prefix like 'zone-', 'chat-', etc.)
       const parts = notif.id.split('-')
       const realId = parts.slice(1).join('-')
       
-      console.log('[Notifications] Deleting:', notif.type, realId)
-      
-      if (notif.type === 'zone') {
-        // Zone messages - only admins should delete these, but we can hide locally
-        // For now just remove from local state (zone messages are shared)
-        console.log('[Notifications] Zone message - removing locally only')
-      } else if (notif.type === 'subgroup') {
-        // Subgroup notifications - delete from user_notifications
+      if (notif.type === 'subgroup') {
         await deleteDoc(doc(db, 'user_notifications', realId))
-        console.log('[Notifications] Deleted subgroup notification from Firebase')
       } else if (notif.type === 'song') {
-        // Song notifications - mark as read (or delete)
         await deleteDoc(doc(db, 'song_notifications', realId))
-        console.log('[Notifications] Deleted song notification from Firebase')
-      } else if (notif.type === 'chat') {
-        // Chat notifications - reset unread count for this user
-        const userId = user?.uid || profile?.id
-        if (userId && realId) {
-          await updateDoc(doc(db, 'chats_v2', realId), {
-            [`unreadCount.${userId}`]: 0
-          })
-          console.log('[Notifications] Reset chat unread count')
-        }
-      } else if (notif.type === 'audiolab') {
-        // AudioLab - can't really delete invite, just hide locally
-        console.log('[Notifications] AudioLab invite - removing locally only')
-      } else if (notif.type === 'calendar') {
-        // Calendar events - these are derived, just hide locally
-        console.log('[Notifications] Calendar event - removing locally only')
-      } else if (notif.type === 'media') {
-        // Media notifications - these are derived, just hide locally
-        console.log('[Notifications] Media notification - removing locally only')
+      } else if (notif.type === 'chat' && userId && realId) {
+        await updateDoc(doc(db, 'chats_v2', realId), {
+          [`unreadCount.${userId}`]: 0
+        })
       }
+      // For zone, audiolab, calendar, media, birthday - just remove locally
       
-      // Remove from local state
       setNotifications(prev => prev.filter(n => n.id !== notif.id))
-    } catch (error) {
-      console.error('[Notifications] Error deleting notification:', error)
+      // Clear cache
+      if (currentZone?.id && userId) {
+        notificationCache.delete(`${currentZone.id}-${userId}`)
+      }
+    } catch (err) {
+      console.error('[Notifications] Error deleting:', err)
+      setError('Failed to delete notification')
     } finally {
       setDeletingId(null)
     }
   }
 
-  const loadNotifications = useCallback(async (showRefresh = false) => {
-    const userId = user?.uid || profile?.id
+  // Load all notification types in parallel
+  const loadNotifications = useCallback(async (showRefresh = false, bypassCache = false) => {
     if (!currentZone?.id || !userId) {
       setLoading(false)
       return
     }
     
+    // Check cache first
+    const cacheKey = `${currentZone.id}-${userId}`
+    if (!bypassCache && !showRefresh) {
+      const cached = notificationCache.get(cacheKey)
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        setNotifications(cached.data)
+        setLoading(false)
+        return
+      }
+    }
+    
     if (showRefresh) setRefreshing(true)
     else setLoading(true)
+    setError(null)
     
     try {
+      const isHQ = isHQGroup(currentZone.id)
+      const now = new Date()
+      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      
+      // Run all queries in parallel
+      const [
+        zoneMessages,
+        subGroupNotifs,
+        audiolabProjects,
+        calendarEvents,
+        mediaNotifs,
+        songNotifs,
+        birthdays,
+        chatNotifs
+      ] = await Promise.allSettled([
+        // 1. Zone messages
+        getAllMessages(currentZone.id).catch(() => []),
+        
+        // 2. Sub-group notifications
+        SubGroupDatabaseService.getUserNotifications(userId, 50).catch(async () => {
+          // Fallback query
+          try {
+            const q = query(collection(db, 'user_notifications'), where('userId', '==', userId), limit(50))
+            const snapshot = await getDocs(q)
+            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+          } catch { return [] }
+        }),
+        
+        // 3. AudioLab projects
+        (async () => {
+          try {
+            const q = query(collection(db, 'audiolab_projects'), where('collaborators', 'array-contains', userId), limit(20))
+            const snapshot = await getDocs(q)
+            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+          } catch {
+            // Fallback to sharedWith
+            try {
+              const q2 = query(collection(db, 'audiolab_projects'), where('sharedWith', 'array-contains', userId), limit(20))
+              const snapshot2 = await getDocs(q2)
+              return snapshot2.docs.map(d => ({ id: d.id, ...d.data() }))
+            } catch { return [] }
+          }
+        })(),
+        
+        // 4. Calendar events (combined query)
+        (async () => {
+          const events: any[] = []
+          const collections = ['upcoming_events', 'calendar_events', 'zone_praise_nights']
+          await Promise.all(collections.map(async (col) => {
+            try {
+              const q = query(collection(db, col), where('zoneId', '==', currentZone.id), limit(20))
+              const snapshot = await getDocs(q)
+              snapshot.docs.forEach(d => events.push({ id: d.id, collection: col, ...d.data() }))
+            } catch {}
+          }))
+          return events
+        })(),
+        
+        // 5. Media notifications
+        (async () => {
+          const media: any[] = []
+          try {
+            const vq = query(collection(db, 'media_videos'), where('forHQ', '==', isHQ), limit(30))
+            const vs = await getDocs(vq)
+            vs.docs.forEach(d => media.push({ id: d.id, type: 'video', ...d.data() }))
+          } catch {}
+          try {
+            const pq = query(collection(db, 'admin_playlists'), where('isPublic', '==', true), limit(20))
+            const ps = await getDocs(pq)
+            ps.docs.forEach(d => {
+              const data = d.data()
+              if (data.forHQ === isHQ || data.forHQ === undefined) {
+                media.push({ id: d.id, type: 'playlist', ...data })
+              }
+            })
+          } catch {}
+          return media
+        })(),
+        
+        // 6. Song notifications
+        userEmail ? getUserSongNotifications(userEmail).catch(() => []) : Promise.resolve([]),
+        
+        // 7. Birthdays
+        BirthdayService.getTodayAndUpcomingBirthdays().catch(() => []),
+        
+        // 8. Chat notifications (show recent, not just unread)
+        (async () => {
+          try {
+            const q = query(collection(db, 'chats_v2'), where('participants', 'array-contains', userId), limit(50))
+            const snapshot = await getDocs(q)
+            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+          } catch { return [] }
+        })()
+      ])
+
       const allNotifications: CombinedNotification[] = []
       
-      // 1. Zone messages
-      try {
-        const zoneMessages = await getAllMessages(currentZone.id)
-        zoneMessages.forEach(msg => {
+      // Process zone messages
+      if (zoneMessages.status === 'fulfilled') {
+        (zoneMessages.value as any[]).forEach(msg => {
           allNotifications.push({
             id: `zone-${msg.id}`, title: msg.title, message: msg.message,
             sentBy: msg.sentBy, sentAt: msg.sentAt, type: 'zone'
           })
         })
-      } catch (e) { console.error('Zone messages error:', e) }
+      }
       
-      // 2. Sub-group notifications - handle potential index issues
-      try {
-        const subGroupNotifs = await SubGroupDatabaseService.getUserNotifications(userId, 50)
-        subGroupNotifs.forEach(notif => {
+      // Process subgroup notifications
+      if (subGroupNotifs.status === 'fulfilled') {
+        (subGroupNotifs.value as any[]).forEach(notif => {
           allNotifications.push({
-            id: `subgroup-${notif.id}`, title: notif.title, message: notif.message,
-            sentAt: notif.createdAt?.toISOString?.() || new Date().toISOString(),
-            type: 'subgroup', subGroupName: notif.subGroupName, read: notif.read
+            id: `subgroup-${notif.id}`, 
+            title: notif.title || 'Notification', 
+            message: notif.message || '',
+            sentAt: notif.createdAt?.toISOString?.() || notif.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            type: 'subgroup', 
+            subGroupName: notif.subGroupName, 
+            read: notif.read
           })
         })
-      } catch (e) { 
-        console.error('Subgroup notifications error:', e)
-        // Fallback: try simpler query without orderBy
-        try {
-          const notificationsRef = collection(db, 'user_notifications')
-          const q = query(notificationsRef, where('userId', '==', userId), limit(50))
-          const snapshot = await getDocs(q)
-          snapshot.docs.forEach(docSnap => {
-            const data = docSnap.data()
-            allNotifications.push({
-              id: `subgroup-${docSnap.id}`, 
-              title: data.title || 'Notification', 
-              message: data.message || '',
-              sentAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-              type: 'subgroup', 
-              subGroupName: data.subGroupName, 
-              read: data.read
-            })
-          })
-        } catch (fallbackError) {
-          console.log('Subgroup fallback also failed:', fallbackError)
-        }
       }
       
-      // 3. AudioLab invites - check projects where user is collaborator
-      try {
-        console.log('[Notifications] Loading AudioLab notifications for user:', userId)
-        const projectsRef = collection(db, 'audiolab_projects')
-        
-        // Try with collaborators array-contains
-        try {
-          const q = query(projectsRef, where('collaborators', 'array-contains', userId), limit(20))
-          const snapshot = await getDocs(q)
-          console.log('[Notifications] Found', snapshot.docs.length, 'audiolab projects with collaborators')
-          
-          snapshot.docs.forEach(docSnap => {
-            const project = docSnap.data()
-            if (project.ownerId !== userId) {
-              allNotifications.push({
-                id: `audiolab-${docSnap.id}`, 
-                title: 'Studio Collaboration',
-                message: `You've been invited to collaborate on "${project.name || 'Untitled Project'}"`,
-                sentAt: project.updatedAt?.toDate?.()?.toISOString() || project.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-                type: 'audiolab', 
-                projectId: docSnap.id, 
-                projectName: project.name
-              })
-            }
-          })
-        } catch (collabError) {
-          console.log('[Notifications] Collaborators query failed, trying sharedWith:', collabError)
-          // Fallback: try sharedWith field
-          const q2 = query(projectsRef, where('sharedWith', 'array-contains', userId), limit(20))
-          const snapshot2 = await getDocs(q2)
-          
-          snapshot2.docs.forEach(docSnap => {
-            const project = docSnap.data()
-            if (project.ownerId !== userId) {
-              allNotifications.push({
-                id: `audiolab-${docSnap.id}`, 
-                title: 'Studio Collaboration',
-                message: `You've been invited to collaborate on "${project.name || 'Untitled Project'}"`,
-                sentAt: project.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-                type: 'audiolab', 
-                projectId: docSnap.id, 
-                projectName: project.name
-              })
-            }
-          })
-        }
-      } catch (e) { console.error('AudioLab error:', e) }
-      
-      // 4. Calendar events - try multiple collections
-      try {
-        console.log('[Notifications] Loading calendar events for zone:', currentZone.id)
-        const now = new Date()
-        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-        
-        // Try upcoming_events collection first (simpler query)
-        try {
-          const upcomingRef = collection(db, 'upcoming_events')
-          const upcomingQuery = query(upcomingRef, where('zoneId', '==', currentZone.id), limit(20))
-          const upcomingSnapshot = await getDocs(upcomingQuery)
-          console.log('[Notifications] Found', upcomingSnapshot.docs.length, 'upcoming_events')
-          
-          upcomingSnapshot.forEach(docSnap => {
-            const event = docSnap.data()
-            const eventDate = new Date(event.date || event.eventDate || event.startDate)
-            if (isNaN(eventDate.getTime())) return
-            
-            // Only show events within next 7 days
-            if (eventDate >= now && eventDate <= nextWeek) {
-              const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-              allNotifications.push({
-                id: `calendar-upcoming-${docSnap.id}`,
-                title: daysUntil === 0 ? 'Event Today!' : daysUntil === 1 ? 'Event Tomorrow' : `Event in ${daysUntil} days`,
-                message: event.title || event.name || event.description || 'Upcoming event',
-                sentAt: now.toISOString(), type: 'calendar', eventDate: event.date || event.eventDate
-              })
-            }
-          })
-        } catch (upcomingError) {
-          console.log('[Notifications] upcoming_events query failed:', upcomingError)
-        }
-        
-        // Also try calendar_events collection
-        try {
-          const calendarRef = collection(db, 'calendar_events')
-          const calendarQuery = query(calendarRef, where('zoneId', '==', currentZone.id), limit(20))
-          const calendarSnapshot = await getDocs(calendarQuery)
-          console.log('[Notifications] Found', calendarSnapshot.docs.length, 'calendar_events')
-          
-          calendarSnapshot.forEach(docSnap => {
-            const event = docSnap.data()
-            const eventDate = new Date(event.date || event.eventDate || event.startDate)
-            if (isNaN(eventDate.getTime())) return
-            
-            // Only show events within next 7 days
-            if (eventDate >= now && eventDate <= nextWeek) {
-              const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-              // Avoid duplicates
-              const existingId = `calendar-upcoming-${docSnap.id}`
-              if (!allNotifications.some(n => n.id === existingId)) {
-                allNotifications.push({
-                  id: `calendar-${docSnap.id}`,
-                  title: daysUntil === 0 ? 'Event Today!' : daysUntil === 1 ? 'Event Tomorrow' : `Event in ${daysUntil} days`,
-                  message: event.title || event.name || event.description || 'Upcoming event',
-                  sentAt: now.toISOString(), type: 'calendar', eventDate: event.date || event.eventDate
-                })
-              }
-            }
-          })
-        } catch (calendarError) {
-          console.log('[Notifications] calendar_events query failed:', calendarError)
-        }
-        
-        // Also try zone_praise_nights for rehearsals
-        try {
-          const rehearsalsRef = collection(db, 'zone_praise_nights')
-          const rehearsalsQuery = query(rehearsalsRef, where('zoneId', '==', currentZone.id), limit(20))
-          const rehearsalsSnapshot = await getDocs(rehearsalsQuery)
-          console.log('[Notifications] Found', rehearsalsSnapshot.docs.length, 'zone_praise_nights')
-          
-          rehearsalsSnapshot.forEach(docSnap => {
-            const rehearsal = docSnap.data()
-            const eventDate = new Date(rehearsal.date || rehearsal.eventDate)
-            if (isNaN(eventDate.getTime())) return
-            
-            // Only show rehearsals within next 7 days
-            if (eventDate >= now && eventDate <= nextWeek) {
-              const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-              allNotifications.push({
-                id: `calendar-rehearsal-${docSnap.id}`,
-                title: daysUntil === 0 ? 'Rehearsal Today!' : daysUntil === 1 ? 'Rehearsal Tomorrow' : `Rehearsal in ${daysUntil} days`,
-                message: rehearsal.name || rehearsal.title || 'Upcoming rehearsal',
-                sentAt: now.toISOString(), type: 'calendar', eventDate: rehearsal.date
-              })
-            }
-          })
-        } catch (rehearsalError) {
-          console.log('[Notifications] zone_praise_nights query failed:', rehearsalError)
-        }
-      } catch (e) { console.log('Calendar skipped:', e) }
-      
-      // 5. Media uploads - check media_videos and admin_playlists
-      try {
-        console.log('[Notifications] Loading media notifications')
-        const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        const { isHQGroup } = require('@/config/zones')
-        const isHQ = isHQGroup(currentZone.id)
-        
-        // Check new videos (media_videos collection) - try with fallback
-        try {
-          const videosRef = collection(db, 'media_videos')
-          let videosSnapshot
-          
-          try {
-            // Try with orderBy first
-            const videosQuery = query(videosRef, where('forHQ', '==', isHQ), orderBy('createdAt', 'desc'), limit(15))
-            videosSnapshot = await getDocs(videosQuery)
-          } catch (indexError) {
-            // Fallback without orderBy
-            console.log('[Notifications] Media videos index not ready, using fallback')
-            const fallbackQuery = query(videosRef, where('forHQ', '==', isHQ), limit(30))
-            videosSnapshot = await getDocs(fallbackQuery)
-          }
-          
-          console.log('[Notifications] Found', videosSnapshot.docs.length, 'media videos')
-          videosSnapshot.forEach(docSnap => {
-            const video = docSnap.data()
-            const createdAt = video.createdAt?.toDate?.() || new Date()
-            if (createdAt >= lastWeek) {
-              allNotifications.push({
-                id: `media-video-${docSnap.id}`,
-                title: 'New Video',
-                message: video.title || 'New video uploaded',
-                sentAt: createdAt.toISOString(), type: 'media', mediaType: 'video',
-                mediaUrl: video.thumbnail
-              })
-            }
-          })
-        } catch (videoError) {
-          console.log('[Notifications] Videos query failed:', videoError)
-        }
-        
-        // Check new playlists (admin_playlists collection) - try with fallback
-        try {
-          const playlistsRef = collection(db, 'admin_playlists')
-          let playlistsSnapshot
-          
-          try {
-            // Try with compound query first
-            const playlistsQuery = query(playlistsRef, where('forHQ', '==', isHQ), where('isPublic', '==', true), orderBy('createdAt', 'desc'), limit(10))
-            playlistsSnapshot = await getDocs(playlistsQuery)
-          } catch (indexError) {
-            // Fallback: simpler query
-            console.log('[Notifications] Playlists index not ready, using fallback')
-            const fallbackQuery = query(playlistsRef, where('isPublic', '==', true), limit(20))
-            playlistsSnapshot = await getDocs(fallbackQuery)
-          }
-          
-          console.log('[Notifications] Found', playlistsSnapshot.docs.length, 'playlists')
-          playlistsSnapshot.forEach(docSnap => {
-            const playlist = docSnap.data()
-            const createdAt = playlist.createdAt?.toDate?.() || new Date()
-            // Filter by forHQ client-side if needed
-            const matchesHQ = playlist.forHQ === isHQ || playlist.forHQ === undefined
-            if (createdAt >= lastWeek && matchesHQ) {
-              allNotifications.push({
-                id: `media-playlist-${docSnap.id}`,
-                title: 'New Playlist',
-                message: `${playlist.name || 'New Playlist'} - ${playlist.videoIds?.length || 0} videos`,
-                sentAt: createdAt.toISOString(), type: 'media', mediaType: 'video',
-                mediaUrl: playlist.thumbnail
-              })
-            }
-          })
-        } catch (playlistError) {
-          console.log('[Notifications] Playlists query failed:', playlistError)
-        }
-      } catch (e) { console.log('Media skipped:', e) }
-      
-      // 6. Song submissions - handle potential index issues
-      try {
-        const userEmail = user?.email || profile?.email
-        if (userEmail) {
-          const songNotifs = await getUserSongNotifications(userEmail)
-          songNotifs.forEach((notif: SongNotification) => {
+      // Process audiolab projects
+      if (audiolabProjects.status === 'fulfilled') {
+        (audiolabProjects.value as any[]).forEach(project => {
+          if (project.ownerId !== userId) {
             allNotifications.push({
-              id: `song-${notif.id}`,
-              title: notif.type === 'approved' ? 'Song Approved' : notif.type === 'rejected' ? 'Song Rejected' : 'Song Reply',
-              message: notif.message, sentAt: notif.createdAt, type: 'song',
-              songStatus: notif.type as 'approved' | 'rejected' | 'replied', read: notif.read
-            })
-          })
-        }
-      } catch (e) { 
-        console.log('Song notifications error:', e)
-        // Fallback: try simpler query
-        try {
-          const userEmail = user?.email || profile?.email
-          if (userEmail) {
-            const notificationsRef = collection(db, 'song_notifications')
-            const q = query(notificationsRef, where('submittedByEmail', '==', userEmail), limit(20))
-            const snapshot = await getDocs(q)
-            snapshot.forEach(docSnap => {
-              const data = docSnap.data()
-              if (['approved', 'rejected', 'replied'].includes(data.type)) {
-                allNotifications.push({
-                  id: `song-${docSnap.id}`,
-                  title: data.type === 'approved' ? 'Song Approved' : data.type === 'rejected' ? 'Song Rejected' : 'Song Reply',
-                  message: data.message, 
-                  sentAt: data.createdAt || data.timestamp?.toDate?.()?.toISOString() || new Date().toISOString(), 
-                  type: 'song',
-                  songStatus: data.type as 'approved' | 'rejected' | 'replied', 
-                  read: data.read
-                })
-              }
+              id: `audiolab-${project.id}`, 
+              title: 'Studio Collaboration',
+              message: `You've been invited to collaborate on "${project.name || 'Untitled Project'}"`,
+              sentAt: project.updatedAt?.toDate?.()?.toISOString() || project.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+              type: 'audiolab', 
+              projectId: project.id, 
+              projectName: project.name
             })
           }
-        } catch (fallbackError) {
-          console.log('Song notifications fallback also failed:', fallbackError)
-        }
+        })
       }
       
-      // 7. Birthdays - upcoming birthdays in next 7 days
-      try {
-        console.log('[Notifications] Loading birthday notifications')
-        const birthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
-        console.log('[Notifications] Found', birthdays.length, 'upcoming birthdays')
-        
-        birthdays.forEach(bday => {
+      // Process calendar events
+      if (calendarEvents.status === 'fulfilled') {
+        const seenIds = new Set<string>()
+        ;(calendarEvents.value as any[]).forEach(event => {
+          const eventDate = new Date(event.date || event.eventDate || event.startDate)
+          if (isNaN(eventDate.getTime())) return
+          if (eventDate < now || eventDate > nextWeek) return
+          if (seenIds.has(event.id)) return
+          seenIds.add(event.id)
+          
+          const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+          const isRehearsal = event.collection === 'zone_praise_nights'
+          const prefix = isRehearsal ? 'Rehearsal' : 'Event'
+          
+          allNotifications.push({
+            id: `calendar-${event.collection}-${event.id}`,
+            title: daysUntil === 0 ? `${prefix} Today!` : daysUntil === 1 ? `${prefix} Tomorrow` : `${prefix} in ${daysUntil} days`,
+            message: event.title || event.name || event.description || `Upcoming ${prefix.toLowerCase()}`,
+            sentAt: eventDate.toISOString(), // Use event date for proper sorting
+            type: 'calendar', 
+            eventDate: event.date || event.eventDate
+          })
+        })
+      }
+      
+      // Process media notifications
+      if (mediaNotifs.status === 'fulfilled') {
+        (mediaNotifs.value as any[]).forEach(media => {
+          const createdAt = media.createdAt?.toDate?.() || new Date()
+          if (createdAt < lastWeek) return
+          
+          if (media.type === 'video') {
+            allNotifications.push({
+              id: `media-video-${media.id}`,
+              title: 'New Video',
+              message: media.title || 'New video uploaded',
+              sentAt: createdAt.toISOString(), 
+              type: 'media', 
+              mediaType: 'video',
+              mediaUrl: media.thumbnail
+            })
+          } else {
+            allNotifications.push({
+              id: `media-playlist-${media.id}`,
+              title: 'New Playlist',
+              message: `${media.name || 'New Playlist'} - ${media.videoIds?.length || 0} videos`,
+              sentAt: createdAt.toISOString(), 
+              type: 'media', 
+              mediaType: 'video',
+              mediaUrl: media.thumbnail
+            })
+          }
+        })
+      }
+
+      // Process song notifications
+      // Filter out notifications about user's own replies (those are for admin)
+      if (songNotifs.status === 'fulfilled') {
+        (songNotifs.value as SongNotification[]).forEach(notif => {
+          // Skip "User replied:" notifications - those are meant for admin, not the user
+          if (notif.type === 'replied' && notif.message?.startsWith('User replied:')) {
+            return
+          }
+          
+          allNotifications.push({
+            id: `song-${notif.id}`,
+            title: notif.type === 'approved' ? 'Song Approved' : notif.type === 'rejected' ? 'Song Rejected' : 'Song Reply',
+            message: notif.message, 
+            sentAt: notif.createdAt, 
+            type: 'song',
+            songStatus: notif.type as 'approved' | 'rejected' | 'replied', 
+            read: notif.read
+          })
+        })
+      }
+      
+      // Process birthdays - use actual birthday date for sorting
+      if (birthdays.status === 'fulfilled') {
+        (birthdays.value as any[]).forEach(bday => {
           const title = bday.isToday 
             ? `🎂 ${bday.first_name}'s Birthday Today!` 
             : `🎂 Upcoming Birthday`
@@ -463,37 +368,54 @@ export default function NotificationsPage() {
             ? `${bday.first_name} ${bday.last_name} is celebrating their birthday today!`
             : `${bday.first_name} ${bday.last_name}'s birthday is coming up`
           
+          // Calculate actual birthday date this year for proper sorting
+          const bdayDate = new Date(bday.birthday)
+          const thisYearBday = new Date(now.getFullYear(), bdayDate.getMonth(), bdayDate.getDate())
+          
           allNotifications.push({
             id: `birthday-${bday.id}`,
             title,
             message,
-            sentAt: new Date().toISOString(),
+            sentAt: thisYearBday.toISOString(),
             type: 'birthday',
             eventDate: bday.birthday
           })
         })
-      } catch (e) { console.log('Birthday notifications error:', e) }
+      }
       
-      // 8. Chat messages - show chats with unread messages
-      try {
-        console.log('[Notifications] Loading chat notifications for user:', userId)
-        const chatsRef = collection(db, 'chats_v2')
-        const q = query(chatsRef, where('participants', 'array-contains', userId), limit(50))
-        const snapshot = await getDocs(q)
-        console.log('[Notifications] Found', snapshot.docs.length, 'chats')
-        
-        snapshot.docs.forEach(docSnap => {
-          const chat = docSnap.data()
+      // Process chat notifications - show recent chats with activity
+      // Don't show chats where user sent the last message (unless there are unread from others)
+      if (chatNotifs.status === 'fulfilled') {
+        (chatNotifs.value as any[]).forEach(chat => {
           const unreadCount = chat.unreadCount?.[userId] || 0
+          const lastSenderId = chat.lastMessage?.senderId
           
-          // Show if there are unread messages
-          if (unreadCount > 0) {
+          // Skip if user sent the last message AND there are no unread messages
+          if (lastSenderId === userId && unreadCount === 0) {
+            return
+          }
+          
+          const hasRecentMessage = chat.lastMessage?.timestamp
+          
+          // Show if unread OR has recent message (within last 24 hours) from someone else
+          let sentAt = new Date().toISOString()
+          if (chat.lastMessage?.timestamp) {
+            if (typeof chat.lastMessage.timestamp.toDate === 'function') {
+              sentAt = chat.lastMessage.timestamp.toDate().toISOString()
+            } else if (chat.lastMessage.timestamp.seconds) {
+              sentAt = new Date(chat.lastMessage.timestamp.seconds * 1000).toISOString()
+            }
+          }
+          
+          const messageTime = new Date(sentAt)
+          const isRecent = (now.getTime() - messageTime.getTime()) < 24 * 60 * 60 * 1000
+          
+          // Only show if there are unread messages OR recent message from someone else
+          if (unreadCount > 0 || (hasRecentMessage && isRecent && lastSenderId !== userId)) {
             const isGroup = chat.type === 'group'
-            const lastSenderId = chat.lastMessage?.senderId
             let senderName = lastSenderId ? (chat.participantDetails?.[lastSenderId]?.name || 'Someone') : 'Someone'
             let chatName = chat.name || 'Chat'
             
-            // For direct chats, get the other person's name
             if (!isGroup && chat.participantDetails) {
               const other = Object.entries(chat.participantDetails).find(([id]) => id !== userId)
               if (other) chatName = (other[1] as any).name || 'Chat'
@@ -504,73 +426,109 @@ export default function NotificationsPage() {
             else if (messagePreview.startsWith('📄')) messagePreview = '📄 Document'
             else if (messagePreview.startsWith('📞')) messagePreview = '📞 Call'
             
-            // Get timestamp
-            let sentAt = new Date().toISOString()
-            if (chat.lastMessage?.timestamp) {
-              if (typeof chat.lastMessage.timestamp.toDate === 'function') {
-                sentAt = chat.lastMessage.timestamp.toDate().toISOString()
-              } else if (chat.lastMessage.timestamp instanceof Date) {
-                sentAt = chat.lastMessage.timestamp.toISOString()
-              } else if (chat.lastMessage.timestamp.seconds) {
-                sentAt = new Date(chat.lastMessage.timestamp.seconds * 1000).toISOString()
-              }
-            }
-            
             allNotifications.push({
-              id: `chat-${docSnap.id}`, 
+              id: `chat-${chat.id}`, 
               title: isGroup ? chatName : (senderName !== 'Someone' ? senderName : chatName),
               message: isGroup ? `${senderName}: ${messagePreview}` : messagePreview,
               sentBy: senderName, 
               sentAt,
               type: 'chat', 
-              chatId: docSnap.id, 
+              chatId: chat.id, 
               chatName, 
               isGroup, 
-              read: false,
+              read: unreadCount === 0,
               senderAvatar: lastSenderId ? chat.participantDetails?.[lastSenderId]?.avatar : undefined
             })
           }
         })
-        console.log('[Notifications] Added', allNotifications.filter(n => n.type === 'chat').length, 'chat notifications')
-      } catch (e) { console.error('Chat notifications error:', e) }
+      }
       
+      // Sort by date
       allNotifications.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+      
+      // Cache the results
+      notificationCache.set(cacheKey, { data: allNotifications, timestamp: Date.now() })
+      
       setNotifications(allNotifications)
-    } catch (e) { console.error('Load error:', e) }
-    finally { setLoading(false); setRefreshing(false) }
-  }, [user?.uid, user?.email, profile?.id, profile?.email, currentZone?.id])
+    } catch (e) { 
+      console.error('Load error:', e)
+      setError('Failed to load notifications')
+    } finally { 
+      setLoading(false)
+      setRefreshing(false) 
+    }
+  }, [userId, userEmail, currentZone?.id])
 
+  // Initial load
   useEffect(() => {
-    const userId = user?.uid || profile?.id
-    if (currentZone?.id && !zoneLoading && userId) loadNotifications()
-  }, [currentZone?.id, zoneLoading, user?.uid, profile?.id, loadNotifications])
+    if (currentZone?.id && !zoneLoading && userId) {
+      loadNotifications()
+    }
+  }, [currentZone?.id, zoneLoading, userId, loadNotifications])
 
-  // Real-time listener
+  // Real-time listener for zone messages only (doesn't reload everything)
   useEffect(() => {
     if (!currentZone?.id) return
-    const { isHQGroup } = require('@/config/zones')
+    
     const isHQ = isHQGroup(currentZone.id)
     const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages'
     const messagesRef = collection(db, collectionName)
-    const q = isHQ 
-      ? query(messagesRef, orderBy('createdAt', 'desc'), limit(20))
-      : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'), limit(20))
+    
+    let q
+    try {
+      q = isHQ 
+        ? query(messagesRef, orderBy('createdAt', 'desc'), limit(20))
+        : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'), limit(20))
+    } catch {
+      // Fallback without orderBy if index not ready
+      q = isHQ 
+        ? query(messagesRef, limit(20))
+        : query(messagesRef, where('zoneId', '==', currentZone.id), limit(20))
+    }
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.metadata.hasPendingWrites) loadNotifications()
-    }, () => {})
+      if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
+        // Only reload if there are actual changes
+        loadNotifications(false, true) // bypass cache
+      }
+    }, (err) => {
+      console.log('[Notifications] Snapshot error:', err)
+    })
+    
     return () => unsubscribe()
   }, [currentZone?.id, loadNotifications])
 
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'all') return true
-    if (filter === 'chat') return n.type === 'chat'
-    if (filter === 'zone') return n.type === 'zone' || n.type === 'subgroup'
-    if (filter === 'song') return n.type === 'song'
-    if (filter === 'audiolab') return n.type === 'audiolab'
-    if (filter === 'calendar') return n.type === 'calendar' || n.type === 'birthday'
-    if (filter === 'media') return n.type === 'media'
-    return true
-  })
+  // Filtered notifications
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(n => {
+      if (filter === 'all') return true
+      if (filter === 'chat') return n.type === 'chat'
+      if (filter === 'zone') return n.type === 'zone' || n.type === 'subgroup'
+      if (filter === 'song') return n.type === 'song'
+      if (filter === 'audiolab') return n.type === 'audiolab'
+      if (filter === 'calendar') return n.type === 'calendar' || n.type === 'birthday'
+      if (filter === 'media') return n.type === 'media'
+      return true
+    })
+  }, [notifications, filter])
+
+  // Group by date
+  const grouped = useMemo(() => {
+    return filteredNotifications.reduce((acc, notif) => {
+      const date = new Date(notif.sentAt)
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+      
+      let key = date.toDateString() === today.toDateString() ? 'Today'
+        : date.toDateString() === yesterday.toDateString() ? 'Yesterday'
+        : date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+      
+      if (!acc[key]) acc[key] = []
+      acc[key].push(notif)
+      return acc
+    }, {} as Record<string, CombinedNotification[]>)
+  }, [filteredNotifications])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -587,7 +545,7 @@ export default function NotificationsPage() {
   }
 
   const getIcon = (type: NotificationType) => {
-    const icons: Record<NotificationType, any> = {
+    const icons: Record<NotificationType, React.ElementType> = {
       zone: Building2, subgroup: Users, audiolab: Mic, calendar: Calendar,
       birthday: Gift, media: Image, song: Music, chat: MessageCircle
     }
@@ -601,34 +559,43 @@ export default function NotificationsPage() {
       return 'bg-purple-100 text-purple-600'
     }
     const colors: Record<NotificationType, string> = {
-      zone: 'bg-blue-100 text-blue-600', subgroup: 'bg-purple-100 text-purple-600',
-      audiolab: 'bg-violet-100 text-violet-600', calendar: 'bg-amber-100 text-amber-600',
-      birthday: 'bg-pink-100 text-pink-600', media: 'bg-emerald-100 text-emerald-600',
-      song: 'bg-purple-100 text-purple-600', chat: 'bg-indigo-100 text-indigo-600'
+      zone: 'bg-blue-100 text-blue-600', 
+      subgroup: 'bg-purple-100 text-purple-600',
+      audiolab: 'bg-violet-100 text-violet-600', 
+      calendar: 'bg-amber-100 text-amber-600',
+      birthday: 'bg-pink-100 text-pink-600', 
+      media: 'bg-emerald-100 text-emerald-600',
+      song: 'bg-purple-100 text-purple-600', 
+      chat: 'bg-indigo-100 text-indigo-600'
     }
     return colors[type] || 'bg-gray-100 text-gray-600'
   }
 
   const handleClick = (notif: CombinedNotification) => {
-    if (notif.type === 'audiolab' && notif.projectId) router.push(`/pages/audiolab?project=${notif.projectId}`)
-    else if (notif.type === 'calendar') router.push('/pages/calendar')
-    else if (notif.type === 'media') router.push('/pages/media')
-    else if (notif.type === 'song') router.push('/pages/submit-song')
-    else if (notif.type === 'chat') router.push(notif.chatId ? `/pages/groups?chat=${notif.chatId}` : '/pages/groups')
+    switch (notif.type) {
+      case 'audiolab':
+        router.push(notif.projectId ? `/pages/audiolab?project=${notif.projectId}` : '/pages/audiolab')
+        break
+      case 'calendar':
+      case 'birthday':
+        router.push('/pages/calendar')
+        break
+      case 'media':
+        router.push('/pages/media')
+        break
+      case 'song':
+        router.push('/pages/submit-song')
+        break
+      case 'chat':
+        router.push(notif.chatId ? `/pages/groups?chat=${notif.chatId}` : '/pages/groups')
+        break
+      case 'zone':
+      case 'subgroup':
+        // Zone/subgroup notifications - could navigate to a specific page if needed
+        // For now, just stay on notifications page
+        break
+    }
   }
-
-  // Group by date
-  const grouped = filteredNotifications.reduce((acc, notif) => {
-    const date = new Date(notif.sentAt)
-    const today = new Date()
-    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1)
-    let key = date.toDateString() === today.toDateString() ? 'Today'
-      : date.toDateString() === yesterday.toDateString() ? 'Yesterday'
-      : date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-    if (!acc[key]) acc[key] = []
-    acc[key].push(notif)
-    return acc
-  }, {} as Record<string, CombinedNotification[]>)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-y-auto">
@@ -641,7 +608,7 @@ export default function NotificationsPage() {
           </button>
         }
         rightButtons={
-          <button onClick={() => loadNotifications(true)} disabled={refreshing}
+          <button onClick={() => loadNotifications(true, true)} disabled={refreshing}
             className="p-2 rounded-lg hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50">
             <RefreshCw className={`w-5 h-5 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -650,7 +617,16 @@ export default function NotificationsPage() {
 
       <div className="pb-24 px-4 overflow-y-auto" style={{ height: 'calc(100vh - 60px)' }}>
         <div className="max-w-2xl mx-auto">
-          {/* Filter Tabs - Horizontal Scroll */}
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+              <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">×</button>
+            </div>
+          )}
+          
+          {/* Filter Tabs */}
           <div className="relative -mx-4 px-4 mb-4 pt-2 sticky top-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 z-10">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
               {FILTER_TABS.map(tab => {
@@ -718,7 +694,7 @@ export default function NotificationsPage() {
                     {notifs.map(notif => {
                       const Icon = getIcon(notif.type)
                       const iconBg = getIconBg(notif.type, notif.songStatus)
-                      const isClickable = ['audiolab', 'calendar', 'media', 'song', 'chat'].includes(notif.type)
+                      const isClickable = ['audiolab', 'calendar', 'birthday', 'media', 'song', 'chat'].includes(notif.type)
                       const isUnread = !notif.read && ['chat', 'song', 'subgroup'].includes(notif.type)
                       const isDeleting = deletingId === notif.id
                       

@@ -22,6 +22,7 @@ export default function AllMinisteredSongsPage() {
   const canEdit = isHQ || isBoss
   
   const [songs, setSongs] = useState<MasterSong[]>([])
+  const [totalCount, setTotalCount] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -37,9 +38,13 @@ export default function AllMinisteredSongsPage() {
     const loadSongs = async () => {
       setLoading(true)
       try {
-        const masterSongs = await MasterLibraryService.getMasterSongs(500) // Load 500 initially
+        // Load ALL songs (up to 5000) - no pagination needed
+        const masterSongs = await MasterLibraryService.getMasterSongs(5000, true) // Force refresh
         setSongs(masterSongs)
         setHasMore(MasterLibraryService.hasMoreMasterSongs())
+        setTotalCount(masterSongs.length)
+        
+        console.log(`[AllMinisteredSongs] Loaded ${masterSongs.length} songs`)
       } catch (error) {
         console.error('Error loading master songs:', error)
       } finally {
@@ -49,15 +54,22 @@ export default function AllMinisteredSongsPage() {
     loadSongs()
   }, [])
 
-  // Load more songs
+  // Load more songs (rarely needed now)
   const loadMoreSongs = async () => {
     if (loadingMore || !hasMore) return
     
     setLoadingMore(true)
     try {
-      const moreSongs = await MasterLibraryService.loadMoreMasterSongs(500)
+      const moreSongs = await MasterLibraryService.loadMoreMasterSongs(1000)
       if (moreSongs.length > 0) {
-        setSongs(prev => [...prev, ...moreSongs])
+        setSongs(prev => {
+          // Avoid duplicates
+          const existingIds = new Set(prev.map(s => s.id))
+          const newSongs = moreSongs.filter(s => !existingIds.has(s.id))
+          const combined = [...prev, ...newSongs]
+          setTotalCount(combined.length)
+          return combined
+        })
       }
       setHasMore(MasterLibraryService.hasMoreMasterSongs())
     } catch (error) {

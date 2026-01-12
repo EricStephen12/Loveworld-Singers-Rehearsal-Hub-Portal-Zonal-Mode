@@ -62,15 +62,17 @@ export interface ImportedSongTracking {
 
 export class MasterLibraryService {
   
-  static async getMasterSongs(limitCount: number = 100, forceRefresh: boolean = false): Promise<MasterSong[]> {
+  // Load ALL master songs at once (no pagination needed for typical library sizes)
+  static async getMasterSongs(limitCount: number = 5000, forceRefresh: boolean = false): Promise<MasterSong[]> {
     try {
       if (!forceRefresh && masterSongsCache && Date.now() - masterSongsCache.timestamp < CACHE_TTL) {
         return masterSongsCache.data
       }
       
+      // Fetch ALL songs - no limit for practical purposes
+      // Firestore can handle thousands of documents efficiently
       const q = query(
         collection(db, 'master_songs'),
-        orderBy('publishedAt', 'desc'),
         firestoreLimit(limitCount)
       )
       
@@ -80,11 +82,21 @@ export class MasterLibraryService {
         ...doc.data()
       })) as MasterSong[]
       
+      // Sort by title alphabetically for consistent display
+      songs.sort((a, b) => {
+        const titleA = (a.title || '').toLowerCase()
+        const titleB = (b.title || '').toLowerCase()
+        return titleA.localeCompare(titleB)
+      })
+      
       masterSongsCache = { data: songs, timestamp: Date.now() }
       
-      if (querySnapshot.docs.length > 0) {
-        lastMasterSongDoc = querySnapshot.docs[querySnapshot.docs.length - 1]
-      }
+      // Track if there might be more (for UI purposes)
+      lastMasterSongDoc = querySnapshot.docs.length >= limitCount 
+        ? querySnapshot.docs[querySnapshot.docs.length - 1] 
+        : null
+      
+      console.log(`[MasterLibrary] Loaded ${songs.length} songs`)
       
       return songs
     } catch (error) {
@@ -93,13 +105,13 @@ export class MasterLibraryService {
     }
   }
 
-  static async loadMoreMasterSongs(limitCount: number = 50): Promise<MasterSong[]> {
+  // Load more is rarely needed now, but keep for backwards compatibility
+  static async loadMoreMasterSongs(limitCount: number = 1000): Promise<MasterSong[]> {
     try {
       if (!lastMasterSongDoc) return []
       
       const q = query(
         collection(db, 'master_songs'),
-        orderBy('publishedAt', 'desc'),
         startAfter(lastMasterSongDoc),
         firestoreLimit(limitCount)
       )
@@ -111,14 +123,30 @@ export class MasterLibraryService {
       })) as MasterSong[]
       
       if (querySnapshot.docs.length > 0) {
-        lastMasterSongDoc = querySnapshot.docs[querySnapshot.docs.length - 1]
+        lastMasterSongDoc = querySnapshot.docs.length >= limitCount 
+          ? querySnapshot.docs[querySnapshot.docs.length - 1] 
+          : null
+          
         if (masterSongsCache) {
-          masterSongsCache.data = [...masterSongsCache.data, ...songs]
+          // Add new songs, avoiding duplicates
+          const existingIds = new Set(masterSongsCache.data.map(s => s.id))
+          const newSongs = songs.filter(s => !existingIds.has(s.id))
+          masterSongsCache.data = [...masterSongsCache.data, ...newSongs]
+          
+          // Re-sort by title
+          masterSongsCache.data.sort((a, b) => {
+            const titleA = (a.title || '').toLowerCase()
+            const titleB = (b.title || '').toLowerCase()
+            return titleA.localeCompare(titleB)
+          })
+          
           masterSongsCache.timestamp = Date.now()
         }
       } else {
         lastMasterSongDoc = null
       }
+      
+      console.log(`[MasterLibrary] Loaded ${songs.length} more songs`)
       
       return songs
     } catch (error) {

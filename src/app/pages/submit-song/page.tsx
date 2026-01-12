@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, Trash2, Music, X } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle, XCircle, Clock, MessageSquare, Trash2, Music, X, Edit2, Send, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { submitSong, getAllSubmittedSongs, deleteUserSubmission, SongSubmission } from '@/lib/song-submission-service'
+import { submitSong, deleteUserSubmission, updateUserSubmission, userReplyToSubmission, SongSubmission } from '@/lib/song-submission-service'
 import { useZone } from '@/hooks/useZone'
 import { getZoneTheme } from '@/utils/zone-theme'
 import { uploadAudio } from '@/lib/cloudinary-setup'
 import { isHQGroup } from '@/config/zones'
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
 interface SongSubmissionForm {
@@ -37,6 +37,12 @@ export default function SubmitSongPage() {
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
   const [activeTab, setActiveTab] = useState<'submit' | 'submitted'>('submit')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingSubmission, setEditingSubmission] = useState<SongSubmission | null>(null)
+  const [showReplyModal, setShowReplyModal] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<SongSubmission | null>(null)
+  const [userReplyMessage, setUserReplyMessage] = useState('')
+  const [sendingReply, setSendingReply] = useState(false)
+  const [expandedSubmissionId, setExpandedSubmissionId] = useState<string | null>(null)
   
   // Generate focus ring color based on zone color
   const getFocusClasses = () => {
@@ -69,117 +75,63 @@ export default function SubmitSongPage() {
     }
   }, [profile, user])
 
-  // Load user's submissions
+  // Set up real-time listener for user's submissions (single source of truth)
   useEffect(() => {
-    if (user && currentZone?.id) {
-      loadMySubmissions()
-    }
-  }, [user?.uid, user?.email, currentZone?.id])
-
-  // Set up real-time listener for user's submissions
-  useEffect(() => {
-    if (!user?.uid || !currentZone?.id) return
-    
-    const submissionsRef = collection(db, 'submitted_songs')
-    const q = query(
-      submissionsRef,
-      where('submittedBy.userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    )
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.metadata.hasPendingWrites) {
-        const isCurrentZoneHQ = isHQGroup(currentZone.id)
-        const emailLower = (user.email || '').toLowerCase()
-        
-        const submissions = snapshot.docs.map((docSnap) => {
-          const data = docSnap.data()
-          return {
-            id: docSnap.id,
-            ...data,
-            zoneId: data.zoneId || 'unknown',
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
-          } as SongSubmission
-        }).filter((submission) => {
-          // If not HQ, also check zone match
-          if (!isCurrentZoneHQ && submission.zoneId !== currentZone.id) {
-            return false
-          }
-          return true
-        })
-        
-        setMySubmissions(submissions)
-        setLoadingSubmissions(false)
-      }
-    }, (error) => {
-      console.log('[SubmitSong] Real-time listener error:', error)
-      loadMySubmissions() // Fallback to manual load
-    })
-    
-    return () => unsubscribe()
-  }, [user?.uid, user?.email, currentZone?.id])
-
-  const loadMySubmissions = async () => {
-    if (!user || !currentZone?.id) {
-      console.log('[SubmitSong] Cannot load - missing user or zone');
-      setMySubmissions([]);
-      return;
+    if (!user?.uid || !currentZone?.id) {
+      setMySubmissions([])
+      setLoadingSubmissions(false)
+      return
     }
     
     setLoadingSubmissions(true)
-    try {
-      // Check if current zone is HQ
+    console.log('[SubmitSong] Setting up real-time listener for user:', user.uid, 'zone:', currentZone.id)
+    
+    const submissionsRef = collection(db, 'submitted_songs')
+    // Simplified query - just filter by userId, we'll filter zone client-side
+    const q = query(
+      submissionsRef,
+      where('submittedBy.userId', '==', user.uid)
+    )
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('[SubmitSong] Snapshot received, docs:', snapshot.docs.length)
+      
       const isCurrentZoneHQ = isHQGroup(currentZone.id)
       
-      console.log('[SubmitSong] Loading submissions:', {
-        zoneId: currentZone.id,
-        zoneName: currentZone.name,
-        isHQ: isCurrentZoneHQ,
-        userEmail: user.email,
-        userId: user.uid
-      });
-      
-      // Fetch submissions: HQ zones see all HQ submissions, regular zones see only their zone
-      const allSubmissions = await getAllSubmittedSongs(currentZone.id, isCurrentZoneHQ)
-      
-      console.log('[SubmitSong] Fetched', allSubmissions.length, 'total submissions');
-      
-      const emailLower = (user.email || '').toLowerCase()
-
-      // Filter by this user
-      // For HQ: user can see their submissions from any HQ zone
-      // For regular: user can only see their submissions from their zone
-      const my = allSubmissions.filter((submission) => {
-        const submittedEmail = (submission.submittedBy?.email || '').toLowerCase()
-        const submittedUserId = submission.submittedBy?.userId
-        const submissionZoneId = submission.zoneId
-
-        // Match by email if available, otherwise fall back to userId
-        const isMySubmission = (emailLower && submittedEmail === emailLower) || 
-                               (submittedUserId && submittedUserId === user.uid)
-        
-        if (!isMySubmission) {
-          return false;
+      const submissions = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data()
+        return {
+          id: docSnap.id,
+          ...data,
+          zoneId: data.zoneId || 'unknown',
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
+        } as SongSubmission
+      }).filter((submission) => {
+        // If not HQ, also check zone match
+        if (!isCurrentZoneHQ && submission.zoneId !== currentZone.id) {
+          return false
         }
-        
-        // If not HQ, also check zone match (regular zones only see their own zone)
-        if (!isCurrentZoneHQ && submissionZoneId !== currentZone.id) {
-          console.log('[SubmitSong] Rejecting - zone mismatch:', submissionZoneId, '!=', currentZone.id);
-          return false;
-        }
-        
-        return true;
-      })
-
-      console.log('[SubmitSong] Found', my.length, 'submissions for user');
-      setMySubmissions(my)
-    } catch (error) {
-      console.error('[SubmitSong] Error loading submissions:', error)
-      setMySubmissions([])
-    } finally {
+        return true
+      }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      
+      console.log('[SubmitSong] Filtered submissions:', submissions.length)
+      setMySubmissions(submissions)
       setLoadingSubmissions(false)
-    }
+    }, (error) => {
+      console.error('[SubmitSong] Real-time listener error:', error)
+      setLoadingSubmissions(false)
+      setMySubmissions([])
+    })
+    
+    return () => unsubscribe()
+  }, [user?.uid, currentZone?.id])
+
+  // No-op: Real-time listener handles all updates
+  // Keeping this function for backward compatibility with button clicks
+  const loadMySubmissions = async () => {
+    // Real-time listener is the single source of truth
+    // This function is kept for UI interactions that expect it
   }
 
   const handleDeleteSubmission = async (submissionId: string) => {
@@ -188,16 +140,152 @@ export default function SubmitSongPage() {
     
     setDeletingId(submissionId)
     try {
+      // Optimistically remove from local state for instant feedback
+      setMySubmissions(prev => prev.filter(sub => sub.id !== submissionId))
+      
       const result = await deleteUserSubmission(submissionId, user.uid)
-      if (result.success) {
-        loadMySubmissions()
-      } else {
+      if (!result.success) {
+        // Revert on failure - real-time listener will restore correct state
         alert(result.error || 'Failed to delete submission')
       }
     } catch (error) {
       alert('Error deleting submission')
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const handleEditSubmission = (submission: SongSubmission) => {
+    setEditingSubmission(submission)
+    setFormData({
+      title: submission.title,
+      writer: submission.writer || '',
+      leadSinger: submission.leadSinger || '',
+      lyrics: submission.lyrics,
+      key: submission.key || '',
+      notes: submission.notes || '',
+      audioFile: null,
+      audioUrl: submission.audioUrl || null
+    })
+    setActiveTab('submit')
+  }
+
+  const handleUpdateSubmission = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user?.uid || !editingSubmission?.id) return
+    
+    if (!formData.title.trim() || !formData.lyrics.trim()) {
+      alert('Please fill in at least the song title and lyrics')
+      return
+    }
+    
+    setIsSubmitting(true)
+    try {
+      const updatedData = {
+        title: formData.title.trim(),
+        lyrics: formData.lyrics.trim(),
+        writer: formData.writer.trim() || getUserName() || 'Unknown',
+        key: formData.key.trim() || '',
+        leadSinger: formData.leadSinger.trim() || '',
+        notes: formData.notes.trim() || '',
+        audioUrl: formData.audioUrl || ''
+      }
+      
+      const result = await updateUserSubmission(editingSubmission.id, user.uid, updatedData)
+      
+      if (result.success) {
+        // Optimistically update local state for instant feedback
+        setMySubmissions(prev => prev.map(sub => 
+          sub.id === editingSubmission.id 
+            ? { ...sub, ...updatedData, updatedAt: new Date().toISOString() }
+            : sub
+        ))
+        
+        setSubmitStatus('success')
+        setEditingSubmission(null)
+        setActiveTab('submitted')
+        
+        setTimeout(() => {
+          setFormData({
+            title: '',
+            writer: getUserName(),
+            leadSinger: '',
+            lyrics: '',
+            key: '',
+            notes: '',
+            audioFile: null,
+            audioUrl: null
+          })
+          setSubmitStatus('idle')
+        }, 2000)
+      } else {
+        alert(result.error || 'Failed to update submission')
+      }
+    } catch (error) {
+      alert('Error updating submission')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingSubmission(null)
+    setFormData({
+      title: '',
+      writer: getUserName(),
+      leadSinger: '',
+      lyrics: '',
+      key: '',
+      notes: '',
+      audioFile: null,
+      audioUrl: null
+    })
+  }
+
+  const handleOpenReply = (submission: SongSubmission) => {
+    setReplyingTo(submission)
+    setUserReplyMessage('')
+    setShowReplyModal(true)
+  }
+
+  const handleSendUserReply = async () => {
+    if (!user?.uid || !replyingTo?.id || !userReplyMessage.trim()) return
+    
+    setSendingReply(true)
+    try {
+      const result = await userReplyToSubmission(replyingTo.id, user.uid, userReplyMessage.trim(), getUserName())
+      if (result.success) {
+        // Optimistically update local state with new conversation message
+        const newMessage = {
+          id: `msg-${Date.now()}`,
+          sender: 'user' as const,
+          senderName: getUserName() || 'User',
+          message: userReplyMessage.trim(),
+          timestamp: new Date().toISOString()
+        }
+        
+        setMySubmissions(prev => prev.map(sub => {
+          if (sub.id === replyingTo.id) {
+            const existingConversation = (sub as any).conversation || []
+            return { 
+              ...sub, 
+              conversation: [...existingConversation, newMessage],
+              userReply: userReplyMessage.trim() 
+            } as SongSubmission
+          }
+          return sub
+        }))
+        
+        setShowReplyModal(false)
+        setReplyingTo(null)
+        setUserReplyMessage('')
+      } else {
+        alert(result.error || 'Failed to send reply')
+      }
+    } catch (error) {
+      alert('Error sending reply')
+    } finally {
+      setSendingReply(false)
     }
   }
 
@@ -317,8 +405,7 @@ export default function SubmitSongPage() {
 
       setSubmitStatus('success')
       
-      // Reload submissions to show the new one and switch to Submitted tab
-      await loadMySubmissions()
+      // Switch to Submitted tab - real-time listener will show the new submission
       setActiveTab('submitted')
       
       setTimeout(() => {
@@ -458,79 +545,187 @@ export default function SubmitSongPage() {
               
               {mySubmissions.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 shadow-sm overflow-hidden">
-                  {mySubmissions.map((submission) => (
-                    <div key={submission.id} className="p-5 active:bg-gray-50 transition-colors">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <h4 className="font-bold text-gray-900 text-base flex-1">{submission.title}</h4>
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                          submission.status === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : submission.status === 'approved'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-3">
-                        Submitted {new Date(submission.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </p>
-                      
-                      {/* Show admin reply if exists */}
-                      {submission.replyMessage && (
-                        <div className="mt-3 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-sm">
-                          <div className="flex items-center gap-2 mb-2">
-                            <MessageSquare className="w-5 h-5 text-purple-600" />
-                            <span className="text-xs font-bold text-purple-800">Admin Reply</span>
-                          </div>
-                          <p className="text-sm text-purple-900 leading-relaxed">{submission.replyMessage}</p>
-                        </div>
-                      )}
-                      
-                      {/* Show rejection reason if rejected */}
-                      {submission.status === 'rejected' && submission.reviewNotes && (
-                        <div className="mt-3 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border border-red-200 shadow-sm">
-                          <div className="flex items-center gap-2 mb-2">
-                            <XCircle className="w-5 h-5 text-red-600" />
-                            <span className="text-xs font-bold text-red-800">Rejection Reason</span>
-                          </div>
-                          <p className="text-sm text-red-900 leading-relaxed">{submission.reviewNotes}</p>
-                        </div>
-                      )}
-                      
-                      {/* Show approval message */}
-                      {submission.status === 'approved' && (
-                        <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <span className="text-sm font-semibold text-green-800">
-                              Your song has been approved and added to the collection!
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Delete button - only for pending submissions */}
-                      {submission.status === 'pending' && submission.id && (
+                  {mySubmissions.map((submission) => {
+                    const isExpanded = expandedSubmissionId === submission.id
+                    
+                    return (
+                      <div key={submission.id} className="transition-colors">
+                        {/* Collapsed Header - Always visible */}
                         <button
-                          onClick={() => handleDeleteSubmission(submission.id!)}
-                          disabled={deletingId === submission.id}
-                          className="mt-4 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 active:bg-red-50 rounded-xl transition-colors disabled:opacity-50 touch-manipulation border border-red-200"
+                          onClick={() => setExpandedSubmissionId(isExpanded ? null : submission.id!)}
+                          className="w-full p-4 flex items-center justify-between gap-3 active:bg-gray-50 touch-manipulation"
                         >
-                          {deletingId === submission.id ? (
-                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <>
-                              <Trash2 className="w-4 h-4" />
-                              <span>Delete Submission</span>
-                            </>
-                          )}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              submission.status === 'pending' 
+                                ? 'bg-yellow-100'
+                                : submission.status === 'approved'
+                                ? 'bg-green-100'
+                                : 'bg-red-100'
+                            }`}>
+                              {submission.status === 'pending' ? (
+                                <Clock className={`w-5 h-5 text-yellow-600`} />
+                              ) : submission.status === 'approved' ? (
+                                <CheckCircle className={`w-5 h-5 text-green-600`} />
+                              ) : (
+                                <XCircle className={`w-5 h-5 text-red-600`} />
+                              )}
+                            </div>
+                            <div className="text-left min-w-0 flex-1">
+                              <h4 className="font-bold text-gray-900 text-sm truncate">{submission.title}</h4>
+                              <p className="text-xs text-gray-500">
+                                {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)} • {new Date(submission.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Indicators */}
+                            {submission.replyMessage && (
+                              <span className="w-2 h-2 bg-purple-500 rounded-full" title="Has admin reply" />
+                            )}
+                            {(submission as any).userReply && (
+                              <span className="w-2 h-2 bg-blue-500 rounded-full" title="You replied" />
+                            )}
+                            {isExpanded ? (
+                              <ChevronUp className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
                         </button>
-                      )}
-                    </div>
-                  ))}
+                        
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="px-4 pb-4 space-y-3">
+                            {/* Show rejection reason if rejected */}
+                            {submission.status === 'rejected' && submission.reviewNotes && (
+                              <div className="p-3 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border border-red-200">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <XCircle className="w-4 h-4 text-red-600" />
+                                  <span className="text-xs font-bold text-red-800">Rejection Reason</span>
+                                </div>
+                                <p className="text-sm text-red-900 leading-relaxed">{submission.reviewNotes}</p>
+                              </div>
+                            )}
+                            
+                            {/* Show approval message */}
+                            {submission.status === 'approved' && (
+                              <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                  <span className="text-sm font-semibold text-green-800">
+                                    Added to the collection!
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Chat-like Conversation */}
+                            {((submission as any).conversation?.length > 0 || submission.replyMessage || (submission as any).userReply) && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <MessageSquare className="w-4 h-4 text-gray-500" />
+                                  <span className="text-xs font-bold text-gray-600">Conversation</span>
+                                </div>
+                                
+                                {/* Show conversation array if exists */}
+                                {(submission as any).conversation?.length > 0 ? (
+                                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    {(submission as any).conversation.map((msg: any) => (
+                                      <div 
+                                        key={msg.id} 
+                                        className={`p-3 rounded-xl ${
+                                          msg.sender === 'admin' 
+                                            ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 ml-0 mr-8' 
+                                            : 'bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 ml-8 mr-0'
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className={`text-xs font-bold ${msg.sender === 'admin' ? 'text-purple-700' : 'text-blue-700'}`}>
+                                            {msg.sender === 'admin' ? `Admin (${msg.senderName})` : 'You'}
+                                          </span>
+                                          <span className="text-[10px] text-gray-400">
+                                            {new Date(msg.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                          </span>
+                                        </div>
+                                        <p className={`text-sm leading-relaxed ${msg.sender === 'admin' ? 'text-purple-900' : 'text-blue-900'}`}>
+                                          {msg.message}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  /* Fallback to legacy fields if no conversation array */
+                                  <div className="space-y-2">
+                                    {submission.replyMessage && (
+                                      <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 mr-8">
+                                        <span className="text-xs font-bold text-purple-700">Admin</span>
+                                        <p className="text-sm text-purple-900 leading-relaxed mt-1">{submission.replyMessage}</p>
+                                      </div>
+                                    )}
+                                    {(submission as any).userReply && (
+                                      <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200 ml-8">
+                                        <span className="text-xs font-bold text-blue-700">You</span>
+                                        <p className="text-sm text-blue-900 leading-relaxed mt-1 whitespace-pre-wrap">{(submission as any).userReply}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {/* Edit button - for pending AND approved submissions */}
+                              {(submission.status === 'pending' || submission.status === 'approved') && submission.id && (
+                                <button
+                                  onClick={() => handleEditSubmission(submission)}
+                                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition-colors touch-manipulation border"
+                                  style={{ 
+                                    color: zoneColor, 
+                                    borderColor: zoneColor,
+                                    backgroundColor: `${zoneColor}10`
+                                  }}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                  <span>Edit</span>
+                                </button>
+                              )}
+                              
+                              {/* Reply button - always show for all statuses */}
+                              {submission.id && (
+                                <button
+                                  onClick={() => handleOpenReply(submission)}
+                                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-purple-600 active:bg-purple-50 rounded-xl transition-colors touch-manipulation border border-purple-200 bg-purple-50"
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  <span>Reply</span>
+                                </button>
+                              )}
+                              
+                              {/* Delete button - only for pending submissions */}
+                              {submission.status === 'pending' && submission.id && (
+                                <button
+                                  onClick={() => handleDeleteSubmission(submission.id!)}
+                                  disabled={deletingId === submission.id}
+                                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-red-600 active:bg-red-50 rounded-xl transition-colors disabled:opacity-50 touch-manipulation border border-red-200"
+                                >
+                                  {deletingId === submission.id ? (
+                                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <>
+                                      <Trash2 className="w-4 h-4" />
+                                      <span>Delete</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -538,7 +733,24 @@ export default function SubmitSongPage() {
 
           {/* Submit Song Tab Content */}
           {activeTab === 'submit' && (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={editingSubmission ? handleUpdateSubmission : handleSubmit} className="flex flex-col gap-5">
+            {/* Edit Mode Banner */}
+            {editingSubmission && (
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Edit2 className="w-5 h-5 text-amber-600" />
+                  <span className="text-sm font-semibold text-amber-800">Editing: {editingSubmission.title}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="text-sm font-medium text-amber-700 hover:text-amber-900"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            
             {/* Song Title */}
             <div className="flex flex-col gap-2.5">
               <label className="text-gray-900 text-sm font-semibold leading-tight">
@@ -707,7 +919,7 @@ export default function SubmitSongPage() {
       <footer className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             <button
               type="submit"
-          onClick={handleSubmit}
+          onClick={editingSubmission ? handleUpdateSubmission : handleSubmit}
               disabled={isSubmitting || !formData.title.trim() || !formData.lyrics.trim()}
           className="flex w-full items-center justify-center rounded-2xl h-14 px-6 text-base font-bold text-white shadow-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 touch-manipulation"
           style={{
@@ -718,7 +930,12 @@ export default function SubmitSongPage() {
               {isSubmitting ? (
                 <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
-                  <span>Submitting...</span>
+                  <span>{editingSubmission ? 'Updating...' : 'Submitting...'}</span>
+                </>
+              ) : editingSubmission ? (
+                <>
+              <Edit2 className="w-5 h-5 mr-2.5" />
+              <span>Update Song</span>
                 </>
               ) : (
                 <>
@@ -728,6 +945,111 @@ export default function SubmitSongPage() {
               )}
             </button>
       </footer>
+
+      {/* User Reply Modal */}
+      {showReplyModal && replyingTo && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
+          <div className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="p-5 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Conversation</h2>
+                <button
+                  onClick={() => { setShowReplyModal(false); setReplyingTo(null); setUserReplyMessage(''); }}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Re: {replyingTo.title}</p>
+            </div>
+            
+            {/* Conversation History */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 max-h-60">
+              {(replyingTo as any).conversation?.length > 0 ? (
+                (replyingTo as any).conversation.map((msg: any) => (
+                  <div 
+                    key={msg.id} 
+                    className={`p-3 rounded-xl ${
+                      msg.sender === 'admin' 
+                        ? 'bg-purple-50 border border-purple-200 mr-6' 
+                        : 'bg-blue-50 border border-blue-200 ml-6'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-bold ${msg.sender === 'admin' ? 'text-purple-700' : 'text-blue-700'}`}>
+                        {msg.sender === 'admin' ? 'Admin' : 'You'}
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        {new Date(msg.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className={`text-sm ${msg.sender === 'admin' ? 'text-purple-900' : 'text-blue-900'}`}>
+                      {msg.message}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                /* Fallback to legacy fields */
+                <>
+                  {replyingTo.replyMessage && (
+                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 mr-6">
+                      <span className="text-xs font-bold text-purple-700">Admin</span>
+                      <p className="text-sm text-purple-900 mt-1">{replyingTo.replyMessage}</p>
+                    </div>
+                  )}
+                  {(replyingTo as any).userReply && (
+                    <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 ml-6">
+                      <span className="text-xs font-bold text-blue-700">You</span>
+                      <p className="text-sm text-blue-900 mt-1 whitespace-pre-wrap">{(replyingTo as any).userReply}</p>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Show message if no conversation yet */}
+              {!(replyingTo as any).conversation?.length && !replyingTo.replyMessage && !(replyingTo as any).userReply && (
+                <p className="text-sm text-gray-400 text-center py-4">No messages yet. Start the conversation!</p>
+              )}
+            </div>
+            
+            {/* Reply Input */}
+            <div className="p-5 border-t border-gray-100 flex-shrink-0">
+              <textarea
+                value={userReplyMessage}
+                onChange={(e) => setUserReplyMessage(e.target.value)}
+                placeholder="Type your message..."
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-base"
+                autoFocus
+              />
+            </div>
+            
+            <div className="p-5 pt-0 flex gap-3">
+              <button
+                onClick={() => { setShowReplyModal(false); setReplyingTo(null); setUserReplyMessage(''); }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendUserReply}
+                disabled={!userReplyMessage.trim() || sendingReply}
+                className="flex-1 px-4 py-3 text-white rounded-xl font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ backgroundColor: zoneColor }}
+              >
+                {sendingReply ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

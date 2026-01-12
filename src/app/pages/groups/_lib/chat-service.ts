@@ -713,13 +713,13 @@ export async function sendMessage(
       if (otherParticipants.length > 0) {
         const isGroup = chatData.type === 'group'
         const chatName = isGroup ? chatData.name : sender.name
-        const notifTitle = chatName || sender.name
+        const notifTitle = chatName || sender.name || 'New Message'
         const notifBody = isGroup 
-          ? `${sender.name}: ${lastMessageText}`
+          ? `${sender.name || 'Someone'}: ${lastMessageText}`
           : lastMessageText
         
         // Fire and forget - don't block message sending
-        sendChatNotification(otherParticipants, notifTitle, notifBody, chatId, sender.id).catch(err => {
+        sendChatNotification(otherParticipants, notifTitle, notifBody, chatId, sender.id, sender.name).catch(err => {
           console.log('[ChatService] Push notification failed (non-blocking):', err)
         })
       }
@@ -750,7 +750,8 @@ async function sendChatNotification(
   title: string,
   body: string,
   chatId: string,
-  senderId: string
+  senderId: string,
+  senderName?: string
 ): Promise<void> {
   try {
     await fetch('/api/send-notification', {
@@ -761,11 +762,14 @@ async function sendChatNotification(
         recipientIds,
         title,
         body,
-        data: { chatId },
+        data: { 
+          chatId,
+          senderName: senderName || 'Someone'
+        },
         excludeUserId: senderId
       })
     })
-    console.log('[ChatService] Push notification sent for chat:', chatId)
+    console.log('[ChatService] Push notification sent for chat:', chatId, 'to', recipientIds.length, 'recipients')
   } catch (error) {
     console.error('[ChatService] sendChatNotification error:', error)
   }

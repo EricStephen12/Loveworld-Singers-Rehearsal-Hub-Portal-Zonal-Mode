@@ -1,37 +1,68 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/contexts/AuthContext'
 import { useWebFCM } from '@/lib/fcm-web'
 
+// Get cached auth state for INSTANT redirect (like big apps do)
+function getCachedAuthState(): boolean | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const hasUser = localStorage.getItem('lwsrh_has_user')
+    if (hasUser === 'true') return true
+    if (hasUser === 'false') return false
+    return null
+  } catch {
+    return null
+  }
+}
+
 export default function SplashPage() {
   const router = useRouter()
   const { user, loading } = useAuthContext()
+  const hasNavigated = useRef(false)
   
   // Initialize FCM for web background notifications
-  useWebFCM();
-  const [delayPassed, setDelayPassed] = useState(false)
+  useWebFCM()
 
+  // INSTANT navigation based on cache (like Instagram/WhatsApp)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDelayPassed(true)
-    }, 300)
+    if (hasNavigated.current) return
     
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (loading || !delayPassed) {
+    const cached = getCachedAuthState()
+    
+    // If we have cached state, navigate IMMEDIATELY (no waiting)
+    if (cached !== null) {
+      hasNavigated.current = true
+      router.replace(cached ? '/home' : '/auth')
       return
     }
     
-    if (user) {
-      router.replace('/home')
-    } else {
-      router.replace('/auth')
+    // No cache = first time user, wait briefly for auth
+    // But max 800ms then go to auth
+    const timeout = setTimeout(() => {
+      if (!hasNavigated.current) {
+        hasNavigated.current = true
+        router.replace('/auth')
+      }
+    }, 800)
+    
+    return () => clearTimeout(timeout)
+  }, [router])
+
+  // When auth resolves, update cache and navigate if we haven't already
+  useEffect(() => {
+    if (loading || hasNavigated.current) return
+    
+    // Update cache for next time
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lwsrh_has_user', user ? 'true' : 'false')
     }
-  }, [loading, user, router, delayPassed])
+    
+    hasNavigated.current = true
+    router.replace(user ? '/home' : '/auth')
+  }, [loading, user, router])
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">

@@ -18,6 +18,14 @@ const SONGS_COLLECTION = 'songs'
 const SUBMITTED_SONGS_COLLECTION = 'submitted_songs'
 const SONG_NOTIFICATIONS_COLLECTION = 'song_notifications'
 
+export interface ConversationMessage {
+  id: string
+  sender: 'admin' | 'user'
+  senderName: string
+  message: string
+  timestamp: string
+}
+
 export interface SongSubmission {
   id?: string
   title: string
@@ -36,7 +44,9 @@ export interface SongSubmission {
   audioUrl?: string
   status: 'pending' | 'approved' | 'rejected'
   adminSeen?: boolean
-  replyMessage?: string
+  replyMessage?: string // Legacy - kept for backward compatibility
+  userReply?: string // Legacy - kept for backward compatibility
+  conversation?: ConversationMessage[] // New chat-like conversation
   zoneId: string
   zoneName?: string
   submittedBy: {
@@ -265,7 +275,10 @@ export async function approveSong(
       status: 'approved',
       reviewedBy: { userId: reviewerId, userName: reviewerName, reviewedAt: new Date().toISOString() },
       reviewNotes: reviewNotes || '',
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      // Clear user update flags
+      isUpdated: false,
+      hasNewUserReply: false
     })
     
     await createStatusNotification(submissionId, submissionData.title, submissionData.submittedBy, 'approved')
@@ -290,7 +303,10 @@ export async function rejectSong(
       status: 'rejected',
       reviewedBy: { userId: reviewerId, userName: reviewerName, reviewedAt: new Date().toISOString() },
       reviewNotes: reviewNotes,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      // Clear user update flags
+      isUpdated: false,
+      hasNewUserReply: false
     })
     
     const submissionDoc = await getDoc(submissionRef)
@@ -428,8 +444,29 @@ export async function replyToSubmission(submissionId: string, adminName: string,
     if (!submissionDoc.exists()) throw new Error('Submission not found')
 
     const submissionData = submissionDoc.data() as SongSubmission
+    
+    // Create new conversation message
+    const newMessage: ConversationMessage = {
+      id: `msg-${Date.now()}`,
+      sender: 'admin',
+      senderName: adminName,
+      message: message,
+      timestamp: new Date().toISOString()
+    }
+    
+    // Get existing conversation or create new array
+    const existingConversation = submissionData.conversation || []
+    const updatedConversation = [...existingConversation, newMessage]
 
-    await updateDoc(submissionRef, { replyMessage: message, updatedAt: serverTimestamp() })
+    await updateDoc(submissionRef, { 
+      replyMessage: message, // Keep legacy field for backward compatibility
+      conversation: updatedConversation,
+      updatedAt: serverTimestamp(),
+      // Clear user update flags when admin replies
+      isUpdated: false,
+      hasNewUserReply: false,
+      lastUpdatedBy: 'admin'
+    })
     await createStatusNotification(submissionId, submissionData.title, submissionData.submittedBy, 'replied', `${adminName} replied: ${message}`)
 
     return { success: true }
@@ -561,5 +598,128 @@ export async function deleteSubmissionAsAdmin(submissionId: string): Promise<{ s
   } catch (error) {
     console.error('Error deleting submission:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' }
+  }
+}
+
+// Update a submission (user can edit their own pending or approved submissions)
+export async function updateUserSubmission(
+  submissionId: string, 
+  userId: string, 
+  updates: Partial<Pick<SongSubmission, 'title' | 'lyrics' | 'writer' | 'key' | 'leadSinger' | 'notes' | 'audioUrl'>>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const submissionRef = doc(db, SUBMITTED_SONGS_COLLECTION, submissionId)
+    const submissionDoc = await getDoc(submissionRef)
+    
+    if (!submissionDoc.exists()) {
+      return { success: false, error: 'Submission not found' }
+    }
+    
+    const submissionData = submissionDoc.data() as SongSubmission
+    
+    // Check ownership
+    if (submissionData.submittedBy.userId !== userId) {
+      return { success: false, error: 'You can only edit your own submissions' }
+    }
+    
+    // Allow editing pending and approved submissions (not rejected)
+    if (submissionData.status === 'rejected') {
+      return { success: false, error: 'Cannot edit rejected submissions' }
+    }
+    
+    await updateDoc(submissionRef, {
+      ...updates,
+      updatedAt: serverTimestamp(),
+      isUpdated: true,  // Flag to show admin that user has updated
+      lastUpdatedBy: 'user'
+    })
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating submission:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to update submission' }
+  }
+}
+
+// User reply to admin message
+export async function userReplyToSubmission(
+  submissionId: string, 
+  userId: string, 
+  message: string,
+  userName?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const submissionRef = doc(db, SUBMITTED_SONGS_COLLECTION, submissionId)
+    const submissionDoc = await getDoc(submissionRef)
+    
+    if (!submissionDoc.exists()) {
+      return { success: false, error: 'Submission not found' }
+    }
+    
+    const submissionData = submissionDoc.data() as SongSubmission
+    
+    // Check ownership
+    if (submissionData.submittedBy.userId !== userId) {
+      return { success: false, error: 'You can only reply to your own submissions' }
+    }
+    
+    // Create new conversation message
+    const newMessage: ConversationMessage = {
+      id: `msg-${Date.now()}`,
+      sender: 'user',
+      senderName: userName || submissionData.submittedBy.userName || 'User',
+      message: message,
+      timestamp: new Date().toISOString()
+    }
+    
+    // Get existing conversation or create new array
+    const existingConversation = submissionData.conversation || []
+    const updatedConversation = [...existingConversation, newMessage]
+    
+    // Also update legacy userReply field for backward compatibility
+    const existingUserReply = submissionData.userReply || ''
+    const newLegacyReply = existingUserReply 
+      ? `${existingUserReply}\n---\n${new Date().toLocaleString()}: ${message}`
+      : `${new Date().toLocaleString()}: ${message}`
+    
+    await updateDoc(submissionRef, { 
+      userReply: newLegacyReply,
+      conversation: updatedConversation,
+      updatedAt: serverTimestamp(),
+      hasNewUserReply: true,
+      lastUpdatedBy: 'user'
+    })
+    
+    // Create notification for admin
+    await createStatusNotification(
+      submissionId, 
+      submissionData.title, 
+      submissionData.submittedBy,
+      'replied', 
+      `User replied: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`
+    )
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error sending user reply:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to send reply' }
+  }
+}
+
+// Mark submission as seen by admin (clears update flags)
+export async function markSubmissionAsSeen(submissionId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const submissionRef = doc(db, SUBMITTED_SONGS_COLLECTION, submissionId)
+    
+    await updateDoc(submissionRef, {
+      isUpdated: false,
+      hasNewUserReply: false,
+      lastSeenByAdmin: serverTimestamp()
+    })
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error marking submission as seen:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to mark as seen' }
   }
 }

@@ -154,7 +154,9 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
                   <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
                   <h3 className="text-xs sm:text-lg font-bold text-white uppercase tracking-wide">
-                    Upcoming Event
+                    {moment((currentItem.data as UpcomingEvent).date).isSame(moment(), 'day') 
+                      ? "Today's Event" 
+                      : 'Upcoming Event'}
                   </h3>
                 </div>
                 <p className="text-base sm:text-2xl font-extrabold text-white mb-1 sm:mb-2 drop-shadow-lg line-clamp-2">
@@ -164,7 +166,9 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm font-medium">
-                      {moment((currentItem.data as UpcomingEvent).date).format('MMM D')}
+                      {moment((currentItem.data as UpcomingEvent).date).isSame(moment(), 'day')
+                        ? 'Today'
+                        : moment((currentItem.data as UpcomingEvent).date).format('MMM D')}
                     </span>
                   </div>
                   {(currentItem.data as UpcomingEvent).time && (
@@ -201,7 +205,9 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
                   <Sparkles className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-300 animate-pulse" />
                   <h3 className="text-xs sm:text-xl font-bold text-white uppercase tracking-wide">
-                    Upcoming Event
+                    {moment((currentItem.data as UpcomingEvent).date).isSame(moment(), 'day') 
+                      ? "Today's Event" 
+                      : 'Upcoming Event'}
                   </h3>
                 </div>
                 <p className="text-sm sm:text-3xl font-extrabold text-white mb-1 sm:mb-2 drop-shadow-lg truncate">
@@ -211,7 +217,9 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm font-medium">
-                      {moment((currentItem.data as UpcomingEvent).date).format('MMM D')}
+                      {moment((currentItem.data as UpcomingEvent).date).isSame(moment(), 'day')
+                        ? 'Today'
+                        : moment((currentItem.data as UpcomingEvent).date).format('MMM D')}
                     </span>
                   </div>
                   {(currentItem.data as UpcomingEvent).time && (

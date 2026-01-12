@@ -15,6 +15,29 @@ interface NotificationRequest {
   body: string;
   data?: Record<string, string | undefined>;
   excludeUserId?: string;
+  senderName?: string;
+}
+
+// Simple in-memory rate limiting (resets on server restart)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 100; // max requests per window
+const RATE_WINDOW = 60000; // 1 minute window
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
 }
 
 // Support both naming conventions for env vars
@@ -68,7 +91,7 @@ function getNotificationUrl(type: NotificationType, data?: Record<string, string
 function getNotificationTag(type: NotificationType, data?: Record<string, string | undefined>): string {
   switch (type) {
     case 'chat':
-      return `chat-${data?.chatId || Date.now()}`;
+      return `chat-${data?.chatId || 'unknown'}`;
     case 'audiolab':
       return `audiolab-${data?.projectId || Date.now()}`;
     case 'calendar':
@@ -101,7 +124,16 @@ function getAndroidChannel(type: NotificationType): string {
 export async function POST(req: NextRequest) {
   try {
     const body: NotificationRequest = await req.json();
-    const { type, recipientIds, title, body: notifBody, data, excludeUserId } = body;
+    const { type, recipientIds, title, body: notifBody, data, excludeUserId, senderName } = body;
+
+    // Rate limiting by type + excludeUserId (sender)
+    const rateLimitKey = `${type}-${excludeUserId || 'anonymous'}`;
+    if (!checkRateLimit(rateLimitKey)) {
+      console.log('[Notification] Rate limit exceeded for:', rateLimitKey);
+      return NextResponse.json({ 
+        error: 'Rate limit exceeded. Please try again later.' 
+      }, { status: 429 });
+    }
 
     // Validate required fields
     if (!type || !recipientIds || !title || !notifBody) {
@@ -123,7 +155,10 @@ export async function POST(req: NextRequest) {
       ? recipientIds.filter(id => id !== excludeUserId)
       : recipientIds;
 
+    console.log(`[Notification] Type: ${type}, Recipients: ${recipientIds.length}, Excluded: ${excludeUserId || 'none'}, After filter: ${filteredRecipients.length}`);
+
     if (filteredRecipients.length === 0) {
+      console.log('[Notification] No recipients after filtering - skipping');
       return NextResponse.json({ 
         success: true, 
         sentCount: 0, 
@@ -132,12 +167,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Get FCM tokens for all recipients
-    const allTokens: { userId: string; token: string }[] = [];
-    for (const userId of filteredRecipients) {
-      const tokens = await getUserFCMTokens(userId);
-      tokens.forEach(token => allTokens.push({ userId, token }));
-    }
+    // Get FCM tokens for all recipients IN PARALLEL
+    const tokenPromises = filteredRecipients.map(userId => 
+      getUserFCMTokens(userId).then(tokens => tokens.map(token => ({ userId, token })))
+    );
+    const tokenResults = await Promise.all(tokenPromises);
+    const allTokens = tokenResults.flat();
 
     if (allTokens.length === 0) {
       console.log('[Notification] No FCM tokens found for any recipient');
@@ -154,6 +189,21 @@ export async function POST(req: NextRequest) {
     const tag = getNotificationTag(type, data);
     const channelId = getAndroidChannel(type);
 
+    // Build display title/body with sender name for chat
+    let displayTitle = title;
+    let displayBody = notifBody;
+    if (type === 'chat' && senderName) {
+      // For group chats, show "SenderName: message" format
+      if (data?.isGroup === 'true') {
+        displayTitle = data?.chatName || title;
+        displayBody = `${senderName}: ${notifBody}`;
+      } else {
+        // For direct chats, sender name is the title
+        displayTitle = senderName;
+        displayBody = notifBody;
+      }
+    }
+
     // Stringify data for FCM (all values must be strings)
     const stringifiedData: Record<string, string> = { type };
     if (data) {
@@ -163,6 +213,7 @@ export async function POST(req: NextRequest) {
         }
       });
     }
+    if (senderName) stringifiedData.senderName = senderName;
     stringifiedData.timestamp = Date.now().toString();
     stringifiedData.url = targetUrl;
     stringifiedData.tag = tag;
@@ -177,8 +228,8 @@ export async function POST(req: NextRequest) {
       android: {
         priority: (isHighPriority ? 'high' : 'normal') as 'high' | 'normal',
         notification: {
-          title,
-          body: notifBody,
+          title: displayTitle,
+          body: displayBody,
           channelId,
           sound: 'default',
           clickAction: targetUrl
@@ -189,14 +240,14 @@ export async function POST(req: NextRequest) {
           aps: {
             sound: 'default',
             badge: 1,
-            alert: { title, body: notifBody }
+            alert: { title: displayTitle, body: displayBody }
           }
         }
       },
       webpush: {
         notification: {
-          title,
-          body: notifBody,
+          title: displayTitle,
+          body: displayBody,
           icon: '/APP ICON/pwa_192_filled.png',
           badge: '/APP ICON/pwa_192_filled.png',
           tag,
@@ -210,45 +261,97 @@ export async function POST(req: NextRequest) {
       }
     }));
 
-    // Send notifications (batch for efficiency)
-    const sendPromises = messages.map((message, index) =>
-      admin.messaging().send(message).then(
-        (messageId) => ({ success: true as const, messageId, ...allTokens[index] }),
-        (error) => ({ success: false as const, error, ...allTokens[index] })
-      )
-    );
+    // Send notifications using sendEach for better efficiency
+    let successCount = 0;
+    let failedCount = 0;
+    const invalidTokens: { userId: string; token: string }[] = [];
 
-    const results = await Promise.all(sendPromises);
-    const successCount = results.filter(r => r.success).length;
-    const failedCount = results.filter(r => !r.success).length;
+    // Use sendEach if available (Firebase Admin SDK v11+), otherwise fall back to individual sends
+    try {
+      const response = await admin.messaging().sendEach(messages);
+      
+      response.responses.forEach((result, index) => {
+        if (result.success) {
+          successCount++;
+        } else {
+          failedCount++;
+          const error = result.error;
+          if (
+            error?.code === 'messaging/registration-token-not-registered' ||
+            error?.code === 'messaging/invalid-registration-token' ||
+            error?.message?.includes('not found') ||
+            error?.message?.includes('not registered')
+          ) {
+            invalidTokens.push(allTokens[index]);
+          }
+          console.error(`[Notification] Failed to send to ${allTokens[index].userId}:`, error?.message || error);
+        }
+      });
+    } catch (batchError) {
+      // Fallback to individual sends if sendEach fails
+      console.log('[Notification] sendEach failed, falling back to individual sends:', batchError);
+      
+      const sendPromises = messages.map((message, index) =>
+        admin.messaging().send(message).then(
+          () => ({ success: true as const, ...allTokens[index] }),
+          (error) => ({ success: false as const, error, ...allTokens[index] })
+        )
+      );
 
-    // Clean up invalid tokens
-    const invalidResults = results.filter((r): r is { success: false; error: any; userId: string; token: string } => 
-      !r.success && (
-        (r as any).error?.code === 'messaging/registration-token-not-registered' ||
-        (r as any).error?.message?.includes('not found') ||
-        (r as any).error?.message?.includes('not registered')
-      )
-    );
+      const results = await Promise.all(sendPromises);
+      results.forEach((result) => {
+        if (result.success) {
+          successCount++;
+        } else {
+          failedCount++;
+          const error = (result as any).error;
+          if (
+            error?.code === 'messaging/registration-token-not-registered' ||
+            error?.code === 'messaging/invalid-registration-token' ||
+            error?.message?.includes('not found') ||
+            error?.message?.includes('not registered')
+          ) {
+            invalidTokens.push({ userId: result.userId, token: result.token });
+          }
+        }
+      });
+    }
 
-    if (invalidResults.length > 0) {
-      console.log('[Notification] Cleaning up', invalidResults.length, 'invalid tokens');
+    // Clean up only the specific invalid tokens (not entire user node)
+    if (invalidTokens.length > 0) {
+      console.log('[Notification] Cleaning up', invalidTokens.length, 'invalid tokens');
       const rtdb = admin.database();
-      for (const result of invalidResults) {
+      
+      for (const { userId, token } of invalidTokens) {
         try {
-          await rtdb.ref(`fcm_tokens/${result.userId}`).remove();
-          console.log('[Notification] Removed invalid token for user:', result.userId);
+          // Get user's tokens and remove only the invalid one
+          const tokenRef = rtdb.ref(`fcm_tokens/${userId}`);
+          const snapshot = await tokenRef.once('value');
+          const data = snapshot.val();
+          
+          if (data) {
+            if (data.token === token) {
+              // Single token structure - remove it
+              await tokenRef.remove();
+              console.log('[Notification] Removed single invalid token for user:', userId);
+            } else if (typeof data === 'object') {
+              // Multiple tokens - find and remove only the invalid one
+              for (const [key, value] of Object.entries(data)) {
+                if ((value as any)?.token === token) {
+                  await rtdb.ref(`fcm_tokens/${userId}/${key}`).remove();
+                  console.log('[Notification] Removed invalid token', key, 'for user:', userId);
+                  break;
+                }
+              }
+            }
+          }
         } catch (cleanupError) {
           console.error('[Notification] Error cleaning up token:', cleanupError);
         }
       }
     }
 
-    // Log results
     console.log(`[Notification] Type: ${type}, Sent: ${successCount}/${allTokens.length}`);
-    results.filter(r => !r.success).forEach((r) => {
-      console.error(`[Notification] Failed to send to ${r.userId}:`, (r as any).error?.message || (r as any).error);
-    });
 
     return NextResponse.json({
       success: true,

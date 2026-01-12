@@ -13,6 +13,7 @@ import {
   rejectSong,
   replyToSubmission,
   deleteSubmissionAsAdmin,
+  markSubmissionAsSeen,
   SongSubmission 
 } from '@/lib/song-submission-service'
 import { useAuth } from '@/hooks/useAuth'
@@ -502,6 +503,18 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       >
                         {song.status.toUpperCase()}
                       </span>
+                      {/* Updated badge - shows when user edited their submission */}
+                      {(song as any).isUpdated && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 animate-pulse">
+                          UPDATED
+                        </span>
+                      )}
+                      {/* New Reply badge - shows when user replied */}
+                      {(song as any).hasNewUserReply && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 animate-pulse">
+                          NEW REPLY
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 text-xs sm:text-sm">
@@ -580,7 +593,17 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       {song.status === 'pending' && (
                         <>
                           <button
-                            onClick={() => setSelectedSong(song)}
+                            onClick={() => {
+                              setSelectedSong(song)
+                              // Clear update flags when viewing
+                              if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
+                                markSubmissionAsSeen(song.id).then(() => {
+                                  setSongs(prev => prev.map(s => 
+                                    s.id === song.id ? { ...s, isUpdated: false, hasNewUserReply: false } as SongSubmission : s
+                                  ))
+                                })
+                              }
+                            }}
                             className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
                           >
                             <Eye className="w-4 h-4" />
@@ -618,7 +641,17 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       )}
                       {song.status !== 'pending' && (
                         <button
-                          onClick={() => setSelectedSong(song)}
+                          onClick={() => {
+                            setSelectedSong(song)
+                            // Clear update flags when viewing
+                            if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
+                              markSubmissionAsSeen(song.id).then(() => {
+                                setSongs(prev => prev.map(s => 
+                                  s.id === song.id ? { ...s, isUpdated: false, hasNewUserReply: false } as SongSubmission : s
+                                ))
+                              })
+                            }
+                          }}
                           className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
                         >
                           <Eye className="w-4 h-4" />
@@ -750,6 +783,77 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                   </div>
                 )}
 
+                {/* Conversation Thread - Chat-like display */}
+                {((selectedSong as any).conversation?.length > 0 || selectedSong.replyMessage || (selectedSong as any).userReply) && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Conversation</label>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {/* Show conversation array if exists */}
+                      {(selectedSong as any).conversation?.length > 0 ? (
+                        (selectedSong as any).conversation.map((msg: any) => (
+                          <div 
+                            key={msg.id} 
+                            className={`p-4 rounded-lg border ${
+                              msg.sender === 'admin' 
+                                ? 'bg-purple-50 border-purple-200 mr-8' 
+                                : 'bg-blue-50 border-blue-200 ml-8'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                  msg.sender === 'admin' ? 'bg-purple-600' : 'bg-blue-600'
+                                }`}>
+                                  {msg.sender === 'admin' ? (
+                                    <MessageSquare className="w-3 h-3 text-white" />
+                                  ) : (
+                                    <User className="w-3 h-3 text-white" />
+                                  )}
+                                </div>
+                                <span className={`text-xs font-semibold ${msg.sender === 'admin' ? 'text-purple-700' : 'text-blue-700'}`}>
+                                  {msg.sender === 'admin' ? `Admin (${msg.senderName})` : selectedSong.submittedBy.userName}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-gray-400">
+                                {new Date(msg.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className={`text-sm whitespace-pre-wrap ${msg.sender === 'admin' ? 'text-purple-900' : 'text-blue-900'}`}>
+                              {msg.message}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        /* Fallback to legacy fields */
+                        <>
+                          {selectedSong.replyMessage && (
+                            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 mr-8">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
+                                  <MessageSquare className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-xs font-semibold text-purple-700">Admin Reply</span>
+                              </div>
+                              <p className="text-sm text-purple-900 whitespace-pre-wrap">{selectedSong.replyMessage}</p>
+                            </div>
+                          )}
+                          {(selectedSong as any).userReply && (
+                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 ml-8">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                  <User className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-xs font-semibold text-blue-700">User Reply ({selectedSong.submittedBy.userName})</span>
+                              </div>
+                              <p className="text-sm text-blue-900 whitespace-pre-wrap">{(selectedSong as any).userReply}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Submission Info */}
                 <div className="border-t border-gray-200 pt-4">
                   <p className="text-sm text-gray-600">
@@ -832,12 +936,28 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         {/* Reply Modal */}
         {showReplyModal && selectedSong && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">Reply to {selectedSong.title}</h2>
                 <p className="text-sm text-gray-600 mt-1">This message will be sent to the submitter</p>
               </div>
-              <div className="p-6">
+              <div className="p-6 space-y-4">
+                {/* Show previous admin reply if exists */}
+                {selectedSong.replyMessage && (
+                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-xs font-semibold text-purple-700 mb-1">Your previous reply:</p>
+                    <p className="text-sm text-purple-900 whitespace-pre-wrap">{selectedSong.replyMessage}</p>
+                  </div>
+                )}
+                
+                {/* Show user's reply if exists */}
+                {(selectedSong as any).userReply && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs font-semibold text-blue-700 mb-1">User replied:</p>
+                    <p className="text-sm text-blue-900 whitespace-pre-wrap">{(selectedSong as any).userReply}</p>
+                  </div>
+                )}
+                
                 <textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
