@@ -166,12 +166,19 @@ export default function MediaUploadSection() {
   }
 
   const handleDeletePlaylist = async (id: string) => {
+    console.log('🗑️ Deleting playlist:', id)
     try {
       await deleteAdminPlaylist(id)
+      console.log('✅ Playlist deleted successfully')
       showToast('success', 'Playlist deleted!')
       setDeleteConfirm(null)
+      setSelectedPlaylist(null) // Clear selected playlist if it was deleted
+      setView('playlists') // Go back to playlists list
       loadData()
-    } catch (e) { showToast('error', 'Failed to delete') }
+    } catch (e) { 
+      console.error('❌ Failed to delete playlist:', e)
+      showToast('error', 'Failed to delete') 
+    }
   }
 
   const handleSaveCategory = async () => {
@@ -249,38 +256,72 @@ export default function MediaUploadSection() {
   const filteredPlaylists = playlists.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   const getPlaylistThumb = (p: AdminPlaylist) => p.thumbnail || (p.videoIds.length > 0 ? videos.find(v => v.id === p.videoIds[0])?.thumbnail : '') || ''
 
-  const Toast = () => toast && (
-    <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
-      {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-      {toast.message}
-    </div>
-  )
+  // Render toast notification
+  const renderToast = () => {
+    if (!toast) return null
+    return (
+      <div className={`fixed top-4 right-4 z-[10000] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+        {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+        {toast.message}
+      </div>
+    )
+  }
 
-  const DeleteModal = () => deleteConfirm && (
-    <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Trash2 className="w-6 h-6 text-red-600" />
-        </div>
-        <h3 className="text-lg font-bold text-center mb-2">Delete {deleteConfirm.type}?</h3>
-        <p className="text-gray-500 text-center mb-6">"{deleteConfirm.name}"</p>
-        <div className="flex gap-3">
-          <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl font-medium transition-colors">Cancel</button>
-          <button onClick={() => {
-            if (deleteConfirm.type === 'video') handleDeleteVideo(deleteConfirm.id)
-            else if (deleteConfirm.type === 'playlist') handleDeletePlaylist(deleteConfirm.id)
-            else if (deleteConfirm.type === 'category') handleDeleteCategory(deleteConfirm.id)
-          }} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors">Delete</button>
+  // Render delete confirmation modal
+  const renderDeleteModal = () => {
+    if (!deleteConfirm) return null
+    return (
+      <div 
+        className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+        onClick={() => setDeleteConfirm(null)}
+      >
+        <div 
+          className="bg-white rounded-2xl p-6 max-w-sm w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-bold text-center mb-2">Delete {deleteConfirm.type}?</h3>
+          <p className="text-gray-500 text-center mb-6">"{deleteConfirm.name}"</p>
+          <div className="flex gap-3">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Cancel clicked')
+                setDeleteConfirm(null)
+              }} 
+              className="flex-1 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl font-medium transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('🗑️ Delete button clicked in modal, type:', deleteConfirm.type, 'id:', deleteConfirm.id)
+                if (deleteConfirm.type === 'video') handleDeleteVideo(deleteConfirm.id)
+                else if (deleteConfirm.type === 'playlist') handleDeletePlaylist(deleteConfirm.id)
+                else if (deleteConfirm.type === 'category') handleDeleteCategory(deleteConfirm.id)
+              }} 
+              className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors cursor-pointer"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // ========== VIDEOS LIST ==========
   if (view === 'videos') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast /><DeleteModal />
+        {renderToast()}{renderDeleteModal()}
         
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -396,7 +437,7 @@ export default function MediaUploadSection() {
   if (view === 'playlists') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast /><DeleteModal />
+        {renderToast()}{renderDeleteModal()}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Media</h1>
           <button onClick={() => { resetPlaylistForm(); setView('add-playlist') }} className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700">
@@ -482,7 +523,7 @@ export default function MediaUploadSection() {
   if (view === 'add-video' || view === 'edit-video') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast />
+        {renderToast()}
         <div className="max-w-xl mx-auto">
           <button onClick={() => { resetVideoForm(); setView('videos') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Videos</span>
@@ -607,7 +648,7 @@ export default function MediaUploadSection() {
   if (view === 'add-playlist' || view === 'edit-playlist') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast />
+        {renderToast()}
         <div className="max-w-xl mx-auto">
           <button onClick={() => { resetPlaylistForm(); setView('playlists') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Playlists</span>
@@ -660,7 +701,7 @@ export default function MediaUploadSection() {
   if (view === 'playlist-detail' && selectedPlaylist) {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast /><DeleteModal />
+        {renderToast()}{renderDeleteModal()}
         <div className="max-w-3xl mx-auto">
           <button onClick={() => { setSelectedPlaylist(null); setSearchQuery(''); setView('playlists') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Playlists</span>
@@ -734,7 +775,7 @@ export default function MediaUploadSection() {
   if (view === 'categories') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast /><DeleteModal />
+        {renderToast()}{renderDeleteModal()}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Media</h1>
           <button onClick={() => { resetCategoryForm(); setView('add-category') }} className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700">
@@ -826,7 +867,7 @@ export default function MediaUploadSection() {
   if (view === 'add-category' || view === 'edit-category') {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
-        <Toast />
+        {renderToast()}
         <div className="max-w-xl mx-auto">
           <button onClick={() => { resetCategoryForm(); setView('categories') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Categories</span>
