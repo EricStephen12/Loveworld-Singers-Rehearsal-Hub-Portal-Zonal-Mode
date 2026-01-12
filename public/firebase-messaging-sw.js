@@ -1,10 +1,11 @@
 // Firebase Cloud Messaging Service Worker
 // Handles background notifications when web app is not active
 
-import { initializeApp } from "firebase/app";
-import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+// Import Firebase scripts from CDN (required for service workers)
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-// Use the same Firebase configuration as your main app
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBkpkvkV82ILc8R_BjDK9OBDPqDaCbM9lM",
   authDomain: "loveworld-singers-app.firebaseapp.com",
@@ -15,77 +16,188 @@ const firebaseConfig = {
   measurementId: "G-0SN10RN806"
 };
 
-// Initialize Firebase app
-const firebaseApp = initializeApp(firebaseConfig);
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase Messaging
-const messaging = getMessaging(firebaseApp);
+// Get messaging instance
+const messaging = firebase.messaging();
 
-// Handle background messages
-onBackgroundMessage(messaging, (payload) => {
-  console.log('[SW] Background message received:', payload);
+// Handle background messages (when app is closed or in background)
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw] Background message received:', payload);
   
-  const notificationTitle = payload.notification?.title || 'LWSRHP';
+  // Check if this is a voice call notification
+  const isVoiceCall = payload.data?.type === 'VOICE_CALL';
+  
+  const notificationTitle = isVoiceCall 
+    ? `📞 ${payload.data?.callerName || 'Someone'} is calling`
+    : (payload.notification?.title || 'LWSRHP');
+    
   const notificationOptions = {
-    body: payload.notification?.body || 'You have a new notification',
-    icon: '/APP ICON/pwa_192_filled.png',
+    body: isVoiceCall 
+      ? 'Tap to answer the call'
+      : (payload.notification?.body || 'You have a new notification'),
+    icon: payload.data?.callerAvatar || '/APP ICON/pwa_192_filled.png',
     badge: '/APP ICON/pwa_192_filled.png',
-    tag: `bg-${Date.now()}`,
+    tag: isVoiceCall ? `call-${payload.data?.callId}` : `notification-${Date.now()}`,
+    requireInteraction: true, // Keep notification visible until user interacts
+    vibrate: isVoiceCall ? [500, 200, 500, 200, 500] : [200, 100, 200], // Longer vibration for calls
     data: {
-      url: payload.data?.url || payload.notification?.data?.url || '/pages/notifications'
+      url: isVoiceCall ? `/pages/groups?call=${payload.data?.callId}` : (payload.data?.url || '/pages/notifications'),
+      type: payload.data?.type,
+      callId: payload.data?.callId,
+      callerName: payload.data?.callerName,
+      callerAvatar: payload.data?.callerAvatar,
+      ...payload.data
     },
-    actions: [
-      {
-        action: 'open',
-        title: 'Open App'
-      },
-      {
-        action: 'close', 
-        title: 'Close'
-      }
-    ]
+    actions: isVoiceCall 
+      ? [
+          { action: 'answer', title: '✅ Answer' },
+          { action: 'decline', title: '❌ Decline' }
+        ]
+      : [
+          { action: 'open', title: 'Open' },
+          { action: 'dismiss', title: 'Dismiss' }
+        ]
   };
 
-  // Show notification
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event.notification.tag);
+  console.log('[firebase-messaging-sw] Notification clicked:', event);
   
   event.notification.close();
   
-  // Handle action buttons
-  if (event.action === 'close') {
+  const data = event.notification.data || {};
+  const isVoiceCall = data.type === 'VOICE_CALL';
+  
+  // Handle call-specific actions
+  if (isVoiceCall) {
+    if (event.action === 'decline') {
+      console.log('[firebase-messaging-sw] Call declined from notification');
+      // Post message to any open client to decline the call
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then((windowClients) => {
+          windowClients.forEach(client => {
+            client.postMessage({
+              type: 'DECLINE_CALL',
+              callId: data.callId
+            });
+          });
+        });
+      return;
+    }
+    
+    // Answer or tap on call notification - open the app
+    // Use relative URL for navigation (works better with PWA)
+    const callUrl = `/pages/groups?call=${data.callId}&action=answer`;
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then((windowClients) => {
+          // Check if app is already open
+          for (const client of windowClients) {
+            if (client.url.includes(self.location.origin) && 'focus' in client) {
+              // Post message first, then navigate
+              client.postMessage({
+                type: 'INCOMING_CALL',
+                callId: data.callId,
+                callerName: data.callerName,
+                callerAvatar: data.callerAvatar,
+                action: event.action === 'answer' ? 'answer' : 'show'
+              });
+              return client.focus().then(() => client.navigate(callUrl));
+            }
+          }
+          // Open new window if app not open - use origin + path
+          return self.clients.openWindow(self.location.origin + callUrl);
+        })
+    );
     return;
   }
   
-  // Default action - open the app
-  const url = event.notification.data?.url || '/pages/notifications';
+  // Handle regular notification actions
+  if (event.action === 'dismiss') {
+    return;
+  }
+  
+  // Get URL - handle both relative and absolute URLs
+  let urlToOpen = data.url || '/pages/notifications';
+  if (urlToOpen.startsWith('/')) {
+    urlToOpen = self.location.origin + urlToOpen;
+  }
   
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Check if there's already a window open
-        for (const client of clientList) {
+      .then((windowClients) => {
+        // Check if app is already open
+        for (const client of windowClients) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.focus();
-            client.navigate(url);
-            return;
+            return client.focus().then(() => client.navigate(urlToOpen));
           }
         }
-        // If no window is open, open a new one
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(url);
-        }
+        // Open new window if app not open
+        return self.clients.openWindow(urlToOpen);
       })
   );
 });
 
-// Handle notification close
-self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] Notification closed:', event.notification.tag);
+// Handle push events directly (fallback)
+self.addEventListener('push', (event) => {
+  console.log('[firebase-messaging-sw] Push event received:', event);
+  
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      console.log('[firebase-messaging-sw] Push payload:', payload);
+      
+      // Handle both notification and data-only messages
+      const title = payload.notification?.title || payload.data?.title || 'LWSRHP';
+      const body = payload.notification?.body || payload.data?.body || 'New notification';
+      
+      const options = {
+        body: body,
+        icon: '/APP ICON/pwa_192_filled.png',
+        badge: '/APP ICON/pwa_192_filled.png',
+        tag: payload.data?.tag || `push-${Date.now()}`,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        data: {
+          url: payload.data?.url || payload.fcmOptions?.link || '/pages/notifications',
+          ...payload.data
+        }
+      };
+      
+      event.waitUntil(
+        self.registration.showNotification(title, options)
+      );
+    } catch (e) {
+      console.error('[firebase-messaging-sw] Error parsing push data:', e);
+      // Try to show notification with raw text
+      if (event.data) {
+        const text = event.data.text();
+        event.waitUntil(
+          self.registration.showNotification('LWSRHP', {
+            body: text || 'New notification',
+            icon: '/APP ICON/pwa_192_filled.png',
+            badge: '/APP ICON/pwa_192_filled.png',
+            tag: `push-${Date.now()}`
+          })
+        );
+      }
+    }
+  } else {
+    // No data, show generic notification
+    event.waitUntil(
+      self.registration.showNotification('LWSRHP', {
+        body: 'You have a new notification',
+        icon: '/APP ICON/pwa_192_filled.png',
+        badge: '/APP ICON/pwa_192_filled.png',
+        tag: `push-${Date.now()}`
+      })
+    );
+  }
 });
 
-console.log('[SW] Firebase Messaging Service Worker loaded');
+console.log('[firebase-messaging-sw] Service worker loaded and ready');

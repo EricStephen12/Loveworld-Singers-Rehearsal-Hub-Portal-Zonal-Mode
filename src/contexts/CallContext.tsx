@@ -129,12 +129,41 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const cleanup = service.startListening()
     serviceRef.current = service
     
+    // Listen for incoming call events from notifications
+    const handleIncomingCallEvent = async (event: CustomEvent) => {
+      console.log('[CallContext] Received incomingVoiceCall event:', event.detail)
+      const { callId, callerName, callerAvatar, action, fromNotification } = event.detail
+      
+      // If from notification, check for pending calls
+      if (callId && service) {
+        console.log('[CallContext] Checking for pending calls, callId:', callId)
+        
+        // First try to check for pending calls in the database
+        const foundCall = await service.checkForPendingCalls()
+        
+        // If no ringing call found, the call may have ended - show feedback
+        if (!foundCall) {
+          console.log('[CallContext] No active call found - may have ended')
+          // Dispatch event to show missed call toast
+          window.dispatchEvent(new CustomEvent('showToast', {
+            detail: {
+              message: callerName ? `Missed call from ${callerName}` : 'Call ended',
+              type: 'info'
+            }
+          }))
+        }
+      }
+    }
+    
+    window.addEventListener('incomingVoiceCall', handleIncomingCallEvent as unknown as EventListener)
+    
     return () => {
       cleanup()
       service.cleanup()
       serviceRef.current = null
+      window.removeEventListener('incomingVoiceCall', handleIncomingCallEvent as unknown as EventListener)
     }
-  }, [user?.uid])
+  }, [user?.uid]) // Only re-initialize when user changes, NOT on callState change
   
   // Duration timer
   useEffect(() => {

@@ -44,18 +44,27 @@ export default function PushNotificationListener() {
         }
       }
 
-      // Get service worker registration
+      // Get the Firebase messaging service worker specifically
       if ('serviceWorker' in navigator) {
         try {
-          registrationRef.current = await navigator.serviceWorker.ready
-          console.log('[Push] Service worker ready')
+          // Wait for the firebase-messaging-sw.js to be ready
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          const fcmSW = registrations.find(r => r.active?.scriptURL.includes('firebase-messaging-sw.js'))
+          
+          if (fcmSW) {
+            registrationRef.current = fcmSW
+            console.log('[Push] Firebase messaging SW found')
+          } else {
+            // Fallback to any ready service worker
+            registrationRef.current = await navigator.serviceWorker.ready
+            console.log('[Push] Using default service worker')
+          }
           
           // Try to get push subscription for native shell communication
-          if (registrationRef.current.pushManager) {
+          if (registrationRef.current?.pushManager) {
             const subscription = await registrationRef.current.pushManager.getSubscription()
             if (subscription) {
               console.log('[Push] Existing subscription found')
-              // Save endpoint for server-side push (if you set up FCM later)
             }
           }
         } catch (e) {
@@ -68,9 +77,13 @@ export default function PushNotificationListener() {
 
   // Show browser notification
   const showNotification = async (title: string, body: string, tag: string, url?: string) => {
-    if (Notification.permission !== 'granted') return
-    if (document.visibilityState === 'visible') return // Don't show if app is focused
+    if (Notification.permission !== 'granted') {
+      console.log('[Push] Permission not granted')
+      return
+    }
     
+    // Show notification regardless of visibility state
+    // Users want to see notifications even when on the site
     try {
       if (registrationRef.current) {
         await registrationRef.current.showNotification(title, {
@@ -83,6 +96,15 @@ export default function PushNotificationListener() {
           silent: false
         } as NotificationOptions)
         console.log('[Push] Notification shown:', title)
+      } else {
+        // Fallback to native Notification API if service worker not ready
+        new Notification(title, {
+          body,
+          icon: '/APP ICON/pwa_192_filled.png',
+          tag,
+          data: { url }
+        })
+        console.log('[Push] Notification shown via Notification API:', title)
       }
     } catch (e) {
       console.log('[Push] Notification error:', e)
@@ -93,6 +115,37 @@ export default function PushNotificationListener() {
   useEffect(() => {
     // This allows your native shell to trigger notifications
     (window as any).showPushNotification = showNotification;
+    
+    // Listen for messages from service worker (background notification clicks)
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      console.log('[Push] Service worker message:', event.data);
+      
+      // Handle incoming call from notification click
+      if (event.data?.type === 'INCOMING_CALL') {
+        window.dispatchEvent(new CustomEvent('incomingVoiceCall', {
+          detail: {
+            callId: event.data.callId,
+            callerName: event.data.callerName,
+            callerAvatar: event.data.callerAvatar,
+            action: event.data.action,
+            timestamp: Date.now()
+          }
+        }));
+        console.log('[Push] Incoming call event dispatched');
+      }
+      
+      // Handle decline call from notification
+      if (event.data?.type === 'DECLINE_CALL') {
+        window.dispatchEvent(new CustomEvent('declineVoiceCall', {
+          detail: { callId: event.data.callId }
+        }));
+        console.log('[Push] Decline call event dispatched');
+      }
+    }
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
     
     // Listen for messages from native shell
     const handleNativeMessage = (event: MessageEvent) => {
@@ -123,6 +176,9 @@ export default function PushNotificationListener() {
     
     return () => {
       window.removeEventListener('message', handleNativeMessage)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      }
       delete (window as any).showPushNotification
     }
   }, [])

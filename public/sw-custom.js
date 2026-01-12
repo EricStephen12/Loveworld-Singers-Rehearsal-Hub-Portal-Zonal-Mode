@@ -272,10 +272,26 @@ self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event.notification.tag);
 });
 
-// Handle push events (for FCM or native shell push)
+// Handle push events - delegate to firebase-messaging-sw.js for FCM
+// This handler is a fallback for non-FCM push events only
 self.addEventListener('push', (event) => {
-  console.log('Push event received:', event);
+  console.log('[sw-custom] Push event received - checking if FCM handled');
   
+  // Skip if this looks like an FCM message (let firebase-messaging-sw handle it)
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      // FCM messages typically have these fields
+      if (data.notification || data.from || data.fcmMessageId) {
+        console.log('[sw-custom] FCM message detected, skipping (handled by firebase-messaging-sw)');
+        return;
+      }
+    } catch (e) {
+      // Not JSON, continue with fallback handling
+    }
+  }
+  
+  // Fallback for non-FCM push events
   let data = { title: 'New Notification', body: '', url: '/pages/notifications' };
   
   try {
@@ -283,7 +299,7 @@ self.addEventListener('push', (event) => {
       data = event.data.json();
     }
   } catch (e) {
-    console.log('Push data parse error:', e);
+    console.log('[sw-custom] Push data parse error:', e);
     if (event.data) {
       data.body = event.data.text();
     }

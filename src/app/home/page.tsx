@@ -30,7 +30,6 @@ function HomePageContent() {
   
   // Simple HQ Admin check
   const isHQAdmin = profile?.email && [
-    'lliamzelvin@gmail.com',
     'ihenacho23@gmail.com', 
     'ephraimloveworld1@gmail.com',
     'takeshopstores@gmail.com',
@@ -700,27 +699,17 @@ function HomePageContent() {
                         )}
                       </div>
                       {feature.badge === true && hasUnreadNotifications && (
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 via-red-500 to-red-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
-                          <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-75"></div>
-                        </div>
-                      )}
-                      {feature.badge === true && !hasUnreadNotifications && (
-                        <div className="absolute -top-1 -right-1 bg-gray-300 text-white text-xs rounded-full w-2.5 h-2.5 flex items-center justify-center font-bold shadow border border-white">
-                        </div>
+                        <div className="absolute -top-0.5 -right-0.5 bg-red-500 rounded-full w-2 h-2 border border-white"></div>
                       )}
                       {feature.badge === 'media' && hasNewMedia && (
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-emerald-500 via-emerald-500 to-emerald-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
-                          <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
-                        </div>
+                        <div className="absolute -top-0.5 -right-0.5 bg-emerald-500 rounded-full w-2 h-2 border border-white"></div>
                       )}
                       {feature.badge === 'calendar' && hasNewCalendar && (
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
-                          <div className="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-75"></div>
-                        </div>
+                        <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full w-2 h-2 border border-white"></div>
                       )}
                       {feature.badge === 'chat' && chatUnreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold shadow-xl border-2 border-white animate-pulse">
-                          <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-75"></div>
+                        <div className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center font-semibold border border-white">
+                          {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                         </div>
                       )}
                       {isPremiumFeature && !hasAccess && (

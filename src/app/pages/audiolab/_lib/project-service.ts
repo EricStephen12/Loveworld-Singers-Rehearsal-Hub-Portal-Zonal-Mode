@@ -447,18 +447,51 @@ export async function updateTrackAudio(
  */
 export async function addCollaborator(
   projectId: string, 
-  userId: string
+  userId: string,
+  projectName?: string,
+  inviterName?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('[ProjectService] Adding collaborator:', userId, 'to project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
+    
+    // Get project name if not provided
+    let finalProjectName = projectName;
+    if (!finalProjectName) {
+      const projectDoc = await getDoc(docRef);
+      if (projectDoc.exists()) {
+        finalProjectName = projectDoc.data().name || 'Untitled Project';
+      }
+    }
+    
     await updateDoc(docRef, {
       collaborators: arrayUnion(userId),
       updatedAt: serverTimestamp()
     });
     
     console.log('[ProjectService] Collaborator added successfully');
+    
+    // Send push notification to the invited user
+    try {
+      await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'audiolab',
+          recipientIds: [userId],
+          title: 'Studio Collaboration Invite',
+          body: inviterName 
+            ? `${inviterName} invited you to collaborate on "${finalProjectName}"`
+            : `You've been invited to collaborate on "${finalProjectName}"`,
+          data: { projectId, projectName: finalProjectName }
+        })
+      });
+      console.log('[ProjectService] Push notification sent for AudioLab invite');
+    } catch (notifError) {
+      console.log('[ProjectService] Push notification failed (non-blocking):', notifError);
+    }
+    
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error adding collaborator:', error);

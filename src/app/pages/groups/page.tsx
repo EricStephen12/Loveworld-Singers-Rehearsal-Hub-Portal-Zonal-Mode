@@ -99,6 +99,33 @@ function GroupsContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
   
+  // Handle URL parameters for incoming calls from notifications
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const callId = urlParams.get('call')
+    const action = urlParams.get('action')
+    
+    if (callId) {
+      console.log('[Groups] Call from notification - callId:', callId, 'action:', action)
+      
+      // Dispatch event to trigger the call UI
+      window.dispatchEvent(new CustomEvent('incomingVoiceCall', {
+        detail: {
+          callId,
+          action: action || 'show',
+          fromNotification: true,
+          timestamp: Date.now()
+        }
+      }))
+      
+      // Clean up URL params
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [])
+  
   // Search users
   useEffect(() => {
     const search = async () => {

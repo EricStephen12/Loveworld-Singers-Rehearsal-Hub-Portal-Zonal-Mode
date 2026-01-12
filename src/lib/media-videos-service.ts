@@ -43,7 +43,7 @@ export type MediaVideoInput = Omit<MediaVideo, 'id' | 'createdAt' | 'updatedAt' 
 const COLLECTION = 'media_videos'
 
 class MediaVideosService {
-  async create(data: MediaVideoInput): Promise<string> {
+  async create(data: MediaVideoInput, notifyUsers: boolean = false): Promise<string> {
     const docRef = await addDoc(collection(db, COLLECTION), {
       ...data,
       views: 0,
@@ -51,7 +51,59 @@ class MediaVideosService {
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     })
+    
+    // Send push notification for new media (optional, admin can choose)
+    if (notifyUsers) {
+      this.sendMediaNotification(docRef.id, data.title, data.forHQ).catch(err => {
+        console.log('[MediaVideos] Push notification failed (non-blocking):', err)
+      })
+    }
+    
     return docRef.id
+  }
+  
+  // Send push notification for new media to zone members
+  async sendMediaNotification(videoId: string, title: string, forHQ: boolean): Promise<void> {
+    try {
+      // Get zone members to notify based on forHQ flag
+      const membersCollection = forHQ ? 'hq_members' : 'zone_members'
+      const membersRef = collection(db, membersCollection)
+      const snapshot = await getDocs(query(membersRef, limit(500))) // Limit to prevent too many notifications
+      
+      const recipientIds: string[] = []
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        if (data.userId) {
+          recipientIds.push(data.userId)
+        }
+      })
+      
+      if (recipientIds.length === 0) {
+        console.log('[MediaVideos] No recipients found for notification')
+        return
+      }
+      
+      // Send in batches of 100 to avoid overwhelming the API
+      const batchSize = 100
+      for (let i = 0; i < recipientIds.length; i += batchSize) {
+        const batch = recipientIds.slice(i, i + batchSize)
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'media',
+            recipientIds: batch,
+            title: '🎬 New Video',
+            body: `New video uploaded: "${title}"`,
+            data: { videoId }
+          })
+        })
+      }
+      
+      console.log('[MediaVideos] Push notification sent to', recipientIds.length, 'users')
+    } catch (error) {
+      console.error('[MediaVideos] Error sending notification:', error)
+    }
   }
 
   async getAll(limitCount = 24): Promise<MediaVideo[]> {

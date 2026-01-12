@@ -146,16 +146,16 @@ export default function RehearsalsPage() {
     //   iconBg: 'bg-indigo-100',
     //   iconColor: 'text-indigo-600'
     // },
-    {
-      id: 'archives',
-      title: 'Archives',
-      description: 'Access past rehearsal recordings and materials',
-      icon: MapPin,
-      href: '/pages/praise-night?category=archive',
-      gradient: 'from-rose-600 via-pink-600 to-purple-600',
-      iconBg: 'bg-rose-100',
-      iconColor: 'text-rose-600'
-    }
+    // {
+    //   id: 'archives',
+    //   title: 'Archives',
+    //   description: 'Access past rehearsal recordings and materials',
+    //   icon: MapPin,
+    //   href: '/pages/praise-night?category=archive',
+    //   gradient: 'from-rose-600 via-pink-600 to-purple-600',
+    //   iconBg: 'bg-rose-100',
+    //   iconColor: 'text-rose-600'
+    // }
   ]
 
   return (

@@ -40,7 +40,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 // Auto-optimize for low data on app startup
 if (typeof window !== 'undefined') {
   // Disable all console logs for security
-  disableConsoleLogs()
+  // disableConsoleLogs() // Temporarily disabled for debugging
   
   PerformanceOptimizer.autoOptimize()
   ViewportHeightFix.init()

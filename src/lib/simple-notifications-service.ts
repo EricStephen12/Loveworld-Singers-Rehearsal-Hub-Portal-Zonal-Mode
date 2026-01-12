@@ -70,10 +70,71 @@ export async function sendMessageToAllUsers(
     const docRef = await addDoc(messagesRef, messageData)
     invalidateCache(zoneId)
     
+    // Send push notification to zone members
+    sendZoneAnnouncementNotification(docRef.id, title.trim(), message.trim(), zoneId).catch(err => {
+      console.log('[Notifications] Push notification failed (non-blocking):', err)
+    })
+    
     return { success: true, id: docRef.id }
   } catch (error) {
     console.error('Error sending message:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to send message' }
+  }
+}
+
+// Send push notification for zone announcement
+async function sendZoneAnnouncementNotification(
+  messageId: string,
+  title: string,
+  message: string,
+  zoneId?: string
+): Promise<void> {
+  try {
+    // Get zone members to notify
+    const isHQ = zoneId ? isHQGroup(zoneId) : false
+    const membersCollection = isHQ ? 'hq_members' : 'zone_members'
+    const membersRef = collection(db, membersCollection)
+    
+    // For non-HQ zones, filter by zoneId
+    const membersQuery = (!isHQ && zoneId)
+      ? query(membersRef, where('zoneId', '==', zoneId))
+      : query(membersRef)
+    
+    const snapshot = await getDocs(membersQuery)
+    
+    const recipientIds: string[] = []
+    snapshot.forEach(doc => {
+      const data = doc.data()
+      if (data.userId) {
+        recipientIds.push(data.userId)
+      }
+    })
+    
+    if (recipientIds.length === 0) {
+      console.log('[Notifications] No recipients found for zone announcement')
+      return
+    }
+    
+    // Send in batches of 100
+    const batchSize = 100
+    for (let i = 0; i < recipientIds.length; i += batchSize) {
+      const batch = recipientIds.slice(i, i + batchSize)
+      await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'zone',
+          recipientIds: batch,
+          title: `📢 ${title}`,
+          body: message.length > 100 ? message.substring(0, 100) + '...' : message,
+          data: { messageId, zoneId: zoneId || '' }
+        })
+      })
+    }
+    
+    console.log('[Notifications] Zone announcement sent to', recipientIds.length, 'users')
+  } catch (error) {
+    console.error('[Notifications] Error sending zone announcement:', error)
   }
 }
 

@@ -6,7 +6,7 @@ import {
   Upload, Film, X, Trash2, Edit2, 
   Youtube, Cloud, Check, Eye, Heart,
   Plus, ListVideo, Globe, Star, Search, 
-  CheckCircle, XCircle, ArrowLeft, ChevronRight
+  CheckCircle, XCircle, ArrowLeft, ChevronRight, Tag
 } from 'lucide-react'
 import { mediaVideosService, MediaVideo } from '@/lib/media-videos-service'
 import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtube'
@@ -19,20 +19,29 @@ import {
   removeVideoFromPlaylist,
   AdminPlaylist
 } from '@/lib/admin-playlist-service'
+import {
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  MediaCategory
+} from '@/lib/media-category-service'
 
-type View = 'videos' | 'playlists' | 'add-video' | 'edit-video' | 'add-playlist' | 'edit-playlist' | 'playlist-detail'
+type View = 'videos' | 'playlists' | 'categories' | 'add-video' | 'edit-video' | 'add-playlist' | 'edit-playlist' | 'playlist-detail' | 'add-category' | 'edit-category'
 
 export default function MediaUploadSection() {
   const { user, profile } = useAuth()
   const [view, setView] = useState<View>('videos')
   const [videos, setVideos] = useState<MediaVideo[]>([])
   const [playlists, setPlaylists] = useState<AdminPlaylist[]>([])
+  const [categories, setCategories] = useState<MediaCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<MediaVideo | null>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<AdminPlaylist | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<MediaCategory | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'video' | 'playlist'; id: string; name: string } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'video' | 'playlist' | 'category'; id: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   
   const [videoForm, setVideoForm] = useState({
@@ -42,6 +51,10 @@ export default function MediaUploadSection() {
   
   const [playlistForm, setPlaylistForm] = useState({
     name: '', description: '', isPublic: true, isFeatured: false, forHQ: true
+  })
+
+  const [categoryForm, setCategoryForm] = useState({
+    name: '', description: ''
   })
 
   const showToast = (type: 'success' | 'error', message: string) => {
@@ -54,9 +67,14 @@ export default function MediaUploadSection() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [v, p] = await Promise.all([mediaVideosService.getAll(50), getAdminPlaylists()])
+      const [v, p, c] = await Promise.all([
+        mediaVideosService.getAll(50), 
+        getAdminPlaylists(),
+        getCategories()
+      ])
       setVideos(v)
       setPlaylists(p)
+      setCategories(c)
     } catch (e) { console.error(e) }
     finally { setIsLoading(false) }
   }
@@ -69,6 +87,11 @@ export default function MediaUploadSection() {
   const resetPlaylistForm = () => {
     setPlaylistForm({ name: '', description: '', isPublic: true, isFeatured: false, forHQ: true })
     setSelectedPlaylist(null)
+  }
+
+  const resetCategoryForm = () => {
+    setCategoryForm({ name: '', description: '' })
+    setSelectedCategory(null)
   }
 
   const handleVideoUrlChange = (url: string) => {
@@ -151,6 +174,38 @@ export default function MediaUploadSection() {
     } catch (e) { showToast('error', 'Failed to delete') }
   }
 
+  const handleSaveCategory = async () => {
+    if (!categoryForm.name.trim()) { showToast('error', 'Enter a category name'); return }
+    setIsSubmitting(true)
+    try {
+      if (selectedCategory) {
+        await updateCategory(selectedCategory.id, { name: categoryForm.name.trim(), description: categoryForm.description.trim() })
+      } else {
+        await createCategory(categoryForm.name.trim(), categoryForm.description.trim())
+      }
+      showToast('success', selectedCategory ? 'Category updated!' : 'Category created!')
+      resetCategoryForm()
+      setView('categories')
+      loadData()
+    } catch (e) { showToast('error', 'Failed to save') }
+    finally { setIsSubmitting(false) }
+  }
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteCategory(id)
+      showToast('success', 'Category deleted!')
+      setDeleteConfirm(null)
+      loadData()
+    } catch (e) { showToast('error', 'Failed to delete') }
+  }
+
+  const handleEditCategory = (category: MediaCategory) => {
+    setSelectedCategory(category)
+    setCategoryForm({ name: category.name, description: category.description || '' })
+    setView('edit-category')
+  }
+
   const handleEditPlaylist = (playlist: AdminPlaylist) => {
     setSelectedPlaylist(playlist)
     setPlaylistForm({ name: playlist.name, description: playlist.description || '', isPublic: playlist.isPublic, isFeatured: playlist.isFeatured, forHQ: playlist.forHQ })
@@ -211,7 +266,11 @@ export default function MediaUploadSection() {
         <p className="text-gray-500 text-center mb-6">"{deleteConfirm.name}"</p>
         <div className="flex gap-3">
           <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl font-medium transition-colors">Cancel</button>
-          <button onClick={() => deleteConfirm.type === 'video' ? handleDeleteVideo(deleteConfirm.id) : handleDeletePlaylist(deleteConfirm.id)} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors">Delete</button>
+          <button onClick={() => {
+            if (deleteConfirm.type === 'video') handleDeleteVideo(deleteConfirm.id)
+            else if (deleteConfirm.type === 'playlist') handleDeletePlaylist(deleteConfirm.id)
+            else if (deleteConfirm.type === 'category') handleDeleteCategory(deleteConfirm.id)
+          }} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors">Delete</button>
         </div>
       </div>
     </div>
@@ -238,6 +297,9 @@ export default function MediaUploadSection() {
           </button>
           <button onClick={() => { setSearchQuery(''); setView('playlists') }} className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl font-medium border border-gray-200 hover:bg-gray-50">
             <ListVideo className="w-4 h-4" />Playlists ({playlists.length})
+          </button>
+          <button onClick={() => { setSearchQuery(''); setView('categories') }} className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl font-medium border border-gray-200 hover:bg-gray-50">
+            <Tag className="w-4 h-4" />Categories ({categories.length})
           </button>
         </div>
         
@@ -347,6 +409,9 @@ export default function MediaUploadSection() {
           </button>
           <button className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium">
             <ListVideo className="w-4 h-4" />Playlists ({playlists.length})
+          </button>
+          <button onClick={() => { setSearchQuery(''); setView('categories') }} className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl font-medium border border-gray-200 hover:bg-gray-50">
+            <Tag className="w-4 h-4" />Categories ({categories.length})
           </button>
         </div>
         <div className="relative mb-6">
@@ -632,6 +697,153 @@ export default function MediaUploadSection() {
               })
             )}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ========== CATEGORIES LIST ==========
+  if (view === 'categories') {
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+        <Toast /><DeleteModal />
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Media</h1>
+          <button onClick={() => { resetCategoryForm(); setView('add-category') }} className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700">
+            <Plus className="w-5 h-5" />New Category
+          </button>
+        </div>
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => { setSearchQuery(''); setView('videos') }} className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl font-medium border border-gray-200 hover:bg-gray-50">
+            <Film className="w-4 h-4" />Videos ({videos.length})
+          </button>
+          <button onClick={() => { setSearchQuery(''); setView('playlists') }} className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl font-medium border border-gray-200 hover:bg-gray-50">
+            <ListVideo className="w-4 h-4" />Playlists ({playlists.length})
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium">
+            <Tag className="w-4 h-4" />Categories ({categories.length})
+          </button>
+        </div>
+        
+        {/* Categories List */}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+                <div className="flex gap-4 items-center">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-200 rounded w-1/3 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Tag className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No categories yet</h3>
+            <p className="text-gray-500 mb-4">Create your first category to organize videos</p>
+            <button onClick={() => { resetCategoryForm(); setView('add-category') }} className="px-6 py-2.5 bg-purple-600 text-white rounded-xl font-medium">
+              Create Category
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {categories.map(category => (
+              <div key={category.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  {/* Icon */}
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Tag className="w-5 h-5 text-purple-600" />
+                  </div>
+                  
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                    {category.description && (
+                      <p className="text-sm text-gray-500 line-clamp-1">{category.description}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">Slug: {category.slug}</p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleEditCategory(category)} 
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />Edit
+                    </button>
+                    <button 
+                      onClick={() => setDeleteConfirm({ type: 'category', id: category.id, name: category.name })} 
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ========== ADD/EDIT CATEGORY ==========
+  if (view === 'add-category' || view === 'edit-category') {
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
+        <Toast />
+        <div className="max-w-xl mx-auto">
+          <button onClick={() => { resetCategoryForm(); setView('categories') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
+            <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Categories</span>
+          </button>
+          
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">{selectedCategory ? 'Edit Category' : 'Create Category'}</h1>
+          
+          {/* Name */}
+          <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
+            <input 
+              type="text" 
+              value={categoryForm.name} 
+              onChange={(e) => setCategoryForm(p => ({ ...p, name: e.target.value }))} 
+              placeholder="e.g., Praise, Worship, Medley" 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" 
+            />
+            {categoryForm.name && (
+              <p className="text-xs text-gray-400 mt-2">
+                Slug: {categoryForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}
+              </p>
+            )}
+          </div>
+          
+          {/* Description */}
+          <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
+            <textarea 
+              value={categoryForm.description} 
+              onChange={(e) => setCategoryForm(p => ({ ...p, description: e.target.value }))} 
+              placeholder="What type of videos belong in this category?" 
+              rows={3} 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-500" 
+            />
+          </div>
+          
+          {/* Save Button */}
+          <button 
+            onClick={handleSaveCategory} 
+            disabled={isSubmitting || !categoryForm.name.trim()} 
+            className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Check className="w-5 h-5" />
+            {isSubmitting ? 'Saving...' : selectedCategory ? 'Save Changes' : 'Create Category'}
+          </button>
         </div>
       </div>
     )

@@ -11,7 +11,6 @@ match /media/{mediaId} {
   // Allow write access only to HQ Admins
   allow create, update, delete: if request.auth != null 
     && request.auth.token.email in [
-      'lliamzelvin@gmail.com',
       'ihenacho23@gmail.com', 
       'ephraimloveworld1@gmail.com',
       'takeshopstores@gmail.com',
@@ -32,7 +31,6 @@ match /media_comments/{commentId} {
   allow update, delete: if request.auth != null 
     && (request.auth.uid == resource.data.userId 
         || request.auth.token.email in [
-          'lliamzelvin@gmail.com',
           'ihenacho23@gmail.com', 
           'ephraimloveworld1@gmail.com',
           'takeshopstores@gmail.com',

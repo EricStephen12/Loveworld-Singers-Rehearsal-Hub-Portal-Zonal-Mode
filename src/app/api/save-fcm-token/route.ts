@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { collection, doc, setDoc, getFirestore } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
-import app from '@/lib/firebase-setup'
+import admin from 'firebase-admin'
 
-const db = getFirestore(app)
+// Support both naming conventions for env vars
+const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_ADMIN_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY || process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PRIVATE_KEY;
+const databaseURL = process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://loveworld-singers-app-default-rtdb.firebaseio.com';
+
+// Initialize Firebase Admin SDK
+try {
+  if (!admin.apps.length && projectId && clientEmail && privateKey) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+      }),
+      databaseURL
+    });
+    console.log('✅ Firebase Admin initialized with Realtime DB');
+  }
+} catch (error) {
+  console.error('❌ Firebase Admin init error:', error);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,17 +32,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'FCM token is required' }, { status: 400 })
     }
 
-    // Save FCM token to Firestore
-    const tokenRef = doc(collection(db, 'fcm_tokens'), token)
-    await setDoc(tokenRef, {
+    if (!admin.apps.length) {
+      console.warn('⚠️ Firebase Admin not configured');
+      return NextResponse.json({ 
+        success: true, 
+        message: 'FCM token received (server storage disabled)' 
+      })
+    }
+
+    // Use Realtime Database instead of Firestore (separate quota, faster)
+    const rtdb = admin.database();
+    const userIdToUse = userId && userId !== 'anonymous' ? userId : `anon_${token.substring(0, 20)}`;
+    
+    await rtdb.ref(`fcm_tokens/${userIdToUse}`).set({
       token,
       platform: platform || 'web',
-      userId: userId || 'anonymous',
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    })
-
-    console.log(`✅ FCM token saved for ${platform}:`, token.substring(0, 20) + '...')
+      userId: userIdToUse,
+      updatedAt: Date.now()
+    });
+    
+    console.log(`✅ FCM token saved to RTDB for user ${userIdToUse}:`, token.substring(0, 20) + '...');
 
     return NextResponse.json({ 
       success: true, 

@@ -18,6 +18,11 @@
     "audiolab_sessions": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    
+    "fcm_tokens": {
+      ".read": true,
+      ".write": true
     }
   }
 }

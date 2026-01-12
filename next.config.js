@@ -73,20 +73,11 @@ const nextConfig = {
       };
     }
     
-    // Optimize bundle size
-    config.optimization.splitChunks = {
-      chunks: 'all',
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-        },
-      },
-    };
-    
     return config;
   },
+  
+  // Transpile problematic packages
+  transpilePackages: ['firebase', 'firebase-admin'],
   
   // Headers for performance
   async headers() {

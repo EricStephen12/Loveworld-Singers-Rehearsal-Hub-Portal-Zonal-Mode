@@ -313,7 +313,6 @@ export function isHQAdministrator(role: UserRole): boolean {
 
 // HQ Admin email list - Add emails of people who should be HQ admins
 export const HQ_ADMIN_EMAILS = [
-  'lliamzelvin@gmail.com',      // Lliamz Elvin - HQ Admin
   'ihenacho23@gmail.com',       // Ihenacho Uche - HQ Admin  
   'ephraimloveworld1@gmail.com', // Ephraim Udoji - HQ Admin
   'takeshopstores@gmail.com',   // Eric Stephen - HQ Admin

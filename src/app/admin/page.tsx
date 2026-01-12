@@ -66,7 +66,6 @@ export default function AdminPage() {
 
   // Check if user is HQ Admin
   const isHQAdmin = Boolean(profile?.email && [
-    'lliamzelvin@gmail.com',
     'ihenacho23@gmail.com', 
     'ephraimloveworld1@gmail.com',
     'takeshopstores@gmail.com',
@@ -297,7 +296,6 @@ export default function AdminPage() {
 
     // Check if user has admin access (zone coordinator OR HQ admin)
     const isHQAdminCheck = Boolean(profile?.email && [
-      'lliamzelvin@gmail.com',
       'ihenacho23@gmail.com', 
       'ephraimloveworld1@gmail.com',
       'takeshopstores@gmail.com',

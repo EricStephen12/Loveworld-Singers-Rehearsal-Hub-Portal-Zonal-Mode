@@ -707,6 +707,22 @@ export async function sendMessage(
         },
         ...unreadUpdates
       })
+      
+      // Send push notification to other participants
+      const otherParticipants = participants.filter((id: string) => id !== sender.id)
+      if (otherParticipants.length > 0) {
+        const isGroup = chatData.type === 'group'
+        const chatName = isGroup ? chatData.name : sender.name
+        const notifTitle = chatName || sender.name
+        const notifBody = isGroup 
+          ? `${sender.name}: ${lastMessageText}`
+          : lastMessageText
+        
+        // Fire and forget - don't block message sending
+        sendChatNotification(otherParticipants, notifTitle, notifBody, chatId, sender.id).catch(err => {
+          console.log('[ChatService] Push notification failed (non-blocking):', err)
+        })
+      }
     } else {
       // Fallback: just update last message if chat doc not found
       const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
@@ -723,6 +739,35 @@ export async function sendMessage(
   } catch (error) {
     console.error('[ChatService] sendMessage error:', error)
     return false
+  }
+}
+
+/**
+ * Send push notification for chat message
+ */
+async function sendChatNotification(
+  recipientIds: string[],
+  title: string,
+  body: string,
+  chatId: string,
+  senderId: string
+): Promise<void> {
+  try {
+    await fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'chat',
+        recipientIds,
+        title,
+        body,
+        data: { chatId },
+        excludeUserId: senderId
+      })
+    })
+    console.log('[ChatService] Push notification sent for chat:', chatId)
+  } catch (error) {
+    console.error('[ChatService] sendChatNotification error:', error)
   }
 }
 

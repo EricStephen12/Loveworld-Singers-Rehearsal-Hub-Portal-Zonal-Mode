@@ -207,7 +207,6 @@ The Firestore rules are in `firestore.rules`. They're pretty open right now beca
 ## Admin Access
 
 These emails have admin rights (hardcoded in Firestore rules):
-- lliamzelvin@gmail.com
 - ihenacho23@gmail.com
 - ephraimloveworld1@gmail.com
 - takeshopstores@gmail.com

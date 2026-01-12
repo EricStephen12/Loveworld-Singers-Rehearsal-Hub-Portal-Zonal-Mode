@@ -329,6 +329,34 @@ async function createStatusNotification(
     
     const notificationsRef = collection(db, SONG_NOTIFICATIONS_COLLECTION)
     await addDoc(notificationsRef, notificationData)
+    
+    // Send push notification for approval/rejection/reply (not for 'seen')
+    if (status !== 'seen' && submittedBy.userId) {
+      const title = status === 'approved' 
+        ? '🎵 Song Approved!' 
+        : status === 'rejected' 
+          ? '🎵 Song Feedback' 
+          : '🎵 Song Reply'
+      
+      const body = customMessage || `Your song "${songTitle}" has been ${status}`
+      
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'song',
+            recipientIds: [submittedBy.userId],
+            title,
+            body,
+            data: { songId, songTitle, status }
+          })
+        })
+        console.log('[SongSubmission] Push notification sent for song:', songTitle, status)
+      } catch (pushError) {
+        console.log('[SongSubmission] Push notification failed (non-blocking):', pushError)
+      }
+    }
   } catch (error) {
     console.error('Error creating status notification:', error)
   }

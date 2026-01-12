@@ -346,6 +346,50 @@ export class VoiceCallService {
     this.callbacks = callbacks
   }
 
+  // Check for pending calls (used when app opens from notification)
+  // Returns true if a ringing call was found
+  async checkForPendingCalls(): Promise<boolean> {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
+      console.warn('[VoiceCall] Realtime Database not available')
+      return false
+    }
+
+    try {
+      console.log('[VoiceCall] Checking for pending calls for user:', this.userId)
+      const callsRef = ref(realtimeDb, `voice_calls/${this.userId}`)
+      const snapshot = await get(callsRef)
+      
+      if (snapshot.exists()) {
+        const calls = snapshot.val()
+        console.log('[VoiceCall] Found calls:', Object.keys(calls).length)
+        
+        let foundRingingCall = false
+        
+        Object.entries(calls).forEach(([callId, callData]: [string, any]) => {
+          console.log('[VoiceCall] Call:', callId, 'status:', callData.status, 'callerId:', callData.callerId)
+          
+          // Check if there's a ringing call that we haven't handled yet
+          if (callData.status === 'ringing' && callData.callerId !== this.userId) {
+            console.log('[VoiceCall] Found pending ringing call:', callId)
+            this.currentCallId = callId
+            this.currentCall = { ...callData, id: callId }
+            this.playRingtone()
+            this.callbacks.onIncomingCall?.(this.currentCall!)
+            foundRingingCall = true
+          }
+        })
+        
+        return foundRingingCall
+      } else {
+        console.log('[VoiceCall] No calls found for user')
+        return false
+      }
+    } catch (error) {
+      console.error('[VoiceCall] Error checking for pending calls:', error)
+      return false
+    }
+  }
+
   // Start listening for incoming calls
   startListening(): () => void {
     if (!isRealtimeDbAvailable() || !realtimeDb) {
