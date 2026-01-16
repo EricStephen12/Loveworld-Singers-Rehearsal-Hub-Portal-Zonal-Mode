@@ -1,4 +1,4 @@
-// HQ Invitation Service
+﻿// HQ Invitation Service
 // Handles invitation codes for HQ groups (zone-001 to zone-005)
 // Separate from zone invitations but uses same authentication
 
@@ -19,7 +19,6 @@ export class HQInvitationService {
     userName: string
   ) {
     try {
-      console.log('🔍 Processing HQ invitation code:', invitationCode)
       
       // Get zone by invitation code
       const zone = getZoneByInvitationCode(invitationCode)
@@ -29,18 +28,14 @@ export class HQInvitationService {
         return { success: false, error: 'Invalid invitation code' }
       }
       
-      // Check if it's an HQ group
-      if (!isHQGroup(zone.id)) {
+            if (!isHQGroup(zone.id)) {
         console.error('❌ Not an HQ group invitation code')
         return { success: false, error: 'Not an HQ group invitation code' }
       }
       
-      console.log('✅ Valid HQ group:', zone.name)
       
-      // Check if user is already a member
-      const existingMember = await HQMembersService.getMemberByUserId(userId, zone.id)
+            const existingMember = await HQMembersService.getMemberByUserId(userId, zone.id)
       if (existingMember) {
-        console.log('⚠️ User already member of HQ group')
         return { success: false, error: 'Already a member of this HQ group' }
       }
       
@@ -48,7 +43,6 @@ export class HQInvitationService {
       const isCoordinator = invitationCode.startsWith('ZNL')
       const role = isCoordinator ? 'coordinator' : 'member'
       
-      console.log('📝 Adding user to HQ group as:', role)
       
       // Add to hq_members collection
       const result = await HQMembersService.addMember({
@@ -60,7 +54,6 @@ export class HQInvitationService {
       })
       
       if (result.success) {
-        console.log('✅ User joined HQ group successfully')
         return {
           success: true,
           zoneName: zone.name,

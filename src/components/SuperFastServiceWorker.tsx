@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -13,22 +13,18 @@ export default function SuperFastServiceWorker() {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       const registerSW = async () => {
         try {
-          console.log('🚀 Registering SUPER FAST Service Worker...')
           
           const registration = await navigator.serviceWorker.register('/sw-super-fast.js', {
             scope: '/'
           })
 
-          console.log('✅ SUPER FAST Service Worker registered:', registration)
 
           // Handle updates
           registration.addEventListener('updatefound', () => {
-            console.log('🔄 Service Worker update found')
             const newWorker = registration.installing
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('🔄 New Service Worker installed, reloading...')
                   window.location.reload()
                 }
               })
@@ -37,7 +33,6 @@ export default function SuperFastServiceWorker() {
 
           // Handle controller change
           navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('🔄 Service Worker controller changed')
             window.location.reload()
           })
 

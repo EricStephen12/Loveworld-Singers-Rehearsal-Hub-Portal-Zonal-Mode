@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Music, Calendar, FolderOpen, ArrowRight, X } from 'lucide-react';
@@ -83,7 +83,6 @@ export default function GlobalSearch({
   };
 
   const handleResultClick = (result: SearchResult) => {
-    console.log('🔍 Navigating to:', result.url);
     router.push(result.url);
     setIsOpen(false);
     setSearchQuery('');

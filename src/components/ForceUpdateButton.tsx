@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
@@ -10,7 +10,6 @@ export default function ForceUpdateButton() {
   const handleForceUpdate = async () => {
     setIsUpdating(true);
     try {
-      console.log('🔄 Force update triggered by user');
       await versionManager.forceRefresh();
     } catch (error) {
       console.error('❌ Force update failed:', error);

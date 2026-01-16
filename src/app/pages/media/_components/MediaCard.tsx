@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -32,8 +32,7 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [categoryName, setCategoryName] = useState<string>(media.type || '')
   
-  // Check if this is a YouTube video
-  const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.youtubeUrl || '')
+    const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.youtubeUrl || '')
   
   // Load category name
   useEffect(() => {

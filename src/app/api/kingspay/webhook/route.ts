@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { verifyKingsPayWebhookSignature } from '@/lib/kingspay-service'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 
@@ -34,8 +34,7 @@ export async function POST(request: NextRequest) {
         const endDate = new Date()
         endDate.setMonth(endDate.getMonth() + months)
 
-        // Update zone subscription in Firebase
-        try {
+                try {
           await FirebaseDatabaseService.updateDocument('zones', zoneId, {
             subscriptionTier: 'premium',
             subscriptionStatus: 'active',
@@ -47,11 +46,8 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date().toISOString()
           })
 
-          console.log(`✅ Zone ${zoneId} upgraded to premium via KingsPay payment ${payment_id}`)
 
-          // TODO: Send notification to zone coordinator
-          // TODO: Log the transaction
-
+                    
           return NextResponse.json({ success: true, message: 'Subscription activated' })
         } catch (error) {
           console.error('❌ Error updating zone subscription:', error)

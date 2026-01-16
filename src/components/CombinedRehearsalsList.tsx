@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Combined Rehearsals List Component
  * Phase 4: Shows both zone and sub-group rehearsals with clear labels
  * Only renders if user belongs to at least one sub-group
@@ -42,8 +42,7 @@ export default function CombinedRehearsalsList({
 
   const zoneColor = currentZone?.themeColor || '#9333EA';
 
-  // Check if user belongs to any sub-groups (from useSubGroup hook)
-  const hasSubGroupMembership = memberSubGroups.length > 0;
+    const hasSubGroupMembership = memberSubGroups.length > 0;
 
   // Don't render anything if user is not a member of any sub-group
   if (!subGroupLoading && !hasSubGroupMembership) {

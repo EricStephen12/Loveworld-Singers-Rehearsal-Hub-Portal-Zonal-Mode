@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,7 +8,6 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
-import AuthCheck from '@/components/AuthCheck'
 
 // Helper function to convert Firebase errors to user-friendly messages
 function sanitizeError(error: string): string {
@@ -18,7 +17,7 @@ function sanitizeError(error: string): string {
     .replace(/auth\//gi, '')
     .replace(/\(auth\/.*?\)/gi, '')
     .trim()
-  
+
   // Map common Firebase errors to friendly messages
   const errorMap: Record<string, string> = {
     'user-not-found': 'No account found with this email. Please check your email or create a new account.',
@@ -33,24 +32,22 @@ function sanitizeError(error: string): string {
     'operation-not-allowed': 'This sign-in method is not enabled. Please contact support.',
     'requires-recent-login': 'Please sign in again to continue.',
   }
-  
-  // Check if error contains any known Firebase error codes
+
   for (const [code, message] of Object.entries(errorMap)) {
     if (error.toLowerCase().includes(code)) {
       return message
     }
   }
-  
+
   // If no specific match, return a generic message
   if (error.toLowerCase().includes('error') || error.toLowerCase().includes('failed')) {
     return 'Something went wrong. Please try again.'
   }
-  
+
   return sanitized || 'An unexpected error occurred. Please try again.'
 }
 
 // Special senior HQ logins: allow name-based "email" that maps to internal emails
-// NOTE: These require matching Firebase Auth users with these email addresses.
 const SPECIAL_LOGIN_MAP: Record<string, { email: string }> = {
   // Senior HQ zones (have their own zones but are HQ groups, not necessarily HQ admins)
   'the president': { email: 'president@loveworldhq.org' },
@@ -116,7 +113,7 @@ function AuthPageContent() {
     if (urlError && urlMessage) {
       setError(urlMessage)
     }
-    
+
     if (recovered === 'true') {
       setIsRecoveredAccount(true)
       setIsLogin(false) // Switch to signup mode
@@ -125,8 +122,7 @@ function AuthPageContent() {
         setFormData(prev => ({ ...prev, email: decodeURIComponent(email) }))
       }
     }
-    
-    // Clear URL parameters
+
     if (urlError || recovered) {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
@@ -136,7 +132,7 @@ function AuthPageContent() {
   const handleZoneCodeChange = async (code: string) => {
     setFormData(prev => ({ ...prev, zoneCode: code }))
     setZoneInvitationCode(code)
-    
+
     if (code.length >= 6) {
       // Get zone name from config
       const { getZoneByInvitationCode } = await import('@/config/zones')
@@ -164,12 +160,11 @@ function AuthPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('Form submitted, preventing default behavior')
     setError('')
     setSuccess('')
     setIsLoading(true)
     setIsCheckingAccount(true)
-    
+
     try {
       if (!isLogin) {
         // Signup validation
@@ -210,7 +205,7 @@ function AuthPageContent() {
 
         // Validate zone code
         const { getZoneByInvitationCode, getZoneRole, isBossCode } = await import('@/config/zones')
-        
+
         // Get zone (Boss code now returns Boss zone)
         const zone = getZoneByInvitationCode(formData.zoneCode)
         if (!zone) {
@@ -219,15 +214,14 @@ function AuthPageContent() {
           setIsCheckingAccount(false)
           return
         }
-        
-        // Check if it's boss code
+
         const isBoss = isBossCode(formData.zoneCode)
-        
+
         // Determine role from code
         const role = getZoneRole(formData.zoneCode)
 
         setSuccess('Creating your account...')
-        
+
         // Create Firebase account with minimal data (fast)
         const profileData: any = {
           first_name: formData.firstName,
@@ -236,17 +230,17 @@ function AuthPageContent() {
           kingschat_id: formData.kingschatId,
           role: isBoss ? 'boss' : 'user',
         }
-        
+
         if (isBoss) {
           profileData.administration = 'Boss'
         }
-        
+
         const result = await FirebaseAuthService.createUserWithEmailAndPassword(
           formData.email,
           formData.password,
           profileData
         )
-        
+
         if (result.error) {
           setError(sanitizeError(result.error))
           setIsLoading(false)
@@ -255,7 +249,7 @@ function AuthPageContent() {
         }
 
         setSuccess('Account created! Joining your zone...')
-        
+
         // Join zone
         if (result.user && zone) {
           const { ZoneInvitationService } = await import('@/lib/zone-invitation-service')
@@ -266,25 +260,24 @@ function AuthPageContent() {
             `${formData.firstName} ${formData.lastName}`,
             role
           )
-          
+
           if (!joinResult.success) {
             setError(sanitizeError(('error' in joinResult ? joinResult.error : 'Failed to join zone') || 'Failed to join zone'))
             setIsLoading(false)
             setIsCheckingAccount(false)
             return
           }
-          
+
           setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
         }
-        
+
         // Go directly to home - Firebase auth listener will handle the rest
-        console.log('✅ Account created, redirecting to home...')
         setTimeout(() => {
           router.push('/home')
         }, 1000)
       } else {
         setSuccess('Checking your account...')
-        
+
         // Support special name-based logins (The President, The Director, PST Daba/Bisola/Rita)
         const rawIdentifier = formData.email.trim()
         const key = rawIdentifier.toLowerCase()
@@ -297,18 +290,16 @@ function AuthPageContent() {
           signInEmail,
           formData.password
         )
-        
+
         if (result.error) {
           setError(sanitizeError(result.error))
           setIsLoading(false)
           setIsCheckingAccount(false)
           return
         }
-        
-        setSuccess('Login successful! Welcome back!')
-        console.log('Sign in successful:', result)
 
-        // Set flag to prevent AuthCheck from redirecting too early
+        setSuccess('Login successful! Welcome back!')
+
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('justLoggedIn', 'true')
         }
@@ -328,7 +319,7 @@ function AuthPageContent() {
       setIsCheckingAccount(false)
     } finally {
       if (isLogin) {
-      setIsLoading(false)
+        setIsLoading(false)
         setIsCheckingAccount(false)
       }
     }
@@ -348,38 +339,36 @@ function AuthPageContent() {
     setIsLoading(true)
     setIsCheckingAccount(true)
     setError('')
-    
+
     try {
       const { FirebaseAuthService } = await import('@/lib/firebase-auth')
-      
+
       const signInEmail = selectedAccount.email
-      console.log('🔐 Signing in with password for:', signInEmail)
-      
+
       // Sign in with their entered password
       const signInResult = await FirebaseAuthService.signInWithEmailAndPassword(
         signInEmail,
         accountPassword
       )
-      
+
       if (signInResult.error) {
         setError('Incorrect password. Please try again.')
         setIsLoading(false)
         setIsCheckingAccount(false)
         return
       }
-      
-      console.log('✅ Password sign-in successful - redirecting to home')
-      
+
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('userAuthenticated', 'true')
         localStorage.setItem('hasCompletedProfile', 'true')
         localStorage.setItem('authProvider', 'kingschat')
       }
-      
+
       setShowPasswordPrompt(false)
       setIsLoading(false)
       setIsCheckingAccount(false)
-      
+
       router.push('/home')
     } catch (error: any) {
       console.error('Account selection error:', error)
@@ -393,42 +382,41 @@ function AuthPageContent() {
   const handleFetchKingsChatId = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
+
     setIsFetchingKingsChat(true)
     setError('')
-    
+
     try {
       // Initiate KingsChat OAuth flow
       const authTokens = await KingsChatAuthService.login()
-      
+
       if (!authTokens) {
         setError('KingsChat login was cancelled. Please try again.')
         setIsFetchingKingsChat(false)
         return
       }
-      
+
       // Extract KingsChat UID from token
       const { jwtDecode } = await import('jwt-decode')
       const decoded: any = jwtDecode(authTokens.accessToken)
       const kingschatUserId = decoded.userId || decoded.sub || decoded.id
-      
+
       if (!kingschatUserId) {
         setError('Could not extract user ID from KingsChat')
         setIsFetchingKingsChat(false)
         return
       }
-      
-      console.log('🔐 KingsChat ID fetched:', kingschatUserId)
-      
+
+
       // Set the KingsChat ID in the form
       setFormData(prev => ({
         ...prev,
         kingschatId: kingschatUserId
       }))
-      
+
       setSuccess('KingsChat ID fetched successfully!')
       setTimeout(() => setSuccess(''), 2000)
-      
+
     } catch (error: any) {
       console.error('KingsChat fetch error:', error)
       setError(sanitizeError(error.message || 'Failed to fetch KingsChat ID'))
@@ -443,59 +431,55 @@ function AuthPageContent() {
       e.preventDefault()
       e.stopPropagation()
     }
-    
+
     setError('')
     setSuccess('')
     setIsLoading(true)
     setIsCheckingAccount(true)
-    
+
     try {
       if (provider === 'kingschat') {
         setSuccess('Opening KingsChat login...')
-        
+
         // Initiate KingsChat OAuth flow
         const authTokens = await KingsChatAuthService.login()
-        
+
         if (!authTokens) {
           setError('KingsChat login was cancelled or failed. Please try again.')
           setIsLoading(false)
           setIsCheckingAccount(false)
           return
         }
-        
+
         setSuccess('KingsChat login successful! Setting up your account...')
-        
+
         // Extract KingsChat data from token
         const { jwtDecode } = await import('jwt-decode')
         const decoded: any = jwtDecode(authTokens.accessToken)
         const kingschatUserId = decoded.userId || decoded.sub || decoded.id
         const kingschatEmail = decoded.email || decoded.emailAddress
-        
+
         if (!kingschatUserId) {
           setError('Could not extract user ID from KingsChat token')
           setIsLoading(false)
           setIsCheckingAccount(false)
           return
         }
-        
-        console.log('🔐 KingsChat UID:', kingschatUserId)
-        console.log('📧 KingsChat Email:', kingschatEmail)
-        
+
+
         // Check for existing profiles with this KingsChat ID
         const { FirebaseAuthService } = await import('@/lib/firebase-auth')
         const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
-        
-        console.log('🔍 Checking for existing profiles with KingsChat ID:', kingschatUserId)
+
         const existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
           'profiles',
           'kingschat_id',
           '==',
           kingschatUserId
         )
-        
+
         // If multiple accounts found, show account selector modal
         if (existingProfiles && existingProfiles.length > 1) {
-          console.log('⚠️ Multiple accounts found:', existingProfiles.length)
           setMultipleAccounts(existingProfiles)
           setPendingKingschatId(kingschatUserId)
           setShowAccountSelector(true)
@@ -503,12 +487,11 @@ function AuthPageContent() {
           setIsCheckingAccount(false)
           return
         }
-        
+
         // If exactly one account found, prompt for password
         if (existingProfiles && existingProfiles.length === 1) {
           const existingProfile = existingProfiles[0] as any
-          console.log('✅ Found existing profile:', existingProfile.email || existingProfile.id)
-          
+
           // Show password prompt for this account
           setSelectedAccount(existingProfile)
           setShowPasswordPrompt(true)
@@ -517,28 +500,27 @@ function AuthPageContent() {
           setIsCheckingAccount(false)
           return
         }
-        
+
         // No existing profile - this is a new user, send to signup form
-        console.log('🆕 No existing profile found - redirecting to signup form')
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('kingschatUserId', kingschatUserId)
           localStorage.setItem('kingschatAuthPending', 'true')
         }
-        
+
         setIsLoading(false)
         setIsCheckingAccount(false)
         setIsLogin(false) // Switch to signup mode
         setSuccess('Please complete signup with your KingsChat account')
-        
+
         // Pre-fill KingsChat ID in the form
         setFormData(prev => ({
           ...prev,
           kingschatId: kingschatUserId
         }))
-        
+
         return
-        
+
         return
       }
     } catch (error: any) {
@@ -569,18 +551,18 @@ function AuthPageContent() {
         setError('Profile image must be less than 5MB')
         return
       }
-      
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please select a valid image file')
         return
       }
-      
+
       setFormData(prev => ({
         ...prev,
         profileImage: file
       }))
-      setError('') // Clear any previous errors
+      setError('')
     }
   }
 
@@ -591,16 +573,15 @@ function AuthPageContent() {
     e.preventDefault()
     setError('')
     setIsLoading(true)
-    
+
     try {
       if (forgotPasswordStep === 'email') {
-        // Step 1: Verify email exists and has KingsChat linked (client-side lookup)
         if (!forgotPasswordEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotPasswordEmail)) {
           setError('Please enter a valid email address')
           setIsLoading(false)
           return
         }
-        
+
         // Lookup user profile client-side using existing Firebase client
         const profiles = await FirebaseDatabaseService.getCollectionWhere(
           'profiles',
@@ -608,53 +589,52 @@ function AuthPageContent() {
           '==',
           forgotPasswordEmail.toLowerCase()
         )
-        
+
         if (!profiles || profiles.length === 0) {
           setError('No account found with this email')
           setIsLoading(false)
           return
         }
-        
+
         const profile = profiles[0] as any
         const kingschatId = profile.kingschat_id
-        
+
         if (!kingschatId) {
           setError('This account does not have KingsChat linked. Please contact support.')
           setIsLoading(false)
           return
         }
-        
+
         // Store user info and move to KingsChat verification step
         setResetUserFirstName(profile.first_name || '')
         setStoredKingschatIdForReset(kingschatId)
         // Mask the KingsChat ID for display
-        const maskedId = kingschatId.length > 4 
+        const maskedId = kingschatId.length > 4
           ? '****' + kingschatId.slice(-4)
           : '****'
         setMaskedKingschatId(maskedId)
         setForgotPasswordStep('kingschat')
-        
+
       } else if (forgotPasswordStep === 'newPassword') {
-        // Step 3: Set new password after KingsChat verification
         if (!newPassword || newPassword.length < 6) {
           setError('Password must be at least 6 characters')
           setIsLoading(false)
           return
         }
-        
+
         if (newPassword !== confirmNewPassword) {
           setError('Passwords do not match')
           setIsLoading(false)
           return
         }
-        
+
         if (!verifiedKingschatId || !storedKingschatIdForReset) {
           setError('KingsChat verification required')
           setForgotPasswordStep('kingschat')
           setIsLoading(false)
           return
         }
-        
+
         // Call API to reset password - send both IDs for server verification
         const response = await fetch('/api/auth/reset-password', {
           method: 'POST',
@@ -667,15 +647,15 @@ function AuthPageContent() {
             newPassword: newPassword
           })
         })
-        
+
         const result = await response.json()
-        
+
         if (!result.success) {
           setError(result.error || 'Failed to reset password')
           setIsLoading(false)
           return
         }
-        
+
         setForgotPasswordSuccess(true)
       }
     } catch (error: any) {
@@ -690,32 +670,32 @@ function AuthPageContent() {
   const handleKingschatVerification = async () => {
     setError('')
     setIsVerifyingKingschat(true)
-    
+
     try {
       // Initiate KingsChat OAuth flow
       const authTokens = await KingsChatAuthService.login()
-      
+
       if (!authTokens) {
         setError('KingsChat verification was cancelled. Please try again.')
         setIsVerifyingKingschat(false)
         return
       }
-      
+
       // Extract KingsChat UID from token
       const { jwtDecode } = await import('jwt-decode')
       const decoded: any = jwtDecode(authTokens.accessToken)
       const kingschatUserId = decoded.userId || decoded.sub || decoded.id
-      
+
       if (!kingschatUserId) {
         setError('Could not verify KingsChat account')
         setIsVerifyingKingschat(false)
         return
       }
-      
+
       // Store verified KingsChat ID and move to new password step
       setVerifiedKingschatId(kingschatUserId)
       setForgotPasswordStep('newPassword')
-      
+
     } catch (error: any) {
       console.error('KingsChat verification error:', error)
       setError(sanitizeError(error.message || 'KingsChat verification failed'))
@@ -730,14 +710,14 @@ function AuthPageContent() {
       <div className="bg-gray-900 px-8 py-12 relative overflow-hidden">
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"></div>
-        
+
         {/* Background Pattern Overlay */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-10 left-10 w-32 h-32 bg-gray-600 rounded-full blur-3xl"></div>
           <div className="absolute top-20 right-20 w-24 h-24 bg-gray-500 rounded-full blur-2xl"></div>
           <div className="absolute bottom-10 left-1/3 w-28 h-28 bg-gray-400 rounded-full blur-2xl"></div>
         </div>
-        
+
         {/* Header Content */}
         <div className="relative z-10 text-center pt-8">
           <h1 className="text-2xl font-bold text-white mb-2">
@@ -757,9 +737,9 @@ function AuthPageContent() {
         {/* App Branding */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <img 
-              src="/logo.png" 
-              alt="Loveworld Singers Rehearsal Hub" 
+            <img
+              src="/logo.png"
+              alt="Loveworld Singers Rehearsal Hub"
               className="object-contain"
               style={{ width: '60px', height: '60px' }}
             />
@@ -788,7 +768,7 @@ function AuthPageContent() {
               </div>
             </div>
           )}
-          
+
           {/* Account Recovery Message */}
           {isRecoveredAccount && (
             <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-xl">
@@ -814,7 +794,7 @@ function AuthPageContent() {
               </div>
             </div>
           )}
-          
+
           {/* Success Message */}
           {success && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
@@ -849,7 +829,7 @@ function AuthPageContent() {
                       <p className="text-xs text-green-600 mt-1 ml-1">✓ {zoneName}</p>
                     )}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="text"
@@ -870,7 +850,7 @@ function AuthPageContent() {
                       required
                     />
                   </div>
-                  
+
                   {/* KingsChat ID Field with Fetch Button */}
                   <div className="relative">
                     {formData.kingschatId ? (
@@ -920,9 +900,9 @@ function AuthPageContent() {
                             </>
                           ) : (
                             <>
-                              <img 
-                                src="/kingschat.jpeg" 
-                                alt="KC" 
+                              <img
+                                src="/kingschat.jpeg"
+                                alt="KC"
                                 className="w-3 h-3 rounded-full object-cover"
                               />
                               <span>Fetch</span>
@@ -934,7 +914,7 @@ function AuthPageContent() {
                   </div>
                 </>
               )}
-              
+
               <input
                 type="text"
                 name="email"
@@ -946,7 +926,7 @@ function AuthPageContent() {
                 pattern=".*"
                 title="Enter your email or username"
               />
-              
+
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -1035,11 +1015,11 @@ function AuthPageContent() {
                   {isLoading && isCheckingAccount ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                  <img 
-                    src="/kingschat.jpeg" 
-                    alt="KingsChat" 
-                    className="w-5 h-5 rounded-full object-cover"
-                  />
+                    <img
+                      src="/kingschat.jpeg"
+                      alt="KingsChat"
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
                   )}
                   {isLoading && isCheckingAccount ? 'Connecting...' : 'Continue with KingsChat'}
                 </button>
@@ -1073,11 +1053,11 @@ function AuthPageContent() {
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">Reset Password</h2>
               <p className="text-gray-600 text-sm">
-                {forgotPasswordStep === 'email' 
+                {forgotPasswordStep === 'email'
                   ? 'Enter your email address to reset your password.'
                   : forgotPasswordStep === 'kingschat'
-                  ? 'Verify your identity with KingsChat.'
-                  : 'Create a new password for your account.'}
+                    ? 'Verify your identity with KingsChat.'
+                    : 'Create a new password for your account.'}
               </p>
             </div>
 
@@ -1148,9 +1128,9 @@ function AuthPageContent() {
                         {isVerifyingKingschat ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                          <img 
-                            src="/kingschat.jpeg" 
-                            alt="KingsChat" 
+                          <img
+                            src="/kingschat.jpeg"
+                            alt="KingsChat"
                             className="w-5 h-5 rounded-full object-cover"
                           />
                         )}
@@ -1275,7 +1255,7 @@ function AuthPageContent() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                          {account.first_name && account.last_name 
+                          {account.first_name && account.last_name
                             ? `${account.first_name} ${account.last_name}`
                             : account.email || 'User'}
                         </p>
@@ -1324,7 +1304,7 @@ function AuthPageContent() {
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
               <h3 className="text-xl font-bold text-white mb-2">Enter Password</h3>
               <p className="text-purple-100 text-sm">
-                Sign in to: {selectedAccount.first_name && selectedAccount.last_name 
+                Sign in to: {selectedAccount.first_name && selectedAccount.last_name
                   ? `${selectedAccount.first_name} ${selectedAccount.last_name}`
                   : selectedAccount.email}
               </p>
@@ -1387,9 +1367,5 @@ function AuthPageContent() {
 }
 
 export default function AuthPage() {
-  return (
-    <AuthCheck>
-      <AuthPageContent />
-    </AuthCheck>
-  )
+  return <AuthPageContent />
 }

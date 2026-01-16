@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -159,15 +159,13 @@ export default function ScreenshotPrevention() {
         return false
       })
 
-      // Clear console periodically
-      const clearConsole = () => {
+            const clearConsole = () => {
         if (typeof console !== 'undefined') {
           console.clear()
         }
       }
 
-      // Clear console every 2 seconds
-      const consoleInterval = setInterval(clearConsole, 2000)
+            const consoleInterval = setInterval(clearConsole, 2000)
 
       // Cleanup function
       return () => {

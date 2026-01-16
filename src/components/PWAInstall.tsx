@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Download, X, Smartphone, Package } from 'lucide-react'
@@ -19,14 +19,12 @@ export default function PWAInstall() {
   const [isNativeApp, setIsNativeApp] = useState(false)
 
   useEffect(() => {
-    // Check if running in native app
-    const nativeAppFlag = localStorage.getItem('isNativeApp') === 'true'
+        const nativeAppFlag = localStorage.getItem('isNativeApp') === 'true'
     const isNative = nativeAppFlag || (typeof window !== 'undefined' && (window as any).isNativeApp)
     setIsNativeApp(isNative)
 
     // Don't show install prompts if running in native app
     if (isNative) {
-      console.log('📱 Native app detected - hiding PWA install prompts')
       return
     }
 
@@ -51,11 +49,9 @@ export default function PWAInstall() {
       const { outcome } = await deferredPrompt.userChoice
       
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt')
         // Only hide the banner if PWA was actually installed
         setShowInstallBanner(false)
       } else {
-        console.log('User dismissed the install prompt')
       }
     } catch (error) {
       console.error('Error installing PWA:', error)

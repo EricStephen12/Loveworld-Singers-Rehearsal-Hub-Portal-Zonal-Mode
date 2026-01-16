@@ -46,8 +46,9 @@ export function useGlobalSearch() {
         const matchesKey = song.key?.toLowerCase().includes(query)
         const matchesLyrics = song.lyrics?.toLowerCase().includes(query)
         const matchesSolfas = song.solfas?.toLowerCase().includes(query)
+        const matchesTempo = song.tempo?.toLowerCase().includes(query)
 
-        if (matchesTitle || matchesWriter || matchesLeadSinger || matchesConductor || matchesCategory || matchesKey || matchesLyrics || matchesSolfas) {
+        if (matchesTitle || matchesWriter || matchesLeadSinger || matchesConductor || matchesCategory || matchesKey || matchesLyrics || matchesSolfas || matchesTempo) {
           let matchReason = ''
           if (matchesTitle) matchReason = 'Song Title'
           else if (matchesWriter) matchReason = `Writer: ${song.writer}`
@@ -57,6 +58,7 @@ export function useGlobalSearch() {
           else if (matchesKey) matchReason = `Key: ${song.key}`
           else if (matchesLyrics) matchReason = 'Lyrics Content'
           else if (matchesSolfas) matchReason = 'Solfas Content'
+          else if (matchesTempo) matchReason = `Tempo: ${song.tempo}`
 
           results.push({
             id: `song-${song.title}-${page.id}`,

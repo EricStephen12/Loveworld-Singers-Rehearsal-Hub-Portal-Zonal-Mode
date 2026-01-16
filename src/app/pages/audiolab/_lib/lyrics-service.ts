@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lyrics Service for AudioLab
  * Handles fetching, syncing, and storing lyrics for songs
  */
@@ -107,8 +107,7 @@ export async function getSongLyrics(songId: string): Promise<{
       let lyricsText = data.lyrics || data.lyricsText || null;
       let lyrics: LyricLine[] | null = null;
       
-      // Check if lyrics is already an array (synced format)
-      if (Array.isArray(data.lyrics) && data.lyrics.length > 0) {
+            if (Array.isArray(data.lyrics) && data.lyrics.length > 0) {
         lyrics = data.lyrics;
       } else if (typeof lyricsText === 'string' && lyricsText.trim()) {
         // Convert HTML to plain text for auto-timing

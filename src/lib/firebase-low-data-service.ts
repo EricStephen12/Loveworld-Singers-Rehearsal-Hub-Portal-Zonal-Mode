@@ -1,4 +1,4 @@
-// Low Data Firebase Service - Minimizes Firebase costs and requests
+﻿// Low Data Firebase Service - Minimizes Firebase costs and requests
 // Instagram-style optimization for poor connections
 
 import { FirebaseDatabaseService } from './firebase-database';
@@ -22,20 +22,17 @@ class FirebaseLowDataService {
     if (useCache) {
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log(`⚡ Collection ${collection} loaded from cache (saved Firebase request)`);
         return cached;
       }
     }
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      console.log(`🔥 Fetching collection ${collection} from Firebase...`);
       const data = await FirebaseDatabaseService.getCollection(collection);
       
       // Cache the data
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
-        console.log(`💾 Cached collection ${collection} (reduced future Firebase costs)`);
       }
       
       return data;
@@ -53,20 +50,17 @@ class FirebaseLowDataService {
     if (useCache) {
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log(`⚡ Document ${collection}/${docId} loaded from cache (saved Firebase request)`);
         return cached;
       }
     }
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      console.log(`🔥 Fetching document ${collection}/${docId} from Firebase...`);
       const data = await FirebaseDatabaseService.getDocument(collection, docId);
       
       // Cache the data
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
-        console.log(`💾 Cached document ${collection}/${docId} (reduced future Firebase costs)`);
       }
       
       return data;
@@ -84,20 +78,17 @@ class FirebaseLowDataService {
     if (useCache) {
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log(`⚡ Songs for page ${pageId} loaded from cache (saved Firebase request)`);
         return cached;
       }
     }
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      console.log(`🔥 Fetching songs for page ${pageId} from Firebase...`);
       const data = await (FirebaseDatabaseService as any).getSongsByPageId(pageId);
       
       // Cache the data
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
-        console.log(`💾 Cached songs for page ${pageId} (reduced future Firebase costs)`);
       }
       
       return data;
@@ -115,20 +106,17 @@ class FirebaseLowDataService {
     if (useCache) {
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log(`⚡ Songs for category ${category} loaded from cache (saved Firebase request)`);
         return cached;
       }
     }
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      console.log(`🔥 Fetching songs for category ${category} from Firebase...`);
       const data = await (FirebaseDatabaseService as any).getSongsByCategory(category);
       
       // Cache the data
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
-        console.log(`💾 Cached songs for category ${category} (reduced future Firebase costs)`);
       }
       
       return data;
@@ -146,20 +134,17 @@ class FirebaseLowDataService {
     if (useCache) {
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log(`⚡ Comments for song ${songId} loaded from cache (saved Firebase request)`);
         return cached;
       }
     }
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      console.log(`🔥 Fetching comments for song ${songId} from Firebase...`);
       const data = await FirebaseDatabaseService.getCollectionWhere('comments', 'songId', songId, '==');
       
       // Cache the data with shorter TTL for comments
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
-        console.log(`💾 Cached comments for song ${songId} (reduced future Firebase costs)`);
       }
       
       return data;
@@ -169,21 +154,16 @@ class FirebaseLowDataService {
     return lowDataOptimizer.get(cacheKey) || [];
   }
 
-  // Clear cache for specific data
-  clearCache(pattern?: string): void {
+    clearCache(pattern?: string): void {
     if (pattern) {
-      // Clear specific cache entries
-      const stats = lowDataOptimizer.getCacheStats();
+            const stats = lowDataOptimizer.getCacheStats();
       stats.keys.forEach(key => {
         if (key.includes(pattern)) {
           lowDataOptimizer.clearCache();
-          console.log(`🧹 Cleared cache for pattern: ${pattern}`);
         }
       });
     } else {
-      // Clear all cache
-      lowDataOptimizer.clearCache();
-      console.log('🧹 Cleared all Firebase cache');
+            lowDataOptimizer.clearCache();
     }
   }
 

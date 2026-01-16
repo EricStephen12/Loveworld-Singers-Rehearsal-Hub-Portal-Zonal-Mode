@@ -7,6 +7,7 @@ import { Search, Download, Clock, Edit, Trash2, Plus, Upload, RefreshCw, Chevron
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup, HQ_GROUP_IDS, BOSS_ZONE_ID } from '@/config/zones';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import CustomLoader from '@/components/CustomLoader';
 
 interface ActivityLog {
   id: string;
@@ -51,7 +52,7 @@ export default function ActivityLogsPage() {
     try {
       setLoading(true);
       const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID];
-      
+
       let q;
       if (isHQ) {
         q = query(collection(db, 'activity_logs'), orderBy('timestamp', 'desc'), limit(500));
@@ -89,14 +90,14 @@ export default function ActivityLogsPage() {
   const filteredLogs = useMemo(() => {
     const monthStart = startOfMonth(new Date(selectedYear, selectedMonth));
     const monthEnd = endOfMonth(new Date(selectedYear, selectedMonth));
-    
+
     return logs.filter(log => {
       const logDate = new Date(log.timestamp);
       const inDateRange = isWithinInterval(logDate, { start: monthStart, end: monthEnd });
       const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           log.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (log.itemName && log.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
+        log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (log.itemName && log.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesAction = !actionFilter || log.action === actionFilter;
       const matchesSection = !sectionFilter || log.section === sectionFilter;
       return inDateRange && matchesSearch && matchesAction && matchesSection;
@@ -142,39 +143,8 @@ export default function ActivityLogsPage() {
 
   if (loading || zoneLoading) {
     return (
-      <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-purple-50">
-        <div className="p-4 lg:p-6 max-w-7xl mx-auto pb-24">
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="h-8 w-40 bg-gray-200 rounded-lg animate-pulse" />
-                <div className="h-4 w-56 bg-gray-100 rounded mt-2 animate-pulse" />
-              </div>
-              <div className="flex gap-2">
-                <div className="h-10 w-10 sm:w-24 bg-gray-200 rounded-lg animate-pulse" />
-                <div className="h-10 w-20 sm:w-32 bg-purple-200 rounded-lg animate-pulse" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/80 rounded-xl shadow-lg border border-purple-100 p-4 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}
-            </div>
-          </div>
-          <div className="bg-white/80 rounded-xl shadow-lg border border-purple-100 p-4">
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg animate-pulse">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-purple-100 shadow-sm">
+        <CustomLoader message="Loading activity logs..." />
       </div>
     );
   }

@@ -1,4 +1,4 @@
-// Device Registration Service
+﻿// Device Registration Service
 import { doc, setDoc, getDoc, collection, query, where, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { db } from './firebase-setup'
@@ -96,8 +96,7 @@ export class DeviceRegistration {
       const deviceInfo = this.getDeviceInfo()
       deviceInfo.userId = userId
       
-      // Check if this device is already registered for this user
-      const deviceRef = doc(db, 'devices', deviceInfo.id)
+            const deviceRef = doc(db, 'devices', deviceInfo.id)
       const deviceDoc = await getDoc(deviceRef)
       
       if (deviceDoc.exists()) {
@@ -110,8 +109,7 @@ export class DeviceRegistration {
           }
         }
         
-        // Update last seen for existing device
-        await setDoc(deviceRef, {
+                await setDoc(deviceRef, {
           lastSeen: serverTimestamp()
         }, { merge: true })
       } else {
@@ -132,8 +130,7 @@ export class DeviceRegistration {
     }
   }
   
-  // Check if device is registered to another user
-  static async isDeviceRegisteredToOtherUser(userId: string): Promise<{ isRegistered: boolean; deviceInfo?: DeviceInfo }> {
+    static async isDeviceRegisteredToOtherUser(userId: string): Promise<{ isRegistered: boolean; deviceInfo?: DeviceInfo }> {
     try {
       const deviceId = this.generateDeviceFingerprint()
       const deviceRef = doc(db, 'devices', deviceId)

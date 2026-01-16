@@ -1,4 +1,4 @@
-// Database Service for Loveworld Praise App
+﻿// Database Service for Loveworld Praise App
 // This service bridges your existing data structure with Supabase
 
 import { createClient } from '@supabase/supabase-js';
@@ -34,7 +34,6 @@ export async function getAudioFromMedia(mediaId: number): Promise<string | null>
     let url = mediaFile?.url || null;
     
     // Supabase Storage URLs work directly - no conversion needed!
-    console.log('✅ Using Supabase Storage URL:', url);
     
     return url;
   } catch (error) {
@@ -104,18 +103,15 @@ export interface DatabaseHistoryEntry {
 
 export async function getAllPages(): Promise<PraiseNight[]> {
   try {
-    // Check if we're online
-    const isOnline = navigator.onLine;
+        const isOnline = navigator.onLine;
     
     if (!isOnline) {
-      console.log('📴 Offline: Loading cached pages data');
       const cachedData = await offlineManager.getCachedData('pages');
       if (cachedData) {
         return cachedData;
       }
     }
 
-    console.log('🚀 Starting ultra-fast data fetch...');
     const startTime = performance.now();
 
     // OPTIMIZATION: Single query with joins for maximum speed
@@ -151,7 +147,6 @@ export async function getAllPages(): Promise<PraiseNight[]> {
     if (error) throw error;
 
     const loadTime = performance.now() - startTime;
-    console.log(`⚡ Data loaded in ${loadTime.toFixed(2)}ms`);
 
     // Convert database pages to your PraiseNight format
     const praiseNights: PraiseNight[] = [];
@@ -217,7 +212,6 @@ export async function getAllPages(): Promise<PraiseNight[]> {
     }
 
     const totalTime = performance.now() - startTime;
-    console.log(`🎯 Total processing time: ${totalTime.toFixed(2)}ms`);
 
     return praiseNights;
   } catch (error) {
@@ -226,7 +220,6 @@ export async function getAllPages(): Promise<PraiseNight[]> {
     // Try to get cached data as fallback
     const cachedData = await offlineManager.getCachedData('pages');
     if (cachedData) {
-      console.log('📴 Using cached pages data as fallback');
       return cachedData;
     }
     
@@ -271,8 +264,7 @@ export async function getPageById(id: number): Promise<PraiseNight | null> {
 
 export async function createPage(pageData: Omit<PraiseNight, 'songs'>): Promise<PraiseNight | null> {
   try {
-    // Clear cache before creating to ensure fresh data
-    if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -318,10 +310,8 @@ export async function createPage(pageData: Omit<PraiseNight, 'songs'>): Promise<
 
 export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight, 'songs'>>): Promise<boolean> {
   try {
-    console.log('🔄 updatePage called with:', { id, pageData });
 
-    // Clear cache before updating
-    if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -340,19 +330,15 @@ export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight,
       updateData.countdownseconds = pageData.countdown.seconds;
     }
 
-    console.log('📝 Update data prepared:', updateData);
 
     const { error } = await supabase
       .from('pages')
       .update(updateData)
       .eq('id', id);
       
-    console.log('📊 Supabase update result:', { error });
 
     if (error) {
-      // Check if it's the updated_at field error
-      if (error.code === '42703' && error.message.includes('updated_at')) {
-        console.log('🔄 Retrying page update without updated_at field...');
+            if (error.code === '42703' && error.message.includes('updated_at')) {
         
         // Remove any fields that might not exist in the database
         const cleanUpdateData = { ...updateData };
@@ -379,8 +365,7 @@ export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight,
 
 export async function deletePage(id: number): Promise<boolean> {
   try {
-    // Clear cache before deleting
-    if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -429,7 +414,6 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
       }
       
       // Supabase Storage URLs work directly - no CORS issues!
-      console.log('✅ Using audio file URL:', audioFile);
 
       praiseNightSongs.push({
         id: song.id,
@@ -463,10 +447,8 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
 
 export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'history'>): Promise<PraiseNightSong | null> {
   try {
-    console.log('💾 Creating song in database:', songData.title);
 
-    // Clear cache before creating
-    if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -500,7 +482,6 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
       throw error;
     }
 
-    console.log('✅ Song created in database:', data);
     return {
       title: data.title,
       status: data.status,
@@ -529,24 +510,8 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
 
 export async function updateSong(songId: number, songData: Partial<PraiseNightSong>): Promise<boolean> {
   try {
-    console.log('💾 updateSong called with:', {
-      songId,
-      category: songData.category,
-      title: songData.title,
-      leadSinger: songData.leadSinger,
-      writer: songData.writer,
-      conductor: songData.conductor,
-      key: songData.key,
-      tempo: songData.tempo,
-      leadKeyboardist: songData.leadKeyboardist,
-      leadGuitarist: songData.leadGuitarist,
-      drummer: songData.drummer,
-      hasHistory: !!songData.history,
-      historyCount: songData.history?.length || 0
-    });
 
-    // Clear cache before updating
-    if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -557,7 +522,6 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
     if (songData.status !== undefined) updateData.status = songData.status;
     if (songData.category !== undefined) {
       updateData.category = songData.category;
-      console.log('💾 Updating category to:', songData.category);
     }
     // Always update these fields if they're in songData (even if empty string)
     if (songData.leadSinger !== undefined) updateData.leadsinger = songData.leadSinger;
@@ -585,19 +549,6 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
     delete updateData.createdAt; // Don't try to update createdAt field
     delete updateData.created_at; // Don't try to update created_at field
 
-    console.log('💾 Updating song in database:', {
-      songId,
-      updateData,
-      writer: updateData.writer,
-      leadSinger: updateData.leadsinger,
-      conductor: updateData.conductor,
-      key: updateData.key,
-      tempo: updateData.tempo,
-      audiofile: updateData.audiofile,
-      mediaid: updateData.mediaid,
-      hasAudioFile: !!updateData.audiofile,
-      hasMediaId: !!updateData.mediaid
-    });
 
     const { error } = await supabase
       .from('songs')
@@ -611,7 +562,6 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
       
       // If it's the comments field error, try again without comments
       if (error.code === 'PGRST204' && error.message.includes('comments')) {
-        console.log('🔄 Retrying update without comments column...');
         delete updateData.comments;
         
         const { error: retryError } = await supabase
@@ -624,13 +574,11 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
           throw retryError;
         }
         
-        console.log('✅ Update succeeded after removing comments column');
         return true;
       }
       
       // If it's the updated_at field error, try again with a minimal update
       if (error.code === '42703' && error.message.includes('updated_at')) {
-        console.log('🔄 Retrying with minimal update data...');
         
         // Create a minimal update object with only essential fields
         const minimalUpdateData: any = {};
@@ -652,7 +600,6 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
         if (updateData.audiofile !== undefined) minimalUpdateData.audiofile = updateData.audiofile;
         if (updateData.mediaid !== undefined) minimalUpdateData.mediaid = updateData.mediaid;
         
-        console.log('🔄 Minimal update data:', minimalUpdateData);
         
         const { error: retryError } = await supabase
           .from('songs')
@@ -663,18 +610,15 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
           console.error('❌ Retry also failed:', retryError);
           throw retryError;
         } else {
-          console.log('✅ Retry successful with minimal data');
         }
       } else {
         throw error;
       }
     }
 
-    console.log('✅ Song updated in database');
 
     // Save history entries if provided
     if (songData.history && songData.history.length > 0) {
-      console.log('💾 Saving', songData.history.length, 'history entries...');
       
       // Get existing history to avoid duplicates
       const existingHistory = await getHistoryBySongId(songId);
@@ -690,13 +634,11 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
         });
         
         if (savedEntry) {
-          console.log('✅ Saved history entry:', historyEntry.type);
         } else {
           console.error('❌ Failed to save history entry:', historyEntry.type);
         }
       }
       
-      console.log('✅ History entries saved');
     }
 
     return true;
@@ -777,7 +719,6 @@ export async function createComment(commentData: Omit<Comment, 'id'> & { songId:
 
 export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]> {
   try {
-    console.log('🎯 Fetching history for song ID:', songId);
     
     const { data, error } = await supabase
       .from('song_history')
@@ -790,7 +731,6 @@ export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]
       throw error;
     }
 
-    console.log('🎯 Raw history data:', data);
 
     const historyEntries = (data || []).map(entry => ({
       id: entry.id,
@@ -804,7 +744,6 @@ export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]
       version: entry.title // Use title as version since we don't have a separate version field
     }));
 
-    console.log('🎯 Processed history entries:', historyEntries);
     return historyEntries;
   } catch (error) {
     console.error('Error fetching history:', error);
@@ -949,7 +888,6 @@ export async function updateSongsCategory(oldCategoryName: string, newCategoryNa
 
     if (error) throw error;
     
-    console.log(`Updated all songs from category "${oldCategoryName}" to "${newCategoryName}"`);
     return true;
   } catch (error) {
     console.error('Error updating songs category:', error);
@@ -1019,15 +957,13 @@ export async function handleCategoryDeletion(categoryName: string, fallbackCateg
     if (checkError) throw checkError;
 
     if (songs && songs.length > 0) {
-      // Update all songs to use the fallback category
-      const { error: updateError } = await supabase
+            const { error: updateError } = await supabase
         .from('songs')
         .update({ category: fallbackCategory })
         .eq('category', categoryName);
 
       if (updateError) throw updateError;
       
-      console.log(`Updated ${songs.length} songs from category "${categoryName}" to "${fallbackCategory}"`);
     }
 
     return true;
@@ -1060,7 +996,6 @@ export async function getAllMedia(): Promise<MediaFile[]> {
   try {
     // Check memory cache first
     if (mediaCache && (Date.now() - mediaCache.timestamp) < MEDIA_CACHE_DURATION) {
-      console.log('⚡ Using memory cached media data');
       return mediaCache.data;
     }
 
@@ -1072,22 +1007,13 @@ export async function getAllMedia(): Promise<MediaFile[]> {
       if (cachedData && cacheTimestamp) {
         const age = Date.now() - parseInt(cacheTimestamp);
         if (age < MEDIA_CACHE_DURATION) {
-          console.log('⚡ Using localStorage cached media data');
           const parsedData = JSON.parse(cachedData);
-          // Update memory cache
-          mediaCache = { data: parsedData, timestamp: parseInt(cacheTimestamp) };
+                    mediaCache = { data: parsedData, timestamp: parseInt(cacheTimestamp) };
           return parsedData;
         }
       }
     }
 
-    console.log('🚀 Fetching media data from database...');
-    console.log('🔍 Cache status:', {
-      hasCache: !!mediaCache,
-      cacheAge: mediaCache ? Date.now() - mediaCache.timestamp : 'N/A',
-      cacheDuration: MEDIA_CACHE_DURATION,
-      isExpired: mediaCache ? (Date.now() - mediaCache.timestamp) >= MEDIA_CACHE_DURATION : 'N/A'
-    });
     const startTime = performance.now();
 
     // Optimized query - only select needed fields, with pagination for better performance
@@ -1103,7 +1029,6 @@ export async function getAllMedia(): Promise<MediaFile[]> {
     }
 
     const loadTime = performance.now() - startTime;
-    console.log(`⚡ Media loaded in ${loadTime.toFixed(2)}ms (${data?.length || 0} files)`);
 
     const mediaFiles = (data || []).map(media => ({
       id: media.id,
@@ -1129,7 +1054,6 @@ export async function getAllMedia(): Promise<MediaFile[]> {
       try {
         localStorage.setItem('media_cache', JSON.stringify(mediaFiles));
         localStorage.setItem('media_cache_timestamp', Date.now().toString());
-        console.log('💾 Media data cached to localStorage');
       } catch (error) {
         console.warn('Failed to cache media data to localStorage:', error);
       }
@@ -1141,7 +1065,6 @@ export async function getAllMedia(): Promise<MediaFile[]> {
     
     // Return cached data if available, even if expired
     if (mediaCache) {
-      console.log('⚠️ Using expired cache due to error');
       return mediaCache.data;
     }
     
@@ -1151,7 +1074,6 @@ export async function getAllMedia(): Promise<MediaFile[]> {
 
 // Function to clear media cache
 export function clearMediaCache(): void {
-  console.log('🗑️ Media cache cleared - Stack trace:', new Error().stack);
   mediaCache = null;
 }
 
@@ -1201,9 +1123,7 @@ export async function getUserStats(): Promise<{total: number, recent: number, ac
 // Function to preload media data in background
 export async function preloadMediaData(): Promise<void> {
   try {
-    console.log('🔄 Preloading media data in background...');
     await getAllMedia(); // This will cache the data
-    console.log('✅ Media data preloaded and cached');
   } catch (error) {
     console.error('❌ Error preloading media data:', error);
   }
@@ -1227,8 +1147,7 @@ export async function createMediaFile(mediaData: Omit<MediaFile, 'id' | 'created
 
     if (error) throw error;
 
-    // Clear cache since we added a new file
-    clearMediaCache();
+        clearMediaCache();
 
     return {
       id: data.id,
@@ -1257,8 +1176,7 @@ export async function deleteMediaFile(mediaId: number): Promise<boolean> {
 
     if (error) throw error;
     
-    // Clear cache since we deleted a file
-    clearMediaCache();
+        clearMediaCache();
     
     return true;
   } catch (error) {
@@ -1278,7 +1196,6 @@ export async function createHistoryEntry(historyData: {
   created_by: string;
 }): Promise<boolean> {
   try {
-    console.log('🎯 Creating history entry:', historyData);
     
     const { data, error } = await supabase
       .from('song_history')
@@ -1297,7 +1214,6 @@ export async function createHistoryEntry(historyData: {
       throw error;
     }
     
-    console.log('🎯 History entry created successfully');
     return true;
   } catch (error) {
     console.error('Error creating history entry:', error);
@@ -1308,7 +1224,6 @@ export async function createHistoryEntry(historyData: {
 // Delete history entry
 export async function deleteHistoryEntry(historyId: string): Promise<boolean> {
   try {
-    console.log('🎯 Deleting history entry:', historyId);
     
     const { error } = await supabase
       .from('song_history')
@@ -1320,7 +1235,6 @@ export async function deleteHistoryEntry(historyId: string): Promise<boolean> {
       throw error;
     }
     
-    console.log('🎯 History entry deleted successfully');
     return true;
   } catch (error) {
     console.error('Error deleting history entry:', error);

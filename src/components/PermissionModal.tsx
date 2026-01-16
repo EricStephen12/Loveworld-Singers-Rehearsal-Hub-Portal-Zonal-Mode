@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Bell, Mic, X, Shield, CheckCircle2 } from 'lucide-react'
@@ -78,7 +78,6 @@ export default function PermissionModal({
         setTimeout(() => onClose(), 1500)
       }
     } catch (error) {
-      console.log('[Permission] Error:', error)
       setStatus('denied')
       onDenied?.()
     } finally {

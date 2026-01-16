@@ -1,19 +1,22 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ChevronLeft, Settings, Save, Mic, 
+import {
+  ChevronLeft, Settings, Save, Mic,
   PlusCircle, SkipBack, Play, Pause, Square, Circle,
-  AudioLines, Loader2, Check, Trash2,
-  Sliders, Download, Pencil, Timer, Upload
+  AudioLines, Check, Trash2,
+  Sliders, Download, Pencil, Timer, Upload,
+  Repeat, RotateCcw, Undo2
 } from 'lucide-react';
+import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { createProject, getProject, updateProject } from '../_lib/project-service';
 import { audioEngine } from '../_lib/audio-engine';
 import { uploadRecording, generateRecordingFileName } from '../_lib/upload-service';
 import { saveRecordingToIndexedDB, getRecordingFromIndexedDB, deleteRecordingFromIndexedDB, getProjectRecordings } from '../_lib/indexeddb-storage';
+import { exportMix, TrackToExport } from '../_lib/export-service';
 
 import { trackEffectsEngine, type TrackEffects, DEFAULT_EFFECTS } from '../_lib/track-effects-engine';
 import { NextActionPrompt } from './NextActionPrompt';
@@ -44,7 +47,7 @@ export function StudioView() {
   const { setView, initializeAudio, state, setCurrentProject: setContextProject } = useAudioLab();
   const { user } = useAuth();
   const { currentZone } = useZone();
-  
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -53,51 +56,54 @@ export function StudioView() {
   const [inputLevel, setInputLevel] = useState(0);
   const [currentProject, setCurrentProject] = useState<AudioLabProject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-  
+
   const [hasFirstRecording, setHasFirstRecording] = useState(false);
   const [showNextActionPrompt, setShowNextActionPrompt] = useState(false);
   const [justRecordedFirstTake, setJustRecordedFirstTake] = useState(false);
   const [isExistingProject, setIsExistingProject] = useState(false);
-  
-  const [backingTrackEnabled, setBackingTrackEnabled] = useState(true);
-  const [backingTrackVolume, setBackingTrackVolume] = useState(70);
-  
+
+
   const [showSettings, setShowSettings] = useState(false);
-  
+
   const [showEffectsPanel, setShowEffectsPanel] = useState(false);
   const [effectsTrackId, setEffectsTrackId] = useState<string | null>(null);
-  
+
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [editingTrackName, setEditingTrackName] = useState('');
-  
+
   const [failedUploads, setFailedUploads] = useState<Map<string, number>>(new Map()); // trackId -> retry count
   const [showRecoveryPrompt, setShowRecoveryPrompt] = useState(false);
-  const [recoveredTracks, setRecoveredTracks] = useState<string[]>([]);  
+  const [recoveredTracks, setRecoveredTracks] = useState<string[]>([]);
   const [metronomeEnabled, setMetronomeEnabled] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  
+  const [isExportingHeader, setIsExportingHeader] = useState(false);
+  const [exportProgressHeader, setExportProgressHeader] = useState(0);
+  const [isLooping, setIsLooping] = useState(false);
+  const [countIn, setCountIn] = useState(0);
+  const [lastRecordedTrackId, setLastRecordedTrackId] = useState<string | null>(null);
+
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [metronomeTempo, setMetronomeTempo] = useState(120);
   const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const metronomeAudioRef = useRef<AudioContext | null>(null);
-  
-  const backingTrackRef = useRef<HTMLAudioElement | null>(null);
-  
-  const backingTrack = state.player.currentSong;
-  
+  const nextMetronomeNoteTime = useRef<number>(0);
+  const metronomeSchedulerId = useRef<number | null>(null);
+
+
+
   const recordingStartTime = useRef<number>(0);
   const recordingInterval = useRef<NodeJS.Timeout | null>(null);
   const waveformSamples = useRef<number[]>([]);
   const playbackAudioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   const trackAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   const playbackIntervalRef = useRef<number | null>(null);
   const isPlayingRef = useRef(false); // Track playing state for cleanup
@@ -106,18 +112,18 @@ export function StudioView() {
   useEffect(() => {
     return () => {
       // Stop metronome
-      if (metronomeIntervalRef.current) {
-        clearInterval(metronomeIntervalRef.current);
+      if (metronomeSchedulerId.current) {
+        cancelAnimationFrame(metronomeSchedulerId.current);
       }
       if (metronomeAudioRef.current) {
         metronomeAudioRef.current.close();
       }
-      
+
       // Stop playback
       if (playbackIntervalRef.current) {
         cancelAnimationFrame(playbackIntervalRef.current);
       }
-      
+
       // Cleanup audio elements and blob URLs
       trackAudioRefs.current.forEach((audio, id) => {
         audio.pause();
@@ -126,10 +132,10 @@ export function StudioView() {
         }
       });
       trackAudioRefs.current.clear();
-      
+
       // Cleanup effects engine
       trackEffectsEngine.dispose();
-      
+
       // Cleanup recording interval
       if (recordingInterval.current) {
         clearInterval(recordingInterval.current);
@@ -137,27 +143,6 @@ export function StudioView() {
     };
   }, []);
 
-  useEffect(() => {
-    if (backingTrack?.audioUrl && !backingTrackRef.current) {
-      const audio = new Audio(backingTrack.audioUrl);
-      audio.volume = backingTrackVolume / 100;
-      audio.loop = true;
-      backingTrackRef.current = audio;
-    }
-    
-    return () => {
-      if (backingTrackRef.current) {
-        backingTrackRef.current.pause();
-        backingTrackRef.current = null;
-      }
-    };
-  }, [backingTrack?.audioUrl]);
-
-  useEffect(() => {
-    if (backingTrackRef.current) {
-      backingTrackRef.current.volume = backingTrackEnabled ? backingTrackVolume / 100 : 0;
-    }
-  }, [backingTrackVolume, backingTrackEnabled]);
 
   useEffect(() => {
     if (user?.uid && state.currentProjectId) {
@@ -172,7 +157,7 @@ export function StudioView() {
         waveformSamples.current.push(Math.round(level * 100));
       }
     };
-    
+
     return () => {
       audioEngine.onInputLevel = null;
     };
@@ -208,7 +193,7 @@ export function StudioView() {
         }
       }
     };
-    
+
     // Only check after project is loaded
     if (currentProject && !isLoading) {
       checkForUnsavedRecordings();
@@ -218,34 +203,32 @@ export function StudioView() {
   // Recover unsaved recordings
   const recoverUnsavedRecordings = async () => {
     if (!currentProject?.id) return;
-    
+
     const savedRecordings = await getProjectRecordings(currentProject.id);
-    
+
     for (const [trackId, blob] of savedRecordings) {
-      // Check if track exists
       const existingTrack = tracks.find(t => t.id === trackId);
-      
+
       if (existingTrack && !existingTrack.audioUrl) {
         // Recover to existing track
         const blobUrl = URL.createObjectURL(blob);
-        setTracks(prev => prev.map(t => 
-          t.id === trackId 
+        setTracks(prev => prev.map(t =>
+          t.id === trackId
             ? { ...t, audioBlob: blob, localStored: true, waveformHeights: generateSimpleWaveform(50) }
             : t
         ));
-        
+
         const audio = new Audio(blobUrl);
         audio.crossOrigin = 'anonymous';
         trackAudioRefs.current.set(trackId, audio);
       }
     }
-    
+
     setShowRecoveryPrompt(false);
     setHasFirstRecording(true);
   };
 
   const dismissRecovery = async () => {
-    // Clear recovered recordings from IndexedDB
     for (const trackId of recoveredTracks) {
       await deleteRecordingFromIndexedDB(trackId);
     }
@@ -260,11 +243,11 @@ export function StudioView() {
       if (project) {
         setCurrentProject(project);
         setIsExistingProject(true);
-        
+
         if (project.duration && project.duration > 0) {
           setDuration(project.duration);
         }
-        
+
         if (project.tracks && project.tracks.length > 0) {
           const loadedTracks = project.tracks.map((t, i) => ({
             id: t.id,
@@ -295,9 +278,9 @@ export function StudioView() {
               compression: 30
             }
           }));
-          
+
           setTracks(loadedTracks);
-          
+
           let maxDuration = project.duration || 0;
           for (const track of loadedTracks) {
             if (track.audioUrl && !track.audioUrl.startsWith('blob:')) {
@@ -306,22 +289,22 @@ export function StudioView() {
               audio.preload = 'auto';
               audio.src = track.audioUrl;
               trackAudioRefs.current.set(track.id, audio);
-              
+
               audio.onloadedmetadata = () => {
                 if (audio.duration && isFinite(audio.duration) && audio.duration > maxDuration) {
                   maxDuration = audio.duration;
                   setDuration(maxDuration);
                 }
               };
-              
+
               audio.load();
             }
           }
-          
+
           if (project.tracks.some(t => t.audioUrl)) {
             setHasFirstRecording(true);
           }
-          
+
           if (!project.duration || project.duration === 0) {
             const trackWithDuration = project.tracks.find(t => t.duration && t.duration > 0);
             if (trackWithDuration?.duration) {
@@ -346,8 +329,7 @@ export function StudioView() {
   const toggleMute = (trackId: string) => {
     setTracks(prevTracks => {
       const updatedTracks = prevTracks.map(t => t.id === trackId ? { ...t, muted: !t.muted } : t);
-      
-      // Update the audio element volume immediately
+
       const audio = trackAudioRefs.current.get(trackId);
       if (audio) {
         const track = updatedTracks.find(t => t.id === trackId);
@@ -355,7 +337,7 @@ export function StudioView() {
           audio.volume = track.muted ? 0 : track.volume / 100;
         }
       }
-      
+
       return updatedTracks;
     });
   };
@@ -363,8 +345,7 @@ export function StudioView() {
   const toggleSolo = (trackId: string) => {
     setTracks(prevTracks => {
       const updatedTracks = prevTracks.map(t => t.id === trackId ? { ...t, solo: !t.solo } : t);
-      
-      // Update the audio element volume immediately
+
       const audio = trackAudioRefs.current.get(trackId);
       if (audio) {
         const track = updatedTracks.find(t => t.id === trackId);
@@ -377,7 +358,7 @@ export function StudioView() {
           }
         }
       }
-      
+
       return updatedTracks;
     });
   };
@@ -405,26 +386,37 @@ export function StudioView() {
 
   const deleteTrack = (trackId: string) => {
     if (tracks.length <= 1) return;
-    
+
     const trackToDelete = tracks.find(t => t.id === trackId);
-    
+
     if (trackToDelete?.audioUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(trackToDelete.audioUrl);
     }
-    
+
     const audio = trackAudioRefs.current.get(trackId);
     if (audio && audio.src.startsWith('blob:')) {
       URL.revokeObjectURL(audio.src);
     }
     trackAudioRefs.current.delete(trackId);
-    
+
     removeRecordingFromLocal(trackId);
-    
+
+    if (lastRecordedTrackId === trackId) {
+      setLastRecordedTrackId(null);
+    }
+
     const newTracks = tracks.filter(t => t.id !== trackId);
     if (trackToDelete?.isActive && newTracks.length > 0) {
       newTracks[0].isActive = true;
     }
     setTracks(newTracks);
+  };
+
+  const undoLastTake = () => {
+    if (lastRecordedTrackId) {
+      deleteTrack(lastRecordedTrackId);
+      setLastRecordedTrackId(null);
+    }
   };
 
   const startEditingTrackName = (trackId: string, currentName: string) => {
@@ -434,7 +426,7 @@ export function StudioView() {
 
   const saveTrackName = () => {
     if (editingTrackId && editingTrackName.trim()) {
-      setTracks(prev => prev.map(t => 
+      setTracks(prev => prev.map(t =>
         t.id === editingTrackId ? { ...t, name: editingTrackName.trim() } : t
       ));
     }
@@ -442,82 +434,111 @@ export function StudioView() {
     setEditingTrackName('');
   };
 
-  const playMetronomeClick = () => {
-    if (!metronomeAudioRef.current) {
+  const playMetronomeTick = (time: number) => {
+    if (!metronomeAudioRef.current || metronomeAudioRef.current.state === 'closed') {
       metronomeAudioRef.current = new AudioContext();
     }
     const ctx = metronomeAudioRef.current;
+
+    // Ensure context is running (needed after user interaction)
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
     const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 1000;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
+    const envelope = ctx.createGain();
+
+    osc.connect(envelope);
+    envelope.connect(ctx.destination);
+
+    // High frequency for the tick
+    osc.frequency.setValueAtTime(1000, time);
+
+    envelope.gain.setValueAtTime(0, time);
+    envelope.gain.linearRampToValueAtTime(0.5, time + 0.001);
+    envelope.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+
+    osc.start(time);
+    osc.stop(time + 0.1);
+  };
+
+  const scheduler = () => {
+    if (!metronomeAudioRef.current) return;
+
+    // While there are notes that will need to play before the next interval, 
+    // schedule them and advance the pointer.
+    const lookahead = 0.1; // 100ms lookahead
+    while (nextMetronomeNoteTime.current < metronomeAudioRef.current.currentTime + lookahead) {
+      playMetronomeTick(nextMetronomeNoteTime.current);
+      const secondsPerBeat = 60.0 / metronomeTempo;
+      nextMetronomeNoteTime.current += secondsPerBeat;
+    }
+    metronomeSchedulerId.current = requestAnimationFrame(scheduler);
   };
 
   const toggleMetronome = () => {
     if (metronomeEnabled) {
-      if (metronomeIntervalRef.current) {
-        clearInterval(metronomeIntervalRef.current);
-        metronomeIntervalRef.current = null;
+      if (metronomeSchedulerId.current) {
+        cancelAnimationFrame(metronomeSchedulerId.current);
+        metronomeSchedulerId.current = null;
       }
       setMetronomeEnabled(false);
     } else {
-      const intervalMs = (60 / metronomeTempo) * 1000;
-      playMetronomeClick();
-      metronomeIntervalRef.current = setInterval(playMetronomeClick, intervalMs);
+      if (!metronomeAudioRef.current || metronomeAudioRef.current.state === 'closed') {
+        metronomeAudioRef.current = new AudioContext();
+      }
+
+      const ctx = metronomeAudioRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      nextMetronomeNoteTime.current = ctx.currentTime + 0.05;
       setMetronomeEnabled(true);
+      scheduler();
     }
   };
 
   const updateMetronomeTempo = (newTempo: number) => {
     setMetronomeTempo(newTempo);
-    if (metronomeEnabled && metronomeIntervalRef.current) {
-      clearInterval(metronomeIntervalRef.current);
-      const intervalMs = (60 / newTempo) * 1000;
-      metronomeIntervalRef.current = setInterval(playMetronomeClick, intervalMs);
-    }
   };
 
   const handleImportAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Validate file type
     const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/webm', 'audio/m4a', 'audio/aac'];
     if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|webm|m4a|aac)$/i)) {
       alert('Please select a valid audio file (MP3, WAV, OGG, WebM, M4A, AAC)');
       return;
     }
-    
+
     setIsImporting(true);
-    
+
     try {
       const blob = new Blob([await file.arrayBuffer()], { type: file.type });
       const blobUrl = URL.createObjectURL(blob);
-      
+
       // Create audio element to get duration
       const audio = new Audio(blobUrl);
-      
+
       await new Promise<void>((resolve, reject) => {
         audio.onloadedmetadata = () => resolve();
         audio.onerror = () => reject(new Error('Failed to load audio file'));
         setTimeout(() => resolve(), 5000); // Timeout fallback
       });
-      
+
       const audioDuration = audio.duration && isFinite(audio.duration) ? audio.duration : 0;
-      
-      // Generate waveform from audio
-      const waveform = generateSimpleWaveform(50);
-      
+
+      // Generate real waveform from audio data
+      const waveform = await analyzeAudioWaveform(blob);
+
       // Create new track with imported audio
       const trackNumber = tracks.length + 1;
       const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
       const newTrackId = `track-${Date.now()}`;
-      
+
       const newTrack: Track = {
         id: newTrackId,
         name: fileName || `Import ${trackNumber}`,
@@ -531,29 +552,28 @@ export function StudioView() {
         audioBlob: blob,
         localStored: false
       };
-      
+
       // Add track and set it as active
       setTracks(prev => [...prev.map(t => ({ ...t, isActive: false })), newTrack]);
-      
+
       // Store audio reference
       audio.crossOrigin = 'anonymous';
       trackAudioRefs.current.set(newTrackId, audio);
-      
-      // Update duration if this is longer than current
+
       if (audioDuration > duration) {
         setDuration(audioDuration);
       }
-      
+
       setHasFirstRecording(true);
-      
+
       // Save locally
       await saveRecordingLocally(newTrackId, blob);
-      
+
       // Upload to cloud if project exists
       if (currentProject) {
         uploadRecordingToCloud(blob, newTrackId);
       }
-      
+
     } catch (error) {
       console.error('Failed to import audio:', error);
       alert('Failed to import audio file. Please try again.');
@@ -566,6 +586,36 @@ export function StudioView() {
     }
   };
 
+  const analyzeAudioWaveform = async (blob: Blob): Promise<number[]> => {
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const channelData = audioBuffer.getChannelData(0);
+      const samplesCount = channelData.length;
+
+      const targetLength = 50; // Match StudioView target
+      const blockSize = Math.floor(samplesCount / targetLength);
+      const peaks: number[] = [];
+
+      for (let i = 0; i < targetLength; i++) {
+        const start = i * blockSize;
+        let max = 0;
+        for (let j = 0; j < blockSize; j++) {
+          const val = Math.abs(channelData[start + j]);
+          if (val > max) max = val;
+        }
+        peaks.push(Math.round(max * 80)); // Normalize to 0-80 scale
+      }
+
+      await ctx.close();
+      return peaks;
+    } catch (error) {
+      console.error('[analyzeAudioWaveform] Failed:', error);
+      return Array.from({ length: 50 }, () => Math.floor(Math.random() * 20) + 10);
+    }
+  };
+
   const generateSimpleWaveform = (length: number): number[] => {
     return Array.from({ length }, () => Math.random() * 60 + 20);
   };
@@ -575,11 +625,11 @@ export function StudioView() {
     const length = buffer.length * numChannels * 2;
     const arrayBuffer = new ArrayBuffer(44 + length);
     const view = new DataView(arrayBuffer);
-    
+
     const writeString = (offset: number, str: string) => {
       for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
     };
-    
+
     writeString(0, 'RIFF');
     view.setUint32(4, 36 + length, true);
     writeString(8, 'WAVE');
@@ -593,10 +643,10 @@ export function StudioView() {
     view.setUint16(34, 16, true);
     writeString(36, 'data');
     view.setUint32(40, length, true);
-    
+
     const channels = [];
     for (let i = 0; i < numChannels; i++) channels.push(buffer.getChannelData(i));
-    
+
     let pos = 44;
     for (let i = 0; i < buffer.length; i++) {
       for (let ch = 0; ch < numChannels; ch++) {
@@ -605,7 +655,7 @@ export function StudioView() {
         pos += 2;
       }
     }
-    
+
     return new Blob([arrayBuffer], { type: 'audio/wav' });
   };
 
@@ -643,19 +693,16 @@ export function StudioView() {
       await initializeAudio();
       const success = await audioEngine.startRecording();
       if (success) {
+        // Initialize and start together to minimize latency
+
         setIsRecording(true);
         recordingStartTime.current = Date.now();
         waveformSamples.current = [];
-        
-        setTracks(prev => prev.map(t => 
+
+        setTracks(prev => prev.map(t =>
           t.isActive ? { ...t, isRecording: true } : t
         ));
-        
-        if (backingTrackEnabled && backingTrackRef.current) {
-          backingTrackRef.current.currentTime = 0;
-          backingTrackRef.current.play().catch(() => {});
-        }
-        
+
         recordingInterval.current = setInterval(() => {
           const elapsed = (Date.now() - recordingStartTime.current) / 1000;
           setCurrentTime(elapsed);
@@ -669,9 +716,9 @@ export function StudioView() {
 
   const handleDeleteAndRecord = async () => {
     if (trackToDelete) {
-      setTracks(prev => prev.map(t => 
-        t.id === trackToDelete 
-          ? { ...t, audioUrl: undefined, audioBlob: undefined, waveformHeights: [] } 
+      setTracks(prev => prev.map(t =>
+        t.id === trackToDelete
+          ? { ...t, audioUrl: undefined, audioBlob: undefined, waveformHeights: [] }
           : t
       ));
       trackAudioRefs.current.delete(trackToDelete);
@@ -683,29 +730,25 @@ export function StudioView() {
 
   const handleStopRecording = async () => {
     if (!isRecording) return;
-    
+
     try {
       if (recordingInterval.current) {
         clearInterval(recordingInterval.current);
         recordingInterval.current = null;
       }
-      
-      if (backingTrackRef.current) {
-        backingTrackRef.current.pause();
-        backingTrackRef.current.currentTime = 0;
-      }
-      
+
+
       const blob = await audioEngine.stopRecording();
       setIsRecording(false);
-      
+
       if (blob) {
         const recordingDuration = (Date.now() - recordingStartTime.current) / 1000;
         const waveform = normalizeWaveform(waveformSamples.current);
         const activeTrackId = tracks.find(t => t.isActive)?.id;
-        
+
         const arrayBuffer = await blob.arrayBuffer();
         const newBlob = new Blob([arrayBuffer], { type: blob.type });
-        
+
         setTracks(prev => prev.map(t => {
           if (t.isActive) {
             return {
@@ -718,28 +761,28 @@ export function StudioView() {
           }
           return { ...t, isRecording: false };
         }));
-        
+
         if (activeTrackId) {
           await saveRecordingLocally(activeTrackId, newBlob);
         }
-        
+
         setDuration(recordingDuration);
-        
+
         if (activeTrackId) {
           const blobUrl = URL.createObjectURL(newBlob);
           const audio = new Audio(blobUrl);
           audio.crossOrigin = 'anonymous';
           audio.currentTime = 0;
-          
+
           trackAudioRefs.current.set(activeTrackId, audio);
           playbackAudioRef.current = audio;
-          
+
           audio.onloadedmetadata = () => {
             audio.currentTime = 0;
-            audio.play().catch(() => {});
+            audio.play().catch(() => { });
             setIsPlaying(true);
           };
-          
+
           audio.onended = () => {
             setIsPlaying(false);
             setCurrentTime(0);
@@ -749,24 +792,32 @@ export function StudioView() {
               setShowNextActionPrompt(true);
             }
           };
-          
+
           audio.ontimeupdate = () => {
             setCurrentTime(audio.currentTime);
           };
-          
+
           audio.load();
         }
-        
+
         if (!hasFirstRecording && !isExistingProject) {
           setTimeout(() => {
             setJustRecordedFirstTake(true);
             setShowNextActionPrompt(true);
           }, 1500);
         }
-        
+
         const activeTrack = tracks.find(t => t.isActive);
-        if (activeTrack && currentProject) {
-          uploadRecordingToCloud(newBlob, activeTrack.id);
+        if (activeTrack) {
+          setLastRecordedTrackId(activeTrack.id);
+          if (currentProject) {
+            uploadRecordingToCloud(newBlob, activeTrack.id);
+          }
+        }
+
+        // Logic for auto-play after recording: only if it's the very first take
+        if (!hasFirstRecording && !isExistingProject) {
+          // Wait a bit then show prompt, but don't force playback if user prefers
         }
       }
     } catch (error) {
@@ -780,9 +831,9 @@ export function StudioView() {
     try {
       // Use IndexedDB for better storage (supports large files, no 5MB limit)
       const success = await saveRecordingToIndexedDB(trackId, blob, currentProject?.id);
-      
+
       if (success) {
-        setTracks(prev => prev.map(t => 
+        setTracks(prev => prev.map(t =>
           t.id === trackId ? { ...t, localStored: true } : t
         ));
       }
@@ -810,12 +861,12 @@ export function StudioView() {
 
   const uploadRecordingToCloud = async (blob: Blob, trackId: string, retryCount = 0) => {
     if (!currentProject) return;
-    
+
     const MAX_RETRIES = 3;
-    
+
     setIsUploading(true);
     setUploadProgress(0);
-    
+
     try {
       const fileName = generateRecordingFileName(currentProject.name);
       const result = await uploadRecording(
@@ -825,26 +876,25 @@ export function StudioView() {
         trackId,
         currentZone?.id
       );
-      
+
       if (result.success && result.url) {
         const oldAudio = trackAudioRefs.current.get(trackId);
         if (oldAudio?.src?.startsWith('blob:')) {
           URL.revokeObjectURL(oldAudio.src);
         }
-        
-        setTracks(prev => prev.map(t => 
+
+        setTracks(prev => prev.map(t =>
           t.id === trackId ? { ...t, audioUrl: result.url, audioBlob: undefined } : t
         ));
-        
+
         const audio = new Audio(result.url);
         audio.crossOrigin = 'anonymous';
         audio.preload = 'auto';
         trackAudioRefs.current.set(trackId, audio);
         audio.load();
-        
+
         removeRecordingFromLocal(trackId);
-        
-        // Clear from failed uploads if it was there
+
         setFailedUploads(prev => {
           const next = new Map(prev);
           next.delete(trackId);
@@ -855,14 +905,13 @@ export function StudioView() {
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      
+
       // Retry logic
       if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying upload for track ${trackId}, attempt ${retryCount + 1}/${MAX_RETRIES}`);
-        
+
         // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, retryCount) * 1000;
-        
+
         setTimeout(() => {
           uploadRecordingToCloud(blob, trackId, retryCount + 1);
         }, delay);
@@ -873,9 +922,9 @@ export function StudioView() {
           next.set(trackId, retryCount);
           return next;
         });
-        
+
         // Keep the blob for manual retry
-        setTracks(prev => prev.map(t => 
+        setTracks(prev => prev.map(t =>
           t.id === trackId ? { ...t, localStored: true } : t
         ));
       }
@@ -900,13 +949,13 @@ export function StudioView() {
 
   const uploadAllRecordingsToCloud = async () => {
     if (!currentProject) return;
-    
+
     const tracksToUpload = tracks.filter(t => t.audioBlob && !t.audioUrl);
-    
+
     if (tracksToUpload.length === 0) return;
-    
+
     setIsUploading(true);
-    
+
     try {
       for (const track of tracksToUpload) {
         await uploadRecordingToCloud(track.audioBlob!, track.id);
@@ -922,7 +971,23 @@ export function StudioView() {
     if (isRecording) {
       handleStopRecording();
     } else {
-      handleStartRecording();
+      // Start count-in
+      setCurrentTime(0);
+      setCountIn(3);
+      const timer = setInterval(() => {
+        setCountIn(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Wait one more tick for UX before starting
+            setTimeout(() => {
+              setCountIn(0);
+              handleStartRecording();
+            }, 500);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
   };
 
@@ -931,20 +996,19 @@ export function StudioView() {
     const targetLength = 50;
     const step = Math.max(1, Math.floor(samples.length / targetLength));
     const downsampled: number[] = [];
-    
+
     for (let i = 0; i < samples.length; i += step) {
       const chunk = samples.slice(i, i + step);
       const avg = chunk.reduce((a, b) => a + b, 0) / chunk.length;
       downsampled.push(avg);
     }
-    
+
     const max = Math.max(...downsampled, 1);
     return downsampled.map(v => Math.round((v / max) * 80));
   };
 
   const handlePlayPause = async () => {
-    console.log('[StudioView] handlePlayPause called, isPlaying:', isPlaying);
-    
+
     if (isPlaying) {
       trackAudioRefs.current.forEach(audio => audio.pause());
       if (playbackAudioRef.current) {
@@ -957,19 +1021,19 @@ export function StudioView() {
       setIsPlaying(false);
       return;
     }
-    
+
     const tracksWithAudio = tracks.filter(t => t.audioBlob || t.audioUrl);
-    
+
     if (tracksWithAudio.length === 0) {
       return;
     }
-    
+
     for (const track of tracksWithAudio) {
       let audio = trackAudioRefs.current.get(track.id);
-      
+
       let sourceUrl: string | undefined;
       let isNewBlobUrl = false;
-      
+
       if (track.audioBlob) {
         if (audio?.src?.startsWith('blob:')) {
           URL.revokeObjectURL(audio.src);
@@ -985,7 +1049,7 @@ export function StudioView() {
             }
             sourceUrl = URL.createObjectURL(localBlob);
             isNewBlobUrl = true;
-            
+
             setTracks(prev => prev.map(t => {
               if (t.id === track.id) {
                 const newLocalBlob = new Blob([localBlob], { type: localBlob.type });
@@ -998,10 +1062,10 @@ export function StudioView() {
           console.error('Error retrieving local recording:', error);
         }
       } else if (track.audioUrl) {
-        const isCloudUrl = track.audioUrl.includes('cloudinary') || 
-                          track.audioUrl.includes('res.cloudinary') ||
-                          (track.audioUrl.startsWith('https://') && !track.audioUrl.startsWith('blob:'));
-        
+        const isCloudUrl = track.audioUrl.includes('cloudinary') ||
+          track.audioUrl.includes('res.cloudinary') ||
+          (track.audioUrl.startsWith('https://') && !track.audioUrl.startsWith('blob:'));
+
         if (isCloudUrl) {
           sourceUrl = track.audioUrl;
         } else {
@@ -1010,9 +1074,9 @@ export function StudioView() {
       } else {
         continue;
       }
-      
+
       if (!sourceUrl) continue;
-      
+
       if (!audio || isNewBlobUrl || audio.src !== sourceUrl) {
         audio = new Audio();
         audio.crossOrigin = 'anonymous';
@@ -1021,49 +1085,49 @@ export function StudioView() {
         audio.load();
       }
     }
-    
+
     const loadPromises = tracksWithAudio.map(track => {
       const audio = trackAudioRefs.current.get(track.id);
       if (!audio || !audio.src) return Promise.resolve();
-      
+
       return new Promise<void>((resolve) => {
         if (audio.readyState >= 3) {
           resolve();
           return;
         }
-        
+
         const onCanPlay = () => {
           audio.removeEventListener('canplaythrough', onCanPlay);
           audio.removeEventListener('error', onError);
           resolve();
         };
-        
+
         const onError = () => {
           audio.removeEventListener('canplaythrough', onCanPlay);
           audio.removeEventListener('error', onError);
           resolve();
         };
-        
+
         audio.addEventListener('canplaythrough', onCanPlay);
         audio.addEventListener('error', onError);
-        
+
         setTimeout(() => {
           audio.removeEventListener('canplaythrough', onCanPlay);
           audio.removeEventListener('error', onError);
           resolve();
         }, 5000);
-        
+
         audio.load();
       });
     });
-    
+
     await Promise.all(loadPromises);
-    
+
     await trackEffectsEngine.initialize();
-    
+
     let maxDuration = duration;
     const soloTracks = tracks.filter(t => t.solo && (t.audioBlob || t.audioUrl));
-    
+
     for (const track of tracksWithAudio) {
       const audio = trackAudioRefs.current.get(track.id);
       if (audio && audio.src) {
@@ -1084,7 +1148,7 @@ export function StudioView() {
               audio.addEventListener('loadedmetadata', onLoadedMetadataForDuration);
               audio.addEventListener('error', onErrorForDuration);
               audio.load(); // Trigger loading if not already started
-              
+
               // Timeout after 3 seconds to prevent hanging
               setTimeout(() => {
                 audio.removeEventListener('loadedmetadata', onLoadedMetadataForDuration);
@@ -1096,7 +1160,7 @@ export function StudioView() {
             console.error('Error loading metadata:', e);
           }
         }
-        
+
         if (track.effects) {
           const existingNodes = trackEffectsEngine.createTrackChain(track.id, audio);
           if (existingNodes) {
@@ -1122,82 +1186,89 @@ export function StudioView() {
             audio.volume = track.muted ? 0 : track.volume / 100;
           }
         }
-        
+
         if (currentTime > 0 && audio.duration && currentTime < audio.duration) {
           audio.currentTime = currentTime;
         } else {
           audio.currentTime = 0;
         }
-        
-        // Update maxDuration after metadata is loaded
+
         if (audio.duration && isFinite(audio.duration) && audio.duration > maxDuration) {
           maxDuration = audio.duration;
         }
       }
     }
-    
+
     if (maxDuration > duration) {
       setDuration(maxDuration);
     }
-    
+
     let anyPlaying = false;
-    for (const track of tracksWithAudio) {
+    // Batch triggering play() for all tracks simultaneously to minimize cumulative latency
+    const playPromises = tracksWithAudio.map(track => {
       const audio = trackAudioRefs.current.get(track.id);
       if (audio && audio.src) {
-        try {
-          await audio.play();
-          anyPlaying = true;
-        } catch (e) {
-          console.error('Playback error:', e);
-        }
+        anyPlaying = true;
+        return audio.play().catch(e => console.error(`Playback error on track ${track.id}:`, e));
       }
-    }
-    
+      return Promise.resolve();
+    });
+
     if (anyPlaying) {
+      // We don't await all play calls here as that would still be sequential
+      // Triggering them in a map above starts the internal browser request for each nearly simultaneously
       setIsPlaying(true);
-      
+
       // Cancel any existing animation frame to prevent multiple loops
       if (playbackIntervalRef.current) {
         cancelAnimationFrame(playbackIntervalRef.current);
       }
-      
+
       const updateTime = () => {
         // Calculate time based on all playing tracks
         let currentTimeValue = 0;
         let hasPlayingTracks = false;
-        
+
         for (const [id, audio] of trackAudioRefs.current) {
           if (audio.paused) continue;
-          
+
           const trackTime = audio.currentTime;
           currentTimeValue = Math.max(currentTimeValue, trackTime);
           hasPlayingTracks = true;
-          
-          // Check if any track has ended
+
           if (audio.ended) {
             handleStop();
             return;
           }
         }
-        
+
         // Also check playbackAudioRef if it exists
         if (playbackAudioRef.current && !playbackAudioRef.current.paused) {
           const playbackTime = playbackAudioRef.current.currentTime;
           currentTimeValue = Math.max(currentTimeValue, playbackTime);
           hasPlayingTracks = true;
-          
+
           if (playbackAudioRef.current.ended) {
             handleStop();
             return;
           }
         }
-        
-        // Check if we should stop based on duration
+
         if (currentTimeValue >= duration && duration > 0) {
-          handleStop();
+          if (isLooping) {
+            // Loop: Reset all to start and continue
+            setCurrentTime(0);
+            for (const [_, audio] of trackAudioRefs.current) {
+              audio.currentTime = 0;
+            }
+            if (playbackAudioRef.current) playbackAudioRef.current.currentTime = 0;
+            playbackIntervalRef.current = requestAnimationFrame(updateTime);
+          } else {
+            handleStop();
+          }
           return;
         }
-        
+
         if (hasPlayingTracks) {
           // Always update the time to ensure the UI updates
           setCurrentTime(currentTimeValue);
@@ -1206,7 +1277,7 @@ export function StudioView() {
           handleStop();
         }
       };
-      
+
       playbackIntervalRef.current = requestAnimationFrame(updateTime);
     }
   };
@@ -1247,7 +1318,7 @@ export function StudioView() {
   const handleSave = async () => {
     setShowNextActionPrompt(false);
     setIsSaving(true);
-    
+
     try {
       if (!currentProject && user?.uid) {
         try {
@@ -1256,7 +1327,7 @@ export function StudioView() {
             ownerId: user.uid,
             zoneId: currentZone?.id
           });
-          
+
           if (result.success && result.project) {
             setCurrentProject(result.project);
             setContextProject(result.project.id);
@@ -1268,7 +1339,7 @@ export function StudioView() {
       } else {
         await saveProject();
       }
-      
+
       await uploadAllRecordingsToCloud();
     } catch (error) {
       console.error('Save failed:', error);
@@ -1277,14 +1348,64 @@ export function StudioView() {
     }
   };
 
+  const handleAutoMix = async () => {
+    if (tracks.length === 0) return;
+
+    setIsLoading(true); // Reuse loading state for "Mixing..." effect
+
+    try {
+      // Logic: Find the highest peak among all tracks and normalize others
+      let overallMaxPeak = 0;
+      const trackPeaks = new Map<string, number>();
+
+      tracks.forEach(t => {
+        if (t.waveformHeights.length > 0) {
+          const trackMax = Math.max(...t.waveformHeights);
+          trackPeaks.set(t.id, trackMax);
+          if (trackMax > overallMaxPeak) overallMaxPeak = trackMax;
+        }
+      });
+
+      if (overallMaxPeak === 0) return;
+
+      setTracks(prev => prev.map(t => {
+        const peak = trackPeaks.get(t.id) || 0;
+        if (peak === 0) return t;
+
+        // Target peak is 70% of max height (80)
+        const targetPeak = 56;
+        const ratio = targetPeak / peak;
+        const newVolume = Math.min(100, Math.max(10, Math.round(t.volume * ratio)));
+
+        return { ...t, volume: newVolume };
+      }));
+
+      tracks.forEach(t => {
+        const audio = trackAudioRefs.current.get(t.id);
+        if (audio) {
+          const peak = trackPeaks.get(t.id) || 0;
+          const targetPeak = 56;
+          const ratio = targetPeak / peak;
+          const newVolume = Math.min(100, Math.max(10, Math.round(t.volume * ratio)));
+          audio.volume = t.muted ? 0 : newVolume / 100;
+        }
+      });
+
+    } catch (error) {
+      console.error('Auto-Mix failed:', error);
+    } finally {
+      setTimeout(() => setIsLoading(false), 800);
+    }
+  };
+
   const hasRecordings = tracks.some(t => t.audioUrl || t.audioBlob || t.waveformHeights.length > 0);
 
   const saveProject = useCallback(async () => {
     if (!currentProject || !user?.uid) return;
-    
+
     setIsSaving(true);
     setSaveError(null);
-    
+
     try {
       const tracksToSave = tracks.map(t => ({
         id: t.id,
@@ -1308,21 +1429,21 @@ export function StudioView() {
           compression: t.effects.compression
         } : undefined
       }));
-      
+
       const result = await updateProject(currentProject.id, {
         tracks: tracksToSave,
         duration: duration
       });
-      
+
       if (result.success) {
         setLastSaved(new Date());
-        
+
         tracks.forEach(track => {
           if (track.audioUrl && track.localStored) {
             removeRecordingFromLocal(track.id);
           }
         });
-        
+
         await uploadAllRecordingsToCloud();
       } else {
         setSaveError('Failed to save');
@@ -1337,7 +1458,7 @@ export function StudioView() {
 
   const shouldSaveRef = useRef(false);
   const lastSaveTimeRef = useRef(0);
-  
+
   useEffect(() => {
     if (!isUploading && hasRecordings && currentProject && !isRecording && autoSaveEnabled) {
       const now = Date.now();
@@ -1359,7 +1480,7 @@ export function StudioView() {
   }, [currentProject?.id]);
 
   const processedAudioUrlsRef = useRef<Set<string>>(new Set());
-  
+
   useEffect(() => {
     const loadTrackDurations = async () => {
       const tracksWithAudio = tracks.filter(t => {
@@ -1368,22 +1489,22 @@ export function StudioView() {
         if (processedAudioUrlsRef.current.has(t.audioUrl)) return false;
         return true;
       });
-      
+
       if (tracksWithAudio.length === 0) return;
-      
+
       let maxDuration = 0;
-      
+
       for (const track of tracksWithAudio) {
         if (!track.audioUrl) continue;
-        
+
         processedAudioUrlsRef.current.add(track.audioUrl);
-        
+
         try {
           const audio = new Audio();
           audio.crossOrigin = 'anonymous';
           audio.src = track.audioUrl;
           trackAudioRefs.current.set(track.id, audio);
-          
+
           await new Promise<void>((resolve) => {
             audio.onloadedmetadata = () => {
               if (audio.duration && isFinite(audio.duration) && audio.duration > maxDuration) {
@@ -1398,12 +1519,12 @@ export function StudioView() {
           console.error('Failed to load track duration:', e);
         }
       }
-      
+
       if (maxDuration > 0) {
         setDuration(prev => Math.max(prev, maxDuration));
       }
     };
-    
+
     loadTrackDurations();
   }, [tracks]);
 
@@ -1420,7 +1541,7 @@ export function StudioView() {
     const hasUnuploadedRecordings = tracks.some(t => t.audioBlob && !t.audioUrl);
     const hasLocalRecordings = tracks.some(t => t.waveformHeights.length > 0 && !t.audioUrl && !t.localStored);
     const projectExistsButNotSaved = currentProject && tracks.length > 0 && currentProject.tracks.length === 0;
-    
+
     return hasUnuploadedRecordings || hasLocalRecordings || projectExistsButNotSaved;
   };
 
@@ -1432,9 +1553,9 @@ export function StudioView() {
         return 'You have unsaved recordings. Are you sure you want to leave?';
       }
     };
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -1456,6 +1577,60 @@ export function StudioView() {
     }
   };
 
+  const handleHeaderExport = async () => {
+    const tracksWithEffects = tracks.map(t => ({
+      ...t,
+      effects: t.effects || DEFAULT_EFFECTS
+    }));
+
+    const tracksWithAudio = tracksWithEffects.filter(t => (t.audioUrl || t.audioBlob) && !t.muted);
+
+    if (tracksWithAudio.length === 0) {
+      alert('No recordings to export');
+      return;
+    }
+
+    setIsExportingHeader(true);
+    setExportProgressHeader(0);
+
+    try {
+      // Create temporary URLs for blobs if they don't have audioUrl
+      const tempTracks = await Promise.all(tracksWithEffects.map(async t => {
+        if (!t.audioUrl && t.audioBlob) {
+          return { ...t, audioUrl: URL.createObjectURL(t.audioBlob) };
+        }
+        return t;
+      }));
+
+      const wavBlob = await exportMix(tempTracks as TrackToExport[], (step, progress) => {
+        setExportProgressHeader(progress);
+      });
+
+      // Revoke temporary URLs
+      tempTracks.forEach(t => {
+        if (t.audioUrl?.startsWith('blob:') && !tracks.find(rt => rt.audioUrl === t.audioUrl)) {
+          URL.revokeObjectURL(t.audioUrl);
+        }
+      });
+
+      const url = URL.createObjectURL(wavBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(currentProject?.name || 'My_Recording').replace(/[^a-z0-9]/gi, '_')}_mix.wav`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('[HeaderExport] Failed:', error);
+      alert('Export failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsExportingHeader(false);
+      setExportProgressHeader(0);
+    }
+  };
+
   useEffect(() => {
     return () => {
       trackAudioRefs.current.forEach(audio => {
@@ -1472,15 +1647,8 @@ export function StudioView() {
         }
         playbackIntervalRef.current = null;
       }
-      
-      if (backingTrackRef.current) {
-        if (backingTrackRef.current.src.startsWith('blob:')) {
-          URL.revokeObjectURL(backingTrackRef.current.src);
-        }
-        backingTrackRef.current.pause();
-        backingTrackRef.current = null;
-      }
-      
+
+
       if (metronomeIntervalRef.current) {
         clearInterval(metronomeIntervalRef.current);
       }
@@ -1492,65 +1660,105 @@ export function StudioView() {
 
   return (
     <div className="fixed inset-0 z-[100] bg-gradient-to-b from-[#0f0f14] via-[#0d0d12] to-[#08080c]">
+      {/* Loop, Undo, Count-in, etc. (Backing track logic removed) */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(139,92,246,0.03)_0%,_transparent_50%)] pointer-events-none" />
-      
-      {/* Header with AudioLab navigation */}
-      <div 
-        className="absolute top-0 left-0 right-0 z-[110] flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-[#131318]/95 backdrop-blur-sm border-b border-white/5"
+
+      {/* Count-in Overlay */}
+      {countIn > 0 && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-md">
+          <div className="flex flex-col items-center animate-in zoom-in duration-300">
+            <span className="text-[120px] sm:text-[180px] font-black text-white tabular-nums drop-shadow-[0_0_40px_rgba(139,92,246,0.5)]">
+              {countIn}
+            </span>
+            <span className="text-xl sm:text-2xl font-bold text-violet-400 uppercase tracking-[0.2em] mt-2">Get Ready</span>
+          </div>
+        </div>
+      )}
+
+      {/* Header with Native Native App Arrangement */}
+      <div
+        className="absolute top-0 left-0 right-0 z-[110] flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-[#131318]/40 backdrop-blur-xl border-b border-white/5"
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
       >
-        <button 
-          onClick={handleBackClick}
-          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-slate-400 transition-colors touch-manipulation"
-        >
-          <ChevronLeft size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
-        </button>
-        <div className="flex flex-col items-center">
-          <h2 className="text-xs sm:text-base font-semibold text-white tracking-tight">
-            {currentProject?.name || 'New Recording'}
-          </h2>
-          {isRecording ? (
-            <span className="text-[10px] sm:text-[10px] text-red-400 font-medium flex items-center gap-1 mt-0.5">
-              <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
-              Recording
-            </span>
-          ) : isSaving ? (
-            <span className="text-[10px] sm:text-[10px] text-blue-400 font-medium flex items-center gap-1 mt-0.5">
-              <Loader2 size={10} className="sm:w-[10px] sm:h-[10px] animate-spin" />
-              Saving...
-            </span>
-          ) : saveError ? (
-            <span className="text-[10px] sm:text-[10px] text-red-400 font-medium mt-0.5">
-              {saveError}
-            </span>
-          ) : lastSaved ? (
-            <span className="text-[10px] sm:text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
-              <Check size={10} className="sm:w-[10px] sm:h-[10px]" />
-              {formatLastSaved()}
-            </span>
-          ) : currentProject ? (
-            <button 
-              onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-              className={`text-[10px] sm:text-[10px] font-medium mt-0.5 flex items-center gap-1 px-1 -mx-1 rounded ${autoSaveEnabled ? 'text-emerald-400' : 'text-slate-500'} touch-manipulation`}
-            >
-              {autoSaveEnabled ? 'Auto-save: On' : 'Auto-save: Off'}
-            </button>
-          ) : null}
-        </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <button 
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-slate-400 transition-colors disabled:opacity-50 touch-manipulation"
+          <button
+            onClick={handleBackClick}
+            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation border border-white/5"
           >
-            {isSaving ? <Loader2 size={14} className="sm:w-[18px] sm:h-[18px] text-white animate-spin" /> : <Save size={14} className="sm:w-[18px] sm:h-[18px] text-white" />}
+            <ChevronLeft size={18} className="text-slate-200" />
           </button>
-          <button 
-            onClick={() => setShowSettings(true)}
-            className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-600 hover:bg-slate-500 active:bg-slate-400 transition-colors touch-manipulation"
-          >
-            <Settings size={14} className="sm:w-[18px] sm:h-[18px] text-white" />
-          </button>
+        </div>
+
+        {/* Central Glass Pill */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center min-w-0 max-w-[45%] sm:max-w-md">
+          <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl flex flex-col items-center w-full">
+            <div className="flex items-center gap-1.5 min-w-0 max-w-full justify-center overflow-hidden">
+              <h1 className="text-xs sm:text-sm font-bold text-white truncate text-center max-w-[12ch] sm:max-w-[24ch] min-w-0">
+                {currentProject?.name || 'Untitled Project'}
+              </h1>
+            </div>
+            {/* Status Indicator within Pill */}
+            <div className="h-4 flex items-center">
+              {isRecording ? (
+                <span className="text-[9px] text-red-400 font-bold flex items-center gap-1 animate-pulse">
+                  <span className="w-1 h-1 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  LIVE
+                </span>
+              ) : isSaving ? (
+                <span className="text-[9px] text-blue-400 font-bold flex items-center gap-1">
+                  <div className="size-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  SAVING
+                </span>
+              ) : (
+                <span className="text-[8px] sm:text-[9px] text-slate-500 font-medium">
+                  {lastSaved ? `SAVED • ${formatLastSaved()}` : 'REHEARSAL MODE'}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {hasRecordings && (
+            <button
+              onClick={handleHeaderExport}
+              disabled={isExportingHeader}
+              className={`flex items-center justify-center transition-all touch-manipulation rounded-full border ${isExportingHeader
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-3 h-8 sm:h-10'
+                : 'w-8 h-8 sm:w-auto sm:h-10 sm:px-4 bg-white/5 border-white/10 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20 shadow-sm active:scale-95'
+                }`}
+            >
+              {isExportingHeader ? (
+                <div className="flex items-center gap-1.5">
+                  <div className="size-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[10px] font-bold">{exportProgressHeader}%</span>
+                </div>
+              ) : (
+                <>
+                  <Download size={16} />
+                  <span className="hidden sm:inline sm:ml-2 font-bold text-xs">EXPORT Mix</span>
+                </>
+              )}
+            </button>
+          )}
+
+          <div className="flex items-center bg-white/5 border border-white/5 rounded-full p-0.5 gap-0.5">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-all disabled:opacity-50 touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
+              title="Save Project"
+            >
+              {isSaving ? <CustomLoader size="sm" className="!w-4 !h-4" /> : <Save size={16} />}
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-all touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
+              title="Project Settings"
+            >
+              <Settings size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1615,12 +1823,7 @@ export function StudioView() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                <div className="size-12 rounded-full border-2 border-slate-600 border-t-white animate-spin" />
-              </div>
-              <span className="text-slate-500 text-sm">Loading studio...</span>
-            </div>
+            <CustomLoader message="" />
           </div>
         ) : (
           <div className="flex flex-col">
@@ -1634,7 +1837,7 @@ export function StudioView() {
                 )}
                 {isUploading && (
                   <div className="flex items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                    <Loader2 size={14} className="sm:w-4 sm:h-4 text-blue-400 animate-spin" />
+                    <CustomLoader size="sm" className="!w-4 !h-4" />
                     <span className="text-blue-400 text-xs sm:text-sm font-medium">Saving to cloud...</span>
                   </div>
                 )}
@@ -1653,47 +1856,6 @@ export function StudioView() {
               </div>
             )}
 
-            {backingTrack && (
-              <div className="px-3 sm:px-4 pt-3 sm:pt-4">
-                <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div 
-                      className="size-8 sm:size-10 rounded-lg bg-cover bg-center bg-slate-800 shrink-0"
-                      style={{ backgroundImage: backingTrack.albumArt ? `url('${backingTrack.albumArt}')` : 'none' }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Backing Track</p>
-                      <p className="text-white text-xs sm:text-sm font-medium truncate">{backingTrack.title}</p>
-                    </div>
-                    <button
-                      onClick={() => setBackingTrackEnabled(!backingTrackEnabled)}
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-semibold transition-all min-h-[32px] sm:min-h-0 touch-manipulation ${
-                        backingTrackEnabled 
-                          ? 'bg-emerald-500 text-white' 
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 active:bg-slate-600'
-                      }`}
-                    >
-                      {backingTrackEnabled ? 'ON' : 'OFF'}
-                    </button>
-                  </div>
-                  {backingTrackEnabled && (
-                    <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-800">
-                      <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium uppercase">Volume</span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={backingTrackVolume}
-                        onChange={(e) => setBackingTrackVolume(parseInt(e.target.value))}
-                        className="flex-1 h-1 sm:h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-emerald-500 touch-manipulation"
-                        style={{ minHeight: '32px' }}
-                      />
-                      <span className="text-[10px] sm:text-xs text-slate-400 font-mono w-7 sm:w-8">{backingTrackVolume}%</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {(hasRecordings || tracks.length > 0) && (
               <div className="px-3 sm:px-4 pt-3 sm:pt-4">
@@ -1709,17 +1871,16 @@ export function StudioView() {
                       className="hidden"
                       id="import-audio-input"
                     />
-                    <button 
+                    <button
                       onClick={() => importInputRef.current?.click()}
                       disabled={isImporting}
-                      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${
-                        isImporting 
-                          ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' 
-                          : 'bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 active:bg-violet-500/40'
-                      }`}
+                      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${isImporting
+                        ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
+                        : 'bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 active:bg-violet-500/40'
+                        }`}
                     >
                       {isImporting ? (
-                        <Loader2 size={12} className="sm:w-[14px] sm:h-[14px] animate-spin" />
+                        <CustomLoader size="sm" className="!w-[14px] !h-[14px]" />
                       ) : (
                         <Download size={12} className="sm:w-[14px] sm:h-[14px] rotate-180" />
                       )}
@@ -1727,17 +1888,16 @@ export function StudioView() {
                     </button>
                     {/* Upload indicator - next to Add button */}
                     {tracks.some(t => t.audioBlob && !t.audioUrl) && (
-                      <button 
+                      <button
                         onClick={uploadAllRecordingsToCloud}
                         disabled={isUploading}
-                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${
-                          isUploading 
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 active:bg-emerald-500/40'
-                        }`}
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium min-h-[32px] sm:min-h-0 touch-manipulation transition-colors ${isUploading
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 active:bg-emerald-500/40'
+                          }`}
                       >
                         {isUploading ? (
-                          <Loader2 size={12} className="sm:w-[14px] sm:h-[14px] animate-spin" />
+                          <CustomLoader size="sm" className="!w-[14px] !h-[14px]" />
                         ) : (
                           <Upload size={12} className="sm:w-[14px] sm:h-[14px]" />
                         )}
@@ -1745,7 +1905,7 @@ export function StudioView() {
                       </button>
                     )}
                     {hasRecordings && (
-                      <button 
+                      <button
                         onClick={addNewTrack}
                         className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors min-h-[32px] sm:min-h-0 touch-manipulation"
                       >
@@ -1759,7 +1919,7 @@ export function StudioView() {
                 {hasRecordings && duration > 0 && (
                   <div className="mb-2 sm:mb-3 relative h-4 sm:h-5 border-b border-slate-800">
                     {Array.from({ length: Math.ceil(duration / 5) + 1 }, (_, i) => i * 5).map((sec) => (
-                      <div 
+                      <div
                         key={sec}
                         className="absolute bottom-0 flex flex-col items-center"
                         style={{ left: `${(sec / duration) * 100}%` }}
@@ -1768,7 +1928,7 @@ export function StudioView() {
                         <div className="w-px h-1 sm:h-1.5 bg-slate-700 mt-0.5" />
                       </div>
                     ))}
-                    <div 
+                    <div
                       className="absolute bottom-0 w-0.5 h-full bg-red-500 transition-all z-10"
                       style={{ left: `${(currentTime / duration) * 100}%` }}
                     />
@@ -1778,29 +1938,27 @@ export function StudioView() {
                 <div className="space-y-2">
                   {tracks.map((track) => {
                     const Icon = track.icon;
-                    
+
                     return (
-                      <div 
+                      <div
                         key={track.id}
                         onClick={() => setActiveTrack(track.id)}
-                        className={`relative rounded-xl overflow-hidden transition-all cursor-pointer ${
-                          track.isActive 
-                            ? 'bg-[#1e1e24] ring-1 ring-violet-500/50' 
-                            : 'bg-[#16161a] hover:bg-[#1a1a1f]'
-                        }`}
+                        className={`relative rounded-xl overflow-hidden transition-all cursor-pointer ${track.isActive
+                          ? 'bg-[#1e1e24] ring-1 ring-violet-500/50'
+                          : 'bg-[#16161a] hover:bg-[#1a1a1f]'
+                          }`}
                       >
                         <div className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2.5">
-                          <div className={`relative flex items-center justify-center shrink-0 size-7 sm:size-9 rounded-lg transition-all ${
-                            track.isActive 
-                              ? 'bg-slate-700 text-white' 
-                              : 'bg-slate-800 text-slate-400'
-                          }`}>
+                          <div className={`relative flex items-center justify-center shrink-0 size-7 sm:size-9 rounded-lg transition-all ${track.isActive
+                            ? 'bg-slate-700 text-white'
+                            : 'bg-slate-800 text-slate-400'
+                            }`}>
                             <Icon size={14} className="sm:w-[18px] sm:h-[18px]" />
                             {track.isRecording && (
                               <span className="absolute -top-0.5 -right-0.5 size-2 sm:size-2.5 rounded-full bg-red-500 animate-pulse" />
                             )}
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1 sm:gap-1.5">
                               {editingTrackId === track.id ? (
@@ -1828,14 +1986,13 @@ export function StudioView() {
                               )}
                               {/* Storage status indicator */}
                               {(track.audioBlob || track.audioUrl || track.localStored) && (
-                                <span 
-                                  className={`text-[8px] sm:text-[9px] px-1 py-0.5 rounded font-medium ${
-                                    track.audioUrl 
-                                      ? 'bg-emerald-500/20 text-emerald-400' 
-                                      : track.localStored || track.audioBlob
-                                        ? 'bg-amber-500/20 text-amber-400'
-                                        : ''
-                                  }`}
+                                <span
+                                  className={`text-[8px] sm:text-[9px] px-1 py-0.5 rounded font-medium ${track.audioUrl
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : track.localStored || track.audioBlob
+                                      ? 'bg-amber-500/20 text-amber-400'
+                                      : ''
+                                    }`}
                                   title={track.audioUrl ? 'Saved to cloud' : 'Saved locally'}
                                 >
                                   {track.audioUrl ? '☁️' : '💾'}
@@ -1844,24 +2001,23 @@ export function StudioView() {
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
                               <div className="relative flex-1 max-w-14 sm:max-w-16 h-1 sm:h-1 bg-slate-700 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className="absolute inset-y-0 left-0 bg-slate-400 rounded-full"
                                   style={{ width: `${track.volume}%` }}
                                 />
-                                <input 
-                                  type="range" 
-                                  min="0" 
-                                  max="100" 
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
                                   value={track.volume}
                                   onChange={(e) => {
                                     e.stopPropagation();
                                     const newVolume = parseInt(e.target.value);
                                     setTracks(prevTracks => {
-                                      const updatedTracks = prevTracks.map(t => 
+                                      const updatedTracks = prevTracks.map(t =>
                                         t.id === track.id ? { ...t, volume: newVolume } : t
                                       );
-                                      
-                                      // Update the audio element volume immediately
+
                                       const audio = trackAudioRefs.current.get(track.id);
                                       if (audio) {
                                         const updatedTrack = updatedTracks.find(t => t.id === track.id);
@@ -1874,7 +2030,7 @@ export function StudioView() {
                                           }
                                         }
                                       }
-                                      
+
                                       return updatedTracks;
                                     });
                                   }}
@@ -1885,10 +2041,10 @@ export function StudioView() {
                               <span className="text-[9px] sm:text-[10px] font-mono text-slate-500 w-5 sm:w-6">{track.volume}</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-0.5 sm:gap-1">
                             {(track.audioUrl || track.audioBlob) && (
-                              <button 
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (!isPlaying) {
@@ -1898,37 +2054,34 @@ export function StudioView() {
                                     handlePlayPause();
                                   }
                                 }}
-                                className={`size-6 sm:size-7 flex items-center justify-center rounded-lg text-xs font-bold transition-colors touch-manipulation ${
-                                  isPlaying && track.isActive
-                                    ? 'bg-emerald-500 text-white' 
-                                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
-                                }`}
+                                className={`size-6 sm:size-7 flex items-center justify-center rounded-lg text-xs font-bold transition-colors touch-manipulation ${isPlaying && track.isActive
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
+                                  }`}
                               >
                                 {isPlaying && track.isActive ? <Pause size={10} className="sm:w-3 sm:h-3" /> : <Play size={10} className="sm:w-3 sm:h-3" />}
                               </button>
                             )}
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); toggleMute(track.id); }}
-                              className={`size-5 sm:size-6 flex items-center justify-center rounded-lg text-[7px] sm:text-[7px] font-bold transition-colors touch-manipulation ${
-                                track.muted 
-                                  ? 'bg-orange-500 text-white' 
-                                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
-                              }`}
+                              className={`size-5 sm:size-6 flex items-center justify-center rounded-lg text-[7px] sm:text-[7px] font-bold transition-colors touch-manipulation ${track.muted
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
+                                }`}
                             >
                               M
                             </button>
-                            <button 
+                            <button
                               onClick={(e) => { e.stopPropagation(); toggleSolo(track.id); }}
-                              className={`size-5 sm:size-6 flex items-center justify-center rounded-lg text-[7px] sm:text-[7px] font-bold transition-colors touch-manipulation ${
-                                track.solo 
-                                  ? 'bg-yellow-500 text-black' 
-                                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
-                              }`}
+                              className={`size-5 sm:size-6 flex items-center justify-center rounded-lg text-[7px] sm:text-[7px] font-bold transition-colors touch-manipulation ${track.solo
+                                ? 'bg-yellow-500 text-black'
+                                : 'bg-slate-700 text-slate-400 hover:bg-slate-600 active:bg-slate-500'
+                                }`}
                             >
                               S
                             </button>
                             {tracks.length > 1 && (
-                              <button 
+                              <button
                                 onClick={(e) => { e.stopPropagation(); deleteTrack(track.id); }}
                                 className="size-5 sm:size-7 flex items-center justify-center rounded-lg bg-slate-700 text-slate-400 hover:text-red-400 hover:bg-slate-600 active:bg-slate-500 transition-colors touch-manipulation"
                               >
@@ -1936,7 +2089,7 @@ export function StudioView() {
                               </button>
                             )}
                             {(track.audioUrl || track.audioBlob) && (
-                              <button 
+                              <button
                                 onClick={(e) => { e.stopPropagation(); openEffectsPanel(track.id); }}
                                 className="size-5 sm:size-7 flex items-center justify-center rounded-lg bg-slate-700 text-slate-400 hover:text-violet-400 hover:bg-slate-600 active:bg-slate-500 transition-colors touch-manipulation"
                                 title="Effects"
@@ -1947,7 +2100,7 @@ export function StudioView() {
                           </div>
                         </div>
 
-                        <div 
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
                             setActiveTrack(track.id);
@@ -1962,9 +2115,8 @@ export function StudioView() {
                             e.stopPropagation();
                             if (track.audioUrl || track.audioBlob) handlePlayPause();
                           }}
-                          className={`w-full bg-[#0f0f12] relative overflow-hidden touch-manipulation ${
-                            track.isActive ? 'h-14 sm:h-16' : 'h-10 sm:h-12'
-                          }`}
+                          className={`w-full bg-[#0f0f12] relative overflow-hidden touch-manipulation ${track.isActive ? 'h-14 sm:h-16' : 'h-10 sm:h-12'
+                            }`}
                         >
                           {track.waveformHeights.length === 0 && !track.isRecording ? (
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -1986,79 +2138,79 @@ export function StudioView() {
                             />
                           )}
                         </div>
-                    </div>
-                  );
-                })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-    </main>
+            )}
+          </div>
+        )}
+      </main>
 
-    <div className="absolute bottom-0 left-0 right-0 z-[110] bg-[#131318]/95 backdrop-blur-xl border-t border-white/5">
-      <div className="px-4 pt-4 pb-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}>
-        <div className="flex justify-between items-center mb-5">
-          <div className="flex items-baseline gap-1.5">
-            <span className={`text-3xl font-bold tabular-nums font-mono tracking-tight ${isRecording ? 'text-red-500' : 'text-white'}`}>
+      <div className="absolute bottom-0 left-0 right-0 z-[110] bg-[#131318]/95 backdrop-blur-xl border-t border-white/5">
+        <div className="px-4 pt-4 pb-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' }}>
+          <div className="flex justify-between items-center mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-1.5">
+              <span className={`text-2xl sm:text-3xl font-bold tabular-nums font-mono tracking-tight leading-none ${isRecording ? 'text-red-500' : 'text-white'}`}>
                 {formatTime(currentTime)}
               </span>
               {duration > 0 && !isRecording && (
-                <span className="text-base font-medium text-slate-500 tabular-nums font-mono">
-                  / {formatTime(duration)}
+                <span className="text-xs sm:text-base font-medium text-slate-500 tabular-nums font-mono leading-none">
+                  <span className="inline sm:hidden"> / </span>
+                  {formatTime(duration)}
                 </span>
               )}
             </div>
-            
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Metronome with tempo control */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <button
                   onClick={toggleMetronome}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-l-xl transition-all ${
-                    metronomeEnabled 
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 border-r-0' 
-                      : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'
-                  }`}
+                  className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-l-lg sm:rounded-l-xl transition-all ${metronomeEnabled
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 border-r-0'
+                    : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'
+                    }`}
                 >
-                  <Timer size={16} />
-                  <span className="text-sm font-mono font-semibold">{metronomeTempo}</span>
+                  <Timer size={14} className="sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm font-mono font-semibold">{metronomeTempo}</span>
                 </button>
                 {metronomeEnabled && (
                   <div className="flex">
                     <button
                       onClick={() => updateMetronomeTempo(Math.max(40, metronomeTempo - 5))}
-                      className="px-2 py-2 bg-amber-500/10 text-amber-400 border-y border-amber-500/30 hover:bg-amber-500/20 transition-colors text-sm font-bold"
+                      className="px-2 py-1.5 sm:py-2 bg-amber-500/10 text-amber-400 border-y border-amber-500/30 hover:bg-amber-500/20 transition-colors text-xs sm:text-sm font-bold"
                     >
                       −
                     </button>
                     <button
                       onClick={() => updateMetronomeTempo(Math.min(240, metronomeTempo + 5))}
-                      className="px-2 py-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 border-l-0 rounded-r-xl hover:bg-amber-500/20 transition-colors text-sm font-bold"
+                      className="px-2 py-1.5 sm:py-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 border-l-0 rounded-r-lg sm:rounded-r-xl hover:bg-amber-500/20 transition-colors text-xs sm:text-sm font-bold"
                     >
                       +
                     </button>
                   </div>
                 )}
               </div>
-              
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${isRecording ? 'text-red-400' : 'text-slate-500'}`}>
-                  {isRecording ? 'REC' : 'IN'}
+
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 min-w-[100px] justify-between">
+                <span className={`text-[9px] font-bold uppercase tracking-wider ${isRecording ? 'text-red-400' : isPlaying ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  {isRecording ? 'REC' : isPlaying ? 'MASTER' : 'IN'}
                 </span>
-                <div className="flex gap-[3px] h-4">
-                  {[0.1, 0.2, 0.3, 0.5, 0.7, 0.9].map((threshold, i) => {
-                    const isActive = inputLevel >= threshold;
-                    const color = i < 3 ? 'green' : i < 5 ? 'yellow' : 'red';
+                <div className="flex gap-[3px] h-3.5 items-end">
+                  {[0.05, 0.15, 0.3, 0.5, 0.7, 0.85, 0.95].map((threshold, i) => {
+                    const isActive = inputLevel >= threshold || (isPlaying && i < 3);
+                    const color = i < 4 ? '#22c55e' : i < 6 ? '#eab308' : '#ef4444';
                     return (
-                      <div 
+                      <div
                         key={i}
                         className="w-1.5 rounded-full transition-all duration-75"
                         style={{
-                          backgroundColor: isActive 
-                            ? (color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#ef4444')
-                            : 'rgba(255,255,255,0.1)',
-                          boxShadow: isActive ? `0 0 8px ${color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#ef4444'}40` : 'none'
+                          height: `${20 + i * 12}%`,
+                          maxHeight: '100%',
+                          backgroundColor: isActive ? color : 'rgba(255,255,255,0.05)',
+                          boxShadow: isActive ? `0 0 8px ${color}30` : 'none'
                         }}
                       />
                     );
@@ -2069,41 +2221,43 @@ export function StudioView() {
           </div>
 
           <div className="flex items-center justify-center gap-1 sm:gap-2">
-            <button 
-              onClick={() => setCurrentTime(0)}
-              className="flex items-center justify-center min-w-[36px] min-h-[36px] sm:w-10 sm:h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all touch-manipulation"
+            <button
+              onClick={() => setIsLooping(!isLooping)}
+              title={isLooping ? "Desactivate Loop" : "Activate Loop"}
+              className={`flex items-center justify-center min-w-[36px] min-h-[36px] sm:w-10 sm:h-10 rounded-xl border transition-all active:scale-95 touch-manipulation ${isLooping
+                ? 'bg-violet-500/20 text-violet-400 border-violet-500/30'
+                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                }`}
             >
-              <SkipBack size={14} className="sm:w-4 sm:h-4" />
+              <Repeat size={14} className={`sm:w-4 sm:h-4 ${isLooping ? 'animate-pulse' : ''}`} />
             </button>
-            
-            <button 
+
+            <button
               onClick={handlePlayPause}
               disabled={isRecording || !hasRecordings}
-              className={`flex items-center justify-center min-w-[44px] min-h-[44px] sm:w-12 sm:h-12 rounded-xl transition-all active:scale-95 touch-manipulation ${
-                isRecording || !hasRecordings
-                  ? 'bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed'
-                  : isPlaying
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                    : 'bg-white/10 border border-white/10 text-white hover:bg-white/15'
-              }`}
+              className={`flex items-center justify-center min-w-[44px] min-h-[44px] sm:w-12 sm:h-12 rounded-xl transition-all active:scale-95 touch-manipulation ${isRecording || !hasRecordings
+                ? 'bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed'
+                : isPlaying
+                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                  : 'bg-white/10 border border-white/10 text-white hover:bg-white/15'
+                }`}
             >
               {isPlaying ? <Pause size={18} className="sm:w-5 sm:h-5" /> : <Play size={18} className="sm:w-5 sm:h-5 ml-0.5 sm:ml-1" fill="currentColor" />}
             </button>
-            
-            <button 
+
+            <button
               onClick={handleRecordToggle}
-              className={`relative flex items-center justify-center w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] rounded-full transition-all duration-200 active:scale-95 touch-manipulation ${
-                isRecording 
-                  ? 'bg-gradient-to-b from-red-500 to-red-600 shadow-[0_0_24px_rgba(239,68,68,0.4)]' 
-                  : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 shadow-lg shadow-red-500/20'
-              }`}
+              className={`relative flex items-center justify-center w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] rounded-full transition-all duration-200 active:scale-95 touch-manipulation ${isRecording
+                ? 'bg-gradient-to-b from-red-500 to-red-600 shadow-[0_0_24px_rgba(239,68,68,0.4)]'
+                : 'bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 shadow-lg shadow-red-500/20'
+                }`}
             >
               <div className={`absolute inset-0 rounded-full border-2 ${isRecording ? 'border-red-400/50' : 'border-red-400/30'}`} />
-              
+
               {isRecording && (
                 <div className="absolute inset-[-4px] rounded-full animate-ping bg-red-500/20" />
               )}
-              
+
               <div className="relative z-10">
                 {isRecording ? (
                   <Square size={16} className="sm:w-5 sm:h-5 text-white" fill="currentColor" />
@@ -2112,16 +2266,24 @@ export function StudioView() {
                 )}
               </div>
             </button>
-            
-            <button 
+
+            <button
               onClick={handleStop}
               className="flex items-center justify-center min-w-[44px] min-h-[44px] sm:w-12 sm:h-12 rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/15 active:scale-95 transition-all touch-manipulation"
             >
               <Square size={16} className="sm:w-[18px] sm:h-[18px]" fill="currentColor" />
             </button>
-            
-            <button className="flex items-center justify-center min-w-[36px] min-h-[36px] sm:w-10 sm:h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all touch-manipulation">
-              <AudioLines size={14} className="sm:w-4 sm:h-4" />
+
+            <button
+              onClick={undoLastTake}
+              disabled={!lastRecordedTrackId || isRecording}
+              title="Undo Last Take"
+              className={`flex items-center justify-center min-w-[36px] min-h-[36px] sm:w-10 sm:h-10 rounded-xl border transition-all active:scale-95 touch-manipulation ${lastRecordedTrackId && !isRecording
+                ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                : 'bg-white/5 border-white/10 text-slate-600 cursor-not-allowed'
+                }`}
+            >
+              <Undo2 size={14} className="sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>

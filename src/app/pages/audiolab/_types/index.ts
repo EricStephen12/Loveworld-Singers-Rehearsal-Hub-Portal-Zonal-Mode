@@ -37,27 +37,27 @@ export interface AudioLabSong {
   title: string;
   artist: string;
   duration: number;     // seconds
-  
+
   // Multi-part audio URLs (Cloudinary)
   audioUrls: AudioUrls;
-  
+
   // Available parts (for filtering)
   availableParts: VocalPart[];
-  
+
   // Metadata
   genre?: string;
   key?: string;
   tempo?: number;
   albumArt?: string;
   lyricsUrl?: string;
-  
+
   // Lyrics data for karaoke
   lyrics?: LyricLine[];
-  
+
   // Access control
   zoneId?: string;      // null = available to all zones (HQ songs)
   isHQSong: boolean;    // true = distributed from HQ
-  
+
   // Timestamps
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
@@ -109,18 +109,18 @@ export interface Track {
   name: string;
   type: 'vocal' | 'harmony' | 'guide' | 'instrument';
   color: string;
-  
+
   // Audio
   audioUrl?: string;    // Cloudinary URL
   audioBlob?: Blob;     // Local recording (before upload)
   waveform?: number[];  // Pre-computed waveform data
-  
+
   // Mix controls
   volume: number;       // 0-100
   pan: number;          // -100 to 100
   muted: boolean;
   solo: boolean;
-  
+
   // Effects (reverb, EQ, compression)
   effects?: {
     volume: number;      // 0-100
@@ -130,7 +130,7 @@ export interface Track {
     treble: number;      // -12 to 12 dB
     compression: number; // 0-100
   };
-  
+
   // Recording metadata
   recordedAt?: Date | Timestamp;
   duration?: number;
@@ -139,23 +139,23 @@ export interface Track {
 export interface AudioLabProject {
   id: string;
   name: string;
-  
+
   // Project settings
   tempo: number;        // BPM
   timeSignature: string; // e.g., "4/4"
   duration: number;     // Total duration in seconds
-  
+
   // Tracks
   tracks: Track[];
-  
+
   // Reference song (if practicing along)
   referenceSongId?: string;
-  
+
   // Ownership
   ownerId: string;
   collaborators: string[];
   zoneId?: string;
-  
+
   // Timestamps
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
@@ -168,7 +168,7 @@ export interface AudioLabProject {
 export interface Participant {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: string | null;
   role: 'host' | 'participant';
   isOnline: boolean;
   isMuted: boolean;
@@ -185,22 +185,22 @@ export interface PlaybackState {
 export interface LiveSession {
   id: string;
   code: string;         // 6-digit join code
-  
+
   // Host info
   hostId: string;
   hostName: string;
-  
+
   // Session details
   projectId?: string;
   songId?: string;
   title: string;
-  
+
   // Participants
   participants: Record<string, Participant>;
-  
+
   // Playback state (synced)
   playback: PlaybackState;
-  
+
   // Status
   status: 'active' | 'ended';
   startedAt: number;    // timestamp
@@ -211,13 +211,13 @@ export interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
-  senderAvatar?: string;
-  
+  senderAvatar?: string | null;
+
   type: 'text' | 'voice' | 'system' | 'file';
   content?: string;     // Text content
   voiceUrl?: string;    // Cloudinary URL for voice notes
   voiceDuration?: number;
-  
+
   // File message properties
   file?: {
     name: string;
@@ -225,7 +225,7 @@ export interface ChatMessage {
     type: string;  // MIME type
     url?: string;  // Cloudinary URL
   };
-  
+
   timestamp: number;
   status: 'sent' | 'delivered' | 'read';
 }
@@ -241,12 +241,12 @@ export interface PracticeSession {
   userId: string;
   songId: string;
   mode: PracticeMode;
-  
+
   // Performance
   score: number;
   accuracy: number;
   streak: number;
-  
+
   // Duration
   startedAt: Date | Timestamp;
   endedAt?: Date | Timestamp;
@@ -255,26 +255,26 @@ export interface PracticeSession {
 
 export interface PracticeProgress {
   userId: string;
-  
+
   // Streak tracking
   currentStreak: number;
   longestStreak: number;
   lastPracticeDate: string; // YYYY-MM-DD
-  
+
   // Weekly stats
   weeklyTarget: number;     // minutes
   weeklyProgress: number;   // minutes practiced this week
-  
+
   // Lifetime stats
   totalSessions: number;
   totalMinutes: number;
   averageScore: number;
   averageAccuracy: number;
-  
+
   // XP/Gamification
   xp: number;
   level: number;
-  
+
   updatedAt: Date | Timestamp;
 }
 
@@ -304,18 +304,20 @@ export interface PlayerState {
   isShuffled: boolean;
   repeatMode: RepeatMode;
   isLoading: boolean;
+  isBufferLoading?: boolean;
+  loadingTarget?: string | null; // e.g., "full" or "alto"
 }
 
 // ============================================
 // VIEW & UI TYPES
 // ============================================
 
-export type ViewType = 
+export type ViewType =
   | 'home'           // Entry point - single CTA
   | 'intent-choice'  // "How do you want to start?"
-  | 'library' 
-  | 'practice' 
-  | 'studio' 
+  | 'library'
+  | 'practice'
+  | 'studio'
   | 'collab'
   | 'collab-chat'
   | 'live-session'

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enterprise-level Smart Cache System
  * Like what Google, Facebook, and Netflix use
  */
@@ -65,8 +65,7 @@ class SmartCache<T = any> {
       return null
     }
 
-    // Update access stats
-    item.accessCount++
+        item.accessCount++
     item.lastAccessed = now
 
     return item.data
@@ -113,8 +112,7 @@ class SmartCache<T = any> {
     }, this.config.cleanupInterval)
   }
 
-  // Clear all cache
-  clear(): void {
+    clear(): void {
     this.cache.clear()
   }
 
@@ -155,11 +153,9 @@ export function withCache<T extends any[], R>(
       const cached = cache.get(key)
       
       if (cached) {
-        console.log('🚀 Cache hit:', key)
         return cached
       }
       
-      console.log('💾 Cache miss, fetching:', key)
       const result = await fn(...args)
       cache.set(key, result, ttl)
       return result

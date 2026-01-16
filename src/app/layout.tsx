@@ -1,4 +1,4 @@
-  import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
 import PWAInstall from '@/components/PWAInstall'
@@ -32,32 +32,14 @@ import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import { PermissionProvider } from '@/contexts/PermissionContext'
 import '@/utils/safeAreaManager'
 import { disableConsoleLogs } from "@/utils/disable-logs"
+import AppBootstrap from '@/components/AppBootstrap'
+import { PageLoader } from '@/components/PageLoader'
 
 // FCM will be initialized in a client component instead
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Auto-optimize for low data on app startup
-if (typeof window !== 'undefined') {
-  // Disable all console logs for security
-  // disableConsoleLogs() // Temporarily disabled for debugging
-  
-  PerformanceOptimizer.autoOptimize()
-  ViewportHeightFix.init()
-  NavigationManager.init()
-  SafeAreaUtils.init()
-  DeviceSafeArea.getInstance().init()
-  // Don't force auth persistence - zustand auth store handles it
-  lowDataOptimizer.init()
-  
-  // Make utilities globally available for debugging
-  ;(window as any).ViewportHeightFix = ViewportHeightFix
-  ;(window as any).SafeAreaUtils = SafeAreaUtils
-  ;(window as any).DeviceSafeArea = DeviceSafeArea
-  ;(window as any).FirebaseAuthService = FirebaseAuthService
-  ;(window as any).lowDataOptimizer = lowDataOptimizer
-  ;(window as any).EmergencyRecovery = EmergencyRecovery
-}
+// Side effects moved to AppBootstrap
 // import GlobalMiniPlayer from '@/components/GlobalMiniPlayer'
 
 // Use system fonts for faster loading
@@ -115,7 +97,7 @@ export const viewport: Viewport = {
   userScalable: false,
   themeColor: '#ffffff',
   viewportFit: 'cover', // Enable safe area support for notched devices
-        // ✅ Enhanced touch responsiveness
+  // ✅ Enhanced touch responsiveness
 }
 
 export default function RootLayout({
@@ -124,7 +106,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/logo.png" />
@@ -138,11 +120,11 @@ export default function RootLayout({
         <link rel="preload" href="/logo.png" as="image" />
         <link rel="preload" href="/lmm.png" as="image" />
         <link rel="preload" href="/APP ICON/pwa_192_filled.png" as="image" />
-        
+
         {/* Critical CSS and JS preloading */}
         <link rel="preload" href="/_next/static/css/app/layout.css" as="style" />
         <link rel="preload" href="/_next/static/chunks/webpack.js" as="script" />
-        
+
         {/* Fonts removed for faster loading */}
 
         <meta name="theme-color" content="#ffffff" />
@@ -154,88 +136,50 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        
+
         {/* Cloudinary Upload Widget */}
         <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
-        
+
         {/* Android WebView Notification Bridge */}
         <script src="/android-notification-bridge.js"></script>
-        
+
         {/* Firebase Cloud Messaging Handler for Android */}
         <script src="/fcm-handler.js"></script>
       </head>
       <body className="font-sans">
-        {isProduction && (
-          <script
-            dangerouslySetInnerHTML={{
-          __html: `
-            // Lightweight runtime bootstrap (no custom install prompt override)
-            // Register Optimized Service Worker for fast first load
-            if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                // Register main service worker
-                navigator.serviceWorker.register('/sw-optimized.js')
-                  .then((registration) => {
-                    console.log('⚡ Optimized Service Worker registered:', registration);
-                    registration.addEventListener('updatefound', () => {
-                      console.log('🔄 New service worker version found');
-                    });
-                  })
-                  .catch((error) => {
-                    console.warn('⚠️ Service Worker registration failed:', error);
-                  });
-                
-                // Register Firebase Messaging Service Worker for background notifications
-                navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                  .then((registration) => {
-                    console.log('🔔 Firebase Messaging Service Worker registered:', registration);
-                  })
-                  .catch((error) => {
-                    console.warn('⚠️ Firebase Messaging SW registration failed:', error);
-                  });
-              });
-            }
-
-            // Basic performance hook
-            if (typeof window !== 'undefined') {
-              window.addEventListener('load', () => {
-                console.log('🚀 PWA bootstrap complete');
-              });
-            }
-              `,
-            }}
-          />
-        )}
+        <AppBootstrap />
         <ErrorBoundary>
           <AuthProvider>
             <CallProvider>
-            <AudioProvider>
-            <MediaProvider>
-              <SubscriptionProvider>
-                <ChatProvider>
-                  <AnalyticsProvider>
-                    <PermissionProvider>
-                    <ActivityLogger>
-                      {/* FCM initialized in client components */}
-                      {/* <ScreenshotPrevention /> */}
-                      <main className="h-full w-full bg-gray-50">
-                        {children}
-                      </main>
-                      {/* Browser will handle its own install prompt; custom UI removed */}
-                      <RealtimeNotifications />
-                      <PushNotificationListener />
-                      <NotificationUrlHandler />
-                      <CallOverlay />
-                      <OfflineIndicator />
-                      <FeatureUpdateChecker />
-                      <ForceUpdateButton />
-                    </ActivityLogger>
-                    </PermissionProvider>
-                  </AnalyticsProvider>
-                </ChatProvider>
-              </SubscriptionProvider>
-            </MediaProvider>
-            </AudioProvider>
+              <AudioProvider>
+                <MediaProvider>
+                  <SubscriptionProvider>
+                    <ChatProvider>
+                      <AnalyticsProvider>
+                        <PermissionProvider>
+                          <ActivityLogger>
+                            {/* FCM initialized in client components */}
+                            {/* <ScreenshotPrevention /> */}
+                            <main className="h-full w-full bg-gray-50">
+                              <PageLoader>
+                                {children}
+                              </PageLoader>
+                            </main>
+                            {/* Browser will handle its own install prompt; custom UI removed */}
+                            <RealtimeNotifications />
+                            <PushNotificationListener />
+                            <NotificationUrlHandler />
+                            <CallOverlay />
+                            <OfflineIndicator />
+                            <FeatureUpdateChecker />
+                            <ForceUpdateButton />
+                          </ActivityLogger>
+                        </PermissionProvider>
+                      </AnalyticsProvider>
+                    </ChatProvider>
+                  </SubscriptionProvider>
+                </MediaProvider>
+              </AudioProvider>
             </CallProvider>
           </AuthProvider>
         </ErrorBoundary>

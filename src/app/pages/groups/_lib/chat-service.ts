@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CLEAN CHAT SERVICE
  * Fresh Firebase real-time chat implementation
  * Collections: chats_v2, messages_v2
@@ -150,20 +150,17 @@ function isSeniorMember(zoneId: string, groupId: string, userName: string): bool
   const lowerGroupId = (groupId || '').toLowerCase()
   const lowerName = (userName || '').toLowerCase()
   
-  // Check if zone/group ID matches senior zones
-  if (SENIOR_ZONES.includes(zoneId) || SENIOR_ZONES.includes(groupId)) {
+    if (SENIOR_ZONES.includes(zoneId) || SENIOR_ZONES.includes(groupId)) {
     return true
   }
   
-  // Check if zone/group ID contains senior keywords
-  for (const title of SENIOR_TITLES) {
+    for (const title of SENIOR_TITLES) {
     if (lowerZoneId.includes(title) || lowerGroupId.includes(title)) {
       return true
     }
   }
   
-  // Check if user name contains senior titles (e.g., "The President", "Zone Director")
-  // Only match if it's clearly a title, not just part of a name
+    // Only match if it's clearly a title, not just part of a name
   if (lowerName.includes('the president') || 
       lowerName.includes('zone president') ||
       lowerName.includes('zone director') ||
@@ -195,8 +192,7 @@ export async function searchZoneUsers(
     const users: ChatUser[] = []
     const seenIds = new Set<string>()
     
-    // Check if current user is in a senior zone (they can see everyone)
-    // First check by zone ID, then we'll also check by user's own name/role
+        // First check by zone ID, then we'll also check by user's own name/role
     const isInSeniorZone = currentUserZoneId ? 
       (SENIOR_ZONES.includes(currentUserZoneId) || 
        SENIOR_TITLES.some(title => currentUserZoneId.toLowerCase().includes(title))) : false
@@ -204,24 +200,14 @@ export async function searchZoneUsers(
     // Convert existing chat user IDs to a Set for fast lookup
     const existingChatUsers = new Set(existingChatUserIds)
     
-    console.log('[ChatService] Search params:', {
-      searchTerm,
-      currentUserId,
-      currentUserZoneId,
-      isBoss,
-      isInSeniorZone,
-      existingChatCount: existingChatUserIds.length
-    })
     
     // Get ALL zone members
     const zoneMembersRef = collection(db, 'zone_members')
     const zoneMembersSnapshot = await getDocs(zoneMembersRef)
-    console.log(`[ChatService] Found ${zoneMembersSnapshot.size} zone_members`)
     
     // Get ALL HQ members
     const hqMembersRef = collection(db, 'hq_members')
     const hqMembersSnapshot = await getDocs(hqMembersRef)
-    console.log(`[ChatService] Found ${hqMembersSnapshot.size} hq_members`)
     
     // Process zone_members
     zoneMembersSnapshot.forEach(docSnap => {
@@ -239,12 +225,6 @@ export async function searchZoneUsers(
       
       // Log senior members for debugging
       if (isInProtectedZone) {
-        console.log('[ChatService] Senior zone_member detected:', {
-          name,
-          zoneId: memberZoneId,
-          groupId: memberGroupId,
-          willBeHidden: !isInSeniorZone && !isBoss && !hasExistingChat
-        })
       }
       
       // Hide protected zone members from regular users
@@ -282,12 +262,6 @@ export async function searchZoneUsers(
       
       // Log senior members for debugging
       if (isInProtectedZone) {
-        console.log('[ChatService] Senior HQ member detected:', {
-          name,
-          zoneId: memberZoneId,
-          groupId: memberGroupId,
-          willBeHidden: !isInSeniorZone && !isBoss && !hasExistingChat
-        })
       }
       
       // Hide protected zone members from regular users
@@ -309,7 +283,6 @@ export async function searchZoneUsers(
       }
     })
     
-    console.log(`[ChatService] Returning ${users.length} unique users (search: "${searchTerm}")`)
     
     // Sort alphabetically
     users.sort((a, b) => a.name.localeCompare(b.name))
@@ -361,9 +334,6 @@ export async function getOrCreateDirectChat(
   otherUser: ChatUser
 ): Promise<string | null> {
   try {
-    console.log('[ChatService] getOrCreateDirectChat called')
-    console.log('[ChatService] Current user:', currentUser.id, currentUser.name)
-    console.log('[ChatService] Other user:', otherUser.id, otherUser.name)
     
     // Prevent self-chat
     if (currentUser.id === otherUser.id) {
@@ -372,14 +342,11 @@ export async function getOrCreateDirectChat(
     }
     
     // Check for existing chat
-    console.log('[ChatService] Checking for existing chat...')
     const existing = await findDirectChat(currentUser.id, otherUser.id)
     if (existing) {
-      console.log('[ChatService] Found existing chat:', existing.id)
       return existing.id
     }
     
-    console.log('[ChatService] No existing chat, creating new one...')
     
     // Create new chat - filter out undefined values
     const chatData: any = {
@@ -406,7 +373,6 @@ export async function getOrCreateDirectChat(
     }
     
     const docRef = await addDoc(collection(db, CHATS_COLLECTION), chatData)
-    console.log('[ChatService] Created direct chat:', docRef.id)
     return docRef.id
   } catch (error) {
     console.error('[ChatService] getOrCreateDirectChat error:', error)
@@ -458,7 +424,6 @@ export async function createGroupChat(
       timestamp: serverTimestamp()
     })
     
-    console.log('[ChatService] Created group chat:', docRef.id)
     return docRef.id
   } catch (error) {
     console.error('[ChatService] createGroupChat error:', error)
@@ -548,7 +513,6 @@ export async function sendCallMessage(
   duration?: number // in seconds
 ): Promise<boolean> {
   try {
-    console.log('[ChatService] sendCallMessage called:', { chatId, callType, callerName, duration })
     
     let text = ''
     if (callType === 'missed') {
@@ -569,9 +533,7 @@ export async function sendCallMessage(
       timestamp: serverTimestamp()
     }
 
-    console.log('[ChatService] Adding call message to Firestore:', messageData)
     const docRef = await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
-    console.log('[ChatService] Call message added with ID:', docRef.id)
 
     // Get chat to update unread counts for participants (for missed/declined calls)
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
@@ -588,8 +550,7 @@ export async function sendCallMessage(
         })
       }
       
-      // Update chat's last message and unread counts
-      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+            await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text,
           senderId: 'system',
@@ -607,7 +568,6 @@ export async function sendCallMessage(
         }
       })
     }
-    console.log('[ChatService] Chat last message updated')
 
     return true
   } catch (error) {
@@ -631,7 +591,6 @@ export async function markChatAsRead(chatId: string, userId: string): Promise<bo
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
       [`unreadCount.${userId}`]: 0
     })
-    console.log('[ChatService] Marked chat as read for user:', userId)
     return true
   } catch (error) {
     console.error('[ChatService] markChatAsRead error:', error)
@@ -697,8 +656,7 @@ export async function sendMessage(
         }
       })
       
-      // Update chat's last message and unread counts
-      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
+            const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text: lastMessageText,
@@ -720,7 +678,6 @@ export async function sendMessage(
         
         // Fire and forget - don't block message sending
         sendChatNotification(otherParticipants, notifTitle, notifBody, chatId, sender.id, sender.name).catch(err => {
-          console.log('[ChatService] Push notification failed (non-blocking):', err)
         })
       }
     } else {
@@ -769,7 +726,6 @@ async function sendChatNotification(
         excludeUserId: senderId
       })
     })
-    console.log('[ChatService] Push notification sent for chat:', chatId, 'to', recipientIds.length, 'recipients')
   } catch (error) {
     console.error('[ChatService] sendChatNotification error:', error)
   }
@@ -802,7 +758,6 @@ export function subscribeToMessages(
     console.error('[ChatService] subscribeToMessages error:', error)
     // If index error, try without orderBy
     if (error.message?.includes('index')) {
-      console.log('[ChatService] Falling back to unordered query')
       const fallbackQ = query(
         messagesRef,
         where('chatId', '==', chatId),
@@ -933,7 +888,6 @@ export async function addGroupMembers(
       timestamp: serverTimestamp()
     })
     
-    console.log('[ChatService] Added members to group:', membersToAdd.length)
     return true
   } catch (error) {
     console.error('[ChatService] addGroupMembers error:', error)
@@ -988,7 +942,6 @@ export async function removeGroupMember(
       timestamp: serverTimestamp()
     })
     
-    console.log('[ChatService] Removed member from group:', memberIdToRemove)
     return true
   } catch (error) {
     console.error('[ChatService] removeGroupMember error:', error)
@@ -1038,7 +991,6 @@ export async function leaveGroup(
       timestamp: serverTimestamp()
     })
     
-    console.log('[ChatService] User left group:', userId)
     return true
   } catch (error) {
     console.error('[ChatService] leaveGroup error:', error)
@@ -1079,7 +1031,6 @@ export async function deleteGroup(
     // Delete the chat
     await deleteDoc(doc(db, CHATS_COLLECTION, chatId))
     
-    console.log('[ChatService] Deleted group and messages:', chatId)
     return true
   } catch (error) {
     console.error('[ChatService] deleteGroup error:', error)

@@ -1,4 +1,4 @@
-import { supabase } from './supabase-client';
+﻿import { supabase } from './supabase-client';
 
 export interface SupportMessage {
   id: string;
@@ -18,10 +18,8 @@ export class SupabaseSupport {
   // Get all support messages (for admin)
   static async getMessages(): Promise<SupportMessage[]> {
     try {
-      console.log('🔍 Admin getMessages: Checking authentication...');
 
-      // Check if user is authenticated
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError) {
         console.error('❌ Admin auth error:', authError);
@@ -33,17 +31,14 @@ export class SupabaseSupport {
         return [];
       }
 
-      console.log('✅ Admin: User authenticated:', user.id);
 
       // Try multiple approaches to get messages
-      console.log('📡 Admin: Trying approach 1 - All messages...');
       let { data, error } = await supabase
         .from('support_messages')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.log('⚠️ Admin: Approach 1 failed, trying approach 2 - User messages only...');
         console.error('Approach 1 error:', error);
 
         // Fallback: Get user's own messages (this should work with RLS)
@@ -60,14 +55,10 @@ export class SupabaseSupport {
           console.error('❌ Admin: Both approaches failed:', error);
           return [];
         } else {
-          console.log('✅ Admin: Approach 2 worked - showing user messages only');
         }
       } else {
-        console.log('✅ Admin: Approach 1 worked - showing all messages');
       }
 
-      console.log('📊 Admin: Raw data from database:', data?.length || 0, 'messages');
-      console.log('📋 Admin: Raw messages:', data);
 
       const mappedMessages = (data || []).map(msg => ({
         id: msg.id,
@@ -83,7 +74,6 @@ export class SupabaseSupport {
         adminRespondedAt: msg.admin_responded_at
       }));
 
-      console.log('✅ Admin: Mapped messages:', mappedMessages.length, mappedMessages);
       return mappedMessages;
     } catch (error) {
       console.error('❌ Admin: Unexpected error in getMessages:', error);
@@ -94,7 +84,6 @@ export class SupabaseSupport {
   // Get messages for current user
   static async getUserMessages(): Promise<SupportMessage[]> {
     try {
-      console.log('🔍 getUserMessages: Getting current user...');
       // Get current user
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -108,7 +97,6 @@ export class SupabaseSupport {
         return [];
       }
 
-      console.log('✅ User found:', user.id, 'fetching messages...');
 
       const { data, error } = await supabase
         .from('support_messages')
@@ -126,8 +114,6 @@ export class SupabaseSupport {
         return [];
       }
 
-      console.log('📊 Raw data from database:', data?.length || 0, 'messages');
-      console.log('📋 Raw messages:', data);
 
       const mappedMessages = (data || []).map(msg => ({
         id: msg.id,
@@ -143,7 +129,6 @@ export class SupabaseSupport {
         adminRespondedAt: msg.admin_responded_at
       }));
 
-      console.log('✅ Mapped messages:', mappedMessages.length, mappedMessages);
       return mappedMessages;
     } catch (error) {
       console.error('❌ Unexpected error in getUserMessages:', error);
@@ -174,7 +159,6 @@ export class SupabaseSupport {
         return null;
       }
 
-      console.log('Creating message for user:', user.id);
 
       const { data, error } = await supabase
         .from('support_messages')
@@ -295,8 +279,7 @@ export class SupabaseSupport {
         return null;
       }
 
-      // Update original message status
-      await supabase
+            await supabase
         .from('support_messages')
         .update({ status: 'resolved' })
         .eq('id', originalMessageId);
@@ -327,8 +310,7 @@ export class SupabaseSupport {
     }
   }
 
-  // Update a message (for status changes only)
-  static async updateMessage(messageId: string, updates: {
+    static async updateMessage(messageId: string, updates: {
     status?: string;
   }): Promise<void> {
     try {

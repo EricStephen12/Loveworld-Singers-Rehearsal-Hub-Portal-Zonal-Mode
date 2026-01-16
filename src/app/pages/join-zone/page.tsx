@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -69,12 +69,10 @@ export default function JoinZonePage() {
         const zName = 'zoneName' in result ? result.zoneName : 'your zone'
         setSuccess(`Welcome to ${zName}!`)
         
-        // Clear ALL caches to ensure fresh data with new zone
-        localStorage.removeItem('lwsrh-zone-cache-v5')
+                localStorage.removeItem('lwsrh-zone-cache-v5')
         localStorage.removeItem('lwsrh-profile-cache-v1')
         
-        // Clear any zone-specific data caches
-        const cacheKeys = ['praise-nights', 'songs-data', 'categories', 'calendar', 'notifications']
+                const cacheKeys = ['praise-nights', 'songs-data', 'categories', 'calendar', 'notifications']
         cacheKeys.forEach(key => {
           try {
             for (let i = localStorage.length - 1; i >= 0; i--) {

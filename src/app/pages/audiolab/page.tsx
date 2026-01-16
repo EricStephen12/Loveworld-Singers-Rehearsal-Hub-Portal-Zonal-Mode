@@ -21,35 +21,20 @@ export default function AudioLabPage() {
   const { state, setView } = useAudioLab();
   const { currentView } = state;
   const searchParams = useSearchParams();
-  
+
   // Track audiolab usage
   useFeatureTracking('audiolab');
 
-  // Handle view query parameter (e.g., /pages/audiolab?view=warmup)
-  // Also handle song parameter - auto-switch to library view when song ID is provided
-  useEffect(() => {
-    const viewParam = searchParams?.get('view');
-    const songParam = searchParams?.get('song');
-    
-    // If song parameter is provided, switch to library view to show the song
-    if (songParam) {
-      setView('library');
-      return;
-    }
-    
-    if (viewParam) {
-      const validViews = ['home', 'library', 'practice', 'karaoke', 'warmup', 'studio', 'collab', 'collab-chat', 'live-session'];
-      if (validViews.includes(viewParam)) {
-        setView(viewParam as any);
-      }
-    }
-  }, [searchParams, setView]);
+  // View synchronization is now handled in AudioLabContext
 
   // Full-screen views (hide bottom nav)
   const fullScreenViews = ['studio', 'karaoke', 'warmup', 'live-session', 'collab-chat'];
-  
+
   // Show bottom nav for all views except full-screen views
   const showBottomNav = !fullScreenViews.includes(currentView);
+
+  // Check for active session to keep LiveSessionView mounted
+  const hasActiveSession = !!state.session.currentSession;
 
   const renderView = () => {
     switch (currentView) {
@@ -67,11 +52,13 @@ export default function AudioLabPage() {
       case 'studio':
         return <StudioView />;
       case 'collab':
+        // If we are in 'collab' view but have a session, we might want to show it or the lobby
         return <CollabView />;
       case 'collab-chat':
         return <CollabChatView />;
+      // live-session is handled outside to persist connection
       case 'live-session':
-        return <LiveSessionView />;
+        return null; // Rendered persistently below
       default:
         return <HomeView />;
     }
@@ -79,12 +66,19 @@ export default function AudioLabPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      
+
       <main className={`
-        flex-1 overflow-y-auto overflow-x-hidden 
+        flex-1 overflow-y-auto overflow-x-hidden relative
         ${showBottomNav ? 'pb-24' : 'pb-0'}
       `}>
         {renderView()}
+
+        {/* Persist LiveSessionView when session is active */}
+        {hasActiveSession && (
+          <div className={`absolute inset-0 z-40 ${currentView === 'live-session' ? 'block' : 'hidden'}`}>
+            <LiveSessionView />
+          </div>
+        )}
       </main>
 
       {showBottomNav && <BottomNav />}

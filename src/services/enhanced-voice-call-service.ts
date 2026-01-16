@@ -1,4 +1,4 @@
-// Enhanced voice call service with push notifications
+﻿// Enhanced voice call service with push notifications
 // Industry-standard approach used by major communication apps
 
 import { ref, set, push } from 'firebase/database';
@@ -90,7 +90,6 @@ class EnhancedVoiceCallService {
         type: 'voice_call_started'
       });
 
-      console.log('[EnhancedVoiceCall] Call initiated with notification:', callId);
       return callData;
 
     } catch (error) {
@@ -137,7 +136,6 @@ class EnhancedVoiceCallService {
         });
       }
 
-      console.log('[EnhancedVoiceCall] Call notification sent to:', receiverId);
 
     } catch (error) {
       console.error('[EnhancedVoiceCall] Error sending call notification:', error);
@@ -167,7 +165,6 @@ class EnhancedVoiceCallService {
 
   static showIncomingCallUI(callData: { callId: string; callerName: string; callerAvatar?: string }) {
     // This would integrate with your existing call UI
-    console.log('[EnhancedVoiceCall] Showing incoming call:', callData);
     
     // Dispatch custom event for your React components
     window.dispatchEvent(new CustomEvent('incomingVoiceCall', {
@@ -183,15 +180,13 @@ class EnhancedVoiceCallService {
   }
 
   static setupCallTimeout(callId: string) {
-    // Set timeout to mark call as missed
-    setTimeout(async () => {
+        setTimeout(async () => {
       try {
       if (!realtimeDb) {
         console.error('[EnhancedVoiceCall] Realtime DB not available');
         return;
       }
         await set(ref(realtimeDb, `voice_calls/${callId}/status`), 'missed');
-        console.log('[EnhancedVoiceCall] Call timed out:', callId);
       } catch (error) {
         console.error('[EnhancedVoiceCall] Error timing out call:', error);
       }

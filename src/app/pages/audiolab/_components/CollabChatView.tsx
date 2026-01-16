@@ -1,20 +1,21 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { 
+import {
   ChevronLeft, Play, Send, Mic, Users,
-  Smile, Check, CheckCheck, Clock, 
-  Trash2, LogOut, Copy, Loader2, Pause, StopCircle
+  Smile, Check, CheckCheck, Clock,
+  Trash2, LogOut, Copy, Pause, StopCircle
 } from 'lucide-react';
+import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
-import { 
-  getMessages, 
-  sendMessage as sendChatMessage, 
-  subscribeToMessages, 
-  deleteMessage, 
+import {
+  getMessages,
+  sendMessage as sendChatMessage,
+  subscribeToMessages,
+  deleteMessage,
   endSession,
-  leaveSession 
+  leaveSession
 } from '../_lib/session-service';
 import { VoiceRecorder } from '../_lib/voice-recorder';
 import type { ChatMessage } from '../_types';
@@ -32,12 +33,20 @@ interface Message {
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 }
 
-const EMOJIS = ['😀','😂','🥰','😍','🤩','😎','🤗','🤔','🥳','😜','😇','🥺','❤️','💯','🔥','✨','🎉','👏','👍','🙌','🙏','💪','🎧','🎤','🎶','🎵'];
+const EMOJIS = ['😀', '😂', '🥰', '😍', '🤩', '😎', '🤗', '🤔', '🥳', '😜', '😇', '🥺', '❤️', '💯', '🔥', '✨', '🎉', '👏', '👍', '🙌', '🙏', '💪', '🎧', '🎤', '🎶', '🎵'];
 
-export function CollabChatView() {
-  const { goBack, state, setView, clearSession } = useAudioLab();
+export interface CollabChatViewProps {
+  onClose?: () => void;
+  className?: string;
+}
+
+export function CollabChatView({ onClose, className = '' }: CollabChatViewProps) {
+  const { goBack: contextGoBack, state, setView, clearSession } = useAudioLab();
   const { user, profile } = useAuth();
-  
+
+  // If overlay (onClose exists), use that. Otherwise use context nav
+  const handleBack = onClose || contextGoBack;
+
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -46,20 +55,32 @@ export function CollabChatView() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const voiceRecorder = useRef<VoiceRecorder>(new VoiceRecorder());
   const recordingInterval = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   const fullName = profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.displayName || 'You';
   const userAvatar = profile?.avatar_url || user?.photoURL || null;
-  
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingInterval.current) clearInterval(recordingInterval.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      // Ensure recorder is stopped
+      voiceRecorder.current.stopRecording().catch(() => { });
+    };
+  }, []);
+
   const currentSession = state.session?.currentSession;
   const sessionId = currentSession?.id;
   const isHost = user?.uid === currentSession?.hostId;
-  // Note: participants info would need to be fetched separately from session service if needed
 
   // Auto-scroll
   const scrollToBottom = useCallback(() => {
@@ -77,7 +98,10 @@ export function CollabChatView() {
     };
     load();
     const unsub = subscribeToMessages(sessionId, (msg) => {
-      setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, convertMessage(msg, user?.uid)]);
+      setMessages(prev => {
+        if (prev.some(m => m.id === msg.id)) return prev;
+        return [...prev, convertMessage(msg, user?.uid)];
+      });
     });
     return () => unsub();
   }, [sessionId, user?.uid]);
@@ -109,7 +133,7 @@ export function CollabChatView() {
   // Voice recording
   const startRecording = async () => {
     if (!sessionId || !user?.uid) return;
-    const ok = await voiceRecorder.current.startRecording(() => {});
+    const ok = await voiceRecorder.current.startRecording(() => { });
     if (ok) {
       setIsRecording(true);
       setRecordingTime(0);
@@ -118,18 +142,41 @@ export function CollabChatView() {
   };
 
   const stopRecording = async () => {
-    if (recordingInterval.current) clearInterval(recordingInterval.current);
+    if (recordingInterval.current) {
+      clearInterval(recordingInterval.current);
+      recordingInterval.current = null;
+    }
+
+    // Capture the final recording time before resetting
+    const finalDuration = recordingTime;
+
     const blob = await voiceRecorder.current.stopRecording();
     setIsRecording(false);
     setRecordingTime(0);
+
     if (!blob || !sessionId || !user?.uid) return;
+
     setIsSending(true);
     try {
       const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
       const result = await uploadAudioToCloudinary(file);
-      const duration = Math.round(blob.size / 16000); // rough estimate
-      await sendChatMessage(sessionId, { type: 'voice', content: 'Voice message', senderId: user.uid, senderName: fullName, ...(userAvatar && { senderAvatar: userAvatar }), voiceUrl: result?.url, voiceDuration: duration });
-    } catch (e) { console.error(e); }
+      if (result?.url) {
+        await sendChatMessage(sessionId, {
+          type: 'voice',
+          content: 'Voice message',
+          senderId: user.uid,
+          senderName: fullName,
+          ...(userAvatar && { senderAvatar: userAvatar }),
+          voiceUrl: result.url,
+          voiceDuration: finalDuration
+        });
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (e) {
+      console.error('[CollabChatView] Voice upload failed:', e);
+      alert('Failed to send voice message. Please check your connection.');
+    }
     setIsSending(false);
   };
 
@@ -193,7 +240,7 @@ export function CollabChatView() {
         </div>
         <h2 className="text-white text-xl font-semibold mb-2">No Active Session</h2>
         <p className="text-gray-400 text-center mb-6">Join or create a session to start collaborating</p>
-        <button onClick={goBack} className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-medium transition-colors">
+        <button onClick={handleBack} className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-medium transition-colors">
           Go Back
         </button>
       </div>
@@ -201,40 +248,18 @@ export function CollabChatView() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#1a1025] to-[#0d0612] flex flex-col">
-      {/* Header */}
-      <header className="flex-shrink-0 bg-[#1a1025]/95 backdrop-blur-xl border-b border-white/5 safe-area-top">
-        <div className="flex items-center gap-3 px-4 py-3 pt-12">
-          <button onClick={goBack} className="p-2 -ml-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          
+    <div className={`flex flex-col z-50 bg-gradient-to-b from-[#1a1025] to-[#0d0612] ${onClose ? '' : 'fixed inset-0'} ${className}`}>
+      {/* Header - Compact for Sidebar */}
+      <header className={`flex-shrink-0 bg-white/5 backdrop-blur-3xl border-b border-white/5 safe-area-top shadow-xl`}>
+        <div className={`flex items-center gap-3 px-4 py-4`}>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-white font-semibold truncate">{currentSession?.title || 'Session'}</h1>
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <button onClick={copyCode} className="text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors">
-                <span>{currentSession?.code}</span>
-                {copiedCode ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-              </button>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-400">Online</span>
-            </div>
+            <h1 className="text-white font-bold tracking-tight text-lg">In-Room Chat</h1>
+            <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest mt-0.5">Secure Collaboration</p>
           </div>
 
-          {/* Header Actions - Simplified */}
-          <div className="flex items-center gap-2">
-            <button onClick={() => setView('live-session')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-emerald-500/20">
-              <Mic className="w-4 h-4" />
-              Voice
-            </button>
-            
-            <button onClick={handleEndSession} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors" title={isHost ? 'End Session' : 'Leave Session'}>
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+          <button onClick={onClose} className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+            <ChevronLeft className="w-6 h-6 rotate-180" />
+          </button>
         </div>
       </header>
 
@@ -251,7 +276,7 @@ export function CollabChatView() {
           ) : (
             messages.map((msg, idx) => {
               const showDate = idx === 0 || new Date(msg.rawTimestamp).toDateString() !== new Date(messages[idx - 1].rawTimestamp).toDateString();
-              
+
               return (
                 <div key={msg.id}>
                   {showDate && (
@@ -261,7 +286,7 @@ export function CollabChatView() {
                       </span>
                     </div>
                   )}
-                  
+
                   {msg.type === 'system' ? (
                     <div className="flex justify-center">
                       <span className="px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs text-violet-300">
@@ -298,7 +323,7 @@ export function CollabChatView() {
                 <button onClick={() => setShowEmoji(!showEmoji)} className="p-2.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                   <Smile className="w-5 h-5" />
                 </button>
-                
+
                 {showEmoji && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowEmoji(false)} />
@@ -327,11 +352,11 @@ export function CollabChatView() {
                   className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-full text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
                 />
               </div>
-              
+
               {/* Voice / Send Button */}
               {message.trim() ? (
                 <button onClick={handleSend} disabled={isSending} className="p-2.5 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-600/50 rounded-full text-white transition-colors">
-                  {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  {isSending ? <CustomLoader message="" /> : <Send className="w-5 h-5" />}
                 </button>
               ) : (
                 <button onClick={startRecording} className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
@@ -356,7 +381,7 @@ function MessageBubble({ msg, onDelete, onPlayVoice, playingId, formatDuration }
 }) {
   const isMe = msg.sender?.isMe;
   const isPlaying = playingId === msg.id;
-  
+
   return (
     <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
       {/* Avatar */}
@@ -369,17 +394,16 @@ function MessageBubble({ msg, onDelete, onPlayVoice, playingId, formatDuration }
           )}
         </div>
       )}
-      
-      <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+
+      <div className={`flex flex-col gap-1 max-w-[85%] ${isMe ? 'items-end' : 'items-start'}`}>
         {/* Sender name (for others) */}
-        {!isMe && <span className="text-xs text-gray-500 ml-1">{msg.sender?.name}</span>}
-        
-        {/* Message content */}
-        <div className={`group relative rounded-2xl px-4 py-2.5 ${
-          isMe 
-            ? 'bg-violet-600 text-white rounded-br-md' 
-            : 'bg-white/10 text-white rounded-bl-md'
-        }`}>
+        {!isMe && <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">{msg.sender?.name}</span>}
+
+        {/* Message content - Glassmorphism */}
+        <div className={`group relative rounded-2xl px-4 py-2.5 transition-all ${isMe
+          ? 'bg-violet-600/80 backdrop-blur-md text-white border border-white/10 shadow-lg'
+          : 'bg-white/5 backdrop-blur-md text-white border border-white/5 lg:hover:bg-white/10'
+          }`}>
 
           {msg.type === 'voice' ? (
             <div className="flex items-center gap-3 min-w-[180px]">
@@ -398,7 +422,7 @@ function MessageBubble({ msg, onDelete, onPlayVoice, playingId, formatDuration }
           ) : (
             <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
           )}
-          
+
           {/* Delete button (own messages) */}
           {isMe && (
             <button onClick={() => onDelete(msg.id)} className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
@@ -406,7 +430,7 @@ function MessageBubble({ msg, onDelete, onPlayVoice, playingId, formatDuration }
             </button>
           )}
         </div>
-        
+
         {/* Timestamp & Status */}
         <div className={`flex items-center gap-1 text-[10px] text-gray-500 ${isMe ? 'mr-1' : 'ml-1'}`}>
           <span>{msg.timestamp}</span>

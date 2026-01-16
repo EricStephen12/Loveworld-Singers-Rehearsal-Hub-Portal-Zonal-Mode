@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { ChevronRight, Calendar, Users, Music, MapPin, Bell } from 'lucide-react'
+import { ChevronRight, Calendar, Users, Music, MapPin, Bell, Mic } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -38,7 +38,7 @@ export default function RehearsalsPage() {
   // Carousel for rehearsal images
   const images = useMemo(() => [
     "/images/DSC_6155_scaled.jpg",
-    "/images/DSC_6303_scaled.jpg", 
+    "/images/DSC_6303_scaled.jpg",
     "/images/DSC_6446_scaled.jpg",
     "/images/DSC_6506_scaled.jpg",
     "/images/DSC_6516_scaled.jpg",
@@ -107,6 +107,16 @@ export default function RehearsalsPage() {
       iconColor: 'text-emerald-600'
     },
     {
+      id: 'audiolab',
+      title: 'AudioLab Studio',
+      description: 'Record, mix and practice your vocal parts',
+      icon: Mic,
+      href: '/pages/audiolab',
+      gradient: 'from-indigo-600 via-purple-600 to-pink-600',
+      iconBg: 'bg-indigo-100',
+      iconColor: 'text-indigo-600'
+    },
+    {
       id: 'vocal-warmups',
       title: 'Vocal Warm-ups',
       description: 'Practice vocal exercises and breathing techniques',
@@ -170,87 +180,87 @@ export default function RehearsalsPage() {
           display: none;
         }
       `}</style>
-      
+
       {/* Main Content with Apple-style reveal effect */}
-      <div 
+      <div
         className={`
           h-full flex flex-col
           transition-all duration-300 ease-out
-          ${isMenuOpen 
-            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden' 
+          ${isMenuOpen
+            ? 'translate-x-72 scale-[0.88] rounded-2xl shadow-2xl origin-left overflow-hidden'
             : 'translate-x-0 scale-100 rounded-none'
           }
         `}
         onClick={() => isMenuOpen && setIsMenuOpen(false)}
       >
-      <ScreenHeader 
-        title="Rehearsals" 
-        onMenuClick={toggleMenu} 
-        rightImageSrc="/logo.png"
-        onTitleClick={handleTitleClick}
-      />
+        <ScreenHeader
+          title="Rehearsals"
+          onMenuClick={toggleMenu}
+          rightImageSrc="/logo.png"
+          onTitleClick={handleTitleClick}
+        />
 
-      {/* ✅ Scrollable Content Container */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 content-bottom-safe">
-        {/* Image Carousel */}
-        <div className="mb-6">
-          <div
-            ref={scrollerRef}
-            className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-1"
-            style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
-          >
-            {images.map((src, i) => (
+        {/* ✅ Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 content-bottom-safe">
+            {/* Image Carousel */}
+            <div className="mb-6">
               <div
-                key={`${src}-${i}`}
-                data-card
-                className="relative flex-shrink-0 w-56 sm:w-64 h-32 sm:h-36 overflow-hidden rounded-2xl shadow-xl bg-slate-200 snap-start"
+                ref={scrollerRef}
+                className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-1"
+                style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
               >
-                <Image
-                  src={src}
-                  alt="Rehearsal moment"
-                  fill
-                  sizes="(max-width: 640px) 224px, 256px"
-                  className="object-cover object-center"
-                  priority={i === 0}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                {images.map((src, i) => (
+                  <div
+                    key={`${src}-${i}`}
+                    data-card
+                    className="relative flex-shrink-0 w-56 sm:w-64 h-32 sm:h-36 overflow-hidden rounded-2xl shadow-xl bg-slate-200 snap-start"
+                  >
+                    <Image
+                      src={src}
+                      alt="Rehearsal moment"
+                      fill
+                      sizes="(max-width: 640px) 224px, 256px"
+                      className="object-cover object-center"
+                      priority={i === 0}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Rehearsal Options */}
+            <div>
+              {rehearsalOptions.map((option) => (
+                <Link key={option.id} href={option.href}>
+                  <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl p-3 shadow-sm hover:shadow-lg hover:bg-white/90 transition-all duration-300 active:scale-[0.97] group ring-1 ring-black/5 mb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 ${option.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm`}>
+                          <option.icon className={`w-4 h-4 ${option.iconColor}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-slate-900 text-sm group-hover:text-black leading-tight">
+                            {option.title}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                            {option.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                          <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 transition-all duration-200" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* Rehearsal Options */}
-        <div>
-          {rehearsalOptions.map((option) => (
-            <Link key={option.id} href={option.href}>
-              <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl p-3 shadow-sm hover:shadow-lg hover:bg-white/90 transition-all duration-300 active:scale-[0.97] group ring-1 ring-black/5 mb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 ${option.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm`}>
-                      <option.icon className={`w-4 h-4 ${option.iconColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-slate-900 text-sm group-hover:text-black leading-tight">
-                        {option.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-tight">
-                        {option.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-                      <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 transition-all duration-200" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-        </div>
-      </div>
 
       </div> {/* End Apple-style animated container */}
 

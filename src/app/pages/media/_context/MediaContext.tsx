@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -70,7 +70,6 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   // Listen for media upload events and refresh
   useEffect(() => {
     const handleMediaUploaded = () => {
-      console.log('📺 New media uploaded, refreshing...')
       loadInitialData()
       if (user) {
         loadUserData()
@@ -88,7 +87,6 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     const cachedMedia = MediaCache.loadMedia(cacheKey)
     
     if (cachedMedia && cachedMedia.length > 0) {
-      console.log(`⚡ Showing ${cachedMedia.length} cached ${cacheKey} media items instantly`)
       setAllMedia(cachedMedia as any)
       setIsLoading(false)
     } else {
@@ -98,7 +96,6 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     // Load fresh data from Firebase in background
     // Filter by zone type: HQ zones see forHQ=true, regular zones see forHQ=false
     try {
-      console.log(`📺 Loading media for ${userIsHQ ? 'HQ' : 'regular'} zone: ${currentZone?.name || 'unknown'}`)
       
       const [media, featured, genresList] = await Promise.all([
         firebaseMediaService.getMediaForZone(userIsHQ, 24), // Load zone-filtered media

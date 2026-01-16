@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useState } from 'react';
 import { 
@@ -202,9 +202,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                 .filter(page => {
                   const matches = page.pageCategory === selectedCategory.name;
                   if (!matches) {
-                    console.log(`❌ Page "${page.name}" pageCategory: "${page.pageCategory}" !== "${selectedCategory.name}"`);
                   } else {
-                    console.log(`✅ Page "${page.name}" matches category "${selectedCategory.name}"`);
                   }
                   return matches;
                 })
@@ -506,7 +504,6 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
         isOpen={showMediaLibrary}
         onClose={() => setShowMediaLibrary(false)}
         onFileSelect={(file) => {
-          console.log('📸 Selected image from library:', file.url);
           setNewPageCategoryImage(file.url);
           setShowMediaLibrary(false);
         }}

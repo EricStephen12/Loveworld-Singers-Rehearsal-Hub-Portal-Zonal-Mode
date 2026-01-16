@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -109,8 +109,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, profile, currentZone])
 
-  // Update user status on window focus/blur with WhatsApp presence
-  useEffect(() => {
+    useEffect(() => {
     const userId = user?.uid || profile?.id
     if (!userId) return
 
@@ -146,17 +145,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // Just need user ID - that's it!
     const userId = user?.uid || profile?.id
     if (!userId) {
-      console.log('⏳ Waiting for user...')
       setIsChatsLoading(false) // Don't show loading if no user
       return
     }
     
-    console.log('🚀 [ChatContext] Loading chats for user:', userId)
     setIsChatsLoading(true)
     
     // Subscribe to Firebase - it handles ALL filtering
     const unsubscribe = FirebaseChatService.subscribeToChats(userId, (cleanChats) => {
-      console.log('✅ [ChatContext] Received', cleanChats.length, 'clean chats from Firebase service')
       
       // NO FILTERING HERE - Firebase service already filtered everything
       // Just use the clean data directly
@@ -165,7 +161,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      console.log('🧹 [ChatContext] Unsubscribing from chats')
       unsubscribe()
     }
   }, [user?.uid, profile?.id]) // Only re-run when user changes
@@ -179,31 +174,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    console.log('💬 [ChatContext] Loading messages for chat:', selectedChat.id)
-    console.log('💬 [ChatContext] Chat details:', {
-      id: selectedChat.id,
-      type: selectedChat.type,
-      participants: selectedChat.participants,
-      name: selectedChat.name
-    })
     setIsMessagesLoading(true)
     setMessages([])
     
     // Subscribe to fresh messages from Firebase
     const unsubscribe = FirebaseChatService.subscribeToMessages(selectedChat.id, (freshMessages) => {
-      console.log('📥 [ChatContext] Received', freshMessages.length, 'messages for chat:', selectedChat.id)
       if (freshMessages.length === 0) {
-        console.log('⚠️ [ChatContext] No messages found. This could mean:')
-        console.log('  1. The chat is new and has no messages')
-        console.log('  2. Messages are stored with a different chatId')
-        console.log('  3. Firestore index is missing (check console for index errors)')
       }
       setMessages(freshMessages)
       setIsMessagesLoading(false)
     })
 
     return () => {
-      console.log('🧹 [ChatContext] Cleaning up messages subscription')
       unsubscribe()
       setMessages([])
     }
@@ -246,8 +228,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    // Check if user is Boss
-    const isBoss = profile?.role === 'boss' || user.email?.toLowerCase().startsWith('boss')
+        const isBoss = profile?.role === 'boss' || user.email?.toLowerCase().startsWith('boss')
 
     const replyMeta = replyToMessage ? {
       messageId: replyToMessage.id,
@@ -283,18 +264,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // Use cached profile if user is still loading
     const userId = user?.uid || profile?.id
     if (!userId || !profile) {
-      console.log('⚠️ [searchUsers] Missing userId or profile:', { userId, hasProfile: !!profile })
       return []
     }
     
-    // Check if user is Boss (Boss can see everyone)
-    const isBoss = profile?.role === 'boss' || user?.email?.toLowerCase().startsWith('boss')
+        const isBoss = profile?.role === 'boss' || user?.email?.toLowerCase().startsWith('boss')
     
-    console.log('🔍 [searchUsers] Searching with:', { searchTerm, userId, zoneId: currentZone?.id, isBoss })
     setIsUsersLoading(true)
     // Pass correct zoneId and isBoss flag for proper filtering
     const users = await FirebaseChatService.searchUsers(searchTerm, userId, currentZone?.id, isBoss)
-    console.log('✅ [searchUsers] Found users:', users.length)
     setIsUsersLoading(false)
     return users
   }, [user, profile, currentZone])
@@ -303,10 +280,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // Use cached profile if user is still loading
     const currentUserId = user?.uid || profile?.id
     if (!currentUserId) {
-      console.log('⚠️ [createDirectChat] No user ID available')
       return null
     }
-    console.log('💬 [createDirectChat] Creating chat between:', currentUserId, 'and', userId)
     return await FirebaseChatService.createDirectChat(currentUserId, userId)
   }, [user, profile])
 

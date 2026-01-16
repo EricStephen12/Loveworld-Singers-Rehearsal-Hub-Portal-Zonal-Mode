@@ -1,4 +1,4 @@
-// Version Manager for Smart Cache Invalidation
+﻿// Version Manager for Smart Cache Invalidation
 // This ensures users get updates immediately in production
 
 interface VersionInfo {
@@ -26,43 +26,36 @@ class VersionManager {
   }
 
   private generateVersion(): string {
-    // Use current timestamp as version for automatic cache busting
-    // This ensures every deployment gets a new version
-    const buildTime = Date.now().toString();
-    return `v${buildTime}`;
+        // This was causing the "force back to reload" loop by clearing auth tokens on every page load
+        return '3.0.0';
   }
 
-  // Check if app version has changed and needs cache refresh
-  public async checkForUpdates(): Promise<boolean> {
+    public async checkForUpdates(): Promise<boolean> {
     // Only run in browser environment
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return false;
     }
-    
+
     try {
       const storedVersion = localStorage.getItem(this.VERSION_KEY);
       const lastUpdateCheck = localStorage.getItem(this.LAST_UPDATE_KEY);
       const now = Date.now();
-      
+
       // Check for updates every 5 minutes
       const shouldCheck = !lastUpdateCheck || (now - parseInt(lastUpdateCheck)) > 5 * 60 * 1000;
-      
+
       if (!shouldCheck) {
         return false;
       }
 
-      // Update last check time
-      localStorage.setItem(this.LAST_UPDATE_KEY, now.toString());
+            localStorage.setItem(this.LAST_UPDATE_KEY, now.toString());
 
       // If no stored version or version changed, we need to update
       if (!storedVersion || storedVersion !== this.currentVersion) {
-        console.log('🔄 App version changed, clearing caches...');
-        console.log(`Old version: ${storedVersion}`);
-        console.log(`New version: ${this.currentVersion}`);
-        
+
         await this.clearAllCaches();
         localStorage.setItem(this.VERSION_KEY, this.currentVersion);
-        
+
         return true;
       }
 
@@ -73,19 +66,14 @@ class VersionManager {
     }
   }
 
-  // Clear all caches when version changes
-  private async clearAllCaches(): Promise<void> {
+    private async clearAllCaches(): Promise<void> {
     try {
-      // Clear localStorage cache
-      this.clearLocalStorageCache();
-      
-      // Clear service worker cache
-      await this.clearServiceWorkerCache();
-      
-      // Clear browser cache
-      await this.clearBrowserCache();
-      
-      console.log('✅ All caches cleared for new version');
+            this.clearLocalStorageCache();
+
+            await this.clearServiceWorkerCache();
+
+            await this.clearBrowserCache();
+
     } catch (error) {
       console.error('Error clearing caches:', error);
     }
@@ -95,13 +83,13 @@ class VersionManager {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return;
     }
-    
+
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (
-        key.includes('cache') || 
-        key.includes('supabase') || 
+        key.includes('cache') ||
+        key.includes('supabase') ||
         key.includes('data') ||
         key.includes('offline') ||
         key.includes('profile') ||
@@ -111,7 +99,6 @@ class VersionManager {
       }
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`🧹 Cleared ${keysToRemove.length} localStorage cache entries`);
   }
 
   private async clearServiceWorkerCache(): Promise<void> {
@@ -121,7 +108,6 @@ class VersionManager {
         for (const registration of registrations) {
           await registration.unregister();
         }
-        console.log('🧹 Service Worker cache cleared');
       } catch (error) {
         console.error('Error clearing service worker cache:', error);
       }
@@ -135,7 +121,6 @@ class VersionManager {
         await Promise.all(
           cacheNames.map(cacheName => caches.delete(cacheName))
         );
-        console.log('🧹 Browser cache cleared');
       } catch (error) {
         console.error('Error clearing browser cache:', error);
       }
@@ -147,8 +132,7 @@ class VersionManager {
     if (typeof window === 'undefined') {
       return;
     }
-    
-    console.log('🔄 Force refresh triggered...');
+
     await this.clearAllCaches();
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.VERSION_KEY, this.currentVersion);
@@ -161,12 +145,11 @@ class VersionManager {
     return this.currentVersion;
   }
 
-  // Check if this is a new session (first load after update)
-  public isNewSession(): boolean {
+    public isNewSession(): boolean {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return false;
     }
-    
+
     const storedVersion = localStorage.getItem(this.VERSION_KEY);
     return !storedVersion || storedVersion !== this.currentVersion;
   }
@@ -177,13 +160,11 @@ export const versionManager = VersionManager.getInstance();
 // Auto-check for updates on app start
 export const initializeVersionCheck = async (): Promise<void> => {
   const hasUpdates = await versionManager.checkForUpdates();
-  
+
   if (hasUpdates) {
-    console.log('🎉 App updated! Fresh data will be loaded.');
     // Show a subtle notification to user
     if (typeof window !== 'undefined') {
       // You can add a toast notification here
-      console.log('App has been updated with new features!');
     }
   }
 };

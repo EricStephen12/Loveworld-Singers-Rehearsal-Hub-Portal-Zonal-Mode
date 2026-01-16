@@ -1,4 +1,4 @@
-import { 
+﻿import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   query, orderBy, limit, where, onSnapshot, startAfter,
   QueryDocumentSnapshot, DocumentData
@@ -15,7 +15,7 @@ export class FirebaseDatabaseService {
         orderBy('createdAt', 'desc'),
         limit(limitCount)
       )
-      
+
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -57,11 +57,10 @@ export class FirebaseDatabaseService {
   // Get a single song by ID - CRITICAL for SongDetailModal
   static async getSongById(songId: string) {
     try {
-      console.log('[getSongById] Fetching song with ID:', songId);
-      
+
       const docRef = doc(db, 'songs', songId);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         const songData: any = {
@@ -69,14 +68,8 @@ export class FirebaseDatabaseService {
           firebaseId: docSnap.id,
           ...data
         };
-        
-        console.log('[getSongById] Song found:', songData.title);
-        console.log('[getSongById] Lead singer:', songData.leadSinger || 'MISSING');
-        console.log('[getSongById] Lead guitarist:', songData.leadGuitarist || 'MISSING');
-        console.log('[getSongById] Lead keyboardist:', songData.leadKeyboardist || 'MISSING');
-        console.log('[getSongById] Drummer:', songData.drummer || 'MISSING');
-        console.log('[getSongById] Audio file:', songData.audioFile || 'MISSING');
-        
+
+
         return songData;
       } else {
         console.warn('[getSongById] Song not found with ID:', songId);
@@ -94,7 +87,7 @@ export class FirebaseDatabaseService {
     try {
       const docRef = doc(db, 'profiles', userId)
       const docSnap = await getDoc(docRef)
-      
+
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() }
       }
@@ -105,7 +98,6 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // Update user profile
   static async updateUserProfile(userId: string, data: any) {
     try {
       const docRef = doc(db, 'profiles', userId)
@@ -141,7 +133,7 @@ export class FirebaseDatabaseService {
       orderBy('createdAt', 'desc'),
       limit(10)
     )
-    
+
     return onSnapshot(q, (querySnapshot) => {
       const data = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -151,10 +143,44 @@ export class FirebaseDatabaseService {
     })
   }
 
+  // Generic subscription to any collection
+  static subscribeToCollection(collectionName: string, callback: (data: any[]) => void, limitCount: number = 100) {
+    const q = query(
+      collection(db, collectionName),
+      limit(limitCount)
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        firebaseId: doc.id,
+        ...doc.data()
+      }))
+      callback(data)
+    })
+  }
+
+  // Generic subscription with filter
+  static subscribeToCollectionWhere(collectionName: string, field: string, operator: any, value: any, callback: (data: any[]) => void, limitCount: number = 100) {
+    const q = query(
+      collection(db, collectionName),
+      where(field, operator, value),
+      limit(limitCount)
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        firebaseId: doc.id,
+        ...doc.data()
+      }))
+      callback(data)
+    })
+  }
+
   // Add new praise night with Firebase-generated ID
   static async addPraiseNight(data: any) {
     try {
-      console.log('Creating praise night with Firebase-generated ID...');
 
       const pageData = {
         ...data,
@@ -165,7 +191,6 @@ export class FirebaseDatabaseService {
       // Use addDoc to let Firebase generate a unique ID
       const docRef = await addDoc(collection(db, 'praise_nights'), pageData);
 
-      console.log('Page created with Firebase-generated ID:', docRef.id);
 
       return { id: docRef.id, firebaseId: docRef.id, success: true }
     } catch (error) {
@@ -174,7 +199,6 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // Update praise night
   static async updatePraiseNight(id: string, data: any) {
     try {
       const docRef = doc(db, 'praise_nights', id)
@@ -182,7 +206,7 @@ export class FirebaseDatabaseService {
         ...data,
         updatedAt: new Date()
       })
-      
+
       // Log activity
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -196,7 +220,7 @@ export class FirebaseDatabaseService {
           }
         }));
       }
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error updating praise night:', error)
@@ -209,7 +233,7 @@ export class FirebaseDatabaseService {
     try {
       const docRef = doc(db, 'praise_nights', id)
       await deleteDoc(docRef)
-      
+
       // Log activity
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -223,7 +247,7 @@ export class FirebaseDatabaseService {
           }
         }));
       }
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error deleting praise night:', error)
@@ -238,11 +262,11 @@ export class FirebaseDatabaseService {
       if (!db) {
         return { status: 'error', message: 'Firestore not initialized' }
       }
-      
+
       // Test if we can access the database
       const testCollection = collection(db, 'test')
-      return { 
-        status: 'success', 
+      return {
+        status: 'success',
         message: 'Firebase Firestore connected successfully'
       }
     } catch (error: any) {
@@ -265,7 +289,7 @@ export class FirebaseDatabaseService {
           supabaseId: data.id, // Store the original Supabase ID if it exists
           ...data
         }
-        
+
         return result;
       })
     } catch (error) {
@@ -305,30 +329,28 @@ export class FirebaseDatabaseService {
       const allResults: any[] = []
       let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null
       let hasMore = true
-      
-      console.log('[Batch] Starting batch fetch for', collectionName, '(batch size:', batchSize, ', max:', maxTotal, ')')
-      
+
+
       while (hasMore && allResults.length < maxTotal) {
         // Build query with cursor if we have a last document
         const q = lastDoc
           ? query(
-              collection(db, collectionName),
-              orderBy(orderByField, 'desc'),
-              startAfter(lastDoc),
-              limit(batchSize)
-            )
+            collection(db, collectionName),
+            orderBy(orderByField, 'desc'),
+            startAfter(lastDoc),
+            limit(batchSize)
+          )
           : query(
-              collection(db, collectionName),
-              orderBy(orderByField, 'desc'),
-              limit(batchSize)
-            )
-        
+            collection(db, collectionName),
+            orderBy(orderByField, 'desc'),
+            limit(batchSize)
+          )
+
         const querySnapshot = await getDocs(q)
         const batchDocs: QueryDocumentSnapshot<DocumentData>[] = querySnapshot.docs
-        
+
         if (batchDocs.length === 0) {
           hasMore = false
-          console.log('[Batch] No more documents in', collectionName)
         } else {
           // Map documents to data
           const batchData = batchDocs.map((docSnap: QueryDocumentSnapshot<DocumentData>) => ({
@@ -336,26 +358,23 @@ export class FirebaseDatabaseService {
             firebaseId: docSnap.id,
             ...docSnap.data()
           }))
-          
+
           allResults.push(...batchData)
           lastDoc = batchDocs[batchDocs.length - 1]
-          
-          console.log('[Batch] Fetched', batchData.length, 'docs, total:', allResults.length)
-          
+
+
           // Call callback with batch progress
           if (onBatch) {
             const isComplete = batchDocs.length < batchSize || allResults.length >= maxTotal
             onBatch(batchData, allResults.length, isComplete)
           }
-          
-          // Check if we got less than batch size (means no more data)
+
           if (batchDocs.length < batchSize) {
             hasMore = false
           }
         }
       }
-      
-      console.log('[Batch] Complete:', allResults.length, 'total documents from', collectionName)
+
       return allResults
     } catch (error) {
       console.error('[Batch] Error fetching', collectionName, ':', error)
@@ -385,7 +404,7 @@ export class FirebaseDatabaseService {
     try {
       const docRef = doc(db, collectionName, docId)
       const docSnap = await getDoc(docRef)
-      
+
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() }
       } else {
@@ -401,22 +420,21 @@ export class FirebaseDatabaseService {
     try {
       const docRef = doc(db, collectionName, docId)
       await setDoc(docRef, data)
-      
-      // Update analytics aggregation if this is an analytics event
+
       if (collectionName === 'analytics_events' && data.type) {
         try {
           const { AnalyticsAggregationService } = await import('./analytics-aggregation-service');
           await AnalyticsAggregationService.incrementEvent(
-            data.timestamp || Date.now(), 
-            data.type, 
-            data.page, 
+            data.timestamp || Date.now(),
+            data.type,
+            data.page,
             data.featureName
           );
         } catch (analyticsError) {
           console.warn('Could not update analytics aggregation:', analyticsError);
         }
       }
-      
+
       return { id: docId, ...data }
     } catch (error) {
       console.error(`Error creating document ${docId}:`, error)
@@ -428,22 +446,21 @@ export class FirebaseDatabaseService {
   static async addDocument(collectionName: string, data: any) {
     try {
       const docRef = await addDoc(collection(db, collectionName), data)
-      
-      // Update analytics aggregation if this is an analytics event
+
       if (collectionName === 'analytics_events' && data.type) {
         try {
           const { AnalyticsAggregationService } = await import('./analytics-aggregation-service');
           await AnalyticsAggregationService.incrementEvent(
-            data.timestamp || Date.now(), 
-            data.type, 
-            data.page, 
+            data.timestamp || Date.now(),
+            data.type,
+            data.page,
             data.featureName
           );
         } catch (analyticsError) {
           console.warn('Could not update analytics aggregation:', analyticsError);
         }
       }
-      
+
       return { success: true, id: docRef.id, ...data }
     } catch (error) {
       console.error(`Error adding document to ${collectionName}:`, error)
@@ -491,11 +508,11 @@ export class FirebaseDatabaseService {
   static async getCollectionWhereIn(collectionName: string, field: string, values: string[]) {
     try {
       if (values.length === 0) return []
-      
+
       // Firestore 'in' operator supports max 30 values
       const maxBatchSize = 30
       const results: any[] = []
-      
+
       for (let i = 0; i < values.length; i += maxBatchSize) {
         const batchValues = values.slice(i, i + maxBatchSize)
         const q = query(collection(db, collectionName), where(field, 'in', batchValues))
@@ -507,7 +524,7 @@ export class FirebaseDatabaseService {
           })
         })
       }
-      
+
       return results
     } catch (error) {
       console.error(`Error batch fetching from ${collectionName}:`, error)
@@ -519,14 +536,14 @@ export class FirebaseDatabaseService {
   static async getDocumentsByIds(collectionName: string, docIds: string[]) {
     try {
       if (docIds.length === 0) return []
-      
+
       const results: any[] = []
       const maxBatchSize = 30
-      
+
       for (let i = 0; i < docIds.length; i += maxBatchSize) {
         const batchIds = docIds.slice(i, i + maxBatchSize)
         // Fetch each document individually but in parallel
-        const promises = batchIds.map(id => 
+        const promises = batchIds.map(id =>
           getDoc(doc(db, collectionName, id))
             .then(docSnap => docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null)
             .catch(() => null)
@@ -534,7 +551,7 @@ export class FirebaseDatabaseService {
         const batchResults = await Promise.all(promises)
         results.push(...batchResults.filter(Boolean))
       }
-      
+
       return results
     } catch (error) {
       console.error(`Error batch fetching documents from ${collectionName}:`, error)
@@ -544,27 +561,23 @@ export class FirebaseDatabaseService {
 
   static async getDocuments(collectionName: string, filters: Array<{ field: string; operator: any; value: any }>) {
     try {
-      console.log('[getDocuments] Querying', collectionName, 'with filters:', filters)
       let q = query(collection(db, collectionName))
-      
+
       // Apply filters
       for (const filter of filters) {
-        console.log('  Adding filter:', filter.field, filter.operator, filter.value)
         q = query(q, where(filter.field, filter.operator, filter.value))
       }
-      
+
       const querySnapshot = await getDocs(q)
-      console.log('[getDocuments] Found', querySnapshot.docs.length, 'documents in', collectionName)
-      
+
       const results = querySnapshot.docs.map(doc => {
         const data = doc.data()
-        console.log('  Document', doc.id, ':', data)
         return {
           id: doc.id,
           ...data
         }
       })
-      
+
       return results
     } catch (error) {
       console.error('[getDocuments] Error getting documents from', collectionName, ':', error)
@@ -576,7 +589,6 @@ export class FirebaseDatabaseService {
   static async createCategory(categoryData: any) {
     try {
       const docRef = await addDoc(collection(db, 'categories'), categoryData)
-      console.log('Category created successfully with ID:', docRef.id);
       return { success: true, id: docRef.id, ...categoryData }
     } catch (error) {
       console.error('Error creating category:', error)
@@ -586,9 +598,7 @@ export class FirebaseDatabaseService {
 
   static async updateCategory(categoryId: string | number, data: any) {
     try {
-      console.log('Updating category with ID:', categoryId, 'Data:', data);
       await updateDoc(doc(db, 'categories', categoryId.toString()), data)
-      console.log('Category updated successfully');
       return { success: true }
     } catch (error) {
       console.error('Error updating category:', error)
@@ -598,9 +608,7 @@ export class FirebaseDatabaseService {
 
   static async deleteCategory(categoryId: string | number) {
     try {
-      console.log('Deleting category with ID:', categoryId);
       await deleteDoc(doc(db, 'categories', categoryId.toString()))
-      console.log('Category deleted successfully');
       return { success: true }
     } catch (error) {
       console.error('Error deleting category:', error)
@@ -616,9 +624,8 @@ export class FirebaseDatabaseService {
         Object.entries(songData).filter(([_, value]) => value !== undefined)
       )
 
-      console.log('Creating song with clean data:', cleanData)
       const docRef = await addDoc(collection(db, 'songs'), cleanData)
-      
+
       // Return the created song with proper ID fields
       const createdSong = {
         ...cleanData,
@@ -627,12 +634,10 @@ export class FirebaseDatabaseService {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
-      console.log('Song created successfully with ID:', docRef.id);
-      console.log('Created song data:', createdSong);
-      
-      return { 
-        success: true, 
+
+
+      return {
+        success: true,
         id: docRef.id,
         song: createdSong
       }
@@ -655,13 +660,6 @@ export class FirebaseDatabaseService {
         };
       }
 
-      console.log('Updating song:', {
-        firebaseDocId: firebaseDocId,
-        title: data.title,
-        praiseNightId: data.praiseNightId,
-        hasHistory: !!data.history,
-        historyCount: data.history?.length || 0
-      });
 
       // Filter out undefined values (Firebase doesn't allow them)
       const cleanData = Object.fromEntries(
@@ -672,9 +670,7 @@ export class FirebaseDatabaseService {
       delete cleanData.id;
       delete cleanData.firebaseId;
 
-      // Update the document
       const docRef = doc(db, 'songs', firebaseDocId);
-      console.log('Document path:', `songs/${firebaseDocId}`);
 
       const docSnap = await getDoc(docRef);
 
@@ -689,36 +685,31 @@ export class FirebaseDatabaseService {
       // Add updatedAt timestamp
       cleanData.updatedAt = new Date();
 
-      // Update the document
       await updateDoc(docRef, cleanData);
-      console.log('Song updated successfully:', data.title);
 
       // Save history entries if provided
       if (data.history && data.history.length > 0) {
-        console.log('Saving', data.history.length, 'history entries to Firebase...');
-        
+
         // Get existing history to avoid duplicates
         const existingHistory = await this.getCollectionWhere('song_history', 'song_id', '==', firebaseDocId);
         const existingIds = new Set(existingHistory?.map(h => h.id) || []);
-        
+
         // Only save new history entries
         const newHistoryEntries = data.history.filter((h: any) => !existingIds.has(h.id));
-        
+
         for (const historyEntry of newHistoryEntries) {
           const savedEntry = await this.createHistoryEntry({
             ...historyEntry,
             song_id: firebaseDocId, // Use Firebase document ID
             created_at: new Date()
           });
-          
+
           if (savedEntry) {
-            console.log('Saved history entry to Firebase:', historyEntry.type);
           } else {
             console.error('Failed to save history entry to Firebase:', historyEntry.type);
           }
         }
-        
-        console.log('History entries saved to Firebase');
+
       }
 
       return { success: true };
@@ -745,11 +736,9 @@ export class FirebaseDatabaseService {
         };
       }
 
-      console.log('Deleting song:', firebaseDocId);
 
       const docRef = doc(db, 'songs', firebaseDocId);
 
-      // Check if exists first
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
         console.error('Song not found:', firebaseDocId);
@@ -761,7 +750,6 @@ export class FirebaseDatabaseService {
 
       // Delete it
       await deleteDoc(docRef);
-      console.log('Song deleted successfully');
       return { success: true };
     } catch (error) {
       console.error('Delete error:', error);
@@ -786,21 +774,17 @@ export class FirebaseDatabaseService {
   static async updatePage(pageId: string | number, data: any) {
     try {
       const docId = typeof pageId === 'number' ? pageId.toString() : pageId
-      console.log('Firebase updatePage called with:', { docId, data });
-      
-      // Check if document exists first
+
       const docRef = doc(db, 'praise_nights', docId);
       const docSnap = await getDoc(docRef);
-      
+
       if (!docSnap.exists()) {
         console.error('Document does not exist:', docId);
         return false;
       }
-      
-      console.log('Document exists, current data:', docSnap.data());
-      
+
+
       await updateDoc(docRef, data);
-      console.log('Firebase updatePage successful');
       return true
     } catch (error) {
       console.error('Firebase updatePage error:', error)
@@ -825,12 +809,11 @@ export class FirebaseDatabaseService {
       // Get all songs with the old category
       const songsQuery = query(collection(db, 'songs'), where('category', '==', oldCategory))
       const songsSnapshot = await getDocs(songsQuery)
-      
-      // Update each song
-      const updatePromises = songsSnapshot.docs.map(doc => 
+
+      const updatePromises = songsSnapshot.docs.map(doc =>
         updateDoc(doc.ref, { category: newCategory })
       )
-      
+
       await Promise.all(updatePromises)
       return true
     } catch (error) {
@@ -852,24 +835,16 @@ export class FirebaseDatabaseService {
   // Get history entries for a song
   static async getHistoryBySongId(songId: string | number) {
     try {
-      console.log('🔍 Firebase: Getting history for song ID:', songId, 'type:', typeof songId);
-      
+
       const q = query(
         collection(db, 'song_history'),
         where('song_id', '==', songId.toString())
       )
 
       const querySnapshot = await getDocs(q)
-      console.log('📊 Firebase: Query returned', querySnapshot.docs.length, 'documents');
-      
+
       const results = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        console.log('📝 Firebase: History entry:', {
-          id: doc.id,
-          song_id: data.song_id,
-          title: data.title,
-          type: data.type
-        });
         return {
           id: doc.id,
           ...data
@@ -882,8 +857,7 @@ export class FirebaseDatabaseService {
         const dateB = new Date((b as any).created_at || 0).getTime()
         return dateB - dateA // Descending order (newest first)
       });
-      
-      console.log('✅ Firebase: Returning', sortedResults.length, 'sorted history entries');
+
       return sortedResults;
     } catch (error) {
       console.error('❌ Error getting song history:', error)
@@ -945,7 +919,6 @@ export class FirebaseDatabaseService {
   static async createHistoryEntry(data: any) {
     try {
       const docRef = await addDoc(collection(db, 'song_history'), data)
-      console.log('✅ History entry created successfully:', docRef.id)
       return true // Return boolean for success
     } catch (error) {
       console.error(' Error creating history entry:', error)
@@ -953,7 +926,6 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // Update history entry
   static async updateHistoryEntry(entryId: string, data: any) {
     try {
       const docRef = doc(db, 'song_history', entryId)
@@ -961,8 +933,7 @@ export class FirebaseDatabaseService {
         ...data,
         updated_at: new Date() // Add timestamp for when the history entry was updated
       })
-      
-      // Clear the history cache for this song so other components get fresh data
+
       if (data.song_id) {
         try {
           const CACHE_KEY = 'song-history-cache';
@@ -976,7 +947,7 @@ export class FirebaseDatabaseService {
           console.warn('Could not clear history cache:', cacheError);
         }
       }
-      
+
       return true
     } catch (error) {
       console.error('Error updating history entry:', error)
@@ -1002,7 +973,7 @@ export class FirebaseDatabaseService {
         collection(db, 'page_categories'),
         orderBy('createdAt', 'desc')
       )
-      
+
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -1021,7 +992,7 @@ export class FirebaseDatabaseService {
         createdAt: new Date(),
         updatedAt: new Date()
       }
-      
+
       const docRef = await addDoc(collection(db, 'page_categories'), categoryData)
       return { success: true, id: docRef.id }
     } catch (error) {

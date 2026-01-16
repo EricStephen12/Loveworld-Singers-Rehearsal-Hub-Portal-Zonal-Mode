@@ -1,4 +1,4 @@
-// app/api/send-call-notification/route.ts
+﻿// app/api/send-call-notification/route.ts
 // Server-side endpoint for sending voice call notifications
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,7 +21,6 @@ if (!admin.apps.length && projectId && clientEmail && privateKey) {
       }),
       databaseURL
     });
-    console.log('✅ Firebase Admin initialized for notifications with RTDB');
   } catch (error) {
     console.error('❌ Firebase Admin init error:', error);
   }
@@ -47,8 +46,7 @@ export async function POST(req: NextRequest) {
       : `${baseUrl}/pages/notifications`;
 
     // Send notification to all user devices
-    // Note: FCM data values must be strings
-    const stringifiedData: Record<string, string> = {};
+        const stringifiedData: Record<string, string> = {};
     if (data) {
       Object.entries(data).forEach(([key, value]) => {
         stringifiedData[key] = String(value);
@@ -121,12 +119,10 @@ export async function POST(req: NextRequest) {
     
     // Remove invalid tokens from database
     if (invalidTokens.length > 0) {
-      console.log('[CallNotification] Cleaning up', invalidTokens.length, 'invalid tokens');
       try {
         const rtdb = admin.database();
         // Remove the entire token entry for this user if their token is invalid
         await rtdb.ref(`fcm_tokens/${receiverId}`).remove();
-        console.log('[CallNotification] Removed invalid token for user:', receiverId);
       } catch (cleanupError) {
         console.error('[CallNotification] Error cleaning up tokens:', cleanupError);
       }
@@ -137,11 +133,9 @@ export async function POST(req: NextRequest) {
       if (!result.success) {
         console.error('[CallNotification] Failed to send to device', index, ':', (result as any).error?.message || (result as any).error);
       } else {
-        console.log('[CallNotification] Sent successfully, messageId:', (result as any).messageId);
       }
     });
     
-    console.log('[CallNotification] Successfully sent to', successCount, 'of', userTokens.length, 'devices');
     
     return NextResponse.json({
       success: true,
@@ -183,7 +177,6 @@ async function getUserFCMTokens(userId: string): Promise<string[]> {
       }
     }
     
-    console.log('[CallNotification] Found', tokens.length, 'tokens for user:', userId);
     return tokens;
     
   } catch (error) {

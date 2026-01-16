@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useRef } from 'react'
 import Link from 'next/link'
@@ -77,29 +77,24 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
           
           // Debug logging for refresh button
           if (isRefresh) {
-            console.log('🔄 Rendering refresh button:', { title: item.title, hasIcon: !!item.icon, hasOnClick: !!item.onClick });
           }
               const commonProps = item.onClick
             ? {
                 onClick: (e: React.MouseEvent) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  console.log('🔗 Menu item clicked (onClick):', item.title);
                   
                   if (isLogout) {
-                    console.log('🚪 Logout button clicked - showing confirmation modal');
                     // Store the callback in ref (won't be lost on re-render)
                     logoutCallbackRef.current = item.onClick || null
                     setShowLogoutModal(true)
                   } else if (isRefresh) {
-                    console.log('🔄 Refresh button clicked - executing immediately');
                     // Execute immediately for refresh
                     if (item.onClick) {
                       item.onClick()
                     }
                     onClose()
                   } else {
-                    console.log('🔗 Regular menu item clicked - executing immediately');
                     // Execute immediately for other items
                     if (item.onClick) {
                       item.onClick()
@@ -111,12 +106,10 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
             : { 
                 href: item.href || '#', 
                 onClick: (e: any) => {
-                  console.log('🔗 Menu item clicked (href):', item.title, 'href:', item.href);
                   
                   // If href is '#', prevent navigation
                   if (item.href === '#') {
                     e.preventDefault();
-                    console.log('🚫 Prevented navigation for placeholder link');
                     return;
                   }
                   
@@ -125,7 +118,6 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
                   
                   // Use router for navigation
                   if (item.href && item.href !== '#') {
-                    console.log('🚀 Navigating to:', item.href);
                     router.push(item.href);
                   }
                 }
@@ -294,21 +286,17 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
               </button>
               <button
                 onClick={async () => {
-                  console.log('🚪 Logout confirmed in modal, executing logout...');
                   setShowLogoutModal(false)
                   onClose()
                   
                   // Execute logout directly using signOut from useAuth
                   // This is more reliable than using a stored callback
                   try {
-                    console.log('🚪 Calling signOut directly...');
                     await signOut()
-                    console.log('✅ SignOut completed');
                   } catch (error) {
                     console.error('❌ SignOut error:', error);
                     // Fallback: try the stored callback
                     if (logoutCallbackRef.current) {
-                      console.log('🚪 Trying stored callback as fallback...');
                       logoutCallbackRef.current()
                     }
                   }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef } from 'react';
 
@@ -60,8 +60,7 @@ export function AnimatedWaveform({
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
 
-      // Clear canvas with slight fade for trail effect
-      ctx.fillStyle = 'rgba(32, 22, 42, 0.3)';
+            ctx.fillStyle = 'rgba(32, 22, 42, 0.3)';
       ctx.fillRect(0, 0, rect.width, actualHeight);
 
       const barWidth = rect.width / barCount;
@@ -177,8 +176,7 @@ export function AnimatedWaveform({
         ctx.shadowBlur = 0;
       }
 
-      // Update phase for smooth animation
-      if (isPlaying) {
+            if (isPlaying) {
         phaseRef.current += 0.08;
       } else if (isRecording) {
         phaseRef.current += 0.12;

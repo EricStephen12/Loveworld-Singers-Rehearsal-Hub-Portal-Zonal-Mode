@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WhatsApp-Style Optimistic UI Updates
  * Shows messages immediately, then confirms with server
  */
@@ -50,7 +50,6 @@ export class WhatsAppOptimisticUI {
     }
     
     this.pendingMessages.set(tempId, optimisticMessage)
-    console.log('📤 [WhatsApp Optimistic] Created optimistic message:', tempId)
     
     return optimisticMessage
   }
@@ -74,7 +73,6 @@ export class WhatsAppOptimisticUI {
       callback(updatedMessage)
     }
     
-    console.log('🔄 [WhatsApp Optimistic] Updated message:', tempId, updates)
     return updatedMessage
   }
   
@@ -93,7 +91,6 @@ export class WhatsAppOptimisticUI {
     this.pendingMessages.delete(tempId)
     this.messageCallbacks.delete(tempId)
     
-    console.log('✅ [WhatsApp Optimistic] Confirmed message:', tempId, '→', realMessageId)
   }
   
   /**
@@ -112,7 +109,6 @@ export class WhatsAppOptimisticUI {
     
     this.pendingMessages.set(tempId, failedMessage)
     
-    console.log('❌ [WhatsApp Optimistic] Message failed:', tempId, error)
     return failedMessage
   }
   
@@ -126,12 +122,10 @@ export class WhatsAppOptimisticUI {
     const retryMessage = {
       ...message,
       status: 'sending' as MessageStatus,
-      timestamp: new Date() // Update timestamp for retry
-    }
+      timestamp: new Date()     }
     
     this.pendingMessages.set(tempId, retryMessage)
     
-    console.log('🔄 [WhatsApp Optimistic] Retrying message:', tempId)
     return retryMessage
   }
   
@@ -164,7 +158,6 @@ export class WhatsAppOptimisticUI {
   static clearOptimisticMessages(): void {
     this.pendingMessages.clear()
     this.messageCallbacks.clear()
-    console.log('🧹 [WhatsApp Optimistic] Cleared all optimistic messages')
   }
   
   /**

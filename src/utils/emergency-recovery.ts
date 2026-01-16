@@ -1,9 +1,8 @@
-// Emergency Recovery Tool for Firebase Data Loss
+﻿// Emergency Recovery Tool for Firebase Data Loss
 // This helps recover accidentally deleted or modified Firebase data
 
 export class EmergencyRecovery {
   static async checkLocalCache() {
-    console.log('🚨 EMERGENCY RECOVERY: Checking local cache...');
     
     try {
       // Check localStorage for any cached data
@@ -15,7 +14,6 @@ export class EmergencyRecovery {
         key.includes('firebase')
       );
       
-      console.log('📦 Found cache keys:', pageCacheKeys);
       
       const recoveredData: any[] = [];
       
@@ -24,11 +22,9 @@ export class EmergencyRecovery {
           const data = localStorage.getItem(key);
           if (data) {
             const parsed = JSON.parse(data);
-            console.log(`📄 Cache key "${key}":`, parsed);
             recoveredData.push({ key, data: parsed });
           }
         } catch (e) {
-          console.log(`❌ Failed to parse cache key "${key}"`);
         }
       }
       
@@ -40,13 +36,11 @@ export class EmergencyRecovery {
   }
   
   static async checkCurrentFirebaseData() {
-    console.log('🚨 EMERGENCY RECOVERY: Checking current Firebase data...');
     
     try {
       const { FirebaseDatabaseService } = await import('@/lib/firebase-database');
       const pages = await FirebaseDatabaseService.getCollection('pages');
       
-      console.log('📊 Current Firebase pages:', pages);
       return pages;
     } catch (error) {
       console.error('❌ Error checking Firebase data:', error);
@@ -55,7 +49,6 @@ export class EmergencyRecovery {
   }
   
   static async createRecoveryReport() {
-    console.log('🚨 EMERGENCY RECOVERY: Creating recovery report...');
     
     const cacheData = await this.checkLocalCache();
     const firebaseData = await this.checkCurrentFirebaseData();
@@ -76,12 +69,10 @@ export class EmergencyRecovery {
       report.recommendations.push('✅ Firebase still has data - check for recent changes');
     }
     
-    console.log('📋 RECOVERY REPORT:', report);
     return report;
   }
   
   static async restoreFromCache(cacheKey: string, targetCollection: string = 'pages') {
-    console.log(`🚨 EMERGENCY RECOVERY: Restoring from cache key "${cacheKey}"...`);
     
     try {
       const cachedData = localStorage.getItem(cacheKey);
@@ -90,11 +81,9 @@ export class EmergencyRecovery {
       }
       
       const data = JSON.parse(cachedData);
-      console.log('📄 Restoring data:', data);
       
       // Here you would restore to Firebase
       // This is a template - you'd need to implement the actual restore logic
-      console.log('⚠️ Manual restore needed - data extracted from cache');
       return data;
     } catch (error) {
       console.error('❌ Error restoring from cache:', error);

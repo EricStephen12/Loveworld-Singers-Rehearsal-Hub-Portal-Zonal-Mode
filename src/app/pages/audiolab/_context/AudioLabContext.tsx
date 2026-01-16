@@ -1,14 +1,15 @@
-'use client';
+﻿'use client';
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { audioEngine } from '../_lib/audio-engine';
 import { toLeagcySong } from '../_lib/song-service';
-import type { 
-  Song, 
+import type {
+  Song,
   AudioLabSong,
-  PlayerState, 
-  RepeatMode, 
-  ViewType, 
+  PlayerState,
+  RepeatMode,
+  ViewType,
   PracticeStats,
   VocalPart,
   AudioUrls,
@@ -25,6 +26,7 @@ interface SessionState {
     code: string;
     title: string;
     hostId: string;
+    classroomId?: string;
   } | null;
 }
 
@@ -32,27 +34,27 @@ interface AudioLabState {
   // Navigation
   currentView: ViewType;
   previousView: ViewType | null;
-  
+
   // Player
   player: PlayerState;
   isPlayerVisible: boolean;
   isFullScreenPlayer: boolean;
-  
+
   // Practice
   practiceStats: PracticeStats;
-  
+
   // Session (for live collaboration)
   session: SessionState;
-  
+
   // Studio - current project being edited
   currentProjectId: string | null;
-  
+
   // Audio Engine
   isAudioInitialized: boolean;
   isRecording: boolean;
   inputLevel: number;
   currentPitch: PitchData | null;
-  
+
   // UI
   isLoading: boolean;
   error: string | null;
@@ -88,9 +90,10 @@ type AudioLabAction =
   | { type: 'SET_RECORDING'; payload: boolean }
   | { type: 'SET_INPUT_LEVEL'; payload: number }
   | { type: 'SET_PITCH'; payload: PitchData | null }
-  | { type: 'SET_SESSION'; payload: SessionState['currentSession'] }
+  | { type: 'SET_SESSION'; payload: SessionState['currentSession'] | any }
   | { type: 'CLEAR_SESSION' }
-  | { type: 'SET_PROJECT'; payload: string | null };
+  | { type: 'SET_PROJECT'; payload: string | null }
+  | { type: 'SET_BUFFER_LOADING'; payload: { isLoading: boolean; target?: string | null } };
 
 // ============================================
 // INITIAL STATE
@@ -145,14 +148,14 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
         previousView: state.currentView,
         currentView: action.payload,
       };
-    
+
     case 'GO_BACK':
       return {
         ...state,
         currentView: state.previousView || 'library',
         previousView: null,
       };
-    
+
     case 'PLAY_SONG':
       return {
         ...state,
@@ -167,55 +170,55 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
         },
         isPlayerVisible: true,
       };
-    
+
     case 'SET_CURRENT_PART':
       return {
         ...state,
         player: { ...state.player, currentPart: action.payload },
       };
-    
+
     case 'TOGGLE_PLAY':
       return {
         ...state,
         player: { ...state.player, isPlaying: !state.player.isPlaying },
       };
-    
+
     case 'PAUSE':
       return {
         ...state,
         player: { ...state.player, isPlaying: false },
       };
-    
+
     case 'SEEK':
       return {
         ...state,
         player: { ...state.player, currentTime: action.payload },
       };
-    
+
     case 'SET_VOLUME':
       return {
         ...state,
         player: { ...state.player, volume: action.payload, isMuted: action.payload === 0 },
       };
-    
+
     case 'TOGGLE_MUTE':
       return {
         ...state,
         player: { ...state.player, isMuted: !state.player.isMuted },
       };
-    
+
     case 'TOGGLE_SHUFFLE':
       return {
         ...state,
         player: { ...state.player, isShuffled: !state.player.isShuffled },
       };
-    
+
     case 'SET_REPEAT':
       return {
         ...state,
         player: { ...state.player, repeatMode: action.payload },
       };
-    
+
     case 'TOGGLE_REPEAT': {
       const modes: RepeatMode[] = ['off', 'all', 'one'];
       const currentIndex = modes.indexOf(state.player.repeatMode);
@@ -225,19 +228,19 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
         player: { ...state.player, repeatMode: nextMode },
       };
     }
-    
+
     case 'UPDATE_TIME':
       return {
         ...state,
         player: { ...state.player, currentTime: action.payload },
       };
-    
+
     case 'SET_DURATION':
       return {
         ...state,
         player: { ...state.player, duration: action.payload, isLoading: false },
       };
-    
+
     case 'SONG_ENDED':
       if (state.player.repeatMode === 'one') {
         return {
@@ -247,68 +250,78 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
       }
       return {
         ...state,
-        player: { 
-          ...state.player, 
+        player: {
+          ...state.player,
           isPlaying: state.player.repeatMode === 'all',
           currentTime: 0,
         },
       };
-    
+
     case 'HIDE_PLAYER':
       return {
         ...state,
         isPlayerVisible: false,
         player: { ...state.player, isPlaying: false },
       };
-    
+
     case 'SHOW_FULLSCREEN_PLAYER':
       return { ...state, isFullScreenPlayer: true };
-    
+
     case 'HIDE_FULLSCREEN_PLAYER':
       return { ...state, isFullScreenPlayer: false };
-    
+
     case 'UPDATE_PRACTICE_STATS':
       return {
         ...state,
         practiceStats: { ...state.practiceStats, ...action.payload },
       };
-    
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
-    
+
     case 'SET_ERROR':
       return { ...state, error: action.payload };
-    
+
     case 'SET_AUDIO_INITIALIZED':
       return { ...state, isAudioInitialized: action.payload };
-    
+
     case 'SET_RECORDING':
       return { ...state, isRecording: action.payload };
-    
+
     case 'SET_INPUT_LEVEL':
       return { ...state, inputLevel: action.payload };
-    
+
     case 'SET_PITCH':
       return { ...state, currentPitch: action.payload };
-    
+
     case 'SET_SESSION':
-      return { 
-        ...state, 
-        session: { currentSession: action.payload } 
+      return {
+        ...state,
+        session: { currentSession: action.payload }
       };
-    
+
     case 'CLEAR_SESSION':
-      return { 
-        ...state, 
-        session: { currentSession: null } 
+      return {
+        ...state,
+        session: { currentSession: null }
       };
-    
+
     case 'SET_PROJECT':
       return {
         ...state,
         currentProjectId: action.payload
       };
-    
+
+    case 'SET_BUFFER_LOADING':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          isBufferLoading: action.payload.isLoading,
+          loadingTarget: action.payload.isLoading ? (action.payload.target || 'full') : null
+        }
+      };
+
     default:
       return state;
   }
@@ -320,11 +333,11 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
 
 interface AudioLabContextValue {
   state: AudioLabState;
-  
+
   // Navigation
   setView: (view: ViewType) => void;
   goBack: () => void;
-  
+
   // Player controls
   playSong: (song: Song | AudioLabSong) => Promise<void>;
   togglePlay: () => void;
@@ -337,30 +350,30 @@ interface AudioLabContextValue {
   hidePlayer: () => void;
   showFullScreenPlayer: () => void;
   hideFullScreenPlayer: () => void;
-  
+
   // Multi-part audio
   switchPart: (part: VocalPart) => Promise<void>;
   getAvailableParts: () => VocalPart[];
-  
+
   // Recording
   startRecording: () => Promise<boolean>;
   stopRecording: () => Promise<Blob | null>;
-  
+
   // Pitch detection
   startPitchDetection: () => void;
   stopPitchDetection: () => void;
-  
+
   // Practice
   updatePracticeStats: (stats: Partial<PracticeStats>) => void;
-  
+
   // Session
-  setCurrentSession: (session: { id: string; code: string; title: string; hostId: string } | null) => void;
+  setCurrentSession: (session: { id: string; code: string; title: string; hostId: string; classroomId?: string } | null) => void;
   clearSession: () => void;
-  
+
   // Studio
   setCurrentProject: (projectId: string | null) => void;
   openProject: (projectId: string) => void;
-  
+
   // Utilities
   formatTime: (seconds: number) => string;
   initializeAudio: () => Promise<boolean>;
@@ -379,6 +392,75 @@ const AudioLabContext = createContext<AudioLabContextValue | null>(null);
 export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(audioLabReducer, initialState);
   const isLoadingRef = useRef(false);
+  const stateRef = useRef(state);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Keep stateRef in sync with state
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // ============================================
+  // URL SYNCHRONIZATION
+  // ============================================
+
+  // Sync internal state with URL on mount and param changes
+  useEffect(() => {
+    const viewParam = searchParams?.get('view');
+    const projectParam = searchParams?.get('project');
+    const roomIdParam = searchParams?.get('roomId');
+
+    if (viewParam && viewParam !== state.currentView) {
+      const validViews = ['home', 'library', 'practice', 'karaoke', 'warmup', 'studio', 'collab', 'collab-chat', 'live-session'];
+      if (validViews.includes(viewParam)) {
+        dispatch({ type: 'SET_VIEW', payload: viewParam as ViewType });
+      }
+    }
+
+    if (projectParam && projectParam !== state.currentProjectId) {
+      dispatch({ type: 'SET_PROJECT', payload: projectParam });
+    }
+
+    // Auto-join room if ID is in URL
+    if (roomIdParam && (!state.session.currentSession || state.session.currentSession.id !== roomIdParam)) {
+      handleAutoJoinRoom(roomIdParam);
+    }
+  }, [searchParams, state.session.currentSession?.id]);
+
+  const handleAutoJoinRoom = async (roomId: string) => {
+    // Only join if we are logged in
+    // This depends on external auth state which might not be in this context
+    // But we can check if we have enough info to show the loading state
+    console.log('[AudioLabContext] Auto-joining room:', roomId);
+    // We will rely on individual components (LiveSessionView or CollabView) 
+    // to handle the actual join logic once the view is set
+  };
+
+  const updateUrl = useCallback((view: ViewType, projectId: string | null = null, roomId: string | null = null) => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('view', view);
+
+    if (projectId) {
+      params.set('project', projectId);
+    } else {
+      params.delete('project');
+    }
+
+    if (roomId || state.session.currentSession?.id) {
+      params.set('roomId', roomId || state.session.currentSession!.id);
+    } else {
+      params.delete('roomId');
+    }
+
+    // Only push if the URL actually changed to avoid infinite cycles
+    const newUrl = `/pages/audiolab?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (newUrl !== currentUrl) {
+      router.push(newUrl);
+    }
+  }, [router, searchParams]);
 
   // ============================================
   // AUDIO ENGINE SETUP
@@ -389,24 +471,26 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     audioEngine.onTimeUpdate = (time) => {
       dispatch({ type: 'UPDATE_TIME', payload: time });
     };
-    
+
     audioEngine.onEnded = () => {
+      const currentState = stateRef.current;
       dispatch({ type: 'SONG_ENDED' });
-      // Handle repeat mode
-      if (state.player.repeatMode === 'one') {
+
+      // Handle repeat mode using the latest state from ref
+      if (currentState.player.repeatMode === 'one') {
         audioEngine.seek(0);
         audioEngine.play();
       }
     };
-    
+
     audioEngine.onInputLevel = (level) => {
       dispatch({ type: 'SET_INPUT_LEVEL', payload: level });
     };
-    
+
     audioEngine.onPitchDetected = (data) => {
       dispatch({ type: 'SET_PITCH', payload: data });
     };
-    
+
     return () => {
       audioEngine.dispose();
     };
@@ -439,7 +523,8 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
   const setView = useCallback((view: ViewType) => {
     dispatch({ type: 'SET_VIEW', payload: view });
-  }, []);
+    updateUrl(view, state.currentProjectId, state.session.currentSession?.id);
+  }, [updateUrl, state.currentProjectId, state.session.currentSession?.id]);
 
   const goBack = useCallback(() => {
     dispatch({ type: 'GO_BACK' });
@@ -448,27 +533,34 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   const playSong = useCallback(async (song: Song | AudioLabSong) => {
     try {
       isLoadingRef.current = true;
-      
+
       // Ensure audio is initialized
       if (!state.isAudioInitialized) {
         await initializeAudio();
       }
-      
+
       // Convert to legacy Song format if needed
-      const legacySong: Song = 'audioUrls' in song && song.audioUrls 
+      const legacySong: Song = 'audioUrls' in song && song.audioUrls
         ? toLeagcySong(song as AudioLabSong)
         : song as Song;
-      
+
       dispatch({ type: 'PLAY_SONG', payload: legacySong });
-      
+      dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: true, target: 'full' } });
+
       // Load audio
       const audioUrls: AudioUrls = legacySong.audioUrls || { full: legacySong.audioUrl };
       const loaded = await audioEngine.loadSongParts(audioUrls);
-      
+
+      dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: false } });
+
       if (loaded) {
         const duration = audioEngine.getDuration();
         dispatch({ type: 'SET_DURATION', payload: duration });
-        await audioEngine.play();
+
+        // Only start playing if the user hasn't paused while we were loading
+        if (stateRef.current.player.isPlaying) {
+          await audioEngine.play();
+        }
       } else {
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load audio' });
       }
@@ -524,7 +616,9 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
   // Multi-part audio
   const switchPart = useCallback(async (part: VocalPart) => {
+    dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: true, target: part } });
     const success = await audioEngine.switchPart(part);
+    dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: false } });
     if (success) {
       dispatch({ type: 'SET_CURRENT_PART', payload: part });
     }
@@ -582,7 +676,8 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   const openProject = useCallback((projectId: string) => {
     dispatch({ type: 'SET_PROJECT', payload: projectId });
     dispatch({ type: 'SET_VIEW', payload: 'studio' });
-  }, []);
+    updateUrl('studio', projectId);
+  }, [updateUrl]);
 
   // Utilities
   const formatTime = useCallback((seconds: number) => {

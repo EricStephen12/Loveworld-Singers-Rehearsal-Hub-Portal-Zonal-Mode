@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useChat } from '../_context/ChatContext'
 import { useZone } from '@/hooks/useZone'
@@ -32,8 +32,6 @@ export default function FriendRequestsModal({ isOpen, onClose }: FriendRequestsM
     setActionLoading(`decline-${requestId}`)
     
     try {
-      // TODO: Implement decline functionality
-      console.log('Declining request:', requestId)
     } catch (error) {
       console.error('Error declining friend request:', error)
     } finally {

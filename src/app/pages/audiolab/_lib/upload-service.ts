@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AUDIOLAB UPLOAD SERVICE
  * 
  * Handles uploading recordings to Cloudinary and saving metadata
@@ -14,11 +14,6 @@ const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
 // Log configuration status (helpful for debugging)
 if (typeof window !== 'undefined') {
-  console.log('[UploadService] Cloudinary config:', {
-    hasCloudName: !!CLOUD_NAME,
-    uploadPreset: UPLOAD_PRESET,
-    cloudName: CLOUD_NAME ? `${CLOUD_NAME.substring(0, 4)}...` : 'MISSING'
-  });
 }
 
 interface UploadResult {
@@ -50,13 +45,6 @@ export async function uploadRecording(
       return { success: false, error: 'Upload preset not configured' };
     }
 
-    console.log('[UploadService] Starting upload:', {
-      fileName,
-      size: `${(blob.size / 1024 / 1024).toFixed(2)}MB`,
-      type: blob.type,
-      cloudName: CLOUD_NAME,
-      preset: UPLOAD_PRESET
-    });
 
     // Create form data for upload
     const formData = new FormData();
@@ -69,7 +57,6 @@ export async function uploadRecording(
     
     // Upload to Cloudinary
     const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`;
-    console.log('[UploadService] Uploading to:', uploadUrl);
     
     const response = await fetch(uploadUrl, {
       method: 'POST',
@@ -97,11 +84,6 @@ export async function uploadRecording(
     }
     
     const data = await response.json();
-    console.log('[UploadService] Upload successful:', {
-      url: data.secure_url,
-      publicId: data.public_id,
-      duration: data.duration
-    });
     
     const result: UploadResult = {
       success: true,
@@ -123,8 +105,7 @@ export async function uploadRecording(
       duration: data.duration || 0
     }, zoneId);
     
-    // Update track with audio URL if project/track provided
-    if (projectId && trackId) {
+        if (projectId && trackId) {
       await updateTrackAudio(
         projectId,
         trackId,
@@ -199,8 +180,7 @@ export async function uploadRecordingWithProgress(
             duration: data.duration || 0
           }, zoneId);
           
-          // Update track
-          if (projectId && trackId) {
+                    if (projectId && trackId) {
             await updateTrackAudio(projectId, trackId, data.secure_url, data.duration || 0);
           }
           

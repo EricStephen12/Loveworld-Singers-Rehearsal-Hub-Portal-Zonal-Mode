@@ -1,20 +1,21 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Music, CheckCircle, XCircle, Clock, Eye, MessageSquare, 
-  User, Calendar, ArrowLeft, RefreshCw, FileText, Play, Pause, Trash2
+import {
+  Music, CheckCircle, XCircle, Clock, Eye, MessageSquare,
+  User, Calendar, ArrowLeft, RefreshCw, FileText, Play, Pause, Trash2,
+  ChevronLeft, ChevronRight, MoreVertical, Edit, Search
 } from 'lucide-react'
-import { 
-  getAllSubmittedSongs, 
-  getPendingSongs, 
-  approveSong, 
+import {
+  getAllSubmittedSongs,
+  getPendingSongs,
+  approveSong,
   rejectSong,
   replyToSubmission,
   deleteSubmissionAsAdmin,
   markSubmissionAsSeen,
-  SongSubmission 
+  SongSubmission
 } from '@/lib/song-submission-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdminTheme } from '@/components/admin/AdminThemeProvider'
@@ -22,6 +23,7 @@ import { useZone } from '@/hooks/useZone'
 import { isHQGroup } from '@/config/zones'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import CustomLoader from '@/components/CustomLoader'
 
 interface SubmittedSongsPageProps {
   embedded?: boolean
@@ -35,6 +37,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const [songs, setSongs] = useState<SongSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedSong, setSelectedSong] = useState<SongSubmission | null>(null)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectNotes, setRejectNotes] = useState('')
@@ -43,23 +46,27 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   const [replyMessage, setReplyMessage] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
+  const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null)
   const audioRefsRef = React.useRef<Map<string, HTMLAudioElement>>(new Map())
-  
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   // Toast and confirmation modal state
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [confirmModal, setConfirmModal] = useState<{ 
-    type: 'approve' | 'delete'; 
+  const [confirmModal, setConfirmModal] = useState<{
+    type: 'approve' | 'delete';
     song: SongSubmission | null;
     title: string;
     message: string;
   } | null>(null)
-  
+
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
   }
-  
-  // Check if current zone is HQ (can see all submissions)
+
   const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
 
   // Cleanup audio refs on unmount
@@ -118,21 +125,20 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   // Set up real-time listener for submitted songs
   useEffect(() => {
     if (!currentZone?.id) return
-    
+
     const submissionsRef = collection(db, 'submitted_songs')
-    const q = isHQ 
+    const q = isHQ
       ? query(submissionsRef, orderBy('createdAt', 'desc'))
       : query(submissionsRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'))
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       // Only refresh if there are actual changes (not just metadata)
       if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
         loadSongs()
       }
     }, (error) => {
-      console.log('[SubmittedSongs] Real-time listener error:', error)
     })
-    
+
     return () => unsubscribe()
   }, [currentZone?.id, isHQ])
 
@@ -143,28 +149,26 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       // Regular zones see only their specific zone submissions
       // isHQ means current zone is an HQ zone - treat all HQ zones as one
       const zoneId = currentZone?.id
-      
-      console.log('📖 Loading submitted songs:', { 
-        zoneId, 
-        isHQ, 
-        isSuperAdmin,
-        currentZone: currentZone?.name,
-        note: isHQ ? 'HQ Manager - seeing all HQ submissions' : 'Regular zone - seeing only this zone'
-      })
-      
+
+
       let data: SongSubmission[]
       if (filter === 'pending') {
         data = await getPendingSongs(zoneId, isHQ)
       } else {
         data = await getAllSubmittedSongs(zoneId, isHQ)
       }
-      
+
       // Filter by status if needed
       if (filter === 'approved' || filter === 'rejected') {
         data = data.filter(song => song.status === filter)
       }
-      
-      setSongs(data)
+
+      setSongs(data.sort((a, b) => {
+        // Sort by update/reply activity first
+        const aTime = (a as any).lastActionAt || (a as any).updatedAt || a.createdAt
+        const bTime = (b as any).lastActionAt || (b as any).updatedAt || b.createdAt
+        return new Date(bTime).getTime() - new Date(aTime).getTime()
+      }))
     } catch (error) {
       console.error('Error loading songs:', error)
     } finally {
@@ -174,7 +178,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
   const handleApprove = async (song: SongSubmission) => {
     if (!user || !song.id) return
-    
+
     setProcessing(song.id)
     try {
       const result = await approveSong(
@@ -182,7 +186,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         user.uid,
         getUserName()
       )
-      
+
       if (result.success) {
         showToast('success', 'Song approved and added to main collection!')
         setConfirmModal(null)
@@ -196,7 +200,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       setProcessing(null)
     }
   }
-  
+
   const openApproveConfirm = (song: SongSubmission) => {
     setConfirmModal({
       type: 'approve',
@@ -208,12 +212,12 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
   const handleReject = async (song: SongSubmission) => {
     if (!user || !song.id) return
-    
+
     if (!rejectNotes.trim()) {
       showToast('error', 'Please provide a reason for rejection')
       return
     }
-    
+
     setProcessing(song.id)
     try {
       const result = await rejectSong(
@@ -222,7 +226,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         getUserName(),
         rejectNotes
       )
-      
+
       if (result.success) {
         showToast('success', 'Song rejected')
         setShowRejectModal(false)
@@ -265,15 +269,41 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   }
 
   const filteredSongs = songs.filter(song => {
-    if (filter === 'all') return true
-    return song.status === filter
+    // 1. Status Filter
+    if (filter !== 'all' && song.status !== filter) return false
+
+    // 2. Search Filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      return (
+        song.title?.toLowerCase().includes(query) ||
+        song.writer?.toLowerCase().includes(query) ||
+        song.submittedBy.userName?.toLowerCase().includes(query) ||
+        song.category?.toLowerCase().includes(query)
+      )
+    }
+
+    return true
   })
 
   const pendingCount = songs.filter(s => s.status === 'pending').length
 
+  // Paginated Songs
+  const paginatedSongs = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredSongs.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredSongs, currentPage])
+
+  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage)
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter])
+
   const handleDeleteAsAdmin = async (song: SongSubmission) => {
     if (!song.id) return
-    
+
     setDeletingId(song.id)
     try {
       const result = await deleteSubmissionAsAdmin(song.id)
@@ -290,7 +320,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       setDeletingId(null)
     }
   }
-  
+
   const openDeleteConfirm = (song: SongSubmission) => {
     setConfirmModal({
       type: 'delete',
@@ -304,22 +334,20 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
     <div className={`${embedded ? 'h-full' : 'min-h-screen'} bg-gradient-to-br from-slate-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8`}>
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${
-          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } text-white`}>
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          } text-white`}>
           {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
           {toast.message}
         </div>
       )}
-      
+
       {/* Confirmation Modal */}
       {confirmModal && confirmModal.song && (
         <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                confirmModal.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${confirmModal.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
                 {confirmModal.type === 'approve' ? (
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 ) : (
@@ -348,11 +376,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                   }
                 }}
                 disabled={processing === confirmModal.song.id || deletingId === confirmModal.song.id}
-                className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50 ${
-                  confirmModal.type === 'approve' 
-                    ? 'bg-green-600 hover:bg-green-700' 
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
+                className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50 ${confirmModal.type === 'approve'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
+                  }`}
               >
                 {confirmModal.type === 'approve' ? 'Approve' : 'Delete'}
               </button>
@@ -360,40 +387,40 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
           </div>
         </div>
       )}
-      
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         {!embedded && (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.back()}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
                 <div className={`w-12 h-12 ${theme.primary} rounded-lg flex items-center justify-center`}>
-                <Music className="w-6 h-6 text-white" />
+                  <Music className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Submitted Songs</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Review and manage song submissions
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Submitted Songs</h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Review and manage song submissions
-                </p>
-              </div>
+              <button
+                onClick={loadSongs}
+                disabled={loading}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-5 h-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-            <button
-              onClick={loadSongs}
-              disabled={loading}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-5 h-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
-            </button>
           </div>
-        </div>
         )}
-        
+
         {embedded && (
           <div className="bg-white rounded-xl shadow-lg p-4 mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -417,26 +444,24 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        {/* Filters and Search */}
+        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between gap-4">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
-                filter === 'all' 
-                  ? `${theme.primary} text-white` 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${filter === 'all'
+                ? `${theme.primary} text-white`
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               All ({songs.length})
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
-                filter === 'pending' 
-                  ? `${theme.primary} text-white` 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${filter === 'pending'
+                ? `${theme.primary} text-white`
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Pending</span>
@@ -445,11 +470,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
             </button>
             <button
               onClick={() => setFilter('approved')}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
-                filter === 'approved' 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${filter === 'approved'
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               <span className="hidden sm:inline">Approved</span>
               <span className="sm:hidden">Appr.</span>
@@ -457,24 +481,36 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
             </button>
             <button
               onClick={() => setFilter('rejected')}
-              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${
-                filter === 'rejected' 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm font-medium ${filter === 'rejected'
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               <span className="hidden sm:inline">Rejected</span>
               <span className="sm:hidden">Rej.</span>
               ({songs.filter(s => s.status === 'rejected').length})
             </button>
           </div>
+
+          {/* Search Input */}
+          <div className="relative w-full sm:max-w-xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search songs, writers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 sm:text-sm transition-colors"
+            />
+          </div>
         </div>
 
         {/* Songs List */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <RefreshCw className={`w-8 h-8 ${theme.text} animate-spin mx-auto mb-4`} />
-            <p className="text-gray-600">Loading submitted songs...</p>
+          <div className="bg-white rounded-xl shadow-lg p-12">
+            <CustomLoader message="Loading submitted songs..." />
           </div>
         ) : filteredSongs.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
@@ -483,199 +519,202 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {filteredSongs.map((song) => (
+            {paginatedSongs.map((song) => (
               <div
                 key={song.id}
-                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow"
+                className="bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{song.title}</h3>
-                      <span
-                        className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                          song.status === 'pending'
-                            ? `${theme.primaryLight} ${theme.text}`
-                            : song.status === 'approved'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {song.status.toUpperCase()}
-                      </span>
-                      {/* Updated badge - shows when user edited their submission */}
-                      {(song as any).isUpdated && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 animate-pulse">
-                          UPDATED
-                        </span>
-                      )}
-                      {/* New Reply badge - shows when user replied */}
-                      {(song as any).hasNewUserReply && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 animate-pulse">
-                          NEW REPLY
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 text-xs sm:text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-medium">Writer:</span>
-                        <span className="truncate">{song.writer || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <FileText className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-medium">Category:</span>
-                        <span className="truncate">{song.category || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-medium">Submitted:</span>
-                        <span className="truncate">{new Date(song.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="font-medium">By:</span>
-                        <span className="truncate">{song.submittedBy.userName}</span>
-                      </div>
-                      {/* Show zone info for HQ/super admin */}
-                      {(isHQ || isSuperAdmin) && song.zoneName && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="font-medium">Zone:</span>
-                          <span className="truncate px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{song.zoneName}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Audio Player */}
-                    {song.audioUrl && (
-                      <div className="mb-3 sm:mb-4">
-                        <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Audio:</p>
-                        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-purple-200">
-                          <button
-                            onClick={() => handleAudioPlay(song.id || '', song.audioUrl!)}
-                            className="flex items-center gap-3 w-full text-left active:scale-[0.98] transition-transform touch-manipulation"
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 truncate" title={song.title}>{song.title}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] items-center font-bold tracking-wide uppercase ${song.status === 'pending'
+                              ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                              : song.status === 'approved'
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                : 'bg-rose-50 text-rose-600 border border-rose-100'
+                              }`}
                           >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
-                              playingAudioId === song.id 
-                                ? 'bg-purple-600' 
-                                : 'bg-white border-2 border-purple-200'
-                            }`}>
-                              {playingAudioId === song.id ? (
-                                <Pause className="w-6 h-6 text-white" />
-                              ) : (
-                                <Play className="w-6 h-6 text-purple-600" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900">
-                                {playingAudioId === song.id ? 'Playing...' : 'Play Audio'}
-                              </p>
-                              <p className="text-xs text-gray-600 truncate">Tap to {playingAudioId === song.id ? 'pause' : 'play'}</p>
-                            </div>
-                          </button>
+                            {song.status}
+                          </span>
+                          {/* Updated badge */}
+                          {(song as any).isUpdated && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-600 border border-orange-100 animate-pulse">
+                              UPDATED
+                            </span>
+                          )}
+                          {/* New Reply badge */}
+                          {(song as any).hasNewUserReply && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 animate-pulse">
+                              NEW REPLY
+                            </span>
+                          )}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <User className="w-3.5 h-3.5" />
+                        <span className="truncate max-w-[150px]">{song.submittedBy.userName}</span>
+                        <span className="text-gray-300">•</span>
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span className="truncate">{new Date(song.createdAt).toLocaleDateString()}</span>
+                        {(isHQ || isSuperAdmin) && song.zoneName && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium truncate max-w-[100px]">{song.zoneName}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setActiveActionMenuId(activeActionMenuId === song.id ? null : (song.id || null))
+                        }}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      >
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+
+                      {activeActionMenuId === song.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setActiveActionMenuId(null)}
+                          />
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                            <button
+                              onClick={() => {
+                                setSelectedSong(song)
+                                setActiveActionMenuId(null)
+                                if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
+                                  markSubmissionAsSeen(song.id).then(() => {
+                                    setSongs(prev => prev.map(s =>
+                                      s.id === song.id ? { ...s, isUpdated: false, hasNewUserReply: false } as SongSubmission : s
+                                    ))
+                                  })
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4 text-gray-400" />
+                              View Details
+                            </button>
+
+                            {song.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    openApproveConfirm(song)
+                                    setActiveActionMenuId(null)
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedSong(song)
+                                    setShowRejectModal(true)
+                                    setActiveActionMenuId(null)
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+
+
+                            {/* Allow reply for any status */}
+                            <button
+                              onClick={() => {
+                                setSelectedSong(song)
+                                setShowReplyModal(true)
+                                setActiveActionMenuId(null)
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <MessageSquare className="w-4 h-4 text-gray-400" />
+                              Message / Reply
+                            </button>
+
+                            {song.id && (
+                              <div className="border-t border-gray-100 mt-1 pt-1">
+                                <button
+                                  onClick={() => {
+                                    openDeleteConfirm(song)
+                                    setActiveActionMenuId(null)
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Song Details Grid */}
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs mb-4 p-3 bg-gray-50/50 rounded-lg border border-gray-100/50">
+                    <div className="space-y-1">
+                      <p className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Writer</p>
+                      <p className="text-gray-900 font-medium truncate">{song.writer || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Category</p>
+                      <p className="text-gray-900 font-medium truncate">{song.category || '—'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Tempo</p>
+                      <p className="text-gray-900 font-medium truncate">{song.tempo || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Key</p>
+                      <p className="text-gray-900 font-medium truncate">{song.key || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {/* Quick Preview & Audio */}
+                  <div className="flex items-center gap-2">
+                    {song.audioUrl ? (
+                      <button
+                        onClick={() => handleAudioPlay(song.id || '', song.audioUrl!)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors border ${playingAudioId === song.id
+                          ? 'bg-purple-100 text-purple-700 border-purple-200'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-purple-200 hover:text-purple-600'
+                          }`}
+                      >
+                        {playingAudioId === song.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        {playingAudioId === song.id ? 'Playing' : 'Play Audio'}
+                      </button>
+                    ) : (
+                      <div className="flex-1 py-2 text-center text-xs text-gray-400 bg-gray-50 rounded-lg border border-gray-100 border-dashed">
+                        No audio
                       </div>
                     )}
 
-                    {/* Quick Preview */}
-                    <div className="mb-3 sm:mb-4">
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2 font-medium">Preview:</p>
-                      <div className="bg-gray-50 rounded-lg p-2 sm:p-3 max-h-24 sm:max-h-32 overflow-y-auto">
-                        <p className="text-xs sm:text-sm text-gray-700 line-clamp-3 sm:line-clamp-4 whitespace-pre-wrap">
-                          {song.lyrics.substring(0, 200)}...
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2 items-center">
-                      {song.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setSelectedSong(song)
-                              // Clear update flags when viewing
-                              if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
-                                markSubmissionAsSeen(song.id).then(() => {
-                                  setSongs(prev => prev.map(s => 
-                                    s.id === song.id ? { ...s, isUpdated: false, hasNewUserReply: false } as SongSubmission : s
-                                  ))
-                                })
-                              }
-                            }}
-                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
-                          >
-                            <Eye className="w-4 h-4" />
-                            <span className="hidden sm:inline">View Details</span>
-                            <span className="sm:hidden">View</span>
-                          </button>
-                          <button
-                            onClick={() => openApproveConfirm(song)}
-                            disabled={processing === song.id}
-                            className="px-3 sm:px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedSong(song)
-                              setShowRejectModal(true)
-                            }}
-                            disabled={processing === song.id}
-                            className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
-                          >
-                            <XCircle className="w-4 h-4" />
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => { setSelectedSong(song); setShowReplyModal(true); }}
-                            disabled={processing === song.id}
-                            className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors disabled:opacity-50 flex items-center gap-2 text-xs sm:text-sm`}
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            <span className="hidden sm:inline">Reply</span>
-                          </button>
-                        </>
-                      )}
-                      {song.status !== 'pending' && (
-                        <button
-                          onClick={() => {
-                            setSelectedSong(song)
-                            // Clear update flags when viewing
-                            if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
-                              markSubmissionAsSeen(song.id).then(() => {
-                                setSongs(prev => prev.map(s => 
-                                  s.id === song.id ? { ...s, isUpdated: false, hasNewUserReply: false } as SongSubmission : s
-                                ))
-                              })
-                            }
-                          }}
-                          className={`px-3 sm:px-4 py-2 ${theme.primaryLight} ${theme.text} rounded-lg ${theme.bgHover} transition-colors flex items-center gap-2 text-xs sm:text-sm`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span className="hidden sm:inline">View Details</span>
-                          <span className="sm:hidden">View</span>
-                        </button>
-                      )}
-                      {/* Admin delete action */}
-                      {song.id && (
-                        <button
-                          onClick={() => openDeleteConfirm(song)}
-                          disabled={deletingId === song.id}
-                          className="px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50 text-xs sm:text-sm"
-                        >
-                          {deletingId === song.id ? (
-                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <XCircle className="w-4 h-4" />
-                          )}
-                          <span className="hidden sm:inline">Delete</span>
-                          <span className="sm:hidden">Del</span>
-                        </button>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedSong(song)
+                        if (song.id && ((song as any).isUpdated || (song as any).hasNewUserReply)) {
+                          markSubmissionAsSeen(song.id)
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               </div>
@@ -683,9 +722,74 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
           </div>
         )}
 
+        {/* Numbered Pagination Controls - Moved outside modal */}
+        {!loading && filteredSongs.length > 0 && totalPages > 1 && (
+          <div className="flex flex-col items-center gap-4 pt-8 pb-12">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setCurrentPage(prev => Math.max(1, prev - 1))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                disabled={currentPage === 1}
+                className="p-3 rounded-xl border border-gray-200 bg-white disabled:opacity-50 text-gray-600 hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = i + 1
+                  if (totalPages > 5) {
+                    if (currentPage > 3) {
+                      pageNum = currentPage - 2 + i
+                      if (pageNum > totalPages) pageNum = totalPages - (4 - i)
+                    }
+                  }
+
+                  if (pageNum > totalPages) return null
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => {
+                        setCurrentPage(pageNum)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className={`w-11 h-11 rounded-xl text-sm font-bold transition-all ${currentPage === pageNum
+                        ? `${theme.primary} text-white shadow-lg scale-110 z-10`
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                onClick={() => {
+                  setCurrentPage(prev => Math.min(totalPages, prev + 1))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                disabled={currentPage === totalPages}
+                className="p-3 rounded-xl border border-gray-200 bg-white disabled:opacity-50 text-gray-600 hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm font-medium text-gray-500 bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-100 shadow-sm">
+              Page <span className={theme.text}>{currentPage}</span> of {totalPages}
+              <span className="mx-2 text-gray-300">|</span>
+              Total: <span className="text-gray-900">{filteredSongs.length} submissions</span>
+            </p>
+          </div>
+        )}
+
         {/* View Details Modal */}
         {selectedSong && !showRejectModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">{selectedSong.title}</h2>
@@ -791,19 +895,17 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       {/* Show conversation array if exists */}
                       {(selectedSong as any).conversation?.length > 0 ? (
                         (selectedSong as any).conversation.map((msg: any) => (
-                          <div 
-                            key={msg.id} 
-                            className={`p-4 rounded-lg border ${
-                              msg.sender === 'admin' 
-                                ? 'bg-purple-50 border-purple-200 mr-8' 
-                                : 'bg-blue-50 border-blue-200 ml-8'
-                            }`}
+                          <div
+                            key={msg.id}
+                            className={`p-4 rounded-lg border ${msg.sender === 'admin'
+                              ? 'bg-purple-50 border-purple-200 mr-8'
+                              : 'bg-blue-50 border-blue-200 ml-8'
+                              }`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                  msg.sender === 'admin' ? 'bg-purple-600' : 'bg-blue-600'
-                                }`}>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${msg.sender === 'admin' ? 'bg-purple-600' : 'bg-blue-600'
+                                  }`}>
                                   {msg.sender === 'admin' ? (
                                     <MessageSquare className="w-3 h-3 text-white" />
                                   ) : (
@@ -864,29 +966,44 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                   </p>
                 </div>
 
-                {/* Actions */}
+
+              </div>
+
+              <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3 sticky bottom-0 z-10">
+                <button
+                  onClick={() => {
+                    // Keep modal open, show reply modal on top
+                    setShowReplyModal(true)
+                  }}
+                  className="flex-1 px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium shadow-sm"
+                >
+                  <MessageSquare className="w-5 h-5 text-gray-400" />
+                  Reply / Message
+                </button>
+
+                {/* Show actions if pending */}
                 {selectedSong.status === 'pending' && (
-                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <>
                     <button
                       onClick={() => {
                         setSelectedSong(null)
                         openApproveConfirm(selectedSong)
                       }}
                       disabled={processing === selectedSong.id}
-                      className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
                       <CheckCircle className="w-5 h-5" />
-                      Approve Song
+                      Approve
                     </button>
                     <button
                       onClick={() => setShowRejectModal(true)}
                       disabled={processing === selectedSong.id}
-                      className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="flex-1 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
                       <XCircle className="w-5 h-5" />
-                      Reject Song
+                      Reject
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
@@ -895,7 +1012,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
         {/* Reject Modal */}
         {showRejectModal && selectedSong && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">Reject Song</h2>
@@ -935,7 +1052,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
 
         {/* Reply Modal */}
         {showReplyModal && selectedSong && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">Reply to {selectedSong.title}</h2>
@@ -949,7 +1066,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                     <p className="text-sm text-purple-900 whitespace-pre-wrap">{selectedSong.replyMessage}</p>
                   </div>
                 )}
-                
+
                 {/* Show user's reply if exists */}
                 {(selectedSong as any).userReply && (
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -957,7 +1074,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                     <p className="text-sm text-blue-900 whitespace-pre-wrap">{(selectedSong as any).userReply}</p>
                   </div>
                 )}
-                
+
                 <textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}

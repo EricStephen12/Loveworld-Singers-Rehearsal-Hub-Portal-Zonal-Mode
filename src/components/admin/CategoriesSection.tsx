@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo } from 'react';
 import { 
@@ -109,16 +109,13 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
 
   // Get all available categories from Supabase songs only
   const allAvailableCategories = useMemo(() => {
-    console.log('🏷️ Computing available categories from songs...');
     
     if (!allSongs || allSongs.length === 0) {
-      console.log('❌ No songs available for categories');
       return [];
     }
     
     // Get unique categories from songs
     const songCategories = [...new Set(allSongs.map(song => song.category))].filter(Boolean);
-    console.log('🎵 Song categories found:', songCategories);
     
     // Convert to Category objects
     const categories: Category[] = songCategories.map((categoryName, index) => ({
@@ -132,15 +129,11 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
       updatedAt: new Date()
     }));
     
-    console.log('📂 Available categories:', categories.length, categories);
     return categories;
   }, [allSongs]);
 
   // Combine database categories with song-based categories
   const combinedCategories = useMemo(() => {
-    console.log('🔄 Combining categories...');
-    console.log('📊 DB Categories:', allCategories?.length || 0);
-    console.log('🎵 Song Categories:', allAvailableCategories.length);
     
     const combined = [...(allCategories || []), ...allAvailableCategories];
     
@@ -149,7 +142,6 @@ export default function CategoriesSection(props: CategoriesSectionProps) {
       index === self.findIndex(c => c.name === category.name)
     );
     
-    console.log('✅ Combined unique categories:', uniqueCategories.length);
     return uniqueCategories;
   }, [allCategories, allAvailableCategories]);
 

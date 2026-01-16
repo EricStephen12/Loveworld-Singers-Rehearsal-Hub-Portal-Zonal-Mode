@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Calendar, Plus, Edit2, Trash2, Search, Clock, MapPin, X, Eye, EyeOff, FolderOpen } from 'lucide-react'
 import { useZone } from '@/hooks/useZone'
+import CustomLoader from '@/components/CustomLoader'
 import { UpcomingEvent, UpcomingEventsService } from '@/app/pages/calendar/_lib/upcoming-events-service'
 import MediaSelectionModal from '../MediaSelectionModal'
 import moment from 'moment'
@@ -26,7 +27,7 @@ export default function CalendarSection() {
   const [eventToDelete, setEventToDelete] = useState<UpcomingEvent | null>(null)
   const [saving, setSaving] = useState(false)
   const [showMediaLibrary, setShowMediaLibrary] = useState(false)
-  
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -90,13 +91,12 @@ export default function CalendarSection() {
   }
 
   const handleSaveEvent = async () => {
-    console.log('handleSaveEvent called', formData)
-    
+
     if (!formData.title.trim()) {
       showToast('Please enter a title', 'warning')
       return
     }
-    
+
     if (!formData.date) {
       showToast('Please select a date', 'warning')
       return
@@ -110,28 +110,24 @@ export default function CalendarSection() {
         type: formData.type,
         showInCarousel: formData.showInCarousel
       }
-      
+
       // Only add optional fields if they have values
       if (formData.description.trim()) eventData.description = formData.description.trim()
       if (formData.location.trim()) eventData.location = formData.location.trim()
       if (formData.time) eventData.time = formData.time
       if (formData.image) eventData.image = formData.image
 
-      console.log('Saving event data:', eventData)
 
       if (editingEvent) {
         await UpcomingEventsService.updateEvent(editingEvent.id, eventData)
-        console.log('Event updated successfully')
         showToast('Event updated successfully!', 'success')
       } else {
         const result = await UpcomingEventsService.createEvent(eventData)
-        console.log('Event created successfully:', result)
         showToast('Event created successfully!', 'success')
       }
 
-      // Clear cache to refresh data
       localStorage.removeItem('lwsrh-upcoming-events-cache')
-      
+
       setShowModal(false)
       setEditingEvent(null)
       await loadEvents()
@@ -146,15 +142,14 @@ export default function CalendarSection() {
   // Toast helper
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
     const toast = document.createElement('div')
-    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
-      type === 'success' ? 'bg-green-500 text-white' :
-      type === 'error' ? 'bg-red-500 text-white' :
-      type === 'warning' ? 'bg-yellow-500 text-white' :
-      'bg-gray-800 text-white'
-    }`
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+          type === 'warning' ? 'bg-yellow-500 text-white' :
+            'bg-gray-800 text-white'
+      }`
     toast.textContent = message
     document.body.appendChild(toast)
-    
+
     setTimeout(() => {
       toast.style.opacity = '0'
       setTimeout(() => toast.remove(), 300)
@@ -166,7 +161,6 @@ export default function CalendarSection() {
 
     try {
       await UpcomingEventsService.deleteEvent(eventToDelete.id)
-      // Clear cache
       localStorage.removeItem('lwsrh-upcoming-events-cache')
       showToast('Event deleted successfully!', 'success')
       setShowDeleteDialog(false)
@@ -193,7 +187,7 @@ export default function CalendarSection() {
   }
 
   const themeColor = currentZone?.themeColor || '#10b981'
-  
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'event': return '#8b5cf6'
@@ -240,18 +234,8 @@ export default function CalendarSection() {
       {/* Events List */}
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="space-y-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-                <div className="flex gap-3">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-lg flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-1/2" />
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CustomLoader message="Loading events..." />
           </div>
         ) : filteredEvents.length === 0 ? (
           <div className="text-center py-16">
@@ -278,8 +262,8 @@ export default function CalendarSection() {
                 <div className="flex gap-3">
                   {/* Image or Color Bar */}
                   {event.image ? (
-                    <img 
-                      src={event.image} 
+                    <img
+                      src={event.image}
                       alt={event.title}
                       className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0"
                     />
@@ -289,13 +273,13 @@ export default function CalendarSection() {
                       style={{ backgroundColor: getTypeColor(event.type), minHeight: '60px' }}
                     />
                   )}
-                  
+
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     {/* Title & Type */}
                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-1">{event.title}</h3>
-                      <span 
+                      <span
                         className="px-1.5 py-0.5 text-[10px] sm:text-xs font-medium rounded-full text-white flex-shrink-0"
                         style={{ backgroundColor: getTypeColor(event.type) }}
                       >
@@ -307,12 +291,12 @@ export default function CalendarSection() {
                         </span>
                       )}
                     </div>
-                    
+
                     {/* Description */}
                     {event.description && (
                       <p className="text-xs sm:text-sm text-gray-500 line-clamp-1 mb-2">{event.description}</p>
                     )}
-                    
+
                     {/* Date & Location */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
                       <div className="flex items-center gap-1">
@@ -326,16 +310,15 @@ export default function CalendarSection() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Actions - Mobile Friendly */}
                     <div className="flex items-center gap-1 mt-3">
                       <button
                         onClick={() => toggleCarouselVisibility(event)}
-                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                          event.showInCarousel 
-                            ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${event.showInCarousel
+                            ? 'text-green-600 bg-green-50 hover:bg-green-100'
                             : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
-                        }`}
+                          }`}
                       >
                         {event.showInCarousel ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                         <span className="hidden sm:inline">{event.showInCarousel ? 'Visible' : 'Hidden'}</span>
@@ -382,7 +365,7 @@ export default function CalendarSection() {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             {/* Modal Body - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
@@ -395,7 +378,7 @@ export default function CalendarSection() {
                   placeholder="Event title"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                 <textarea
@@ -406,7 +389,7 @@ export default function CalendarSection() {
                   placeholder="Event description"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Type</label>
                 <select
@@ -419,7 +402,7 @@ export default function CalendarSection() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
                 <input
@@ -430,7 +413,7 @@ export default function CalendarSection() {
                   placeholder="Event location"
                 />
               </div>
-              
+
               {/* Date & Time - Stack on mobile */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -452,15 +435,15 @@ export default function CalendarSection() {
                   />
                 </div>
               </div>
-              
+
               {/* Image/Ecard from Media Library */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Image</label>
                 {formData.image ? (
                   <div className="relative">
-                    <img 
-                      src={formData.image} 
-                      alt="Event ecard" 
+                    <img
+                      src={formData.image}
+                      alt="Event ecard"
                       className="w-full h-36 sm:h-40 object-cover rounded-xl border border-gray-200"
                     />
                     <div className="absolute top-2 right-2 flex gap-2">
@@ -503,7 +486,7 @@ export default function CalendarSection() {
                 <span className="text-sm text-gray-700">Show in calendar carousel</span>
               </label>
             </div>
-            
+
             {/* Modal Footer - Fixed */}
             <div className="flex gap-3 p-4 border-t border-gray-200 flex-shrink-0 bg-white">
               <button
@@ -521,8 +504,8 @@ export default function CalendarSection() {
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
+                    <CustomLoader size="sm" />
+                    <span className="ml-2">Saving...</span>
                   </>
                 ) : (
                   editingEvent ? 'Update' : 'Create'
@@ -570,7 +553,6 @@ export default function CalendarSection() {
         isOpen={showMediaLibrary}
         onClose={() => setShowMediaLibrary(false)}
         onFileSelect={(file) => {
-          console.log('📸 Selected image from library:', file.url)
           setFormData({ ...formData, image: file.url })
           setShowMediaLibrary(false)
         }}

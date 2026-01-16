@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AUDIOLAB PRACTICE SERVICE
  * 
  * Firebase integration for practice progress tracking
@@ -60,7 +60,6 @@ export async function startSession(
   mode: PracticeMode
 ): Promise<{ success: boolean; sessionId?: string; error?: string }> {
   try {
-    console.log('[PracticeService] Starting session for user:', userId);
     
     const sessionData = {
       userId,
@@ -76,7 +75,6 @@ export async function startSession(
     
     const docRef = await addDoc(collection(db, SESSIONS_COLLECTION), sessionData);
     
-    console.log('[PracticeService] Session started:', docRef.id);
     return { success: true, sessionId: docRef.id };
   } catch (error) {
     console.error('[PracticeService] Error starting session:', error);
@@ -95,7 +93,6 @@ export async function endSession(
   stats: { score: number; accuracy: number; streak: number; duration: number }
 ): Promise<{ success: boolean; xpEarned?: number; error?: string }> {
   try {
-    console.log('[PracticeService] Ending session:', sessionId);
     
     // Get session data
     const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
@@ -107,8 +104,7 @@ export async function endSession(
     
     const sessionData = sessionSnap.data();
     
-    // Update session with final stats
-    await updateDoc(sessionRef, {
+        await updateDoc(sessionRef, {
       score: stats.score,
       accuracy: stats.accuracy,
       streak: stats.streak,
@@ -116,14 +112,12 @@ export async function endSession(
       endedAt: serverTimestamp()
     });
     
-    // Update user progress and calculate XP
-    const xpEarned = await updateUserProgress(
+        const xpEarned = await updateUserProgress(
       sessionData.userId, 
       stats,
       sessionData.mode
     );
     
-    console.log('[PracticeService] Session ended, XP earned:', xpEarned);
     return { success: true, xpEarned };
   } catch (error) {
     console.error('[PracticeService] Error ending session:', error);
@@ -143,7 +137,6 @@ export async function endSession(
  */
 export async function getUserProgress(userId: string): Promise<PracticeProgress | null> {
   try {
-    console.log('[PracticeService] Getting progress for user:', userId);
     
     const docRef = doc(db, PROGRESS_COLLECTION, userId);
     const docSnap = await getDoc(docRef);
@@ -173,10 +166,8 @@ export async function getWeeklyStats(userId: string): Promise<{
   dailyBreakdown: { day: string; minutes: number }[];
 }> {
   try {
-    console.log('[PracticeService] Getting weekly stats for user:', userId);
     
-    // Get sessions from the last 7 days
-    const weekAgo = new Date();
+        const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     
     const sessionsQuery = query(
@@ -300,8 +291,7 @@ async function updateUserProgress(
     const newXp = progress.xp + xpEarned;
     const newLevel = calculateLevel(newXp);
     
-    // Update progress
-    const updates = {
+        const updates = {
       currentStreak: newStreak,
       longestStreak: Math.max(progress.longestStreak, newStreak),
       lastPracticeDate: today,

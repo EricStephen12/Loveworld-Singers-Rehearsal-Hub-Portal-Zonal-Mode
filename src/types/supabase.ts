@@ -172,6 +172,7 @@ export interface PraiseNight {
   category: 'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive';
   pageCategory?: string; // New field for page categories
   bannerImage?: string;
+  songCount?: number; // Added to cache song count for UI
   countdown: {
     days: number;
     hours: number;

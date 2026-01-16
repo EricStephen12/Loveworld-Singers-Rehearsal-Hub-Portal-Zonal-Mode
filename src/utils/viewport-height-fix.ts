@@ -1,4 +1,4 @@
-// Viewport Height Fix for Mobile Browsers
+﻿// Viewport Height Fix for Mobile Browsers
 export class ViewportHeightFix {
   private static isInitialized = false
 
@@ -11,29 +11,24 @@ export class ViewportHeightFix {
     const setVH = () => {
       const vh = window.innerHeight * 0.01
       document.documentElement.style.setProperty('--vh', `${vh}px`)
-      console.log('📱 Viewport height updated:', window.innerHeight, 'vh:', vh)
     }
 
     // Set initial value
     setVH()
 
-    // Update on resize
-    window.addEventListener('resize', setVH)
+        window.addEventListener('resize', setVH)
     
-    // Update on orientation change
-    window.addEventListener('orientationchange', () => {
+        window.addEventListener('orientationchange', () => {
       setTimeout(setVH, 100)
     })
 
-    // Update when visual viewport changes (mobile browsers)
-    if (window.visualViewport) {
+        if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', setVH)
     }
 
     // Handle app resume from background (iOS Safari issue)
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
-        console.log('📱 App resumed from background - fixing viewport')
         setTimeout(setVH, 100)
         setTimeout(setVH, 500) // Double check after animations
       }
@@ -41,19 +36,16 @@ export class ViewportHeightFix {
 
     // Handle page focus (when switching back to tab)
     window.addEventListener('focus', () => {
-      console.log('📱 Page focused - fixing viewport')
       setTimeout(setVH, 100)
     })
 
     // Handle page show (when page becomes visible)
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) {
-        console.log('📱 Page restored from cache - fixing viewport')
         setTimeout(setVH, 100)
       }
     })
 
-    console.log('📱 Viewport height fix initialized')
   }
 
   static getViewportHeight() {
@@ -76,7 +68,6 @@ export class ViewportHeightFix {
   static forceRefresh() {
     if (typeof window === 'undefined') return
     
-    console.log('📱 Force refreshing viewport height')
     const vh = window.innerHeight * 0.01
     document.documentElement.style.setProperty('--vh', `${vh}px`)
     

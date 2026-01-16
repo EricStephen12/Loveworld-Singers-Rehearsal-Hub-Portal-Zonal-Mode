@@ -1,4 +1,4 @@
-// Simplified Analytics tracking utility
+﻿// Simplified Analytics tracking utility
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 
 export interface AnalyticsEvent {
@@ -70,7 +70,7 @@ class AnalyticsTracker {
 
   private initializeTracking(): void {
     if (typeof window === 'undefined') return;
-    
+
     this.isTracking = true;
   }
 
@@ -82,26 +82,29 @@ class AnalyticsTracker {
     if (!this.isTracking) return;
 
     const location = await this.getLocation();
-    
+
     const event: AnalyticsEvent = {
       id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
       timestamp: Date.now(),
-      page,
-      featureName,
-      country: location.country,
-      city: location.city,
+      page: page || undefined,
+      featureName: featureName || undefined,
+      country: location.country || undefined,
+      city: location.city || undefined,
       browser: this.getBrowser(),
       deviceType: this.getDeviceType(),
       metadata: {}
     };
 
-    this.sendEvent(event);
+    // Remove undefined fields to prevent Firebase errors
+    const sanitizedEvent = JSON.parse(JSON.stringify(event));
+
+    this.sendEvent(sanitizedEvent);
   }
 
   public async trackSessionEnd(): Promise<void> {
     if (!this.isTracking) return;
-    
+
     this.isTracking = false;
   }
 
@@ -138,8 +141,7 @@ class AnalyticsTracker {
 
   public async clearStoredData(): Promise<void> {
     try {
-      // Note: This would require implementing a delete collection method in FirebaseDatabaseService
-      console.warn('Clear data functionality needs to be implemented in FirebaseDatabaseService');
+            console.warn('Clear data functionality needs to be implemented in FirebaseDatabaseService');
     } catch (error) {
       console.warn('Failed to clear stored data:', error);
     }
@@ -148,18 +150,18 @@ class AnalyticsTracker {
   // Public method to get analytics data for the dashboard
   public async getAnalyticsData(dateRange: string = '7d'): Promise<any> {
     const events = await this.getStoredEvents();
-    
+
     const now = Date.now();
     const daysBack = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 365;
     const cutoffTime = now - (daysBack * 24 * 60 * 60 * 1000);
-    
+
     const filteredEvents = events.filter(event => event.timestamp >= cutoffTime);
-    
+
     // Calculate metrics
     const signups = filteredEvents.filter(e => e.type === 'signup').length;
     const logins = filteredEvents.filter(e => e.type === 'login').length;
     const featureEngagements = filteredEvents.filter(e => e.type === 'feature_engagement').length;
-    
+
     // Top pages (from feature engagement events that have pages)
     const pageViewsByPage = filteredEvents
       .filter(e => e.type === 'feature_engagement' && e.page)
@@ -167,12 +169,12 @@ class AnalyticsTracker {
         acc[event.page!] = (acc[event.page!] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-    
+
     const topPages = Object.entries(pageViewsByPage)
       .map(([page, views]) => ({ page, views }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 10);
-    
+
     // Browser stats
     const browserCounts = filteredEvents.reduce((acc, event) => {
       if (event.browser) {
@@ -180,14 +182,14 @@ class AnalyticsTracker {
       }
       return acc;
     }, {} as Record<string, number>);
-    
+
     const totalBrowsers = Object.values(browserCounts).reduce((sum, count) => sum + count, 0);
     const browserStats = Object.entries(browserCounts).map(([browser, count]) => ({
       browser,
       count,
       percentage: totalBrowsers > 0 ? (count / totalBrowsers) * 100 : 0
     }));
-    
+
     // Countries
     const countryCounts = filteredEvents.reduce((acc, event) => {
       if (event.country) {
@@ -195,14 +197,14 @@ class AnalyticsTracker {
       }
       return acc;
     }, {} as Record<string, number>);
-    
+
     const totalCountries = Object.values(countryCounts).reduce((sum, count) => sum + count, 0);
     const countries = Object.entries(countryCounts).map(([country, count]) => ({
       country,
       count,
       percentage: totalCountries > 0 ? (count / totalCountries) * 100 : 0
     }));
-    
+
     // Cities
     const cityCounts = filteredEvents.reduce((acc, event) => {
       if (event.city) {
@@ -210,14 +212,14 @@ class AnalyticsTracker {
       }
       return acc;
     }, {} as Record<string, number>);
-    
+
     const totalCities = Object.values(cityCounts).reduce((sum, count) => sum + count, 0);
     const cities = Object.entries(cityCounts).map(([city, count]) => ({
       city,
       count,
       percentage: totalCities > 0 ? (count / totalCities) * 100 : 0
     }));
-    
+
     // Feature engagement
     const featureCounts = filteredEvents
       .filter(e => e.type === 'feature_engagement' && e.featureName)
@@ -225,12 +227,12 @@ class AnalyticsTracker {
         acc[event.featureName!] = (acc[event.featureName!] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-    
+
     const featureEngagementStats = Object.entries(featureCounts).map(([feature, count]) => ({
       feature,
       count
     }));
-    
+
     return {
       signups,
       logins,

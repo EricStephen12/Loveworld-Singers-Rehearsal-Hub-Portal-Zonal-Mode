@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -43,8 +43,7 @@ export function CountdownTimerV2({ targetDate, onComplete, className = '' }: Cou
     // Calculate immediately
     calculateTimeLeft();
     
-    // Update every second
-    const timer = setInterval(calculateTimeLeft, 1000);
+        const timer = setInterval(calculateTimeLeft, 1000);
     
     return () => clearInterval(timer);
   }, [targetDate, onComplete]);

@@ -1,4 +1,4 @@
-import {
+﻿import {
   collection,
   doc,
   getDoc,
@@ -55,7 +55,6 @@ class MediaVideosService {
     // Send push notification for new media (optional, admin can choose)
     if (notifyUsers) {
       this.sendMediaNotification(docRef.id, data.title, data.forHQ).catch(err => {
-        console.log('[MediaVideos] Push notification failed (non-blocking):', err)
       })
     }
     
@@ -79,7 +78,6 @@ class MediaVideosService {
       })
       
       if (recipientIds.length === 0) {
-        console.log('[MediaVideos] No recipients found for notification')
         return
       }
       
@@ -100,7 +98,6 @@ class MediaVideosService {
         })
       }
       
-      console.log('[MediaVideos] Push notification sent to', recipientIds.length, 'users')
     } catch (error) {
       console.error('[MediaVideos] Error sending notification:', error)
     }

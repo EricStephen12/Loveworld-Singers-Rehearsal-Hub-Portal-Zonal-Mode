@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export class DeviceSafeArea {
   private static instance: DeviceSafeArea;
@@ -31,32 +31,26 @@ export class DeviceSafeArea {
       this.deviceType = 'android';
     }
 
-    console.log('📱 Device detected:', {
-      type: this.deviceType,
-      hasNotch: this.hasNotch,
-      hasHomeIndicator: this.hasHomeIndicator,
-      userAgent: userAgent
-    });
   }
 
   private detectNotch(): boolean {
     // Check for iPhone X and newer (with notch)
-    const isIPhoneX = /iphone/.test(navigator.userAgent.toLowerCase()) && 
-                     (window.screen.height >= 812 || window.screen.width >= 812);
+    const isIPhoneX = /iphone/.test(navigator.userAgent.toLowerCase()) &&
+      (window.screen.height >= 812 || window.screen.width >= 812);
     return isIPhoneX;
   }
 
   private detectHomeIndicator(): boolean {
     // Check for devices with home indicator (iPhone X and newer)
-    return this.hasNotch || 
-           (window.screen.height >= 812 || window.screen.width >= 812);
+    return this.hasNotch ||
+      (window.screen.height >= 812 || window.screen.width >= 812);
   }
 
   private setupSafeAreaCSS(): void {
     if (typeof window === 'undefined') return;
 
     const root = document.documentElement;
-    
+
     // Set device-specific CSS variables
     root.style.setProperty('--device-type', this.deviceType);
     root.style.setProperty('--has-notch', this.hasNotch ? '1' : '0');
@@ -67,13 +61,12 @@ export class DeviceSafeArea {
     if (this.hasNotch) document.body.classList.add('has-notch');
     if (this.hasHomeIndicator) document.body.classList.add('has-home-indicator');
 
-    // Update safe area values based on device
-    this.updateSafeAreaValues();
+        this.updateSafeAreaValues();
   }
 
   private updateSafeAreaValues(): void {
     const root = document.documentElement;
-    
+
     if (this.deviceType === 'iphone') {
       if (this.hasHomeIndicator) {
         // iPhone X and newer with home indicator
@@ -109,7 +102,7 @@ export class DeviceSafeArea {
 
   public getSafeAreaBottom(type: 'input' | 'nav' | 'default' = 'default'): string {
     const envValue = 'env(safe-area-inset-bottom, 0px)';
-    
+
     switch (type) {
       case 'input':
         return `max(${envValue}, var(--input-safe-area-bottom, 16px))`;
@@ -137,7 +130,4 @@ export class DeviceSafeArea {
   }
 }
 
-// Initialize on import
-if (typeof window !== 'undefined') {
-  DeviceSafeArea.getInstance().init();
-}
+// Initialized via AppBootstrap component

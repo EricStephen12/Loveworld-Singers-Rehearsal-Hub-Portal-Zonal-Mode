@@ -7,11 +7,7 @@ export default function PagesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <PageLoader>
-      {children}
-    </PageLoader>
-  );
+  return <>{children}</>;
 }
 
 

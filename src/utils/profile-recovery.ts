@@ -1,4 +1,4 @@
-// Profile Recovery Utility
+﻿// Profile Recovery Utility
 // Fixes incomplete user accounts created before the bug was fixed
 
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
@@ -26,8 +26,7 @@ export async function checkProfileCompleteness(userId: string): Promise<{
       return { hasProfile: false, isComplete: false, profile: null }
     }
     
-    // Check if profile has minimum required fields
-    const hasRequiredFields = !!(
+        const hasRequiredFields = !!(
       (profile as any).email &&
       ((profile as any).first_name || (profile as any).last_name || (profile as any).full_name)
     )
@@ -48,14 +47,12 @@ export async function checkProfileCompleteness(userId: string): Promise<{
  */
 export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
   try {
-    console.log('🔧 Starting profile recovery for user:', user.email)
     
     // Check current profile status
     const status = await checkProfileCompleteness(user.uid)
     
     // Profile exists and is complete - no recovery needed
     if (status.hasProfile && status.isComplete) {
-      console.log('✅ Profile is complete, no recovery needed')
       return {
         success: true,
         message: 'Profile is already complete',
@@ -66,7 +63,6 @@ export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
     
     // Profile missing completely - create new one
     if (!status.hasProfile) {
-      console.log('🆕 Creating missing profile...')
       
       const newProfile = {
         id: user.uid,
@@ -88,7 +84,6 @@ export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
       
       await FirebaseDatabaseService.createDocument('profiles', user.uid, newProfile)
       
-      console.log('✅ Profile created successfully')
       return {
         success: true,
         message: 'Account recovered! Please sign up again to add your zone and KingsChat ID.',
@@ -99,7 +94,6 @@ export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
     
     // Profile exists but incomplete - update it
     if (status.hasProfile && !status.isComplete) {
-      console.log('🔄 Updating incomplete profile...')
       
       const updates = {
         email: user.email || status.profile.email || '',
@@ -114,7 +108,6 @@ export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
       
       await FirebaseDatabaseService.updateDocument('profiles', user.uid, updates)
       
-      console.log('✅ Profile updated successfully')
       return {
         success: true,
         message: 'Account recovered! Please sign up again to add your zone and KingsChat ID.',
@@ -147,11 +140,9 @@ export async function autoRecoverProfile(user: User): Promise<void> {
     
     // Only recover if profile is missing or incomplete
     if (!status.hasProfile || !status.isComplete) {
-      console.log('🔧 Auto-recovering profile...')
       const result = await recoverUserProfile(user)
       
       if (result.success) {
-        console.log('✅ Auto-recovery successful:', result.message)
       } else {
         console.error('❌ Auto-recovery failed:', result.message)
       }

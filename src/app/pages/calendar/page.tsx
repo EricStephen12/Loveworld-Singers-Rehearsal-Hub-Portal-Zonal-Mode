@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
@@ -81,7 +81,7 @@ export default function CalendarPage() {
           import('moment'),
           import('react-big-calendar')
         ])
-        
+
         moment = momentModule.default
         momentLocalizer = localizerFn(moment)
         setCalendarReady(true)
@@ -103,9 +103,8 @@ export default function CalendarPage() {
       // Load cached events immediately for instant display
       const { CalendarCache } = await import('@/utils/calendar-cache')
       const cachedEvents = CalendarCache.loadEvents(currentZone.id)
-      
+
       if (cachedEvents && cachedEvents.length > 0) {
-        console.log(`⚡ Showing ${cachedEvents.length} cached calendar events instantly`)
         setEvents(cachedEvents)
         setLoading(false)
       } else {
@@ -116,7 +115,7 @@ export default function CalendarPage() {
       try {
         const zoneEvents = await calendarService.getZoneEvents(currentZone.id)
         setEvents(zoneEvents)
-        
+
         // Cache the events for next time
         CalendarCache.saveEvents(currentZone.id, zoneEvents)
       } catch (error) {
@@ -132,7 +131,7 @@ export default function CalendarPage() {
   // Load all birthdays for carousel only (zone-aware)
   useEffect(() => {
     if (!currentZone) return
-    
+
     const loadBirthdays = async () => {
       try {
         const { BirthdayService } = await import('./_lib/birthday-service')
@@ -149,15 +148,15 @@ export default function CalendarPage() {
   // Load upcoming events for carousel and calendar
   useEffect(() => {
     if (!calendarReady || !moment) return
-    
+
     const loadUpcomingEvents = async () => {
       try {
         const { UpcomingEventsService } = await import('./_lib/upcoming-events-service')
         const carouselEvents = await UpcomingEventsService.getCarouselEvents()
         const allUpcoming = await UpcomingEventsService.getUpcomingEvents()
-        
+
         setUpcomingEvents(carouselEvents)
-        
+
         // Convert to calendar events
         const calendarEvents = allUpcoming.map(event => ({
           id: event.id,
@@ -171,7 +170,7 @@ export default function CalendarPage() {
           time: event.time,
           type: event.type
         }))
-        
+
         setUpcomingEventsList(calendarEvents)
       } catch (error) {
         console.error('Error loading upcoming events:', error)
@@ -200,7 +199,6 @@ export default function CalendarPage() {
 
   const handleEventSaved = (event: CalendarEvent) => {
     if (selectedEvent) {
-      // Update existing event
       setEvents(prev => prev.map(e => e.id === event.id ? event : e))
     } else {
       // Add new event
@@ -247,7 +245,6 @@ export default function CalendarPage() {
 
   // If we have cached profile, show content even if user is still loading
   // This prevents blank screen on revisits
-  if (!user && !profile) return null
 
   if (!currentZone) {
     return (
@@ -264,19 +261,19 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-hidden">
       <CalendarStyles />
-      
+
       {/* Mobile Header - Compact */}
       <div className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200">
         {/* Top row: Back + Title + Home */}
         <div className="flex items-center px-2 py-1.5">
-          <button 
+          <button
             onClick={() => router.back()}
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
-          
+
           <div className="flex-1 flex items-center justify-center gap-1">
             <button
               onClick={() => {
@@ -290,11 +287,11 @@ export default function CalendarPage() {
             >
               <ChevronLeft className="w-4 h-4 text-gray-600" />
             </button>
-            
+
             <span className="text-sm font-medium text-gray-800 min-w-[90px] text-center">
               {calendarReady && moment ? moment(date).format('MMM YYYY') : ''}
             </span>
-            
+
             <button
               onClick={() => {
                 const newDate = new Date(date)
@@ -308,8 +305,8 @@ export default function CalendarPage() {
               <ChevronRight className="w-4 h-4 text-gray-600" />
             </button>
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Open menu"
@@ -317,7 +314,7 @@ export default function CalendarPage() {
             <Menu className="w-5 h-5 text-gray-700" />
           </button>
         </div>
-        
+
         {/* Bottom row: Today button only */}
         <div className="flex items-center justify-center px-2 pb-2">
           <button
@@ -400,13 +397,13 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Area - Apple-style reveal animation */}
-        <div 
+        <div
           className={`
             flex-1 overflow-auto bg-gray-100
             transition-all duration-300 ease-in-out
             lg:translate-x-0 lg:scale-100 lg:rounded-none
-            ${sidebarOpen 
-              ? 'translate-x-64 scale-[0.85] rounded-2xl shadow-2xl origin-left' 
+            ${sidebarOpen
+              ? 'translate-x-64 scale-[0.85] rounded-2xl shadow-2xl origin-left'
               : 'translate-x-0 scale-100 rounded-none'
             }
           `}
@@ -415,10 +412,10 @@ export default function CalendarPage() {
           <div className="h-full bg-white relative z-0 flex flex-col">
             {/* Unified Carousel - Birthdays + Events */}
             {(todaysBirthdays.length > 0 || upcomingEvents.length > 0) && (
-              <UnifiedCarousel 
+              <UnifiedCarousel
                 birthdays={todaysBirthdays}
                 events={upcomingEvents}
-                themeColor={currentZone?.themeColor || '#10b981'} 
+                themeColor={currentZone?.themeColor || '#10b981'}
               />
             )}
 
@@ -450,7 +447,7 @@ export default function CalendarPage() {
                   toolbar={false}
                   formats={{
                     timeGutterFormat: 'h A',
-                    eventTimeRangeFormat: ({ start, end }: any) => 
+                    eventTimeRangeFormat: ({ start, end }: any) =>
                       `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
                     agendaTimeRangeFormat: ({ start, end }: any) =>
                       `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,

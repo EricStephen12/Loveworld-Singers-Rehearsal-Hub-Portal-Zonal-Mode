@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,7 +13,6 @@ export type CallState =
   | 'connected'      // Call active and audio flowing
   | 'ending'         // Call ending
 
-// Check if running in native app (React Native WebView)
 function isNativeApp(): boolean {
   if (typeof window === 'undefined') return false
   return !!(
@@ -71,25 +70,21 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       return
     }
     
-    console.log('[CallContext] Initializing VoiceCallService for user:', user.uid)
     const service = new VoiceCallService(user.uid)
     
     service.setCallbacks({
       onIncomingCall: (call) => {
-        console.log('[CallContext] Incoming call from:', call.callerName)
         setCurrentCall(call)
         setCallState('incoming')
       },
       
       onCallAnswered: (call) => {
-        console.log('[CallContext] Call answered, transitioning to connecting')
         setCurrentCall(call)
         setCallState('connecting')
         callStartTimeRef.current = Date.now()
       },
       
       onCallEnded: async (call, reason) => {
-        console.log('[CallContext] Call ended:', reason)
         
         // Play end sound
         service.playCallEndSound(reason)
@@ -115,13 +110,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       },
       
       onRemoteStream: (stream) => {
-        console.log('[CallContext] Remote stream received - call is now connected')
         setRemoteStream(stream)
         setCallState('connected')
       },
       
       onCallTimeout: async (call) => {
-        console.log('[CallContext] Call timeout - handled by onCallEnded')
         resetState()
       }
     })
@@ -131,19 +124,16 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     
     // Listen for incoming call events from notifications
     const handleIncomingCallEvent = async (event: CustomEvent) => {
-      console.log('[CallContext] Received incomingVoiceCall event:', event.detail)
       const { callId, callerName, callerAvatar, action, fromNotification } = event.detail
       
       // If from notification, check for pending calls
       if (callId && service) {
-        console.log('[CallContext] Checking for pending calls, callId:', callId)
         
         // First try to check for pending calls in the database
         const foundCall = await service.checkForPendingCalls()
         
         // If no ringing call found, the call may have ended - show feedback
         if (!foundCall) {
-          console.log('[CallContext] No active call found - may have ended')
           // Dispatch event to show missed call toast
           window.dispatchEvent(new CustomEvent('showToast', {
             detail: {
@@ -204,11 +194,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     receiverAvatar?: string
   ): Promise<boolean> => {
     if (!serviceRef.current || callState !== 'idle') {
-      console.log('[CallContext] Cannot start call - service not ready or already in call')
       return false
     }
     
-    console.log('[CallContext] Starting call to:', receiverName)
     setCallState('outgoing')
     
     // Just start the call - browser will show native permission prompt if needed
@@ -227,7 +215,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       return true
     } else {
       // Call failed to start (could be permission denied or other error)
-      console.log('[CallContext] Failed to start call')
       resetState()
       return false
     }
@@ -238,7 +225,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       return false
     }
     
-    console.log('[CallContext] Answering call')
     setCallState('connecting')
     
     const success = await serviceRef.current.answerCall(currentCall)
@@ -254,7 +240,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const declineCall = useCallback(async (): Promise<void> => {
     if (!serviceRef.current || !currentCall) return
     
-    console.log('[CallContext] Declining call')
     serviceRef.current.playCallEndSound('declined')
     await serviceRef.current.declineCall(currentCall)
     
@@ -264,7 +249,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const endCall = useCallback(async (): Promise<void> => {
     if (!serviceRef.current) return
     
-    console.log('[CallContext] Ending call')
     setCallState('ending')
     serviceRef.current.playCallEndSound('ended')
     

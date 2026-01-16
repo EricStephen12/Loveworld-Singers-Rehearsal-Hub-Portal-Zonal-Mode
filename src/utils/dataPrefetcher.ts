@@ -1,4 +1,4 @@
-// Data Prefetcher for Ultra-Fast Loading
+﻿// Data Prefetcher for Ultra-Fast Loading
 // This utility prefetches data in the background for instant access
 
 import { getAllPages } from '@/lib/database';
@@ -31,7 +31,6 @@ class DataPrefetcher {
       // Cache the data for instant access
       await offlineManager.cacheData('pages', pages);
       
-      console.log('✅ Data prefetched and cached successfully');
     } catch (error) {
       console.error('Error during prefetch:', error);
       throw error;
@@ -49,11 +48,9 @@ class DataPrefetcher {
     return await this.prefetchData();
   }
 
-  // Clear cached data
-  async clearCache(): Promise<void> {
+    async clearCache(): Promise<void> {
     await offlineManager.clearCache();
     this.lastPrefetchTime = 0; // Reset timer
-    console.log('🧹 Cache cleared');
   }
 }
 

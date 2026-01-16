@@ -1,9 +1,8 @@
-// Bulk Profile Recovery Tool
+﻿// Bulk Profile Recovery Tool
 // Admin utility to fix all incomplete profiles at once
 
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { auth } from '@/lib/firebase-setup'
-// Note: listUsers is only available in Firebase Admin SDK, not client SDK
 // This utility is for reference only and should be run server-side
 
 interface BulkRecoveryResult {
@@ -33,16 +32,13 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
   }
   
   try {
-    console.log('🔧 Starting bulk profile recovery...')
     
     // Get all profiles from Firestore
     const profiles = await FirebaseDatabaseService.getCollection('profiles')
     const profileMap = new Map(profiles.map((p: any) => [p.id, p]))
     
-    console.log(`📊 Found ${profiles.length} profiles in Firestore`)
     
-    // Note: Firebase Admin SDK is needed to list all auth users
-    // For now, we'll just check existing profiles and fix incomplete ones
+        // For now, we'll just check existing profiles and fix incomplete ones
     
     for (const profile of profiles) {
       result.total++
@@ -50,8 +46,7 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
       const userId = profile.id
       const email = (profile as any).email || 'unknown'
       
-      // Check if profile is incomplete
-      const isIncomplete = !(
+            const isIncomplete = !(
         (profile as any).email &&
         ((profile as any).first_name || (profile as any).last_name || (profile as any).full_name)
       )
@@ -90,7 +85,6 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
           message: 'Profile recovered successfully'
         })
         
-        console.log(`✅ Recovered profile for ${email}`)
       } catch (error: any) {
         result.failed++
         result.details.push({
@@ -104,12 +98,6 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
       }
     }
     
-    console.log('✅ Bulk recovery complete:', {
-      total: result.total,
-      recovered: result.recovered,
-      failed: result.failed,
-      skipped: result.skipped
-    })
     
     return result
     

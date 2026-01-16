@@ -1,4 +1,4 @@
-// Comprehensive Backup Service for Firebase Data
+﻿// Comprehensive Backup Service for Firebase Data
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from './firebase-setup'
 
@@ -22,7 +22,6 @@ export class BackupService {
   // Export all data to JSON
   static async exportToJSON(): Promise<string> {
     try {
-      console.log('🔄 Starting data export...')
       
       const backupData: BackupData = {
         users: [],
@@ -54,7 +53,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Songs collection not found or empty')
       }
       
       // Export Praise Nights
@@ -65,7 +63,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Praise nights collection not found or empty')
       }
       
       // Export User Sessions
@@ -76,7 +73,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Sessions collection not found or empty')
       }
       
       // Export Attendance
@@ -87,7 +83,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Attendance collection not found or empty')
       }
       
       // Export Achievements
@@ -98,7 +93,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Achievements collection not found or empty')
       }
       
       // Export Conversations
@@ -109,7 +103,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Conversations collection not found or empty')
       }
       
       // Export Messages
@@ -120,7 +113,6 @@ export class BackupService {
           ...doc.data()
         }))
       } catch (e) {
-        console.log('Messages collection not found or empty')
       }
       
       // Calculate total records
@@ -134,7 +126,6 @@ export class BackupService {
         backupData.conversations.length +
         backupData.messages.length
       
-      console.log(`✅ Export complete! ${backupData.totalRecords} records exported`)
       
       return JSON.stringify(backupData, null, 2)
     } catch (error) {
@@ -158,7 +149,6 @@ export class BackupService {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
       
-      console.log('✅ JSON backup downloaded successfully')
     } catch (error) {
       console.error('❌ JSON backup download failed:', error)
       alert('Failed to download backup. Please try again.')
@@ -220,7 +210,6 @@ export class BackupService {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
       
-      console.log(`✅ CSV backup downloaded for ${collectionName}`)
     } catch (error) {
       console.error(`❌ CSV backup download failed for ${collectionName}:`, error)
       alert(`Failed to download ${collectionName} backup. Please try again.`)
@@ -238,7 +227,6 @@ export class BackupService {
         await this.downloadCSVBackup(collection)
       }
       
-      console.log('✅ Excel-compatible CSV files downloaded')
       alert('Multiple CSV files downloaded. You can open these in Excel.')
     } catch (error) {
       console.error('❌ Excel export failed:', error)
@@ -252,7 +240,6 @@ export class BackupService {
       // This is a placeholder for Google Sheets integration
       // You would need to set up Google Sheets API credentials
       
-      console.log('🔄 Starting Google Sheets backup...')
       
       // For now, we'll show instructions to the user
       const instructions = `
@@ -283,15 +270,12 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
     // Run backup every 24 hours
     setInterval(async () => {
       try {
-        console.log('🔄 Running scheduled backup...')
         await this.downloadJSONBackup()
-        console.log('✅ Scheduled backup completed')
       } catch (error) {
         console.error('❌ Scheduled backup failed:', error)
       }
     }, 24 * 60 * 60 * 1000) // 24 hours
     
-    console.log('✅ Auto-backup scheduled every 24 hours')
   }
   
   // Get backup statistics
@@ -326,7 +310,6 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
   // Restore from JSON backup
   static async restoreFromJSON(jsonData: string): Promise<void> {
     try {
-      console.log('🔄 Starting data restore...')
       
       const backupData = JSON.parse(jsonData) as BackupData
       
@@ -338,14 +321,11 @@ This may overwrite existing data. Are you sure you want to continue?`
       )
       
       if (!confirmRestore) {
-        console.log('❌ Restore cancelled by user')
         return
       }
       
-      // Note: Actual restore implementation would require careful handling
-      // to avoid data conflicts and ensure data integrity
+            // to avoid data conflicts and ensure data integrity
       
-      console.log('✅ Restore completed (implementation needed)')
       alert('Restore feature requires additional implementation for safety.')
       
     } catch (error) {

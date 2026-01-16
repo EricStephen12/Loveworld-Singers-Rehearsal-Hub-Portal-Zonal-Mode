@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
 import { Bell } from 'lucide-react'
@@ -13,8 +13,7 @@ export default function SongSubmissionBadge() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   
-  // Check if current zone is HQ (can see all notifications)
-  const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
+    const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
 
   useEffect(() => {
     if (currentZone?.id) {

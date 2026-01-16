@@ -1,6 +1,6 @@
 'use client';
 
-import { Music, Play, Pause, ChevronDown, Mic } from 'lucide-react';
+import { Music, Play, Pause, ChevronDown, Mic, RefreshCw } from 'lucide-react';
 import type { Song, VocalPart } from '../_types';
 
 export interface CollapsibleSongCardProps {
@@ -16,7 +16,9 @@ export interface CollapsibleSongCardProps {
   onPlayPart: (part: VocalPart) => void;
   onPause: () => void;
   onSeek: (time: number) => void;
-  onStartKaraoke?: () => void; // New: direct karaoke start
+  onStartKaraoke?: () => void;
+  isBufferLoading?: boolean;
+  loadingTarget?: string | null;
 }
 
 const partColors: Record<string, { bg: string; text: string; activeBg: string }> = {
@@ -38,7 +40,6 @@ const customPartColors = [
 
 const getPartColors = (part: VocalPart, index: number) => {
   if (partColors[part]) return partColors[part];
-  // Use rotating colors for custom parts
   return customPartColors[index % customPartColors.length];
 };
 
@@ -51,7 +52,7 @@ const partLabels: Record<string, string> = {
 };
 
 const getPartLabel = (part: VocalPart) => {
-  return partLabels[part] || part; // Use part name as label for custom parts
+  return partLabels[part] || part;
 };
 
 export function CollapsibleSongCard({
@@ -68,10 +69,12 @@ export function CollapsibleSongCard({
   onPause,
   onSeek,
   onStartKaraoke,
+  isBufferLoading,
+  loadingTarget,
 }: CollapsibleSongCardProps) {
   const isThisSongPlaying = isPlaying && currentPart !== null;
   const availableParts = song.availableParts || ['full'];
-  
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -81,6 +84,7 @@ export function CollapsibleSongCard({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
@@ -89,23 +93,21 @@ export function CollapsibleSongCard({
   };
 
   return (
-    <div className={`rounded-xl bg-[#261933] border overflow-hidden transition-all duration-300 ${
-      isHighlighted 
-        ? 'border-violet-400 ring-4 ring-violet-500/30 shadow-xl shadow-violet-500/30 bg-violet-500/5' 
-        : 'border-white/5'
-    }`}>
+    <div className={`rounded-xl bg-[#261933] border overflow-hidden transition-all duration-300 ${isHighlighted
+      ? 'border-violet-400 ring-4 ring-violet-500/30 shadow-xl shadow-violet-500/30 bg-violet-500/5'
+      : 'border-white/5'
+      }`}>
       {/* Card Header - Always visible */}
       <button
         onClick={onToggleExpand}
         className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors"
       >
-        {/* Album Art */}
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg shadow-sm">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: song.albumArt ? `url('${song.albumArt}')` : 'none', 
-              backgroundColor: '#1a0f24' 
+            style={{
+              backgroundImage: song.albumArt ? `url('${song.albumArt}')` : 'none',
+              backgroundColor: '#1a0f24'
             }}
           />
           {!song.albumArt && (
@@ -114,20 +116,18 @@ export function CollapsibleSongCard({
             </div>
           )}
         </div>
-        
-        {/* Song Info */}
+
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-white truncate">{song.title}</p>
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <span className="truncate">{song.artist}</span>
           </div>
-          {/* Part badges */}
           {availableParts.length > 1 && (
             <div className="flex gap-1 mt-1">
               {availableParts.filter(p => p !== 'full').slice(0, 4).map((part, index) => {
                 const colors = getPartColors(part, index);
                 return (
-                  <span 
+                  <span
                     key={part}
                     className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium uppercase ${colors.bg} ${colors.text}`}
                   >
@@ -138,35 +138,40 @@ export function CollapsibleSongCard({
             </div>
           )}
         </div>
-        
-        {/* Expand/Collapse Icon */}
-        <ChevronDown 
-          size={20} 
+
+        <ChevronDown
+          size={20}
           className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Expanded Content */}
-      <div 
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
       >
         <div className="px-3 pb-3 pt-1 border-t border-white/5">
-          {/* Play All Button */}
           <div className="flex gap-2 mb-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (isBufferLoading && loadingTarget === 'full') return;
                 if (isThisSongPlaying && currentPart === 'full') {
                   onPause();
                 } else {
                   onPlayAll();
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-violet-500 hover:bg-violet-600 text-white font-bold text-sm transition-colors"
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-colors ${isBufferLoading && loadingTarget === 'full'
+                  ? 'bg-violet-500/50 cursor-wait'
+                  : 'bg-violet-500 hover:bg-violet-600'
+                } text-white`}
             >
-              {isThisSongPlaying && currentPart === 'full' ? (
+              {isBufferLoading && loadingTarget === 'full' ? (
+                <>
+                  <RefreshCw size={18} className="animate-spin" />
+                  <span>Loading...</span>
+                </>
+              ) : isThisSongPlaying && currentPart === 'full' ? (
                 <>
                   <Pause size={18} fill="currentColor" />
                   <span>Pause</span>
@@ -178,56 +183,60 @@ export function CollapsibleSongCard({
                 </>
               )}
             </button>
-            
-            {/* Karaoke Button */}
+
             {onStartKaraoke && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStartKaraoke();
-                }}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm transition-colors"
+                disabled
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-pink-500/20 border border-pink-500/20 text-pink-400/50 cursor-not-allowed font-bold text-sm relative"
               >
                 <Mic size={18} />
                 <span>Karaoke</span>
+                <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-[9px] px-1.5 py-0.5 rounded-full shadow-sm">
+                  Soon
+                </span>
               </button>
             )}
           </div>
 
-          {/* Vocal Parts List */}
           <div className="space-y-1">
             {availableParts.map((part, index) => {
               const isActive = isThisSongPlaying && currentPart === part;
+              const isPartLoading = isBufferLoading && loadingTarget === part;
               const colors = getPartColors(part, index);
-              
+
               return (
                 <button
                   key={part}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (isPartLoading) return;
                     if (isActive) {
                       onPause();
                     } else {
                       onPlayPart(part);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
-                    isActive 
-                      ? `${colors.activeBg} text-white` 
-                      : `${colors.bg} ${colors.text} hover:bg-white/10`
-                  }`}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors ${isPartLoading
+                      ? 'bg-white/10 text-white/50 cursor-wait'
+                      : isActive
+                        ? `${colors.activeBg} text-white`
+                        : `${colors.bg} ${colors.text} hover:bg-white/10`
+                    }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    isActive ? 'bg-white/20' : colors.bg
-                  }`}>
-                    {isActive ? (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : colors.bg}`}>
+                    {isPartLoading ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : isActive ? (
                       <Pause size={14} fill="currentColor" />
                     ) : (
                       <Play size={14} fill="currentColor" />
                     )}
                   </div>
-                  <span className="font-medium text-sm">{getPartLabel(part)}</span>
-                  {isActive && (
+                  <span className="font-medium text-sm">
+                    {getPartLabel(part)}
+                    {isPartLoading && " (Loading...)"}
+                  </span>
+                  {isActive && !isPartLoading && (
                     <span className="ml-auto text-xs opacity-80">Playing</span>
                   )}
                 </button>
@@ -235,21 +244,17 @@ export function CollapsibleSongCard({
             })}
           </div>
 
-          {/* Inline Playback Controls - Only show when playing */}
           {isThisSongPlaying && (
             <div className="mt-4 pt-3 border-t border-white/10">
-              {/* Progress Bar */}
-              <div 
+              <div
                 className="w-full h-2 bg-white/10 rounded-full cursor-pointer mb-2"
                 onClick={handleProgressClick}
               >
-                <div 
+                <div
                   className="h-full bg-violet-500 rounded-full transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              
-              {/* Time Display */}
               <div className="flex justify-between text-xs text-slate-400">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>

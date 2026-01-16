@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WhatsApp Migration Utility
  * Migrates existing chat data to WhatsApp-style schema
  */
@@ -44,7 +44,6 @@ export class WhatsAppMigration {
    * Migrate existing chats to WhatsApp schema
    */
   static async migrateChats(): Promise<void> {
-    console.log('🚀 Starting WhatsApp chat migration...')
     
     try {
       // Get all existing chats
@@ -97,7 +96,6 @@ export class WhatsAppMigration {
       }
       
       await batch.commit()
-      console.log(`✅ Migrated ${migratedCount} chats to WhatsApp schema`)
       
     } catch (error) {
       console.error('❌ Chat migration failed:', error)
@@ -109,7 +107,6 @@ export class WhatsAppMigration {
    * Migrate existing messages to WhatsApp schema
    */
   static async migrateMessages(): Promise<void> {
-    console.log('🚀 Starting WhatsApp message migration...')
     
     try {
       // Get all existing messages (in batches to avoid memory issues)
@@ -172,7 +169,6 @@ export class WhatsAppMigration {
       }
       
       await batch.commit()
-      console.log(`✅ Migrated ${migratedCount} messages to WhatsApp schema`)
       
     } catch (error) {
       console.error('❌ Message migration failed:', error)
@@ -184,7 +180,6 @@ export class WhatsAppMigration {
    * Migrate existing users to WhatsApp schema
    */
   static async migrateUsers(): Promise<void> {
-    console.log('🚀 Starting WhatsApp user migration...')
     
     try {
       // Get all existing chat users
@@ -226,7 +221,6 @@ export class WhatsAppMigration {
       }
       
       await batch.commit()
-      console.log(`✅ Migrated ${migratedCount} users to WhatsApp schema`)
       
     } catch (error) {
       console.error('❌ User migration failed:', error)
@@ -238,10 +232,8 @@ export class WhatsAppMigration {
    * Run complete migration
    */
   static async runFullMigration(): Promise<void> {
-    console.log('🚀 Starting full WhatsApp migration for LWSRH...')
     
-    // Get user from LWSRH auth store (Zustand)
-    let currentUser: any = null
+        let currentUser: any = null
     let userProfile: any = null
     
     try {
@@ -251,12 +243,6 @@ export class WhatsAppMigration {
       currentUser = authState.user
       userProfile = authState.profile
       
-      console.log('🔐 LWSRH Auth Check:', { 
-        hasUser: !!currentUser, 
-        hasProfile: !!userProfile,
-        userId: currentUser?.uid,
-        userEmail: currentUser?.email || userProfile?.email
-      })
       
     } catch (error) {
       console.error('❌ Failed to get auth state:', error)
@@ -272,7 +258,6 @@ export class WhatsAppMigration {
       throw new Error('❌ No user ID found. Please log in again.')
     }
     
-    console.log('🔐 Checking migration permissions for user:', userId)
     
     // Check permissions first
     const hasPermissions = await MigrationPermissionCheck.quickCheck(userId)
@@ -281,15 +266,12 @@ export class WhatsAppMigration {
       throw new Error('❌ Insufficient permissions for migration. Please check Firestore rules.')
     }
     
-    console.log('✅ Permissions verified. Starting migration...')
     
     try {
       await this.migrateUsers()
       await this.migrateChats()
       await this.migrateMessages()
       
-      console.log('✅ Full WhatsApp migration completed successfully!')
-      console.log('📱 Your LWSRH chat system now uses WhatsApp-style architecture!')
       
     } catch (error) {
       console.error('❌ Full migration failed:', error)
@@ -301,12 +283,9 @@ export class WhatsAppMigration {
    * Cleanup old collections (use with caution!)
    */
   static async cleanupOldCollections(): Promise<void> {
-    console.log('⚠️  Starting cleanup of old collections...')
-    console.log('⚠️  This will DELETE old data. Make sure migration was successful!')
     
     // This is intentionally not implemented for safety
     // You should manually verify the migration before cleaning up
-    console.log('❌ Cleanup not implemented for safety. Please verify migration first.')
   }
 }
 
@@ -314,9 +293,6 @@ export class WhatsAppMigration {
  * Quick migration starter for console - LWSRH Compatible
  */
 export const startMigration = async () => {
-  console.log('🚀 Starting WhatsApp migration for LWSRH...')
-  console.log('📱 This will convert your chat system to WhatsApp-style architecture')
-  console.log('')
   
   // Check LWSRH auth first
   try {
@@ -327,11 +303,9 @@ export const startMigration = async () => {
     
     if (!currentUser && !userProfile) {
       console.error('❌ Please log in to LWSRH first!')
-      console.log('🔗 Go to /auth to log in, then try again')
       return
     }
     
-    console.log('✅ LWSRH user authenticated:', currentUser?.email || userProfile?.email)
   } catch (error) {
     console.error('❌ Failed to check LWSRH auth:', error)
     return
@@ -339,26 +313,8 @@ export const startMigration = async () => {
   
   try {
     await WhatsAppMigration.runFullMigration()
-    console.log('')
-    console.log('🎉 Migration completed successfully!')
-    console.log('✅ Your LWSRH chat system is now WhatsApp-ready!')
-    console.log('📱 Users will now experience:')
-    console.log('   • Real-time presence (online/offline status)')
-    console.log('   • Message delivery confirmations (✓✓)')
-    console.log('   • Optimistic UI updates (instant messages)')
-    console.log('   • WhatsApp-style interface')
-    console.log('')
-    console.log('🔗 Visit /admin/whatsapp-migration for a visual migration panel')
   } catch (error) {
     console.error('❌ Migration failed:', error)
-    console.log('')
-    console.log('💡 Common solutions:')
-    console.log('   1. Deploy Firestore rules: firebase deploy --only firestore:rules')
-    console.log('   2. Wait 2-3 minutes for rules to propagate')
-    console.log('   3. Check permissions: checkMigrationPermissions()')
-    console.log('   4. Try again: startMigration()')
-    console.log('')
-    console.log('🔗 Visit /admin/whatsapp-migration for detailed logs and retry options')
   }
 }
 
@@ -372,12 +328,4 @@ if (typeof window !== 'undefined') {
   };
   (window as any).startMigration = startMigration
   
-  console.log('🔧 WhatsApp migration tools available in console:')
-  console.log('   startMigration()           - Quick start full migration')
-  console.log('   whatsappMigration.runFullMigration()')
-  console.log('   whatsappMigration.migrateChats()')
-  console.log('   whatsappMigration.migrateMessages()')
-  console.log('   whatsappMigration.migrateUsers()')
-  console.log('')
-  console.log('🎯 Or visit: /admin/whatsapp-migration for visual interface')
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
 import {
@@ -124,8 +124,7 @@ export default function RequestSubGroupForm() {
     }
   };
 
-  // Check if user has a pending request
-  const hasPendingRequest = userRequests.some(r => r.status === 'pending');
+    const hasPendingRequest = userRequests.some(r => r.status === 'pending');
 
   if (isLoading) {
     return (

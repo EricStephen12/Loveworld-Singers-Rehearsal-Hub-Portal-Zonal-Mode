@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { 
@@ -122,8 +122,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
       { text: messageText }
     )
 
-    // Update display immediately
-    setDisplayMessages(prev => [...prev, optimisticMessage])
+        setDisplayMessages(prev => [...prev, optimisticMessage])
 
     try {
       // Send to server
@@ -133,7 +132,6 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
 
       if (success) {
         // Mark as sent (will be handled by real message from server)
-        console.log('Message sent successfully')
       } else {
         // Mark as failed
         WhatsAppOptimisticUI.markOptimisticMessageFailed(optimisticMessage.id, 'Failed to send')
@@ -143,8 +141,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
       WhatsAppOptimisticUI.markOptimisticMessageFailed(optimisticMessage.id, 'Network error')
     }
 
-    // Clear reply
-    setReplyToMessage(null)
+        setReplyToMessage(null)
   }, [newMessage, selectedChat, user, sendMessage, replyToMessage, setReplyToMessage])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

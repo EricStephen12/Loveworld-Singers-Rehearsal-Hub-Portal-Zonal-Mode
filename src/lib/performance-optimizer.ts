@@ -1,4 +1,4 @@
-// Performance Optimizer - Fix PWA Slowness
+﻿// Performance Optimizer - Fix PWA Slowness
 export class PerformanceOptimizer {
   // Disable heavy real-time subscriptions
   static disableHeavyFeatures() {
@@ -18,11 +18,9 @@ export class PerformanceOptimizer {
     }
   }
 
-  // Clear heavy caches
-  static clearHeavyCaches() {
+    static clearHeavyCaches() {
     if (typeof window !== 'undefined') {
-      // Clear old caches
-      localStorage.removeItem('realtime_data')
+            localStorage.removeItem('realtime_data')
       localStorage.removeItem('chat_data')
       localStorage.removeItem('notification_data')
     }
@@ -33,7 +31,6 @@ export class PerformanceOptimizer {
     this.disableHeavyFeatures()
     this.enableEssentialFeatures()
     this.clearHeavyCaches()
-    console.log('🚀 Performance optimized for speed!')
   }
 
   // Optimize for low data usage
@@ -51,7 +48,6 @@ export class PerformanceOptimizer {
       localStorage.setItem('disable_chat', 'true')
       localStorage.setItem('disable_notifications', 'true')
       
-      console.log('📱 Optimized for low data usage!')
     }
   }
 
@@ -65,7 +61,6 @@ export class PerformanceOptimizer {
                                connection.downlink < 1.5
         
         if (isSlowConnection) {
-          console.log('🐌 Slow connection detected, optimizing...')
           this.optimizeForLowData()
         }
       }

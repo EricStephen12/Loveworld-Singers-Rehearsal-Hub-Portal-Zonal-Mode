@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { NavigationManager } from '@/utils/navigation'
 // Removed auth context dependency for admin check
@@ -17,9 +17,10 @@ type ScreenHeaderProps = {
   onTitleClick?: () => void
   timer?: React.ReactNode
   showMenuButton?: boolean
+  showBackButton?: boolean
 }
 
-export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/logo.png', showDivider = true, rightButtons, leftButtons, onTitleClick, timer, showMenuButton = true }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/logo.png', showDivider = true, rightButtons, leftButtons, onTitleClick, timer, showMenuButton = true, showBackButton = false }: ScreenHeaderProps) {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
   // Check admin status from localStorage
@@ -43,8 +44,18 @@ export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/l
       <div className="flex items-center justify-between p-2 sm:p-3 relative min-h-[60px] sm:min-h-[70px]">
         {/* Left side - Menu button and left buttons */}
         <div className="flex items-center space-x-2">
+          {showBackButton && (
+            <button
+              onClick={() => NavigationManager.safeBack(router)}
+              className={`flex items-center p-2 rounded-lg transition-all duration-1000 ease-out focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-4 scale-75'}`}
+              aria-label="Go back"
+              style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
           {showMenuButton && (
-            <button 
+            <button
               onClick={onMenuClick}
               className={`flex items-center p-2 rounded-lg transition-all duration-1000 ease-out focus:outline-none focus:ring-0 focus:border-0 hover:bg-gray-100 ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-4 scale-75'}`}
               aria-label="Open menu"
@@ -59,10 +70,10 @@ export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/l
             </div>
           )}
         </div>
-        
+
         {/* Center - Title and Timer (centered on all screen sizes) */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-          <button 
+          <button
             onClick={onTitleClick}
             className={`text-base sm:text-lg font-outfit-semibold text-gray-800 transition-all duration-1000 ease-out delay-200 ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-90'} ${onTitleClick ? 'hover:text-gray-900 active:scale-95' : 'cursor-default'}`}
             disabled={!onTitleClick}
@@ -80,7 +91,7 @@ export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/l
             </div>
           )}
         </div>
-        
+
         {/* Right side - Buttons and Logo */}
         <div className={`flex items-center space-x-2 transition-all duration-1000 ease-out delay-400 ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-4 scale-75'}`}>
           {rightButtons}
@@ -89,9 +100,9 @@ export function ScreenHeader({ title, subtitle, onMenuClick, rightImageSrc = '/l
             className="hover:scale-105 active:scale-95 transition-transform duration-200"
             aria-label="Go to home"
           >
-            <img 
-              src={rightImageSrc} 
-              alt="Logo" 
+            <img
+              src={rightImageSrc}
+              alt="Logo"
               className="w-8 h-8 object-contain"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = 'none'

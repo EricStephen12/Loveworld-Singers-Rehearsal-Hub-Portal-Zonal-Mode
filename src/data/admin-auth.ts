@@ -1,4 +1,4 @@
-// Admin Authentication Management System
+﻿// Admin Authentication Management System
 export interface AdminUser {
   id: string;
   username: string;
@@ -89,8 +89,7 @@ export class AdminAuthManager {
     return newUser;
   }
 
-  // Update an existing admin user
-  static updateAdminUser(id: string, updates: Partial<Omit<AdminUser, 'id' | 'createdAt'>>): AdminUser | null {
+    static updateAdminUser(id: string, updates: Partial<Omit<AdminUser, 'id' | 'createdAt'>>): AdminUser | null {
     const users = this.getAdminUsers();
     const index = users.findIndex(user => user.id === id);
     
@@ -152,8 +151,7 @@ export class AdminAuthManager {
     const user = this.getAdminUserByUsername(username);
     
     if (user && user.password === password && user.isActive) {
-      // Update last login
-      this.updateAdminUser(user.id, { lastLogin: new Date() });
+            this.updateAdminUser(user.id, { lastLogin: new Date() });
       return user;
     }
     
@@ -193,8 +191,7 @@ export class AdminAuthManager {
     return null;
   }
 
-  // Check if user is authenticated
-  static isAuthenticated(): boolean {
+    static isAuthenticated(): boolean {
     return this.getCurrentAdminUser() !== null;
   }
 
@@ -236,8 +233,7 @@ export const adminAuthFunctions = {
     return adminAuthManager.deleteAdminUser(id);
   },
 
-  // Update admin user details
-  updateAdminUser: (id: string, updates: Partial<Omit<AdminUser, 'id' | 'createdAt'>>) => {
+    updateAdminUser: (id: string, updates: Partial<Omit<AdminUser, 'id' | 'createdAt'>>) => {
     return adminAuthManager.updateAdminUser(id, updates);
   },
 
@@ -266,8 +262,7 @@ export const adminAuthFunctions = {
     return adminAuthManager.getCurrentAdminUser();
   },
 
-  // Check if user is authenticated
-  isAuthenticated: () => {
+    isAuthenticated: () => {
     return adminAuthManager.isAuthenticated();
   },
 

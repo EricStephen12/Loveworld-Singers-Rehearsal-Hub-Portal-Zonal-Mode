@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Shield, RefreshCw } from 'lucide-react'
@@ -76,7 +76,6 @@ export default function ProfileRecoveryButton() {
           <button
             onClick={() => {
               const report = generateRecoveryReport(result)
-              console.log(report)
               alert('Full report logged to console')
             }}
             className="mt-4 text-sm text-purple-600 hover:text-purple-700"

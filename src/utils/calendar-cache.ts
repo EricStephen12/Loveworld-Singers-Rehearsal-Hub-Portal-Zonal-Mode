@@ -1,4 +1,4 @@
-// Calendar events caching utility
+﻿// Calendar events caching utility
 import { CalendarEvent } from '@/app/pages/calendar/_lib/firebase-calendar-service'
 
 const CACHE_PREFIX = 'calendar-cache-'
@@ -24,7 +24,6 @@ export class CalendarCache {
         zoneId
       }
       localStorage.setItem(this.getCacheKey(zoneId), JSON.stringify(cached))
-      console.log(`💾 Cached ${events.length} calendar events for zone ${zoneId}`)
     } catch (error) {
       console.error('Failed to cache calendar events:', error)
     }
@@ -35,28 +34,22 @@ export class CalendarCache {
     try {
       const cached = localStorage.getItem(this.getCacheKey(zoneId))
       if (!cached) {
-        console.log('📭 No cached calendar events found')
         return null
       }
 
       const parsed: CachedData<CalendarEvent[]> = JSON.parse(cached)
       
-      // Check if cache is still valid
-      const age = Date.now() - parsed.timestamp
+            const age = Date.now() - parsed.timestamp
       if (age > CACHE_DURATION) {
-        console.log('⏰ Cached calendar events expired')
         this.clearEvents(zoneId)
         return null
       }
 
-      // Check if cache is for the correct zone
-      if (parsed.zoneId !== zoneId) {
-        console.log('🏢 Cached events are for different zone')
+            if (parsed.zoneId !== zoneId) {
         this.clearEvents(zoneId)
         return null
       }
 
-      console.log(`⚡ Cache hit: ${parsed.data.length} calendar events loaded instantly`)
       return parsed.data
     } catch (error) {
       console.error('Failed to load cached calendar events:', error)
@@ -64,18 +57,15 @@ export class CalendarCache {
     }
   }
 
-  // Clear cached events
-  static clearEvents(zoneId: string): void {
+    static clearEvents(zoneId: string): void {
     try {
       localStorage.removeItem(this.getCacheKey(zoneId))
-      console.log('🗑️ Cleared cached calendar events')
     } catch (error) {
       console.error('Failed to clear cached calendar events:', error)
     }
   }
 
-  // Clear all calendar caches
-  static clearAll(): void {
+    static clearAll(): void {
     try {
       const keys = Object.keys(localStorage)
       keys.forEach(key => {
@@ -83,7 +73,6 @@ export class CalendarCache {
           localStorage.removeItem(key)
         }
       })
-      console.log('🗑️ Cleared all calendar caches')
     } catch (error) {
       console.error('Failed to clear all calendar caches:', error)
     }

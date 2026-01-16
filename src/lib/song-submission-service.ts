@@ -1,4 +1,4 @@
-import {
+﻿import {
   collection,
   addDoc,
   getDocs,
@@ -276,8 +276,7 @@ export async function approveSong(
       reviewedBy: { userId: reviewerId, userName: reviewerName, reviewedAt: new Date().toISOString() },
       reviewNotes: reviewNotes || '',
       updatedAt: serverTimestamp(),
-      // Clear user update flags
-      isUpdated: false,
+            isUpdated: false,
       hasNewUserReply: false
     })
     
@@ -304,8 +303,7 @@ export async function rejectSong(
       reviewedBy: { userId: reviewerId, userName: reviewerName, reviewedAt: new Date().toISOString() },
       reviewNotes: reviewNotes,
       updatedAt: serverTimestamp(),
-      // Clear user update flags
-      isUpdated: false,
+            isUpdated: false,
       hasNewUserReply: false
     })
     
@@ -368,9 +366,7 @@ async function createStatusNotification(
             data: { songId, songTitle, status }
           })
         })
-        console.log('[SongSubmission] Push notification sent for song:', songTitle, status)
       } catch (pushError) {
-        console.log('[SongSubmission] Push notification failed (non-blocking):', pushError)
       }
     }
   } catch (error) {
@@ -462,8 +458,7 @@ export async function replyToSubmission(submissionId: string, adminName: string,
       replyMessage: message, // Keep legacy field for backward compatibility
       conversation: updatedConversation,
       updatedAt: serverTimestamp(),
-      // Clear user update flags when admin replies
-      isUpdated: false,
+            isUpdated: false,
       hasNewUserReply: false,
       lastUpdatedBy: 'admin'
     })
@@ -534,7 +529,6 @@ export async function getUserSongNotifications(userEmail: string): Promise<SongN
       })
     } catch (indexError) {
       // Fallback: simpler query without orderBy, filter and sort client-side
-      console.log('[SongSubmission] Index not ready, using fallback query')
       const fallbackQ = query(
         notificationsRef,
         where('submittedByEmail', '==', userEmail)
@@ -601,7 +595,6 @@ export async function deleteSubmissionAsAdmin(submissionId: string): Promise<{ s
   }
 }
 
-// Update a submission (user can edit their own pending or approved submissions)
 export async function updateUserSubmission(
   submissionId: string, 
   userId: string, 

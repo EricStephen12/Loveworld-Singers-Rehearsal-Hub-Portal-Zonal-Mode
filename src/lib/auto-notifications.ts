@@ -1,4 +1,4 @@
-// Automatic Notification System
+﻿// Automatic Notification System
 // Sends notifications automatically when admin performs actions
 
 import { FirebaseDatabaseService } from './firebase-database';
@@ -30,7 +30,6 @@ class AutoNotificationService {
       const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       await FirebaseDatabaseService.createDocument('notifications', notificationId, notificationData);
 
-      console.log('✅ Auto-notification sent:', data.title);
       return { success: true, notificationId };
     } catch (error) {
       console.error('❌ Error creating auto-notification:', error);

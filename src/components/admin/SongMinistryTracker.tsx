@@ -51,7 +51,7 @@ export default function SongMinistryTracker() {
         SongMinistryService.getMostMinisteredSongs(),
         SongMinistryService.getAllMonthlySummaries()
       ]);
-      
+
       // For now, we'll just get the records by fetching the most ministered songs
       // In a real implementation, you'd want to fetch all records differently
       setMonthlySummaries(summaries);
@@ -64,7 +64,7 @@ export default function SongMinistryTracker() {
 
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const result = await SongMinistryService.logSongMinistry(
       newRecord.songId,
       newRecord.songTitle,
@@ -73,7 +73,7 @@ export default function SongMinistryTracker() {
       undefined,
       newRecord.notes
     );
-    
+
     if (result.success) {
       setNewRecord({
         songId: '',
@@ -90,12 +90,13 @@ export default function SongMinistryTracker() {
 
   const filteredRecords = records.filter(record =>
     record.songTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.songId.toLowerCase().includes(searchTerm.toLowerCase())
+    record.songId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Get the most recent monthly summary
   const currentSummary = monthlySummaries.length > 0 ? monthlySummaries[0] : null;
-  const currentMonthName = currentSummary 
+  const currentMonthName = currentSummary
     ? new Date(currentSummary.year, currentSummary.month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'N/A';
 
@@ -103,14 +104,13 @@ export default function SongMinistryTracker() {
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`}>
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
           {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
           {toast.message}
         </div>
       )}
-      
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -173,30 +173,30 @@ export default function SongMinistryTracker() {
             <input
               type="text"
               value={newRecord.songTitle}
-              onChange={(e) => setNewRecord({...newRecord, songTitle: e.target.value})}
+              onChange={(e) => setNewRecord({ ...newRecord, songTitle: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               placeholder="Enter song title"
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Song ID</label>
             <input
               type="text"
               value={newRecord.songId}
-              onChange={(e) => setNewRecord({...newRecord, songId: e.target.value})}
+              onChange={(e) => setNewRecord({ ...newRecord, songId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               placeholder="Enter song ID"
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Program Type</label>
             <select
               value={newRecord.programType}
-              onChange={(e) => setNewRecord({...newRecord, programType: e.target.value as any})}
+              onChange={(e) => setNewRecord({ ...newRecord, programType: e.target.value as any })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="rehearsal">Rehearsal</option>
@@ -205,29 +205,29 @@ export default function SongMinistryTracker() {
               <option value="other">Other</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
             <input
               type="date"
               value={newRecord.programDate}
-              onChange={(e) => setNewRecord({...newRecord, programDate: e.target.value})}
+              onChange={(e) => setNewRecord({ ...newRecord, programDate: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               required
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
             <input
               type="text"
               value={newRecord.notes}
-              onChange={(e) => setNewRecord({...newRecord, notes: e.target.value})}
+              onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               placeholder="Additional notes about the ministry"
             />
           </div>
-          
+
           <div className="md:col-span-2 flex items-end">
             <button
               type="submit"
@@ -280,7 +280,7 @@ export default function SongMinistryTracker() {
             />
           </div>
         </div>
-        
+
         {filteredRecords.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -302,12 +302,11 @@ export default function SongMinistryTracker() {
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-900">{record.programDate}</td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        record.programType === 'rehearsal' ? 'bg-purple-100 text-purple-800' :
-                        record.programType === 'service' ? 'bg-green-100 text-green-800' :
-                        record.programType === 'meeting' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${record.programType === 'rehearsal' ? 'bg-purple-100 text-purple-800' :
+                          record.programType === 'service' ? 'bg-green-100 text-green-800' :
+                            record.programType === 'meeting' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                        }`}>
                         {record.programType.charAt(0).toUpperCase() + record.programType.slice(1)}
                       </span>
                     </td>

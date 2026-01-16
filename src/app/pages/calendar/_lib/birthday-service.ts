@@ -1,4 +1,4 @@
-import { FirebaseDatabaseService } from '@/lib/firebase-database'
+﻿import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { UserProfile } from '@/types/supabase'
 import moment from 'moment'
 
@@ -109,11 +109,9 @@ export class BirthdayService {
           // Get birthday this year
           const birthdayThisYear = moment(profile.birthday).year(today.year())
           
-          // Check if birthday is today
-          const isToday = birthdayThisYear.isSame(today, 'day')
+                    const isToday = birthdayThisYear.isSame(today, 'day')
           
-          // Check if birthday is within next 7 days
-          const isUpcoming = birthdayThisYear.isBetween(today, nextWeek, 'day', '[]')
+                    const isUpcoming = birthdayThisYear.isBetween(today, nextWeek, 'day', '[]')
           
           if (!isToday && !isUpcoming) {
             return null

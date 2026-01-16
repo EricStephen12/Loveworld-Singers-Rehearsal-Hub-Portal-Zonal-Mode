@@ -1,456 +1,292 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Mic, MicOff, PhoneOff, Users, Copy, Check, Volume2, MessageCircle, Wifi, WifiOff, Loader2
+import {
+  Mic, MicOff, PhoneOff, Check, Volume2, MessageCircle, Share2
 } from 'lucide-react';
+import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
-import { 
-  subscribeToSession, 
-  leaveSession, 
-  endSession,
+import {
+  subscribeToSession,
+  leaveSession as leaveSessionService,
   toggleMute as toggleMuteService,
-  subscribeToMessages
+  getClassroom,
+  getLiveSessionForClassroom,
+  createSession,
+  joinSession
 } from '../_lib/session-service';
 import { WebRTCService } from '../_lib/webrtc-service';
-import type { Participant, ChatMessage } from '../_types';
-
-// Helper to darken color
-function darkenColor(hex: string, percent: number): string {
-  const num = parseInt(hex.replace('#', ''), 16)
-  const amt = Math.round(2.55 * percent)
-  const R = Math.max((num >> 16) - amt, 0)
-  const G = Math.max((num >> 8 & 0x00FF) - amt, 0)
-  const B = Math.max((num & 0x0000FF) - amt, 0)
-  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`
-}
-
-// Play a subtle join sound
-function playJoinSound() {
-  if (typeof window === 'undefined') return;
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.05);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.2);
-    setTimeout(() => ctx.close(), 300);
-  } catch (e) {}
-}
+import { CollabChatView } from './CollabChatView';
 
 export function LiveSessionView() {
-  const { state, clearSession, setView } = useAudioLab();
+  const { state, setView, clearSession, setCurrentSession } = useAudioLab();
   const { user, profile } = useAuth();
   const { currentZone } = useZone();
-  const currentSession = state.session.currentSession;
-  
-  // Zone colors
+
+  // Zone theming - safe defaults if zone doesn't have specific colors
   const primaryColor = currentZone?.themeColor || '#8B5CF6';
-  const darkColor = darkenColor(primaryColor, 30);
-  const darkerColor = darkenColor(primaryColor, 50);
-  
-  const [webrtcService] = useState(() => new WebRTCService());
-  const audioElementsRef = useRef<Record<string, HTMLAudioElement>>({});
-  
-  const [isLive, setIsLive] = useState(true);
+  const darkColor = '#1a1025';
+  const darkerColor = '#0a050e';
+
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [participants, setParticipants] = useState<any[]>([]);
   const [isMuted, setIsMuted] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copied, setCopied] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [chatOpen, setChatOpen] = useState(false);
   const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Subscribe to session updates
+  const currentSession = state.session.currentSession;
+  const webRTCService = useRef<WebRTCService | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fullName = profile?.first_name
+    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+    : user?.displayName || 'Singer';
+  const userAvatar = profile?.avatar_url || undefined;
+
+  // Track the room ID from URL for auto-joining
   useEffect(() => {
-    if (!currentSession?.id) return;
-    
-    const unsubscribe = subscribeToSession(currentSession.id, {
-      onParticipantJoined: (participant) => {
-        setParticipants(prev => {
-          if (prev.find(p => p.id === participant.id)) return prev;
-          if (participant.id !== user?.uid) {
-            playJoinSound();
-          }
-          return [...prev, participant];
-        });
-        
-        if (user?.uid && participant.id !== user.uid) {
-          webrtcService.createPeerConnection(participant.id, false);
-          
-          if (user.uid === currentSession.hostId) {
-            setTimeout(async () => {
-              try {
-                await webrtcService.initiateConnection(participant.id);
-              } catch (error) {
-                console.error('[LiveSession] Error initiating connection:', error);
-              }
-            }, 1500);
-          }
-        }
-      },
-      onParticipantLeft: (participantId) => {
-        setParticipants(prev => prev.filter(p => p.id !== participantId));
-        setConnectedPeers(prev => {
-          const next = new Set(prev);
-          next.delete(participantId);
-          return next;
-        });
-        webrtcService.removePeerConnection(participantId);
-      },
-      onParticipantUpdated: (participant) => {
-        setParticipants(prev => prev.map(p => 
-          p.id === participant.id ? participant : p
-        ));
-      },
-      onSessionEnded: () => {
-        setIsLive(false);
-        clearSession();
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get('roomId');
+
+    if (roomId && !currentSession) {
+      handleJoinOrCreateSession(roomId);
+    } else if (currentSession) {
+      setIsInitializing(false);
+    }
+  }, [currentSession]);
+
+  const handleJoinOrCreateSession = async (roomId: string) => {
+    if (!user?.uid) return;
+
+    setIsInitializing(true);
+    try {
+      const room = await getClassroom(roomId);
+      if (!room) {
+        console.error('[LiveSession] Room not found:', roomId);
         setView('collab');
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [currentSession?.id, clearSession, setView, user?.uid, currentSession?.hostId, webrtcService]);
-
-  // Initialize WebRTC
-  useEffect(() => {
-    if (!user?.uid || !currentSession?.id) return;
-    
-    webrtcService.initializeSignaling(currentSession.id, user.uid);
-    
-    const setupWebRTC = async () => {
-      // Just initialize - browser will show native permission prompt if needed
-      // Native apps handle permissions on their side
-      const success = await webrtcService.initializeLocalStream();
-      if (!success) {
-        setConnectionStatus('failed');
         return;
       }
-      
-      setConnectionStatus('connected');
-      
-      webrtcService.setOnRemoteStreamAdded((userId, stream) => {
-        console.log('[LiveSession] Remote stream added from:', userId);
-        setConnectedPeers(prev => new Set(prev).add(userId));
-        
-        if (audioElementsRef.current[userId]) {
-          audioElementsRef.current[userId].srcObject = stream;
-          audioElementsRef.current[userId].play().catch(() => {});
-          return;
-        }
-        
-        const audio = new Audio();
-        audio.autoplay = true;
-        (audio as any).playsInline = true;
-        audio.volume = 1.0;
-        audio.srcObject = stream;
-        
-        audio.onloadedmetadata = () => {
-          audio.play().catch(() => {
-            document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
-          });
-        };
-        
-        audioElementsRef.current[userId] = audio;
-      });
-      
-      if (user.uid !== currentSession.hostId) {
-        setTimeout(async () => {
-          webrtcService.createPeerConnection(currentSession.hostId, true);
-          await webrtcService.requestOfferFrom(currentSession.hostId);
-        }, 2000);
+
+      let session = await getLiveSessionForClassroom(roomId);
+      if (!session) {
+        const result = await createSession(user.uid, fullName, userAvatar || undefined, {
+          projectId: roomId,
+          title: room.title
+        });
+        if (result.success) session = result.session || null;
       }
-    };
-    
-    setupWebRTC();
-    
-    return () => {
-      webrtcService.closeAllConnections();
-      Object.values(audioElementsRef.current).forEach(audio => {
-        audio.pause();
-        audio.srcObject = null;
-      });
-      audioElementsRef.current = {};
-    };
-  }, [user?.uid, currentSession?.id, currentSession?.hostId, webrtcService]);
 
-  // Subscribe to messages
+      if (session) {
+        const joinResult = await joinSession(session.id, user.uid, fullName, userAvatar || undefined);
+        if (joinResult.success && joinResult.session) {
+          setCurrentSession(joinResult.session);
+        }
+      }
+    } catch (e) {
+      console.error('[LiveSession] Error joining:', e);
+      setView('collab');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
   useEffect(() => {
-    if (!currentSession?.id) return;
-    const unsubscribe = subscribeToMessages(currentSession.id, (message) => {
-      setMessages(prev => [...prev, message]);
+    if (!currentSession?.id || !user?.uid) return;
+
+    webRTCService.current = new WebRTCService();
+    webRTCService.current.initializeSignaling(currentSession.id, user.uid);
+
+    webRTCService.current.setOnConnectionStateChanged((_peerId: string, status: string) => {
+      if (status === 'connected' || status === 'completed') {
+        setConnectionStatus('connected');
+        setConnectedPeers(prev => new Set(prev).add(_peerId));
+      } else if (status === 'failed' || status === 'disconnected') {
+        setConnectedPeers(prev => {
+          const next = new Set(prev);
+          next.delete(_peerId);
+          return next;
+        });
+      }
     });
-    return () => unsubscribe();
-  }, [currentSession?.id]);
 
-  // Timer
-  useEffect(() => {
-    if (!isLive) return;
-    const interval = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
-    return () => clearInterval(interval);
-  }, [isLive]);
+    webRTCService.current.initializeLocalStream().then((success) => {
+      if (success) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          setElapsedTime(prev => prev + 1);
+        }, 1000);
+      }
+    });
+
+    const unsub = subscribeToSession(currentSession.id, {
+      onParticipantJoined: (p) => {
+        setParticipants(prev => {
+          if (prev.some(existing => existing.id === p.id)) return prev;
+          return [...prev, p];
+        });
+      },
+      onParticipantLeft: (pid) => {
+        setParticipants(prev => prev.filter(p => p.id !== pid));
+        setConnectedPeers(prev => {
+          const next = new Set(prev);
+          next.delete(pid);
+          return next;
+        });
+      },
+      onParticipantUpdated: (p) => {
+        setParticipants(prev => prev.map(existing =>
+          existing.id === p.id ? { ...existing, ...p } : existing
+        ));
+      }
+    });
+
+    return () => {
+      unsub();
+      if (timerRef.current) clearInterval(timerRef.current);
+      webRTCService.current?.dispose();
+    };
+  }, [currentSession?.id, user?.uid]);
 
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
     const s = secs % 60;
-    if (h > 0) {
-      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleCopyCode = async () => {
-    if (!currentSession?.code) return;
-    await navigator.clipboard.writeText(currentSession.code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.slice(0, 2).toUpperCase();
   };
 
   const handleToggleMute = async () => {
     if (!currentSession?.id || !user?.uid) return;
     const newMuted = !isMuted;
     setIsMuted(newMuted);
-    
-    const localStream = webrtcService.getLocalStream();
-    if (localStream) {
-      localStream.getAudioTracks().forEach(track => {
-        track.enabled = !newMuted;
-      });
-    }
-    
+    webRTCService.current?.toggleMute(newMuted);
     await toggleMuteService(currentSession.id, user.uid, newMuted);
   };
 
   const handleEndOrLeave = async () => {
     if (!currentSession?.id || !user?.uid) return;
-    
-    if (user.uid === currentSession.hostId) {
-      await endSession(currentSession.id);
-    } else {
-      await leaveSession(currentSession.id, user.uid, profile?.display_name || 'User');
-    }
+    await leaveSessionService(currentSession.id, user.uid, fullName);
     clearSession();
     setView('collab');
   };
 
-  if (!currentSession) {
+  const handleShareLink = async () => {
+    if (!currentSession) return;
+    const roomId = currentSession.classroomId || currentSession.id;
+    const url = `${window.location.origin}${window.location.pathname}?view=live-session&roomId=${roomId}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (isInitializing || !currentSession) {
     return (
-      <div 
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center text-white"
-        style={{ background: `linear-gradient(180deg, ${darkColor} 0%, ${darkerColor} 100%)` }}
-      >
-        <p className="text-white/60 mb-4">No active session</p>
-        <button
-          onClick={() => setView('collab')}
-          className="px-6 py-3 rounded-xl font-bold text-white"
-          style={{ backgroundColor: primaryColor }}
-        >
-          Go Back
-        </button>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-white bg-[#0a050e]">
+        <CustomLoader message="Entering Classroom..." />
       </div>
     );
   }
 
-  const isHost = user?.uid === currentSession.hostId;
   const participantCount = participants.length || 1;
   const otherParticipants = participants.filter(p => p.id !== user?.uid);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex flex-col text-white"
-      style={{ background: `linear-gradient(180deg, ${primaryColor} 0%, ${darkColor} 50%, ${darkerColor} 100%)` }}
+    <div
+      className="fixed inset-0 z-50 flex flex-col text-white font-sans overflow-hidden"
+      style={{ background: `linear-gradient(135deg, ${darkColor} 0%, ${darkerColor} 100%)` }}
     >
       {/* Top Bar */}
-      <div className="relative z-10 px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between">
-          {/* Chat Button */}
-          <button
-            onClick={() => setView('collab-chat')}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <MessageCircle size={18} />
-            <span className="text-sm">Chat</span>
+      <div className={`relative z-10 px-6 pt-12 pb-4 flex items-center justify-between transition-all duration-500 ${chatOpen ? 'pr-[370px]' : ''}`}>
+        <div className="flex flex-col">
+          <h1 className="text-white text-lg font-bold tracking-tight">{currentSession.title}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <div className={`size-1.5 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-yellow-500 animate-pulse'}`} />
+            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
+              {connectionStatus === 'connected' ? 'Securely Connected' : 'Securing Line...'}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={handleShareLink} className="size-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/10 transition-colors">
+            {copied ? <Check size={18} className="text-green-400" /> : <Share2 size={18} />}
           </button>
-          
-          {/* Connection Status */}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-            connectionStatus === 'connected' 
-              ? 'bg-green-500/20 text-green-300' 
-              : connectionStatus === 'connecting'
-              ? 'bg-yellow-500/20 text-yellow-300'
-              : 'bg-red-500/20 text-red-300'
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold">
+            <span className="text-white/40">{formatTime(elapsedTime)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className={`flex-1 px-4 py-4 flex items-center justify-center overflow-y-auto transition-all duration-500 ${chatOpen ? 'pr-[350px]' : ''}`}>
+        <div className={`grid gap-4 w-full max-w-2xl ${participantCount === 1 ? 'grid-cols-1' :
+            participantCount === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+              participantCount <= 4 ? 'grid-cols-2' :
+                'grid-cols-2 sm:grid-cols-3'
           }`}>
-            {connectionStatus === 'connecting' ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span>Connecting</span>
-              </>
-            ) : connectionStatus === 'connected' ? (
-              <>
-                <Wifi size={14} />
-                <span>Live</span>
-              </>
-            ) : (
-              <>
-                <WifiOff size={14} />
-                <span>Failed</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        {/* Session Code */}
-        <button 
-          onClick={handleCopyCode}
-          className="mb-10 flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all active:scale-95"
-        >
-          <span className="text-2xl font-bold tracking-[0.3em] text-white">
-            {currentSession.code}
-          </span>
-          {copied ? (
-            <Check size={20} className="text-green-400" />
-          ) : (
-            <Copy size={20} className="text-white/60" />
-          )}
-        </button>
-
-        {/* Participants Circle with Pulsing Rings */}
-        <div className="relative w-48 h-48 flex items-center justify-center mb-8">
-          {/* Pulsing rings */}
-          <div 
-            className="absolute inset-0 rounded-full opacity-20 animate-ping"
-            style={{ border: `3px solid white` }}
-          />
-          <div 
-            className="absolute inset-3 rounded-full opacity-30 animate-pulse"
-            style={{ border: `2px solid white` }}
-          />
-          <div 
-            className="absolute inset-6 rounded-full opacity-40"
-            style={{ border: `2px solid white` }}
-          />
-          
-          {/* Main circle */}
-          <div className="w-32 h-32 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-            {participantCount <= 4 ? (
-              <div className="flex flex-wrap items-center justify-center gap-1 p-2">
-                {/* Current user */}
-                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-                  isMuted ? 'bg-red-500/30 text-red-300' : 'bg-white/20 text-white'
-                }`}>
-                  {profile?.first_name?.charAt(0) || 'Y'}
-                  {!isMuted && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                      <Mic size={10} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Other participants */}
-                {otherParticipants.slice(0, 3).map((p) => {
-                  const isConnected = connectedPeers.has(p.id);
-                  return (
-                    <div 
-                      key={p.id}
-                      className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        p.isMuted ? 'bg-white/10 text-white/50' : 'bg-white/20 text-white'
-                      } ${!isConnected ? 'opacity-50' : ''}`}
-                    >
-                      {p.name?.charAt(0) || '?'}
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                        !isConnected ? 'bg-yellow-500' : p.isMuted ? 'bg-white/30' : 'bg-green-500'
-                      }`}>
-                        {!isConnected ? (
-                          <Loader2 size={8} className="animate-spin" />
-                        ) : p.isMuted ? (
-                          <MicOff size={7} />
-                        ) : (
-                          <Volume2 size={8} />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+          <div className={`relative aspect-square sm:aspect-video rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center justify-center overflow-hidden transition-all duration-500 ${isMuted ? 'ring-2 ring-red-500/20' : 'ring-2 ring-violet-500/20 shadow-[0_0_30px_rgba(139,92,246,0.1)]'}`}>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0" />
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <div className="size-24 rounded-full flex items-center justify-center text-3xl font-bold bg-violet-600/30 text-white overflow-hidden">
+                {profile?.avatar_url ? <img src={profile.avatar_url} className="size-full object-cover" alt="" /> : getInitials(fullName)}
               </div>
-            ) : (
-              <div className="text-center">
-                <Users size={32} className="text-white/80 mx-auto mb-1" />
-                <span className="text-2xl font-bold">{participantCount}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Timer */}
-        <div className="text-5xl font-mono font-light text-white mb-2 flex items-center gap-3">
-          <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-          {formatTime(elapsedTime)}
-        </div>
-        
-        {/* Status */}
-        <p className="text-white/60 text-sm mb-2">
-          {isHost ? 'You\'re hosting this session' : `Hosted by ${currentSession.title?.replace("'s Session", '') || 'Host'}`}
-        </p>
-        
-        {/* Participant count */}
-        <p className="text-white/40 text-xs">
-          {participantCount} participant{participantCount !== 1 ? 's' : ''}
-        </p>
-      </div>
-
-      {/* Bottom Controls */}
-      <div className="relative px-6 pb-12 pt-6">
-        <div className="flex items-center justify-center gap-8">
-          {/* Mute Button */}
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={handleToggleMute}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
-                isMuted 
-                  ? 'bg-white text-slate-900' 
-                  : 'bg-white/10 text-white border border-white/20'
-              }`}
-            >
-              {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-            </button>
-            <span className="text-white/60 text-xs">{isMuted ? 'Unmute' : 'Mute'}</span>
-          </div>
-
-          {/* End/Leave Button */}
-          <div className="flex flex-col items-center gap-2">
-            <button 
-              onClick={handleEndOrLeave}
-              className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-white transition-all active:scale-95 shadow-lg shadow-red-500/30"
-            >
-              <PhoneOff size={28} />
-            </button>
-            <span className="text-white/60 text-xs">{isHost ? 'End' : 'Leave'}</span>
-          </div>
-
-          {/* Participants Button */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex flex-col items-center justify-center">
-              <Users size={18} className="text-white/80" />
-              <span className="text-xs font-bold">{participantCount}</span>
+              {!isMuted && <div className="p-1 px-3 bg-green-500 rounded-full text-[10px] font-bold uppercase">Speaking</div>}
             </div>
-            <span className="text-white/60 text-xs">People</span>
+            <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-between items-center">
+              <span className="text-sm font-bold text-white/90">You</span>
+              {isMuted && <MicOff size={14} className="text-red-400" />}
+            </div>
           </div>
+
+          {otherParticipants.map((p) => (
+            <div key={p.id} className="relative aspect-square sm:aspect-video rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0" />
+              <div className="size-20 rounded-full flex items-center justify-center text-2xl font-bold bg-white/10 text-white/70 overflow-hidden">
+                {p.avatar ? <img src={p.avatar} className="size-full object-cover" alt="" /> : getInitials(p.name)}
+              </div>
+              <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-between items-center">
+                <span className="text-sm font-bold text-white/90 truncate">{p.name?.split(' ')[0]}</span>
+                {p.isMuted && <MicOff size={14} className="text-red-400" />}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Controls */}
+      <div className={`relative px-6 pb-12 flex justify-center transition-all duration-500 ${chatOpen ? 'pr-[350px] hidden md:flex' : ''}`}>
+        <div className="flex items-center gap-4 bg-white/10 backdrop-blur-3xl px-6 py-4 rounded-[2.5rem] border border-white/10 shadow-2xl">
+          <button onClick={handleToggleMute} className={`size-14 rounded-full flex items-center justify-center transition-all ${isMuted ? 'bg-red-500' : 'bg-white/10 hover:bg-white/20'}`}>
+            {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+          </button>
+          <button onClick={() => setChatOpen(!chatOpen)} className={`size-14 rounded-full flex items-center justify-center transition-all ${chatOpen ? 'bg-violet-600' : 'bg-white/10 hover:bg-white/20'}`}>
+            <MessageCircle size={24} />
+          </button>
+          <div className="w-1" />
+          <button onClick={handleEndOrLeave} className="size-16 rounded-full bg-red-600 flex items-center justify-center shadow-xl shadow-red-600/30 hover:bg-red-500">
+            <PhoneOff size={28} />
+          </button>
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      {chatOpen && (
+        <div className="fixed inset-y-0 right-0 w-full md:w-[350px] z-[60] bg-black/60 backdrop-blur-2xl border-l border-white/10 shadow-2xl animate-in slide-in-from-right duration-300">
+          <CollabChatView onClose={() => setChatOpen(false)} className="!relative !bg-transparent !inset-0 !z-0 h-full !rounded-none" />
+        </div>
+      )}
     </div>
   );
 }

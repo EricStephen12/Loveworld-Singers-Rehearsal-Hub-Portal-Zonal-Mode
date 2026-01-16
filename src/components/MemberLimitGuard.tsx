@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -32,8 +32,7 @@ export default function MemberLimitGuard({
     return null
   }
   
-  // Check if user can see upgrade prompts (only Zone Leaders with ZNL prefix)
-  const canShowUpgrade = canSeeUpgradePrompts(profile)
+    const canShowUpgrade = canSeeUpgradePrompts(profile)
 
   useEffect(() => {
     loadMemberCount()

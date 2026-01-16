@@ -15,7 +15,7 @@ interface AdminMobileHeaderProps {
   onParentClick?: () => void;
 }
 
-export default function AdminMobileHeader({
+const AdminMobileHeader = React.memo(({
   title,
   subtitle,
   showSearch = false,
@@ -24,7 +24,7 @@ export default function AdminMobileHeader({
   showZoneBadge = false,
   parentSection,
   onParentClick
-}: AdminMobileHeaderProps) {
+}: AdminMobileHeaderProps) => {
   const { currentZone } = useZone();
 
   return (
@@ -36,7 +36,7 @@ export default function AdminMobileHeader({
           {parentSection && onParentClick ? (
             // Breadcrumb style
             <div className="flex items-center gap-1 min-w-0">
-              <button 
+              <button
                 onClick={onParentClick}
                 className="text-sm text-purple-600 font-medium truncate hover:underline"
               >
@@ -77,4 +77,6 @@ export default function AdminMobileHeader({
       </div>
     </div>
   );
-}
+});
+
+export default AdminMobileHeader;

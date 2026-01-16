@@ -17,7 +17,7 @@ function isCategoriesCacheValid(cache: CategoriesCache | undefined): boolean {
 }
 
 export class ZoneDatabaseService {
-  
+
   static async getPraiseNightsByZone(zoneId: string, limitCount = 10) {
     try {
       const allPraiseNights = await FirebaseDatabaseService.getCollectionWhere(
@@ -26,20 +26,40 @@ export class ZoneDatabaseService {
         '==',
         zoneId
       )
-      
+
       const sorted = allPraiseNights.sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || 0).getTime()
         const dateB = new Date(b.createdAt || 0).getTime()
         return dateB - dateA
       })
-      
+
       return sorted.slice(0, limitCount)
     } catch (error) {
       console.error('Error getting praise nights by zone:', error)
       return []
     }
   }
-  
+
+  static subscribeToPraiseNightsByZone(zoneId: string, callback: (data: any[]) => void, limitCount = 100) {
+    // For zonal data
+    return FirebaseDatabaseService.subscribeToCollectionWhere(
+      'zone_praise_nights',
+      'zoneId',
+      '==',
+      zoneId,
+      (data) => {
+        // Sort client-side since we can't easily compound index dynamically
+        const sorted = data.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0).getTime()
+          const dateB = new Date(b.createdAt || 0).getTime()
+          return dateB - dateA
+        })
+        callback(sorted)
+      },
+      limitCount
+    )
+  }
+
   static async getSongsByPraiseNight(praiseNightId: string) {
     try {
       const songs = await FirebaseDatabaseService.getCollectionWhere(
@@ -54,7 +74,7 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async getAllSongsByZone(zoneId: string) {
     try {
       return await FirebaseDatabaseService.getCollectionWhere(
@@ -68,7 +88,7 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async createPraiseNight(zoneId: string, data: any) {
     try {
       const { isHQGroup } = await import('@/config/zones')
@@ -84,7 +104,7 @@ export class ZoneDatabaseService {
         updatedAt: now
       }
       const result = await FirebaseDatabaseService.addDocument(collection, praiseNightData)
-      
+
       // Log activity
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -98,14 +118,14 @@ export class ZoneDatabaseService {
           }
         }));
       }
-      
+
       return { success: true, id: result.id, firebaseId: result.id }
     } catch (error) {
       console.error('Error creating praise night:', error)
       return { success: false }
     }
   }
-  
+
   static async createSong(zoneId: string, praiseNightId: string, songData: any) {
     try {
       const data = {
@@ -115,11 +135,11 @@ export class ZoneDatabaseService {
         createdAt: new Date(),
         updatedAt: new Date()
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(data).filter(([_, value]) => value !== undefined)
       )
-      
+
       const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
       return { success: true, id: result.id, song: { ...cleanData, id: result.id } }
     } catch (error) {
@@ -127,17 +147,17 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async updatePraiseNight(praiseNightId: string, data: any, zoneId?: string) {
     try {
       const updateData = { ...data, updatedAt: new Date() }
       delete updateData.zoneId
-      
+
       if (zoneId) {
         const { isHQGroup } = await import('@/config/zones')
         if (isHQGroup(zoneId)) {
           const result = await FirebaseDatabaseService.updatePraiseNight(praiseNightId, updateData)
-          
+
           // Log activity
           if (typeof window !== 'undefined' && result.success) {
             window.dispatchEvent(new CustomEvent('showToast', {
@@ -151,13 +171,13 @@ export class ZoneDatabaseService {
               }
             }));
           }
-          
+
           return result
         }
       }
 
       const result = await FirebaseDatabaseService.updateDocument('zone_praise_nights', praiseNightId, updateData)
-      
+
       // Log activity
       if (typeof window !== 'undefined' && result.success) {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -171,25 +191,25 @@ export class ZoneDatabaseService {
           }
         }));
       }
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error updating praise night:', error)
       return { success: false }
     }
   }
-  
+
   static async updateSong(songId: string, data: any) {
     try {
       const updateData = { ...data, updatedAt: new Date() }
       delete updateData.zoneId
       delete updateData.id
       delete updateData.firebaseId
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(updateData).filter(([_, value]) => value !== undefined)
       )
-      
+
       await FirebaseDatabaseService.updateDocument('zone_songs', songId, cleanData)
       return { success: true }
     } catch (error) {
@@ -197,7 +217,7 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async deletePraiseNight(praiseNightId: string, zoneId?: string) {
     try {
       let result;
@@ -211,7 +231,7 @@ export class ZoneDatabaseService {
       if (!result) {
         result = await FirebaseDatabaseService.deleteDocument('zone_praise_nights', praiseNightId)
       }
-      
+
       // Log activity
       if (typeof window !== 'undefined' && result.success) {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -225,14 +245,14 @@ export class ZoneDatabaseService {
           }
         }));
       }
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error deleting praise night:', error)
       return { success: false }
     }
   }
-  
+
   static async deleteSong(songId: string) {
     try {
       await FirebaseDatabaseService.deleteDocument('zone_songs', songId)
@@ -242,7 +262,7 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async getCategoriesByZone(zoneId: string) {
     try {
       return await FirebaseDatabaseService.getCollectionWhere(
@@ -256,19 +276,19 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async createCategory(zoneId: string, categoryData: any) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'categories' : 'zone_categories'
-      
+
       const data = {
         ...categoryData,
         ...(isHQGroup(zoneId) ? {} : { zoneId }),
         createdAt: new Date(),
         updatedAt: new Date()
       }
-      
+
       const result = await FirebaseDatabaseService.addDocument(collection, data)
       this.invalidateCategoriesCache(zoneId)
       return { success: true, id: result.id, ...data }
@@ -277,7 +297,7 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async getPageCategoriesByZone(zoneId: string) {
     try {
       return await FirebaseDatabaseService.getCollectionWhere(
@@ -291,19 +311,19 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async createPageCategory(zoneId: string, data: any) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'page_categories' : 'zone_page_categories'
-      
+
       const categoryData = {
         ...data,
         ...(isHQGroup(zoneId) ? {} : { zoneId }),
         createdAt: new Date(),
         updatedAt: new Date()
       }
-      
+
       const result = await FirebaseDatabaseService.addDocument(collection, categoryData)
       this.invalidatePageCategoriesCache(zoneId)
       return { success: true, id: result.id }
@@ -312,14 +332,14 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async updatePageCategory(zoneId: string, pageCategoryId: string, data: any) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'page_categories' : 'zone_page_categories'
       const updateData = { ...data, updatedAt: new Date() }
       delete updateData.zoneId
-      
+
       await FirebaseDatabaseService.updateDocument(collection, pageCategoryId, updateData)
       this.invalidatePageCategoriesCache(zoneId)
       return { success: true }
@@ -328,12 +348,12 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async deletePageCategory(zoneId: string, pageCategoryId: string) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'page_categories' : 'zone_page_categories'
-      
+
       await FirebaseDatabaseService.deleteDocument(collection, pageCategoryId)
       this.invalidatePageCategoriesCache(zoneId)
       return { success: true }
@@ -342,14 +362,14 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async updateCategory(zoneId: string, categoryId: string, data: any) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'categories' : 'zone_categories'
       const updateData = { ...data, updatedAt: new Date() }
       delete updateData.zoneId
-      
+
       await FirebaseDatabaseService.updateDocument(collection, categoryId, updateData)
       this.invalidateCategoriesCache(zoneId)
       return { success: true }
@@ -358,12 +378,12 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async deleteCategory(zoneId: string, categoryId: string) {
     try {
       const { isHQGroup } = await import('@/config/zones')
       const collection = isHQGroup(zoneId) ? 'categories' : 'zone_categories'
-      
+
       await FirebaseDatabaseService.deleteDocument(collection, categoryId)
       this.invalidateCategoriesCache(zoneId)
       return { success: true }
@@ -372,7 +392,7 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async getSongHistory(songId: string) {
     try {
       const history = await FirebaseDatabaseService.getCollectionWhere(
@@ -381,7 +401,7 @@ export class ZoneDatabaseService {
         '==',
         songId
       )
-      
+
       return history.sort((a: any, b: any) => {
         const dateA = new Date(a.created_at || 0).getTime()
         const dateB = new Date(b.created_at || 0).getTime()
@@ -392,7 +412,7 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async createSongHistory(historyData: any) {
     try {
       const data = { ...historyData, created_at: new Date() }
@@ -403,45 +423,45 @@ export class ZoneDatabaseService {
       return { success: false }
     }
   }
-  
+
   static async getCategories(zoneId: string) {
     const cacheKey = `categories_${zoneId}`
     const cached = categoriesCache.get(cacheKey)
     if (isCategoriesCacheValid(cached)) {
       return cached!.data
     }
-    
+
     const { isHQGroup } = await import('@/config/zones')
-    
+
     const categories = isHQGroup(zoneId)
       ? await FirebaseDatabaseService.getCollection('categories')
       : await this.getCategoriesByZone(zoneId)
-    
+
     categoriesCache.set(cacheKey, { data: categories, timestamp: Date.now(), zoneId })
     return categories
   }
-  
+
   static async getPageCategories(zoneId: string) {
     const cacheKey = `page_categories_${zoneId}`
     const cached = pageCategoriesCache.get(cacheKey)
     if (isCategoriesCacheValid(cached)) {
       return cached!.data
     }
-    
+
     const { isHQGroup } = await import('@/config/zones')
-    
+
     const pageCategories = isHQGroup(zoneId)
       ? await FirebaseDatabaseService.getCollection('page_categories')
       : await this.getPageCategoriesByZone(zoneId)
-    
+
     pageCategoriesCache.set(cacheKey, { data: pageCategories, timestamp: Date.now(), zoneId })
     return pageCategories
   }
-  
+
   static invalidateCategoriesCache(zoneId: string) {
     categoriesCache.delete(`categories_${zoneId}`)
   }
-  
+
   static invalidatePageCategoriesCache(zoneId: string) {
     pageCategoriesCache.delete(`page_categories_${zoneId}`)
   }
@@ -455,24 +475,28 @@ export class ZoneDatabaseService {
       return []
     }
   }
-  
+
   static async searchMasterSongs(searchTerm: string) {
     try {
       const allSongs = await this.getMasterSongs()
       const term = searchTerm.toLowerCase()
-      
-      return allSongs.filter((song: any) => 
+
+      return allSongs.filter((song: any) =>
         song.title?.toLowerCase().includes(term) ||
         song.writer?.toLowerCase().includes(term) ||
         song.leadSinger?.toLowerCase().includes(term) ||
-        song.category?.toLowerCase().includes(term)
+        song.category?.toLowerCase().includes(term) ||
+        song.lyrics?.toLowerCase().includes(term) ||
+        song.solfa?.toLowerCase().includes(term) ||
+        song.key?.toLowerCase().includes(term) ||
+        song.tempo?.toLowerCase().includes(term)
       )
     } catch (error) {
       console.error('Error searching Master Library:', error)
       return []
     }
   }
-  
+
   static async importFromMasterLibrary(
     zoneId: string,
     praiseNightId: string,
@@ -484,19 +508,19 @@ export class ZoneDatabaseService {
       const alreadyImported = existingSongs.some(
         (s: any) => s.importedFrom === 'master' && s.originalSongId === masterSong.id
       )
-      
+
       if (alreadyImported) {
-        return { 
-          success: false, 
-          error: 'This song has already been imported to this praise night' 
+        return {
+          success: false,
+          error: 'This song has already been imported to this praise night'
         }
       }
-      
+
       const maxOrderIndex = existingSongs.reduce(
-        (max: number, s: any) => Math.max(max, s.orderIndex || 0), 
+        (max: number, s: any) => Math.max(max, s.orderIndex || 0),
         0
       )
-      
+
       const zoneSongData = {
         title: masterSong.title || '',
         lyrics: masterSong.lyrics || '',
@@ -520,13 +544,13 @@ export class ZoneDatabaseService {
         createdAt: new Date(),
         updatedAt: new Date()
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(zoneSongData).filter(([_, v]) => v !== undefined)
       )
-      
+
       const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
-      
+
       if (result.success && result.id) {
         await this.incrementMasterSongImportCount(masterSong.id)
         return { success: true, id: result.id }
@@ -534,17 +558,17 @@ export class ZoneDatabaseService {
       return { success: false, error: 'Failed to import song' }
     } catch (error) {
       console.error('Error importing from Master Library:', error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
   }
-  
+
   static async incrementMasterSongImportCount(masterSongId: string) {
     try {
       const masterSong = await FirebaseDatabaseService.getDocument('master_songs', masterSongId)
-      
+
       if (masterSong) {
         const newCount = ((masterSong as any).importCount || 0) + 1
         await FirebaseDatabaseService.updateDocument('master_songs', masterSongId, {
@@ -555,7 +579,7 @@ export class ZoneDatabaseService {
       console.error('Error incrementing import count:', error)
     }
   }
-  
+
   static async isImportedFromMaster(songId: string): Promise<boolean> {
     try {
       const song = await FirebaseDatabaseService.getDocument('zone_songs', songId)
@@ -565,7 +589,7 @@ export class ZoneDatabaseService {
       return false
     }
   }
-  
+
   static async getImportedSongs(zoneId: string) {
     try {
       const allSongs = await this.getAllSongsByZone(zoneId)

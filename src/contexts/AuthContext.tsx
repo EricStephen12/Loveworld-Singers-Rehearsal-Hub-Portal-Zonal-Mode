@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, onAuthStateChanged } from 'firebase/auth'
@@ -14,38 +14,58 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+/**
+ * AuthProvider - Big Tech Approach
+ * 
+ * How Instagram, WhatsApp, Twitter handle Firebase Auth:
+ * 1. Use Firebase's currentUser (synchronous) for INSTANT initial state
+ * 2. Show content immediately from cache
+ * 3. Let onAuthStateChanged update asynchronously in background
+ * 4. Firebase persistence (IndexedDB) survives page reloads
+ * 
+ * This prevents:
+ * - Slow "loading..." screens
+ * - Auth loss on reload
+ * - Aggressive redirects while Firebase initializes
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  // INSTANT: Use Firebase's currentUser (synchronous, from IndexedDB cache)
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null
+    // This is INSTANT - no async wait
+    return auth.currentUser
+  })
+
+  // Start as false if we have cached user, true if we don't
+  const [loading, setLoading] = useState(() => !auth.currentUser)
 
   useEffect(() => {
-  
+    // Listen for auth state changes (async, happens in background)
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log('🔐 Auth state:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user')
       setUser(firebaseUser)
-      setLoading(false) // Done checking - we now know the real state
+      setLoading(false)
+
+      // Update cache for instant next load
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lwsrh_has_user', firebaseUser ? 'true' : 'false')
+      }
     })
 
     return unsubscribe
-  }, []) // Run ONCE on mount
+  }, [])
 
   const handleSignOut = async () => {
     try {
       await FirebaseAuthService.signOut()
-      // Firebase will automatically trigger onAuthStateChanged with null
-      // which will update our state
-      
-      // Clear any app-specific storage
+
       if (typeof window !== 'undefined') {
         localStorage.clear()
         sessionStorage.clear()
       }
-      
-      // Redirect to auth
+
       window.location.replace('/auth')
     } catch (error) {
       console.error('Sign out error:', error)
-      // Force redirect even on error
       window.location.replace('/auth')
     }
   }

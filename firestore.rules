@@ -554,6 +554,12 @@ service cloud.firestore {
       allow write: if true;  // Open for admin panel to manage master songs
     }
 
+    // ===== MASTER PROGRAMS (Song Collections) =====
+    match /master_programs/{programId} {
+      allow read: if request.auth != null;
+      allow write: if true;
+    }
+
     // ===== MASTER SONGS (HQ Published Songs for AudioLab) =====
     match /master_songs/{songId} {
       allow read: if request.auth != null;  // All authenticated users can read

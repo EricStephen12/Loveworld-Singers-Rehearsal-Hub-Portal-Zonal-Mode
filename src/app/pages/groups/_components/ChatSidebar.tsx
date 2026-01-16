@@ -1,4 +1,4 @@
-   'use client'
+﻿   'use client'
 
 import { useState, useEffect } from 'react'
 import { useChat } from '../_context/ChatContext'
@@ -19,15 +19,8 @@ export default function ChatSidebar() {
   // Debug chats on load
   useEffect(() => {
     if (chats.length > 0) {
-      console.log('💬 [ChatSidebar] Loaded chats:', chats.length)
       chats.forEach((chat, i) => {
         if (i < 3) { // Only log first 3
-          console.log(`  Chat ${i + 1}:`, {
-            type: chat.type,
-            participants: chat.participants,
-            participantNames: chat.participantNames,
-            currentUserId: user?.uid
-          })
         }
       })
     }
@@ -91,8 +84,7 @@ export default function ChatSidebar() {
     try {
       const date = formatTimestamp(timestamp)
       
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
+            if (isNaN(date.getTime())) {
         return 'Just now'
       }
       

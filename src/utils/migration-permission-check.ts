@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Migration Permission Checker
  * Verifies user has proper permissions before running migration
  */
@@ -24,7 +24,6 @@ export class MigrationPermissionCheck {
       errors: [] as string[]
     }
     
-    console.log('🔐 [Migration] Checking permissions for user:', userId)
     
     // Test WhatsApp Users collection
     try {
@@ -51,7 +50,6 @@ export class MigrationPermissionCheck {
         results.canWriteUsers = true
         // Clean up test document
         await deleteDoc(testUserRef)
-        console.log('✅ [Migration] WhatsApp Users collection - WRITE OK')
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Users: ${error.message}`)
@@ -88,7 +86,6 @@ export class MigrationPermissionCheck {
       if (testDoc.exists()) {
         results.canWriteChats = true
         await deleteDoc(testChatRef)
-        console.log('✅ [Migration] WhatsApp Chats collection - WRITE OK')
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Chats: ${error.message}`)
@@ -120,7 +117,6 @@ export class MigrationPermissionCheck {
       if (testDoc.exists()) {
         results.canWriteMessages = true
         await deleteDoc(testMessageRef)
-        console.log('✅ [Migration] WhatsApp Messages collection - WRITE OK')
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Messages: ${error.message}`)
@@ -130,7 +126,6 @@ export class MigrationPermissionCheck {
     const allPermissionsOk = results.canWriteUsers && results.canWriteChats && results.canWriteMessages
     
     if (allPermissionsOk) {
-      console.log('🎉 [Migration] All permissions OK - Ready for migration!')
     } else {
       console.error('❌ [Migration] Permission check failed:', results.errors)
     }
@@ -178,7 +173,6 @@ if (typeof window !== 'undefined') {
           return false
         }
         
-        console.log('🔐 Using LWSRH auth user:', userId)
       } catch (error) {
         console.error('❌ Failed to get user from LWSRH auth store:', error)
         return false
@@ -188,7 +182,4 @@ if (typeof window !== 'undefined') {
     return MigrationPermissionCheck.quickCheck(userId)
   }
   
-  console.log('🔧 Permission checker available in console:')
-  console.log('   checkMigrationPermissions()           - Auto-detect user from LWSRH auth')
-  console.log('   checkMigrationPermissions("user-id")  - Check specific user')
 }

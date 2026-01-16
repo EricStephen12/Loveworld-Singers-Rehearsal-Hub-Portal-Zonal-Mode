@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Music, 
-  Plus, 
-  Search, 
+import {
+  Music,
+  Plus,
+  Search,
   Download,
   RefreshCw,
   X,
@@ -12,6 +12,7 @@ import {
   FileText
 } from 'lucide-react';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
+import CustomLoader from '@/components/CustomLoader';
 
 interface SubGroupSongsProps {
   subGroupId: string;
@@ -35,7 +36,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedForImport, setSelectedForImport] = useState<string[]>([]);
-  
+
   // Create form state
   const [newTitle, setNewTitle] = useState('');
   const [newWriter, setNewWriter] = useState('');
@@ -83,19 +84,18 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
 
   const handleImport = async () => {
     if (selectedForImport.length === 0) return;
-    
+
     setImporting(true);
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const songsToImport = zoneSongs.filter(s => selectedForImport.includes(s.id || s.firebaseId));
-      
+
       const result = await SubGroupDatabaseService.importSongsFromZone(
         subGroupId,
         zoneId,
         songsToImport,
-        'system' // TODO: pass actual user ID
-      );
-      
+        'system');
+
       if (result.success) {
         setSelectedForImport([]);
         setShowImportModal(false);
@@ -110,7 +110,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
-    
+
     setCreating(true);
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
@@ -118,9 +118,8 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
         subGroupId,
         zoneId,
         { title: newTitle, writer: newWriter, lyrics: newLyrics },
-        'system' // TODO: pass actual user ID
-      );
-      
+        'system');
+
       if (result.success) {
         setNewTitle('');
         setNewWriter('');
@@ -151,7 +150,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
+        <CustomLoader />
       </div>
     );
   }
@@ -266,7 +265,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                 </button>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-auto p-4">
               {zoneSongs.length === 0 ? (
                 <div className="text-center py-8">
@@ -279,18 +278,16 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                     <div
                       key={song.id}
                       onClick={() => toggleImportSelection(song.id)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedForImport.includes(song.id)
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedForImport.includes(song.id)
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-slate-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          selectedForImport.includes(song.id)
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedForImport.includes(song.id)
                             ? 'border-blue-500 bg-blue-500'
                             : 'border-slate-300'
-                        }`}>
+                          }`}>
                           {selectedForImport.includes(song.id) && (
                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -307,7 +304,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                 </div>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-600">
@@ -323,9 +320,14 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                   <button
                     onClick={handleImport}
                     disabled={selectedForImport.length === 0 || importing}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {importing ? 'Importing...' : 'Import Selected'}
+                    {importing ? (
+                      <>
+                        <CustomLoader size="sm" />
+                        <span>Importing...</span>
+                      </>
+                    ) : 'Import Selected'}
                   </button>
                 </div>
               </div>
@@ -354,7 +356,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -368,7 +370,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Writer
@@ -381,7 +383,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Lyrics
@@ -395,7 +397,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
                 />
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -406,9 +408,14 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
               <button
                 onClick={handleCreate}
                 disabled={!newTitle.trim() || creating}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {creating ? 'Creating...' : 'Create'}
+                {creating ? (
+                  <>
+                    <CustomLoader size="sm" />
+                    <span>Creating...</span>
+                  </>
+                ) : 'Create'}
               </button>
             </div>
           </div>

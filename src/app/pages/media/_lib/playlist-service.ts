@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { db } from '@/lib/firebase-setup'
 import { 
@@ -81,27 +81,22 @@ export async function ensureSystemPlaylists(userId: string): Promise<void> {
 // Toggle like on a video
 export async function toggleLikeVideo(userId: string, videoId: string, thumbnail?: string): Promise<boolean> {
   try {
-    console.log('👍 toggleLikeVideo:', { userId, videoId })
     const playlistId = getSystemPlaylistId(userId, 'liked')
     const docRef = doc(db, COLLECTION, playlistId)
     const snapshot = await getDoc(docRef)
     
     if (!snapshot.exists()) {
-      console.log('👍 Creating system playlists for user')
       await ensureSystemPlaylists(userId)
     }
     
     const playlist = await getPlaylist(playlistId)
     const isLiked = playlist?.videoIds.includes(videoId)
-    console.log('👍 Current like status:', isLiked)
     
     if (isLiked) {
       await removeFromPlaylist(playlistId, videoId)
-      console.log('👍 Removed from liked')
       return false
     } else {
       await addToPlaylist(playlistId, videoId, thumbnail)
-      console.log('👍 Added to liked')
       return true
     }
   } catch (error) {
@@ -113,27 +108,22 @@ export async function toggleLikeVideo(userId: string, videoId: string, thumbnail
 // Toggle watch later on a video
 export async function toggleWatchLater(userId: string, videoId: string, thumbnail?: string): Promise<boolean> {
   try {
-    console.log('⏰ toggleWatchLater:', { userId, videoId })
     const playlistId = getSystemPlaylistId(userId, 'watch_later')
     const docRef = doc(db, COLLECTION, playlistId)
     const snapshot = await getDoc(docRef)
     
     if (!snapshot.exists()) {
-      console.log('⏰ Creating system playlists for user')
       await ensureSystemPlaylists(userId)
     }
     
     const playlist = await getPlaylist(playlistId)
     const isInWatchLater = playlist?.videoIds.includes(videoId)
-    console.log('⏰ Current watch later status:', isInWatchLater)
     
     if (isInWatchLater) {
       await removeFromPlaylist(playlistId, videoId)
-      console.log('⏰ Removed from watch later')
       return false
     } else {
       await addToPlaylist(playlistId, videoId, thumbnail)
-      console.log('⏰ Added to watch later')
       return true
     }
   } catch (error) {
@@ -142,14 +132,12 @@ export async function toggleWatchLater(userId: string, videoId: string, thumbnai
   }
 }
 
-// Check if video is liked
 export async function isVideoLiked(userId: string, videoId: string): Promise<boolean> {
   const playlistId = getSystemPlaylistId(userId, 'liked')
   const playlist = await getPlaylist(playlistId)
   return playlist?.videoIds.includes(videoId) || false
 }
 
-// Check if video is in watch later
 export async function isInWatchLater(userId: string, videoId: string): Promise<boolean> {
   const playlistId = getSystemPlaylistId(userId, 'watch_later')
   const playlist = await getPlaylist(playlistId)
@@ -165,7 +153,6 @@ export async function createPlaylist(
   type?: string // Category type
 ): Promise<string> {
   try {
-    console.log('📝 createPlaylist:', { userId, name, isPublic, type })
     const docRef = await addDoc(collection(db, COLLECTION), {
       name,
       description: description || '',
@@ -177,7 +164,6 @@ export async function createPlaylist(
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
-    console.log('📝 Created playlist:', docRef.id)
     return docRef.id
   } catch (error) {
     console.error('📝 Error creating playlist:', error)
@@ -188,14 +174,12 @@ export async function createPlaylist(
 // Get user's playlists
 export async function getUserPlaylists(userId: string): Promise<Playlist[]> {
   try {
-    console.log('📋 getUserPlaylists for:', userId)
     const q = query(
       collection(db, COLLECTION),
       where('userId', '==', userId),
       orderBy('updatedAt', 'desc')
     )
     const snapshot = await getDocs(q)
-    console.log('📋 Found playlists:', snapshot.docs.length)
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -245,7 +229,6 @@ export async function removeFromPlaylist(playlistId: string, videoId: string): P
   })
 }
 
-// Update playlist
 export async function updatePlaylist(
   playlistId: string,
   data: { name?: string; description?: string; isPublic?: boolean; type?: string }
@@ -262,7 +245,6 @@ export async function deletePlaylist(playlistId: string): Promise<void> {
   await deleteDoc(doc(db, COLLECTION, playlistId))
 }
 
-// Check if video is in any of user's playlists
 export async function getPlaylistsContainingVideo(userId: string, videoId: string): Promise<string[]> {
   const playlists = await getUserPlaylists(userId)
   return playlists.filter(p => p.videoIds.includes(videoId)).map(p => p.id)
@@ -361,7 +343,6 @@ export async function getAddablePlaylistsForUser(userId: string, excludePlaylist
 // Get all public playlists (for browsing)
 export async function getPublicPlaylists(limitCount: number = 20): Promise<Playlist[]> {
   try {
-    console.log('🌐 getPublicPlaylists')
     const q = query(
       collection(db, COLLECTION),
       where('isPublic', '==', true),
@@ -369,7 +350,6 @@ export async function getPublicPlaylists(limitCount: number = 20): Promise<Playl
       orderBy('updatedAt', 'desc')
     )
     const snapshot = await getDocs(q)
-    console.log('🌐 Found public playlists:', snapshot.docs.length)
     return snapshot.docs.slice(0, limitCount).map(doc => ({
       id: doc.id,
       ...doc.data(),

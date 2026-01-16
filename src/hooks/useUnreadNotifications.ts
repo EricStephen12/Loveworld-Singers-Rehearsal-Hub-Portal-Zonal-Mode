@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -66,7 +66,6 @@ export function useUnreadNotifications() {
       
       unsubscribers.push(chatUnsub)
     } catch (e) {
-      console.log('Chat query error:', e)
     }
 
     // Listen for zone/admin messages
@@ -86,8 +85,7 @@ export function useUnreadNotifications() {
             const data = change.doc.data()
             const createdAt = data.createdAt?.toDate?.()?.getTime() || 0
             
-            // Check if this is a new message since last seen
-            if (createdAt > lastZoneMessageTime.current) {
+                        if (createdAt > lastZoneMessageTime.current) {
               setHasNewZoneMessage(true)
             }
           }
@@ -96,7 +94,6 @@ export function useUnreadNotifications() {
       
       unsubscribers.push(zoneUnsub)
     } catch (e) {
-      console.log('Zone query error:', e)
     }
 
     // Check for new media (videos uploaded in last 7 days)
@@ -129,8 +126,7 @@ export function useUnreadNotifications() {
           // Only consider videos from last week
           if (createdAt > lastWeek.getTime()) {
             currentMediaIds.push(doc.id)
-            // Check if user hasn't seen this media
-            if (!seenMedia.includes(doc.id)) {
+                        if (!seenMedia.includes(doc.id)) {
               hasNew = true
             }
           }
@@ -140,7 +136,6 @@ export function useUnreadNotifications() {
         localStorage.setItem(`currentMediaItems_${userId}`, JSON.stringify(currentMediaIds))
         setHasNewMedia(hasNew)
       } catch (e) {
-        console.log('Media check error:', e)
       }
     }
     checkNewMedia()
@@ -174,8 +169,7 @@ export function useUnreadNotifications() {
           const eventDate = new Date(rehearsal.date || rehearsal.eventDate)
           if (!isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
             currentEventIds.push(doc.id)
-            // Check if user hasn't seen this event
-            if (!seenEvents.includes(doc.id)) {
+                        if (!seenEvents.includes(doc.id)) {
               hasNewEvent = true
             }
           }
@@ -202,7 +196,6 @@ export function useUnreadNotifications() {
         
         setHasNewCalendar(hasNewEvent)
       } catch (e) {
-        console.log('Calendar check error:', e)
       }
     }
     checkNewCalendar()
@@ -213,8 +206,7 @@ export function useUnreadNotifications() {
         const birthdays = await BirthdayService.getTodayAndUpcomingBirthdays()
         setHasUpcomingBirthday(birthdays.length > 0)
         
-        // Check if user has seen today's birthdays
-        // We use today's date as the key so it resets each day
+                // We use today's date as the key so it resets each day
         const today = new Date().toDateString()
         const hasSeenToday = lastBirthdaySeen === today
         
@@ -225,7 +217,6 @@ export function useUnreadNotifications() {
           setHasUnseenBirthday(false)
         }
       } catch (e) {
-        console.log('Birthday check error:', e)
       }
     }
     checkBirthdays()

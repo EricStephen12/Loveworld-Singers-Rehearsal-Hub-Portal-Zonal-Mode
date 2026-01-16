@@ -1,16 +1,13 @@
-// KingsChat Authentication Service
+﻿// KingsChat Authentication Service
 import kingsChatWebSdk from 'kingschat-web-sdk'
 
 // TEMPORARY: Hardcode your Client ID here for testing
-// TODO: Replace this with your actual KingsChat Client ID from KingsChat Developer Portal
 const HARDCODED_CLIENT_ID = '331c9eda-a130-4bb8-9a00-9231a817207d' // Your KingsChat Client ID
 
 // Try to get from env first, fallback to hardcoded
 const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || HARDCODED_CLIENT_ID
 
 // Debug: Log what we're using
-console.log('🔍 Using Client ID:', KINGSCHAT_CLIENT_ID)
-console.log('🔍 From env?', !!process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID)
 
 interface KingsChatAuthTokens {
   accessToken: string
@@ -35,9 +32,6 @@ export class KingsChatAuthService {
    */
   static async login(): Promise<KingsChatAuthTokens | null> {
     try {
-      console.log('🔐 Initiating KingsChat login...')
-      console.log('📋 Client ID:', KINGSCHAT_CLIENT_ID)
-      console.log('🌐 Current Origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A')
       
       if (!KINGSCHAT_CLIENT_ID || KINGSCHAT_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
         console.error('❌ KingsChat Client ID is not configured!')
@@ -53,13 +47,9 @@ export class KingsChatAuthService {
         clientId: KINGSCHAT_CLIENT_ID
       }
       
-      console.log('📋 Login options:', loginOptions)
 
-      console.log('🚀 Calling KingsChat SDK login...')
       const authResponse = await kingsChatWebSdk.login(loginOptions)
       
-      console.log('✅ KingsChat login successful')
-      console.log('📦 Full auth response:', authResponse)
       
       // Store tokens in localStorage for persistence
       if (typeof window !== 'undefined') {
@@ -71,7 +61,6 @@ export class KingsChatAuthService {
         if ((authResponse as any).user || (authResponse as any).profile) {
           const userProfile = (authResponse as any).user || (authResponse as any).profile
           localStorage.setItem('kingschat_user_profile', JSON.stringify(userProfile))
-          console.log('💾 Stored KingsChat user profile:', userProfile)
         }
       }
       
@@ -100,7 +89,6 @@ export class KingsChatAuthService {
    */
   static async refreshToken(refreshToken: string): Promise<KingsChatAuthTokens | null> {
     try {
-      console.log('🔄 Refreshing KingsChat token...')
       
       const refreshOptions = {
         clientId: KINGSCHAT_CLIENT_ID,
@@ -109,10 +97,8 @@ export class KingsChatAuthService {
 
       const authResponse = await kingsChatWebSdk.refreshAuthenticationToken(refreshOptions)
       
-      console.log('✅ KingsChat token refreshed')
       
-      // Update stored tokens
-      if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined') {
         localStorage.setItem('kingschat_access_token', authResponse.accessToken)
         localStorage.setItem('kingschat_refresh_token', authResponse.refreshToken)
         localStorage.setItem('kingschat_token_expiry', (Date.now() + authResponse.expiresInMillis).toString())
@@ -193,7 +179,6 @@ export class KingsChatAuthService {
       }
 
       await kingsChatWebSdk.sendMessage(sendMessageOptions)
-      console.log('✅ Message sent successfully')
       return true
     } catch (error) {
       console.error('❌ Failed to send message:', error)
@@ -206,14 +191,11 @@ export class KingsChatAuthService {
    */
   static async getUserProfile(accessToken: string): Promise<KingsChatUserProfile | null> {
     try {
-      console.log('📋 Fetching KingsChat user profile...')
-      console.log('🔑 Access Token:', accessToken?.substring(0, 20) + '...')
       
       // First, try to get profile from localStorage (stored during login)
       if (typeof window !== 'undefined') {
         const storedProfile = localStorage.getItem('kingschat_user_profile')
         if (storedProfile) {
-          console.log('💾 Found stored profile in localStorage')
           const profileData = JSON.parse(storedProfile)
           
           const profile: KingsChatUserProfile = {
@@ -224,7 +206,6 @@ export class KingsChatAuthService {
             profilePicture: profileData.profilePicture || profileData.profile_picture || profileData.avatar || profileData.picture || profileData.photoUrl
           }
           
-          console.log('✅ Profile from localStorage:', profile)
           
           if (profile.userId) {
             return profile
@@ -233,15 +214,12 @@ export class KingsChatAuthService {
       }
       
       // If no stored profile, try to decode JWT token to get user info
-      console.log('🔍 Trying to decode access token...')
       try {
         // JWT tokens have 3 parts separated by dots
         const tokenParts = accessToken.split('.')
         if (tokenParts.length === 3) {
           // Decode the payload (middle part)
           const payload = JSON.parse(atob(tokenParts[1]))
-          console.log('📦 Decoded token payload:', payload)
-          console.log('📦 All token keys:', Object.keys(payload))
           
           // Extract all possible user info from token
           const profile: KingsChatUserProfile = {
@@ -252,14 +230,6 @@ export class KingsChatAuthService {
             profilePicture: payload.picture || payload.avatar || payload.profilePicture || payload.profile_picture || payload.photo
           }
           
-          console.log('✅ Profile from token:', profile)
-          console.log('📊 Profile completeness:', {
-            hasUserId: !!profile.userId,
-            hasEmail: !!profile.email,
-            hasFirstName: !!profile.firstName,
-            hasLastName: !!profile.lastName,
-            hasProfilePicture: !!profile.profilePicture
-          })
           
           if (profile.userId) {
             // Store this profile for future use
@@ -293,7 +263,6 @@ export class KingsChatAuthService {
     localStorage.removeItem('kingschat_access_token')
     localStorage.removeItem('kingschat_refresh_token')
     localStorage.removeItem('kingschat_token_expiry')
-    console.log('🚪 KingsChat tokens cleared')
   }
 
   /**

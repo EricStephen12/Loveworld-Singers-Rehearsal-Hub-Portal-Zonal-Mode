@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,8 +23,7 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
         return
       }
 
-      // Check if user has seen the tour
-      const hasSeenTour = profile.has_seen_onboarding_tour || false
+            const hasSeenTour = profile.has_seen_onboarding_tour || false
       
       if (!hasSeenTour) {
         // Show welcome message after a short delay
@@ -47,7 +46,6 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
           has_seen_onboarding_tour: true,
           onboarding_completed_at: new Date().toISOString()
         })
-        console.log('✅ Onboarding welcome dismissed')
       } catch (error) {
         console.error('❌ Error updating tour status:', error)
       }

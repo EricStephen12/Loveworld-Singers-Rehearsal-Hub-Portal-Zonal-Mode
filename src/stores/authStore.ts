@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // LEGACY AUTH STORE - For backward compatibility
 // ============================================
 // The main auth flow now uses AuthContext (src/contexts/AuthContext.tsx)
@@ -82,7 +82,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // Legacy initialize - now a no-op since AuthContext handles this
   initialize: () => {
-    console.log('⚠️ authStore.initialize() is deprecated. Use AuthContext instead.')
     return () => {} // Return empty cleanup
   }
 }))

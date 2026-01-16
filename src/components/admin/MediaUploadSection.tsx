@@ -1,15 +1,16 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { 
-  Upload, Film, X, Trash2, Edit2, 
+import {
+  Upload, Film, X, Trash2, Edit2,
   Youtube, Cloud, Check, Eye, Heart,
-  Plus, ListVideo, Globe, Star, Search, 
+  Plus, ListVideo, Globe, Star, Search,
   CheckCircle, XCircle, ArrowLeft, ChevronRight, Tag
 } from 'lucide-react'
 import { mediaVideosService, MediaVideo } from '@/lib/media-videos-service'
 import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtube'
+import CustomLoader from '@/components/CustomLoader'
 import {
   getAdminPlaylists,
   createAdminPlaylist,
@@ -43,12 +44,12 @@ export default function MediaUploadSection() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'video' | 'playlist' | 'category'; id: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   const [videoForm, setVideoForm] = useState({
     title: '', description: '', videoUrl: '', thumbnail: '',
     type: 'praise', featured: false, forHQ: true, isYouTube: true
   })
-  
+
   const [playlistForm, setPlaylistForm] = useState({
     name: '', description: '', isPublic: true, isFeatured: false, forHQ: true
   })
@@ -63,12 +64,12 @@ export default function MediaUploadSection() {
   }
 
   useEffect(() => { loadData() }, [])
-  
+
   const loadData = async () => {
     setIsLoading(true)
     try {
       const [v, p, c] = await Promise.all([
-        mediaVideosService.getAll(50), 
+        mediaVideosService.getAll(50),
         getAdminPlaylists(),
         getCategories()
       ])
@@ -83,7 +84,7 @@ export default function MediaUploadSection() {
     setVideoForm({ title: '', description: '', videoUrl: '', thumbnail: '', type: 'praise', featured: false, forHQ: true, isYouTube: true })
     setSelectedVideo(null)
   }
-  
+
   const resetPlaylistForm = () => {
     setPlaylistForm({ name: '', description: '', isPublic: true, isFeatured: false, forHQ: true })
     setSelectedPlaylist(null)
@@ -117,10 +118,10 @@ export default function MediaUploadSection() {
       }
       if (videoForm.isYouTube) { data.youtubeUrl = videoForm.videoUrl; data.videoUrl = '' }
       else { data.videoUrl = videoForm.videoUrl; data.youtubeUrl = '' }
-      
+
       if (selectedVideo) await mediaVideosService.update(selectedVideo.id, data)
       else await mediaVideosService.create(data)
-      
+
       showToast('success', selectedVideo ? 'Video updated!' : 'Video added!')
       resetVideoForm()
       setView('videos')
@@ -166,18 +167,16 @@ export default function MediaUploadSection() {
   }
 
   const handleDeletePlaylist = async (id: string) => {
-    console.log('🗑️ Deleting playlist:', id)
     try {
       await deleteAdminPlaylist(id)
-      console.log('✅ Playlist deleted successfully')
       showToast('success', 'Playlist deleted!')
       setDeleteConfirm(null)
-      setSelectedPlaylist(null) // Clear selected playlist if it was deleted
-      setView('playlists') // Go back to playlists list
+      setSelectedPlaylist(null);
+      setView('playlists'); // Go back to playlists list
       loadData()
-    } catch (e) { 
+    } catch (e) {
       console.error('❌ Failed to delete playlist:', e)
-      showToast('error', 'Failed to delete') 
+      showToast('error', 'Failed to delete')
     }
   }
 
@@ -271,11 +270,11 @@ export default function MediaUploadSection() {
   const renderDeleteModal = () => {
     if (!deleteConfirm) return null
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
         onClick={() => setDeleteConfirm(null)}
       >
-        <div 
+        <div
           className="bg-white rounded-2xl p-6 max-w-sm w-full"
           onClick={(e) => e.stopPropagation()}
         >
@@ -285,28 +284,26 @@ export default function MediaUploadSection() {
           <h3 className="text-lg font-bold text-center mb-2">Delete {deleteConfirm.type}?</h3>
           <p className="text-gray-500 text-center mb-6">"{deleteConfirm.name}"</p>
           <div className="flex gap-3">
-            <button 
+            <button
               type="button"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                console.log('Cancel clicked')
                 setDeleteConfirm(null)
-              }} 
+              }}
               className="flex-1 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl font-medium transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="button"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                console.log('🗑️ Delete button clicked in modal, type:', deleteConfirm.type, 'id:', deleteConfirm.id)
                 if (deleteConfirm.type === 'video') handleDeleteVideo(deleteConfirm.id)
                 else if (deleteConfirm.type === 'playlist') handleDeletePlaylist(deleteConfirm.id)
                 else if (deleteConfirm.type === 'category') handleDeleteCategory(deleteConfirm.id)
-              }} 
+              }}
               className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors cursor-pointer"
             >
               Delete
@@ -322,7 +319,7 @@ export default function MediaUploadSection() {
     return (
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
         {renderToast()}{renderDeleteModal()}
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Media</h1>
@@ -330,7 +327,7 @@ export default function MediaUploadSection() {
             <Plus className="w-5 h-5" />Add Video
           </button>
         </div>
-        
+
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           <button className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium">
@@ -343,27 +340,17 @@ export default function MediaUploadSection() {
             <Tag className="w-4 h-4" />Categories ({categories.length})
           </button>
         </div>
-        
+
         {/* Search */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search videos..." className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" />
         </div>
-        
+
         {/* Content */}
         {isLoading ? (
-          <div className="space-y-3">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-                <div className="flex gap-4">
-                  <div className="w-32 h-20 bg-gray-200 rounded-lg" />
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-gray-200 rounded w-1/2" />
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CustomLoader message="Loading media content..." />
           </div>
         ) : filteredVideos.length === 0 ? (
           <div className="text-center py-20">
@@ -390,7 +377,7 @@ export default function MediaUploadSection() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -401,23 +388,23 @@ export default function MediaUploadSection() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-3 text-sm text-gray-500 mb-3">
                       <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{video.views || 0}</span>
                       <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{video.likes || 0}</span>
                       <span className="capitalize text-xs bg-gray-100 px-2 py-0.5 rounded">{video.type}</span>
                     </div>
-                    
+
                     {/* Actions - Always visible */}
                     <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => handleEditVideo(video)} 
+                      <button
+                        onClick={() => handleEditVideo(video)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
                       >
                         <Edit2 className="w-3.5 h-3.5" />Edit
                       </button>
-                      <button 
-                        onClick={() => setDeleteConfirm({ type: 'video', id: video.id, name: video.title })} 
+                      <button
+                        onClick={() => setDeleteConfirm({ type: 'video', id: video.id, name: video.title })}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium"
                       >
                         <Trash2 className="w-3.5 h-3.5" />Delete
@@ -470,13 +457,13 @@ export default function MediaUploadSection() {
             {filteredPlaylists.map(playlist => (
               <div key={playlist.id} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md">
                 <div className="flex items-center gap-4">
-                  <div 
+                  <div
                     onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }}
                     className="w-20 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
                   >
                     {getPlaylistThumb(playlist) ? <img src={getPlaylistThumb(playlist)} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ListVideo className="w-6 h-6 text-gray-300" /></div>}
                   </div>
-                  <div 
+                  <div
                     onClick={() => { setSelectedPlaylist(playlist); setView('playlist-detail') }}
                     className="flex-1 min-w-0 cursor-pointer"
                   >
@@ -488,15 +475,15 @@ export default function MediaUploadSection() {
                     <p className="text-sm text-gray-500">{playlist.videoIds.length} videos</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleEditPlaylist(playlist) }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditPlaylist(playlist) }}
                       className="p-2 hover:bg-gray-100 rounded-lg"
                       title="Edit"
                     >
                       <Edit2 className="w-4 h-4 text-gray-500" />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'playlist', id: playlist.id, name: playlist.name }) }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'playlist', id: playlist.id, name: playlist.name }) }}
                       className="p-2 hover:bg-red-50 rounded-lg"
                       title="Delete"
                     >
@@ -528,9 +515,9 @@ export default function MediaUploadSection() {
           <button onClick={() => { resetVideoForm(); setView('videos') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Videos</span>
           </button>
-          
+
           <h1 className="text-2xl font-bold text-gray-900 mb-6">{selectedVideo ? 'Edit Video' : 'Add Video'}</h1>
-          
+
           {/* Source Type */}
           {!selectedVideo && (
             <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
@@ -547,7 +534,7 @@ export default function MediaUploadSection() {
               </div>
             </div>
           )}
-          
+
           {/* Video URL */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">{videoForm.isYouTube ? 'YouTube URL' : 'Video File'}</label>
@@ -571,7 +558,7 @@ export default function MediaUploadSection() {
                   className="px-4 py-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-colors flex items-center gap-2"
                   title="Paste from clipboard"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></svg>
                   <span className="hidden sm:inline">Paste</span>
                 </button>
               </div>
@@ -590,7 +577,7 @@ export default function MediaUploadSection() {
               )
             )}
           </div>
-          
+
           {/* Thumbnail */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
@@ -606,19 +593,19 @@ export default function MediaUploadSection() {
               </button>
             )}
           </div>
-          
+
           {/* Title */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
             <input type="text" value={videoForm.title} onChange={(e) => setVideoForm(p => ({ ...p, title: e.target.value }))} placeholder="Video title" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
           </div>
-          
+
           {/* Description */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
             <textarea value={videoForm.description} onChange={(e) => setVideoForm(p => ({ ...p, description: e.target.value }))} placeholder="What's this video about?" rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none" />
           </div>
-          
+
           {/* Options */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-3">Options</label>
@@ -633,7 +620,7 @@ export default function MediaUploadSection() {
               </label>
             </div>
           </div>
-          
+
           {/* Save Button */}
           <button onClick={handleSaveVideo} disabled={isSubmitting} className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
             <Check className="w-5 h-5" />
@@ -653,21 +640,21 @@ export default function MediaUploadSection() {
           <button onClick={() => { resetPlaylistForm(); setView('playlists') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Playlists</span>
           </button>
-          
+
           <h1 className="text-2xl font-bold text-gray-900 mb-6">{selectedPlaylist ? 'Edit Playlist' : 'Create Playlist'}</h1>
-          
+
           {/* Name */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Playlist Name</label>
             <input type="text" value={playlistForm.name} onChange={(e) => setPlaylistForm(p => ({ ...p, name: e.target.value }))} placeholder="My Playlist" className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
           </div>
-          
+
           {/* Description */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
             <textarea value={playlistForm.description} onChange={(e) => setPlaylistForm(p => ({ ...p, description: e.target.value }))} placeholder="What's this playlist about?" rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none" />
           </div>
-          
+
           {/* Options */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-3">Options</label>
@@ -686,7 +673,7 @@ export default function MediaUploadSection() {
               </label>
             </div>
           </div>
-          
+
           {/* Save Button */}
           <button onClick={handleSavePlaylist} disabled={isSubmitting} className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
             <Check className="w-5 h-5" />
@@ -706,7 +693,7 @@ export default function MediaUploadSection() {
           <button onClick={() => { setSelectedPlaylist(null); setSearchQuery(''); setView('playlists') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Playlists</span>
           </button>
-          
+
           {/* Playlist Header */}
           <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex items-start gap-4">
@@ -727,20 +714,20 @@ export default function MediaUploadSection() {
               </div>
             </div>
           </div>
-          
+
           {/* Instructions */}
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4">
             <p className="text-purple-800 text-sm">
               <strong>Tap videos below</strong> to add or remove them from this playlist. Videos with a purple checkmark are already in the playlist.
             </p>
           </div>
-          
+
           {/* Search */}
           <div className="relative mb-4">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search videos..." className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl" />
           </div>
-          
+
           {/* Videos List */}
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
             {filteredVideos.length === 0 ? (
@@ -793,11 +780,11 @@ export default function MediaUploadSection() {
             <Tag className="w-4 h-4" />Categories ({categories.length})
           </button>
         </div>
-        
+
         {/* Categories List */}
         {isLoading ? (
           <div className="space-y-3">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
                 <div className="flex gap-4 items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-lg" />
@@ -829,7 +816,7 @@ export default function MediaUploadSection() {
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Tag className="w-5 h-5 text-purple-600" />
                   </div>
-                  
+
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900">{category.name}</h3>
@@ -838,17 +825,17 @@ export default function MediaUploadSection() {
                     )}
                     <p className="text-xs text-gray-400 mt-1">Slug: {category.slug}</p>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => handleEditCategory(category)} 
+                    <button
+                      onClick={() => handleEditCategory(category)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
                     >
                       <Edit2 className="w-3.5 h-3.5" />Edit
                     </button>
-                    <button 
-                      onClick={() => setDeleteConfirm({ type: 'category', id: category.id, name: category.name })} 
+                    <button
+                      onClick={() => setDeleteConfirm({ type: 'category', id: category.id, name: category.name })}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium"
                     >
                       <Trash2 className="w-3.5 h-3.5" />Delete
@@ -872,18 +859,18 @@ export default function MediaUploadSection() {
           <button onClick={() => { resetCategoryForm(); setView('categories') }} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Back to Categories</span>
           </button>
-          
+
           <h1 className="text-2xl font-bold text-gray-900 mb-6">{selectedCategory ? 'Edit Category' : 'Create Category'}</h1>
-          
+
           {/* Name */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Category Name</label>
-            <input 
-              type="text" 
-              value={categoryForm.name} 
-              onChange={(e) => setCategoryForm(p => ({ ...p, name: e.target.value }))} 
-              placeholder="e.g., Praise, Worship, Medley" 
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" 
+            <input
+              type="text"
+              value={categoryForm.name}
+              onChange={(e) => setCategoryForm(p => ({ ...p, name: e.target.value }))}
+              placeholder="e.g., Praise, Worship, Medley"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
             {categoryForm.name && (
               <p className="text-xs text-gray-400 mt-2">
@@ -891,23 +878,23 @@ export default function MediaUploadSection() {
               </p>
             )}
           </div>
-          
+
           {/* Description */}
           <div className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
-            <textarea 
-              value={categoryForm.description} 
-              onChange={(e) => setCategoryForm(p => ({ ...p, description: e.target.value }))} 
-              placeholder="What type of videos belong in this category?" 
-              rows={3} 
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-500" 
+            <textarea
+              value={categoryForm.description}
+              onChange={(e) => setCategoryForm(p => ({ ...p, description: e.target.value }))}
+              placeholder="What type of videos belong in this category?"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-          
+
           {/* Save Button */}
-          <button 
-            onClick={handleSaveCategory} 
-            disabled={isSubmitting || !categoryForm.name.trim()} 
+          <button
+            onClick={handleSaveCategory}
+            disabled={isSubmitting || !categoryForm.name.trim()}
             className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <Check className="w-5 h-5" />

@@ -1,8 +1,6 @@
-// Utility function for refreshing app data while preserving auth and zone state
+﻿// Utility function for refreshing app data while preserving auth and zone state
 export const handleAppRefresh = async () => {
   try {
-    console.log('🔄 Refreshing app data...');
-    console.log('🔐 Preserving authentication and zone data...');
     
     // Show user feedback
     if (typeof window !== 'undefined') {
@@ -81,8 +79,7 @@ export const handleAppRefresh = async () => {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key) {
-        // Check if this key should be preserved
-        const shouldPreserve = keysToPreserve.some(preserve => 
+                const shouldPreserve = keysToPreserve.some(preserve => 
           key.includes(preserve) || key.startsWith(preserve)
         );
         
@@ -93,12 +90,9 @@ export const handleAppRefresh = async () => {
     }
     
     keysToRemove.forEach(key => {
-      console.log('🗑️ Clearing cache key:', key);
       localStorage.removeItem(key);
     });
     
-    console.log('✅ Non-essential cache cleared');
-    console.log('🔐 Auth and zone data preserved');
     
     // Instead of page reload, refresh data in Zustand stores
     try {
@@ -106,7 +100,6 @@ export const handleAppRefresh = async () => {
       const { useZoneStore } = await import('@/stores/zoneStore');
       
       // Refresh zone data from server (without clearing state)
-      console.log('🔄 Refreshing zone data from server...');
       await useZoneStore.getState().refreshZones();
       
       // Remove loading indicator
@@ -118,7 +111,6 @@ export const handleAppRefresh = async () => {
       // Show success message
       showRefreshSuccess();
       
-      console.log('✅ App data refreshed successfully!');
     } catch (storeError) {
       console.warn('Could not refresh stores, falling back to page reload:', storeError);
       // Fallback to page reload if store refresh fails

@@ -1,15 +1,20 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { featureUpdateManager } from '@/utils/feature-update-manager';
 
 export default function FeatureUpdateChecker() {
   useEffect(() => {
+    // DISABLED: Temporarily disabled to debug reload loop issue
+    // The version check (3.1.0) might be conflicting with VersionManager (3.0.0)
+    // causing constant cache wipes
+    return;
+
+    /* ORIGINAL CODE - DISABLED
     const checkForUpdates = async () => {
       try {
         const hasUpdate = await featureUpdateManager.checkForFeatureUpdates();
         if (hasUpdate) {
-          console.log('🚀 New features detected and notifications sent!');
         }
       } catch (error) {
         console.error('Feature update check failed:', error);
@@ -35,6 +40,7 @@ export default function FeatureUpdateChecker() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+    */
   }, []);
 
   // This component doesn't render anything visible

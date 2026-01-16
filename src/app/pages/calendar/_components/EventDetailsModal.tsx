@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { CalendarEvent, CalendarService } from '../_lib/firebase-calendar-service'
@@ -75,8 +75,7 @@ export default function EventDetailsModal({
     try {
       await calendarService.deleteEvent(event.id)
       
-      // Clear calendar cache
-      try {
+            try {
         const { CalendarCache } = await import('@/utils/calendar-cache')
         CalendarCache.clearEvents(event.zoneId)
       } catch {

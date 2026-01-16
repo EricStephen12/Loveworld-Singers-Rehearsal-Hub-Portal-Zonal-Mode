@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,22 +33,20 @@ interface AdminSidebarProps {
   pendingSubGroupCount?: number;
 }
 
-export default function AdminSidebar({
+const AdminSidebar = React.memo(({
   sidebarCollapsed,
   setSidebarCollapsed,
   activeSection,
   setActiveSection,
   isHQAdmin = false,
   pendingSubGroupCount = 0
-}: AdminSidebarProps) {
+}: AdminSidebarProps) => {
   const router = useRouter();
   const { currentZone } = useZone();
-  
-  // Check if current zone is HQ
-  const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
-  
-  // Check if user is Zone Coordinator (not HQ)
-  const isZoneCoordinator = currentZone && !isHQ && !isHQAdmin;
+
+    const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
+
+    const isZoneCoordinator = currentZone && !isHQ && !isHQAdmin;
 
   // Group sidebar items by category
   const mainItems = [
@@ -73,7 +71,7 @@ export default function AdminSidebar({
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
     { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
   ];
-  
+
   // Filter items based on role
   const filterItems = (items: any[]) => items.filter(item => {
     if (item.hqOnly && !isHQAdmin) return false;
@@ -133,7 +131,7 @@ export default function AdminSidebar({
     <>
       {/* Mobile Overlay */}
       {!sidebarCollapsed && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/50 z-[65]"
           onClick={() => setSidebarCollapsed(true)}
         />
@@ -157,16 +155,16 @@ export default function AdminSidebar({
             >
               <X className="w-6 h-6 text-slate-600" />
             </button>
-            
+
             {/* Logo & Title */}
             <Link
               href="/home"
               className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''}`}
             >
               <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-200">
-                <img 
-                  src="/logo.png" 
-                  alt="Logo" 
+                <img
+                  src="/logo.png"
+                  alt="Logo"
                   className="w-7 h-7 object-contain"
                 />
               </div>
@@ -175,7 +173,7 @@ export default function AdminSidebar({
                 <p className="text-xs text-slate-500 truncate max-w-[140px]">{currentZone?.name || 'Loveworld Singers'}</p>
               </div>
             </Link>
-            
+
             <div className="w-10 lg:hidden" />
           </div>
         </div>
@@ -225,7 +223,7 @@ export default function AdminSidebar({
             <Home className="w-4 h-4" />
             Back to Home
           </Link>
-          
+
           {/* Desktop: Collapse toggle */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -239,4 +237,6 @@ export default function AdminSidebar({
       </div>
     </>
   );
-}
+});
+
+export default AdminSidebar;

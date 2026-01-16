@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { 
-  Plus, Edit2, Trash2, ListVideo, Globe, Star, 
+import {
+  Plus, Edit2, Trash2, ListVideo, Globe, Star,
   X, Check, Search, GripVertical, Play, Eye, CheckCircle, XCircle
 } from 'lucide-react'
-import { 
-  getAdminPlaylists, 
-  createAdminPlaylist, 
-  updateAdminPlaylist, 
+import {
+  getAdminPlaylists,
+  createAdminPlaylist,
+  updateAdminPlaylist,
   deleteAdminPlaylist,
   addVideoToPlaylist,
   removeVideoFromPlaylist,
-  AdminPlaylist 
+  AdminPlaylist
 } from '@/lib/admin-playlist-service'
 import { mediaVideosService, MediaVideo } from '@/lib/media-videos-service'
+import CustomLoader from '@/components/CustomLoader'
 
 type ViewMode = 'list' | 'create' | 'edit' | 'videos'
 
@@ -26,7 +27,7 @@ export default function PlaylistsSection() {
   const [allVideos, setAllVideos] = useState<MediaVideo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedPlaylist, setSelectedPlaylist] = useState<AdminPlaylist | null>(null)
-  
+
   // Form state
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -34,10 +35,10 @@ export default function PlaylistsSection() {
   const [isFeatured, setIsFeatured] = useState(false)
   const [forHQ, setForHQ] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   // Video selection
   const [videoSearch, setVideoSearch] = useState('')
-  
+
   // Toast and delete confirmation
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -46,7 +47,7 @@ export default function PlaylistsSection() {
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
   }
-  
+
   // Helper to get thumbnail from first video in playlist
   const getPlaylistThumbnail = (playlist: AdminPlaylist): string => {
     if (playlist.videoIds.length > 0) {
@@ -180,7 +181,7 @@ export default function PlaylistsSection() {
     }
   }
 
-  const filteredVideos = allVideos.filter(v => 
+  const filteredVideos = allVideos.filter(v =>
     v.title.toLowerCase().includes(videoSearch.toLowerCase())
   )
 
@@ -190,9 +191,8 @@ export default function PlaylistsSection() {
       <div className="h-full overflow-auto bg-gray-50 p-4 lg:p-6">
         {/* Toast */}
         {toast && (
-          <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
-            toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}>
+          <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}>
             {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
             {toast.message}
           </div>
@@ -244,14 +244,8 @@ export default function PlaylistsSection() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-                <div className="aspect-video bg-gray-200 rounded-lg mb-3" />
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CustomLoader message="Loading playlists..." />
           </div>
         ) : playlists.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -270,55 +264,56 @@ export default function PlaylistsSection() {
             {playlists.map(playlist => {
               const thumbUrl = playlist.thumbnail || getPlaylistThumbnail(playlist)
               return (
-              <div key={playlist.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <div className="relative aspect-video bg-gray-100">
-                  {thumbUrl ? (
-                    <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ListVideo className="w-12 h-12 text-gray-300" />
+                <div key={playlist.id} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <div className="relative aspect-video bg-gray-100">
+                    {thumbUrl ? (
+                      <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ListVideo className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                      {playlist.videoIds.length} videos
                     </div>
-                  )}
-                  <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                    {playlist.videoIds.length} videos
+                    {playlist.isFeatured && (
+                      <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                        <Star className="w-3 h-3" /> Featured
+                      </div>
+                    )}
+                    {playlist.isPublic && (
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                      </div>
+                    )}
                   </div>
-                  {playlist.isFeatured && (
-                    <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                      <Star className="w-3 h-3" /> Featured
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">{playlist.name}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{playlist.description || 'No description'}</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleManageVideos(playlist)}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 flex items-center justify-center gap-1"
+                      >
+                        <Play className="w-4 h-4" /> Videos
+                      </button>
+                      <button
+                        onClick={() => handleEditClick(playlist)}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
+                      >
+                        <Edit2 className="w-4 h-4 text-gray-500" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(playlist.id)}
+                        className="p-2 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
                     </div>
-                  )}
-                  {playlist.isPublic && (
-                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                      <Globe className="w-3 h-3" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">{playlist.name}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-3">{playlist.description || 'No description'}</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleManageVideos(playlist)}
-                      className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 flex items-center justify-center gap-1"
-                    >
-                      <Play className="w-4 h-4" /> Videos
-                    </button>
-                    <button
-                      onClick={() => handleEditClick(playlist)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <Edit2 className="w-4 h-4 text-gray-500" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(playlist.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            )})}
+              )
+            })}
           </div>
         )}
       </div>
@@ -375,9 +370,8 @@ export default function PlaylistsSection() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
                 <button
                   onClick={() => setIsPublic(!isPublic)}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${
-                    isPublic ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${isPublic ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'
+                    }`}
                 >
                   <Globe className="w-4 h-4" />
                   {isPublic ? 'Public' : 'Private'}
@@ -388,9 +382,8 @@ export default function PlaylistsSection() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Featured</label>
                 <button
                   onClick={() => setIsFeatured(!isFeatured)}
-                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${
-                    isFeatured ? 'border-yellow-500 bg-yellow-50 text-yellow-700' : 'border-gray-200 text-gray-600'
-                  }`}
+                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all flex items-center justify-center gap-2 ${isFeatured ? 'border-yellow-500 bg-yellow-50 text-yellow-700' : 'border-gray-200 text-gray-600'
+                    }`}
                 >
                   <Star className="w-4 h-4" />
                   {isFeatured ? 'Featured' : 'Not Featured'}
@@ -403,17 +396,15 @@ export default function PlaylistsSection() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setForHQ(true)}
-                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    forHQ ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'
-                  }`}
+                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${forHQ ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'
+                    }`}
                 >
                   🏢 HQ Zones
                 </button>
                 <button
                   onClick={() => setForHQ(false)}
-                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    !forHQ ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
-                  }`}
+                  className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${!forHQ ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
+                    }`}
                 >
                   🌍 Regular Zones
                 </button>
@@ -425,13 +416,22 @@ export default function PlaylistsSection() {
               disabled={!name.trim() || isSubmitting}
               className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Check className="w-5 h-5" />
-              {isSubmitting ? 'Saving...' : viewMode === 'create' ? 'Create Playlist' : 'Save Changes'}
+              {isSubmitting ? (
+                <>
+                  <CustomLoader size="sm" />
+                  <span className="ml-2">Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-5 h-5" />
+                  {viewMode === 'create' ? 'Create Playlist' : 'Save Changes'}
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Manage Videos View
@@ -489,9 +489,8 @@ export default function PlaylistsSection() {
                 <div key={video.id} className="flex items-center gap-3 p-3 hover:bg-gray-50">
                   <button
                     onClick={() => handleToggleVideo(video.id)}
-                    className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                      isInPlaylist ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-300'
-                    }`}
+                    className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${isInPlaylist ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-300'
+                      }`}
                   >
                     {isInPlaylist && <Check className="w-4 h-4" />}
                   </button>
@@ -509,5 +508,5 @@ export default function PlaylistsSection() {
         </div>
       </div>
     </div>
-  )
+  );
 }

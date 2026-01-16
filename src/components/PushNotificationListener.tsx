@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,7 +15,6 @@ async function savePushToken(userId: string, token: string) {
       updatedAt: new Date(),
       userId
     }, { merge: true })
-    console.log('[Push] Token saved to Firestore')
   } catch (e) {
     console.error('[Push] Error saving token:', e)
   }
@@ -53,22 +52,18 @@ export default function PushNotificationListener() {
           
           if (fcmSW) {
             registrationRef.current = fcmSW
-            console.log('[Push] Firebase messaging SW found')
           } else {
             // Fallback to any ready service worker
             registrationRef.current = await navigator.serviceWorker.ready
-            console.log('[Push] Using default service worker')
           }
           
           // Try to get push subscription for native shell communication
           if (registrationRef.current?.pushManager) {
             const subscription = await registrationRef.current.pushManager.getSubscription()
             if (subscription) {
-              console.log('[Push] Existing subscription found')
             }
           }
         } catch (e) {
-          console.log('[Push] Service worker error:', e)
         }
       }
     }
@@ -78,7 +73,6 @@ export default function PushNotificationListener() {
   // Show browser notification
   const showNotification = async (title: string, body: string, tag: string, url?: string) => {
     if (Notification.permission !== 'granted') {
-      console.log('[Push] Permission not granted')
       return
     }
     
@@ -95,7 +89,6 @@ export default function PushNotificationListener() {
           requireInteraction: false,
           silent: false
         } as NotificationOptions)
-        console.log('[Push] Notification shown:', title)
       } else {
         // Fallback to native Notification API if service worker not ready
         new Notification(title, {
@@ -104,10 +97,8 @@ export default function PushNotificationListener() {
           tag,
           data: { url }
         })
-        console.log('[Push] Notification shown via Notification API:', title)
       }
     } catch (e) {
-      console.log('[Push] Notification error:', e)
     }
   }
 
@@ -118,7 +109,6 @@ export default function PushNotificationListener() {
     
     // Listen for messages from service worker (background notification clicks)
     const handleServiceWorkerMessage = (event: MessageEvent) => {
-      console.log('[Push] Service worker message:', event.data);
       
       // Handle incoming call from notification click
       if (event.data?.type === 'INCOMING_CALL') {
@@ -131,7 +121,6 @@ export default function PushNotificationListener() {
             timestamp: Date.now()
           }
         }));
-        console.log('[Push] Incoming call event dispatched');
       }
       
       // Handle decline call from notification
@@ -139,7 +128,6 @@ export default function PushNotificationListener() {
         window.dispatchEvent(new CustomEvent('declineVoiceCall', {
           detail: { callId: event.data.callId }
         }));
-        console.log('[Push] Decline call event dispatched');
       }
     }
     
@@ -163,7 +151,6 @@ export default function PushNotificationListener() {
               timestamp: Date.now()
             }
           }));
-          console.log('[Push] Voice call notification handled');
           return;
         }
         
@@ -212,7 +199,6 @@ export default function PushNotificationListener() {
         }
       })
     }, (error) => {
-      console.log('[Push] Zone messages listener error:', error)
     })
     return () => unsubscribe()
   }, [currentZone?.id])
@@ -223,8 +209,7 @@ export default function PushNotificationListener() {
     if (!userId) return
     
     const chatsRef = collection(db, 'chats_v2')
-    // Fixed: use 'participants' field which is what chat-service.ts uses
-    const q = query(
+        const q = query(
       chatsRef, 
       where('participants', 'array-contains', userId),
       limit(20)
@@ -272,7 +257,6 @@ export default function PushNotificationListener() {
         }
       })
     }, (error) => {
-      console.log('[Push] Chat listener error:', error)
     })
     return () => unsubscribe()
   }, [user?.uid, profile?.id])

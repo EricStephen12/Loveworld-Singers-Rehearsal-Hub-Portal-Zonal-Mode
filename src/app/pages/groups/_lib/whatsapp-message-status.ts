@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WhatsApp-Style Message Status System
  * Handles the three-tier acknowledgment: sent → delivered → read
  */
@@ -49,7 +49,6 @@ export class WhatsAppMessageStatus {
       }
       
       await updateDoc(messageRef, updateData)
-      console.log(`✅ [WhatsApp Status] Message ${messageId} marked as ${status}`)
     } catch (error) {
       console.error('❌ [WhatsApp Status] Failed to update status:', error)
     }
@@ -98,7 +97,6 @@ export class WhatsAppMessageStatus {
         
         if (batch.length > 0) {
           await Promise.all(batch)
-          console.log(`✅ [WhatsApp Status] Marked ${batch.length} messages as read in chat ${chatId}`)
         }
         
         unsubscribe() // Only run once

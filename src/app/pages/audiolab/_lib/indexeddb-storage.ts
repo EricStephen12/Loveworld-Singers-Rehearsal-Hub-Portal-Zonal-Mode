@@ -1,4 +1,4 @@
-/**
+﻿/**
  * INDEXEDDB STORAGE FOR AUDIOLAB
  * 
  * Best practice: Use IndexedDB instead of localStorage for audio files
@@ -67,7 +67,6 @@ export async function saveRecordingToIndexedDB(
     });
     
     db.close();
-    console.log('[IndexedDB] Saved recording:', trackId, `(${(blob.size / 1024 / 1024).toFixed(2)}MB)`);
     return true;
   } catch (error) {
     console.error('[IndexedDB] Failed to save recording:', error);
@@ -93,7 +92,6 @@ export async function getRecordingFromIndexedDB(trackId: string): Promise<Blob |
     db.close();
     
     if (recording) {
-      console.log('[IndexedDB] Retrieved recording:', trackId, `(${(recording.blob.size / 1024 / 1024).toFixed(2)}MB)`);
       return recording.blob;
     }
     
@@ -160,7 +158,6 @@ export async function getAllRecordings(): Promise<Map<string, { blob: Blob; proj
       });
     });
     
-    console.log('[IndexedDB] Found', map.size, 'total recordings');
     return map;
   } catch (error) {
     console.error('[IndexedDB] Failed to get all recordings:', error);
@@ -184,7 +181,6 @@ export async function deleteRecordingFromIndexedDB(trackId: string): Promise<boo
     });
     
     db.close();
-    console.log('[IndexedDB] Deleted recording:', trackId);
     return true;
   } catch (error) {
     console.error('[IndexedDB] Failed to delete recording:', error);

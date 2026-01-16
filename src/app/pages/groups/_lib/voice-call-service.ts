@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VOICE CALL SERVICE
  * WebRTC-based voice calling for groups chat
  * Optimized for low latency and reliable connections
@@ -169,7 +169,6 @@ export class VoiceCallService {
         }
       }, 500)
       
-      console.log('[VoiceCall] Played call end sound:', type)
     } catch (error) {
       console.error('[VoiceCall] Error playing call end sound:', error)
     }
@@ -238,7 +237,6 @@ export class VoiceCallService {
   // Play outgoing call tone (ringback) - subtle beep for caller
   private playOutgoingTone() {
     if (typeof window === 'undefined') {
-      console.log('[VoiceCall] Cannot play tone - not in browser')
       return
     }
     
@@ -246,23 +244,18 @@ export class VoiceCallService {
     this.stopOutgoingTone()
     
     try {
-      console.log('[VoiceCall] Creating AudioContext for outgoing tone')
       this.outgoingToneContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-      console.log('[VoiceCall] AudioContext state:', this.outgoingToneContext.state)
       
       // Resume context if suspended (required by some browsers)
       if (this.outgoingToneContext.state === 'suspended') {
-        console.log('[VoiceCall] Resuming suspended AudioContext')
         this.outgoingToneContext.resume()
       }
       
       const playBeep = () => {
         if (!this.outgoingToneContext || this.outgoingToneContext.state === 'closed') {
-          console.log('[VoiceCall] AudioContext closed, stopping beep')
           return
         }
         
-        console.log('[VoiceCall] Playing outgoing beep')
         const osc = this.outgoingToneContext.createOscillator()
         const gainNode = this.outgoingToneContext.createGain()
         
@@ -285,7 +278,6 @@ export class VoiceCallService {
       // Play immediately and repeat every 3 seconds (standard ringback pattern)
       playBeep()
       this.outgoingToneInterval = setInterval(playBeep, 3000)
-      console.log('[VoiceCall] Outgoing tone started successfully')
     } catch (error) {
       console.error('[VoiceCall] Error playing outgoing tone:', error)
     }
@@ -307,13 +299,11 @@ export class VoiceCallService {
   private startCallTimeout(call: CallData) {
     this.clearCallTimeout()
     this.callTimeoutId = setTimeout(async () => {
-      console.log('[VoiceCall] Call timeout - no answer')
       await this.handleCallTimeout(call)
     }, CALL_TIMEOUT)
   }
 
-  // Clear call timeout
-  private clearCallTimeout() {
+    private clearCallTimeout() {
     if (this.callTimeoutId) {
       clearTimeout(this.callTimeoutId)
       this.callTimeoutId = null
@@ -325,8 +315,7 @@ export class VoiceCallService {
     if (!realtimeDb) return
     
     try {
-      // Update status to missed
-      await set(ref(realtimeDb, `voice_calls/${call.receiverId}/${call.id}/status`), 'missed')
+            await set(ref(realtimeDb, `voice_calls/${call.receiverId}/${call.id}/status`), 'missed')
       await set(ref(realtimeDb, `voice_calls/${call.callerId}/${call.id}/status`), 'missed')
       await set(ref(realtimeDb, `voice_calls/${call.receiverId}/${call.id}/endedAt`), Date.now())
       await set(ref(realtimeDb, `voice_calls/${call.callerId}/${call.id}/endedAt`), Date.now())
@@ -355,22 +344,17 @@ export class VoiceCallService {
     }
 
     try {
-      console.log('[VoiceCall] Checking for pending calls for user:', this.userId)
       const callsRef = ref(realtimeDb, `voice_calls/${this.userId}`)
       const snapshot = await get(callsRef)
       
       if (snapshot.exists()) {
         const calls = snapshot.val()
-        console.log('[VoiceCall] Found calls:', Object.keys(calls).length)
         
         let foundRingingCall = false
         
         Object.entries(calls).forEach(([callId, callData]: [string, any]) => {
-          console.log('[VoiceCall] Call:', callId, 'status:', callData.status, 'callerId:', callData.callerId)
           
-          // Check if there's a ringing call that we haven't handled yet
-          if (callData.status === 'ringing' && callData.callerId !== this.userId) {
-            console.log('[VoiceCall] Found pending ringing call:', callId)
+                    if (callData.status === 'ringing' && callData.callerId !== this.userId) {
             this.currentCallId = callId
             this.currentCall = { ...callData, id: callId }
             this.playRingtone()
@@ -381,7 +365,6 @@ export class VoiceCallService {
         
         return foundRingingCall
       } else {
-        console.log('[VoiceCall] No calls found for user')
         return false
       }
     } catch (error) {
@@ -492,7 +475,6 @@ export class VoiceCallService {
 
     // Handle remote stream
     pc.ontrack = (event) => {
-      console.log('[VoiceCall] Remote track received')
       this.remoteStream = event.streams[0]
       this.callbacks.onRemoteStream?.(event.streams[0])
     }
@@ -506,16 +488,12 @@ export class VoiceCallService {
 
     // Monitor ICE connection state for faster feedback
     pc.oniceconnectionstatechange = () => {
-      console.log('[VoiceCall] ICE connection state:', pc.iceConnectionState)
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
-        console.log('[VoiceCall] ICE connected - call is active')
       }
     }
 
     pc.onconnectionstatechange = () => {
-      console.log('[VoiceCall] Connection state:', pc.connectionState)
       if (pc.connectionState === 'connected') {
-        console.log('[VoiceCall] Peer connection established!')
       } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
         this.endCall()
       }
@@ -542,7 +520,6 @@ export class VoiceCallService {
       }
 
       // Start outgoing tone IMMEDIATELY (while still in user gesture context)
-      console.log('[VoiceCall] Starting call - playing outgoing tone')
       this.playOutgoingTone()
 
       // Initialize local stream and peer connection in parallel for speed
@@ -620,7 +597,6 @@ export class VoiceCallService {
             }
           })
         });
-        console.log('[VoiceCall] Notification sent to:', receiverId);
       } catch (notifyError) {
         console.error('[VoiceCall] Failed to send notification:', notifyError);
         // Continue with call even if notification fails
@@ -642,7 +618,6 @@ export class VoiceCallService {
     const unsub = onValue(answerRef, async (snapshot) => {
       if (snapshot.exists() && this.peerConnection) {
         const answer = snapshot.val() as RTCSessionDescriptionInit
-        console.log('[VoiceCall] Received answer')
         
         try {
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer))
@@ -698,8 +673,7 @@ export class VoiceCallService {
 
       const answeredAt = Date.now()
 
-      // Update call with answer
-      const callRef = ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}`)
+            const callRef = ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}`)
       await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/answer`), answer)
       await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/status`), 'answered')
       await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/answeredAt`), answeredAt)
@@ -751,8 +725,7 @@ export class VoiceCallService {
     let endedCall: CallData | null = null
 
     try {
-      // Update status in both users' call records
-      const callRef = ref(realtimeDb, `voice_calls/${this.userId}/${this.currentCallId}`)
+            const callRef = ref(realtimeDb, `voice_calls/${this.userId}/${this.currentCallId}`)
       const snapshot = await get(callRef)
       
       if (snapshot.exists()) {
@@ -846,8 +819,7 @@ export class VoiceCallService {
     this.stopRingtone()
     this.stopOutgoingTone()
     
-    // Clear timeout
-    this.clearCallTimeout()
+        this.clearCallTimeout()
 
     // Stop local stream
     if (this.localStream) {
@@ -861,8 +833,7 @@ export class VoiceCallService {
       this.peerConnection = null
     }
 
-    // Clear unsubscribers
-    this.unsubscribers.forEach(unsub => unsub())
+        this.unsubscribers.forEach(unsub => unsub())
     this.unsubscribers = []
 
     this.remoteStream = null

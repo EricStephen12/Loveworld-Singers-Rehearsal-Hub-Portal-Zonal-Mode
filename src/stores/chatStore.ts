@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Chat Store - The "Bank" for Chat Data
  * 
  * Stores all chat-related data in Zustand for instant access
@@ -30,8 +30,7 @@ interface ChatState {
   subscribeToChats: (userId: string) => () => void
   subscribeToMessages: (chatId: string) => () => void
   
-  // Clear on logout
-  clearChatData: () => void
+    clearChatData: () => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -66,20 +65,17 @@ export const useChatStore = create<ChatState>((set) => ({
         if (chat.type === 'direct') {
           // Must have exactly 2 participants
           if (chat.participants.length !== 2) {
-            console.log('🚫 Filtering out chat with wrong participant count:', chat.participants.length)
             return false
           }
           
           // Must not be a self-chat (both participants are the same)
           const uniqueParticipants = new Set(chat.participants)
           if (uniqueParticipants.size < 2) {
-            console.log('🚫 Filtering out self-chat:', chat.participants)
             return false
           }
           
           // Must include current user
           if (!chat.participants.includes(userId)) {
-            console.log('🚫 Filtering out chat without current user')
             return false
           }
           
@@ -88,7 +84,6 @@ export const useChatStore = create<ChatState>((set) => ({
         return true
       })
       
-      console.log(`✅ Filtered ${freshChats.length} → ${filteredChats.length} chats (removed ${freshChats.length - filteredChats.length} invalid)`)
       
       // Store in the "bank"
       set({ 
@@ -127,8 +122,7 @@ export const useChatStore = create<ChatState>((set) => ({
     }
   },
   
-  // Clear all chat data (on logout)
-  clearChatData: () => {
+    clearChatData: () => {
     set({
       chats: [],
       selectedChat: null,

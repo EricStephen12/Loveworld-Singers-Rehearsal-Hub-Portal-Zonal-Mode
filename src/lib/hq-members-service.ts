@@ -1,4 +1,4 @@
-// HQ Members Service
+﻿// HQ Members Service
 // Manages membership for HQ groups (zone-001 to zone-005)
 // Separate from zone_members but uses same authentication
 
@@ -37,7 +37,6 @@ export class HQMembersService {
         return { success: false, error: 'Not an HQ group' }
       }
       
-      console.log('📝 Adding member to HQ group:', data.hqGroupId)
       
       const memberData = {
         userId: data.userId,
@@ -50,10 +49,8 @@ export class HQMembersService {
         status: 'active'
       }
       
-      // Check if already exists
-      const existing = await this.getMemberByUserId(data.userId, data.hqGroupId)
+            const existing = await this.getMemberByUserId(data.userId, data.hqGroupId)
       if (existing) {
-        console.log('⚠️ Member already exists in HQ group')
         return { success: false, error: 'Member already exists' }
       }
       
@@ -64,7 +61,6 @@ export class HQMembersService {
         memberData
       )
       
-      console.log('✅ HQ member added successfully')
       return { success: true, member: result }
     } catch (error) {
       console.error('❌ Error adding HQ member:', error)
@@ -96,7 +92,6 @@ export class HQMembersService {
    */
   static async getUserHQGroups(userId: string) {
     try {
-      console.log('🔍 Getting HQ groups for user:', userId)
       
       const members = await FirebaseDatabaseService.getCollectionWhere(
         'hq_members',
@@ -105,7 +100,6 @@ export class HQMembersService {
         userId
       )
       
-      console.log('✅ Found', members.length, 'HQ group memberships')
       return members
     } catch (error) {
       console.error('❌ Error getting user HQ groups:', error)
@@ -123,7 +117,6 @@ export class HQMembersService {
         return []
       }
       
-      console.log('🔍 Getting members for HQ group:', hqGroupId)
       
       const members = await FirebaseDatabaseService.getCollectionWhere(
         'hq_members',
@@ -132,7 +125,6 @@ export class HQMembersService {
         hqGroupId
       )
       
-      console.log('✅ Found', members.length, 'HQ members')
       return members
     } catch (error) {
       console.error('❌ Error getting HQ group members:', error)
@@ -152,7 +144,6 @@ export class HQMembersService {
         updatedAt: new Date()
       })
       
-      console.log('✅ HQ member role updated')
       return { success: true }
     } catch (error) {
       console.error('❌ Error updating HQ member role:', error)
@@ -169,7 +160,6 @@ export class HQMembersService {
       
       await FirebaseDatabaseService.deleteDocument('hq_members', docId)
       
-      console.log('✅ HQ member removed')
       return { success: true }
     } catch (error) {
       console.error('❌ Error removing HQ member:', error)
@@ -228,7 +218,6 @@ export class HQMembersService {
         updatedAt: new Date()
       })
       
-      console.log('✅ HQ member status updated')
       return { success: true }
     } catch (error) {
       console.error('❌ Error updating HQ member status:', error)

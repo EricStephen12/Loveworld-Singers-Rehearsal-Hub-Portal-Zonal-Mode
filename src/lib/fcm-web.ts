@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // Firebase Web FCM Integration
 // Uses existing Firebase app from firebase-setup.ts
@@ -46,7 +46,6 @@ class WebFCMService {
           swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
             scope: '/'
           });
-          console.log('✅ Firebase messaging SW registered:', swRegistration.scope);
         } catch (swError) {
           console.error('❌ SW registration failed:', swError);
         }
@@ -64,14 +63,12 @@ class WebFCMService {
         this.token = currentToken;
         
         if (tokenChanged || forceRefresh) {
-          console.log('✅ FCM token received (new/refreshed):', currentToken.substring(0, 20) + '...');
         }
         
         // Always save to server to keep token fresh
         await this.saveTokenToServer(currentToken);
         return currentToken;
       } else {
-        console.log('❌ No registration token available. Request permission to generate one.');
         return null;
       }
     } catch (err) {
@@ -83,13 +80,11 @@ class WebFCMService {
   // Request notification permission
   async requestPermission(): Promise<boolean> {
     if (typeof Notification === 'undefined') {
-      console.log('❌ This browser does not support notifications');
       return false;
     }
 
     try {
       const permission = await Notification.requestPermission();
-      console.log('🔔 Notification permission status:', permission);
       
       if (permission === 'granted') {
         await this.getToken();
@@ -107,7 +102,6 @@ class WebFCMService {
     if (!this.messaging) return;
     
     onMessage(this.messaging, (payload) => {
-      console.log('📥 Message received in foreground:', payload);
       callback(payload);
     });
   }
@@ -131,7 +125,6 @@ class WebFCMService {
         }
       }
       
-      console.log('🔑 [FCM] Saving token for userId:', userId);
       
       const response = await fetch('/api/save-fcm-token', {
         method: 'POST',
@@ -146,7 +139,6 @@ class WebFCMService {
       });
       
       const result = await response.json();
-      console.log('✅ FCM token saved to server for user:', userId, result);
     } catch (error) {
       console.error('❌ Error saving token to server:', error);
     }
@@ -165,12 +157,9 @@ export const webFCMService = WebFCMService.getInstance();
 export function useWebFCM() {
   useEffect(() => {
     const initFCM = async () => {
-      console.log('🚀 [FCM] Starting initialization...');
-      console.log('🔑 [FCM] VAPID key exists:', !!process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY);
       
       try {
         const result = await webFCMService.requestPermission();
-        console.log('🔔 [FCM] Permission result:', result);
       } catch (error) {
         console.error('❌ [FCM] Init error:', error);
       }
@@ -180,22 +169,18 @@ export function useWebFCM() {
     
     // Refresh token every 30 minutes to keep it valid (like big apps do)
     const tokenRefreshInterval = setInterval(async () => {
-      console.log('🔄 [FCM] Periodic token refresh...');
       try {
         await webFCMService.getToken(true);
       } catch (e) {
-        console.log('⚠️ [FCM] Token refresh failed:', e);
       }
     }, 30 * 60 * 1000); // 30 minutes
     
     // Also refresh when page becomes visible (user returns to tab)
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        console.log('👁️ [FCM] Page visible, refreshing token...');
         try {
           await webFCMService.getToken(true);
         } catch (e) {
-          console.log('⚠️ [FCM] Visibility token refresh failed:', e);
         }
       }
     };
@@ -203,14 +188,12 @@ export function useWebFCM() {
     
     // Listen for foreground messages
     webFCMService.onMessage((payload) => {
-      console.log('📥 [FCM] Foreground message:', payload);
       
       const { notification, data } = payload;
       const isVoiceCall = data?.type === 'VOICE_CALL';
       
       // Handle voice call notifications specially
       if (isVoiceCall) {
-        console.log('📞 [FCM] Incoming call notification:', data);
         
         // Dispatch event for the call UI to handle
         window.dispatchEvent(new CustomEvent('incomingVoiceCall', {
@@ -267,7 +250,6 @@ export function useWebFCM() {
               requireInteraction: false
             });
           }).catch((e) => {
-            console.log('📥 [FCM] SW notification failed, using fallback:', e);
             // Fallback to native Notification
             new Notification(title, {
               body,

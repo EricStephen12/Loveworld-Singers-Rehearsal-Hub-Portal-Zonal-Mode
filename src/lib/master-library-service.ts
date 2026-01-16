@@ -1,7 +1,7 @@
-import { 
-  collection, 
-  query, 
-  orderBy, 
+﻿import {
+  collection,
+  query,
+  orderBy,
   getDocs,
   where,
   doc,
@@ -10,7 +10,9 @@ import {
   increment,
   limit as firestoreLimit,
   startAfter,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore'
 
 import { FirebaseDatabaseService } from './firebase-database'
@@ -60,44 +62,54 @@ export interface ImportedSongTracking {
   importedBy: string
 }
 
+export interface MasterProgram {
+  id: string
+  name: string
+  description?: string
+  songIds: string[]
+  publishedBy: string
+  publishedByName: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export class MasterLibraryService {
-  
+
   // Load ALL master songs at once (no pagination needed for typical library sizes)
   static async getMasterSongs(limitCount: number = 5000, forceRefresh: boolean = false): Promise<MasterSong[]> {
     try {
       if (!forceRefresh && masterSongsCache && Date.now() - masterSongsCache.timestamp < CACHE_TTL) {
         return masterSongsCache.data
       }
-      
+
       // Fetch ALL songs - no limit for practical purposes
       // Firestore can handle thousands of documents efficiently
       const q = query(
         collection(db, 'master_songs'),
         firestoreLimit(limitCount)
       )
-      
+
       const querySnapshot = await getDocs(q)
       const songs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as MasterSong[]
-      
+
       // Sort by title alphabetically for consistent display
       songs.sort((a, b) => {
         const titleA = (a.title || '').toLowerCase()
         const titleB = (b.title || '').toLowerCase()
         return titleA.localeCompare(titleB)
       })
-      
+
       masterSongsCache = { data: songs, timestamp: Date.now() }
-      
+
       // Track if there might be more (for UI purposes)
-      lastMasterSongDoc = querySnapshot.docs.length >= limitCount 
-        ? querySnapshot.docs[querySnapshot.docs.length - 1] 
+      lastMasterSongDoc = querySnapshot.docs.length >= limitCount
+        ? querySnapshot.docs[querySnapshot.docs.length - 1]
         : null
-      
-      console.log(`[MasterLibrary] Loaded ${songs.length} songs`)
-      
+
+
       return songs
     } catch (error) {
       console.error('Error getting Master Library songs:', error)
@@ -109,45 +121,44 @@ export class MasterLibraryService {
   static async loadMoreMasterSongs(limitCount: number = 1000): Promise<MasterSong[]> {
     try {
       if (!lastMasterSongDoc) return []
-      
+
       const q = query(
         collection(db, 'master_songs'),
         startAfter(lastMasterSongDoc),
         firestoreLimit(limitCount)
       )
-      
+
       const querySnapshot = await getDocs(q)
       const songs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as MasterSong[]
-      
+
       if (querySnapshot.docs.length > 0) {
-        lastMasterSongDoc = querySnapshot.docs.length >= limitCount 
-          ? querySnapshot.docs[querySnapshot.docs.length - 1] 
+        lastMasterSongDoc = querySnapshot.docs.length >= limitCount
+          ? querySnapshot.docs[querySnapshot.docs.length - 1]
           : null
-          
+
         if (masterSongsCache) {
           // Add new songs, avoiding duplicates
           const existingIds = new Set(masterSongsCache.data.map(s => s.id))
           const newSongs = songs.filter(s => !existingIds.has(s.id))
           masterSongsCache.data = [...masterSongsCache.data, ...newSongs]
-          
+
           // Re-sort by title
           masterSongsCache.data.sort((a, b) => {
             const titleA = (a.title || '').toLowerCase()
             const titleB = (b.title || '').toLowerCase()
             return titleA.localeCompare(titleB)
           })
-          
+
           masterSongsCache.timestamp = Date.now()
         }
       } else {
         lastMasterSongDoc = null
       }
-      
-      console.log(`[MasterLibrary] Loaded ${songs.length} more songs`)
-      
+
+
       return songs
     } catch (error) {
       console.error('Error loading more Master Library songs:', error)
@@ -168,7 +179,7 @@ export class MasterLibraryService {
     try {
       const docRef = doc(db, 'master_songs', songId)
       const docSnap = await getDoc(docRef)
-      
+
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as MasterSong
       }
@@ -189,7 +200,7 @@ export class MasterLibraryService {
       if (existing) {
         return { success: false, error: 'This song is already in the Master Library' }
       }
-      
+
       const masterSongData = {
         title: originalSong.title || '',
         lyrics: originalSong.lyrics || '',
@@ -211,13 +222,13 @@ export class MasterLibraryService {
         updatedAt: new Date(),
         importCount: 0
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(masterSongData).filter(([_, v]) => v !== undefined)
       )
-      
+
       const result = await FirebaseDatabaseService.addDocument('master_songs', cleanData)
-      
+
       if (result.success) {
         this.clearMasterSongsCache()
         return { success: true, id: result.id }
@@ -255,13 +266,13 @@ export class MasterLibraryService {
         updatedAt: new Date(),
         importCount: 0
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(masterSongData).filter(([_, v]) => v !== undefined)
       )
-      
+
       const result = await FirebaseDatabaseService.addDocument('master_songs', cleanData)
-      
+
       if (result.success) {
         this.clearMasterSongsCache()
         return { success: true, id: result.id }
@@ -279,7 +290,7 @@ export class MasterLibraryService {
         collection(db, 'master_songs'),
         where('originalSongId', '==', originalSongId)
       )
-      
+
       const querySnapshot = await getDocs(q)
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0]
@@ -293,7 +304,7 @@ export class MasterLibraryService {
   }
 
   static async updateMasterSong(
-    songId: string, 
+    songId: string,
     data: Partial<MasterSong>
   ): Promise<{ success: boolean; error?: string }> {
     try {
@@ -303,9 +314,9 @@ export class MasterLibraryService {
       delete (updateData as any).publishedBy
       delete (updateData as any).publishedAt
       delete (updateData as any).importCount
-      
+
       updateData.updatedAt = new Date()
-      
+
       await FirebaseDatabaseService.updateDocument('master_songs', songId, updateData)
       return { success: true }
     } catch (error) {
@@ -354,13 +365,13 @@ export class MasterLibraryService {
         updatedAt: new Date(),
         status: 'unheard'
       }
-      
+
       const cleanData = Object.fromEntries(
         Object.entries(zoneSongData).filter(([_, v]) => v !== undefined)
       )
-      
+
       const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
-      
+
       if (result.success) {
         await this.incrementImportCount(masterSong.id)
         return { success: true, id: result.id }
@@ -386,24 +397,24 @@ export class MasterLibraryService {
       if (!forceRefresh && hqInternalSongsCache && Date.now() - hqInternalSongsCache.timestamp < CACHE_TTL) {
         return hqInternalSongsCache.data
       }
-      
+
       const q = query(collection(db, 'praise_night_songs'), firestoreLimit(limitCount))
       const querySnapshot = await getDocs(q)
-      
+
       const songs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         firebaseId: doc.id,
         ...doc.data()
-      })) as Array<{ id: string; firebaseId: string; title?: string; [key: string]: any }>
-      
+      })) as Array<{ id: string; firebaseId: string; title?: string;[key: string]: any }>
+
       songs.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-      
+
       hqInternalSongsCache = { data: songs, timestamp: Date.now() }
-      
+
       if (querySnapshot.docs.length > 0) {
         lastHQInternalDoc = querySnapshot.docs[querySnapshot.docs.length - 1]
       }
-      
+
       return songs
     } catch (error) {
       console.error('Error getting HQ Internal songs:', error)
@@ -414,22 +425,22 @@ export class MasterLibraryService {
   static async loadMoreHQInternalSongs(limitCount: number = 100): Promise<any[]> {
     try {
       if (!lastHQInternalDoc) return []
-      
+
       const q = query(
         collection(db, 'praise_night_songs'),
         startAfter(lastHQInternalDoc),
         firestoreLimit(limitCount)
       )
-      
+
       const querySnapshot = await getDocs(q)
       const songs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         firebaseId: doc.id,
         ...doc.data()
-      })) as Array<{ id: string; firebaseId: string; title?: string; [key: string]: any }>
-      
+      })) as Array<{ id: string; firebaseId: string; title?: string;[key: string]: any }>
+
       songs.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-      
+
       if (querySnapshot.docs.length > 0) {
         lastHQInternalDoc = querySnapshot.docs[querySnapshot.docs.length - 1]
         if (hqInternalSongsCache) {
@@ -439,7 +450,7 @@ export class MasterLibraryService {
       } else {
         lastHQInternalDoc = null
       }
-      
+
       return songs
     } catch (error) {
       console.error('Error loading more HQ Internal songs:', error)
@@ -460,12 +471,16 @@ export class MasterLibraryService {
     try {
       const allSongs = await this.getMasterSongs()
       const term = searchTerm.toLowerCase()
-      
-      return allSongs.filter(song => 
+
+      return allSongs.filter(song =>
         song.title?.toLowerCase().includes(term) ||
         song.writer?.toLowerCase().includes(term) ||
         song.leadSinger?.toLowerCase().includes(term) ||
-        song.category?.toLowerCase().includes(term)
+        song.category?.toLowerCase().includes(term) ||
+        song.lyrics?.toLowerCase().includes(term) ||
+        song.solfa?.toLowerCase().includes(term) ||
+        song.key?.toLowerCase().includes(term) ||
+        song.tempo?.toLowerCase().includes(term)
       )
     } catch (error) {
       console.error('Error searching Master Library:', error)
@@ -480,16 +495,125 @@ export class MasterLibraryService {
   }> {
     try {
       const songs = await this.getMasterSongs()
-      
+
       const totalImports = songs.reduce((sum, song) => sum + (song.importCount || 0), 0)
       const mostImported = [...songs]
         .sort((a, b) => (b.importCount || 0) - (a.importCount || 0))
         .slice(0, 5)
-      
+
       return { totalSongs: songs.length, totalImports, mostImported }
     } catch (error) {
       console.error('Error getting Master Library stats:', error)
       return { totalSongs: 0, totalImports: 0, mostImported: [] }
+    }
+  }
+
+  // --- Program Management ---
+
+  static async getMasterPrograms(): Promise<MasterProgram[]> {
+    try {
+      const q = query(collection(db, 'master_programs'), orderBy('name', 'asc'))
+      const querySnapshot = await getDocs(q)
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate?.() || new Date()
+      })) as MasterProgram[]
+    } catch (error) {
+      console.error('Error getting Master programs:', error)
+      return []
+    }
+  }
+
+  static async createMasterProgram(
+    name: string,
+    publishedBy: string,
+    publishedByName: string,
+    description?: string
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const programData = {
+        name,
+        description: description || '',
+        songIds: [],
+        publishedBy,
+        publishedByName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      const result = await FirebaseDatabaseService.addDocument('master_programs', programData)
+      return { success: result.success, id: result.id, error: result.error }
+    } catch (error) {
+      console.error('Error creating Master program:', error)
+      return { success: false, error: 'Failed to create program' }
+    }
+  }
+
+  static async updateMasterProgram(
+    programId: string,
+    data: Partial<MasterProgram>
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const updateData = { ...data, updatedAt: new Date() }
+      delete (updateData as any).id
+      await FirebaseDatabaseService.updateDocument('master_programs', programId, updateData)
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating Master program:', error)
+      return { success: false, error: 'Failed to update program' }
+    }
+  }
+
+  static async deleteMasterProgram(programId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await FirebaseDatabaseService.deleteDocument('master_programs', programId)
+      return { success: true }
+    } catch (error) {
+      console.error('Error deleting Master program:', error)
+      return { success: false, error: 'Failed to delete program' }
+    }
+  }
+
+  static async addSongToProgram(programId: string, songId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const programRef = doc(db, 'master_programs', programId)
+      await updateDoc(programRef, {
+        songIds: arrayUnion(songId),
+        updatedAt: new Date()
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Error adding song to program:', error)
+      return { success: false, error: 'Failed to add song' }
+    }
+  }
+
+  static async addSongsToProgram(programId: string, songIds: string[]): Promise<{ success: boolean; error?: string }> {
+    try {
+      const programRef = doc(db, 'master_programs', programId)
+      await updateDoc(programRef, {
+        songIds: arrayUnion(...songIds),
+        updatedAt: new Date()
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Error adding songs to program:', error)
+      return { success: false, error: 'Failed to add songs' }
+    }
+  }
+
+  static async removeSongFromProgram(programId: string, songId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const programRef = doc(db, 'master_programs', programId)
+      await updateDoc(programRef, {
+        songIds: arrayRemove(songId),
+        updatedAt: new Date()
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Error removing song from program:', error)
+      return { success: false, error: 'Failed to remove song' }
     }
   }
 }

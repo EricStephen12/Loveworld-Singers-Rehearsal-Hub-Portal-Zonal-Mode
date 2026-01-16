@@ -17,11 +17,11 @@ interface AdminMobileNavProps {
   onMenuOpen: () => void;
 }
 
-export default function AdminMobileNav({
+const AdminMobileNav = React.memo(({
   activeSection,
   setActiveSection,
   onMenuOpen
-}: AdminMobileNavProps) {
+}: AdminMobileNavProps) => {
   // Map sections to their nav item for highlighting
   const getSectionNavItem = (section: string): string => {
     switch (section) {
@@ -64,10 +64,10 @@ export default function AdminMobileNav({
       <div className="flex items-center justify-around h-14">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.section === 'menu' 
+          const isActive = item.section === 'menu'
             ? currentNavItem === 'More'
             : currentNavItem === item.section;
-          
+
           return (
             <button
               key={item.section}
@@ -80,7 +80,7 @@ export default function AdminMobileNav({
               }}
               className="flex flex-col items-center justify-center flex-1 h-full active:opacity-60 transition-opacity"
             >
-              <Icon 
+              <Icon
                 className={`w-6 h-6 ${isActive ? 'text-purple-600' : 'text-gray-400'}`}
                 strokeWidth={isActive ? 2.5 : 1.5}
               />
@@ -93,4 +93,6 @@ export default function AdminMobileNav({
       </div>
     </div>
   );
-}
+});
+
+export default AdminMobileNav;

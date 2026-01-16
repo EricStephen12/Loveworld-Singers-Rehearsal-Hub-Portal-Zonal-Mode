@@ -1,4 +1,4 @@
-// Firebase Chat Service - Complete chat system with Firebase
+﻿// Firebase Chat Service - Complete chat system with Firebase
 import { 
   collection, 
   doc, 
@@ -128,14 +128,11 @@ export class FirebaseChatService {
    */
   static async clearChatCache(): Promise<void> {
     try {
-      console.log('🧹 [WhatsApp Mode] Clearing all chat cache...')
       
-      // Clear IndexedDB (Firestore cache)
-      if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined') {
         const databases = await window.indexedDB.databases()
         for (const dbInfo of databases) {
           if (dbInfo.name?.includes('firestore')) {
-            console.log('🗑️ [WhatsApp Mode] Deleting Firestore DB:', dbInfo.name)
             const deleteReq = window.indexedDB.deleteDatabase(dbInfo.name)
             await new Promise((resolve) => {
               deleteReq.onsuccess = () => resolve(true)
@@ -146,17 +143,14 @@ export class FirebaseChatService {
         }
       }
       
-      // Clear localStorage chat data
-      if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined') {
         Object.keys(localStorage).forEach(key => {
           if (key.includes('chat') || key.includes('firebase')) {
             localStorage.removeItem(key)
-            console.log('🗑️ [WhatsApp Mode] Cleared localStorage:', key)
           }
         })
       }
       
-      console.log('✅ [WhatsApp Mode] Cache cleared completely')
     } catch (error) {
       console.error('❌ [WhatsApp Mode] Cache clear failed:', error)
     }
@@ -231,9 +225,7 @@ export class FirebaseChatService {
       const users: ChatUser[] = []
       const zoneDetails = getZoneById(zoneId)
       
-      // Check if this is an HQ group - if so, fetch from hq_members collection
-      if (isHQGroup(zoneId)) {
-        console.log('🏢 HQ Group detected, fetching from hq_members collection:', zoneId)
+            if (isHQGroup(zoneId)) {
         const hqMembers = await HQMembersService.getHQGroupMembers(zoneId)
         
         // Convert HQ members to ChatUser format
@@ -276,7 +268,6 @@ export class FirebaseChatService {
         }
       } else {
         // Regular zone - fetch from zone_members collection
-        console.log('📍 Regular zone, fetching from zone_members collection:', zoneId)
         const zoneMembersRef = collection(db, 'zone_members')
         const zoneMembersQuery = query(zoneMembersRef, where('zoneId', '==', zoneId))
         const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
@@ -303,7 +294,6 @@ export class FirebaseChatService {
       // Sort by name
       users.sort((a, b) => a.fullName.localeCompare(b.fullName))
       
-      console.log(`✅ Found ${users.length} members for zone ${zoneId}`)
       return users
     } catch (error) {
       console.error('Error getting zone members:', error)
@@ -325,8 +315,7 @@ export class FirebaseChatService {
       // SECURITY: Senior zones that should only be visible to their own zone members
       const SENIOR_ZONES = ['zone-president', 'zone-director', 'zone-oftp']
       
-      // Check if searcher is in a senior zone - if so, they can see EVERYONE
-      const isSearcherInSeniorZone = zoneId ? SENIOR_ZONES.includes(zoneId) : false
+            const isSearcherInSeniorZone = zoneId ? SENIOR_ZONES.includes(zoneId) : false
       
       let allMembers: ChatUser[] = []
       
@@ -360,7 +349,6 @@ export class FirebaseChatService {
         const memberZoneId = data.zoneId
         if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
           // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
-          console.log('🚫 Hiding senior zone member:', { memberZoneId, searcherZone: zoneId, isSearcherInSeniorZone, isBoss })
           return
         }
         
@@ -394,7 +382,6 @@ export class FirebaseChatService {
               const memberZoneId = member.hqGroupId || hqZoneId
               if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
                 // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
-                console.log('🚫 Hiding senior HQ member:', { memberZoneId, searcherZone: zoneId, isSearcherInSeniorZone, isBoss })
                 continue
               }
               
@@ -667,8 +654,7 @@ export class FirebaseChatService {
         return null
       }
       
-      // Check if chat already exists
-      const existingChat = await this.findDirectChat(user1Id, user2Id)
+            const existingChat = await this.findDirectChat(user1Id, user2Id)
       if (existingChat) return existingChat.id
 
       // Get user names for participant mapping
@@ -690,7 +676,6 @@ export class FirebaseChatService {
         isActive: true
       }
 
-      console.log('✅ Creating direct chat between:', user1?.fullName || 'User1', 'and', user2?.fullName || 'User2')
       const docRef = await addDoc(collection(db, 'chats'), chatData)
       return docRef.id
     } catch (error) {
@@ -867,8 +852,7 @@ export class FirebaseChatService {
       // Add message
       await addDoc(collection(db, 'messages'), message)
 
-      // Update chat's last message
-      const chatRef = doc(db, 'chats', chatId)
+            const chatRef = doc(db, 'chats', chatId)
       await updateDoc(chatRef, {
         lastMessage: {
           text: messageData.text || (messageData.image ? '📷 Image' : '📎 File'),
@@ -1005,7 +989,6 @@ export class FirebaseChatService {
    * Subscribe to real-time messages - OPTIMIZED: Limited to 100 most recent messages
    */
   static subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): () => void {
-    console.log('🔌 [Chat] Setting up message subscription for chat:', chatId)
     
     if (!chatId) {
       console.error('❌ [Chat] No chatId provided for message subscription')
@@ -1014,8 +997,6 @@ export class FirebaseChatService {
     }
 
     // Debug: Log the exact chatId being queried
-    console.log('🔍 [Chat] Querying messages collection with chatId:', JSON.stringify(chatId))
-    console.log('🔍 [Chat] chatId type:', typeof chatId, 'length:', chatId.length)
     
     // Simple query without orderBy to avoid index requirement
     // We'll sort client-side instead
@@ -1027,14 +1008,11 @@ export class FirebaseChatService {
     
     // Also do a one-time fetch to debug
     getDocs(q).then(snapshot => {
-      console.log('🔍 [Chat] One-time fetch result:', snapshot.docs.length, 'messages')
       if (snapshot.docs.length === 0) {
         // Try fetching ALL messages to see what chatIds exist
         getDocs(query(collection(db, 'messages'), limit(10))).then(allSnapshot => {
-          console.log('🔍 [Chat] Sample of ALL messages in collection:')
           allSnapshot.docs.forEach(doc => {
             const data = doc.data()
-            console.log('  - Message ID:', doc.id, 'chatId:', data.chatId, 'text:', data.text?.substring(0, 30))
           })
         })
       }
@@ -1043,7 +1021,6 @@ export class FirebaseChatService {
     })
     
     return onSnapshot(q, (snapshot) => {
-        console.log('📨 [Chat] Message snapshot received:', snapshot.docs.length, 'messages for chat:', chatId)
         
         const messages: ChatMessage[] = []
         
@@ -1075,14 +1052,12 @@ export class FirebaseChatService {
           return timeA - timeB
         })
         
-        console.log('✅ [Chat] Returning', messages.length, 'messages (sorted client-side)')
         callback(messages)
       }, 
       (error) => {
         console.error('❌ [Chat] Message subscription error:', error)
         console.error('❌ [Chat] Error details:', error.message, error.code)
-        // Check if it's an index error
-        if (error.message?.includes('index')) {
+                if (error.message?.includes('index')) {
           console.error('🔧 [Chat] This error requires creating a Firestore composite index. Check the Firebase console.')
           console.error('🔧 [Chat] Create index: messages -> chatId (ASC) + timestamp (DESC)')
         }
@@ -1095,7 +1070,6 @@ export class FirebaseChatService {
    * Subscribe to real-time chats - OPTIMIZED: Removed cache rejection to reduce reads
    */
   static subscribeToChats(userId: string, callback: (chats: Chat[]) => void): () => void {
-    console.log('🔌 [Chat] Setting up chat subscription for user:', userId)
     
     const q = query(
       collection(db, 'chats'),
@@ -1118,14 +1092,12 @@ export class FirebaseChatService {
             
             // FILTER 2: Must have exactly 2 participants
             if (chatData.participants.length !== 2) {
-              console.log('🗑️ [Firebase] Invalid chat (wrong participant count):', doc.id, chatData.participants)
               selfChatsToDelete.push(doc.id)
               continue
             }
             
             // FILTER 3: Both participants must be different people
             if (p1 === p2) {
-              console.log('🗑️ [Firebase] Self-chat detected (duplicate):', doc.id, [p1, p2])
               selfChatsToDelete.push(doc.id)
               continue
             }
@@ -1133,7 +1105,6 @@ export class FirebaseChatService {
             // FILTER 4: Current user should only appear ONCE
             const userCount = chatData.participants.filter(p => p === userId).length
             if (userCount !== 1) {
-              console.log('🗑️ [Firebase] Self-chat detected (user appears', userCount, 'times):', doc.id)
               selfChatsToDelete.push(doc.id)
               continue
             }
@@ -1161,11 +1132,9 @@ export class FirebaseChatService {
         
         // Clean up invalid chats in background
         if (selfChatsToDelete.length > 0) {
-          console.log(`🧹 [Firebase] Cleaning up ${selfChatsToDelete.length} invalid chats...`)
           selfChatsToDelete.forEach(async (chatId) => {
             try {
               await deleteDoc(doc(db, 'chats', chatId))
-              console.log('✅ [Firebase] Deleted invalid chat:', chatId)
             } catch (error) {
               console.error('❌ [Firebase] Failed to delete chat:', chatId, error)
             }
@@ -1181,7 +1150,6 @@ export class FirebaseChatService {
           return bTimeMs - aTimeMs
         })
         
-        console.log('✅ [Firebase] Returning', sortedChats.length, 'valid chats')
         callback(sortedChats)
       },
       (error) => {
@@ -1205,8 +1173,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is admin
-      if (!chat.admins.includes(adminId)) return false
+            if (!chat.admins.includes(adminId)) return false
       
       // Add user to participants
       await updateDoc(chatRef, {
@@ -1233,8 +1200,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is admin
-      if (!chat.admins.includes(adminId)) return false
+            if (!chat.admins.includes(adminId)) return false
       
       // Remove user from participants and admins
       await updateDoc(chatRef, {
@@ -1261,8 +1227,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is admin
-      if (!chat.admins.includes(adminId)) return false
+            if (!chat.admins.includes(adminId)) return false
       
       // Add user to admins
       await updateDoc(chatRef, {
@@ -1292,8 +1257,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is admin
-      if (!chat.admins.includes(adminId)) return false
+            if (!chat.admins.includes(adminId)) return false
       
       await updateDoc(chatRef, updates)
       return true
@@ -1315,8 +1279,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is a participant
-      if (!chat.participants.includes(userId)) return false
+            if (!chat.participants.includes(userId)) return false
       
       // Remove user from participants and admins (if they were an admin)
       await updateDoc(chatRef, {
@@ -1369,8 +1332,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is a participant
-      if (!chat.participants.includes(userId)) return false
+            if (!chat.participants.includes(userId)) return false
       
       // For direct chats, remove user from participants (effectively deleting it for them)
       // For group chats, just mark as inactive for the user
@@ -1407,8 +1369,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is a participant
-      if (!chat.participants.includes(userId)) return false
+            if (!chat.participants.includes(userId)) return false
       
       const pinned = chat.pinned || {}
       pinned[userId] = pin
@@ -1436,8 +1397,7 @@ export class FirebaseChatService {
       
       const chat = chatDoc.data() as Chat
       
-      // Check if user is a participant
-      if (!chat.participants.includes(userId)) return false
+            if (!chat.participants.includes(userId)) return false
       
       const starred = chat.starred || {}
       starred[userId] = star
@@ -1458,8 +1418,7 @@ export class FirebaseChatService {
    */
   static async toggleStarMessage(messageId: string, userId: string): Promise<boolean> {
     try {
-      // Check if message is already starred by this user
-      const starredRef = collection(db, 'starred_messages')
+            const starredRef = collection(db, 'starred_messages')
       const starredQuery = query(
         starredRef,
         where('messageId', '==', messageId),
@@ -1529,7 +1488,6 @@ export class FirebaseChatService {
       } catch (error: any) {
         // If orderBy fails (likely missing index), try without it
         if (error.code === 'failed-precondition') {
-          console.log('Index missing, searching without orderBy')
           const messagesQuery = query(
             messagesRef,
             where('chatId', '==', chatId)

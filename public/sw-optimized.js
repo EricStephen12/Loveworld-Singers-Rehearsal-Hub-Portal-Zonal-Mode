@@ -95,9 +95,9 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         }),
-        // Timeout after 5 seconds
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('timeout')), 5000)
+        // Timeout after 10 seconds (increased from 5s for slower connections/local dev)
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10000)
         )
       ]).catch(() => {
         // Fallback to cache
@@ -118,7 +118,7 @@ self.addEventListener('fetch', (event) => {
           // Return cached version immediately
           return cachedResponse;
         }
-        
+
         // Fetch and cache for next time
         return fetch(request).then(response => {
           if (response.ok) {
@@ -136,9 +136,9 @@ self.addEventListener('fetch', (event) => {
 
   // HTML pages - Network First with fast fallback
   event.respondWith(
-    fetch(request, { 
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined 
+    fetch(request, {
+      // Add timeout to prevent hanging (increased to 10s for reliability)
+      signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined
     })
       .then(response => {
         // Cache successful page loads
@@ -152,14 +152,13 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         // Fallback to cache
-        return caches.match(request).then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // Return offline page if available
+        // Return offline page if available ONLY for navigation requests
+        if (request.mode === 'navigate') {
           return caches.match('/');
-        });
-      })
+        }
+        return null;
+      });
+})
   );
 });
 

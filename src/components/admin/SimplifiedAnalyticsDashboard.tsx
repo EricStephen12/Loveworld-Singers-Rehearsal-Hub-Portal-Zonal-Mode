@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Users, Activity, Eye, Music, Calendar, RefreshCw, ChevronLeft, ChevronRight, CheckCircle, XCircle, Filter, MapPin, Globe } from 'lucide-react';
 import { SimplifiedAnalyticsService } from '@/lib/simplified-analytics-service';
 import { SongMinistryService } from '@/lib/song-ministry-service';
+import CustomLoader from '@/components/CustomLoader';
 
 interface AnalyticsRecord {
   id: string;
@@ -63,12 +64,12 @@ export default function SimplifiedAnalyticsDashboard() {
     e.preventDefault();
     const selectedSong = allSongs.find(song => song.id === newMinistry.songId);
     const songTitle = selectedSong ? selectedSong.title : newMinistry.songTitle;
-    
+
     const result = await SongMinistryService.logSongMinistry(
       newMinistry.songId, songTitle, newMinistry.programType,
       newMinistry.programDate, undefined, newMinistry.notes
     );
-    
+
     if (result.success) {
       setNewMinistry({ songId: '', songTitle: '', programType: 'rehearsal', programDate: new Date().toISOString().split('T')[0], notes: '' });
       loadAnalytics();
@@ -167,11 +168,8 @@ export default function SimplifiedAnalyticsDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />)}
-        </div>
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <CustomLoader message="Loading analytics data..." />
       </div>
     );
   }
@@ -296,7 +294,10 @@ export default function SimplifiedAnalyticsDashboard() {
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Song</label>
             {songsLoading ? (
-              <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500">Loading...</div>
+              <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 flex items-center gap-2 text-gray-400">
+                <CustomLoader size="sm" />
+                <span>Loading songs...</span>
+              </div>
             ) : (
               <select value={newMinistry.songId} onChange={(e) => {
                 const song = allSongs.find(s => s.id === e.target.value);
@@ -309,7 +310,7 @@ export default function SimplifiedAnalyticsDashboard() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select value={newMinistry.programType} onChange={(e) => setNewMinistry({...newMinistry, programType: e.target.value as any})}
+            <select value={newMinistry.programType} onChange={(e) => setNewMinistry({ ...newMinistry, programType: e.target.value as any })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500">
               <option value="rehearsal">Rehearsal</option>
               <option value="service">Service</option>
@@ -319,12 +320,12 @@ export default function SimplifiedAnalyticsDashboard() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input type="date" value={newMinistry.programDate} onChange={(e) => setNewMinistry({...newMinistry, programDate: e.target.value})}
+            <input type="date" value={newMinistry.programDate} onChange={(e) => setNewMinistry({ ...newMinistry, programDate: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500" required />
           </div>
           <div className="sm:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <input type="text" value={newMinistry.notes} onChange={(e) => setNewMinistry({...newMinistry, notes: e.target.value})}
+            <input type="text" value={newMinistry.notes} onChange={(e) => setNewMinistry({ ...newMinistry, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Optional notes" />
           </div>
           <div className="flex items-end">
@@ -370,7 +371,7 @@ export default function SimplifiedAnalyticsDashboard() {
             <span className="text-sm text-gray-500 ml-auto">{totalCountryVisits} total visits</span>
           )}
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Countries */}
           <div>
@@ -386,7 +387,7 @@ export default function SimplifiedAnalyticsDashboard() {
                       <span className="text-sm text-gray-700 font-medium">{item.country}</span>
                       <span className="text-sm text-gray-600">{item.count} ({percentage}%)</span>
                     </div>
-                    <div 
+                    <div
                       className="absolute inset-y-0 left-0 bg-purple-100 rounded"
                       style={{ width: `${percentage}%` }}
                     />
@@ -397,7 +398,7 @@ export default function SimplifiedAnalyticsDashboard() {
               )}
             </div>
           </div>
-          
+
           {/* Cities */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">

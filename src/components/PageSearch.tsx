@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
@@ -35,8 +35,7 @@ export default function PageSearch({
     });
   }, [data, searchQuery, searchFields]);
 
-  // Update parent component when filtered data changes
-  React.useEffect(() => {
+    React.useEffect(() => {
     onFilter(filteredData);
   }, [filteredData, onFilter]);
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AUDIOLAB SONG SERVICE
  * 
  * Firebase integration for AudioLab songs
@@ -51,11 +51,9 @@ export async function getSongs(zoneId?: string, limitCount: number = 500): Promi
     const cached = songCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('[SongService] Using cached Master Library songs:', cached.data.length);
       return cached.data;
     }
     
-    console.log('[SongService] Fetching songs from Master Library');
     
     // Fetch from master_songs collection (HQ published songs)
     const masterSongsRef = collection(db, MASTER_SONGS_COLLECTION);
@@ -72,15 +70,12 @@ export async function getSongs(zoneId?: string, limitCount: number = 500): Promi
     const songsWithAudio = songs.filter(song => {
       if (!song.audioUrls) return false;
       
-      // Check if any audio URL exists
-      const hasAudio = Object.values(song.audioUrls).some(url => url && url.length > 0);
+            const hasAudio = Object.values(song.audioUrls).some(url => url && url.length > 0);
       return hasAudio;
     });
     
-    // Update cache
-    songCache.set(cacheKey, { data: songsWithAudio, timestamp: Date.now() });
+        songCache.set(cacheKey, { data: songsWithAudio, timestamp: Date.now() });
     
-    console.log('[SongService] Fetched', songsWithAudio.length, 'songs with audio from Master Library');
     return songsWithAudio;
   } catch (error) {
     console.error('[SongService] Error fetching songs from Master Library:', error);
@@ -124,7 +119,6 @@ export async function getAllMasterSongs(limitCount: number = 200): Promise<Audio
  */
 export async function getSongById(songId: string): Promise<AudioLabSong | null> {
   try {
-    console.log('[SongService] Fetching song:', songId);
     
     // Try Master Library first
     const masterDocRef = doc(db, MASTER_SONGS_COLLECTION, songId);
@@ -142,7 +136,6 @@ export async function getSongById(songId: string): Promise<AudioLabSong | null> 
       return docToSong(docSnap);
     }
     
-    console.log('[SongService] Song not found:', songId);
     return null;
   } catch (error) {
     console.error('[SongService] Error fetching song:', error);
@@ -177,7 +170,6 @@ export async function searchSongs(queryStr: string, zoneId?: string): Promise<Au
  */
 export async function getSongsByVocalPart(part: VocalPart, zoneId?: string): Promise<AudioLabSong[]> {
   try {
-    console.log('[SongService] Fetching songs with part:', part);
     
     // Get all songs from Master Library and filter client-side
     // (Master songs don't have availableParts field, we derive it from audioUrls)
@@ -187,7 +179,6 @@ export async function getSongsByVocalPart(part: VocalPart, zoneId?: string): Pro
       song.availableParts?.includes(part)
     );
     
-    console.log('[SongService] Found', filteredSongs.length, 'songs with part:', part);
     return filteredSongs;
   } catch (error) {
     console.error('[SongService] Error fetching songs by part:', error);
@@ -204,7 +195,6 @@ export async function getSongsByVocalPart(part: VocalPart, zoneId?: string): Pro
  */
 export async function createSong(input: CreateSongInput): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
-    console.log('[SongService] Creating song:', input.title);
     
     // Validate required fields
     if (!input.title || !input.artist || !input.duration) {
@@ -236,10 +226,8 @@ export async function createSong(input: CreateSongInput): Promise<{ success: boo
     
     const docRef = await addDoc(collection(db, COLLECTION_NAME), songData);
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Song created with ID:', docRef.id);
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error('[SongService] Error creating song:', error);
@@ -258,7 +246,6 @@ export async function updateSong(
   updates: Partial<Omit<AudioLabSong, 'id' | 'createdAt' | 'createdBy'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[SongService] Updating song:', songId);
     
     const docRef = doc(db, COLLECTION_NAME, songId);
     const docSnap = await getDoc(docRef);
@@ -282,10 +269,8 @@ export async function updateSong(
       updatedAt: serverTimestamp()
     });
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Song updated successfully');
     return { success: true };
   } catch (error) {
     console.error('[SongService] Error updating song:', error);
@@ -301,7 +286,6 @@ export async function updateSong(
  */
 export async function deleteSong(songId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[SongService] Deleting song:', songId);
     
     const docRef = doc(db, COLLECTION_NAME, songId);
     const docSnap = await getDoc(docRef);
@@ -312,10 +296,8 @@ export async function deleteSong(songId: string): Promise<{ success: boolean; er
     
     await deleteDoc(docRef);
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Song deleted successfully');
     return { success: true };
   } catch (error) {
     console.error('[SongService] Error deleting song:', error);
@@ -339,7 +321,6 @@ export async function updateSongAudioPart(
   url: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[SongService] Updating audio part:', part, 'for song:', songId);
     
     const docRef = doc(db, COLLECTION_NAME, songId);
     const docSnap = await getDoc(docRef);
@@ -358,10 +339,8 @@ export async function updateSongAudioPart(
       updatedAt: serverTimestamp()
     });
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Audio part updated successfully');
     return { success: true };
   } catch (error) {
     console.error('[SongService] Error updating audio part:', error);
@@ -380,7 +359,6 @@ export async function removeSongAudioPart(
   part: VocalPart
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[SongService] Removing audio part:', part, 'from song:', songId);
     
     const docRef = doc(db, COLLECTION_NAME, songId);
     const docSnap = await getDoc(docRef);
@@ -406,10 +384,8 @@ export async function removeSongAudioPart(
       updatedAt: serverTimestamp()
     });
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Audio part removed successfully');
     return { success: true };
   } catch (error) {
     console.error('[SongService] Error removing audio part:', error);
@@ -432,7 +408,6 @@ export async function updateSongLyrics(
   lyrics: LyricLine[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[SongService] Updating lyrics for song:', songId);
     
     const docRef = doc(db, COLLECTION_NAME, songId);
     
@@ -441,10 +416,8 @@ export async function updateSongLyrics(
       updatedAt: serverTimestamp()
     });
     
-    // Clear cache
-    clearSongCache();
+        clearSongCache();
     
-    console.log('[SongService] Lyrics updated successfully');
     return { success: true };
   } catch (error) {
     console.error('[SongService] Error updating lyrics:', error);
@@ -584,7 +557,6 @@ function determineAvailableParts(audioUrls: AudioUrls): VocalPart[] {
  */
 export function clearSongCache(): void {
   songCache.clear();
-  console.log('[SongService] Cache cleared');
 }
 
 // ============================================

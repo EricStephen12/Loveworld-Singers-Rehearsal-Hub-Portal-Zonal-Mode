@@ -1,4 +1,4 @@
-// User Roles Configuration
+﻿// User Roles Configuration
 
 export type UserRole = 'super_admin' | 'boss' | 'zone_coordinator' | 'zone_member' | 'hq_admin' | 'hq_member';
 
@@ -248,33 +248,27 @@ export function getUserRoleInZone(
   zoneMembership: any,
   userEmail?: string
 ): UserRole {
-  // Check if super admin
-  if (zoneMembership?.isSuperAdmin) {
+    if (zoneMembership?.isSuperAdmin) {
     return 'super_admin';
   }
   
-  // Check if boss
-  if (zoneMembership?.role === 'boss' || zoneId === 'zone-boss') {
+    if (zoneMembership?.role === 'boss' || zoneId === 'zone-boss') {
     return 'boss';
   }
   
-  // Check if HQ admin by email (for HQ groups)
-  if (isHQGroup(zoneId) && userEmail && isHQAdminEmail(userEmail)) {
+    if (isHQGroup(zoneId) && userEmail && isHQAdminEmail(userEmail)) {
     return 'hq_admin';
   }
   
-  // Check if HQ admin (specific role for HQ group administrators)
-  if (isHQGroup(zoneId) && zoneMembership?.role === 'hq_admin') {
+    if (isHQGroup(zoneId) && zoneMembership?.role === 'hq_admin') {
     return 'hq_admin';
   }
   
-  // Check if HQ group member (zones 001-005)
-  if (isHQGroup(zoneId)) {
+    if (isHQGroup(zoneId)) {
     return 'hq_member';
   }
   
-  // Check if zone coordinator (the one who created/pays for the zone)
-  if (zoneMembership?.role === 'coordinator') {
+    if (zoneMembership?.role === 'coordinator') {
     return 'zone_coordinator';
   }
   
@@ -286,8 +280,7 @@ export function getUserRoleInZone(
 export function getUserGlobalRole(userEmail: string | null | undefined): UserRole | null {
   if (!userEmail) return null;
   
-  // Check if HQ admin by email
-  if (isHQAdminEmail(userEmail)) {
+    if (isHQAdminEmail(userEmail)) {
     return 'hq_admin';
   }
   

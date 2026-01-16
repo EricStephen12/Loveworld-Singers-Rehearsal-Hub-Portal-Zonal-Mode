@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import SplashScreen from './SplashScreen'
@@ -28,8 +28,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    // Check if device is mobile
-    const checkMobile = () => {
+        const checkMobile = () => {
       const userAgent = navigator.userAgent
       const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
       const isSmallScreen = window.innerWidth < 768

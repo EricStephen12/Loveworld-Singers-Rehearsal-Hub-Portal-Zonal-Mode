@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,21 +31,14 @@ export default function MediaUploadPage() {
   useEffect(() => {
     if (authLoading) return;
 
-    // Check authorization
+    // Check authorization (PageLoader already ensures user exists)
     const checkAuthorization = () => {
-      // Not logged in
-      if (!user) {
-        router.push('/auth');
-        return;
-      }
-
-      // Check if user is admin (always allowed)
-      const isAdmin = userRole === 'super_admin' || 
-                      userRole === 'boss' || 
-                      userRole === 'zone_coordinator' ||
-                      userRole === 'hq_admin' ||
-                      profile?.role === 'admin' ||
-                      profile?.role === 'boss';
+      const isAdmin = userRole === 'super_admin' ||
+        userRole === 'boss' ||
+        userRole === 'zone_coordinator' ||
+        userRole === 'hq_admin' ||
+        profile?.role === 'admin' ||
+        profile?.role === 'boss';
 
       if (isAdmin) {
         setIsAuthorized(true);
@@ -53,25 +46,22 @@ export default function MediaUploadPage() {
         return;
       }
 
-      // Check if user is in sound team by email
-      const userEmail = user.email?.toLowerCase();
+      const userEmail = user?.email?.toLowerCase();
       if (userEmail && SOUND_TEAM_EMAILS.map(e => e.toLowerCase()).includes(userEmail)) {
         setIsAuthorized(true);
         setCheckingAuth(false);
         return;
       }
 
-      // Check if user is in sound team by user ID
-      if (SOUND_TEAM_USER_IDS.includes(user.uid)) {
+      if (user?.uid && SOUND_TEAM_USER_IDS.includes(user.uid)) {
         setIsAuthorized(true);
         setCheckingAuth(false);
         return;
       }
 
-      // Check if user has sound_team designation in profile
-      if (profile?.designation === 'Instrumentalist' || 
-          profile?.administration?.toLowerCase().includes('sound') ||
-          profile?.administration?.toLowerCase().includes('media')) {
+      if (profile?.designation === 'Instrumentalist' ||
+        profile?.administration?.toLowerCase().includes('sound') ||
+        profile?.administration?.toLowerCase().includes('media')) {
         setIsAuthorized(true);
         setCheckingAuth(false);
         return;
@@ -107,7 +97,7 @@ export default function MediaUploadPage() {
           </div>
           <h1 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h1>
           <p className="text-slate-600 mb-6">
-            You don't have permission to access the Media Upload page. 
+            You don't have permission to access the Media Upload page.
             This page is only available to admins and sound team members.
           </p>
           <button

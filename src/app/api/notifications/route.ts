@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 
 export async function POST(request: NextRequest) {
@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     // Users will see notifications where target_audience === 'all' OR they have a user_notification entry
     // This saves MASSIVE Firebase writes (1 write vs N writes where N = number of users)
     if (target_audience === 'all') {
-      console.log('📢 Notification targets all users - no individual entries needed');
       // The notification itself with target_audience='all' is sufficient
       // Client-side filtering will show this to all users
     }
@@ -50,7 +49,6 @@ export async function POST(request: NextRequest) {
 
       // Broadcast notification event to all clients
       // This will be picked up by the client-side notification listener
-      console.log('📢 Broadcasting push notification:', { title, message, type });
 
       // Store in a special collection for real-time push notifications
       const pushNotificationData = {
@@ -66,7 +64,6 @@ export async function POST(request: NextRequest) {
         pushNotificationData
       );
 
-      console.log('✅ Push notification broadcast stored');
     } catch (pushError) {
       console.error('⚠️ Error broadcasting push notification (non-critical):', pushError);
       // Don't fail the request if push notification fails

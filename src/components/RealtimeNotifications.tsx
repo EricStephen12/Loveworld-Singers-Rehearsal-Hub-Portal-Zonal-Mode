@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Info, AlertTriangle, XCircle, X } from 'lucide-react';
@@ -25,34 +25,22 @@ export default function RealtimeNotifications() {
     const handleToast = (event: CustomEvent) => {
       const { message, type, zoneName, userName, action, songTitle } = event.detail;
       
-      console.log('Toast event received:', { message, type, zoneName, userName, action, songTitle });
-      console.log('Current zone:', currentZone?.name, 'Is HQ:', isHQ);
-      console.log('Zone comparison:', { 
-        received: zoneName, 
-        current: currentZone?.name, 
-        match: zoneName === currentZone?.name,
-        types: { receivedType: typeof zoneName, currentType: typeof currentZone?.name }
-      });
       
       // Zone filtering logic
       if (zoneName) {
         // This is an activity notification
         if (isHQ) {
           // HQ sees all activity notifications
-          console.log('HQ - showing notification');
           showNotification(message, type, zoneName, userName, action, songTitle);
         } else if (currentZone && zoneName === currentZone.name) {
           // Regular zones only see their own activity notifications
-          console.log('Zone match - showing notification');
           showNotification(message, type, zoneName, userName, action, songTitle);
         } else {
-          console.log('Zone filter - hiding notification, but showing for debugging');
           // TEMPORARY: Show all notifications for debugging
           showNotification(message, type, zoneName, userName, action, songTitle);
         }
       } else {
         // Regular toast notifications - everyone sees these
-        console.log('Regular toast - showing notification');
         showNotification(message, type);
       }
     };

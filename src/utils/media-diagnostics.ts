@@ -1,4 +1,4 @@
-// Media Library Diagnostics Tool
+﻿// Media Library Diagnostics Tool
 import { supabase } from '@/lib/supabase-client';
 
 export interface DiagnosticResult {
@@ -183,26 +183,17 @@ export async function runMediaDiagnostics(): Promise<DiagnosticResult[]> {
 }
 
 export function printDiagnostics(results: DiagnosticResult[]) {
-  console.log('\n🔍 MEDIA LIBRARY DIAGNOSTICS\n');
-  console.log('='.repeat(60));
   
   results.forEach((result, index) => {
     const icon = result.status === 'pass' ? '✅' : result.status === 'fail' ? '❌' : '⚠️';
-    console.log(`\n${index + 1}. ${icon} ${result.test}`);
-    console.log(`   Status: ${result.status.toUpperCase()}`);
-    console.log(`   Message: ${result.message}`);
     if (result.details) {
-      console.log(`   Details:`, result.details);
     }
   });
   
-  console.log('\n' + '='.repeat(60));
   
   const passed = results.filter(r => r.status === 'pass').length;
   const failed = results.filter(r => r.status === 'fail').length;
   const warnings = results.filter(r => r.status === 'warning').length;
   
-  console.log(`\nSummary: ${passed} passed, ${failed} failed, ${warnings} warnings`);
-  console.log('='.repeat(60) + '\n');
 }
 

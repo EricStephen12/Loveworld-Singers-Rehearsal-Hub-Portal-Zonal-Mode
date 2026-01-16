@@ -8,9 +8,12 @@
 
 /* 🟣 ACTIVE SONG - Blinking Purple Border Animation */
 @keyframes pulse-ring {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(192, 92, 242, 0.7), 0 0 20px rgba(192, 92, 242, 0.3);
   }
+
   50% {
     box-shadow: 0 0 0 8px rgba(192, 92, 242, 0), 0 0 30px rgba(192, 92, 242, 0.5);
   }
@@ -22,10 +25,13 @@
 
 /* 🟣 ACTIVE CATEGORY - Blinking Purple Badge */
 @keyframes pulse-badge {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(192, 92, 242, 0.6), 0 0 10px rgba(192, 92, 242, 0.3);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 0 4px rgba(192, 92, 242, 0), 0 0 15px rgba(192, 92, 242, 0.5);
     transform: scale(1.05);
@@ -173,11 +179,11 @@ body {
   .bottom-input-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--input-safe-area-bottom, 20px));
   }
-  
+
   .bottom-nav-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--nav-safe-area-bottom, 24px));
   }
-  
+
   .fixed-bottom-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
   }
@@ -214,7 +220,7 @@ body {
   .bottom-input-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--input-safe-area-bottom, 24px));
   }
-  
+
   .bottom-nav-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--nav-safe-area-bottom, 28px));
   }
@@ -225,15 +231,15 @@ body {
   .safe-area-bottom-enhanced {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 28px);
   }
-  
+
   .modal-bottom-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 36px);
   }
-  
+
   .bottom-input-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
   }
-  
+
   .bottom-nav-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
   }
@@ -244,19 +250,19 @@ body {
   .safe-area-bottom-enhanced {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 32px);
   }
-  
+
   .modal-bottom-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 40px);
   }
-  
+
   .content-bottom-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 100px);
   }
-  
+
   .bottom-input-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
   }
-  
+
   .bottom-nav-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 28px);
   }
@@ -295,7 +301,7 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
   }
-  
+
   .fixed-bottom-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
   }
@@ -314,6 +320,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -325,10 +332,10 @@ body {
 }
 
 /* Enhanced Touch Targets */
-button, 
-a, 
-[role="button"], 
-input[type="button"], 
+button,
+a,
+[role="button"],
+input[type="button"],
 input[type="submit"] {
   min-height: 44px;
   min-width: 44px;
@@ -558,8 +565,13 @@ body {
 
 /* Mobile-first responsive improvements */
 @media (max-width: 640px) {
+
   /* Improve touch targets */
-  button, a, input, select, textarea {
+  button,
+  a,
+  input,
+  select,
+  textarea {
     min-height: 44px;
     min-width: 44px;
     /* ✅ Enhanced touch responsiveness */
@@ -567,27 +579,29 @@ body {
     touch-action: manipulation;
     cursor: pointer;
   }
-  
+
   /* Better spacing for mobile */
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   /* Prevent horizontal scroll */
   * {
     max-width: 100%;
     box-sizing: border-box;
   }
-  
+
   /* Improve readability */
-  p, span, div {
+  p,
+  span,
+  div {
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
-  
+
   /* ✅ Enhanced touch responsiveness for all interactive elements */
-  [role="button"], 
+  [role="button"],
   .cursor-pointer,
   button,
   a,
@@ -600,7 +614,7 @@ body {
     -webkit-user-select: none;
     user-select: none;
   }
-  
+
   /* ✅ Remove touch delays */
   * {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
@@ -673,16 +687,20 @@ body {
 .category-auto-scroll {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
   /* Enhanced smoothness */
   will-change: scroll-position;
-  transform: translateZ(0); /* Force hardware acceleration */
+  transform: translateZ(0);
+  /* Force hardware acceleration */
   backface-visibility: hidden;
 }
 
 .category-auto-scroll::-webkit-scrollbar {
-  display: none; /* WebKit */
+  display: none;
+  /* WebKit */
 }
 
 /* Auto-scroll animation for category buttons */
@@ -690,9 +708,11 @@ body {
   0% {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(-20px);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -729,6 +749,7 @@ body {
 
 /* Prevent zoom on input focus */
 @media screen and (max-width: 768px) {
+
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -739,9 +760,9 @@ body {
 }
 
 /* Remove all focus outlines and borders */
-button:focus, 
-input:focus, 
-select:focus, 
+button:focus,
+input:focus,
+select:focus,
 textarea:focus,
 a:focus,
 button:active,
@@ -762,7 +783,9 @@ button {
 }
 
 /* Remove all input outlines and borders */
-input, textarea, select {
+input,
+textarea,
+select {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
@@ -776,11 +799,14 @@ a {
 
 /* Album Art Breathing Animation */
 @keyframes pulse-gentle {
-  0%, 100% { 
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
-  50% { 
+
+  50% {
     transform: scale(1.02);
     box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15), 0 15px 20px -5px rgba(0, 0, 0, 0.08), 0 0 30px rgba(147, 51, 234, 0.2);
   }
@@ -797,21 +823,25 @@ a {
     box-shadow: 0 0 15px #9333ea, 0 0 30px #9333ea, 0 0 45px #9333ea;
     filter: drop-shadow(0 0 6px #9333ea);
   }
+
   25% {
     transform: scale(1.08);
     box-shadow: 0 0 25px #a855f7, 0 0 50px #a855f7, 0 0 75px #a855f7;
     filter: drop-shadow(0 0 10px #a855f7);
   }
+
   50% {
     transform: scale(1.12);
     box-shadow: 0 0 35px #c084fc, 0 0 70px #c084fc, 0 0 105px #c084fc;
     filter: drop-shadow(0 0 14px #c084fc);
   }
+
   75% {
     transform: scale(1.08);
     box-shadow: 0 0 25px #a855f7, 0 0 50px #a855f7, 0 0 75px #a855f7;
     filter: drop-shadow(0 0 10px #a855f7);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 0 15px #9333ea, 0 0 30px #9333ea, 0 0 45px #9333ea;
@@ -822,12 +852,16 @@ a {
 /* Hide scrollbar utility */
 .scrollbar-hide,
 .no-scrollbar {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar,
-.no-scrollbar::-webkit-scrollbar { 
-  display: none;  /* Safari and Chrome */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Safari and Chrome */
 }
 
 /* Custom animations for chat */
@@ -836,6 +870,7 @@ a {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -847,6 +882,7 @@ a {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -872,6 +908,7 @@ a {
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -883,6 +920,7 @@ a {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -902,6 +940,7 @@ a {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -916,6 +955,7 @@ a {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -927,9 +967,12 @@ a {
 
 /* Bounce animation for scroll button */
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -941,9 +984,12 @@ a {
 
 /* Pulse animation for loading */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -964,6 +1010,7 @@ a {
     transform: scale(0.9);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;

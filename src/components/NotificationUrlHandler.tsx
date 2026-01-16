@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,7 +47,6 @@ export default function NotificationUrlHandler() {
   }, [router])
 
   const handleNotification = (notificationData: NotificationData) => {
-    console.log('📬 Notification opened from URL:', notificationData)
 
     // Handle navigation if URL is provided in data
     if (notificationData.data.url) {
@@ -119,7 +118,6 @@ export default function NotificationUrlHandler() {
 
         default:
           // Default: just log the notification
-          console.log('Notification received:', notificationData)
       }
     }
 
@@ -127,7 +125,6 @@ export default function NotificationUrlHandler() {
     if (notificationData.title && notificationData.body) {
       // You can integrate with a toast library here
       // For now, we'll just log it
-      console.log(`Notification: ${notificationData.title} - ${notificationData.body}`)
     }
 
     // Track notification open event (for analytics)

@@ -1,4 +1,4 @@
-// Voice Recording Service for Voice Messages
+﻿// Voice Recording Service for Voice Messages
 export interface VoiceMessage {
   id: string
   audioBlob: Blob
@@ -58,10 +58,8 @@ export class VoiceRecordingService {
   // Start recording
   async startRecording(): Promise<boolean> {
     try {
-      console.log('Starting voice recording...')
       
-      // Check if MediaRecorder is supported
-      if (!MediaRecorder.isTypeSupported('audio/webm') && !MediaRecorder.isTypeSupported('audio/mp4')) {
+            if (!MediaRecorder.isTypeSupported('audio/webm') && !MediaRecorder.isTypeSupported('audio/mp4')) {
         throw new Error('Voice recording not supported on this device')
       }
 
@@ -84,7 +82,6 @@ export class VoiceRecordingService {
       
       // Handle recording stop
       this.mediaRecorder.onstop = () => {
-        console.log('Recording stopped')
         const audioBlob = new Blob(this.audioChunks, { type: mimeType })
         const audioUrl = URL.createObjectURL(audioBlob)
         
@@ -118,8 +115,7 @@ export class VoiceRecordingService {
         this.updateRecordingState()
       }, 1000)
       
-      // Update state
-      this.recordingState = {
+            this.recordingState = {
         ...this.recordingState,
         isRecording: true,
         isPaused: false,
@@ -138,7 +134,6 @@ export class VoiceRecordingService {
   // Stop recording
   stopRecording(): void {
     if (this.mediaRecorder && this.recordingState.isRecording) {
-      console.log('Stopping voice recording...')
       this.mediaRecorder.stop()
       
       if (this.recordingTimer) {
@@ -168,7 +163,6 @@ export class VoiceRecordingService {
 
   // Cancel recording
   cancelRecording(): void {
-    console.log('Canceling voice recording...')
     
     if (this.mediaRecorder) {
       this.mediaRecorder.stop()
@@ -233,13 +227,11 @@ export class VoiceRecordingService {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Update recording state and notify callbacks
-  private updateRecordingState(): void {
+    private updateRecordingState(): void {
     this.callbacks.onRecordingStateChange?.(this.getRecordingState())
   }
 
-  // Check if voice recording is supported
-  static isSupported(): boolean {
+    static isSupported(): boolean {
     return !!(
       typeof window !== 'undefined' &&
       window.MediaRecorder &&

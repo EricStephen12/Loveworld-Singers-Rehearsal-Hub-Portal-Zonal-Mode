@@ -1,14 +1,15 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
-import { 
-  Bell, 
-  Send, 
+import {
+  Bell,
+  Send,
   RefreshCw,
   X,
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import CustomLoader from '@/components/CustomLoader';
 
 interface SubGroupNotificationsProps {
   subGroupId: string;
@@ -23,7 +24,7 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) return;
-    
+
     setSending(true);
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
@@ -35,9 +36,8 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
           type: 'announcement'
         }
       );
-      
+
       if (result.success) {
-        console.log(`✅ Sent notification to ${result.count} members`);
         setTitle('');
         setMessage('');
         setSent(true);
@@ -95,7 +95,7 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Message *
@@ -108,7 +108,7 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
             />
           </div>
-          
+
           <button
             onClick={handleSend}
             disabled={!title.trim() || !message.trim() || sending}
@@ -116,8 +116,8 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
           >
             {sending ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Sending...
+                <CustomLoader size="sm" />
+                <span>Sending...</span>
               </>
             ) : (
               <>

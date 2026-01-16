@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sub-Group Service
  * Handles sub-group creation, approval, and management
  * 
@@ -68,10 +68,8 @@ export class SubGroupService {
     request: SubGroupRequest
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-      console.log('📝 Creating sub-group request:', request.name)
       
-      // Check if user already has a pending request in this zone
-      const existingRequests = await this.getUserSubGroupRequests(zoneId, requesterId)
+            const existingRequests = await this.getUserSubGroupRequests(zoneId, requesterId)
       const hasPending = existingRequests.some(r => r.status === 'pending')
       
       if (hasPending) {
@@ -98,7 +96,6 @@ export class SubGroupService {
       const result = await FirebaseDatabaseService.addDocument('subgroups', subGroupData)
       
       if (result.success && result.id) {
-        console.log('✅ Sub-group request created:', result.id)
         
         // Send notification to Zone Coordinator
         await this.notifyZoneCoordinator(zoneId, request.name, requesterName)
@@ -121,7 +118,6 @@ export class SubGroupService {
    */
   static async getZoneSubGroups(zoneId: string): Promise<SubGroup[]> {
     try {
-      console.log('📚 Getting sub-groups for zone:', zoneId)
       
       const q = query(
         collection(db, 'subgroups'),
@@ -139,7 +135,6 @@ export class SubGroupService {
         rejectedAt: doc.data().rejectedAt?.toDate?.() || (doc.data().rejectedAt ? new Date(doc.data().rejectedAt) : undefined)
       })) as SubGroup[]
       
-      console.log(`✅ Found ${subGroups.length} sub-groups`)
       return subGroups
     } catch (error) {
       console.error('❌ Error getting zone sub-groups:', error)
@@ -188,7 +183,6 @@ export class SubGroupService {
    */
   static async getUserSubGroups(userId: string): Promise<SubGroup[]> {
     try {
-      console.log('📚 Getting sub-groups for user:', userId)
       
       const q = query(
         collection(db, 'subgroups'),
@@ -203,7 +197,6 @@ export class SubGroupService {
         createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
       })) as SubGroup[]
       
-      console.log(`✅ User is member of ${subGroups.length} sub-groups`)
       return subGroups
     } catch (error) {
       console.error('❌ Error getting user sub-groups:', error)
@@ -243,7 +236,6 @@ export class SubGroupService {
     approvedByName: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('✅ Approving sub-group:', subGroupId)
       
       const subGroup = await this.getSubGroup(subGroupId)
       if (!subGroup) {
@@ -269,7 +261,6 @@ export class SubGroupService {
         'Your sub-group request has been approved! Please complete payment to activate.'
       )
       
-      console.log('✅ Sub-group approved')
       return { success: true }
     } catch (error) {
       console.error('❌ Error approving sub-group:', error)
@@ -290,7 +281,6 @@ export class SubGroupService {
     reason: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('❌ Rejecting sub-group:', subGroupId)
       
       const subGroup = await this.getSubGroup(subGroupId)
       if (!subGroup) {
@@ -316,7 +306,6 @@ export class SubGroupService {
         `Your sub-group request was not approved. Reason: ${reason}`
       )
       
-      console.log('✅ Sub-group rejected')
       return { success: true }
     } catch (error) {
       console.error('❌ Error rejecting sub-group:', error)
@@ -332,7 +321,6 @@ export class SubGroupService {
    */
   static async activateSubGroup(subGroupId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🚀 Activating sub-group:', subGroupId)
       
       const subGroup = await this.getSubGroup(subGroupId)
       if (!subGroup) {
@@ -348,7 +336,6 @@ export class SubGroupService {
         activatedAt: new Date()
       })
       
-      console.log('✅ Sub-group activated')
       return { success: true }
     } catch (error) {
       console.error('❌ Error activating sub-group:', error)
@@ -511,7 +498,6 @@ export class SubGroupService {
         read: false,
         createdAt: new Date()
       })
-      console.log('📬 Zone coordinator notified')
     } catch (error) {
       console.error('❌ Error notifying zone coordinator:', error)
     }
@@ -536,7 +522,6 @@ export class SubGroupService {
         read: false,
         createdAt: new Date()
       })
-      console.log('📬 Requester notified')
     } catch (error) {
       console.error('❌ Error notifying requester:', error)
     }

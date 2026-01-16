@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Smart Auto-History System - Fixed icon imports
 import React, { useState, useEffect } from 'react';
@@ -28,32 +28,32 @@ interface EditSongModalProps {
   onClose: () => void;
   song: PraiseNightSong | null;
   categories: Category[];
-  praiseNightCategories: Array<{id: string, name: string, description: string, date: string, location: string, icon: string, color: string, isActive: boolean, createdAt: Date, updatedAt: Date, countdown: {days: number, hours: number, minutes: number, seconds: number}}>;
+  praiseNightCategories: Array<{ id: string, name: string, description: string, date: string, location: string, icon: string, color: string, isActive: boolean, createdAt: Date, updatedAt: Date, countdown: { days: number, hours: number, minutes: number, seconds: number } }>;
   onUpdate: (updatedSong: PraiseNightSong) => void;
 }
 
-export default function EditSongModal({ 
-  isOpen, 
-  onClose, 
-  song, 
-  categories, 
+export default function EditSongModal({
+  isOpen,
+  onClose,
+  song,
+  categories,
   praiseNightCategories,
-  onUpdate 
+  onUpdate
 }: EditSongModalProps) {
   const { theme } = useAdminTheme();
   const { currentZone } = useZone();
-  
+
   // Helper function to get current user info
   const getCurrentUserName = () => {
     // Implement based on your auth system - could be from context, localStorage, etc.
     return localStorage.getItem('userName') || 'Current User';
   };
-  
+
   // Theme-based CSS classes
   const inputClasses = `w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 ${theme.focusRing} ${theme.focusBorder} focus:shadow-xl ${theme.focusBg}`;
   const buttonClasses = `flex items-center gap-2 px-4 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors text-sm font-medium`;
   const historyButtonClasses = `flex items-center gap-1 px-3 py-1.5 text-xs font-medium ${theme.text} ${theme.primaryLight} ${theme.bgHover} border ${theme.border} rounded-md transition-colors`;
-  
+
   // Form state
   const [songTitle, setSongTitle] = useState('');
   const [songCategory, setSongCategory] = useState('');
@@ -76,19 +76,19 @@ export default function EditSongModal({
   const [songComments, setSongComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [coordinatorComment, setCoordinatorComment] = useState('');
-  
+
   // History management state
   const [rehearsalCount, setRehearsalCount] = useState(0);
   const [showMediaManager, setShowMediaManager] = useState(false);
 
   // Get zone context to determine comment terminology (currentZone already declared above)
-  
+
   // Helper function to get correct comment terminology based on zone
   const getCommentLabel = () => {
     // HQ groups see "Pastor Comment", regular zones see "Coordinator Comment"
     return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
   };
-  
+
   // Smart change detection - track original values
   const [originalValues, setOriginalValues] = useState({
     lyrics: '',
@@ -113,12 +113,11 @@ export default function EditSongModal({
   const [historyDescription, setHistoryDescription] = useState('');
   const [historyEntries, setHistoryEntries] = useState<any[]>([]);
   const [showHistoryList, setShowHistoryList] = useState(false);
-  const [originalHistoryValues, setOriginalHistoryValues] = useState({old_value: '', new_value: ''});
+  const [originalHistoryValues, setOriginalHistoryValues] = useState({ old_value: '', new_value: '' });
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(true);
 
   // Manual history creation functions
   const handleCreateHistory = (type: 'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'audio' | 'comments') => {
-    // Check if Firebase is configured
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
       window.dispatchEvent(new CustomEvent('showToast', {
         detail: {
@@ -128,12 +127,12 @@ export default function EditSongModal({
       }));
       return;
     }
-    
+
     // Reset the currentHistoryEntryId to ensure we're creating, not updating
     (window as any).currentHistoryEntryId = null;
-    
+
     setHistoryType(type);
-    
+
     // Set default title and description based on section
     const sectionNames = {
       'song-details': 'Song Details',
@@ -144,21 +143,21 @@ export default function EditSongModal({
       'audio': 'Audio',
       'comments': 'Comments'
     };
-    
+
     setHistoryTitle(`${sectionNames[type]} Version ${new Date().toLocaleDateString()}`);
     setHistoryDescription(`Updated ${sectionNames[type].toLowerCase()} on ${new Date().toLocaleString()}`);
-    
+
     setShowHistoryForm(true);
   };
 
   const handleSaveHistory = async () => {
     if (!song?.id) return;
-    
+
     try {
       // Get current content based on section type
       let currentContent = '';
       let oldValue = '';
-      
+
       switch (historyType) {
         case 'song-details':
           currentContent = JSON.stringify({
@@ -229,30 +228,18 @@ export default function EditSongModal({
           }
           break;
       }
-      
-      // Check if we're updating an existing history entry
+
       const currentHistoryEntryId = (window as any).currentHistoryEntryId;
-      
+
       if (currentHistoryEntryId) {
-        // Update existing history entry in Firebase
         // Use the edited historical value from the form if in edit mode
         const updateOldValue = originalHistoryValues.old_value;
         // Keep the original new_value since we're only editing the historical (old) value
         const existingEntries = await FirebaseDatabaseService.getHistoryBySongId(song.id.toString());
         const existingEntry = existingEntries.find((entry: any) => entry.id === currentHistoryEntryId);
         const updateNewValue = (existingEntry as any)?.new_value || originalHistoryValues.new_value;
-        
-        console.log('📝 Updating history entry:', {
-          id: currentHistoryEntryId,
-          song_id: song.id.toString(), // Use string ID instead of number
-          title: historyTitle,
-          description: historyDescription,
-          type: historyType,
-          old_value: updateOldValue,
-          new_value: updateNewValue,
-          created_by: 'admin'
-        });
-        
+
+
         const success = await FirebaseDatabaseService.updateHistoryEntry(currentHistoryEntryId, {
           song_id: song.id.toString(), // Use string ID instead of number
           title: historyTitle,
@@ -263,22 +250,20 @@ export default function EditSongModal({
           created_by: 'admin',
           created_at: new Date().toISOString()
         });
-        
-        console.log('📝 History update result:', success);
-        
-        // Clear the stored entry ID
+
+
         (window as any).currentHistoryEntryId = null;
-        
+
         if (success) {
           // Load updated history entries
           loadHistoryEntries();
-          
+
           // Dispatch event to notify other components of history update
           window.dispatchEvent(new Event('historyUpdated'));
-          
+
           // Close the form
           setShowHistoryForm(false);
-          
+
           // Show success message
           window.dispatchEvent(new CustomEvent('showToast', {
             detail: {
@@ -286,7 +271,7 @@ export default function EditSongModal({
               type: 'success'
             }
           }));
-          
+
           // Log activity with toast event that ActivityLogger will catch
           window.dispatchEvent(new CustomEvent('showToast', {
             detail: {
@@ -307,21 +292,11 @@ export default function EditSongModal({
             }
           }));
         }
-        
-        // Clear the stored entry ID regardless of success/failure
+
         (window as any).currentHistoryEntryId = null;
       } else {
         // Create new history entry in Firebase
-        console.log('📝 Creating history entry:', {
-          song_id: song.id.toString(), // Use string ID instead of number
-          title: historyTitle,
-          description: historyDescription,
-          type: historyType,
-          old_value: oldValue,
-          new_value: currentContent,
-          created_by: 'admin'
-        });
-                
+
         const success = await FirebaseDatabaseService.createHistoryEntry({
           song_id: song.id.toString(), // Use string ID instead of number
           title: historyTitle,
@@ -332,9 +307,8 @@ export default function EditSongModal({
           created_by: 'admin',
           created_at: new Date().toISOString()
         });
-                
-        console.log('📝 History creation result:', success);
-                
+
+
         if (success) {
           // Reset form but keep it open for multiple entries
           const sectionNames = {
@@ -346,19 +320,17 @@ export default function EditSongModal({
             'audio': 'Audio',
             'comments': 'Comments'
           };
-                  
+
           setHistoryTitle(`${sectionNames[historyType]} Version ${new Date().toLocaleDateString()}`);
           setHistoryDescription(`Updated ${sectionNames[historyType].toLowerCase()} on ${new Date().toLocaleString()}`);
-                  
+
           // Load updated history entries
           loadHistoryEntries();
-          
+
           // Dispatch event to notify other components of history update
           window.dispatchEvent(new Event('historyUpdated'));
-                  
-          // Check if we were updating an existing entry
+
           if ((window as any).currentHistoryEntryId) {
-            // Clear the stored entry ID after successful update
             (window as any).currentHistoryEntryId = null;
             // Close the form after successful update
             setShowHistoryForm(false);
@@ -400,23 +372,15 @@ export default function EditSongModal({
   // Load history entries for the current song
   const loadHistoryEntries = async () => {
     if (!song?.id) return;
-    
+
     try {
-      // Check if Firebase is configured
       if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
         console.warn('⚠️ Firebase not configured - history features will not work');
         setHistoryEntries([]);
         return;
       }
-      
-      console.log('🔍 Loading history for song:', {
-        songId: song.id,
-        songIdType: typeof song.id,
-        songIdString: song.id.toString()
-      });
-      
+
       const data = await FirebaseDatabaseService.getHistoryBySongId(song.id.toString());
-      console.log('📝 History data received:', data);
       setHistoryEntries(data || []);
     } catch (error) {
       console.error('Error loading history entries:', error);
@@ -427,7 +391,7 @@ export default function EditSongModal({
   // Delete history entry
   const handleDeleteHistory = async (historyId: string) => {
     if (!confirm('Are you sure you want to delete this history entry?')) return;
-    
+
     try {
       // Delete history entry from Firebase
       const success = await FirebaseDatabaseService.deleteHistoryEntry(historyId);
@@ -461,17 +425,10 @@ export default function EditSongModal({
 
   // Handle media file selection from MediaManager
   const handleMediaFileSelect = (mediaFile: any) => {
-    console.log('✅ SELECTED AUDIO FILE:', {
-      name: mediaFile.name,
-      url: mediaFile.url,
-      id: mediaFile.id,
-      type: mediaFile.type
-    });
-    
+
     // Supabase Storage URLs work directly - no CORS issues!
     let fixedUrl = mediaFile.url;
-    console.log('✅ USING SUPABASE STORAGE URL:', fixedUrl);
-    
+
     setSongAudioFile(fixedUrl);
     setAudioFile({ ...mediaFile, url: fixedUrl }); // Store with fixed URL
     setShowMediaManager(false);
@@ -496,11 +453,11 @@ export default function EditSongModal({
   const handlePaste = (e: React.ClipboardEvent, currentValue: string, setValue: (value: string) => void) => {
     e.preventDefault();
     const clipboardData = e.clipboardData || (window as any).clipboardData;
-    
+
     // Try to get HTML content first (preserves formatting)
     let htmlContent = clipboardData.getData('text/html');
     const plainText = clipboardData.getData('text/plain') || clipboardData.getData('text');
-    
+
     if (htmlContent) {
       // Clean the HTML while preserving formatting
       const cleanHtml = cleanPastedHtml(htmlContent);
@@ -517,30 +474,30 @@ export default function EditSongModal({
     // Create a temporary div to parse the HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-    
+
     // Remove unwanted attributes but keep formatting tags
     const allowedTags = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
     const allowedAttributes = ['style'];
-    
+
     const cleanNode = (node: Node): Node | null => {
       if (node.nodeType === Node.TEXT_NODE) {
         return node.cloneNode(true);
       }
-      
+
       if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element;
         const tagName = element.tagName.toLowerCase();
-        
+
         if (allowedTags.includes(tagName)) {
           const newElement = document.createElement(tagName);
-          
+
           // Copy allowed attributes
           allowedAttributes.forEach(attr => {
             if (element.hasAttribute(attr)) {
               newElement.setAttribute(attr, element.getAttribute(attr) || '');
             }
           });
-          
+
           // Copy style attribute but clean it
           if (element.hasAttribute('style')) {
             const style = element.getAttribute('style') || '';
@@ -556,7 +513,7 @@ export default function EditSongModal({
               newElement.setAttribute('style', safeStyle);
             }
           }
-          
+
           // Process child nodes
           Array.from(element.childNodes).forEach(child => {
             const cleanedChild = cleanNode(child);
@@ -564,17 +521,17 @@ export default function EditSongModal({
               newElement.appendChild(cleanedChild);
             }
           });
-          
+
           return newElement;
         } else {
           // For disallowed tags, just return the text content
           return document.createTextNode(element.textContent || '');
         }
       }
-      
+
       return null;
     };
-    
+
     const cleanedNode = cleanNode(tempDiv);
     return cleanedNode && 'innerHTML' in cleanedNode ? (cleanedNode as Element).innerHTML : html;
   };
@@ -582,14 +539,7 @@ export default function EditSongModal({
   // Initialize form when song changes
   useEffect(() => {
     if (song) {
-      console.log('🎵 MODAL DEBUG - useEffect triggered with song:');
-      console.log('🎵 song object:', song);
-      console.log('🎵 song ID fields:', {
-        id: song.id,
-        firebaseId: song.firebaseId,
-        allFields: Object.keys(song)
-      });
-      
+
       // Editing existing song - populate form with song data
       setSongTitle(song.title || '');
       setSongCategory(song.category || '');
@@ -617,11 +567,11 @@ export default function EditSongModal({
       setSongHistory('');
       setSongAudioFile(song.audioFile || '');
       setAudioFile(null); // Reset file object when editing existing song
-      
+
       // Use HTML directly for BasicTextEditor
       setSongLyrics(song.lyrics || '');
       setSongSolfas(song.solfas || '');
-      
+
       setSongComments(Array.isArray(song.comments) ? song.comments : []);
       setNewComment('');
       // Initialize comment editor from latest comment (Pastor or Coordinator)
@@ -631,11 +581,11 @@ export default function EditSongModal({
           .filter(c => c.author === commentAuthor || c.author === 'Coordinator' || c.author === 'Pastor')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         setCoordinatorComment((latestComment as any)?.text || (latestComment as any)?.content || '');
-      } catch {}
-      
+      } catch { }
+
       // Load rehearsal count from song data, default to 0 if not set
       setRehearsalCount(song.rehearsalCount ?? 0);
-      
+
       // Store original values for change detection
       setOriginalValues({
         lyrics: song.lyrics || '',
@@ -677,7 +627,7 @@ export default function EditSongModal({
       setNewComment('');
       setCoordinatorComment('');
       setRehearsalCount(0);
-      
+
       // Reset original values for new song
       setOriginalValues({
         lyrics: '',
@@ -694,20 +644,17 @@ export default function EditSongModal({
         key: '',
         tempo: ''
       });
-      
-      // Clear history when no song
+
       setHistoryEntries([]);
     }
-    
+
     // Load history entries when song is available
     if (song?.id) {
       loadHistoryEntries();
     }
   }, [song]);
 
-  // Update original values when changes are made
   useEffect(() => {
-    // Update original values when changes are saved
     setOriginalValues({
       lyrics: songLyrics,
       solfas: songSolfas,
@@ -723,20 +670,15 @@ export default function EditSongModal({
       key: songKey,
       tempo: songTempo
     });
-  }, [songTitle, songCategory, songKey, songTempo, songLyrics, songSolfas, songAudioFile, 
-      songLeadSinger, songWriter, songConductor, songLeadKeyboardist, songLeadGuitarist, songDrummer]);
+  }, [songTitle, songCategory, songKey, songTempo, songLyrics, songSolfas, songAudioFile,
+    songLeadSinger, songWriter, songConductor, songLeadKeyboardist, songLeadGuitarist, songDrummer]);
 
   const handleUpdate = async () => {
     if (songTitle.trim()) {
       // Find the selected Praise Night ID
       const selectedPraiseNight = praiseNightCategories.find(pn => pn.name === songPraiseNight);
-      
-      console.log('🔍 DEBUG - Praise Night Selection:', {
-        songPraiseNight,
-        praiseNightCategories: praiseNightCategories.map(pn => ({ id: pn.id, name: pn.name })),
-        selectedPraiseNight: selectedPraiseNight ? { id: selectedPraiseNight.id, name: selectedPraiseNight.name } : null
-      });
-      
+
+
       if (!selectedPraiseNight) {
         window.dispatchEvent(new CustomEvent('showToast', {
           detail: {
@@ -747,16 +689,9 @@ export default function EditSongModal({
         return;
       }
 
-      console.log('💾 SAVING SONG:', {
-        songTitle: songTitle,
-        praiseNightId: selectedPraiseNight.id,
-        hasSelectedAudio: !!audioFile,
-        audioURL: audioFile ? audioFile.url : songAudioFile,
-        willSaveAudio: !!(audioFile ? audioFile.url : songAudioFile)
-      });
-      
+
       const finalAudioFile = audioFile ? audioFile.url : songAudioFile;
-      
+
       const finalComments = coordinatorComment && coordinatorComment.trim() !== '' ? [
         {
           id: `comment-${Date.now()}`,
@@ -765,7 +700,7 @@ export default function EditSongModal({
           author: getCommentLabel() // Dynamic: "Pastor" for HQ groups, "Coordinator" for zones
         }
       ] : [];
-      
+
       const songData: PraiseNightSong = {
         title: songTitle.trim(),
         status: songStatus,
@@ -791,49 +726,18 @@ export default function EditSongModal({
         history: song?.history || []
       };
 
-      console.log('🎵 Final songData being saved:', {
-        title: songData.title,
-        writer: songData.writer,
-        leadSinger: songData.leadSinger,
-        conductor: songData.conductor,
-        key: songData.key,
-        tempo: songData.tempo,
-        audioFile: songData.audioFile,
-        mediaId: songData.mediaId,
-        mediaIdType: typeof songData.mediaId,
-        audioFileLength: songData.audioFile?.length,
-        originalAudioFileId: audioFile?.id,
-        originalAudioFileIdType: typeof audioFile?.id
-      });
 
       // If editing existing song, preserve other properties including history
       let updatedSong = song ? { ...song, ...songData } : songData;
 
-      console.log('🎵 Final updatedSong with history:', {
-        title: updatedSong.title,
-        hasHistory: !!updatedSong.history,
-        historyCount: updatedSong.history?.length || 0,
-        historyTypes: updatedSong.history?.map(h => h.type) || []
-      });
 
       // Pass the song ID if editing an existing song
-      console.log('🎵 MODAL DEBUG - Save button clicked');
-      console.log('🎵 song object:', song);
-      console.log('🎵 song.id:', song?.id);
-      console.log('🎵 song.firebaseId:', song?.firebaseId);
-      console.log('🎵 song exists?', !!song);
-      console.log('🎵 song.id exists?', !!(song?.id));
-      
+
       // Create history entry before saving
       if (song && song.id) {
-        console.log('🎵 EditSongModal - Editing existing song:', {
-          songId: song.id,
-          songFirebaseId: song.firebaseId,
-          songTitle: song.title
-        });
-        
+
         // Compare current values with original values to detect changes
-        const hasChanges = 
+        const hasChanges =
           songTitle !== originalValues.title ||
           songCategory !== originalValues.category ||
           songKey !== originalValues.key ||
@@ -847,7 +751,7 @@ export default function EditSongModal({
           songLeadKeyboardist !== originalValues.leadKeyboardist ||
           songLeadGuitarist !== originalValues.leadGuitarist ||
           songDrummer !== originalValues.drummer;
-        
+
         if (hasChanges) {
           // Create history entry for the changes
           const historyEntry = {
@@ -888,12 +792,11 @@ export default function EditSongModal({
             created_by: 'user',
             created_at: new Date().toISOString()
           };
-          
+
           try {
             // Save history entry to Firebase
             const historySuccess = await FirebaseDatabaseService.createHistoryEntry(historyEntry);
-            console.log('🎵 History entry saved:', historySuccess);
-            
+
             // Reload history entries to show the new one
             if (historySuccess) {
               loadHistoryEntries();
@@ -902,29 +805,19 @@ export default function EditSongModal({
             console.error('Error saving history entry:', error);
           }
         }
-        
+
         // Use firebaseId for Firebase operations, keep numeric id for UI compatibility
         const updateData = {
           ...updatedSong,
           id: song.id, // Keep numeric id for UI
           firebaseId: song.firebaseId // Use firebaseId for Firebase operations
         };
-        
-        console.log('🎵 EditSongModal - Song data:', {
-          songId: song.id,
-          songFirebaseId: song.firebaseId,
-          songTitle: song.title
-        });
-        console.log('🎵 EditSongModal - Sending update data:', updateData);
+
         onUpdate(updateData);
       } else {
-        console.log('🚨 EditSongModal - Creating new song (this should NOT happen when editing!)');
-        console.log('🚨 WHY IS THIS CREATING? song:', song);
-        console.log('🚨 song.id:', song?.id);
-        console.log('🚨 song.firebaseId:', song?.firebaseId);
         onUpdate(updatedSong);
       }
-      
+
       // Log activity for song update
       if (typeof window !== 'undefined' && song && updatedSong) {
         window.dispatchEvent(new CustomEvent('showToast', {
@@ -938,7 +831,7 @@ export default function EditSongModal({
           }
         }));
       }
-      
+
       onClose();
     }
   };
@@ -962,18 +855,15 @@ export default function EditSongModal({
   };
 
   if (!isOpen) {
-    console.log('🎵 EditSongModal: isOpen is false, not rendering');
     return null;
   }
 
   // Don't render form until song data is properly loaded (for editing mode)
   // Only check this for existing songs (has id), not for new songs
   if (song && song.id && !song.title) {
-    console.log('🎵 EditSongModal: Existing song without title, not rendering');
     return null;
   }
 
-  console.log('🎵 EditSongModal: Rendering modal with song:', song);
 
   return (
     <>
@@ -982,7 +872,7 @@ export default function EditSongModal({
           display: none !important;
         }
       `}</style>
-      
+
       <div className="fixed inset-0 bg-white z-50 flex flex-col w-screen h-screen">
         <div className="bg-white w-full h-full overflow-hidden flex flex-col">
           {/* Header */}
@@ -997,17 +887,17 @@ export default function EditSongModal({
               <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
           </div>
-          
+
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
             <div className="w-full p-3 sm:p-4 lg:p-6">
-              
+
               {/* Main Form Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
-                
+
                 {/* Left Column - Basic Info */}
                 <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-                  
+
                   {/* Song Title - Full Width */}
                   <div className="bg-slate-50 rounded-lg p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -1036,7 +926,7 @@ export default function EditSongModal({
                           placeholder="Enter song title"
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1164,8 +1054,8 @@ export default function EditSongModal({
                     <div className="mt-6">
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-slate-700">
-                        Audio File
-                      </label>
+                          Audio File
+                        </label>
                         <button
                           onClick={() => handleCreateHistory('audio')}
                           className={historyButtonClasses}
@@ -1219,13 +1109,8 @@ export default function EditSongModal({
                               </div>
                               <button
                                 onClick={() => {
-                                  console.log('🗑️ Deleting audio file:', {
-                                    currentSongAudioFile: songAudioFile,
-                                    currentAudioFile: audioFile
-                                  });
                                   setSongAudioFile('');
                                   setAudioFile(null);
-                                  console.log('🗑️ Audio deleted, state cleared');
                                 }}
                                 className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded border border-red-200 hover:border-red-300 transition-colors"
                               >
@@ -1372,10 +1257,10 @@ export default function EditSongModal({
                   <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
                     <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
                       <div className="flex items-center justify-between">
-                      <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        Song Lyrics
-                      </h4>
+                        <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          Song Lyrics
+                        </h4>
                         <button
                           onClick={() => handleCreateHistory('lyrics')}
                           className={historyButtonClasses}
@@ -1390,13 +1275,12 @@ export default function EditSongModal({
                       <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600">
                         Rich text editor - Use the toolbar above to format your lyrics
                       </div>
-                      
+
                       <div className="relative">
                         <BasicTextEditor
                           id="lyrics-editor"
                           value={songLyrics}
                           onChange={(value) => {
-                            console.log('🎵 Lyrics onChange called with:', value);
                             setSongLyrics(value);
                           }}
                           placeholder="Enter complete song lyrics here...
@@ -1423,10 +1307,10 @@ Bridge:
                   <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
                     <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
                       <div className="flex items-center justify-between">
-                      <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        Conductor's Guide Notation
-                      </h4>
+                        <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Conductor's Guide Notation
+                        </h4>
                         <button
                           onClick={() => handleCreateHistory('solfas')}
                           className={historyButtonClasses}
@@ -1441,13 +1325,12 @@ Bridge:
                       <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600">
                         Rich text editor - Use the toolbar above to format your solfas
                       </div>
-                      
+
                       <div className="relative">
                         <BasicTextEditor
                           id="solfas-editor"
                           value={songSolfas}
                           onChange={(value) => {
-                            console.log("🎵 Conductor's Guide onChange called with:", value);
                             setSongSolfas(value);
                           }}
                           placeholder="Enter solfas notation here...
@@ -1470,10 +1353,10 @@ Do Re Mi Fa Sol La Ti Do"
                   <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
                     <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
                       <div className="flex items-center justify-between">
-                      <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                           {getCommentLabel()} Comment
-                      </h4>
+                        </h4>
                         <button
                           onClick={() => handleCreateHistory('comments')}
                           className={historyButtonClasses}
@@ -1493,14 +1376,14 @@ Do Re Mi Fa Sol La Ti Do"
                         onChange={(value) => setCoordinatorComment(value)}
                         placeholder={`Enter ${getCommentLabel()}'s comment here...`}
                         className="w-full"
-                            />
-                          </div>
-                          </div>
-                        </div>
-                      </div>
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
+
           {/* Footer */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 border-t border-slate-200 flex-shrink-0">
             <button
@@ -1510,51 +1393,50 @@ Do Re Mi Fa Sol La Ti Do"
               <Save className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">{song ? 'Update Song' : 'Add Song'}</span>
             </button>
-            
+
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
-                if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-                  window.dispatchEvent(new CustomEvent('showToast', {
-        detail: {
-          message: 'History features require Firebase configuration. Please set up your .env.local file with Firebase credentials. See ENVIRONMENT_SETUP.md for details.',
-          type: 'warning'
-        }
-      }));
-                  return;
-                }
+                  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+                    window.dispatchEvent(new CustomEvent('showToast', {
+                      detail: {
+                        message: 'History features require Firebase configuration. Please set up your .env.local file with Firebase credentials. See ENVIRONMENT_SETUP.md for details.',
+                        type: 'warning'
+                      }
+                    }));
+                    return;
+                  }
                   loadHistoryEntries();
                   setShowHistoryList(true);
                 }}
-              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium relative ${
-                !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                  : `${theme.primary} text-white ${theme.primaryHover}`
-              }`}
-              disabled={!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium relative ${!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : `${theme.primary} text-white ${theme.primaryHover}`
+                  }`}
+                disabled={!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}
               >
                 <History className="w-4 h-4" />
                 <span className="text-sm sm:text-base">View History</span>
-              {historyEntries.length > 0 && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
+                {historyEntries.length > 0 && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {historyEntries.length}
                   </span>
                 )}
-              {!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
-                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Firebase not configured">
-                  ⚠️
+                {!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
+                  <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Firebase not configured">
+                    ⚠️
                   </span>
                 )}
-            </button>
-            <button
-              onClick={onClose}
-              className="w-full sm:w-auto px-4 sm:px-6 py-3 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium"
-            >
-              Cancel
-            </button>
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full sm:w-auto px-4 sm:px-6 py-3 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-          </div>
-          
+
         </div>
       </div>
 
@@ -1578,7 +1460,7 @@ Do Re Mi Fa Sol La Ti Do"
                 {(window as any).currentHistoryEntryId ? 'Update the selected history entry' : `Create a history entry for the current ${historyType} content`}
               </p>
             </div>
-            
+
             <div className="p-4 sm:p-6 space-y-6 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1592,7 +1474,7 @@ Do Re Mi Fa Sol La Ti Do"
                   placeholder="e.g., Lyrics Version 1.2"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Type
@@ -1611,7 +1493,7 @@ Do Re Mi Fa Sol La Ti Do"
                   <option value="comments">Comments</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Notes (Optional)
@@ -1624,7 +1506,7 @@ Do Re Mi Fa Sol La Ti Do"
                   placeholder="What changed in this version?"
                 />
               </div>
-              
+
               {(window as any).currentHistoryEntryId && (
                 <div className="space-y-6">
                   <div>
@@ -1653,9 +1535,9 @@ Do Re Mi Fa Sol La Ti Do"
                           try {
                             const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
                             if (typeof parsed !== 'object') return null;
-                            
+
                             const fields: { label: string; key: string }[] = [];
-                            
+
                             if (historyType === 'song-details') {
                               fields.push(
                                 { label: 'Title', key: 'title' },
@@ -1678,7 +1560,7 @@ Do Re Mi Fa Sol La Ti Do"
                                 { label: 'Tempo', key: 'tempo' }
                               );
                             }
-                            
+
                             return fields.map(field => (
                               <div key={field.key}>
                                 <label className="block text-xs font-medium text-slate-600 mb-1">{field.label}</label>
@@ -1703,62 +1585,61 @@ Do Re Mi Fa Sol La Ti Do"
                         })()}
                       </div>
                     ) : (
-                    <textarea
-                      value={(() => {
-                        // Check if originalHistoryValues is properly set
-                        if (!originalHistoryValues) {
-                          console.warn('originalHistoryValues is not set for textarea');
-                          return '';
-                        }
-                                            
-                        try {
-                          // Try to parse as JSON, otherwise return as string
-                          const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
-                                              
-                          // For lyrics, solfas, comments - convert HTML to readable text
-                          const rawValue = typeof parsed === 'string' ? parsed : originalHistoryValues.old_value || '';
-                          return rawValue
-                            .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
-                            .replace(/<br\s*\/?>/gi, '\n')
-                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                            .replace(/<[^>]*>/g, '')
-                            .trim();
-                        } catch {
-                          // If parsing fails, convert HTML to readable text
-                          const rawValue = originalHistoryValues.old_value || '';
-                          return rawValue
-                            .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
-                            .replace(/<br\s*\/?>/gi, '\n')
-                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                            .replace(/<[^>]*>/g, '')
-                            .trim();
-                        }
-                      })()}
-                      onChange={(e) => {
-                        // For lyrics, solfas, comments - convert readable format back to HTML for saving
-                        let convertedValue = e.target.value;
-                        const paragraphs = convertedValue.split('\n\n');
-                        convertedValue = paragraphs
-                          .filter(p => p.trim() !== '')
-                          .map(p => `<div>${p.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`)
-                          .join('');
-                        setOriginalHistoryValues({...originalHistoryValues, old_value: convertedValue});
-                      }}
-                      className="w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                      rows={8}
-                      placeholder="Historical value to edit"
-                    />
+                      <textarea
+                        value={(() => {
+                          if (!originalHistoryValues) {
+                            console.warn('originalHistoryValues is not set for textarea');
+                            return '';
+                          }
+
+                          try {
+                            // Try to parse as JSON, otherwise return as string
+                            const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
+
+                            // For lyrics, solfas, comments - convert HTML to readable text
+                            const rawValue = typeof parsed === 'string' ? parsed : originalHistoryValues.old_value || '';
+                            return rawValue
+                              .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+                              .replace(/<br\s*\/?>/gi, '\n')
+                              .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                              .replace(/<[^>]*>/g, '')
+                              .trim();
+                          } catch {
+                            // If parsing fails, convert HTML to readable text
+                            const rawValue = originalHistoryValues.old_value || '';
+                            return rawValue
+                              .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+                              .replace(/<br\s*\/?>/gi, '\n')
+                              .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                              .replace(/<[^>]*>/g, '')
+                              .trim();
+                          }
+                        })()}
+                        onChange={(e) => {
+                          // For lyrics, solfas, comments - convert readable format back to HTML for saving
+                          let convertedValue = e.target.value;
+                          const paragraphs = convertedValue.split('\n\n');
+                          convertedValue = paragraphs
+                            .filter(p => p.trim() !== '')
+                            .map(p => `<div>${p.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`)
+                            .join('');
+                          setOriginalHistoryValues({ ...originalHistoryValues, old_value: convertedValue });
+                        }}
+                        className="w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                        rows={8}
+                        placeholder="Historical value to edit"
+                      />
                     )}
                   </div>
-                                
+
                 </div>
               )}
-              
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <strong>
-                    {(window as any).currentHistoryEntryId 
-                      ? 'History entry will be updated with your changes.' 
+                    {(window as any).currentHistoryEntryId
+                      ? 'History entry will be updated with your changes.'
                       : `Current ${historyType} content will be saved as a new version.`}
                   </strong>
                   <br />
@@ -1766,7 +1647,7 @@ Do Re Mi Fa Sol La Ti Do"
                 </p>
               </div>
             </div>
-            
+
             <div className="px-6 py-4 border-t border-slate-200 flex justify-end">
               <div className="flex gap-2">
                 <button
@@ -1817,7 +1698,7 @@ Do Re Mi Fa Sol La Ti Do"
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {historyEntries.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
@@ -1880,7 +1761,7 @@ Do Re Mi Fa Sol La Ti Do"
                 </div>
               )}
             </div>
-            
+
             <div className="px-6 py-4 border-t border-slate-200">
               <button
                 onClick={() => setShowHistoryList(false)}

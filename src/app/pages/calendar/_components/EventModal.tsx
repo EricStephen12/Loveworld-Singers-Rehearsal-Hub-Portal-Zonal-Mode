@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -162,8 +162,7 @@ export default function EventModal({
       }
 
       if (event) {
-        // Update existing event
-        await calendarService.updateEvent(event.id, eventData)
+                await calendarService.updateEvent(event.id, eventData)
         onSave({ ...event, ...eventData })
         showToast('Event updated successfully')
       } else {
@@ -178,8 +177,7 @@ export default function EventModal({
         showToast('Event created successfully')
       }
       
-      // Clear calendar cache so new event shows on refresh
-      try {
+            try {
         const { CalendarCache } = await import('@/utils/calendar-cache')
         CalendarCache.clearEvents(zoneId)
       } catch {

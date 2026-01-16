@@ -1,4 +1,4 @@
-// Firebase Media Service - Netflix-style media management
+﻿// Firebase Media Service - Netflix-style media management
 import { 
   collection, 
   doc, 
@@ -261,8 +261,7 @@ class FirebaseMediaService {
 
   async searchMedia(searchTerm: string): Promise<MediaItem[]> {
     try {
-      // Note: For better search, consider using Algolia or similar
-      const snapshot = await getDocs(collection(db, this.mediaCollection))
+            const snapshot = await getDocs(collection(db, this.mediaCollection))
       const allMedia = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -333,8 +332,7 @@ class FirebaseMediaService {
   
   async saveWatchProgress(userId: string, mediaId: string, progress: number): Promise<void> {
     try {
-      // Check if history exists
-      const q = query(
+            const q = query(
         collection(db, this.watchHistoryCollection),
         where('userId', '==', userId),
         where('mediaId', '==', mediaId)
@@ -350,8 +348,7 @@ class FirebaseMediaService {
           lastWatched: Timestamp.now()
         })
       } else {
-        // Update existing history
-        const docRef = doc(db, this.watchHistoryCollection, snapshot.docs[0].id)
+                const docRef = doc(db, this.watchHistoryCollection, snapshot.docs[0].id)
         await updateDoc(docRef, {
           progress,
           lastWatched: Timestamp.now()
@@ -404,8 +401,7 @@ class FirebaseMediaService {
   
   async addToFavorites(userId: string, mediaId: string): Promise<void> {
     try {
-      // Check if already favorited
-      const q = query(
+            const q = query(
         collection(db, this.favoritesCollection),
         where('userId', '==', userId),
         where('mediaId', '==', mediaId)

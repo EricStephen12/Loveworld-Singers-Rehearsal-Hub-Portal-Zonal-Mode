@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 
@@ -64,8 +64,7 @@ export function usePermissions() {
   // Request permission with modal
   const requestPermission = useCallback((type: PermissionType): Promise<boolean> => {
     return new Promise((resolve) => {
-      // Check if already granted
-      if (type === 'notification' && permissions.notification === 'granted') {
+            if (type === 'notification' && permissions.notification === 'granted') {
         resolve(true)
         return
       }
@@ -108,8 +107,7 @@ export function usePermissions() {
     }
   }, [checkPermissions])
 
-  // Check if permission is needed (not granted)
-  const needsPermission = useCallback((type: PermissionType): boolean => {
+    const needsPermission = useCallback((type: PermissionType): boolean => {
     if (type === 'notification') {
       return permissions.notification !== 'granted'
     }

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Search, 
-  Calendar, 
-  FileText, 
+import {
+  Search,
+  Calendar,
+  FileText,
   Plus,
   ChevronLeft,
   Edit,
@@ -14,6 +14,7 @@ import {
 import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { Toast } from '../Toast';
 import { useAdminTheme } from './AdminThemeProvider';
+import CustomLoader from '@/components/CustomLoader';
 
 interface PagesSectionProps {
   allPraiseNights: PraiseNight[] | null;
@@ -81,10 +82,10 @@ interface PagesSectionProps {
 
 export default function PagesSection(props: PagesSectionProps) {
   const { theme } = useAdminTheme();
-  
+
   // Pagination state for pages list
   const [pagesDisplayLimit, setPagesDisplayLimit] = useState(10);
-  
+
   const {
     allPraiseNights,
     loading,
@@ -149,17 +150,13 @@ export default function PagesSection(props: PagesSectionProps) {
   // Get admin pages (same logic as original)
   const pages = useMemo(() => {
     if (loading) {
-      console.log('⏳ Still loading...');
       return [];
     }
-    
+
     if (!allPraiseNights) {
-      console.log('❌ No allPraiseNights data');
       return [];
     }
-    
-    console.log('📄 Admin pages loaded:', allPraiseNights.length, 'pages');
-    console.log('📄 All pages data:', allPraiseNights);
+
     return allPraiseNights;
   }, [allPraiseNights, loading]);
 
@@ -167,11 +164,11 @@ export default function PagesSection(props: PagesSectionProps) {
   const filteredPages = useMemo(() => {
     // Reset pagination when filter changes
     setPagesDisplayLimit(10);
-    
+
     if (!searchTerm) return pages;
-    
+
     // Filter by page category name or page name
-    return pages.filter(page => 
+    return pages.filter(page =>
       page.pageCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       page.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -192,15 +189,14 @@ export default function PagesSection(props: PagesSectionProps) {
       updatedAt: new Date(),
       countdown: page.countdown
     }));
-    
-    console.log('📂 Page categories:', categories.length);
+
     return categories;
   }, [filteredPages]);
 
   // Get available song categories for filtering
   const availableCategories = useMemo(() => {
     if (!selectedPage) return [];
-    
+
     // Handle both number IDs and Firebase document IDs
     const pageSongs = allSongs.filter(song => {
       const songPraiseNightId = song.praiseNightId;
@@ -208,15 +204,14 @@ export default function PagesSection(props: PagesSectionProps) {
       return songPraiseNightId === pageId || songPraiseNightId === pageId.toString();
     });
     const categories = [...new Set(pageSongs.map(song => song.category))];
-    
-    console.log('🏷️ Available categories for page:', categories);
+
     return categories;
   }, [allSongs, selectedPage]);
 
   // Filter and paginate songs
   const filteredSongs = useMemo(() => {
     if (!selectedPage) return [];
-    
+
     return allSongs
       .filter(song => {
         // Handle both number IDs and Firebase document IDs
@@ -225,7 +220,17 @@ export default function PagesSection(props: PagesSectionProps) {
         return songPraiseNightId === pageId || songPraiseNightId === pageId.toString();
       })
       .filter(song => {
-        const matchesSearch = song.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const query = searchTerm.toLowerCase();
+        const matchesSearch =
+          song.title.toLowerCase().includes(query) ||
+          song.writer?.toLowerCase().includes(query) ||
+          song.leadSinger?.toLowerCase().includes(query) ||
+          song.lyrics?.toLowerCase().includes(query) ||
+          song.solfas?.toLowerCase().includes(query) ||
+          song.key?.toLowerCase().includes(query) ||
+          song.tempo?.toLowerCase().includes(query) ||
+          (song.comments && Array.isArray(song.comments) && song.comments.some(c => c.text?.toLowerCase().includes(query)));
+
         const matchesStatus = statusFilter === 'all' || song.status === statusFilter;
         const matchesCategory = categoryFilter === 'all' || song.category === categoryFilter;
         return matchesSearch && matchesStatus && matchesCategory;
@@ -237,59 +242,8 @@ export default function PagesSection(props: PagesSectionProps) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col lg:flex-row h-full">
-        {/* Pages List Skeleton */}
-        <div className="w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col h-full">
-          <div className="p-6 border-b border-slate-200 flex-shrink-0">
-            <div className="flex items-center justify-between mb-4">
-              <div className="h-7 w-24 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-9 w-28 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-            <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="p-4 rounded-lg border border-slate-200 bg-white">
-                  <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
-                  <div className="h-4 w-40 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content Skeleton */}
-        <div className="flex-1 flex flex-col h-full">
-          <div className="bg-white border-b border-slate-200 p-6 flex-shrink-0">
-            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-
-          <div className="bg-white border-b border-slate-200 p-6 flex-shrink-0">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="flex gap-3">
-                <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-                <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white h-full">
+        <CustomLoader message="Loading pages and songs..." />
       </div>
     );
   }
@@ -335,7 +289,7 @@ export default function PagesSection(props: PagesSectionProps) {
             />
           </div>
         </div>
-        
+
         {/* Mobile Search & Add */}
         <div className="lg:hidden p-4 border-b border-slate-100 space-y-3">
           <div className="relative">
@@ -349,7 +303,7 @@ export default function PagesSection(props: PagesSectionProps) {
             />
           </div>
         </div>
-        
+
         {/* Mobile Add Button - Floating */}
         <button
           onClick={() => {
@@ -399,13 +353,22 @@ export default function PagesSection(props: PagesSectionProps) {
                         inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                         ${page.category === 'ongoing' ? 'bg-green-100 text-green-800' :
                           page.category === 'pre-rehearsal' ? 'bg-yellow-100 text-yellow-800' :
-                          page.category === 'archive' ? 'bg-gray-100 text-gray-800' :
-                          'bg-blue-100 text-blue-800'}
+                            page.category === 'archive' ? 'bg-gray-100 text-gray-800' :
+                              'bg-blue-100 text-blue-800'}
                       `}>
                         {page.category}
                       </span>
                       <span className="text-xs text-slate-500">
-                        {allSongs.filter(song => song.praiseNightId === page.id).length} songs
+                        {(() => {
+                          const count = page.songCount !== undefined && page.songCount !== null
+                            ? page.songCount
+                            : allSongs.filter(song => {
+                              const songPageId = song.praiseNightId || (song as any).praisenightid || (song as any).praisenight_id || (song as any).pageId;
+                              return songPageId === page.id || songPageId === page.id.toString();
+                            }).length;
+
+                          return count > 0 ? `${count} songs` : null;
+                        })()}
                       </span>
                     </div>
                   </div>
@@ -432,7 +395,7 @@ export default function PagesSection(props: PagesSectionProps) {
                 </div>
               </div>
             ))}
-            
+
             {/* Load More Button for Pages */}
             {filteredPages.length > pagesDisplayLimit && (
               <div className="pt-2 pb-1">
@@ -445,7 +408,7 @@ export default function PagesSection(props: PagesSectionProps) {
                 </button>
               </div>
             )}
-            
+
             {/* Show count */}
             {filteredPages.length > 0 && (
               <div className="text-center text-xs text-slate-500 pt-1">
@@ -623,77 +586,74 @@ export default function PagesSection(props: PagesSectionProps) {
                         {filteredSongs
                           .slice(startIndex, startIndex + itemsPerPage)
                           .map((song, index) => (
-                          <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
-                            <td className="py-4 px-4">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 ${theme.primaryLight} rounded-lg flex items-center justify-center`}>
-                                  <Music className={`w-5 h-5 ${theme.text}`} />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-slate-900">{song.title}</div>
-                                  <div className="text-sm text-gray-500">
-                                    {song.leadKeyboardist} • {song.leadGuitarist} • {song.drummer}
+                            <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
+                              <td className="py-4 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 ${theme.primaryLight} rounded-lg flex items-center justify-center`}>
+                                    <Music className={`w-5 h-5 ${theme.text}`} />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-slate-900">{song.title}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {song.leadKeyboardist} • {song.leadGuitarist} • {song.drummer}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-blue-800 whitespace-nowrap">
-                                {song.category}
-                              </span>
-                            </td>
-                            <td className="py-4 px-4">
-                              <button
-                                onClick={() => handleToggleSongStatus(song)}
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                                  song.status === 'heard'
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-blue-800 whitespace-nowrap">
+                                  {song.category}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <button
+                                  onClick={() => handleToggleSongStatus(song)}
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${song.status === 'heard'
                                     ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                     : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                }`}
-                              >
-                                {song.status === 'heard' ? 'Heard' : 'Unheard'}
-                              </button>
-                            </td>
-                            <td className="py-4 px-4">
-                              <button
-                                onClick={() => handleToggleSongActive(song)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                                  (song as any).isActive
+                                    }`}
+                                >
+                                  {song.status === 'heard' ? 'Heard' : 'Unheard'}
+                                </button>
+                              </td>
+                              <td className="py-4 px-4">
+                                <button
+                                  onClick={() => handleToggleSongActive(song)}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${(song as any).isActive
                                     ? theme.primary
                                     : 'bg-gray-200'
-                                }`}
-                                title={(song as any).isActive ? 'Active (Users see blinking border)' : 'Click to make active'}
-                              >
-                                <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    (song as any).isActive ? 'translate-x-6' : 'translate-x-1'
-                                  }`}
-                                />
-                              </button>
-                            </td>
-                            <td className="py-4 px-4 text-sm text-slate-900">{song.leadSinger}</td>
-                            <td className="py-4 px-4 text-sm text-slate-900">{song.writer}</td>
-                            <td className="py-4 px-4 text-sm text-slate-900">{song.conductor}</td>
-                            <td className="py-4 px-4 text-sm text-slate-900">{song.key}</td>
-                            <td className="py-4 px-4 text-sm text-slate-900">{song.tempo}</td>
-                            <td className="py-4 px-4">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditSong(song)}
-                                  className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded"
+                                    }`}
+                                  title={(song as any).isActive ? 'Active (Users see blinking border)' : 'Click to make active'}
                                 >
-                                  <Edit className="w-4 h-4" />
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(song as any).isActive ? 'translate-x-6' : 'translate-x-1'
+                                      }`}
+                                  />
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteSong(song)}
-                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="py-4 px-4 text-sm text-slate-900">{song.leadSinger}</td>
+                              <td className="py-4 px-4 text-sm text-slate-900">{song.writer}</td>
+                              <td className="py-4 px-4 text-sm text-slate-900">{song.conductor}</td>
+                              <td className="py-4 px-4 text-sm text-slate-900">{song.key}</td>
+                              <td className="py-4 px-4 text-sm text-slate-900">{song.tempo}</td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleEditSong(song)}
+                                    className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSong(song)}
+                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -706,101 +666,98 @@ export default function PagesSection(props: PagesSectionProps) {
                         <span className="font-semibold text-slate-700">{filteredSongs.length}</span> songs
                       </p>
                     </div>
-                    
+
                     <div className="divide-y divide-slate-100">
                       {filteredSongs
                         .slice(startIndex, startIndex + itemsPerPage)
                         .map((song, index) => (
-                        <div key={index} className="bg-white">
-                          {/* Main Row - Tappable */}
-                          <div 
-                            className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors"
-                            onClick={() => handleEditSong(song)}
-                          >
-                            {/* Song Icon */}
-                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                              song.status === 'heard' 
-                                ? 'from-green-400 to-emerald-500' 
+                          <div key={index} className="bg-white">
+                            {/* Main Row - Tappable */}
+                            <div
+                              className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors"
+                              onClick={() => handleEditSong(song)}
+                            >
+                              {/* Song Icon */}
+                              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${song.status === 'heard'
+                                ? 'from-green-400 to-emerald-500'
                                 : 'from-purple-400 to-pink-500'
-                            } flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                              <Music className="w-6 h-6 text-white" />
+                                } flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                                <Music className="w-6 h-6 text-white" />
+                              </div>
+
+                              {/* Song Info */}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-[15px] text-slate-900 truncate">{song.title}</h3>
+                                <p className="text-sm text-slate-500 truncate">
+                                  {song.leadSinger || song.writer || 'No artist info'}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                                    {song.category}
+                                  </span>
+                                  {song.key && (
+                                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                      Key: {song.key}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Status */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSongStatus(song);
+                                }}
+                                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${song.status === 'heard'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                                  }`}
+                              >
+                                {song.status === 'heard' ? '✓ Heard' : 'Unheard'}
+                              </button>
                             </div>
-                            
-                            {/* Song Info */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-[15px] text-slate-900 truncate">{song.title}</h3>
-                              <p className="text-sm text-slate-500 truncate">
-                                {song.leadSinger || song.writer || 'No artist info'}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
-                                  {song.category}
-                                </span>
-                                {song.key && (
-                                  <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                                    Key: {song.key}
+
+                            {/* Quick Actions Bar */}
+                            <div className="flex items-center justify-between px-4 py-2 bg-slate-50/50 border-t border-slate-100">
+                              <div className="flex items-center gap-3">
+                                {song.tempo && (
+                                  <span className="text-xs text-slate-500">
+                                    <span className="font-medium">{song.tempo}</span> BPM
+                                  </span>
+                                )}
+                                {song.conductor && (
+                                  <span className="text-xs text-slate-500 truncate max-w-[100px]">
+                                    🎼 {song.conductor}
                                   </span>
                                 )}
                               </div>
-                            </div>
-                            
-                            {/* Status */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleSongStatus(song);
-                              }}
-                              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
-                                song.status === 'heard'
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-yellow-100 text-yellow-700'
-                              }`}
-                            >
-                              {song.status === 'heard' ? '✓ Heard' : 'Unheard'}
-                            </button>
-                          </div>
-                          
-                          {/* Quick Actions Bar */}
-                          <div className="flex items-center justify-between px-4 py-2 bg-slate-50/50 border-t border-slate-100">
-                            <div className="flex items-center gap-3">
-                              {song.tempo && (
-                                <span className="text-xs text-slate-500">
-                                  <span className="font-medium">{song.tempo}</span> BPM
-                                </span>
-                              )}
-                              {song.conductor && (
-                                <span className="text-xs text-slate-500 truncate max-w-[100px]">
-                                  🎼 {song.conductor}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleToggleSongActive(song);
-                                }}
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
-                                  (song as any).isActive 
-                                    ? 'bg-green-500 text-white' 
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleSongActive(song);
+                                  }}
+                                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${(song as any).isActive
+                                    ? 'bg-green-500 text-white'
                                     : 'bg-slate-200 text-slate-600'
-                                }`}
-                              >
-                                {(song as any).isActive ? '● Live' : '○ Off'}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteSong(song);
-                                }}
-                                className="p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                                    }`}
+                                >
+                                  {(song as any).isActive ? '● Live' : '○ Off'}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteSong(song);
+                                  }}
+                                  className="p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </div>
 
@@ -832,11 +789,10 @@ export default function PagesSection(props: PagesSectionProps) {
                               <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                                  currentPage === page
-                                    ? `${theme.primary} text-white`
-                                    : 'text-slate-500 bg-white border border-slate-300 hover:bg-slate-50'
-                                }`}
+                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${currentPage === page
+                                  ? `${theme.primary} text-white`
+                                  : 'text-slate-500 bg-white border border-slate-300 hover:bg-slate-50'
+                                  }`}
                               >
                                 {page}
                               </button>

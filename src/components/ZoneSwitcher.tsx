@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useZone } from '@/hooks/useZone'
-import { ChevronDown, Check, Users, Loader2 } from 'lucide-react'
+import { ChevronDown, Check, Users } from 'lucide-react'
+import CustomLoader from './CustomLoader'
 
 export default function ZoneSwitcher() {
   const { currentZone, userZones, isSuperAdmin, switchZone } = useZone()
@@ -19,20 +20,17 @@ export default function ZoneSwitcher() {
       setIsOpen(false)
       return
     }
-    
-    setIsSwitching(true)
+
     setIsOpen(false)
-    
-    console.log('🔄 Zone Switch: Starting switch to', zoneId)
-    
-    // Call switchZone which saves the preference
+    setIsSwitching(true)
+
+
+    // Call switchZone which updates current zone
     const success = await switchZone(zoneId)
-    
+
     if (success) {
-      console.log('🔄 Zone Switch: Preference saved, reloading page...')
-      
-      // Clear all zone-specific caches before reload
-      try {
+
+            try {
         const keysToRemove: string[] = []
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
@@ -50,13 +48,14 @@ export default function ZoneSwitcher() {
           }
         }
         keysToRemove.forEach(k => localStorage.removeItem(k))
-        console.log('🔄 Zone Switch: Cleared', keysToRemove.length, 'data caches')
       } catch (e) {
         console.error('Error clearing caches:', e)
       }
-      
-      // Reload the page to refresh all contexts with new zone
-      window.location.reload()
+
+      // Small delay for visual feedback before hard reload
+      setTimeout(() => {
+        window.location.reload()
+      }, 800)
     } else {
       setIsSwitching(false)
     }
@@ -64,12 +63,12 @@ export default function ZoneSwitcher() {
 
   return (
     <>
-      {/* Switching Overlay */}
+      {/* Switching Overlay - Premium Indication */}
       {isSwitching && (
-        <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-            <p className="text-sm font-medium text-gray-700">Switching zone...</p>
+        <div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-4">
+            <CustomLoader size="lg" />
+            <p className="text-gray-600 font-medium animate-pulse">Switching to new zone...</p>
           </div>
         </div>
       )}
@@ -81,8 +80,8 @@ export default function ZoneSwitcher() {
           disabled={isSwitching}
           className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50"
         >
-          <div 
-            className="w-3 h-3 rounded-full" 
+          <div
+            className="w-3 h-3 rounded-full"
             style={{ backgroundColor: currentZone.themeColor }}
           />
           <div className="flex-1 text-left">
@@ -98,11 +97,11 @@ export default function ZoneSwitcher() {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <div 
-              className="fixed inset-0 z-40" 
+            <div
+              className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}
             />
-            
+
             {/* Dropdown Menu */}
             <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl z-50 max-h-[400px] overflow-y-auto">
               {isSuperAdmin && (
@@ -112,18 +111,17 @@ export default function ZoneSwitcher() {
                   </p>
                 </div>
               )}
-              
+
               <div className="py-2">
                 {userZones.map((zone) => (
                   <button
                     key={zone.id}
                     onClick={() => handleZoneSwitch(zone.id)}
-                    className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-                      currentZone.id === zone.id ? 'bg-green-50' : ''
-                    }`}
+                    className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${currentZone.id === zone.id ? 'bg-green-50' : ''
+                      }`}
                   >
-                    <div 
-                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: zone.themeColor }}
                     />
                     <div className="flex-1 text-left">
@@ -136,7 +134,7 @@ export default function ZoneSwitcher() {
                   </button>
                 ))}
               </div>
-              
+
               {/* Join Another Zone Button */}
               <div className="border-t border-gray-200 p-2">
                 <a

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Music, Settings, Home, Menu, X } from 'lucide-react'
+import { Music, Settings, Home, Menu, X, Mic } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Navigation() {
@@ -12,6 +12,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/home', label: 'Home', icon: Home },
     { href: '/pages/praise-night', label: 'Program', icon: Music },
+    { href: '/pages/audiolab', label: 'AudioLab', icon: Mic },
     { href: '/pages/admin', label: 'Admin', icon: Settings },
   ]
 
@@ -38,11 +39,10 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -78,11 +78,10 @@ export default function Navigation() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-4 rounded-lg text-base font-medium transition-colors touch-target ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center space-x-3 px-4 py-4 rounded-lg text-base font-medium transition-colors touch-target ${isActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span>{item.label}</span>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { db } from '@/lib/firebase-setup'
 import { 
@@ -188,7 +188,6 @@ export async function createAdminPlaylist(data: {
   }
 }
 
-// Update playlist
 export async function updateAdminPlaylist(
   id: string,
   data: Partial<Omit<AdminPlaylist, 'id' | 'createdAt' | 'updatedAt'>>
@@ -276,8 +275,7 @@ export async function addChildPlaylist(parentId: string, childId: string): Promi
     const child = await getAdminPlaylist(childId)
     if (!child) throw new Error('Child playlist not found')
     
-    // Check if child already contains parent (prevent circular)
-    if (child.childPlaylistIds?.includes(parentId)) {
+        if (child.childPlaylistIds?.includes(parentId)) {
       throw new Error('Cannot create circular playlist reference')
     }
     

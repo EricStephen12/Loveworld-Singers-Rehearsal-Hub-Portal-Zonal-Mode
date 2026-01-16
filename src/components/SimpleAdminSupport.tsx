@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { SupabaseSupport, SupportMessage } from '@/lib/supabase-support';
@@ -23,10 +23,8 @@ export default function SimpleAdminSupport() {
 
   // Load messages
   const loadMessages = async () => {
-    console.log('🔄 Admin: Loading messages...');
     try {
       const allMessages = await SupabaseSupport.getMessages();
-      console.log('📨 Admin: Received messages:', allMessages.length, allMessages);
       setMessages(allMessages);
     } catch (error) {
       console.error('❌ Admin: Error loading messages:', error);
@@ -52,8 +50,7 @@ export default function SimpleAdminSupport() {
     }
   };
 
-  // Update message status
-  const updateStatus = async (messageId: string, status: string) => {
+    const updateStatus = async (messageId: string, status: string) => {
     await SupabaseSupport.updateMessage(messageId, { status: status as any });
     loadMessages();
   };
@@ -106,7 +103,6 @@ export default function SimpleAdminSupport() {
         <div className="flex gap-2">
           <button
             onClick={() => {
-              console.log('🔄 Manual refresh clicked');
               loadMessages();
             }}
             className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
@@ -115,7 +111,6 @@ export default function SimpleAdminSupport() {
           </button>
           <button
             onClick={() => {
-              console.log('🔍 Running admin debug...');
               debugAdminSupport();
             }}
             className="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"

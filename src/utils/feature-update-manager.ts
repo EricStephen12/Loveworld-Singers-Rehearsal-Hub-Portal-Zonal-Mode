@@ -1,4 +1,4 @@
-// Feature Update Manager - Like Instagram PWA
+﻿// Feature Update Manager - Like Instagram PWA
 // Handles feature rollouts and cache invalidation for new features
 
 interface FeatureUpdate {
@@ -97,17 +97,11 @@ class FeatureUpdateManager {
 
       localStorage.setItem(this.LAST_CHECK_KEY, now.toString());
 
-      // Check if version changed
-      const needsUpdate = !storedVersion || 
+            const needsUpdate = !storedVersion || 
         storedVersion !== this.CURRENT_VERSION.version ||
         this.CURRENT_VERSION.forceUpdate;
 
       if (needsUpdate) {
-        console.log('🚀 New features detected!', {
-          oldVersion: storedVersion,
-          newVersion: this.CURRENT_VERSION.version,
-          newFeatures: this.CURRENT_VERSION.features
-        });
 
         await this.handleFeatureUpdate();
         return true;
@@ -123,8 +117,7 @@ class FeatureUpdateManager {
   // Handle feature update - clear relevant caches
   private async handleFeatureUpdate(): Promise<void> {
     try {
-      // Clear feature-specific caches
-      const cacheKeysToClear = new Set<string>();
+            const cacheKeysToClear = new Set<string>();
       
       this.FEATURES.forEach(feature => {
         if (feature.enabled) {
@@ -132,20 +125,17 @@ class FeatureUpdateManager {
         }
       });
 
-      // Clear localStorage caches
-      const keysToRemove: string[] = [];
+            const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
-          // Clear feature-related caches
-          cacheKeysToClear.forEach(cacheKey => {
+                    cacheKeysToClear.forEach(cacheKey => {
             if (key.includes(cacheKey)) {
               keysToRemove.push(key);
             }
           });
           
-          // Clear old version caches
-          if (key.includes('cache') || key.includes('Cache')) {
+                    if (key.includes('cache') || key.includes('Cache')) {
             keysToRemove.push(key);
           }
         }
@@ -153,43 +143,36 @@ class FeatureUpdateManager {
 
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log('🗑️ Cleared cache:', key);
       });
 
-      // Clear service worker caches
-      if ('serviceWorker' in navigator && 'caches' in window) {
+            if ('serviceWorker' in navigator && 'caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(
           cacheNames.map(cacheName => {
-            console.log('🗑️ Clearing service worker cache:', cacheName);
             return caches.delete(cacheName);
           })
         );
       }
 
-      // Update stored version
-      localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION.version);
+            localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION.version);
       localStorage.setItem(this.FEATURE_KEY, JSON.stringify(this.CURRENT_VERSION.features));
 
       // Show update notification
       this.showUpdateNotification();
 
-      console.log('✅ Feature update completed');
     } catch (error) {
       console.error('Feature update failed:', error);
     }
   }
 
-  // Check if a specific feature is enabled for this user
-  public isFeatureEnabled(featureId: string): boolean {
+    public isFeatureEnabled(featureId: string): boolean {
     if (typeof window === 'undefined') return false;
 
     try {
       const feature = this.FEATURES.find(f => f.featureId === featureId);
       if (!feature) return false;
 
-      // Check if feature is enabled
-      if (!feature.enabled) return false;
+            if (!feature.enabled) return false;
 
       // Check rollout percentage (like Instagram does)
       const userId = this.getUserId();
@@ -235,7 +218,6 @@ class FeatureUpdateManager {
   // DISABLED: Push notifications for feature updates are disabled
   private async showUpdateNotification(): Promise<void> {
     // Disabled - no longer broadcasting push notifications for feature updates
-    console.log('ℹ️ Feature update detected, notification disabled');
     return;
   }
 
@@ -243,14 +225,11 @@ class FeatureUpdateManager {
   public forceRefresh(): void {
     if (typeof window === 'undefined') return;
 
-    console.log('🔄 Force refreshing app for all users...');
     
-    // Clear all caches
-    localStorage.clear();
+        localStorage.clear();
     sessionStorage.clear();
     
-    // Clear service worker caches
-    if ('serviceWorker' in navigator && 'caches' in window) {
+        if ('serviceWorker' in navigator && 'caches' in window) {
       caches.keys().then(cacheNames => {
         return Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
       });

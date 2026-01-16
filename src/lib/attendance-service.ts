@@ -1,4 +1,4 @@
-import { supabase } from './supabase-client'
+﻿import { supabase } from './supabase-client'
 
 export interface AttendanceRecord {
   id?: string
@@ -22,8 +22,7 @@ export class AttendanceService {
         return { success: false, message: 'Invalid or expired QR code' }
       }
 
-      // Check if user already checked in today
-      const today = new Date().toISOString().split('T')[0]
+            const today = new Date().toISOString().split('T')[0]
       const { data: existingRecord, error: checkError } = await supabase
         .from('attendance')
         .select('*')

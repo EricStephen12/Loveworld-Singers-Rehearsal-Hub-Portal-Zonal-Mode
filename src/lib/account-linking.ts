@@ -1,4 +1,4 @@
-// Account Linking Service for LoveWorld Singers App
+﻿// Account Linking Service for LoveWorld Singers App
 // Links KingsChat accounts with Firebase accounts
 
 import { FirebaseDatabaseService } from './firebase-database';
@@ -17,8 +17,7 @@ export interface KingsChatLinkResult {
 }
 
 export class AccountLinkingService {
-  // Check if a KingsChat account is already linked
-  static async isAccountLinked(odooId: string): Promise<boolean> {
+    static async isAccountLinked(odooId: string): Promise<boolean> {
     try {
       const users = await FirebaseDatabaseService.getAllUsers();
       return users.some((user: any) => user.odooId === odooId);
@@ -28,8 +27,7 @@ export class AccountLinkingService {
     }
   }
 
-  // Check if KingsChat is linked to a Firebase user
-  static async isKingsChatLinked(firebaseUid: string): Promise<boolean> {
+    static async isKingsChatLinked(firebaseUid: string): Promise<boolean> {
     try {
       const user = await FirebaseDatabaseService.getUserProfile(firebaseUid);
       return !!(user as any)?.kingsChatId;
@@ -79,8 +77,7 @@ export class AccountLinkingService {
 
       const kingsChatUser = await response.json();
 
-      // Update Firebase profile with KingsChat info
-      await FirebaseDatabaseService.updateUserProfile(firebaseUid, {
+            await FirebaseDatabaseService.updateUserProfile(firebaseUid, {
         kingsChatId: kingsChatUser.id,
         kingsChatUsername: kingsChatUser.username || '',
         kingsChatName: kingsChatUser.name || kingsChatUser.displayName || '',

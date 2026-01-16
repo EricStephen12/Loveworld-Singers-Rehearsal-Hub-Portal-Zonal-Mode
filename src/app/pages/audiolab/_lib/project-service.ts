@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AUDIOLAB PROJECT SERVICE
  * 
  * Firebase integration for multi-track recording projects
@@ -53,7 +53,6 @@ const TRACK_COLORS = [
  */
 export async function createProject(input: CreateProjectInput): Promise<{ success: boolean; id?: string; project?: AudioLabProject; error?: string }> {
   try {
-    console.log('[ProjectService] Creating project:', input.name);
     
     if (!input.name || !input.ownerId) {
       return { success: false, error: 'Name and owner ID are required' };
@@ -75,7 +74,6 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
     
     const docRef = await addDoc(collection(db, COLLECTION_NAME), projectData);
     
-    console.log('[ProjectService] Project created with ID:', docRef.id);
     
     // Return the created project
     const project: AudioLabProject = {
@@ -108,13 +106,11 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
  */
 export async function getProject(projectId: string): Promise<AudioLabProject | null> {
   try {
-    console.log('[ProjectService] Fetching project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
     const docSnap = await getDoc(docRef);
     
     if (!docSnap.exists()) {
-      console.log('[ProjectService] Project not found:', projectId);
       return null;
     }
     
@@ -130,7 +126,6 @@ export async function getProject(projectId: string): Promise<AudioLabProject | n
  */
 export async function getUserProjects(userId: string, limitCount: number = 50): Promise<AudioLabProject[]> {
   try {
-    console.log('[ProjectService] Fetching projects for user:', userId);
     
     // Get projects where user is owner (simple query without orderBy to avoid index requirement)
     const ownerQuery = query(
@@ -142,7 +137,6 @@ export async function getUserProjects(userId: string, limitCount: number = 50): 
     const ownerSnapshot = await getDocs(ownerQuery);
     const ownedProjects = ownerSnapshot.docs.map(doc => docToProject(doc));
     
-    console.log('[ProjectService] Found', ownedProjects.length, 'owned projects');
     
     // Get projects where user is collaborator (simple query)
     let collabProjects: AudioLabProject[] = [];
@@ -155,10 +149,8 @@ export async function getUserProjects(userId: string, limitCount: number = 50): 
       
       const collabSnapshot = await getDocs(collabQuery);
       collabProjects = collabSnapshot.docs.map(doc => docToProject(doc));
-      console.log('[ProjectService] Found', collabProjects.length, 'collab projects');
     } catch (collabError) {
       // Collab query might fail if no index, that's okay
-      console.log('[ProjectService] Collab query skipped (may need index)');
     }
     
     // Merge and dedupe
@@ -176,7 +168,6 @@ export async function getUserProjects(userId: string, limitCount: number = 50): 
       return dateB.getTime() - dateA.getTime();
     });
     
-    console.log('[ProjectService] Found', allProjects.length, 'projects');
     return allProjects;
   } catch (error) {
     console.error('[ProjectService] Error fetching user projects:', error);
@@ -217,7 +208,6 @@ export async function updateProject(
   updates: Partial<Omit<AudioLabProject, 'id' | 'createdAt' | 'ownerId'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Updating project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
     
@@ -226,7 +216,6 @@ export async function updateProject(
     
     // Ensure we have at least one field to update (besides updatedAt)
     if (!cleanUpdates || Object.keys(cleanUpdates).length === 0) {
-      console.log('[ProjectService] No valid updates to apply');
       return { success: true };
     }
     
@@ -235,7 +224,6 @@ export async function updateProject(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Project updated successfully');
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error updating project:', error);
@@ -251,14 +239,11 @@ export async function updateProject(
  */
 export async function deleteProject(projectId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Deleting project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
     await deleteDoc(docRef);
     
-    // TODO: Also delete associated audio files from Cloudinary
-    
-    console.log('[ProjectService] Project deleted successfully');
+        
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error deleting project:', error);
@@ -281,7 +266,6 @@ export async function addTrack(
   input: CreateTrackInput
 ): Promise<{ success: boolean; track?: Track; error?: string }> {
   try {
-    console.log('[ProjectService] Adding track to project:', projectId);
     
     const project = await getProject(projectId);
     if (!project) {
@@ -310,7 +294,6 @@ export async function addTrack(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Track added:', trackId);
     return { success: true, track };
   } catch (error) {
     console.error('[ProjectService] Error adding track:', error);
@@ -330,7 +313,6 @@ export async function updateTrack(
   updates: Partial<Omit<Track, 'id'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Updating track:', trackId, 'in project:', projectId);
     
     const project = await getProject(projectId);
     if (!project) {
@@ -342,16 +324,14 @@ export async function updateTrack(
       return { success: false, error: 'Track not found' };
     }
     
-    // Update track - remove undefined values from updates first
-    const cleanTrackUpdates = removeUndefinedValues(updates);
+        const cleanTrackUpdates = removeUndefinedValues(updates);
     const updatedTracks = [...project.tracks];
     updatedTracks[trackIndex] = { ...updatedTracks[trackIndex], ...cleanTrackUpdates };
     
     // Clean the entire tracks array to remove any undefined values
     const cleanedTracks = removeUndefinedValues(updatedTracks);
     
-    // Update project duration if track has audio
-    let duration = project.duration;
+        let duration = project.duration;
     if (updates.duration && updates.duration > duration) {
       duration = updates.duration;
     }
@@ -363,7 +343,6 @@ export async function updateTrack(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Track updated successfully');
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error updating track:', error);
@@ -382,7 +361,6 @@ export async function deleteTrack(
   trackId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Deleting track:', trackId, 'from project:', projectId);
     
     const project = await getProject(projectId);
     if (!project) {
@@ -394,8 +372,7 @@ export async function deleteTrack(
       return { success: false, error: 'Track not found' };
     }
     
-    // TODO: Delete audio file from Cloudinary if exists
-    
+        
     // Remove track from project
     const updatedTracks = project.tracks.filter(t => t.id !== trackId);
     
@@ -409,7 +386,6 @@ export async function deleteTrack(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Track deleted successfully');
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error deleting track:', error);
@@ -452,7 +428,6 @@ export async function addCollaborator(
   inviterName?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Adding collaborator:', userId, 'to project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
     
@@ -470,7 +445,6 @@ export async function addCollaborator(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Collaborator added successfully');
     
     // Send push notification to the invited user
     try {
@@ -487,9 +461,7 @@ export async function addCollaborator(
           data: { projectId, projectName: finalProjectName }
         })
       });
-      console.log('[ProjectService] Push notification sent for AudioLab invite');
     } catch (notifError) {
-      console.log('[ProjectService] Push notification failed (non-blocking):', notifError);
     }
     
     return { success: true };
@@ -510,7 +482,6 @@ export async function removeCollaborator(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[ProjectService] Removing collaborator:', userId, 'from project:', projectId);
     
     const docRef = doc(db, COLLECTION_NAME, projectId);
     await updateDoc(docRef, {
@@ -518,7 +489,6 @@ export async function removeCollaborator(
       updatedAt: serverTimestamp()
     });
     
-    console.log('[ProjectService] Collaborator removed successfully');
     return { success: true };
   } catch (error) {
     console.error('[ProjectService] Error removing collaborator:', error);

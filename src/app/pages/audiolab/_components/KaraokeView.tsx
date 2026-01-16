@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  X, Settings, Flame, Star, Play, Pause, 
-  RotateCcw, RotateCw, Maximize, Mic, MicOff, Loader2, AlertCircle
+import {
+  X, Settings, Flame, Star, Play, Pause,
+  RotateCcw, RotateCw, Maximize, Mic, MicOff, AlertCircle
 } from 'lucide-react';
+import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { audioEngine } from '../_lib/audio-engine';
@@ -22,20 +23,20 @@ export function KaraokeView() {
   const { goBack, formatTime, state, setView, togglePlay, seek, updatePracticeStats } = useAudioLab();
   const { user } = useAuth();
   const { player } = state;
-  
+
   const currentSong = player.currentSong;
   const hasSong = !!currentSong;
-  
+
   const songTitle = currentSong?.title || 'Practice Mode';
   const songArtist = currentSong?.artist || 'AudioLab';
   const songDuration = currentSong?.duration || 60;
-  
+
   // Lyrics state - fetched from song data or URL
   const [songLyrics, setSongLyrics] = useState<{ time: number; text: string; targetPitch?: number }[]>(defaultLyrics);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [lyricsError, setLyricsError] = useState<string | null>(null);
   const [hasSyncedLyrics, setHasSyncedLyrics] = useState(false);
-  
+
   // Fetch and parse lyrics when song changes
   useEffect(() => {
     const loadLyrics = async () => {
@@ -44,15 +45,15 @@ export function KaraokeView() {
         setHasSyncedLyrics(false);
         return;
       }
-      
+
       setLyricsLoading(true);
       setLyricsError(null);
-      
+
       try {
         // First, try to get lyrics from Firestore (audiolab_songs collection)
         if (currentSong.id) {
           const { lyrics, lyricsText, hasSyncedLyrics: synced } = await getSongLyrics(currentSong.id);
-          
+
           if (lyrics && lyrics.length > 0) {
             // Use synced lyrics with timestamps
             setSongLyrics(lyrics.map(line => ({
@@ -64,7 +65,7 @@ export function KaraokeView() {
             setLyricsLoading(false);
             return;
           }
-          
+
           if (lyricsText) {
             // Use plain text lyrics with auto-timing
             const autoTimed = parseAutoTimedLyrics(lyricsText, songDuration);
@@ -80,9 +81,8 @@ export function KaraokeView() {
             }
           }
         }
-        
-        // Check if song has embedded lyrics array (from AudioLabSong type)
-        const songWithLyrics = currentSong as any;
+
+                const songWithLyrics = currentSong as any;
         if (songWithLyrics.lyrics && Array.isArray(songWithLyrics.lyrics) && songWithLyrics.lyrics.length > 0) {
           // Use embedded lyrics directly
           setSongLyrics(songWithLyrics.lyrics.map((line: { time: number; text: string; pitch?: number }) => ({
@@ -94,14 +94,13 @@ export function KaraokeView() {
           setLyricsLoading(false);
           return;
         }
-        
-        // Check if song has lyrics URL (LRC file or plain text)
-        if (currentSong.lyricsUrl) {
+
+                if (currentSong.lyricsUrl) {
           try {
             const response = await fetch(currentSong.lyricsUrl);
             if (response.ok) {
               const content = await response.text();
-              
+
               // Detect if it's LRC format (has timestamps)
               if (content.includes('[') && /\[\d{2}:\d{2}/.test(content)) {
                 const parsed = parseLRCLyrics(content);
@@ -112,7 +111,7 @@ export function KaraokeView() {
                   return;
                 }
               }
-              
+
               // Fall back to plain text parsing with auto-timing
               const parsed = parseAutoTimedLyrics(content, songDuration);
               if (parsed.length > 0) {
@@ -130,21 +129,21 @@ export function KaraokeView() {
             console.error('[KaraokeView] Error loading lyrics from URL:', error);
           }
         }
-        
+
         // No lyrics available - show placeholder
         setSongLyrics(defaultLyrics);
         setHasSyncedLyrics(false);
         setLyricsError('No lyrics found for this song');
-        
+
       } catch (error) {
         console.error('[KaraokeView] Error loading lyrics:', error);
         setSongLyrics(defaultLyrics);
         setLyricsError('Failed to load lyrics');
       }
-      
+
       setLyricsLoading(false);
     };
-    
+
     loadLyrics();
   }, [currentSong, songDuration]);
 
@@ -152,7 +151,7 @@ export function KaraokeView() {
   const parseLRCLyrics = (lrcContent: string): { time: number; text: string; targetPitch?: number }[] => {
     const lines = lrcContent.split('\n');
     const lyrics: { time: number; text: string; targetPitch?: number }[] = [];
-    
+
     for (const line of lines) {
       const match = line.match(/\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/);
       if (match) {
@@ -160,17 +159,17 @@ export function KaraokeView() {
         const seconds = parseInt(match[2], 10);
         const ms = match[3] ? parseInt(match[3].padEnd(3, '0'), 10) : 0;
         const text = match[4].trim();
-        
+
         if (text) {
           const time = minutes * 60 + seconds + ms / 1000;
           lyrics.push({ time, text, targetPitch: 440 });
         }
       }
     }
-    
+
     return lyrics.sort((a, b) => a.time - b.time);
   };
-  
+
   // State
   const [currentLine, setCurrentLine] = useState(0);
   const [score, setScore] = useState(0);
@@ -182,7 +181,7 @@ export function KaraokeView() {
   const [currentPitch, setCurrentPitch] = useState<number | null>(null);
   const [pitchAccuracy, setPitchAccuracy] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  
+
   // Refs
   const ratingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastLineRef = useRef(-1);
@@ -209,17 +208,21 @@ export function KaraokeView() {
       // Set up pitch detection callback
       audioEngine.onPitchDetected = (data) => {
         setCurrentPitch(data.pitch);
-        
-        // Calculate accuracy based on target pitch
+
+        // Calculate accuracy based on target pitch (logarithmic cents)
         const targetPitch = songLyrics[currentLine]?.targetPitch || 440;
-        const pitchDiff = Math.abs(data.pitch - targetPitch);
-        const accuracy = Math.max(0, 100 - (pitchDiff / targetPitch) * 100);
+
+        // Calculate cents difference: 1200 * log2(f2/f1)
+        const centsDiff = Math.abs(1200 * Math.log2(data.pitch / targetPitch));
+
+        // Quarter-tone (50 cents) deviation = 0% accuracy
+        const accuracy = Math.max(0, 100 - (centsDiff / 50) * 100);
         setPitchAccuracy(accuracy);
-        
-        // Update pitch position for visualization (0-100)
-        const normalizedPitch = Math.max(30, Math.min(70, 50 + (data.pitch - targetPitch) / 10));
+
+                // Maps -50/+50 cents to 0-100 range
+        const normalizedPitch = Math.max(0, Math.min(100, 50 + (1200 * Math.log2(data.pitch / targetPitch))));
         setPitchPosition(normalizedPitch);
-        
+
         // Award points based on accuracy
         if (accuracy > 80) {
           setScore(prev => prev + Math.floor(accuracy / 10));
@@ -231,30 +234,29 @@ export function KaraokeView() {
           }
         }
       };
-      
+
       audioEngine.startPitchDetection();
     } else {
       audioEngine.stopPitchDetection();
       audioEngine.onPitchDetected = null;
     }
-    
+
     return () => {
       audioEngine.stopPitchDetection();
       audioEngine.onPitchDetected = null;
     };
   }, [isMicActive, currentLine, songLyrics]);
 
-  // Update current lyric line based on playback time
-  useEffect(() => {
+    useEffect(() => {
     const currentTime = player.currentTime;
-    const activeLine = songLyrics.findIndex((lyric, index) => 
+    const activeLine = songLyrics.findIndex((lyric, index) =>
       currentTime >= lyric.time && currentTime < (songLyrics[index + 1]?.time || songDuration)
     );
-    
+
     if (activeLine !== -1 && activeLine !== lastLineRef.current) {
       setCurrentLine(activeLine);
       lastLineRef.current = activeLine;
-      
+
       // Animate waveform on line change
       setWaveformBars(prev => prev.map(() => Math.floor(Math.random() * 12) + 2));
     }
@@ -263,25 +265,25 @@ export function KaraokeView() {
   // Animate waveform while playing
   useEffect(() => {
     if (!player.isPlaying) return;
-    
+
     const interval = setInterval(() => {
       setWaveformBars(prev => prev.map(h => {
         const change = (Math.random() - 0.5) * 4;
         return Math.max(2, Math.min(14, h + change));
       }));
     }, 150);
-    
+
     return () => clearInterval(interval);
   }, [player.isPlaying]);
 
   const showRatingPopup = (rating: string) => {
     setCurrentRating(rating);
     setShowRating(true);
-    
+
     if (ratingTimeoutRef.current) {
       clearTimeout(ratingTimeoutRef.current);
     }
-    
+
     ratingTimeoutRef.current = setTimeout(() => {
       setShowRating(false);
     }, 1500);
@@ -322,7 +324,7 @@ export function KaraokeView() {
       await audioEngine.stopRecording();
       setIsMicActive(false);
     }
-    
+
     // Save session stats
     if (user?.uid && sessionId) {
       await endSession(sessionId, {
@@ -332,15 +334,14 @@ export function KaraokeView() {
         duration: player.currentTime
       });
     }
-    
-    // Update practice stats in context
-    updatePracticeStats({
+
+        updatePracticeStats({
       score,
       accuracy: pitchAccuracy,
       streak,
       sessionsCompleted: state.practiceStats.sessionsCompleted + 1
     });
-    
+
     goBack();
   };
 
@@ -355,7 +356,7 @@ export function KaraokeView() {
       {/* Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {currentSong?.albumArt && (
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center opacity-20 blur-3xl scale-110"
             style={{ backgroundImage: `url('${currentSong.albumArt}')` }}
           />
@@ -365,7 +366,7 @@ export function KaraokeView() {
 
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between p-4 md:p-6 lg:p-8 pt-6">
-        <button 
+        <button
           onClick={handleClose}
           className="flex size-10 md:size-12 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition backdrop-blur-sm"
         >
@@ -433,8 +434,8 @@ export function KaraokeView() {
       {/* Loading Lyrics State */}
       {hasSong && lyricsLoading && (
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
-          <Loader2 size={32} className="animate-spin text-violet-500 mb-4" />
-          <p className="text-slate-400 text-sm">Loading lyrics...</p>
+          <CustomLoader message="" />
+          <p className="text-slate-400 text-sm mt-4">Loading lyrics...</p>
         </div>
       )}
 
@@ -453,7 +454,7 @@ export function KaraokeView() {
 
       {/* Lyrics Stage */}
       {hasSong && !lyricsLoading && (
-        <main 
+        <main
           className="relative z-10 flex-1 w-full max-w-lg mx-auto flex flex-col items-center justify-center overflow-hidden py-8"
           style={{
             maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)',
@@ -472,7 +473,7 @@ export function KaraokeView() {
             {/* Waveform Background */}
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 md:h-24 lg:h-28 flex items-center justify-center gap-1 opacity-30 pointer-events-none">
               {waveformBars.map((height, i) => (
-                <div 
+                <div
                   key={i}
                   className="w-2 md:w-3 bg-violet-500 rounded-full transition-all duration-150"
                   style={{ height: `${height * 4}px` }}
@@ -481,7 +482,7 @@ export function KaraokeView() {
             </div>
 
             {/* Lyric Text */}
-            <h1 
+            <h1
               className="text-white text-[32px] md:text-[48px] lg:text-[64px] font-bold leading-tight text-center relative z-10"
               style={{ textShadow: '0 0 20px rgba(139, 92, 246, 0.5)' }}
             >
@@ -492,16 +493,16 @@ export function KaraokeView() {
             <div className="mt-6 flex flex-col items-center gap-2">
               <div className="h-2 w-56 bg-white/10 rounded-full overflow-hidden relative">
                 <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white/40 -translate-x-1/2 z-10" />
-                <div 
+                <div
                   className="absolute top-0 bottom-0 w-3 bg-violet-500 rounded-full transition-all duration-100"
-                  style={{ 
+                  style={{
                     left: `${pitchPosition}%`,
                     transform: 'translateX(-50%)',
                     boxShadow: isMicActive ? '0 0 10px #8b5cf6' : 'none'
                   }}
                 />
               </div>
-              
+
               {/* Accuracy Display */}
               {isMicActive && currentPitch && (
                 <p className="text-violet-400 text-xs font-medium">
@@ -540,7 +541,7 @@ export function KaraokeView() {
             {/* Progress */}
             <div className="flex items-center gap-3 mb-5 px-1">
               <span className="text-[10px] font-bold text-[#ad92c9] tabular-nums">{formatTime(player.currentTime)}</span>
-              <div 
+              <div
                 className="relative flex-1 h-1.5 bg-white/10 rounded-full cursor-pointer group"
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
@@ -548,7 +549,7 @@ export function KaraokeView() {
                   seek(percent * songDuration);
                 }}
               >
-                <div 
+                <div
                   className="absolute top-0 left-0 h-full bg-violet-500 rounded-full transition-all"
                   style={{ width: `${progress}%` }}
                 />
@@ -563,13 +564,13 @@ export function KaraokeView() {
               </button>
 
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={skipBack}
                   className="size-10 flex items-center justify-center rounded-full text-white hover:text-violet-400 hover:bg-white/5 transition active:scale-95"
                 >
                   <RotateCcw size={22} />
                 </button>
-                <button 
+                <button
                   onClick={handlePlayPause}
                   className="size-14 flex items-center justify-center rounded-full bg-violet-500 text-white shadow-lg shadow-violet-500/40 hover:bg-violet-600 active:scale-90 transition"
                 >
@@ -579,7 +580,7 @@ export function KaraokeView() {
                     <Play size={26} fill="currentColor" className="ml-1" />
                   )}
                 </button>
-                <button 
+                <button
                   onClick={skipForward}
                   className="size-10 flex items-center justify-center rounded-full text-white hover:text-violet-400 hover:bg-white/5 transition active:scale-95"
                 >
@@ -588,13 +589,12 @@ export function KaraokeView() {
               </div>
 
               {/* Mic Toggle */}
-              <button 
+              <button
                 onClick={toggleMic}
-                className={`size-8 flex items-center justify-center rounded-full transition ${
-                  isMicActive 
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
-                    : 'text-white/50 hover:text-white hover:bg-white/10'
-                }`}
+                className={`size-8 flex items-center justify-center rounded-full transition ${isMicActive
+                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                  : 'text-white/50 hover:text-white hover:bg-white/10'
+                  }`}
               >
                 {isMicActive ? <Mic size={20} /> : <MicOff size={20} />}
               </button>

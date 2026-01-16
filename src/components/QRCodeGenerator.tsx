@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
@@ -24,13 +24,11 @@ export default function QRCodeGenerator({ value, size = 200, className = '' }: Q
         
         const canvas = canvasRef.current!
         
-        // Clear the canvas first
-        const ctx = canvas.getContext('2d')
+                const ctx = canvas.getContext('2d')
         if (ctx) {
           ctx.clearRect(0, 0, size, size)
         }
 
-        console.log('Generating QR code for:', value)
         
         // Generate QR code using the qrcode library
         await QRCode.toCanvas(canvas, value, {
@@ -43,7 +41,6 @@ export default function QRCodeGenerator({ value, size = 200, className = '' }: Q
           errorCorrectionLevel: 'M'
         })
         
-        console.log('QR code generated successfully')
       } catch (error) {
         console.error('QR Code generation error:', error)
         setError('Failed to generate QR code')

@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // ANALYTICS MIGRATION API - BIG DATA APPROACH
 // ============================================
 // Like big companies: fetch raw data in TIME-BOUNDED CHUNKS
@@ -200,14 +200,12 @@ async function processMonth(year: number, month: number): Promise<{
   // Calculate unique users count from the userIds map
   summary.uniqueUsers = Object.keys(summary.userIds).length
   
-  // Update timestamps
-  summary.updatedAt = new Date()
+    summary.updatedAt = new Date()
   
   // Save the monthly summary (don't save the full userIds map to save space, just the count)
   const summaryToSave = {
     ...summary,
-    userIds: {} // Clear the map, we only need the count
-  }
+    userIds: {}   }
   await setDoc(docRef, summaryToSave)
   
   return { 
@@ -227,7 +225,6 @@ export async function POST(request: NextRequest) {
     
     // If specific month provided, process just that month
     if (typeof year === 'number' && typeof month === 'number') {
-      console.log(`📊 Processing ${year}-${month + 1}...`)
       const result = await processMonth(year, month)
       
       return NextResponse.json({
@@ -243,7 +240,6 @@ export async function POST(request: NextRequest) {
     
     // Auto-detect: find all months with data and process them
     if (autoDetect) {
-      console.log('📊 Auto-detecting months with data...')
       
       // Get date range from raw data (sample first and last docs)
       const oldestEventQuery = query(
@@ -287,7 +283,6 @@ export async function POST(request: NextRequest) {
         current.setMonth(current.getMonth() + 1)
       }
       
-      console.log(`📊 Found ${monthsToProcess.length} months to process`)
       
       // Process each month sequentially (prevents memory overload)
       let totalEvents = 0
@@ -297,7 +292,6 @@ export async function POST(request: NextRequest) {
       const processedMonths: string[] = []
       
       for (const { year: y, month: m } of monthsToProcess) {
-        console.log(`📊 Processing ${y}-${m + 1}...`)
         const result = await processMonth(y, m)
         totalEvents += result.events
         totalSignups += result.signups

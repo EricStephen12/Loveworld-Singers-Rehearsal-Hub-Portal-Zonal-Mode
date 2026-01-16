@@ -1,12 +1,13 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { 
-  X, Music, Upload, Loader2, Check, Trash2,
+import {
+  X, Music, Upload, Check, Trash2,
   Save, AlertCircle, Plus, Mic
 } from 'lucide-react';
 import { MasterSong, MasterLibraryService } from '@/lib/master-library-service';
 import MediaSelectionModal from '@/components/MediaSelectionModal';
+import CustomLoader from '@/components/CustomLoader';
 
 interface MasterEditSongModalProps {
   song?: MasterSong | null; // Optional - if null, we're creating a new song
@@ -30,31 +31,31 @@ const DEFAULT_AUDIO_PARTS: { key: AudioPartKey; label: string; color: string }[]
 // Helper function to convert markdown-style formatting to HTML for display
 const markdownToHtml = (text: string): string => {
   if (!text) return '';
-  
+
   // Split by double newlines to identify paragraph breaks
   const paragraphs = text.split('\n\n');
-  
+
   // Process each paragraph
   const processedParagraphs = paragraphs
     .filter(p => p.trim() !== '') // Remove empty paragraphs
     .map(paragraph => {
       // Convert **bold** to <b>bold</b>
       let processed = paragraph.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-      
+
       // Convert single newlines to <br>
       processed = processed.replace(/\n/g, '<br>');
-      
+
       // Wrap in div
       return `<div>${processed}</div>`;
     });
-  
+
   return processedParagraphs.join('');
 };
 
 // Helper function to convert HTML to markdown-style text for editing
 const htmlToMarkdown = (html: string): string => {
   if (!html) return '';
-  
+
   return html
     .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n') // Convert <div> to text with double newlines
     .replace(/<br\s*\/?>/gi, '\n') // Convert <br> to newlines
@@ -67,16 +68,16 @@ const htmlToMarkdown = (html: string): string => {
     .trim();
 };
 
-export function MasterEditSongModal({ 
-  song, 
-  isOpen, 
+export function MasterEditSongModal({
+  song,
+  isOpen,
   onClose,
   onSongUpdated,
   onSongCreated,
   mode = 'edit',
 }: MasterEditSongModalProps) {
   const isCreateMode = mode === 'create' || !song;
-  
+
   const [formData, setFormData] = useState({
     title: song?.title || '',
     writer: song?.writer || '',
@@ -86,7 +87,7 @@ export function MasterEditSongModal({
     category: song?.category || '',
     lyrics: htmlToMarkdown(song?.lyrics || ''),
   });
-  
+
   // Initialize audio URLs with existing data or empty
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {
@@ -104,20 +105,19 @@ export function MasterEditSongModal({
     }
     return initial;
   });
-  
+
   // Track custom parts (beyond the default S/A/T/B)
   const [customParts, setCustomParts] = useState<string[]>(song?.customParts || []);
   const [newPartName, setNewPartName] = useState('');
   const [showAddPart, setShowAddPart] = useState(false);
-  
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showMediaSelector, setShowMediaSelector] = useState(false);
   const [selectingPart, setSelectingPart] = useState<string | null>(null);
-  
 
-  // Update form data when song changes
+
   useEffect(() => {
     if (isOpen) {
       if (song) {
@@ -194,15 +194,14 @@ export function MasterEditSongModal({
   const handleAddCustomPart = () => {
     const partName = newPartName.trim();
     if (!partName) return;
-    
-    // Check if part already exists
+
     const normalizedName = partName.toLowerCase();
     const existingParts = ['full', 'soprano', 'alto', 'tenor', 'bass', ...customParts.map(p => p.toLowerCase())];
     if (existingParts.includes(normalizedName)) {
       setError('This part already exists');
       return;
     }
-    
+
     setCustomParts(prev => [...prev, partName]);
     setAudioUrls(prev => ({ ...prev, [partName]: '' }));
     setNewPartName('');
@@ -224,17 +223,17 @@ export function MasterEditSongModal({
       setError('Title is required');
       return;
     }
-    
+
     setSaving(true);
     setError(null);
-    
+
     try {
       // Build audioUrls object with all parts
       const allAudioUrls: Record<string, string> = {};
       Object.entries(audioUrls).forEach(([key, value]) => {
         if (value) allAudioUrls[key] = value;
       });
-      
+
       const songData: Partial<MasterSong> = {
         title: formData.title.trim(),
         writer: formData.writer.trim(),
@@ -247,14 +246,14 @@ export function MasterEditSongModal({
         audioFile: audioUrls.full,
         customParts: customParts,
       };
-      
+
       if (isCreateMode) {
         // Create new song
         const userId = localStorage.getItem('userId') || '';
         const userName = localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Admin';
-        
+
         const result = await MasterLibraryService.createMasterSong(songData, userId, userName);
-        
+
         if (result.success && result.id) {
           setSuccess(true);
           const newSong: MasterSong = {
@@ -267,9 +266,9 @@ export function MasterEditSongModal({
             updatedAt: new Date(),
             importCount: 0,
           } as MasterSong;
-          
+
           onSongCreated?.(newSong);
-          
+
           setTimeout(() => {
             onClose();
           }, 1000);
@@ -277,9 +276,8 @@ export function MasterEditSongModal({
           setError(result.error || 'Failed to create song');
         }
       } else if (song) {
-        // Update existing song
         const result = await MasterLibraryService.updateMasterSong(song.id, songData);
-        
+
         if (result.success) {
           setSuccess(true);
           const updatedSong: MasterSong = {
@@ -287,7 +285,7 @@ export function MasterEditSongModal({
             ...songData,
           };
           onSongUpdated(updatedSong);
-          
+
           setTimeout(() => {
             onClose();
           }, 1000);
@@ -357,7 +355,7 @@ export function MasterEditSongModal({
           {/* Basic Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Song Details</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Title *</label>
@@ -369,7 +367,7 @@ export function MasterEditSongModal({
                   placeholder="Song title"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Writer</label>
                 <input
@@ -380,7 +378,7 @@ export function MasterEditSongModal({
                   placeholder="Song writer"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Lead Singer</label>
                 <input
@@ -391,7 +389,7 @@ export function MasterEditSongModal({
                   placeholder="Lead singer"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
                 <input
@@ -402,7 +400,7 @@ export function MasterEditSongModal({
                   placeholder="e.g., Worship, Praise"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Key</label>
                 <input
@@ -413,7 +411,7 @@ export function MasterEditSongModal({
                   placeholder="e.g., C, G, Am"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Tempo</label>
                 <input
@@ -442,7 +440,7 @@ export function MasterEditSongModal({
                 Add Custom Part
               </button>
             </div>
-            
+
             {/* Add Custom Part Input */}
             {showAddPart && (
               <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-xl border border-purple-200">
@@ -468,17 +466,16 @@ export function MasterEditSongModal({
                 </button>
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {/* Default Parts */}
               {DEFAULT_AUDIO_PARTS.map(({ key, label, color }) => (
-                <div 
+                <div
                   key={key}
-                  className={`relative p-3 rounded-xl border-2 transition-all ${
-                    audioUrls[key] 
-                      ? 'border-green-300 bg-green-50' 
+                  className={`relative p-3 rounded-xl border-2 transition-all ${audioUrls[key]
+                      ? 'border-green-300 bg-green-50'
                       : 'border-slate-200 bg-slate-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-700">{label}</span>
@@ -486,12 +483,12 @@ export function MasterEditSongModal({
                       <Check size={16} className="text-green-600" />
                     )}
                   </div>
-                  
+
                   {audioUrls[key] ? (
                     <div className="flex items-center gap-2">
-                      <audio 
-                        src={audioUrls[key]} 
-                        controls 
+                      <audio
+                        src={audioUrls[key]}
+                        controls
                         className="h-8 w-full max-w-[140px]"
                         style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}
                       />
@@ -513,16 +510,15 @@ export function MasterEditSongModal({
                   )}
                 </div>
               ))}
-              
+
               {/* Custom Parts */}
               {customParts.map((partName) => (
-                <div 
+                <div
                   key={partName}
-                  className={`relative p-3 rounded-xl border-2 transition-all ${
-                    audioUrls[partName] 
-                      ? 'border-green-300 bg-green-50' 
+                  className={`relative p-3 rounded-xl border-2 transition-all ${audioUrls[partName]
+                      ? 'border-green-300 bg-green-50'
                       : 'border-orange-200 bg-orange-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-700">{partName}</span>
@@ -539,12 +535,12 @@ export function MasterEditSongModal({
                       </button>
                     </div>
                   </div>
-                  
+
                   {audioUrls[partName] ? (
                     <div className="flex items-center gap-2">
-                      <audio 
-                        src={audioUrls[partName]} 
-                        controls 
+                      <audio
+                        src={audioUrls[partName]}
+                        controls
                         className="h-8 w-full max-w-[140px]"
                         style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}
                       />
@@ -574,7 +570,7 @@ export function MasterEditSongModal({
             <div className="flex items-center justify-between">
               <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">Lyrics</label>
             </div>
-            
+
             <textarea
               value={formData.lyrics}
               onChange={(e) => handleInputChange('lyrics', e.target.value)}
@@ -603,8 +599,8 @@ export function MasterEditSongModal({
           >
             {saving ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
-                {isCreateMode ? 'Creating...' : 'Saving...'}
+                <CustomLoader size="sm" />
+                <span className="ml-2">{isCreateMode ? 'Creating...' : 'Saving...'}</span>
               </>
             ) : (
               <>

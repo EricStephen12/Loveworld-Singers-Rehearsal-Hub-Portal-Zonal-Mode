@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Safe Area Manager - Handles device-specific safe area adjustments
  * Fixes bottom bar cut-off issues on mobile devices
  */
@@ -20,13 +20,12 @@ export class SafeAreaManager {
    */
   init(): void {
     if (this.isInitialized) return;
-    
+
     this.detectSafeArea();
     this.setupEventListeners();
     this.applySafeAreaStyles();
-    
+
     this.isInitialized = true;
-    console.log('🛡️ SafeAreaManager initialized with bottom safe area:', this.safeAreaBottom);
   }
 
   /**
@@ -42,18 +41,18 @@ export class SafeAreaManager {
     testElement.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
     testElement.style.visibility = 'hidden';
     testElement.style.pointerEvents = 'none';
-    
+
     document.body.appendChild(testElement);
-    
+
     const computedStyle = window.getComputedStyle(testElement);
     const paddingBottom = computedStyle.paddingBottom;
-    
+
     // Parse the padding value
     this.safeAreaBottom = parseInt(paddingBottom) || 0;
-    
+
     // Clean up
     document.body.removeChild(testElement);
-    
+
     // Fallback detection for devices without proper safe area support
     if (this.safeAreaBottom === 0) {
       this.detectFallbackSafeArea();
@@ -67,7 +66,7 @@ export class SafeAreaManager {
     const userAgent = navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
-    
+
     if (isIOS) {
       // iPhone X and later have home indicators
       const isIPhoneX = /iphone/.test(userAgent) && window.screen.height >= 812;
@@ -90,7 +89,6 @@ export class SafeAreaManager {
       setTimeout(() => {
         this.detectSafeArea();
         this.applySafeAreaStyles();
-        console.log('🛡️ Safe area updated after orientation change');
       }, 100);
     });
 
@@ -98,7 +96,6 @@ export class SafeAreaManager {
     window.addEventListener('resize', () => {
       this.detectSafeArea();
       this.applySafeAreaStyles();
-      console.log('🛡️ Safe area updated after resize');
     });
 
     // Handle visual viewport changes (for mobile browsers)
@@ -106,7 +103,6 @@ export class SafeAreaManager {
       window.visualViewport.addEventListener('resize', () => {
         this.detectSafeArea();
         this.applySafeAreaStyles();
-        console.log('🛡️ Safe area updated after visual viewport change');
       });
     }
 
@@ -116,7 +112,6 @@ export class SafeAreaManager {
         setTimeout(() => {
           this.detectSafeArea();
           this.applySafeAreaStyles();
-          console.log('🛡️ Safe area updated after page visibility change');
         }, 200);
       }
     });
@@ -126,7 +121,6 @@ export class SafeAreaManager {
       setTimeout(() => {
         this.detectSafeArea();
         this.applySafeAreaStyles();
-        console.log('🛡️ Safe area updated after navigation');
       }, 100);
     });
   }
@@ -136,11 +130,11 @@ export class SafeAreaManager {
    */
   private applySafeAreaStyles(): void {
     const root = document.documentElement;
-    
+
     // Set CSS custom properties
     root.style.setProperty('--safe-area-bottom', `${this.safeAreaBottom}px`);
     root.style.setProperty('--enhanced-safe-area-bottom', `${Math.max(this.safeAreaBottom, 24)}px`);
-    
+
     // Add device-specific classes
     root.classList.remove('has-safe-area', 'no-safe-area');
     if (this.safeAreaBottom > 0) {
@@ -176,14 +170,9 @@ export class SafeAreaManager {
    * Useful when navigating between pages or when layout changes
    */
   recalculate(): void {
-    console.log('🛡️ Manually recalculating safe area...');
     this.detectSafeArea();
     this.applySafeAreaStyles();
   }
 }
 
-// Auto-initialize when the module is loaded
-if (typeof window !== 'undefined') {
-  const safeAreaManager = SafeAreaManager.getInstance();
-  safeAreaManager.init();
-}
+// Initialized via AppBootstrap or manual call

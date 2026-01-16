@@ -1,4 +1,4 @@
-// Smart Cache Manager - Intelligent cache invalidation for production updates
+﻿// Smart Cache Manager - Intelligent cache invalidation for production updates
 
 interface CacheConfig {
   key: string;
@@ -38,12 +38,10 @@ class SmartCacheManager {
       return;
     }
     
-    // Check if app version changed and clear old cache
-    const storedVersion = localStorage.getItem('app-cache-version');
+        const storedVersion = localStorage.getItem('app-cache-version');
     if (!storedVersion || storedVersion !== this.APP_VERSION) {
       this.clearAllCache();
       localStorage.setItem('app-cache-version', this.APP_VERSION);
-      console.log('🔄 App version changed, cache cleared');
     }
   }
 
@@ -59,17 +57,14 @@ class SmartCacheManager {
     return null;
   }
 
-  // Check if cache entry is valid
-  private isValidEntry(entry: SmartCacheEntry): boolean {
+    private isValidEntry(entry: SmartCacheEntry): boolean {
     const now = Date.now();
     
-    // Check if expired
-    if (now > entry.expiresAt) {
+        if (now > entry.expiresAt) {
       return false;
     }
 
-    // Check if version changed
-    if (entry.version !== this.APP_VERSION) {
+        if (entry.version !== this.APP_VERSION) {
       return false;
     }
 
@@ -103,12 +98,10 @@ class SmartCacheManager {
     });
   }
 
-  // Clear all cache
-  public clearAllCache(): void {
+    public clearAllCache(): void {
     this.cache.clear();
     
-    // Clear localStorage cache (only in browser)
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -119,11 +112,9 @@ class SmartCacheManager {
       keysToRemove.forEach(key => localStorage.removeItem(key));
     }
     
-    console.log('🧹 Smart cache cleared');
   }
 
-  // Clear specific cache
-  public clearCache(key: string): void {
+    public clearCache(key: string): void {
     this.cache.delete(key);
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       localStorage.removeItem(`cache-${key}`);
@@ -140,7 +131,6 @@ class SmartCacheManager {
 
   // Force refresh specific cache
   public async refreshCache(key: string, fetchFn: () => Promise<any>, config: CacheConfig): Promise<any> {
-    console.log(`🔄 Refreshing cache: ${key}`);
     this.clearCache(key);
     
     try {

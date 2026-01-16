@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Check if user is a zone coordinator
  * Directly queries the database instead of relying on ZoneContext
  */
@@ -15,8 +15,7 @@ export async function isUserCoordinator(userId: string): Promise<boolean> {
       userId
     )
     
-    // Check if any membership has coordinator role
-    const hasCoordinatorRole = memberships.some((m: any) => m.role === 'coordinator')
+        const hasCoordinatorRole = memberships.some((m: any) => m.role === 'coordinator')
     
     return hasCoordinatorRole
   } catch (error) {

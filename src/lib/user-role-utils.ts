@@ -1,4 +1,4 @@
-// User Role Utilities
+﻿// User Role Utilities
 // Determines user permissions based on email prefix and zone context
 
 import type { UserProfile } from '@/types/supabase'
@@ -16,14 +16,11 @@ export function isBoss(user: UserProfile | null): boolean {
   
   const email = user.email?.toLowerCase();
   
-  // Check if user has boss role
-  if (user.role === 'boss') return true;
+    if (user.role === 'boss') return true;
   
-  // Check if email starts with "BOSS"
-  if (email?.startsWith('boss')) return true;
+    if (email?.startsWith('boss')) return true;
   
-  // Check if email is in boss emails list
-  if (email && BOSS_EMAILS.includes(email)) return true;
+    if (email && BOSS_EMAILS.includes(email)) return true;
   
   return false;
 }
@@ -34,8 +31,7 @@ export function isBoss(user: UserProfile | null): boolean {
 export function isZoneLeader(user: UserProfile | null): boolean {
   if (!user?.email) return false
   
-  // Check if email starts with "ZNL" (case insensitive)
-  return user.email.toLowerCase().startsWith('znl')
+    return user.email.toLowerCase().startsWith('znl')
 }
 
 /**
@@ -53,8 +49,7 @@ export function canSeeUpgradePrompts(user: UserProfile | null): boolean {
 export function isZoneCoordinator(user: UserProfile | null): boolean {
   if (!user) return false
   
-  // Check if user has coordinator role or is a zone leader
-  return user.administration === 'Coordinator' || isZoneLeader(user)
+    return user.administration === 'Coordinator' || isZoneLeader(user)
 }
 
 /**

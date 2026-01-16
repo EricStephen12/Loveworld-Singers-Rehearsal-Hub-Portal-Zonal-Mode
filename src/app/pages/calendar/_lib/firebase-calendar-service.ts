@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   collection, 
   doc, 
   addDoc, 
@@ -77,8 +77,7 @@ export class CalendarService {
     }
   }
 
-  // Update an existing event
-  async updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<void> {
+    async updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<void> {
     try {
       const eventRef = doc(this.eventsCollection, eventId)
       const updateData: any = {
@@ -213,8 +212,7 @@ export class CalendarService {
     }
   }
 
-  // Update attendee status
-  async updateAttendeeStatus(eventId: string, userId: string, status: EventAttendee['status']): Promise<void> {
+    async updateAttendeeStatus(eventId: string, userId: string, status: EventAttendee['status']): Promise<void> {
     try {
       const q = query(
         this.attendeesCollection,

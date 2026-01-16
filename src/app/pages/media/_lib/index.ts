@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Media Library - Standalone Module
  * 
  * Complete Firebase-based media management system
@@ -19,7 +19,6 @@ export { db, storage } from '@/lib/firebase-setup'
 export { firebaseMediaService, firebaseMediaService as mediaService } from './firebase-media-service'
 export { default } from './firebase-media-service'
 
-// Note: File uploads handled via Cloudinary (see admin section)
 
 // Types
 export type { 

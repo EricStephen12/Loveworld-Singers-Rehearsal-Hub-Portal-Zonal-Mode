@@ -1,4 +1,4 @@
-// API Route for Password Reset (In-App)
+﻿// API Route for Password Reset (In-App)
 // Uses Firebase Admin SDK to reset password
 // Lookup is done client-side, only password update uses Admin SDK
 
@@ -92,8 +92,7 @@ export async function POST(request: NextRequest) {
         // Get Firebase Auth user by email
         const userRecord = await auth.getUserByEmail(email.toLowerCase())
         
-        // Update password using Firebase Admin
-        await auth.updateUser(userRecord.uid, {
+                await auth.updateUser(userRecord.uid, {
           password: newPassword
         })
         

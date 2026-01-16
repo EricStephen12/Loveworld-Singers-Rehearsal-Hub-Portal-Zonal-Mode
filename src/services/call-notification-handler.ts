@@ -1,4 +1,4 @@
-// Enhanced Call notification handler for incoming voice call notifications
+﻿// Enhanced Call notification handler for incoming voice call notifications
 // Integrates with your existing PushNotificationListener and voice call system
 
 interface CallPayload {
@@ -28,7 +28,6 @@ export class CallNotificationHandler {
     const { type, callId, callerName, callerAvatar } = payload.data;
     
     if (type === 'VOICE_CALL' && this.isActive) {
-      console.log('[CallNotification] Handling incoming call:', { callId, callerName });
       
       const eventData: CallEventData = {
         callId,
@@ -59,7 +58,6 @@ export class CallNotificationHandler {
   static playIncomingCallSound(eventData: CallEventData) {
     // Trigger your existing Web Audio API ringtone
     if (typeof window !== 'undefined' && window.AudioContext) {
-      console.log('[CallNotification] Playing incoming call sound for:', eventData.callerName);
       
       // Dispatch additional event that your ringtone system can listen for
       window.dispatchEvent(new CustomEvent<CallEventData>('playCallRingtone', {
@@ -90,7 +88,6 @@ export class CallNotificationHandler {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 1);
       
-      console.log('[CallNotification] Default ringtone played');
     } catch (error) {
       console.warn('[CallNotification] Could not play default ringtone:', error);
     }
@@ -130,7 +127,6 @@ export class CallNotificationHandler {
             if (notification) notification.close();
           }, 30000);
           
-          console.log('[CallNotification] Browser notification shown');
         }
       }
     }
@@ -139,12 +135,10 @@ export class CallNotificationHandler {
   // Enhanced initialization with better error handling
   static initialize() {
     if (this.isInitialized) {
-      console.log('[CallNotification] Already initialized');
       return;
     }
     
     if (typeof window === 'undefined') {
-      console.log('[CallNotification] Not running in browser environment');
       return;
     }
     
@@ -155,18 +149,15 @@ export class CallNotificationHandler {
       if ((window as any).firebase && (window as any).firebase.messaging) {
         (window as any).firebase.messaging().onMessage((payload: CallPayload) => {
           if (payload.data?.type === 'VOICE_CALL') {
-            console.log('[CallNotification] Received FCM message');
             this.handleIncomingCall(payload);
           }
         });
-        console.log('[CallNotification] Firebase messaging listener attached');
       }
       
       // Custom events from native shell (Android WebView)
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === 'NATIVE_PUSH' && 
             event.data?.data?.type === 'VOICE_CALL') {
-          console.log('[CallNotification] Received native push message');
           this.handleIncomingCall(event.data);
         }
       };
@@ -179,10 +170,8 @@ export class CallNotificationHandler {
         const state = customEvent.detail?.state;
         if (state === 'background' || state === 'inactive') {
           this.isActive = false;
-          console.log('[CallNotification] Paused - app in background');
         } else if (state === 'foreground' || state === 'active') {
           this.isActive = true;
-          console.log('[CallNotification] Resumed - app in foreground');
         }
       };
       
@@ -193,12 +182,10 @@ export class CallNotificationHandler {
         window.removeEventListener('message', handleMessage);
         this.isInitialized = false;
         this.isActive = false;
-        console.log('[CallNotification] Cleaned up listeners');
       };
       
       this.isInitialized = true;
       this.isActive = true;
-      console.log('[CallNotification] Initialized successfully');
       
     } catch (error) {
       console.error('[CallNotification] Initialization failed:', error);
@@ -210,12 +197,10 @@ export class CallNotificationHandler {
 export class CallNotificationUtils {
   static pause() {
     CallNotificationHandler['isActive'] = false;
-    console.log('[CallNotification] Manually paused');
   }
   
   static resume() {
     CallNotificationHandler['isActive'] = true;
-    console.log('[CallNotification] Manually resumed');
   }
   
   static isEnabled(): boolean {

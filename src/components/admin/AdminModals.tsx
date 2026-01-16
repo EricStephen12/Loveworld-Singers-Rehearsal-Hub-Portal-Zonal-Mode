@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
 import {
@@ -60,7 +60,7 @@ interface AdminModalsProps {
   handleUpdatePageCategory: () => void; // New prop for updating page categories
   activeSection: string;
   pageCategories: any[]; // New prop for available page categories
-  
+
   // Page Category Selection
   newPagePageCategory: string; // New prop for page category selection
   setNewPagePageCategory: (pageCategory: string) => void; // New prop for page category selection
@@ -99,12 +99,12 @@ interface AdminModalsProps {
 
 export default function AdminModals(props: AdminModalsProps) {
   const { theme } = useAdminTheme();
-  
+
   // Theme-based CSS classes
   const inputClasses = `w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 ${theme.focusRing} ${theme.focusBorder} focus:shadow-xl ${theme.focusBg}`;
   const buttonClasses = `flex-1 flex items-center justify-center gap-2 px-4 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors font-medium`;
   const selectButtonClasses = `w-full px-4 py-3 ${theme.primaryLight} ${theme.bgHover} ${theme.text} font-medium rounded-lg border-2 ${theme.border} ${theme.borderHover} transition-all duration-200 flex items-center justify-center gap-2`;
-  
+
   // Media Library Modal State
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
@@ -138,7 +138,7 @@ export default function AdminModals(props: AdminModalsProps) {
     setNewPageBannerFile,
     handleAddPage,
     handleUpdatePage,
-    
+
     // Category Modal
     showCategoryModal,
     setShowCategoryModal,
@@ -158,7 +158,7 @@ export default function AdminModals(props: AdminModalsProps) {
     pageCategories, // New prop
     newPagePageCategory, // New prop
     setNewPagePageCategory, // New prop
-    
+
     // Song Modal
     showSongModal,
     setShowSongModal,
@@ -209,7 +209,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <X className="w-6 h-6 sm:w-8 sm:h-8" />
               </button>
             </div>
-            
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <div className="space-y-4 sm:space-y-6">
@@ -217,28 +217,28 @@ export default function AdminModals(props: AdminModalsProps) {
                   <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
                     Category Name
                   </label>
-                <input
-                  type="text"
-                value={newPageCategoryName}
-                onChange={(e) => setNewPageCategoryName(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="Enter category name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Description
-                </label>
-                <textarea
-                  value={newPageCategoryDescription}
-                  onChange={(e) => setNewPageCategoryDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="Enter category description"
-                />
-              </div>
-              
+                  <input
+                    type="text"
+                    value={newPageCategoryName}
+                    onChange={(e) => setNewPageCategoryName(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="Enter category name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Description
+                  </label>
+                  <textarea
+                    value={newPageCategoryDescription}
+                    onChange={(e) => setNewPageCategoryDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="Enter category description"
+                  />
+                </div>
+
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
                   <button
                     onClick={(editingPageCategory || editingCategory) ? (editingPageCategory ? handleUpdatePageCategory : handleUpdateCategory) : (activeSection === 'Categories' ? handleAddCategory : handleAddPageCategory)}
@@ -299,240 +299,236 @@ export default function AdminModals(props: AdminModalsProps) {
                 <X className="w-6 h-6 sm:w-8 sm:h-8" />
               </button>
             </div>
-            
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <div className="space-y-4 sm:space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Page Name
-                </label>
-                <input
-                  type="text"
-                  value={newPageName}
-                  onChange={(e) => setNewPageName(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="e.g., Your Loveworld Special"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Date
-                </label>
-                <input
-                  type="text"
-                  value={newPageDate}
-                  onChange={(e) => setNewPageDate(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="e.g., 21st September 2025"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={newPageLocation}
-                  onChange={(e) => setNewPageLocation(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="e.g., Oasis Studio"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Page Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newPageName}
+                    onChange={(e) => setNewPageName(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="e.g., Your Loveworld Special"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Description
-                </label>
-                <textarea
-                  value={newPageDescription}
-                  onChange={(e) => setNewPageDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                  placeholder="Enter description for this page"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Date
+                  </label>
+                  <input
+                    type="text"
+                    value={newPageDate}
+                    onChange={(e) => setNewPageDate(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="e.g., 21st September 2025"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Banner Image
-                </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={newPageLocation}
+                    onChange={(e) => setNewPageLocation(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="e.g., Oasis Studio"
+                  />
+                </div>
 
-                {/* Hidden file input */}
-                <input
-                  id="banner-image-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Store the actual file for upload
-                      setNewPageBannerFile(file);
-                      // Create a preview URL for the uploaded image
-                      const previewUrl = URL.createObjectURL(file);
-                      setNewPageBannerImage(previewUrl);
-                    }
-                  }}
-                  className="hidden"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Description
+                  </label>
+                  <textarea
+                    value={newPageDescription}
+                    onChange={(e) => setNewPageDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                    placeholder="Enter description for this page"
+                  />
+                </div>
 
-                {/* Browse Library Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowMediaLibrary(true)}
-                  className={selectButtonClasses}
-                >
-                  <FolderOpen className="w-5 h-5" />
-                  {newPageBannerImage ? 'Change Image' : 'Browse Library'}
-                </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Banner Image
+                  </label>
 
-                {newPageBannerImage && (
-                  <div className="mt-3">
-                    <img
-                      src={newPageBannerImage}
-                      alt="Banner preview"
-                      className="w-full h-40 object-cover rounded-lg border-2 border-purple-200 shadow-sm"
-                    />
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-600 truncate flex-1">
-                        {newPageBannerImage.includes('cloudinary') ? 'From Media Library' : 'Current banner image'}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNewPageBannerImage('');
-                          setNewPageBannerFile(null);
-                        }}
-                        className="text-xs text-red-600 hover:text-red-700 font-medium ml-2"
-                      >
-                        Remove
-                      </button>
+                  {/* Hidden file input */}
+                  <input
+                    id="banner-image-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Store the actual file for upload
+                        setNewPageBannerFile(file);
+                        // Create a preview URL for the uploaded image
+                        const previewUrl = URL.createObjectURL(file);
+                        setNewPageBannerImage(previewUrl);
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  {/* Browse Library Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMediaLibrary(true)}
+                    className={selectButtonClasses}
+                  >
+                    <FolderOpen className="w-5 h-5" />
+                    {newPageBannerImage ? 'Change Image' : 'Browse Library'}
+                  </button>
+
+                  {newPageBannerImage && (
+                    <div className="mt-3">
+                      <img
+                        src={newPageBannerImage}
+                        alt="Banner preview"
+                        className="w-full h-40 object-cover rounded-lg border-2 border-purple-200 shadow-sm"
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-gray-600 truncate flex-1">
+                          {newPageBannerImage.includes('cloudinary') ? 'From Media Library' : 'Current banner image'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewPageBannerImage('');
+                            setNewPageBannerFile(null);
+                          }}
+                          className="text-xs text-red-600 hover:text-red-700 font-medium ml-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Select an image from your media library
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Category
+                  </label>
+                  <select
+                    value={newPageCategory}
+                    onChange={(e) => setNewPageCategory(e.target.value as 'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive')}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                  >
+                    <option value="unassigned">Unassigned</option>
+                    <option value="pre-rehearsal">Pre-Rehearsal</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="archive">Archive</option>
+                  </select>
+                </div>
+
+                {/* Page Category Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                    Page Category
+                  </label>
+                  <select
+                    value={newPagePageCategory}
+                    onChange={(e) => setNewPagePageCategory(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                  >
+                    <option value="">Select a page category (optional)</option>
+                    {pageCategories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Assign this page to a specific category for better organization
+                  </p>
+                </div>
+              </div>
+
+              {/* Countdown Timer Section */}
+              <div className="mt-6">
+                <h4 className="text-lg font-medium text-slate-900 mb-4">Countdown Timer</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                      Days
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPageDays}
+                      onChange={(e) => setNewPageDays(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                      placeholder="0"
+                    />
                   </div>
-                )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Select an image from your media library
-                </p>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Category
-                </label>
-                <select
-                  value={newPageCategory}
-                  onChange={(e) => setNewPageCategory(e.target.value as 'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive')}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                >
-                  <option value="unassigned">Unassigned</option>
-                  <option value="pre-rehearsal">Pre-Rehearsal</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="archive">Archive</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                      Hours
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={newPageHours}
+                      onChange={(e) => setNewPageHours(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                      placeholder="0"
+                    />
+                  </div>
 
-              {/* Page Category Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                  Page Category
-                </label>
-                <select
-                  value={newPagePageCategory}
-                  onChange={(e) => setNewPagePageCategory(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                >
-                  <option value="">Select a page category (optional)</option>
-                  {pageCategories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Assign this page to a specific category for better organization
-                </p>
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                      Minutes
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={newPageMinutes}
+                      onChange={(e) => setNewPageMinutes(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                      placeholder="0"
+                    />
+                  </div>
 
-            {/* Countdown Timer Section */}
-            <div className="mt-6">
-              <h4 className="text-lg font-medium text-slate-900 mb-4">Countdown Timer</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                    Days
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={newPageDays}
-                    onChange={(e) => setNewPageDays(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                    Hours
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={newPageHours}
-                    onChange={(e) => setNewPageHours(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                    Minutes
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={newPageMinutes}
-                    onChange={(e) => setNewPageMinutes(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
-                    Seconds
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={newPageSeconds}
-                    onChange={(e) => setNewPageSeconds(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
-                    placeholder="0"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 transition-all duration-200">
+                      Seconds
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={newPageSeconds}
+                      onChange={(e) => setNewPageSeconds(parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-600 focus:shadow-xl focus:bg-purple-50 transition-all duration-200"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            </div>
-              
+
             {/* Footer */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
               <button
                 onClick={() => {
-                  console.log('🔘 Update/Add button clicked');
-                  console.log('editingPage:', editingPage);
                   if (editingPage) {
-                    console.log('🔄 Calling handleUpdatePage');
                     handleUpdatePage();
                   } else {
-                    console.log('➕ Calling handleAddPage');
                     handleAddPage();
                   }
                 }}
@@ -570,35 +566,16 @@ export default function AdminModals(props: AdminModalsProps) {
       )}
 
       {/* Song Edit Modal */}
-      {showSongModal && (
-        <>
-          {console.log('🎵 MODAL DEBUG - EditSongModal is opening with:')}
-          {console.log('🎵 editingSong:', editingSong)}
-          {console.log('🎵 editingSong ID fields:', editingSong ? {
-            id: editingSong.id,
-            firebaseId: editingSong.firebaseId,
-            allFields: Object.keys(editingSong)
-          } : 'No editingSong')}
-        </>
-      )}
       <EditSongModal
         isOpen={showSongModal}
         onClose={() => {
-          console.log('🎵 MODAL DEBUG - EditSongModal closing');
           setShowSongModal(false);
           setEditingSong(null);
         }}
         song={editingSong}
         categories={allCategories}
-        praiseNightCategories={pages.map(page => ({ id: page.id, name: page.name, description: 'Praise Night Event', date: page.date, location: page.location, icon: 'Music', color: '#8B5CF6', isActive: true, createdAt: new Date(), updatedAt: new Date(), countdown: page.countdown }))}
+        praiseNightCategories={pages.map(page => ({ id: page.id, name: page.name, description: 'Praise Night Event', date: page.date, location: page.location, icon: 'Music', color: '#8B5CF6', isActive: true, createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'), countdown: page.countdown }))}
         onUpdate={(songData) => {
-          console.log('🎵 MODAL DEBUG - onUpdate called with songData:');
-          console.log('🎵 songData:', songData);
-          console.log('🎵 songData ID fields:', {
-            id: songData.id,
-            firebaseId: songData.firebaseId,
-            allFields: Object.keys(songData)
-          });
           handleSaveSong(songData);
         }}
       />
@@ -616,7 +593,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <p className="text-sm text-gray-500">This action cannot be undone</p>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <p className="text-gray-700 mb-2">
                 Are you sure you want to delete the page:
@@ -627,7 +604,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <p className="text-sm text-gray-500">{pageToDelete.date}</p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={cancelDeletePage}
@@ -653,14 +630,14 @@ export default function AdminModals(props: AdminModalsProps) {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <Trash2 className="w-5 h-5 text-red-600" />
-                  </div>
+              </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Delete Song</h3>
                 <p className="text-sm text-gray-500">This action cannot be undone</p>
-                </div>
               </div>
+            </div>
 
-                <div className="mb-6">
+            <div className="mb-6">
               <p className="text-gray-700 mb-2">
                 Are you sure you want to delete the song:
               </p>
@@ -670,7 +647,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <p className="text-sm text-gray-500">Status: {songToDelete.status}</p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={cancelDeleteSong}
@@ -685,9 +662,9 @@ export default function AdminModals(props: AdminModalsProps) {
                 Delete Song
               </button>
             </div>
-                  </div>
-                </div>
-              )}
+          </div>
+        </div>
+      )}
 
       {/* Delete Category Confirmation Dialog */}
       {showDeleteCategoryDialog && categoryToDelete && (
@@ -712,7 +689,7 @@ export default function AdminModals(props: AdminModalsProps) {
                 <p className="text-sm text-gray-500">{categoryToDelete.description}</p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={cancelDeleteCategory}
@@ -736,10 +713,8 @@ export default function AdminModals(props: AdminModalsProps) {
         isOpen={showMediaLibrary}
         onClose={() => setShowMediaLibrary(false)}
         onFileSelect={(file) => {
-          console.log('📸 Selected image from library:', file.url);
           setNewPageBannerImage(file.url);
-          setNewPageBannerFile(null); // Clear file since we're using URL
-          setShowMediaLibrary(false);
+          setNewPageBannerFile(null); setShowMediaLibrary(false);
         }}
         allowedTypes={['image']}
         title="Select Banner Image"

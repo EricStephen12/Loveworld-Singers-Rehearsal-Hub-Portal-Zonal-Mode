@@ -1,16 +1,17 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Plus, 
-  Search, 
-  MapPin, 
+import {
+  Calendar,
+  Plus,
+  Search,
+  MapPin,
   Clock,
   Music,
   RefreshCw,
   X
 } from 'lucide-react';
+import CustomLoader from '@/components/CustomLoader';
 
 interface SubGroupRehearsalsProps {
   subGroupId: string;
@@ -30,7 +31,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  
+
   // Form state
   const [newName, setNewName] = useState('');
   const [newDate, setNewDate] = useState('');
@@ -62,7 +63,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
 
   const handleCreate = async () => {
     if (!newName.trim() || !newDate) return;
-    
+
     setCreating(true);
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
@@ -70,9 +71,8 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
         subGroupId,
         zoneId,
         { name: newName, date: newDate, location: newLocation },
-        'system' // TODO: pass actual user ID
-      );
-      
+        'system');
+
       if (result.success) {
         setNewName('');
         setNewDate('');
@@ -95,7 +95,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
+        <CustomLoader />
       </div>
     );
   }
@@ -189,7 +189,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -203,7 +203,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Date *
@@ -215,7 +215,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Location
@@ -229,7 +229,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
                 />
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -240,9 +240,14 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
               <button
                 onClick={handleCreate}
                 disabled={!newName.trim() || !newDate || creating}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {creating ? 'Creating...' : 'Create'}
+                {creating ? (
+                  <>
+                    <CustomLoader size="sm" />
+                    <span>Creating...</span>
+                  </>
+                ) : 'Create'}
               </button>
             </div>
           </div>

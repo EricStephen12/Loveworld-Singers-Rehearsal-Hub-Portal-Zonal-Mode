@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from 'react';
 import { useAudio } from '@/contexts/AudioContext';
@@ -29,8 +29,7 @@ export default function AudioWave({ className = "" }: AudioWaveProps) {
 
     generateWave();
     
-    // Update wave more frequently when playing
-    const interval = isPlaying ? 100 : 500;
+        const interval = isPlaying ? 100 : 500;
     const timer = setInterval(generateWave, interval);
     
     return () => clearInterval(timer);

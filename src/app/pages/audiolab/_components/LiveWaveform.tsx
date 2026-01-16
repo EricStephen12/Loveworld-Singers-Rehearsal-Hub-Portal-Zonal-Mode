@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -49,14 +49,12 @@ export function LiveWaveform({
       analyserRef.current = analyser;
 
       // Connect audio element to analyser
-      // Check if already connected to avoid errors
-      if (!sourceRef.current) {
+            if (!sourceRef.current) {
         const source = audioContext.createMediaElementSource(audioElement);
         source.connect(analyser);
         analyser.connect(audioContext.destination);
         sourceRef.current = source;
         setIsConnected(true);
-        console.log('[LiveWaveform] Connected audio element to analyser');
       }
     } catch (error) {
       console.error('[LiveWaveform] Error connecting audio:', error);
@@ -88,8 +86,7 @@ export function LiveWaveform({
       // Get frequency data
       analyser.getByteFrequencyData(dataArray);
 
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Calculate bar dimensions
       const barWidth = canvas.width / barCount;

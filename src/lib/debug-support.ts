@@ -1,11 +1,9 @@
-import { supabase } from './supabase-client';
+﻿import { supabase } from './supabase-client';
 
 export async function debugSupportSystem() {
-  console.log('🔍 Debugging Support System...');
   
   try {
     // Test 1: Check authentication
-    console.log('1. Checking authentication...');
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError) {
@@ -18,14 +16,8 @@ export async function debugSupportSystem() {
       return;
     }
     
-    console.log('✅ User authenticated:', {
-      id: user.id,
-      email: user.email,
-      role: user.role
-    });
     
     // Test 2: Check database connection
-    console.log('2. Testing database connection...');
     const { data: testData, error: dbError } = await supabase
       .from('support_messages')
       .select('count(*)')
@@ -36,10 +28,8 @@ export async function debugSupportSystem() {
       return;
     }
     
-    console.log('✅ Database connection working');
     
     // Test 3: Check RLS policies
-    console.log('3. Testing RLS policies...');
     const { data: userMessages, error: rlsError } = await supabase
       .from('support_messages')
       .select('*')
@@ -51,10 +41,8 @@ export async function debugSupportSystem() {
       return;
     }
     
-    console.log('✅ RLS policies working');
     
     // Test 4: Try to insert a test message
-    console.log('4. Testing message insertion...');
     const testMessage = {
       user_id: user.id,
       user_name: 'Test User',
@@ -82,7 +70,6 @@ export async function debugSupportSystem() {
       return;
     }
     
-    console.log('✅ Message insertion working:', insertData);
     
     // Clean up test message
     await supabase
@@ -90,7 +77,6 @@ export async function debugSupportSystem() {
       .delete()
       .eq('id', insertData.id);
     
-    console.log('✅ All tests passed! Support system should work.');
     
   } catch (error) {
     console.error('❌ Unexpected error:', error);

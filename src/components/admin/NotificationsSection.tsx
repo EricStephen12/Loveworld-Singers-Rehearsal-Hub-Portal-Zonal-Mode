@@ -5,6 +5,7 @@ import { Bell, Search, X, Clock, Megaphone, Trash2, RefreshCw, ChevronDown } fro
 import { useRealtimeNotifications, useNotificationActions } from '@/hooks/useRealtimeNotifications';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { useAdminTheme } from './AdminThemeProvider';
+import CustomLoader from '@/components/CustomLoader';
 
 export default function NotificationsSection() {
   const { theme } = useAdminTheme();
@@ -40,7 +41,7 @@ export default function NotificationsSection() {
         // This avoids fetching ALL profiles just to get group names
         const predefinedGroups = ['soprano', 'alto', 'tenor', 'bass', 'instrumentalists', 'choir', 'worship team'];
         setAvailableGroups(predefinedGroups);
-        
+
         // Cache the groups
         localStorage.setItem('lwsrh-groups-cache', JSON.stringify({
           groups: predefinedGroups,
@@ -123,15 +124,14 @@ export default function NotificationsSection() {
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
     // Create a simple toast notification
     const toast = document.createElement('div');
-    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
-      type === 'success' ? 'bg-green-500 text-white' :
-      type === 'error' ? 'bg-red-500 text-white' :
-      type === 'warning' ? 'bg-yellow-500 text-white' :
-      'bg-gray-800 text-white'
-    }`;
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+          type === 'warning' ? 'bg-yellow-500 text-white' :
+            'bg-gray-800 text-white'
+      }`;
     toast.textContent = message;
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
@@ -197,7 +197,7 @@ export default function NotificationsSection() {
         await FirebaseDatabaseService.deleteDocument('notifications', notif.id);
         deleted++;
       }
-      
+
       showToast(`✅ ${deleted} notifications deleted!`, 'success');
       setShowDeleteAllConfirm(false);
     } catch (error) {
@@ -210,47 +210,8 @@ export default function NotificationsSection() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="h-7 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="h-6 w-24 bg-gray-200 rounded-full animate-pulse"></div>
-        </div>
-
-        {/* Admin Controls Skeleton */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-            ))}
-          </div>
-        </div>
-
-        {/* Search Bar Skeleton */}
-        <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-
-        {/* Notifications List Skeleton */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="divide-y divide-gray-200">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>
-                  <div className="flex-1">
-                    <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <CustomLoader message="Loading notifications..." />
       </div>
     );
   }
@@ -280,151 +241,151 @@ export default function NotificationsSection() {
           Send messages to users
         </p>
       </div>
-      
+
       {/* Mobile content wrapper */}
       <div className="flex-1 flex flex-col overflow-hidden p-4 lg:px-6 lg:py-0 space-y-4">
 
-      {/* Admin Controls - Clean card design */}
-      <div className="flex-shrink-0 bg-white border border-gray-100 rounded-2xl lg:rounded-lg overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3 border-b border-gray-100">
-          <h3 className="text-gray-900 font-semibold text-sm flex items-center gap-2">
-            <Megaphone className={`w-4 h-4 ${theme.text}`} />
-            Send Notification
-          </h3>
-        </div>
-        <div className="p-4 grid grid-cols-3 gap-2">
-          <button
-            onClick={() => openModal('all')}
-            className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
-          >
-            <span className="text-lg">📢</span>
-            <span>All</span>
-          </button>
-          <button
-            onClick={() => openModal('group')}
-            className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
-          >
-            <span className="text-lg">👥</span>
-            <span>Group</span>
-          </button>
-          <button
-            onClick={() => setShowDeleteAllConfirm(true)}
-            disabled={isDeleting}
-            className="bg-white border border-red-200 text-red-600 py-2.5 px-3 rounded-xl hover:bg-red-50 transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs disabled:opacity-50"
-          >
-            {isDeleting ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            <span>{isDeleting ? '...' : 'Clear'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search notifications..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 lg:bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      {unreadCount > 0 && (
-        <div className="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-xl p-3">
-          <span className="text-sm text-purple-700 font-medium">{unreadCount} unread</span>
-          <button
-            onClick={markAllAsRead}
-            className={`${theme.text} font-semibold text-sm hover:underline`}
-          >
-            Mark all read
-          </button>
-        </div>
-      )}
-
-      {/* Notifications List */}
-      <div className="flex-1 bg-white rounded-2xl lg:rounded-lg border border-gray-100 lg:border-gray-200 overflow-auto shadow-sm">
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-12 px-6">
-            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-1">No notifications</h3>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto">
-              {searchTerm ? 'No notifications match your search.' : 'Send your first notification to users!'}
-            </p>
+        {/* Admin Controls - Clean card design */}
+        <div className="flex-shrink-0 bg-white border border-gray-100 rounded-2xl lg:rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3 border-b border-gray-100">
+            <h3 className="text-gray-900 font-semibold text-sm flex items-center gap-2">
+              <Megaphone className={`w-4 h-4 ${theme.text}`} />
+              Send Notification
+            </h3>
           </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredNotifications.slice(0, displayLimit).map((notification) => {
-              const categoryStyle = getCategoryStyle(notification.category);
-              return (
-                <div
-                  key={notification.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors ${!notification.is_read ? 'bg-purple-50' : ''}`}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Icon */}
-                    <div className={`w-10 h-10 rounded-lg ${categoryStyle.bg} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-lg">{categoryStyle.icon}</span>
-                    </div>
+          <div className="p-4 grid grid-cols-3 gap-2">
+            <button
+              onClick={() => openModal('all')}
+              className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
+            >
+              <span className="text-lg">📢</span>
+              <span>All</span>
+            </button>
+            <button
+              onClick={() => openModal('group')}
+              className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
+            >
+              <span className="text-lg">👥</span>
+              <span>Group</span>
+            </button>
+            <button
+              onClick={() => setShowDeleteAllConfirm(true)}
+              disabled={isDeleting}
+              className="bg-white border border-red-200 text-red-600 py-2.5 px-3 rounded-xl hover:bg-red-50 transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <CustomLoader size="sm" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              <span>{isDeleting ? '...' : 'Clear'}</span>
+            </button>
+          </div>
+        </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900 text-sm">{notification.title}</h4>
-                            {!notification.is_read && (
-                              <div className={`w-2 h-2 ${theme.primary} rounded-full flex-shrink-0`} />
-                            )}
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search notifications..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 lg:bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          />
+        </div>
+
+        {/* Quick Actions */}
+        {unreadCount > 0 && (
+          <div className="flex items-center justify-between bg-purple-50 border border-purple-100 rounded-xl p-3">
+            <span className="text-sm text-purple-700 font-medium">{unreadCount} unread</span>
+            <button
+              onClick={markAllAsRead}
+              className={`${theme.text} font-semibold text-sm hover:underline`}
+            >
+              Mark all read
+            </button>
+          </div>
+        )}
+
+        {/* Notifications List */}
+        <div className="flex-1 bg-white rounded-2xl lg:rounded-lg border border-gray-100 lg:border-gray-200 overflow-auto shadow-sm">
+          {filteredNotifications.length === 0 ? (
+            <div className="text-center py-12 px-6">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Bell className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">No notifications</h3>
+              <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                {searchTerm ? 'No notifications match your search.' : 'Send your first notification to users!'}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {filteredNotifications.slice(0, displayLimit).map((notification) => {
+                const categoryStyle = getCategoryStyle(notification.category);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`p-4 hover:bg-gray-50 transition-colors ${!notification.is_read ? 'bg-purple-50' : ''}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div className={`w-10 h-10 rounded-lg ${categoryStyle.bg} flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-lg">{categoryStyle.icon}</span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 text-sm">{notification.title}</h4>
+                              {!notification.is_read && (
+                                <div className={`w-2 h-2 ${theme.primary} rounded-full flex-shrink-0`} />
+                              )}
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2">{notification.message}</p>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatTimestamp(notification.created_at)}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                • {notification.target_audience === 'all' ? 'All Users' : notification.target_group || 'Individual'}
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-gray-600 text-sm mb-2">{notification.message}</p>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatTimestamp(notification.created_at)}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              • {notification.target_audience === 'all' ? 'All Users' : notification.target_group || 'Individual'}
-                            </span>
-                          </div>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => deleteNotification(notification.id)}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+                          >
+                            <X className="w-4 h-4 text-gray-400" />
+                          </button>
                         </div>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                        >
-                          <X className="w-4 h-4 text-gray-400" />
-                        </button>
                       </div>
                     </div>
                   </div>
+                );
+              })}
+
+              {/* Load More Button */}
+              {filteredNotifications.length > displayLimit && (
+                <div className="p-4 text-center border-t border-gray-100">
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 20)}
+                    className={`px-6 py-2 ${theme.text} hover:bg-purple-50 rounded-lg transition-colors font-medium flex items-center gap-2 mx-auto`}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Load More ({filteredNotifications.length - displayLimit} remaining)
+                  </button>
                 </div>
-              );
-            })}
-            
-            {/* Load More Button */}
-            {filteredNotifications.length > displayLimit && (
-              <div className="p-4 text-center border-t border-gray-100">
-                <button
-                  onClick={() => setDisplayLimit(prev => prev + 20)}
-                  className={`px-6 py-2 ${theme.text} hover:bg-purple-50 rounded-lg transition-colors font-medium flex items-center gap-2 mx-auto`}
-                >
-                  <ChevronDown className="w-4 h-4" />
-                  Load More ({filteredNotifications.length - displayLimit} remaining)
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Send Notification Modal */}
@@ -488,8 +449,9 @@ export default function NotificationsSection() {
                       ))}
                     </select>
                   ) : (
-                    <div className="text-sm text-gray-500 py-2">
-                      Loading groups...
+                    <div className="text-sm text-gray-400 py-2 flex items-center gap-2">
+                      <CustomLoader size="sm" />
+                      <span>Loading groups...</span>
                     </div>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
@@ -515,8 +477,8 @@ export default function NotificationsSection() {
               >
                 {sending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Sending...
+                    <CustomLoader size="sm" />
+                    <span className="ml-2">Sending...</span>
                   </>
                 ) : (
                   'Send Notification'
@@ -557,8 +519,8 @@ export default function NotificationsSection() {
               >
                 {isDeleting ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Deleting...
+                    <CustomLoader size="sm" />
+                    <span className="ml-2">Deleting...</span>
                   </>
                 ) : (
                   'Delete All'

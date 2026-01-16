@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { MobileSafe } from '@/utils/mobile-safe'
@@ -23,14 +23,11 @@ export default function MobileSafeLayout({
       setMobileStyles(MobileSafe.getMobileStyles())
     }
 
-    // Update on resize
-    window.addEventListener('resize', updateStyles)
+        window.addEventListener('resize', updateStyles)
     
-    // Update on orientation change
-    window.addEventListener('orientationchange', updateStyles)
+        window.addEventListener('orientationchange', updateStyles)
 
-    // Update when visual viewport changes
-    if (window.visualViewport) {
+        if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateStyles)
     }
 

@@ -1,4 +1,4 @@
-// app/api/send-notification/route.ts
+﻿// app/api/send-notification/route.ts
 // Unified server-side endpoint for sending push notifications
 // Supports: chat, audiolab, calendar, song, media, zone, call
 
@@ -57,7 +57,6 @@ if (!admin.apps.length && projectId && clientEmail && privateKey) {
       }),
       databaseURL
     });
-    console.log('✅ Firebase Admin initialized for unified notifications');
   } catch (error) {
     console.error('❌ Firebase Admin init error:', error);
   }
@@ -129,7 +128,6 @@ export async function POST(req: NextRequest) {
     // Rate limiting by type + excludeUserId (sender)
     const rateLimitKey = `${type}-${excludeUserId || 'anonymous'}`;
     if (!checkRateLimit(rateLimitKey)) {
-      console.log('[Notification] Rate limit exceeded for:', rateLimitKey);
       return NextResponse.json({ 
         error: 'Rate limit exceeded. Please try again later.' 
       }, { status: 429 });
@@ -155,10 +153,8 @@ export async function POST(req: NextRequest) {
       ? recipientIds.filter(id => id !== excludeUserId)
       : recipientIds;
 
-    console.log(`[Notification] Type: ${type}, Recipients: ${recipientIds.length}, Excluded: ${excludeUserId || 'none'}, After filter: ${filteredRecipients.length}`);
 
     if (filteredRecipients.length === 0) {
-      console.log('[Notification] No recipients after filtering - skipping');
       return NextResponse.json({ 
         success: true, 
         sentCount: 0, 
@@ -175,7 +171,6 @@ export async function POST(req: NextRequest) {
     const allTokens = tokenResults.flat();
 
     if (allTokens.length === 0) {
-      console.log('[Notification] No FCM tokens found for any recipient');
       return NextResponse.json({ 
         success: true, 
         sentCount: 0, 
@@ -289,7 +284,6 @@ export async function POST(req: NextRequest) {
       });
     } catch (batchError) {
       // Fallback to individual sends if sendEach fails
-      console.log('[Notification] sendEach failed, falling back to individual sends:', batchError);
       
       const sendPromises = messages.map((message, index) =>
         admin.messaging().send(message).then(
@@ -319,7 +313,6 @@ export async function POST(req: NextRequest) {
 
     // Clean up only the specific invalid tokens (not entire user node)
     if (invalidTokens.length > 0) {
-      console.log('[Notification] Cleaning up', invalidTokens.length, 'invalid tokens');
       const rtdb = admin.database();
       
       for (const { userId, token } of invalidTokens) {
@@ -333,13 +326,11 @@ export async function POST(req: NextRequest) {
             if (data.token === token) {
               // Single token structure - remove it
               await tokenRef.remove();
-              console.log('[Notification] Removed single invalid token for user:', userId);
             } else if (typeof data === 'object') {
               // Multiple tokens - find and remove only the invalid one
               for (const [key, value] of Object.entries(data)) {
                 if ((value as any)?.token === token) {
                   await rtdb.ref(`fcm_tokens/${userId}/${key}`).remove();
-                  console.log('[Notification] Removed invalid token', key, 'for user:', userId);
                   break;
                 }
               }
@@ -351,7 +342,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log(`[Notification] Type: ${type}, Sent: ${successCount}/${allTokens.length}`);
 
     return NextResponse.json({
       success: true,

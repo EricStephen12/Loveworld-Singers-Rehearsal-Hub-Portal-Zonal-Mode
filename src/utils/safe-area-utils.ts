@@ -1,4 +1,4 @@
-// Safe Area Utilities for PWA
+﻿// Safe Area Utilities for PWA
 export class SafeAreaUtils {
   private static isInitialized = false
 
@@ -26,28 +26,18 @@ export class SafeAreaUtils {
       
       document.documentElement.style.setProperty('--enhanced-safe-area-bottom', `${enhancedBottom}px`)
       
-      console.log('📱 Safe areas updated:', {
-        top: safeAreaTop,
-        bottom: safeAreaBottom,
-        left: safeAreaLeft,
-        right: safeAreaRight,
-        enhancedBottom
-      })
     }
 
     // Set initial values
     updateSafeAreas()
 
-    // Update on resize
-    window.addEventListener('resize', updateSafeAreas)
+        window.addEventListener('resize', updateSafeAreas)
     
-    // Update on orientation change
-    window.addEventListener('orientationchange', () => {
+        window.addEventListener('orientationchange', () => {
       setTimeout(updateSafeAreas, 100)
     })
 
-    // Update when visual viewport changes (mobile browsers)
-    if (window.visualViewport) {
+        if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateSafeAreas)
     }
 
@@ -58,7 +48,6 @@ export class SafeAreaUtils {
       }
     })
 
-    console.log('📱 Safe area utils initialized')
   }
 
   static getSafeAreaBottom() {

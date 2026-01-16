@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import { RefreshCw, Trash2 } from 'lucide-react';
@@ -26,15 +26,12 @@ export default function CacheRefreshButton({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      console.log('🔄 Manual cache refresh triggered...');
       
-      // Clear all caches
-      smartCache.clearAllCache();
+            smartCache.clearAllCache();
       
       // Force version refresh
       await versionManager.forceRefresh();
       
-      console.log('✅ Cache refresh completed');
     } catch (error) {
       console.error('❌ Cache refresh failed:', error);
     } finally {

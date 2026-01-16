@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -68,7 +68,6 @@ export default function TiptapEditor({
     content: value || '',
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      console.log('TiptapEditor: Generated HTML:', html);
       onChange(html);
     },
     editorProps: {
@@ -82,15 +81,11 @@ export default function TiptapEditor({
     },
   });
 
-  // Update editor content when value prop changes
-  useEffect(() => {
+    useEffect(() => {
     if (editor) {
       const currentContent = editor.getHTML();
-      console.log('TiptapEditor: Current content:', currentContent);
-      console.log('TiptapEditor: New value:', value);
       
       if (value !== currentContent) {
-        console.log('TiptapEditor: Setting content to:', value);
         editor.commands.setContent(value || '', { emitUpdate: false });
       }
     }
@@ -119,8 +114,7 @@ export default function TiptapEditor({
       return;
     }
 
-    // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
   return (

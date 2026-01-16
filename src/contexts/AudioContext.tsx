@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useRef, useState, useEffect, ReactNode } from "react";
 import { PraiseNightSong } from "@/types/supabase";
@@ -41,32 +41,22 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const togglePlayPause = () => {
     // Prevent rapid clicking
     if (isToggling) {
-      console.log('🚫 Ignoring rapid click');
       return;
     }
 
     setIsToggling(true);
     setTimeout(() => setIsToggling(false), 300); // 300ms debounce
 
-    console.log('🎵 togglePlayPause called:', {
-      isPlaying,
-      hasAudioRef: !!audioRef.current,
-      audioSrc: audioRef.current?.src,
-      songTitle: currentSong?.title
-    });
 
     if (audioRef.current) {
       if (isPlaying) {
-        console.log('⏸️ Pausing audio');
         audioRef.current.pause();
       } else {
-        // Check if audio source is set and valid before trying to play
-        if (!audioRef.current.src || audioRef.current.src === '') {
+                if (!audioRef.current.src || audioRef.current.src === '') {
           console.warn('No audio source set. Cannot play audio.');
           return;
         }
 
-        console.log('▶️ Playing audio:', audioRef.current.src);
 
         // Use a promise to handle play() properly
         const playPromise = audioRef.current.play();
@@ -74,7 +64,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
-              console.log('✅ Audio started playing successfully');
             })
             .catch((error) => {
               console.error('❌ Error playing audio:', error);
@@ -91,15 +80,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
   const play = () => {
     if (audioRef.current && currentSong?.audioFile && currentSong.audioFile.trim() !== '') {
-      // Check if audio is ready to play
-      if (audioRef.current.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+            if (audioRef.current.readyState >= 2) { // HAVE_CURRENT_DATA or higher
         audioRef.current.play().catch((error) => {
           console.error('Error playing audio:', error);
-          console.log('Audio file:', currentSong.audioFile);
-          console.log('Ready state:', audioRef.current?.readyState);
         });
       } else {
-        console.log('Audio not ready to play, readyState:', audioRef.current.readyState);
         // Wait for audio to be ready
         const handleCanPlay = () => {
           if (audioRef.current) {
@@ -112,7 +97,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         audioRef.current.addEventListener('canplay', handleCanPlay);
       }
     } else {
-      console.log('Cannot play: no audio file or audio element');
     }
   };
 
@@ -165,20 +149,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       if (savedSong && savedState === 'true') { // Only restore if song was actually playing
         const songData = JSON.parse(savedSong);
 
-        // Check if saved within the last 30 minutes (much more conservative)
-        const savedTimeNum = savedTimestamp ? parseInt(savedTimestamp) : 0;
+                const savedTimeNum = savedTimestamp ? parseInt(savedTimestamp) : 0;
         const now = Date.now();
         const thirtyMinutesAgo = now - (30 * 60 * 1000);
 
         if (savedTimeNum < thirtyMinutesAgo) {
-          console.log('🎵 Audio session too old, clearing saved state');
           clearAudioState();
           return;
         }
 
         // Only restore if the song has an audio file AND user was actively playing
         if (songData.audioFile && songData.audioFile.trim() !== '' && savedState === 'true') {
-          console.log('🎵 Restoring recent audio session for:', songData.title);
 
           // Set the song but don't auto-play initially
           setCurrentSong(songData);
@@ -198,18 +179,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
           // Don't auto-play on app startup - this is not typical music player behavior
           // Users should manually start playback
-          console.log('🎵 Audio state restored but not auto-playing (user must manually start)');
         }
       }
     } catch (error) {
       console.error('Error restoring audio state:', error);
-      // Clear corrupted data
-      clearAudioState();
+            clearAudioState();
     }
   };
 
-  // Clear saved audio state
-  const clearAudioState = () => {
+    const clearAudioState = () => {
     localStorage.removeItem(AUDIO_SONG_KEY);
     localStorage.removeItem(AUDIO_STATE_KEY);
     localStorage.removeItem(AUDIO_TIME_KEY);
@@ -221,12 +199,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       setDuration(audioRef.current.duration);
       setIsLoading(false);
       setHasError(false);
-      console.log('✅ Audio metadata loaded successfully');
-      console.log('✅ Duration:', audioRef.current.duration);
-      console.log('✅ Ready state:', audioRef.current.readyState);
       // Auto-play if requested and audio is ready
       if (shouldAutoPlay && currentSong?.audioFile && currentSong.audioFile.trim() !== '') {
-        console.log('Audio loaded, auto-playing:', currentSong.title);
         audioRef.current.play().catch((error) => {
           console.error('Error auto-playing after load:', error);
           setHasError(true);
@@ -248,12 +222,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   };
 
   const handlePlay = () => {
-    console.log('🎵 Audio play event fired');
     setIsPlaying(true);
   };
 
   const handlePause = () => {
-    console.log('🎵 Audio pause event fired');
     setIsPlaying(false);
   };
 
@@ -287,42 +259,29 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     restoreAudioState();
   }, []);
 
-  // Update audio source when song changes
-  useEffect(() => {
-    console.log('🎵 Audio loading effect triggered for song:', currentSong?.title);
-    console.log('🎵 Audio file URL:', currentSong?.audioFile);
-    console.log('🎵 Current audio src:', audioRef.current?.src);
+    useEffect(() => {
 
     if (currentSong?.audioFile && audioRef.current && currentSong.audioFile.trim() !== '') {
       try {
-        // Check if this is the same song that's already loaded to prevent restart
-        if (audioRef.current.src && audioRef.current.src === currentSong.audioFile) {
-          console.log('🎵 Same audio file already loaded, skipping audio reset - NO RESTART');
+                if (audioRef.current.src && audioRef.current.src === currentSong.audioFile) {
           return; // Don't reset audio state for the same song
         }
 
         // Additional check: if the audio is already playing and it's the same file, don't restart
         if (audioRef.current.src && audioRef.current.src === currentSong.audioFile && isPlaying) {
-          console.log('🎵 Same audio file already playing, skipping audio reset - NO RESTART');
           return; // Don't restart the same song that's already playing
         }
 
-        console.log('🎵 Different audio file, resetting audio state');
         // Reset audio state only for new songs
         setCurrentTime(0);
         setDuration(0);
         setIsLoading(true);
         setHasError(false);
 
-        // Check if the audio file URL looks valid (Cloudinary URLs or other valid URLs)
-        if (currentSong.audioFile.startsWith('http') || currentSong.audioFile.startsWith('https')) {
+                if (currentSong.audioFile.startsWith('http') || currentSong.audioFile.startsWith('https')) {
           // Don't encode URLs that are already properly encoded (like Cloudinary URLs)
           const urlToUse = currentSong.audioFile;
 
-          console.log('🎵 Loading audio file for song:', currentSong.title);
-          console.log('🎵 Audio URL:', urlToUse);
-          console.log('🎵 URL length:', urlToUse.length);
-          console.log('🎵 URL domain:', new URL(urlToUse).hostname);
 
           audioRef.current.src = urlToUse;
           audioRef.current.load();
@@ -348,44 +307,27 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       setDuration(0);
       setIsLoading(false);
       setHasError(false);
-      console.log('🧹 Clearing audio source - no valid audio file');
     }
   }, [currentSong]);
 
   const setCurrentSongWithAutoPlay = (song: PraiseNightSong | null, autoPlay: boolean = false) => {
-    console.log('🎵 setCurrentSongWithAutoPlay called:', {
-      songTitle: song?.title,
-      songId: song?.id,
-      autoPlay: autoPlay,
-      currentSongId: currentSong?.id,
-      currentSongTitle: currentSong?.title,
-      isPlaying: isPlaying,
-      isSameSong: currentSong?.id === song?.id
-    });
 
-    // Check if this is the same song that's already playing
-    if (currentSong?.id === song?.id && isPlaying) {
-      console.log('🎵 Same song already playing, skipping ALL audio changes - EXITING');
+        if (currentSong?.id === song?.id && isPlaying) {
       return; // Don't restart the same song - exit completely
     }
 
-    // Check if this is the same song but paused - also don't restart
-    if (currentSong?.id === song?.id && !isPlaying) {
-      console.log('🎵 Same song but paused, skipping ALL audio changes - EXITING');
+        if (currentSong?.id === song?.id && !isPlaying) {
       return; // Don't restart the same song - exit completely
     }
 
-    console.log('🎵 Different song or new song, proceeding with audio changes');
 
     // Stop current playback when changing songs
     if (audioRef.current) {
-      console.log('🎵 Stopping current audio');
       audioRef.current.pause();
       setIsPlaying(false);
       setCurrentTime(0);
     }
 
-    console.log('🎵 Setting new song in state');
     setCurrentSong(song);
     setShouldAutoPlay(autoPlay);
   };

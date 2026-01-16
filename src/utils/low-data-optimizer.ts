@@ -1,4 +1,4 @@
-// Low Data Optimizer - Super fast loading with minimal Firebase costs
+﻿// Low Data Optimizer - Super fast loading with minimal Firebase costs
 // Instagram-style optimization for poor connections
 
 interface ConnectionInfo {
@@ -32,7 +32,6 @@ class LowDataOptimizer {
   init() {
     this.detectConnection();
     this.setupEventListeners();
-    console.log('📱 Low Data Optimizer initialized');
   }
 
   private detectConnection() {
@@ -52,16 +51,8 @@ class LowDataOptimizer {
         this.connectionInfo.downlink < 1 ||
         this.connectionInfo.saveData;
 
-      console.log('📊 Connection detected:', {
-        type: this.connectionInfo.effectiveType,
-        speed: this.connectionInfo.downlink + 'Mbps',
-        rtt: this.connectionInfo.rtt + 'ms',
-        saveData: this.connectionInfo.saveData,
-        isLowData: this.isLowData
-      });
 
       if (this.isLowData) {
-        console.log('⚠️ Low data connection detected - enabling aggressive caching');
       }
     }
   }
@@ -76,12 +67,10 @@ class LowDataOptimizer {
 
     // Listen for online/offline events
     window.addEventListener('online', () => {
-      console.log('🌐 Connection restored');
       this.detectConnection();
     });
 
     window.addEventListener('offline', () => {
-      console.log('📴 Connection lost');
       this.isLowData = true;
     });
   }
@@ -122,14 +111,12 @@ class LowDataOptimizer {
       console.warn('Failed to store in localStorage:', error);
     }
 
-    console.log(`💾 Cached ${key} for ${ttl/1000/60} minutes (low data mode)`);
   }
 
   get(key: string): any | null {
     // Check memory cache first
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      console.log(`⚡ Cache hit: ${key} (instant load)`);
       return cached.data;
     }
 
@@ -141,7 +128,6 @@ class LowDataOptimizer {
         if (Date.now() - parsed.timestamp < parsed.ttl) {
           // Restore to memory cache
           this.cache.set(key, parsed);
-          console.log(`💾 Restored ${key} from localStorage`);
           return parsed.data;
         } else {
           // Expired, remove it
@@ -155,15 +141,12 @@ class LowDataOptimizer {
     return null;
   }
 
-  // Check if we should make a Firebase request
-  shouldFetch(key: string): boolean {
+    shouldFetch(key: string): boolean {
     const cached = this.get(key);
     if (cached) {
-      console.log(`🚫 Skipping Firebase request for ${key} (cached)`);
       return false;
     }
     
-    console.log(`🔥 Making Firebase request for ${key}`);
     return true;
   }
 
@@ -172,21 +155,17 @@ class LowDataOptimizer {
     return this.connectionInfo;
   }
 
-  // Check if low data mode
-  isLowDataMode(): boolean {
+    isLowDataMode(): boolean {
     return this.isLowData;
   }
 
-  // Clear cache
-  clearCache(): void {
+    clearCache(): void {
     this.cache.clear();
-    // Clear localStorage cache
-    Object.keys(localStorage).forEach(key => {
+        Object.keys(localStorage).forEach(key => {
       if (key.startsWith('lowdata_')) {
         localStorage.removeItem(key);
       }
     });
-    console.log('🧹 Low data cache cleared');
   }
 
   // Get cache stats

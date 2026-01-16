@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Languages, Clipboard } from 'lucide-react';
@@ -78,12 +78,9 @@ export default function BasicTextEditor({
 
     setIsTranslating(true);
     try {
-      console.log('Starting translation to', langCode);
-      console.log('Content to translate:', currentContent.substring(0, 200));
       
       const translated = await translationService.translateLyrics(currentContent, langCode);
       
-      console.log('Translation result:', translated.substring(0, 200));
       
       if (editorRef.current && translated && translated !== currentContent) {
         editorRef.current.innerHTML = translated;
@@ -91,7 +88,6 @@ export default function BasicTextEditor({
         
         // Show success message
         const langName = translationService.LANGUAGES.find(l => l.code === langCode)?.name || langCode;
-        console.log(`Translation to ${langName} completed successfully!`);
       } else if (translated === currentContent) {
         console.warn('Translation returned the same content - translation may have failed');
         alert('Translation service returned the same content. This might indicate a translation error or the text is already in the target language.');
@@ -253,8 +249,7 @@ export default function BasicTextEditor({
     }
     
     try {
-      // Check if clipboard API is available
-      if (!navigator.clipboard || !navigator.clipboard.readText) {
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
         // Fallback: use execCommand (deprecated but works on more browsers)
         if (editorRef.current) {
           document.execCommand('paste');
@@ -302,7 +297,6 @@ export default function BasicTextEditor({
       }
     } catch (err) {
       // Clipboard API failed, try execCommand fallback
-      console.log('Clipboard API not available, using fallback');
       if (editorRef.current) {
         try {
           document.execCommand('paste');

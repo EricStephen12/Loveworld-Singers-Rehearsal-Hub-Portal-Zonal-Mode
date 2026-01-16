@@ -1,4 +1,4 @@
-// Mobile Safe Area Utilities
+﻿// Mobile Safe Area Utilities
 export class MobileSafe {
   // Get safe area insets for iOS devices
   static getSafeAreaInsets() {
@@ -32,8 +32,7 @@ export class MobileSafe {
     return Math.max(insets.bottom, 20) // Minimum 20px padding
   }
 
-  // Check if device has safe area (notch, home indicator)
-  static hasSafeArea() {
+    static hasSafeArea() {
     if (typeof window === 'undefined') return false
     return CSS.supports('padding: env(safe-area-inset-top)')
   }

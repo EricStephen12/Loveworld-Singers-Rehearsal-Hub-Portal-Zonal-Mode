@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase-client';
+﻿import { supabase } from '@/lib/supabase-client';
 
 export interface UploadResult {
   success: boolean;
@@ -11,18 +11,10 @@ export async function uploadProfileImage(
   userId: string
 ): Promise<UploadResult> {
   try {
-    console.log('🚀 Starting profile image upload...');
-    console.log('📁 File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-    console.log('👤 User ID:', userId);
     
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      console.log('❌ Invalid file type:', file.type);
       return {
         success: false,
         error: 'Invalid file type. Please upload a JPEG, PNG, or WebP image.'
@@ -32,21 +24,18 @@ export async function uploadProfileImage(
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      console.log('❌ File too large:', file.size, 'bytes');
       return {
         success: false,
         error: 'File size too large. Please upload an image smaller than 5MB.'
       };
     }
     
-    console.log('📁 [Cloudinary] Uploading profile image...');
 
     // Upload file to Cloudinary
     const { uploadImageToCloudinary } = await import('@/lib/cloudinary-storage');
     const uploadResult = await uploadImageToCloudinary(file);
 
     if (!uploadResult) {
-      console.log('❌ Cloudinary upload failed');
       return {
         success: false,
         error: 'Failed to upload image to Cloudinary'
@@ -54,7 +43,6 @@ export async function uploadProfileImage(
     }
 
     const publicUrl = uploadResult.url;
-    console.log('✅ [Cloudinary] Upload successful:', publicUrl);
 
     return {
       success: true,
@@ -72,7 +60,6 @@ export async function uploadProfileImage(
 
 export async function deleteProfileImage(imageUrl: string): Promise<boolean> {
   try {
-    console.log('🗑️ Deleting profile image:', imageUrl);
     
     // Extract file path from URL
     const url = new URL(imageUrl);
@@ -81,7 +68,6 @@ export async function deleteProfileImage(imageUrl: string): Promise<boolean> {
     const fileName = pathParts[pathParts.length - 1];
     const filePath = `profile-images/${fileName}`;
     
-    console.log('📁 Deleting from path:', filePath);
     
     const { error } = await supabase.storage
       .from('media-files')
@@ -92,7 +78,6 @@ export async function deleteProfileImage(imageUrl: string): Promise<boolean> {
       return false;
     }
     
-    console.log('✅ Image deleted successfully');
     return true;
     
   } catch (error) {
@@ -129,18 +114,10 @@ export async function uploadBannerImage(
   pageId: number | string
 ): Promise<UploadResult> {
   try {
-    console.log('⚡ Starting ULTRA-FAST banner image upload...');
-    console.log('📁 File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-    console.log('📄 Page ID:', pageId);
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      console.log('❌ Invalid file type:', file.type);
       return {
         success: false,
         error: 'Invalid file type. Please upload a JPEG, PNG, or WebP image.'
@@ -150,7 +127,6 @@ export async function uploadBannerImage(
     // Validate file size (max 5MB for faster uploads)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      console.log('❌ File too large:', file.size);
       return {
         success: false,
         error: 'File size too large. Please upload an image smaller than 5MB.'
@@ -159,11 +135,6 @@ export async function uploadBannerImage(
 
     // Compress image for faster upload
     const compressedFile = await compressImage(file);
-    console.log('🗜️ Image compressed:', {
-      original: file.size,
-      compressed: compressedFile.size,
-      reduction: `${Math.round((1 - compressedFile.size / file.size) * 100)}%`
-    });
 
     // Create unique filename (sanitize pageId for filename)
     const fileExt = 'webp'; // Use WebP for better compression
@@ -171,7 +142,6 @@ export async function uploadBannerImage(
     const fileName = `page-${sanitizedPageId}-banner-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
     const filePath = `banner-images/${fileName}`;
 
-    console.log('📤 Uploading compressed image to path:', filePath);
 
     // Upload directly without timeout (Supabase handles timeouts internally)
     const { data, error: uploadError } = await supabase.storage
@@ -190,7 +160,6 @@ export async function uploadBannerImage(
       };
     }
 
-    console.log('✅ File uploaded to Supabase storage successfully');
 
     // Get public URL
     const { data: urlData } = supabase.storage
@@ -198,7 +167,6 @@ export async function uploadBannerImage(
       .getPublicUrl(filePath);
 
     const publicUrl = urlData.publicUrl;
-    console.log('⚡ ULTRA-FAST banner image uploaded successfully:', publicUrl);
 
     return {
       success: true,

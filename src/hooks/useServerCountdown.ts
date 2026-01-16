@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 
@@ -91,12 +91,10 @@ export function useServerCountdown({
 
   useEffect(() => {
     const initializeCountdown = async () => {
-      console.log('🕐 Initializing countdown:', { praiseNightId, countdownData, countdownKey })
       setIsLoading(true)
       setError(null)
 
-      // Clear any existing interval
-      if (intervalRef.current) {
+            if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
@@ -107,7 +105,6 @@ export function useServerCountdown({
 
         if (targetDate) {
           target = targetDate
-          console.log('🕐 Using provided targetDate:', target)
         } else if (countdownData && (countdownData.days > 0 || countdownData.hours > 0 || countdownData.minutes > 0 || countdownData.seconds > 0)) {
           let storedTargetDate: string | null = null
 
@@ -116,18 +113,14 @@ export function useServerCountdown({
               const countdownDoc = await FirebaseDatabaseService.getDocument('countdowns', praiseNightId.toString())
               if (countdownDoc && (countdownDoc as any).targetDate) {
                 storedTargetDate = (countdownDoc as any).targetDate
-                console.log('🕐 Found stored target date:', storedTargetDate)
               }
             } catch (error) {
-              console.log('🕐 No stored countdown found, will calculate new one')
             }
           }
 
           if (storedTargetDate) {
             target = new Date(storedTargetDate)
-            // Check if stored target is in the past
-            if (target.getTime() <= serverTime.getTime()) {
-              console.log('🕐 Stored target is in the past, recalculating...')
+                        if (target.getTime() <= serverTime.getTime()) {
               // Recalculate target from countdownData
               const totalMs =
                 (countdownData.days * 24 * 60 * 60 * 1000) +
@@ -137,15 +130,13 @@ export function useServerCountdown({
 
               target = new Date(serverTime.getTime() + totalMs)
               
-              // Update stored target
-              if (praiseNightId) {
+                            if (praiseNightId) {
                 try {
                   await FirebaseDatabaseService.updateDocument('countdowns', praiseNightId.toString(), {
                     targetDate: target.toISOString(),
                     updatedAt: new Date(),
                     praiseNightId: praiseNightId
                   })
-                  console.log('🕐 Updated stored target date:', target.toISOString())
                 } catch (error) {
                   console.error('Failed to update target date:', error)
                 }
@@ -159,7 +150,6 @@ export function useServerCountdown({
               (countdownData.seconds * 1000)
 
             target = new Date(serverTime.getTime() + totalMs)
-            console.log('🕐 Calculated new target date:', target.toISOString())
 
             if (praiseNightId) {
               try {
@@ -168,14 +158,12 @@ export function useServerCountdown({
                   createdAt: new Date(),
                   praiseNightId: praiseNightId
                 })
-                console.log('🕐 Stored new target date in Firebase')
               } catch (error) {
                 console.error('Failed to store target date:', error)
               }
             }
           }
         } else {
-          console.log('🕐 No countdown data provided or all values are 0')
         }
         
         if (!target) {
@@ -188,7 +176,6 @@ export function useServerCountdown({
         calculateTimeLeft()
         
         intervalRef.current = setInterval(calculateTimeLeft, 1000)
-        console.log('🕐 Countdown interval started')
       } catch (err) {
         console.error('Error initializing countdown:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')

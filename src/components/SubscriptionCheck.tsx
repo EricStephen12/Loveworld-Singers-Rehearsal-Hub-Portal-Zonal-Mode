@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import SubscriptionOnboardingScreen from './SubscriptionOnboardingScreen'
@@ -12,8 +12,7 @@ export default function SubscriptionCheck({ children }: SubscriptionCheckProps) 
   const [showSubscription, setShowSubscription] = useState(false)
 
   useEffect(() => {
-    // Check if user has active subscription
-    // In a real app, this would check with your backend/API
+        // In a real app, this would check with your backend/API
     const checkSubscription = async () => {
       try {
         // Simulate API call to check subscription status
@@ -45,7 +44,6 @@ export default function SubscriptionCheck({ children }: SubscriptionCheckProps) 
   const handleSubscriptionBack = () => {
     // User can't go back, they need to subscribe
     // In a real app, you might redirect to login or show a message
-    console.log('User needs to subscribe to continue')
   }
 
   // Show loading state while checking subscription

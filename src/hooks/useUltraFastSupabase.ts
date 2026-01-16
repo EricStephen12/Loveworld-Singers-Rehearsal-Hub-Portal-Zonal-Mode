@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -61,15 +61,13 @@ export const useUltraFastSupabase = <T = any>({
     return `${table}-${select}-${JSON.stringify(filters)}-${JSON.stringify(orderBy)}-${limit}`;
   }, [table, select, filters, orderBy, limit]);
 
-  // Check if cache is valid
-  const isCacheValid = useCallback((cacheKey: string) => {
+    const isCacheValid = useCallback((cacheKey: string) => {
     const entry = globalCache.get(cacheKey);
     if (!entry) return false;
     return Date.now() < entry.expiresAt;
   }, []);
 
-  // Get data from cache
-  const getCachedData = useCallback((cacheKey: string) => {
+    const getCachedData = useCallback((cacheKey: string) => {
     const entry = globalCache.get(cacheKey);
     return entry ? entry.data : null;
   }, []);
@@ -169,10 +167,8 @@ export const useUltraFastSupabase = <T = any>({
           table: table,
         },
         (payload) => {
-          console.log('🔄 Real-time update received:', payload);
           
-          // Update data immediately without refetch
-          setData(currentData => {
+                    setData(currentData => {
             const newData = [...currentData];
             
             switch (payload.eventType) {
@@ -193,8 +189,7 @@ export const useUltraFastSupabase = <T = any>({
                 break;
             }
             
-            // Update cache
-            const cacheKey = cacheKeyRef.current;
+                        const cacheKey = cacheKeyRef.current;
             if (cacheKey) {
               setCachedData(cacheKey, newData);
             }
@@ -209,7 +204,6 @@ export const useUltraFastSupabase = <T = any>({
         }
       )
       .subscribe((status) => {
-        console.log('📡 Realtime subscription status:', status);
       });
 
     channelRef.current = channel;
@@ -261,8 +255,7 @@ export const useUltraFastSupabase = <T = any>({
           break;
       }
       
-      // Update cache
-      const cacheKey = cacheKeyRef.current;
+            const cacheKey = cacheKeyRef.current;
       if (cacheKey) {
         setCachedData(cacheKey, newData);
       }

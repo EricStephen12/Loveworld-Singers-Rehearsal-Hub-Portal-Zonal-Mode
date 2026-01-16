@@ -1,30 +1,26 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      console.log('❌ Service Worker not supported')
       return
     }
 
     // Skip in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('⚠️ Skipping Service Worker in development')
       return
     }
 
     const registerSW = async () => {
       try {
-        console.log('🔄 Registering service worker...')
         
         const registration = await navigator.serviceWorker.register('/sw-big-company.js', {
           scope: '/',
           updateViaCache: 'none'
         })
         
-        console.log('✅ Service Worker registered:', registration.scope)
 
         // Handle updates
         registration.addEventListener('updatefound', () => {
@@ -32,7 +28,6 @@ export default function ServiceWorkerRegistration() {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('🔄 New version available, updating...')
                 newWorker.postMessage({ type: 'SKIP_WAITING' })
               }
             })
@@ -41,7 +36,6 @@ export default function ServiceWorkerRegistration() {
 
         // Handle controller change
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('🔄 Service Worker updated, reloading...')
           window.location.reload()
         })
 

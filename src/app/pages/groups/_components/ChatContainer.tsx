@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../_context/ChatContext'
@@ -70,8 +70,7 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
       const messageText = (message.text || '').toLowerCase()
       const senderName = (message.senderName || '').toLowerCase()
       
-      // Check if search term matches message text or sender name
-      if (messageText.includes(searchLower) || senderName.includes(searchLower)) {
+            if (messageText.includes(searchLower) || senderName.includes(searchLower)) {
         matchingMessageIds.push(message.id)
       }
     })
@@ -233,13 +232,6 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
               
               // Debug first message only
               if (index === 0) {
-                console.log('💬 [Message Debug]', {
-                  messageSenderId: message.senderId,
-                  currentUserId: currentUserId,
-                  isOwnMessage: isOwnMessage,
-                  userUid: user?.uid,
-                  profileId: profile?.id
-                })
               }
               
               return (
@@ -434,8 +426,7 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                         onClick={async () => {
                           const isStarred = starredMessages.has(message.id)
                           await toggleStarMessage(message.id)
-                          // Update local state
-                          const newStarred = new Set(starredMessages)
+                                                    const newStarred = new Set(starredMessages)
                           if (isStarred) {
                             newStarred.delete(message.id)
                           } else {

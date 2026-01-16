@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { 
@@ -107,8 +107,7 @@ export default function NotificationsPage() {
       // For zone, audiolab, calendar, media, birthday - just remove locally
       
       setNotifications(prev => prev.filter(n => n.id !== notif.id))
-      // Clear cache
-      if (currentZone?.id && userId) {
+            if (currentZone?.id && userId) {
         notificationCache.delete(`${currentZone.id}-${userId}`)
       }
     } catch (err) {
@@ -492,7 +491,6 @@ export default function NotificationsPage() {
         loadNotifications(false, true) // bypass cache
       }
     }, (err) => {
-      console.log('[Notifications] Snapshot error:', err)
     })
     
     return () => unsubscribe()

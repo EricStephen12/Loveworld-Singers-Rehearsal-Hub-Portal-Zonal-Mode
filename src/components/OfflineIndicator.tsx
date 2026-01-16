@@ -1,4 +1,4 @@
-// Offline Indicator - Shows offline status permanently, online status briefly
+﻿// Offline Indicator - Shows offline status permanently, online status briefly
 
 'use client'
 
@@ -22,7 +22,6 @@ const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Offl
     const handleOnline = () => {
       setIsOnline(true)
       setShowOnlineNotification(true)
-      console.log('🌐 Online')
       
       // Hide "Online" notification after 3 seconds
       setTimeout(() => {
@@ -33,7 +32,6 @@ const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Offl
     const handleOffline = () => {
       setIsOnline(false)
       setShowOnlineNotification(false)
-      console.log('📴 Offline')
     }
 
     window.addEventListener('online', handleOnline)

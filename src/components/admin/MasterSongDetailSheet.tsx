@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen, Loader2 } from 'lucide-react';
+import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MasterSong } from '@/lib/master-library-service';
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 import { useAudio } from '@/contexts/AudioContext';
+import CustomLoader from '@/components/CustomLoader';
 
 interface MasterSongDetailSheetProps {
   song: MasterSong;
@@ -19,7 +20,7 @@ interface MasterSongDetailSheetProps {
 // Helper function to convert HTML back to plain text for display (matching edit modal format)
 const formatLyricsForDisplay = (html: string): string => {
   if (!html) return '';
-  
+
   // Convert HTML back to plain text format like the edit modal shows
   let text = html
     // Convert </div><div> to double newlines (paragraph breaks)
@@ -45,22 +46,22 @@ const formatLyricsForDisplay = (html: string): string => {
     // Clean up excessive newlines
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  
+
   return text;
 };
 
-export function MasterSongDetailSheet({ 
-  song, 
-  isOpen, 
+export function MasterSongDetailSheet({
+  song,
+  isOpen,
   onClose,
 }: MasterSongDetailSheetProps) {
   const router = useRouter();
   const { currentZone } = useZone();
   const { currentSong, isPlaying, currentTime, duration, setCurrentSong, togglePlayPause, setCurrentTime: seekTo } = useAudio();
-  
+
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
   const isCurrentSong = currentSong?.id === song.id;
-  
+
   const [showLyrics, setShowLyrics] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -69,7 +70,7 @@ export function MasterSongDetailSheet({
 
   const handlePlayPause = () => {
     if (!fullMixUrl) return;
-    
+
     if (isCurrentSong) {
       togglePlayPause();
     } else {
@@ -128,7 +129,7 @@ export function MasterSongDetailSheet({
           >
             <X size={18} className="sm:w-4 sm:h-4" />
           </button>
-          
+
           <div className="relative overflow-hidden rounded-2xl">
             {/* Background image + soft overlay */}
             <div
@@ -231,7 +232,7 @@ export function MasterSongDetailSheet({
                 </span>
                 <div className="flex-1 relative h-8 sm:h-6 flex items-center">
                   <div className="absolute inset-x-0 h-1.5 sm:h-1 bg-slate-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-purple-600 rounded-full"
                       style={{ width: `${isCurrentSong && duration ? (currentTime / duration) * 100 : 0}%` }}
                     />
@@ -293,7 +294,7 @@ export function MasterSongDetailSheet({
                       font-weight: 700;
                     }
                   `}</style>
-                  <pre 
+                  <pre
                     className="lyrics-content text-slate-800 whitespace-pre-wrap font-mono text-sm"
                     dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(song.lyrics) }}
                   />
@@ -313,8 +314,8 @@ export function MasterSongDetailSheet({
             >
               {isNavigating ? (
                 <>
-                  <Loader2 size={22} className="sm:w-5 sm:h-5 animate-spin" />
-                  Opening AudioLab...
+                  <CustomLoader size="sm" />
+                  <span className="ml-2">Opening AudioLab...</span>
                 </>
               ) : (
                 <>

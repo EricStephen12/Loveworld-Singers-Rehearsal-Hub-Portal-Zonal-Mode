@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SIMPLE UNIFIED ID MANAGER
  * Rule: ALWAYS use firebaseId for Firebase operations. That's it!
  */
@@ -69,13 +69,6 @@ export class IDManager {
    * Debug helper
    */
   static debugIds(song: any, context: string = ''): void {
-    console.log(`🔍 [${context}] ID Info:`, {
-      firebaseId: song.firebaseId,
-      id: song.id,
-      idType: typeof song.id,
-      primaryId: this.getPrimaryId(song),
-      title: song.title
-    });
   }
 
   // Legacy compatibility methods (not used anymore, but kept to avoid breaking code)

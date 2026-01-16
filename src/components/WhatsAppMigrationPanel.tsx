@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { 
@@ -89,21 +89,18 @@ export function WhatsAppMigrationPanel() {
     addLog('🚀 Starting full WhatsApp migration for LWSRH...')
     
     try {
-      // Step 1: Users
-      addLog('Step 1/3: Migrating users...')
+            addLog('Step 1/3: Migrating users...')
       await WhatsAppMigration.migrateUsers()
       setMigrationStatus(prev => ({ ...prev, users: 'completed' }))
       addLog('✅ Users migrated successfully!')
       
-      // Step 2: Chats
-      setMigrationStatus(prev => ({ ...prev, chats: 'running' }))
+            setMigrationStatus(prev => ({ ...prev, chats: 'running' }))
       addLog('Step 2/3: Migrating chats...')
       await WhatsAppMigration.migrateChats()
       setMigrationStatus(prev => ({ ...prev, chats: 'completed' }))
       addLog('✅ Chats migrated successfully!')
       
-      // Step 3: Messages
-      setMigrationStatus(prev => ({ ...prev, messages: 'running' }))
+            setMigrationStatus(prev => ({ ...prev, messages: 'running' }))
       addLog('Step 3/3: Migrating messages...')
       await WhatsAppMigration.migrateMessages()
       setMigrationStatus(prev => ({ ...prev, messages: 'completed' }))

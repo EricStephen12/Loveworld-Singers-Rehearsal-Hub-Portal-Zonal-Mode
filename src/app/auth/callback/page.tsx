@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -34,8 +34,7 @@ export default function AuthCallbackPage() {
         const user = FirebaseAuthService.getCurrentUser()
         
         if (user) {
-          // Check if this is a password recovery session
-          const type = urlParams.get('type')
+                    const type = urlParams.get('type')
           
           if (type === 'recovery') {
             // Redirect to password reset page

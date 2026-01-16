@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
@@ -24,14 +24,12 @@ export default function FeatureGate({
   const { profile } = useAuth()
   const { hasFeature, isFreeTier } = useSubscription()
   
-  // Check if user can see upgrade prompts (only Zone Leaders with ZNL prefix)
-  const canShowUpgradePrompt = canSeeUpgradePrompts(profile)
+    const canShowUpgradePrompt = canSeeUpgradePrompts(profile)
 
   // Boss role or boss emails bypass all feature gates
   const userIsBoss = isBoss(profile)
   
-  // Check if user has access to this feature
-  const hasAccess = userIsBoss || hasFeature(feature)
+    const hasAccess = userIsBoss || hasFeature(feature)
 
   if (hasAccess) {
     return <>{children}</>

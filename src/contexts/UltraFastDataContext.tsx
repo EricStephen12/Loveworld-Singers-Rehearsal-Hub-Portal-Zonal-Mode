@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 import { useUltraFastSupabase } from '@/hooks/useUltraFastSupabase';
@@ -117,8 +117,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
 
   // Global refresh function
   const refreshAll = useCallback(() => {
-    // Clear any existing timeout
-    if (refreshTimeoutRef.current) {
+        if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
     }
 
@@ -129,7 +128,6 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
       refreshCategories(),
       refreshMedia(),
     ]).then(() => {
-      console.log('🔄 All data refreshed successfully');
     }).catch((error) => {
       console.error('Error refreshing data:', error);
     });

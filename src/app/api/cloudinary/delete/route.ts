@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * DELETE FILE FROM CLOUDINARY
@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (data.result === 'ok' || data.result === 'not found') {
-      console.log('✅ [Cloudinary API] Deleted:', publicId);
       return NextResponse.json({ success: true });
     } else {
       console.error('❌ [Cloudinary API] Delete failed:', data);

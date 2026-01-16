@@ -20,36 +20,37 @@ function getCollectionName(zoneId?: string): string {
 }
 
 export class PraiseNightSongsService {
-  
+
   static async getSongsByPraiseNight(praiseNightId: string, zoneId?: string): Promise<PraiseNightSong[]> {
     try {
       const collectionName = getCollectionName(zoneId)
       const songsRef = collection(db, collectionName)
-      
+
       let q = query(songsRef, where('praiseNightId', '==', praiseNightId))
       let snapshot = await getDocs(q)
-      
+
       // Try alternative field names for HQ groups
       if (snapshot.empty && zoneId && isHQGroup(zoneId)) {
         q = query(songsRef, where('praisenightid', '==', praiseNightId))
         snapshot = await getDocs(q)
-        
+
         if (snapshot.empty) {
           q = query(songsRef, where('praisenight_id', '==', praiseNightId))
           snapshot = await getDocs(q)
         }
-        
+
         if (snapshot.empty) {
           q = query(songsRef, where('pageId', '==', praiseNightId))
           snapshot = await getDocs(q)
         }
       }
-      
+
       return snapshot.docs.map(doc => {
         const data = doc.data()
         return {
           ...data,
           id: doc.id,
+          rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
           createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
           updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
         }
@@ -64,18 +65,19 @@ export class PraiseNightSongsService {
     try {
       const collectionName = getCollectionName(zoneId)
       const songsRef = collection(db, collectionName)
-      
+
       const q = (zoneId && !isHQGroup(zoneId))
         ? query(songsRef, where('zoneId', '==', zoneId))
         : query(songsRef)
-      
+
       const snapshot = await getDocs(q)
-      
+
       return snapshot.docs.map(doc => {
         const data = doc.data()
         return {
           ...data,
           id: doc.id,
+          rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
           createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
           updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
         }
@@ -91,13 +93,14 @@ export class PraiseNightSongsService {
       const collectionName = getCollectionName(zoneId)
       const songRef = doc(db, collectionName, songId)
       const songDoc = await getDoc(songRef)
-      
+
       if (!songDoc.exists()) return null
-      
+
       const data = songDoc.data()
       return {
         ...data,
         id: songDoc.id,
+        rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
       } as unknown as PraiseNightSong
@@ -110,7 +113,7 @@ export class PraiseNightSongsService {
   static async createSong(songData: Partial<PraiseNightSong>, zoneId?: string): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
       const collectionName = getCollectionName(zoneId)
-      
+
       const cleanData = {
         title: songData.title || '',
         leadSinger: songData.leadSinger || '',
@@ -137,10 +140,10 @@ export class PraiseNightSongsService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }
-      
+
       const songsRef = collection(db, collectionName)
       const docRef = await addDoc(songsRef, cleanData)
-      
+
       return { success: true, id: docRef.id }
     } catch (error) {
       console.error('Error creating song:', error)
@@ -153,11 +156,11 @@ export class PraiseNightSongsService {
       const collectionName = getCollectionName(zoneId)
       const songRef = doc(db, collectionName, songId)
       const songDoc = await getDoc(songRef)
-      
+
       if (!songDoc.exists()) {
         return { success: false, error: 'Song not found' }
       }
-      
+
       const { id, firebaseId, createdAt, zoneId: _, ...updateData } = songData as any
 
       const cleanedData = Object.entries(updateData).reduce((acc, [key, value]) => {
@@ -166,7 +169,7 @@ export class PraiseNightSongsService {
       }, {} as any)
 
       await updateDoc(songRef, { ...cleanedData, updatedAt: serverTimestamp() })
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error updating song:', error)
@@ -179,11 +182,11 @@ export class PraiseNightSongsService {
       const collectionName = getCollectionName(zoneId)
       const songRef = doc(db, collectionName, songId)
       const songDoc = await getDoc(songRef)
-      
+
       if (!songDoc.exists()) {
         return { success: false, error: 'Song not found' }
       }
-      
+
       await deleteDoc(songRef)
       return { success: true }
     } catch (error) {
@@ -196,7 +199,7 @@ export class PraiseNightSongsService {
     try {
       const collectionName = getCollectionName(zoneId)
       const songRef = doc(db, collectionName, songId)
-      
+
       await updateDoc(songRef, { status, updatedAt: serverTimestamp() })
       return { success: true }
     } catch (error) {

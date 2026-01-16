@@ -1,4 +1,4 @@
-// Simple integration with your existing voice call system
+﻿// Simple integration with your existing voice call system
 // This adds push notifications to your current Realtime DB approach
 
 interface CallParams {
@@ -37,8 +37,7 @@ export async function startCallWithNotification(callParams: CallParams) {
   } = callParams;
 
   try {
-    // Step 1: Create call in Realtime Database (your existing logic)
-    // This is exactly what your current startCall function does
+        // This is exactly what your current startCall function does
     const callData = await createVoiceCallInDB({
       chatId,
       receiverId,
@@ -49,14 +48,12 @@ export async function startCallWithNotification(callParams: CallParams) {
       userId
     });
 
-    // Step 2: Send push notification to receiver
-    await sendCallPushNotification({
+        await sendCallPushNotification({
       receiverId,
       callerName,
       callId: callData.id
     });
 
-    console.log('[VoiceCall] Call started with notification:', callData.id);
     return callData;
 
   } catch (error) {
@@ -124,7 +121,6 @@ async function sendCallPushNotification(notificationData: CallNotificationData) 
     });
 
     const result = await response.json();
-    console.log('[VoiceCall] Notification sent:', result);
     
   } catch (error) {
     console.error('[VoiceCall] Failed to send notification:', error);
@@ -153,5 +149,4 @@ export function handleIncomingCallNotification(payload: Payload) {
 
 function playIncomingCallSound() {
   // Use your existing Web Audio API ringtone code
-  console.log('[VoiceCall] Playing incoming call sound');
 }

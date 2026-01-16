@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sub-Group Database Service
  * Handles CRUD operations for sub-group songs, rehearsals, and members
  */
@@ -126,7 +126,6 @@ export class SubGroupDatabaseService {
       };
       
       const docRef = await addDoc(songsRef, newSong);
-      console.log('✅ Created sub-group song:', docRef.id);
       
       return { success: true, id: docRef.id };
     } catch (error) {
@@ -174,7 +173,6 @@ export class SubGroupDatabaseService {
         count++;
       }
       
-      console.log(`✅ Imported ${count} songs to sub-group`);
       return { success: true, count };
     } catch (error) {
       console.error('Error importing songs:', error);
@@ -188,7 +186,6 @@ export class SubGroupDatabaseService {
   static async deleteSong(songId: string): Promise<{ success: boolean; error?: string }> {
     try {
       await deleteDoc(doc(db, 'subgroup_songs', songId));
-      console.log('✅ Deleted sub-group song:', songId);
       return { success: true };
     } catch (error) {
       console.error('Error deleting song:', error);
@@ -278,7 +275,6 @@ export class SubGroupDatabaseService {
       };
       
       const docRef = await addDoc(rehearsalsRef, newRehearsal);
-      console.log('✅ Created sub-group rehearsal:', docRef.id);
       
       // Send notification to sub-group members
       if (sendNotification) {
@@ -317,7 +313,6 @@ export class SubGroupDatabaseService {
         updatedAt: Timestamp.now()
       });
       
-      console.log('✅ Updated rehearsal:', rehearsalId);
       return { success: true };
     } catch (error) {
       console.error('Error updating rehearsal:', error);
@@ -331,7 +326,6 @@ export class SubGroupDatabaseService {
   static async deleteRehearsal(rehearsalId: string): Promise<{ success: boolean; error?: string }> {
     try {
       await deleteDoc(doc(db, 'subgroup_praise_nights', rehearsalId));
-      console.log('✅ Deleted rehearsal:', rehearsalId);
       return { success: true };
     } catch (error) {
       console.error('Error deleting rehearsal:', error);
@@ -375,7 +369,6 @@ export class SubGroupDatabaseService {
         updatedAt: Timestamp.now()
       });
       
-      console.log(`✅ Added ${memberIds.length} members to sub-group`);
       return { success: true };
     } catch (error) {
       console.error('Error adding members:', error);
@@ -397,7 +390,6 @@ export class SubGroupDatabaseService {
         updatedAt: Timestamp.now()
       });
       
-      console.log('✅ Removed member from sub-group:', memberId);
       return { success: true };
     } catch (error) {
       console.error('Error removing member:', error);
@@ -496,7 +488,6 @@ export class SubGroupDatabaseService {
     combined: any[];
   }> {
     try {
-      console.log('📚 Getting combined rehearsals for user:', userId);
 
       // 1. Get zone rehearsals
       const zoneRehearsalsRef = collection(db, 'zone_praise_nights');
@@ -576,7 +567,6 @@ export class SubGroupDatabaseService {
         return dateB - dateA;
       });
 
-      console.log(`✅ Found ${zoneRehearsals.length} zone + ${subGroupRehearsals.length} sub-group rehearsals`);
 
       return {
         zoneRehearsals,
@@ -608,7 +598,6 @@ export class SubGroupDatabaseService {
     }
   ): Promise<{ success: boolean; count: number; error?: string }> {
     try {
-      console.log('📬 Sending notification to sub-group:', subGroupId);
 
       // Get sub-group members
       const subGroupRef = doc(db, 'subgroups', subGroupId);
@@ -646,7 +635,6 @@ export class SubGroupDatabaseService {
         count++;
       }
 
-      console.log(`✅ Sent ${count} notifications`);
       return { success: true, count };
     } catch (error) {
       console.error('Error sending sub-group notification:', error);
@@ -679,7 +667,6 @@ export class SubGroupDatabaseService {
         return notifications;
       } catch (indexError) {
         // Fallback: query without orderBy and sort client-side
-        console.log('[SubGroupDB] Index not ready, using fallback query');
         const fallbackQ = query(
           notificationsRef,
           where('userId', '==', userId)

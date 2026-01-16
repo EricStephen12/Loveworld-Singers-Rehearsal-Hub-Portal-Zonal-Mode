@@ -35,19 +35,28 @@ const faqItems = [
   { question: 'How do I get support?', answer: 'Use the Support section.' }
 ]
 
-export function useHomeGlobalSearch(zoneId?: string) {
-  const { pages } = useRealtimeData(zoneId)
+export function useHomeGlobalSearch(zoneId?: string, enabled: boolean = false) {
+  const { pages } = useRealtimeData(zoneId) // Limit is not supported by hook
   const [searchQuery, setSearchQuery] = useState('')
   const [allSongs, setAllSongs] = useState<PraiseNightSong[]>([])
   const [songsLoaded, setSongsLoaded] = useState(false)
 
+  useEffect(() => {
+    if (!enabled) return; // Don't reset if just disabled, but do reset on zone change
+    if (zoneId) {
+      // Only reset if zone changed. 
+      // Actually, we should probably keep data until new data loads to avoid flickering if toggling.
+    }
+  }, [zoneId])
+
+  // Reset when zone changes completely
   useEffect(() => {
     setAllSongs([])
     setSongsLoaded(false)
   }, [zoneId])
 
   useEffect(() => {
-    if (!zoneId) return
+    if (!zoneId || !enabled) return
 
     const loadAllSongs = async () => {
       try {
@@ -60,10 +69,10 @@ export function useHomeGlobalSearch(zoneId?: string) {
       }
     }
 
-    if (pages.length > 0 && !songsLoaded) {
+    if (!songsLoaded) {
       loadAllSongs()
     }
-  }, [pages.length, songsLoaded, zoneId])
+  }, [songsLoaded, zoneId, enabled])
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -87,11 +96,15 @@ export function useHomeGlobalSearch(zoneId?: string) {
     })
 
     allSongs.forEach(song => {
-      const matches = 
+      const matches =
         song.title.toLowerCase().includes(query) ||
         song.writer?.toLowerCase().includes(query) ||
         song.leadSinger?.toLowerCase().includes(query) ||
-        song.category.toLowerCase().includes(query)
+        song.category.toLowerCase().includes(query) ||
+        song.lyrics?.toLowerCase().includes(query) ||
+        song.solfas?.toLowerCase().includes(query) ||
+        song.key?.toLowerCase().includes(query) ||
+        song.tempo?.toLowerCase().includes(query)
 
       if (matches) {
         const songPage = pages.find(p => p.id === song.praiseNightId)

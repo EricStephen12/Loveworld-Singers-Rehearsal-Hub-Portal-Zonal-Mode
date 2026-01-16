@@ -1,4 +1,4 @@
-import {
+﻿import {
   collection,
   doc,
   addDoc,
@@ -72,7 +72,6 @@ export async function sendMessageToAllUsers(
     
     // Send push notification to zone members
     sendZoneAnnouncementNotification(docRef.id, title.trim(), message.trim(), zoneId).catch(err => {
-      console.log('[Notifications] Push notification failed (non-blocking):', err)
     })
     
     return { success: true, id: docRef.id }
@@ -111,7 +110,6 @@ async function sendZoneAnnouncementNotification(
     })
     
     if (recipientIds.length === 0) {
-      console.log('[Notifications] No recipients found for zone announcement')
       return
     }
     
@@ -132,7 +130,6 @@ async function sendZoneAnnouncementNotification(
       })
     }
     
-    console.log('[Notifications] Zone announcement sent to', recipientIds.length, 'users')
   } catch (error) {
     console.error('[Notifications] Error sending zone announcement:', error)
   }

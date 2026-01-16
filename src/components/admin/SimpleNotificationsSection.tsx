@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Bell, Send, Trash2, MessageSquare, X, CheckCircle, XCircle } from 'lucide-react';
@@ -9,6 +9,7 @@ import { useAdminTheme } from './AdminThemeProvider';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 import { isHQGroup } from '@/config/zones';
+import CustomLoader from '@/components/CustomLoader';
 
 export default function SimpleNotificationsSection() {
   const { user } = useAuth();
@@ -38,15 +39,15 @@ export default function SimpleNotificationsSection() {
   // Set up real-time listener for messages
   useEffect(() => {
     if (!currentZone?.id) return;
-    
+
     const isHQ = isHQGroup(currentZone.id);
     const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages';
     const messagesRef = collection(db, collectionName);
-    
-    const q = isHQ 
+
+    const q = isHQ
       ? query(messagesRef, orderBy('createdAt', 'desc'))
       : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.metadata.hasPendingWrites) {
         const msgs = snapshot.docs.map((docSnap) => {
@@ -62,10 +63,9 @@ export default function SimpleNotificationsSection() {
         setLoading(false);
       }
     }, (error) => {
-      console.log('[AdminNotifications] Real-time listener error:', error);
       loadMessages(); // Fallback to manual load
     });
-    
+
     return () => unsubscribe();
   }, [currentZone?.id]);
 
@@ -135,9 +135,8 @@ export default function SimpleNotificationsSection() {
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`}>
+        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
           {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
           {toast.message}
         </div>
@@ -163,22 +162,8 @@ export default function SimpleNotificationsSection() {
       {/* Messages List */}
       <div className="bg-white rounded-lg border border-slate-200">
         {loading ? (
-          <div className="divide-y divide-slate-200">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                      <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
-                    </div>
-                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-3 w-64 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg border border-slate-200 shadow-sm">
+            <CustomLoader message="Loading messages..." />
           </div>
         ) : messages.length === 0 ? (
           <div className="p-12 text-center">
@@ -282,8 +267,8 @@ export default function SimpleNotificationsSection() {
                 >
                   {sending ? (
                     <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      Sending...
+                      <CustomLoader size="sm" />
+                      <span className="ml-2">Sending...</span>
                     </>
                   ) : (
                     <>

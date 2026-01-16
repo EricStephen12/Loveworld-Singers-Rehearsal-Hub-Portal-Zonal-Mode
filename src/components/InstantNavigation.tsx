@@ -15,6 +15,7 @@ export default function InstantNavigation() {
       '/pages/rehearsals',
       '/pages/profile',
       '/pages/praise-night',
+      '/pages/audiolab',
       '/admin',
       '/auth'
     ];
@@ -23,7 +24,7 @@ export default function InstantNavigation() {
     criticalPages.forEach(page => {
       if (!preloadedPages.current.has(page)) {
         preloadedPages.current.add(page);
-        
+
         // Create prefetch link
         const link = document.createElement('link');
         link.rel = 'prefetch';
@@ -65,15 +66,15 @@ export default function InstantNavigation() {
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       const link = target.closest('a');
-      
+
       if (link && link.href && link.href.startsWith(window.location.origin)) {
         const url = new URL(link.href);
         const pathname = url.pathname;
-        
+
         // If it's a page we haven't preloaded, preload it now
         if (!preloadedPages.current.has(pathname)) {
           preloadedPages.current.add(pathname);
-          
+
           const prefetchLink = document.createElement('link');
           prefetchLink.rel = 'prefetch';
           prefetchLink.href = pathname;

@@ -1,4 +1,4 @@
-// Cache busting utilities for immediate updates
+﻿// Cache busting utilities for immediate updates
 
 // Generate a unique cache buster based on current time
 export const getCacheBuster = (): string => {
@@ -14,8 +14,7 @@ export const getVersionCacheBuster = (): string => {
 
 // Force refresh all cached data
 export const forceRefreshCache = (): void => {
-  // Clear localStorage cache
-  const keysToRemove = [];
+    const keysToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && (key.includes('cache') || key.includes('supabase') || key.includes('data'))) {
@@ -24,14 +23,12 @@ export const forceRefreshCache = (): void => {
   }
   keysToRemove.forEach(key => localStorage.removeItem(key));
 
-  // Clear sessionStorage
-  sessionStorage.clear();
+    sessionStorage.clear();
 
   // Force reload the page
   window.location.reload();
 };
 
-// Check if we need to force refresh (for development)
 export const shouldForceRefresh = (): boolean => {
   const lastRefresh = localStorage.getItem('lastForceRefresh');
   const now = Date.now();
@@ -58,7 +55,6 @@ export const clearServiceWorkerCache = async (): Promise<void> => {
       for (const registration of registrations) {
         await registration.unregister();
       }
-      console.log('🧹 Service Worker cache cleared');
     } catch (error) {
       console.error('Error clearing service worker cache:', error);
     }
@@ -73,7 +69,6 @@ export const clearPWACache = async (): Promise<void> => {
       await Promise.all(
         cacheNames.map(cacheName => caches.delete(cacheName))
       );
-      console.log('🧹 PWA cache cleared');
     } catch (error) {
       console.error('Error clearing PWA cache:', error);
     }

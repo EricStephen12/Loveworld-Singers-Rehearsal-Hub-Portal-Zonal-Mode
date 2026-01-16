@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   doc, 
   getDoc, 
   setDoc, 
@@ -70,8 +70,7 @@ export class SongMinistryService {
       // Add to the main collection
       const docRef = await addDoc(collection(db, 'song_ministries'), record);
       
-      // Update the monthly summary
-      await this.updateMonthlySummary(songId, year, month);
+            await this.updateMonthlySummary(songId, year, month);
       
       return { success: true, id: docRef.id };
     } catch (error) {

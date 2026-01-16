@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase-client';
+﻿import { supabase } from '@/lib/supabase-client';
 
 export interface UltraFastUploadResult {
   success: boolean;
@@ -76,8 +76,6 @@ export async function ultraFastUploadProfileImage(
   const startTime = Date.now();
   
   try {
-    console.log('🚀 Starting ULTRA-FAST profile image upload...');
-    console.log('📁 Original file:', { name: file.name, size: file.size, type: file.type });
     
     // Stage 1: Quick validation
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -105,13 +103,7 @@ export async function ultraFastUploadProfileImage(
         message: 'Optimizing...'
       });
 
-      console.log('🗜️ Compressing image...');
       processedFile = await compressImage(file, 0.85, 1000); // Optimized size
-      console.log('✅ Compression complete:', {
-        original: file.size,
-        compressed: processedFile.size,
-        reduction: `${Math.round((1 - processedFile.size / file.size) * 100)}%`
-      });
     }
     
     // Stage 3: Generate optimized path
@@ -124,7 +116,6 @@ export async function ultraFastUploadProfileImage(
       message: 'Uploading to cloud...'
     });
     
-    console.log('📤 [Cloudinary] Uploading ultra-fast...');
 
     // Stage 4: Ultra-fast upload to Cloudinary
     // Convert Blob to File if needed
@@ -158,12 +149,6 @@ export async function ultraFastUploadProfileImage(
       message: 'Upload complete!'
     });
 
-    console.log('✅ [Cloudinary] ULTRA-FAST upload successful!', {
-      url: publicUrl,
-      uploadTime: `${uploadTime}ms`,
-      originalSize: file.size,
-      finalSize: processedFile.size
-    });
     
     return {
       success: true,
@@ -208,7 +193,6 @@ export function preloadImage(url: string): Promise<HTMLImageElement> {
 // Delete with ultra-fast cleanup
 export async function ultraFastDeleteImage(imageUrl: string): Promise<boolean> {
   try {
-    console.log('🗑️ Ultra-fast image deletion...');
     
     // Extract file path from URL
     const url = new URL(imageUrl);
@@ -216,7 +200,6 @@ export async function ultraFastDeleteImage(imageUrl: string): Promise<boolean> {
     const fileName = pathParts[pathParts.length - 1];
     const filePath = `profile-images/${fileName}`;
     
-    console.log('📁 Deleting from path:', filePath);
     
     const { error } = await supabase.storage
       .from('media-files')
@@ -227,7 +210,6 @@ export async function ultraFastDeleteImage(imageUrl: string): Promise<boolean> {
       return false;
     }
     
-    console.log('✅ Image deleted successfully');
     return true;
     
   } catch (error) {

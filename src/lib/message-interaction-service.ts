@@ -1,4 +1,4 @@
-// Message Interaction Service for Reply, Like, Share, Forward
+﻿// Message Interaction Service for Reply, Like, Share, Forward
 export interface MessageInteraction {
   id: string
   messageId: string
@@ -46,7 +46,6 @@ export class MessageInteractionService {
   // Like a message
   async likeMessage(messageId: string, userId: string): Promise<boolean> {
     try {
-      console.log(`User ${userId} liked message ${messageId}`)
       
       // Get current reactions
       const reactions = await this.getMessageReactions(messageId)
@@ -72,7 +71,6 @@ export class MessageInteractionService {
   // Reply to a message
   async replyToMessage(messageId: string, userId: string, userName: string, content: string): Promise<boolean> {
     try {
-      console.log(`User ${userId} replied to message ${messageId}`)
       
       const reply: MessageReply = {
         id: Date.now().toString(),
@@ -102,7 +100,6 @@ export class MessageInteractionService {
   // Share a message
   async shareMessage(messageId: string, userId: string, targetGroupId?: string, targetFriendId?: string): Promise<boolean> {
     try {
-      console.log(`User ${userId} shared message ${messageId}`)
       
       // Get current reactions
       const reactions = await this.getMessageReactions(messageId)
@@ -144,7 +141,6 @@ export class MessageInteractionService {
   // Forward a message
   async forwardMessage(messageId: string, userId: string, targetGroupId?: string, targetFriendId?: string): Promise<boolean> {
     try {
-      console.log(`User ${userId} forwarded message ${messageId}`)
       
       // Get current reactions
       const reactions = await this.getMessageReactions(messageId)
@@ -211,7 +207,6 @@ export class MessageInteractionService {
   private async saveMessageReactions(messageId: string, reactions: MessageReaction): Promise<void> {
     try {
       // In a real app, this would save to Firebase
-      console.log('Saving message reactions:', reactions)
     } catch (error) {
       console.error('Error saving message reactions:', error)
     }
@@ -236,7 +231,6 @@ export class MessageInteractionService {
   private async saveSharedMessage(message: any): Promise<void> {
     try {
       // In a real app, this would save to Firebase
-      console.log('Saving shared message:', message)
     } catch (error) {
       console.error('Error saving shared message:', error)
     }
@@ -246,7 +240,6 @@ export class MessageInteractionService {
   private async saveForwardedMessage(message: any): Promise<void> {
     try {
       // In a real app, this would save to Firebase
-      console.log('Saving forwarded message:', message)
     } catch (error) {
       console.error('Error saving forwarded message:', error)
     }
@@ -257,8 +250,7 @@ export class MessageInteractionService {
     return reactions[type].length
   }
 
-  // Check if user has reacted
-  hasUserReacted(reactions: MessageReaction, userId: string, type: 'likes' | 'shares' | 'forwards'): boolean {
+    hasUserReacted(reactions: MessageReaction, userId: string, type: 'likes' | 'shares' | 'forwards'): boolean {
     return reactions[type].includes(userId)
   }
 

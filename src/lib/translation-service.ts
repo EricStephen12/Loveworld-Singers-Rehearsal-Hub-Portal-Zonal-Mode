@@ -1,4 +1,4 @@
-// Completely FREE translation service with NO LIMITS
+﻿// Completely FREE translation service with NO LIMITS
 // Uses multiple fallback methods:
 // 1. Browser's native translation (unlimited, free)
 // 2. LibreTranslate public API (free, open source)
@@ -325,22 +325,16 @@ class TranslationService {
     
     // Check cache first
     if (this.cache[cacheKey]) {
-      console.log('Using cached translation for:', text.substring(0, 50));
       return this.cache[cacheKey];
     }
 
-    console.log('Translating text to', targetLang, ':', text.substring(0, 100));
 
     // Always try offline translation first for reliability
-    console.log('Using offline translation (most reliable)...');
     const offlineTranslated = await this.translateWithFallback(text, targetLang);
     
-    // Check if offline translation made significant changes
-    const changePercentage = this.calculateChangePercentage(text, offlineTranslated);
-    console.log('Offline translation change percentage:', changePercentage);
+        const changePercentage = this.calculateChangePercentage(text, offlineTranslated);
     
     if (changePercentage > 10) { // If more than 10% of words were translated
-      console.log('Offline translation successful:', offlineTranslated.substring(0, 100));
       this.cache[cacheKey] = offlineTranslated;
       return offlineTranslated;
     }
@@ -348,13 +342,10 @@ class TranslationService {
     // If offline translation didn't change much, try online services
     try {
       // Try Lingva first (fastest, most reliable)
-      console.log('Trying Lingva translation for better coverage...');
       const translated = await this.translateWithLingva(text, targetLang, sourceLang);
       
-      // Check if online translation is significantly different from original
-      const onlineChangePercentage = this.calculateChangePercentage(text, translated);
+            const onlineChangePercentage = this.calculateChangePercentage(text, translated);
       if (onlineChangePercentage > changePercentage) {
-        console.log('Lingva success with better coverage:', translated.substring(0, 100));
         this.cache[cacheKey] = translated;
         return translated;
       } else {
@@ -363,14 +354,12 @@ class TranslationService {
         return offlineTranslated;
       }
     } catch (error) {
-      console.log('Lingva failed, trying LibreTranslate...');
       try {
         // Fallback to LibreTranslate
         const translated = await this.translateWithLibre(text, targetLang, sourceLang);
         const onlineChangePercentage = this.calculateChangePercentage(text, translated);
         
         if (onlineChangePercentage > changePercentage) {
-          console.log('LibreTranslate success:', translated.substring(0, 100));
           this.cache[cacheKey] = translated;
           return translated;
         } else {
@@ -379,7 +368,6 @@ class TranslationService {
           return offlineTranslated;
         }
       } catch (error2) {
-        console.log('All online services failed, using offline translation...');
         this.cache[cacheKey] = offlineTranslated;
         return offlineTranslated;
       }
@@ -412,7 +400,6 @@ class TranslationService {
   async translateLyrics(lyrics: string, targetLang: string, sourceLang: string = 'en'): Promise<string> {
     if (!lyrics || targetLang === sourceLang) return lyrics;
 
-    console.log('Translating lyrics to', targetLang, '- Length:', lyrics.length);
 
     try {
       // Handle HTML content
@@ -430,14 +417,12 @@ class TranslationService {
           if (section.trim() === '') {
             translatedSections.push(section);
           } else {
-            console.log('Translating section:', section.substring(0, 50));
             const translated = await this.translate(section, targetLang, sourceLang);
             translatedSections.push(translated);
           }
         }
 
         const result = translatedSections.join('\n\n');
-        console.log('Lyrics translation complete. Original length:', lyrics.length, 'Translated length:', result.length);
         return result;
       }
     } catch (error) {
@@ -500,8 +485,7 @@ class TranslationService {
     localStorage.setItem('preferredLanguage', langCode);
   }
 
-  // Clear cache
-  clearCache(): void {
+    clearCache(): void {
     this.cache = {};
   }
 }

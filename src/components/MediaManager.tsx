@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -38,6 +38,7 @@ import {
 import { useZone } from '@/hooks/useZone';
 import { Toast } from './Toast';
 import { runMediaDiagnostics, printDiagnostics, DiagnosticResult } from '@/utils/media-diagnostics';
+import CustomLoader from './CustomLoader';
 
 
 interface MediaFile {
@@ -59,15 +60,15 @@ interface MediaManagerProps {
   allowedTypes?: ('image' | 'audio' | 'video' | 'document')[];
 }
 
-export default function MediaManager({ 
-  onSelectFile, 
-  onClose, 
+export default function MediaManager({
+  onSelectFile,
+  onClose,
   filterType = 'all',
   selectionMode = false,
   allowedTypes = ['image', 'audio', 'video', 'document']
 }: MediaManagerProps) {
   const { currentZone } = useZone();
-  
+
   // Import admin theme if available, fallback to default colors
   let theme;
   try {
@@ -111,7 +112,6 @@ export default function MediaManager({
   // Load files from database with optimized caching
   useEffect(() => {
     if (currentZone) {
-      console.log('🔄 MediaManager: Loading media for zone:', currentZone.id);
       loadFilesFromDatabase();
     }
   }, [currentZone?.id]); // Reload when zone changes
@@ -119,7 +119,6 @@ export default function MediaManager({
   const loadFilesFromDatabase = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      console.log('🚀 [Cloudinary] Loading media files from Firebase...');
       const startTime = performance.now();
 
       // Always load all media types with pagination - filtering happens client-side
@@ -128,14 +127,12 @@ export default function MediaManager({
       setCurrentFilterType(null);
 
       const loadTime = performance.now() - startTime;
-      console.log(`⚡ [Cloudinary] Media loaded in ${loadTime.toFixed(2)}ms`);
-      console.log(`📊 [Cloudinary] Total media files: ${mediaFiles.length}`);
 
       // Show success message for slow loads
       if (loadTime > 1000 && showLoading) {
         addToast({
           type: 'info',
-          message: `Loaded ${mediaFiles.length} files in ${(loadTime/1000).toFixed(1)}s`
+          message: `Loaded ${mediaFiles.length} files in ${(loadTime / 1000).toFixed(1)}s`
         });
       }
 
@@ -158,7 +155,6 @@ export default function MediaManager({
         acc[f.type] = (acc[f.type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      console.log('📊 [MediaManager] Files by type:', typeBreakdown);
 
       setFiles(convertedFiles);
 
@@ -182,13 +178,13 @@ export default function MediaManager({
   // Load more media files
   const handleLoadMore = async () => {
     if (isLoadingMore || !hasMore) return;
-    
+
     setIsLoadingMore(true);
     try {
       // Always load more from all media (filtering happens client-side)
       const moreFiles = await loadMoreCloudinaryMedia(currentZone?.id, 50);
       setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
-      
+
       if (moreFiles.length > 0) {
         const convertedFiles: MediaFile[] = moreFiles.map(dbFile => ({
           id: dbFile.id,
@@ -202,7 +198,7 @@ export default function MediaManager({
           createdAt: new Date(dbFile.createdAt),
           updatedAt: new Date(dbFile.updatedAt)
         }));
-        
+
         setFiles(prev => [...prev, ...convertedFiles]);
       }
     } catch (error) {
@@ -219,7 +215,7 @@ export default function MediaManager({
   const addToast = (toast: Omit<Toast, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts(prev => [...prev, { ...toast, id }]);
-    
+
     // Auto-dismiss after 3 seconds
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -283,25 +279,21 @@ export default function MediaManager({
     let failCount = 0;
 
     try {
-      console.log(`📤 Starting upload of ${fileList.length} file(s)...`);
 
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         setUploadingFile(file.name);
-        console.log(`📤 Uploading file ${i + 1}/${fileList.length}: ${file.name} (${formatFileSize(file.size)})`);
 
         // Determine file type
         const fileType = getFileType(file.type);
 
         try {
           // Upload to Cloudinary with progress tracking
-          console.log(`📤 [Cloudinary] Uploading to Cloudinary...`);
           const uploadResult = await uploadToCloudinary(file, (progress) => {
             setUploadProgress(progress);
           });
 
           if (uploadResult) {
-            console.log(`✅ [Cloudinary] File uploaded: ${uploadResult.url}`);
 
             // Save to zone-aware collection
             const result = await createCloudinaryMedia({
@@ -316,7 +308,6 @@ export default function MediaManager({
             }, currentZone?.id);
 
             if (result.success) {
-              console.log(`✅ [Cloudinary] File saved to Firebase with ID: ${result.id}`);
               successCount++;
 
               addToast({
@@ -385,15 +376,12 @@ export default function MediaManager({
   };
 
   const handleFileSelect = (file: MediaFile) => {
-    console.log('[MediaManager] File clicked:', file.name, 'selectionMode:', selectionMode);
     if (selectionMode) {
-      console.log('[MediaManager] Setting selected file:', file.name);
       setSelectedFile(file);
     }
   };
 
   const handleFileDoubleClick = (file: MediaFile) => {
-    console.log('[MediaManager] File double-clicked:', file.name);
     if (selectionMode && onSelectFile) {
       onSelectFile(file);
       if (onClose) {
@@ -415,14 +403,12 @@ export default function MediaManager({
     if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
       try {
         // Delete from Firebase first
-        console.log(`🗑️ [Cloudinary] Deleting from Firebase: ${file.id}`);
         const dbDeleteResult = await deleteCloudinaryMedia(file.id, currentZone?.id);
 
         if (dbDeleteResult.success) {
           // Delete from Cloudinary using stored publicId
           let cloudinaryDeleteSuccess = true;
           if (file.storagePath) {
-            console.log(`🗑️ [Cloudinary] Deleting file with publicId: ${file.storagePath}`);
 
             // Determine resource type
             let resourceType = 'image';
@@ -432,7 +418,6 @@ export default function MediaManager({
 
             cloudinaryDeleteSuccess = await deleteFromCloudinary(file.storagePath, resourceType);
           } else {
-            console.log('⚠️ No storagePath found for file, skipping Cloudinary deletion');
           }
 
           if (cloudinaryDeleteSuccess) {
@@ -532,9 +517,7 @@ export default function MediaManager({
       // Play new audio
       if (audioRef.current) {
         try {
-          console.log('🎵 Attempting to play audio:', file.url);
 
-          // Set crossOrigin to handle CORS
           audioRef.current.crossOrigin = 'anonymous';
           audioRef.current.src = file.url;
 
@@ -545,7 +528,6 @@ export default function MediaManager({
           await audioRef.current.play();
           setPlayingAudioId(file.id);
 
-          console.log('✅ Audio playing successfully');
           addToast({
             type: 'success',
             message: `Playing: ${file.name}`
@@ -568,7 +550,7 @@ export default function MediaManager({
       const handleEnded = () => {
         setPlayingAudioId(null);
       };
-      
+
       audio.addEventListener('ended', handleEnded);
       return () => audio.removeEventListener('ended', handleEnded);
     }
@@ -587,7 +569,7 @@ export default function MediaManager({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileUpload(files);
@@ -599,13 +581,13 @@ export default function MediaManager({
     const matchesType = selectedType === 'all' || file.type === selectedType;
     const matchesFolder = selectedFolder === 'all' || file.folder === selectedFolder;
     const matchesAllowedTypes = allowedTypes.includes(file.type);
-    
+
     // In selection mode with specific allowedTypes, prioritize allowedTypes filter
     // and ignore the selectedType dropdown filter
     if (selectionMode && allowedTypes.length < 4) {
       return matchesSearch && matchesFolder && matchesAllowedTypes;
     }
-    
+
     return matchesSearch && matchesType && matchesFolder && matchesAllowedTypes;
   });
 
@@ -615,47 +597,8 @@ export default function MediaManager({
     <div className="h-full w-full flex flex-col bg-white relative overflow-hidden">
       {/* Loading Skeleton */}
       {loading && files.length === 0 && (
-        <div className="absolute inset-0 bg-white z-50 flex flex-col">
-          {/* Header Skeleton */}
-          <div className="flex-shrink-0 p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1">
-                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-          </div>
-
-          {/* Filters Skeleton */}
-          <div className="flex-shrink-0 p-6 border-b border-gray-200">
-            <div className="flex items-center gap-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 w-20 bg-gray-200 rounded-full animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Grid Skeleton */}
-          <div className="flex-1 overflow-auto p-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="aspect-square bg-gray-200 animate-pulse"></div>
-                  <div className="p-3">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-8">
+          <CustomLoader message="Loading media library..." />
         </div>
       )}
 
@@ -672,7 +615,7 @@ export default function MediaManager({
                 disabled={loading}
                 className={`p-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors disabled:opacity-50`}
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className="w-4 h-4" />
               </button>
             )}
             {onClose && (
@@ -685,7 +628,7 @@ export default function MediaManager({
             )}
           </div>
         </div>
-        
+
         {/* Search - Always visible */}
         <div className="mt-2 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -697,18 +640,17 @@ export default function MediaManager({
             className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
-        
+
         {/* Type filter - Horizontal scroll on mobile */}
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 -mx-3 px-3 scrollbar-hide">
           {['all', 'audio', 'image', 'video'].map(type => (
             <button
               key={type}
               onClick={() => setSelectedType(type as any)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
-                selectedType === type 
-                  ? `${theme.primary} text-white` 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${selectedType === type
+                ? `${theme.primary} text-white`
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
@@ -723,11 +665,10 @@ export default function MediaManager({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-3 sm:p-4 text-center transition-colors ${
-            dragOver 
-              ? `${theme.border} ${theme.primaryLight}` 
-              : 'border-gray-300'
-          }`}
+          className={`border-2 border-dashed rounded-lg p-3 sm:p-4 text-center transition-colors ${dragOver
+            ? `${theme.border} ${theme.primaryLight}`
+            : 'border-gray-300'
+            }`}
         >
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -736,13 +677,13 @@ export default function MediaManager({
             <Upload className="w-5 h-5" />
             <span>Upload Files</span>
           </button>
-          
+
           <input
             ref={fileInputRef}
             type="file"
             multiple
             accept={allowedTypes.map(type => {
-              switch(type) {
+              switch (type) {
                 case 'image': return 'image/*';
                 case 'audio': return 'audio/*';
                 case 'video': return 'video/*';
@@ -764,17 +705,15 @@ export default function MediaManager({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded transition-colors ${
-              viewMode === 'grid' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400'
-            }`}
+            className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400'
+              }`}
           >
             <Grid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded transition-colors ${
-              viewMode === 'list' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400'
-            }`}
+            className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? `${theme.primaryLight} ${theme.text}` : 'text-gray-400'
+              }`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -794,7 +733,7 @@ export default function MediaManager({
               </span>
             </div>
             <div className="w-full bg-blue-200 rounded-full h-1.5">
-              <div 
+              <div
                 className="bg-blue-600 h-1.5 rounded-full transition-all"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
@@ -808,20 +747,18 @@ export default function MediaManager({
             <p className="text-sm text-gray-500">No files found</p>
           </div>
         ) : (
-          <div className={viewMode === 'grid' 
+          <div className={viewMode === 'grid'
             ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3'
             : 'space-y-1.5'
           }>
             {filteredFiles.map((file) => (
               <div
                 key={file.id}
-                className={`group relative bg-white border rounded-lg overflow-hidden transition-all ${
-                  selectionMode ? 'cursor-pointer active:scale-95' : ''
-                } ${
-                  selectedFile?.id === file.id 
-                    ? `border-purple-500 ring-2 ring-purple-200` 
+                className={`group relative bg-white border rounded-lg overflow-hidden transition-all ${selectionMode ? 'cursor-pointer active:scale-95' : ''
+                  } ${selectedFile?.id === file.id
+                    ? `border-purple-500 ring-2 ring-purple-200`
                     : 'border-gray-200'
-                }`}
+                  }`}
                 onClick={() => handleFileSelect(file)}
                 onDoubleClick={() => handleFileDoubleClick(file)}
               >
@@ -838,7 +775,7 @@ export default function MediaManager({
                       {getFileIcon(file.type)}
                     </div>
                   )}
-                  
+
                   {/* Play button for audio files */}
                   {file.type === 'audio' && (
                     <button
@@ -855,7 +792,7 @@ export default function MediaManager({
                       )}
                     </button>
                   )}
-                  
+
                   {/* Selection check mark */}
                   {selectionMode && selectedFile?.id === file.id && (
                     <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-0.5">
@@ -866,10 +803,9 @@ export default function MediaManager({
 
                 {/* File Info - Compact */}
                 <div className="p-1.5 sm:p-2">
-                  <h3 
-                    className={`font-medium text-[10px] sm:text-xs text-gray-900 break-words group-hover:line-clamp-none cursor-pointer ${
-                      expandedFileId === file.id ? '' : 'line-clamp-2'
-                    }`}
+                  <h3
+                    className={`font-medium text-[10px] sm:text-xs text-gray-900 break-words group-hover:line-clamp-none cursor-pointer ${expandedFileId === file.id ? '' : 'line-clamp-2'
+                      }`}
                     title={file.name}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -899,7 +835,7 @@ export default function MediaManager({
                 )}
               </div>
             ))}
-            
+
             {/* Load More Button */}
             {hasMore && !searchTerm && (
               <div className={viewMode === 'grid' ? 'col-span-full' : ''}>
@@ -931,15 +867,14 @@ export default function MediaManager({
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300 ${
-              toast.type === 'success' 
-                ? 'bg-green-500 text-white' 
-                : toast.type === 'error'
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300 ${toast.type === 'success'
+              ? 'bg-green-500 text-white'
+              : toast.type === 'error'
                 ? 'bg-red-500 text-white'
                 : toast.type === 'warning'
-                ? 'bg-amber-500 text-white'
-                : 'bg-slate-800 text-white'
-            }`}
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-slate-800 text-white'
+              }`}
           >
             {toast.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0" />}
             {toast.type === 'error' && <X className="w-4 h-4 shrink-0" />}
@@ -990,7 +925,6 @@ export default function MediaManager({
           });
         }}
         onLoadedData={() => {
-          console.log('✅ Audio loaded successfully');
         }}
       />
     </div>

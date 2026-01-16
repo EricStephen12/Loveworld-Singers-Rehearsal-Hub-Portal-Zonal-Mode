@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuthContext } from '@/contexts/AuthContext'
 import { useWebFCM } from '@/lib/fcm-web'
+import { NavigationManager } from '@/utils/navigation'
 
-// Get cached auth state for INSTANT redirect (like big apps do)
 function getCachedAuthState(): boolean | null {
   if (typeof window === 'undefined') return null
   try {
@@ -18,63 +18,60 @@ function getCachedAuthState(): boolean | null {
   }
 }
 
+/**
+ * SplashPage - ONLY handles initial app load routing
+ * 
+ * CRITICAL: This page should ONLY redirect when pathname is '/' (initial load).
+ * It should NOT redirect during navigation to other pages (lazy loading).
+ * 
+ * The aggressive redirect to /auth during lazy loading was causing the bounce issue.
+ */
 export default function SplashPage() {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, loading } = useAuthContext()
   const hasNavigated = useRef(false)
-  
-  // Initialize FCM for web background notifications
+
   useWebFCM()
 
-  // INSTANT navigation based on cache (like Instagram/WhatsApp)
   useEffect(() => {
-    if (hasNavigated.current) return
-    
+    // CRITICAL: Only redirect if we're on the splash page itself
+    if (pathname !== '/' || hasNavigated.current) return
+
     const cached = getCachedAuthState()
-    
-    // If we have cached state, navigate IMMEDIATELY (no waiting)
+
     if (cached !== null) {
       hasNavigated.current = true
-      router.replace(cached ? '/home' : '/auth')
+      const targetPath = cached ? NavigationManager.getLastPath() : '/auth'
+      router.replace(targetPath)
       return
     }
-    
-    // No cache = first time user, wait briefly for auth
-    // But max 800ms then go to auth
-    const timeout = setTimeout(() => {
-      if (!hasNavigated.current) {
-        hasNavigated.current = true
-        router.replace('/auth')
-      }
-    }, 800)
-    
-    return () => clearTimeout(timeout)
-  }, [router])
+  }, [router, pathname])
 
-  // When auth resolves, update cache and navigate if we haven't already
   useEffect(() => {
-    if (loading || hasNavigated.current) return
-    
-    // Update cache for next time
+    // CRITICAL: Only redirect if we're on the splash page itself
+    if (pathname !== '/' || loading || hasNavigated.current) return
+
     if (typeof window !== 'undefined') {
       localStorage.setItem('lwsrh_has_user', user ? 'true' : 'false')
     }
-    
+
     hasNavigated.current = true
-    router.replace(user ? '/home' : '/auth')
-  }, [loading, user, router])
+    const targetPath = user ? NavigationManager.getLastPath() : '/auth'
+    router.replace(targetPath)
+  }, [loading, user, router, pathname])
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
       <link rel="preload" href="/logo.png" as="image" />
-      
+
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-10 left-10 w-32 h-32 bg-gray-600 rounded-full blur-3xl"></div>
         <div className="absolute top-20 right-20 w-24 h-24 bg-gray-500 rounded-full blur-2xl"></div>
         <div className="absolute bottom-10 left-1/3 w-28 h-28 bg-gray-400 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col items-center">
         <img
           src="/logo.png"
           alt="LoveWorld Singers"

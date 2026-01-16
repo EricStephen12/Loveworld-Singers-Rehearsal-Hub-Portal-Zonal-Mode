@@ -1,4 +1,4 @@
-// Performance optimization utilities
+﻿// Performance optimization utilities
 
 // Dynamic imports for code splitting
 export const dynamicImport = {
@@ -139,14 +139,12 @@ export const performanceMonitoring = {
     new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
     }).observe({ entryTypes: ['largest-contentful-paint'] });
 
     // First Input Delay (FID)
     new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries();
       entries.forEach(entry => {
-        console.log('FID:', (entry as any).processingStart - entry.startTime);
       });
     }).observe({ entryTypes: ['first-input'] });
 
@@ -159,7 +157,6 @@ export const performanceMonitoring = {
           clsValue += (entry as any).value;
         }
       });
-      console.log('CLS:', clsValue);
     }).observe({ entryTypes: ['layout-shift'] });
   },
 
@@ -167,7 +164,6 @@ export const performanceMonitoring = {
   measureCustomMetric: (name: string, startTime: number) => {
     const endTime = performance.now();
     const duration = endTime - startTime;
-    console.log(`${name}: ${duration}ms`);
     return duration;
   }
 };
@@ -178,8 +174,7 @@ export const memoryOptimization = {
   cleanup: () => {
     if (typeof window === 'undefined') return;
     
-    // Clear unused caches
-    caches.keys().then(cacheNames => {
+        caches.keys().then(cacheNames => {
       cacheNames.forEach(cacheName => {
         if (cacheName.includes('old-')) {
           caches.delete(cacheName);

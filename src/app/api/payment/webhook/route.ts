@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { verifyKingsPayWebhookSignature } from '@/lib/kingspay-service';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 
@@ -19,18 +19,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    console.log('📨 Webhook received:', data.event);
 
     // Handle payment.succeeded event
     if (data.event === 'payment.succeeded') {
       const paymentData = data.data;
       
-      console.log('✅ Payment succeeded:', {
-        payment_id: paymentData.payment_id,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        metadata: paymentData.metadata,
-      });
 
       // Store payment record in Firebase
       try {
@@ -48,7 +41,6 @@ export async function POST(request: NextRequest) {
           processed_at: new Date().toISOString(),
         });
 
-        console.log('✅ Payment record saved to Firebase');
 
         // Handle different subscription types
         const subscriptionType = paymentData.metadata?.type;
@@ -73,7 +65,6 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date().toISOString(),
           });
 
-          console.log('✅ Zone subscription activated:', zoneId);
           
         } else if (subscriptionType === 'individual_subscription') {
           // Individual subscription (Member pays for themselves)
@@ -93,7 +84,6 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date().toISOString(),
           });
 
-          console.log('✅ Individual subscription activated:', userId);
         }
       } catch (error) {
         console.error('❌ Error processing payment webhook:', error);

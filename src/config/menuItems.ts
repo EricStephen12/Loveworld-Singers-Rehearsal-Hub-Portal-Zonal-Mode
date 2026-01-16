@@ -1,4 +1,4 @@
-import { Home, User, Bell, Users, Music, Calendar, Play, BarChart3, HelpCircle, LogOut, Headphones, MessageCircle, RefreshCw, RotateCcw, RotateCw, Mic, Film, Shield, Crown } from 'lucide-react'
+﻿import { Home, User, Bell, Users, Music, Calendar, Play, BarChart3, HelpCircle, LogOut, Headphones, MessageCircle, RefreshCw, RotateCcw, RotateCw, Mic, Film, Shield, Crown } from 'lucide-react'
 
 export type MenuItem = {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
@@ -12,14 +12,14 @@ export type MenuItem = {
 
 // Shared menu items used across all pages
 export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCoordinator?: boolean, isBoss?: boolean): MenuItem[] => [
- 
+
   {
     icon: Home,
     title: 'Home',
     href: '/home',
     badge: null,
   },
- 
+
   {
     icon: User,
     title: 'Profile',
@@ -76,7 +76,7 @@ export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCo
     href: '/pages/calendar',
     badge: null,
   },
- 
+
   {
     icon: HelpCircle,
     title: 'Admin Support',
@@ -88,7 +88,6 @@ export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCo
     title: 'Refresh App',
     badge: null,
     onClick: onRefresh || (() => {
-      console.log('⚠️ Refresh callback not provided, using fallback');
       if (typeof window !== 'undefined') {
         window.location.reload();
       }
@@ -99,7 +98,6 @@ export const getMenuItems = (onLogout?: () => void, onRefresh?: () => void, isCo
     title: 'Logout',
     badge: null,
     onClick: onLogout || (() => {
-      console.log('⚠️ Logout callback not provided - no fallback redirect');
       // No hard redirect - let the app handle it
     }),
   },

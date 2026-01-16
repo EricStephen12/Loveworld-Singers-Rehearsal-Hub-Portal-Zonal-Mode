@@ -1,4 +1,4 @@
-// Media caching utility with zone-specific support
+﻿// Media caching utility with zone-specific support
 interface Media {
   id: string
   title: string
@@ -30,7 +30,6 @@ export class MediaCache {
       }
       const key = getCacheKey(zoneType)
       localStorage.setItem(key, JSON.stringify(cached))
-      console.log(`💾 Cached ${media.length} media items (${zoneType || 'default'})`)
     } catch (error) {
       console.error('Failed to cache media:', error)
     }
@@ -42,21 +41,17 @@ export class MediaCache {
       const key = getCacheKey(zoneType)
       const cached = localStorage.getItem(key)
       if (!cached) {
-        console.log(`📭 No cached media found (${zoneType || 'default'})`)
         return null
       }
 
       const parsed: CachedData = JSON.parse(cached)
       
-      // Check if cache is still valid
-      const age = Date.now() - parsed.timestamp
+            const age = Date.now() - parsed.timestamp
       if (age > CACHE_DURATION) {
-        console.log(`⏰ Cached media expired (${zoneType || 'default'})`)
         this.clearMedia(zoneType)
         return null
       }
 
-      console.log(`⚡ Cache hit: ${parsed.data.length} media items loaded instantly (${zoneType || 'default'})`)
       return parsed.data
     } catch (error) {
       console.error('Failed to load cached media:', error)
@@ -64,24 +59,20 @@ export class MediaCache {
     }
   }
 
-  // Clear cached media (with optional zone-specific key)
-  static clearMedia(zoneType?: string): void {
+    static clearMedia(zoneType?: string): void {
     try {
       const key = getCacheKey(zoneType)
       localStorage.removeItem(key)
-      console.log(`🗑️ Cleared cached media (${zoneType || 'default'})`)
     } catch (error) {
       console.error('Failed to clear cached media:', error)
     }
   }
   
-  // Clear all media caches (both HQ and regular)
-  static clearAllMedia(): void {
+    static clearAllMedia(): void {
     try {
       localStorage.removeItem(getCacheKey())
       localStorage.removeItem(getCacheKey('hq'))
       localStorage.removeItem(getCacheKey('regular'))
-      console.log('🗑️ Cleared all cached media')
     } catch (error) {
       console.error('Failed to clear all cached media:', error)
     }

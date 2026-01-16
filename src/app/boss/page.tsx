@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -48,8 +48,7 @@ export default function BossPage() {
   const [approvalDuration, setApprovalDuration] = useState<number>(1)
   const [rejectionNotes, setRejectionNotes] = useState('')
 
-  // Check if user has boss role or is in boss zone
-  const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
+    const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
 
   useEffect(() => {
     // Use cached profile immediately - don't wait for authLoading
@@ -72,9 +71,7 @@ export default function BossPage() {
 
   const loadPendingPayments = async () => {
     try {
-      console.log('🔍 Loading pending payments...')
       const payments = await EspeesPaymentService.getPendingPayments()
-      console.log('✅ Loaded payments:', payments.length, payments)
       setPendingPayments(payments)
     } catch (error) {
       console.error('❌ Error loading pending payments:', error)

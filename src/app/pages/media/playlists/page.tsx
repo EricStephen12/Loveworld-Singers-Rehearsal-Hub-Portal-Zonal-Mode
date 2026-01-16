@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { 
-  getUserPlaylists, 
-  deletePlaylist, 
-  ensureSystemPlaylists, 
+import {
+  getUserPlaylists,
+  deletePlaylist,
+  ensureSystemPlaylists,
   createPlaylist,
-  Playlist 
+  Playlist
 } from '../_lib/playlist-service'
-import { 
-  ArrowLeft, ListVideo, MoreVertical, Trash2, Play, ThumbsUp, Clock, 
+import {
+  ArrowLeft, ListVideo, MoreVertical, Trash2, Play, ThumbsUp, Clock,
   Globe, Plus, Lock, Layers, X
 } from 'lucide-react'
 
@@ -82,36 +82,6 @@ export default function PlaylistsPage() {
   const systemPlaylists = playlists.filter(p => p.isSystem)
   const customPlaylists = playlists.filter(p => !p.isSystem)
 
-  if (authLoading && !profile) {
-    return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="w-10 h-10 border-3 border-gray-700 border-t-red-600 rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (!user && !profile) {
-    return (
-      <div className="min-h-screen bg-[#0f0f0f] text-white">
-        <header className="sticky top-0 z-50 bg-[#0f0f0f] h-14 flex items-center gap-3 px-4">
-          <button onClick={() => router.push('/pages/media')} className="p-2 hover:bg-white/10 rounded-full">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg font-semibold">Playlists</h1>
-        </header>
-        <div className="flex flex-col items-center justify-center py-20 px-4">
-          <div className="w-20 h-20 bg-[#272727] rounded-full flex items-center justify-center mb-4">
-            <ListVideo className="w-10 h-10 text-gray-500" />
-          </div>
-          <h3 className="text-lg font-medium mb-2">Sign in to view playlists</h3>
-          <p className="text-gray-400 text-sm text-center mb-4">Save your favorite videos</p>
-          <button onClick={() => router.push('/auth')} className="px-6 py-2.5 bg-white text-black rounded-full font-medium hover:bg-gray-200">
-            Sign In
-          </button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">

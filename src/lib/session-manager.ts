@@ -1,4 +1,4 @@
-// Session Management Service - Concurrent Login Prevention
+﻿// Session Management Service - Concurrent Login Prevention
 import { doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase-setup'
 import { User } from 'firebase/auth'
@@ -118,8 +118,7 @@ export class SessionManager {
     return 'Unknown OS'
   }
   
-  // Check if user can login (Single-device policy - block new login if another device active)
-  static async canUserLogin(userId: string): Promise<{ canLogin: boolean; activeDevice?: string }> {
+    static async canUserLogin(userId: string): Promise<{ canLogin: boolean; activeDevice?: string }> {
     try {
       const currentDeviceId = this.generateDeviceId()
       const sessionRef = doc(db, 'user_sessions', userId)
@@ -170,7 +169,6 @@ export class SessionManager {
       // Start activity tracking
       this.startActivityTracking(user.uid)
       
-      console.log('✅ Session created for device:', deviceInfo)
     } catch (error) {
       console.error('Error creating session:', error)
     }
@@ -187,8 +185,7 @@ export class SessionManager {
         
         // If existing session is on a different device, notify it
         if (session.deviceId !== currentDeviceId) {
-          // Update the session to mark it as terminated
-          await setDoc(sessionRef, {
+                    await setDoc(sessionRef, {
             ...session,
             isActive: false,
             terminatedAt: serverTimestamp(),
@@ -201,8 +198,7 @@ export class SessionManager {
     }
   }
   
-  // Update last activity
-  static async updateActivity(userId: string): Promise<void> {
+    static async updateActivity(userId: string): Promise<void> {
     try {
       const sessionRef = doc(db, 'user_sessions', userId)
       await setDoc(sessionRef, {
@@ -217,14 +213,12 @@ export class SessionManager {
   static startActivityTracking(userId: string): void {
     // DISABLED - Session tracking causes page reloads
     // Just log the activity without forcing logouts
-    console.log('📊 Activity tracking disabled to prevent reloads')
   }
   
   // Handle session termination (user logged in elsewhere)
   static handleSessionTermination(): void {
     // DISABLED - No more forced reloads
     // Just clear the session silently, let React handle the UI
-    console.log('⚠️ Session terminated on another device')
   }
   
   // End session
@@ -238,7 +232,6 @@ export class SessionManager {
         this.sessionListener = null
       }
       
-      console.log('✅ Session ended')
     } catch (error) {
       console.error('Error ending session:', error)
     }
@@ -253,7 +246,6 @@ export class SessionManager {
         terminatedAt: serverTimestamp(),
         terminatedReason: 'admin_force_logout'
       }, { merge: true })
-      console.log('✅ User force logged out from all devices')
     } catch (error) {
       console.error('Error force logging out user:', error)
     }

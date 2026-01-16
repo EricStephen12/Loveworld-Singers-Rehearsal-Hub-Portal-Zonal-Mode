@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 import { FileText } from "lucide-react";
+import CustomLoader from '@/components/CustomLoader';
 
 import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { useAdminData } from '../../hooks/useAdminData';
@@ -20,37 +22,44 @@ import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminMobileNav from '../../components/admin/AdminMobileNav';
 import AdminMobileHeader from '../../components/admin/AdminMobileHeader';
-import PagesSection from '../../components/admin/PagesSection';
-import CategoriesSection from '../../components/admin/CategoriesSection';
-import MediaSection from '../../components/admin/MediaSection';
-import MediaUploadSection from '../../components/admin/MediaUploadSection';
-import MembersSection from '../../components/admin/MembersSection';
-import SimpleNotificationsSection from '../../components/admin/SimpleNotificationsSection';
-import AdminModals from '../../components/admin/AdminModals';
-import PageCategoriesSection from '../../components/admin/PageCategoriesSection';
-import SubmittedSongsPage from '../pages/admin/submitted-songs/page';
-import DashboardSection from '../../components/admin/DashboardSection';
-import MasterLibrarySection from '../../components/admin/MasterLibrarySection';
-import SubGroupsSection from '../../components/admin/SubGroupsSection';
-import AnalyticsSection from '../../components/admin/AnalyticsSection';
-import CalendarSection from '../../components/admin/CalendarSection';
-import ActivityLogsPage from '../../components/admin/ActivityLogsPage';
+// Dynamic imports for improved hydration and performance
+const PagesSection = dynamic(() => import('../../components/admin/PagesSection'), { ssr: false });
+const CategoriesSection = dynamic(() => import('../../components/admin/CategoriesSection'), { ssr: false });
+const MediaSection = dynamic(() => import('../../components/admin/MediaSection'), { ssr: false });
+const MediaUploadSection = dynamic(() => import('../../components/admin/MediaUploadSection'), { ssr: false });
+const MembersSection = dynamic(() => import('../../components/admin/MembersSection'), { ssr: false });
+const SimpleNotificationsSection = dynamic(() => import('../../components/admin/SimpleNotificationsSection'), { ssr: false });
+const PageCategoriesSection = dynamic(() => import('../../components/admin/PageCategoriesSection'), { ssr: false });
+const DashboardSection = dynamic(() => import('../../components/admin/DashboardSection'), { ssr: false });
+const MasterLibrarySection = dynamic(() => import('../../components/admin/MasterLibrarySection'), { ssr: false });
+const SubGroupsSection = dynamic(() => import('../../components/admin/SubGroupsSection'), { ssr: false });
+const AnalyticsSection = dynamic(() => import('../../components/admin/AnalyticsSection'), { ssr: false });
+const CalendarSection = dynamic(() => import('../../components/admin/CalendarSection'), { ssr: false });
+const ActivityLogsPage = dynamic(() => import('../../components/admin/ActivityLogsPage'), { ssr: false });
+const SubmittedSongsPage = dynamic(() => import('../pages/admin/submitted-songs/page'), { ssr: false });
+const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
   const router = useRouter()
   const { user, profile, isLoading: authLoading } = useAuth()
-  
+
+  // Hydration guard - must be the first state
+  const [hasMounted, setHasMounted] = React.useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   // Zone context - must be called before any conditional returns
   const { currentZone, isZoneCoordinator, isLoading: zoneLoading } = useZone();
-  
+
   // Sub-group management (for Zone Coordinators) - must be called before any conditional returns
   const { pendingCount: pendingSubGroupCount } = useZoneSubGroups();
-  
+
   // Admin authentication state
   const [currentAdmin, setCurrentAdmin] = useState<{ id: string; username: string; fullName: string } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
   // Initialize admin from user profile
   useEffect(() => {
     if (user && profile && currentZone) {
@@ -64,9 +73,8 @@ export default function AdminPage() {
     }
   }, [user, profile, currentZone]);
 
-  // Check if user is HQ Admin
   const isHQAdmin = Boolean(profile?.email && [
-    'ihenacho23@gmail.com', 
+    'ihenacho23@gmail.com',
     'ephraimloveworld1@gmail.com',
     'takeshopstores@gmail.com',
     'nnennawealth@gmail.com'
@@ -81,11 +89,11 @@ export default function AdminPage() {
   // Modal states
   const [showPageModal, setShowPageModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showPageCategoryModal, setShowPageCategoryModal] = useState(false); 
+  const [showPageCategoryModal, setShowPageCategoryModal] = useState(false);
   const [showSongModal, setShowSongModal] = useState(false);
   const [editingPage, setEditingPage] = useState<PraiseNight | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingPageCategory, setEditingPageCategory] = useState<any | null>(null); 
+  const [editingPageCategory, setEditingPageCategory] = useState<any | null>(null);
   const [editingSong, setEditingSong] = useState<PraiseNightSong | null>(null);
 
   // Form states
@@ -94,7 +102,7 @@ export default function AdminPage() {
   const [newPageLocation, setNewPageLocation] = useState('');
   const [newPageDescription, setNewPageDescription] = useState('');
   const [newPageCategory, setNewPageCategory] = useState<'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive'>('unassigned');
-  const [newPagePageCategory, setNewPagePageCategory] = useState(''); 
+  const [newPagePageCategory, setNewPagePageCategory] = useState('');
   const [newPageDays, setNewPageDays] = useState(0);
   const [newPageHours, setNewPageHours] = useState(0);
   const [newPageMinutes, setNewPageMinutes] = useState(0);
@@ -102,25 +110,25 @@ export default function AdminPage() {
   const [newPageBannerImage, setNewPageBannerImage] = useState('');
   const [newPageBannerFile, setNewPageBannerFile] = useState<File | null>(null);
   const [newPageCategoryName, setNewPageCategoryName] = useState('');
-  const [newPageCategoryDescription, setNewPageCategoryDescription] = useState(''); 
-  const [newPageCategoryImage, setNewPageCategoryImage] = useState(''); 
-  const [selectedPageCategoryFilter, setSelectedPageCategoryFilter] = useState<string | null>(null); 
+  const [newPageCategoryDescription, setNewPageCategoryDescription] = useState('');
+  const [newPageCategoryImage, setNewPageCategoryImage] = useState('');
+  const [selectedPageCategoryFilter, setSelectedPageCategoryFilter] = useState<string | null>(null);
 
   // Delete dialog states
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [pageToDelete, setPageToDelete] = useState<PraiseNight | null>(null);
   const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
-  const [showDeletePageCategoryDialog, setShowDeletePageCategoryDialog] = useState(false); 
+  const [showDeletePageCategoryDialog, setShowDeletePageCategoryDialog] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [pageCategoryToDelete, setPageCategoryToDelete] = useState<any | null>(null); 
+  const [pageCategoryToDelete, setPageCategoryToDelete] = useState<any | null>(null);
   const [showDeleteSongDialog, setShowDeleteSongDialog] = useState(false);
   const [songToDelete, setSongToDelete] = useState<PraiseNightSong | null>(null);
 
   // Data states
   const [allSongs, setAllSongs] = useState<PraiseNightSong[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
-  const [pageCategories, setPageCategories] = useState<any[]>([]); 
-  
+  const [pageCategories, setPageCategories] = useState<any[]>([]);
+
 
   // Pagination and filtering
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,7 +141,7 @@ export default function AdminPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
 
- 
+
   const {
     pages: allPraiseNights,
     loading,
@@ -147,21 +155,19 @@ export default function AdminPage() {
   // Set zone ID when currentZone changes
   useEffect(() => {
     if (currentZone) {
-      console.log('🔄 Admin: Setting zone for data loading:', currentZone.id);
       setZoneId(currentZone.id);
     }
   }, [currentZone, setZoneId]);
 
- 
+
   const [loadingSongs, setLoadingSongs] = useState(false);
 
- 
+
   useEffect(() => {
     if (selectedPage) {
       setLoadingSongs(true);
-     
+
       getCurrentSongs(selectedPage.id, true).then(songs => {
-        console.log(`📊 Loaded ${songs.length} songs for page ${selectedPage.id}`);
         setAllSongs(songs);
         setLoadingSongs(false);
       }).catch(error => {
@@ -172,9 +178,19 @@ export default function AdminPage() {
     } else {
       setAllSongs([]);
     }
-  }, [selectedPage, getCurrentSongs]);
+  }, [selectedPage, getCurrentSongs, allPraiseNights]);
 
- 
+  // Update selectedPage reference when allPraiseNights refreshes to ensure we have latest data
+  useEffect(() => {
+    if (selectedPage && allPraiseNights) {
+      const updatedPage = allPraiseNights.find(p => p.id === selectedPage.id);
+      if (updatedPage && JSON.stringify(updatedPage) !== JSON.stringify(selectedPage)) {
+        setSelectedPage(updatedPage);
+      }
+    }
+  }, [allPraiseNights, selectedPage]);
+
+
 
 
   const allAvailableCategories = useMemo(() => {
@@ -184,7 +200,7 @@ export default function AdminPage() {
     return [...new Set(songCategoryNames)];
   }, [allSongs]);
 
-  
+
   const allCategories = useMemo(() => {
     // Start with database categories
     const combinedCategories = [...dbCategories];
@@ -200,8 +216,8 @@ export default function AdminPage() {
           icon: 'Music',
           color: '#3B82F6',
           isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-01')
         });
       }
     });
@@ -213,14 +229,11 @@ export default function AdminPage() {
   useEffect(() => {
     const loadCategories = async () => {
       if (!currentZone) {
-        console.log('⏳ Waiting for zone to load...');
         return;
       }
 
       try {
-        console.log('🌍 Loading categories for zone:', currentZone.id);
         const categories = await ZoneDatabaseService.getCategories(currentZone.id);
-        console.log('🔥 Raw categories from zone:', categories);
 
         // Map categories to include both Firebase ID and Supabase ID
         const mappedCategories = categories.map(category => ({
@@ -230,7 +243,6 @@ export default function AdminPage() {
           supabaseId: category.id // This will be the Firebase ID for now
         }));
 
-        console.log('🔥 Mapped categories:', mappedCategories);
         setDbCategories(mappedCategories as any);
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -244,14 +256,11 @@ export default function AdminPage() {
   useEffect(() => {
     const loadPageCategories = async () => {
       if (!currentZone) {
-        console.log('⏳ Waiting for zone to load...');
         return;
       }
 
       try {
-        console.log('🌍 Loading page categories for zone:', currentZone.id);
         const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
-        console.log('🔥 Raw page categories from zone:', categories);
         setPageCategories(categories);
       } catch (error) {
         console.error('Error loading page categories:', error);
@@ -261,31 +270,26 @@ export default function AdminPage() {
     loadPageCategories();
   }, [currentZone]);
 
-  // Check if user is zone coordinator - ONLY on initial load, not on every re-render
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
-  
+
   useEffect(() => {
     // Wait for Firebase auth to finish loading first
     if (authLoading) {
-      console.log('⏳ Auth still loading...')
       return
     }
 
     // Don't redirect - just return nothing if no user
     if (!user) {
-      console.log('⏳ No user yet, waiting...')
       return
     }
 
     // Wait for zone context to finish loading before checking permissions
     if (zoneLoading) {
-      console.log('⏳ Zone context still loading...')
       return
     }
 
     // Wait for zone to be available
     if (!currentZone) {
-      console.log('⏳ Waiting for zone to load...')
       return
     }
 
@@ -298,36 +302,32 @@ export default function AdminPage() {
     const BLOCKED_ADMIN_EMAILS = [
       'lliamzelvin@gmail.com'
     ]
-    
+
     const isBlocked = Boolean(profile?.email && BLOCKED_ADMIN_EMAILS.includes(profile.email.toLowerCase()))
-    
+
     if (isBlocked) {
-      console.log('❌ User is blocked from admin access:', profile?.email)
       router.push('/home')
       return
     }
 
-    // Check if user has admin access (zone coordinator OR HQ admin)
     const isHQAdminCheck = Boolean(profile?.email && [
-      'ihenacho23@gmail.com', 
+      'ihenacho23@gmail.com',
       'ephraimloveworld1@gmail.com',
       'takeshopstores@gmail.com',
       'nnennawealth@gmail.com'
     ].includes(profile.email.toLowerCase()))
-    
+
     // Give a small delay to ensure zone role is properly loaded from cache
     const checkAccess = () => {
       if (!isZoneCoordinator && !isHQAdminCheck) {
-        console.log('❌ User is not a zone coordinator or HQ admin, redirecting to home')
         router.push('/home')
         return
       }
 
       // Mark auth as checked so we don't redirect on subsequent re-renders
       setHasCheckedAuth(true)
-      
+
       const role = getRoleTerminology(currentZone.id);
-      console.log(`✅ ${role.title} access granted for:`, currentZone.name)
     }
 
     // Small delay to ensure zone data is fully loaded from cache
@@ -335,22 +335,16 @@ export default function AdminPage() {
     return () => clearTimeout(timer)
   }, [user, isZoneCoordinator, currentZone, zoneLoading, router, hasCheckedAuth, profile?.email, authLoading]);
 
-  // Get pages from Firebase (includes unassigned for admin)
   const pages = useMemo(() => {
-    console.log('🔍 Pages useMemo triggered:', { loading, allPraiseNights: allPraiseNights?.length, showPageModal });
-    
+
     if (loading) {
-      console.log('⏳ Still loading...');
       return [];
     }
-    
+
     if (!allPraiseNights) {
-      console.log('❌ No allPraiseNights data');
       return [];
     }
-    
-    console.log('📄 Admin pages loaded:', allPraiseNights.length, 'pages');
-    console.log('📄 All pages data:', allPraiseNights);
+
     return allPraiseNights;
   }, [allPraiseNights, loading]);
 
@@ -359,10 +353,7 @@ export default function AdminPage() {
   if (!profile && !user && authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-gray-600 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
-        </div>
+        <CustomLoader message="Verifying admin credentials..." />
       </div>
     );
   }
@@ -371,11 +362,11 @@ export default function AdminPage() {
   const addToast = (toast: Omit<Toast, 'id'>) => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { ...toast, id }]);
-    
+
     // Detect action from message
     let detectedAction = 'unknown';
     const message = toast.message.toLowerCase();
-    
+
     if (message.includes('created') || message.includes('added')) {
       detectedAction = 'created';
     } else if (message.includes('updated') || message.includes('modified') || message.includes('changed')) {
@@ -389,7 +380,7 @@ export default function AdminPage() {
     } else if (message.includes('published') || message.includes('imported')) {
       detectedAction = 'created';
     }
-    
+
     // Detect section from message
     let detectedSection = 'admin';
     if (message.includes('page') || message.includes('praise night')) {
@@ -405,21 +396,21 @@ export default function AdminPage() {
     } else if (message.includes('media')) {
       detectedSection = 'media';
     }
-    
+
     // Extract item name from message
     let itemName = null;
     const nameMatch = toast.message.match(/["']([^"']+)["']/);
     if (nameMatch) {
       itemName = nameMatch[1];
     }
-    
+
     // Get real user info
-    const userName = currentAdmin?.fullName || 
-                   currentAdmin?.username || 
-                   localStorage.getItem('userName') || 
-                   localStorage.getItem('userEmail') || 
-                   'Admin';
-    
+    const userName = currentAdmin?.fullName ||
+      currentAdmin?.username ||
+      localStorage.getItem('userName') ||
+      localStorage.getItem('userEmail') ||
+      'Admin';
+
     // Also dispatch global event for activity logging
     window.dispatchEvent(new CustomEvent('showToast', {
       detail: {
@@ -437,11 +428,9 @@ export default function AdminPage() {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
-  // Note: Authentication is now handled by the AdminAuth component
   // But we still need handleAdminLogout for the sidebar
   const handleAdminLogout = () => {
     if (currentAdmin) {
-      console.log('🔐 Admin logged out:', currentAdmin.username);
     }
 
     setCurrentAdmin(null);
@@ -459,7 +448,6 @@ export default function AdminPage() {
 
   // Category management functions
   const handleAddCategory = async () => {
-    console.log('🎯 handleAddCategory called with name:', newPageCategoryName);
 
     if (!currentZone) {
       addToast({
@@ -488,11 +476,9 @@ export default function AdminPage() {
         updatedAt: new Date()
       };
 
-      console.log('🌍 Creating category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.createCategory(currentZone.id, newCategory);
 
       if (result.success) {
-        console.log('✅ Category added successfully');
         addToast({
           type: 'success',
           message: 'Category added successfully'
@@ -509,8 +495,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.createCategory({ 
-            id: user.uid, 
+          logAdminAction.createCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, newCategory.name);
@@ -530,7 +516,6 @@ export default function AdminPage() {
   const handleEditCategory = (categoryName: string) => {
     const category = allCategories.find(c => c.name === categoryName);
     if (category) {
-      // Check if this is a real database category or a song-based category
       const isDbCategory = dbCategories.some(dbCat => dbCat.id === category.id);
 
       if (!isDbCategory) {
@@ -566,7 +551,6 @@ export default function AdminPage() {
     }
 
     try {
-      console.log('🔄 Updating category with ID:', editingCategory.id, 'Name:', newPageCategoryName.trim());
 
       // Prepare update data (only the fields that can be updated)
       const updateData = {
@@ -576,11 +560,9 @@ export default function AdminPage() {
       };
 
       // Use the Firebase document ID directly
-      console.log('🌍 Updating category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.updateCategory(currentZone.id, editingCategory.id, updateData);
 
       if (result.success) {
-        console.log('✅ Category updated successfully');
         addToast({
           type: 'success',
           message: 'Category updated successfully'
@@ -598,8 +580,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.updateCategory({ 
-            id: user.uid, 
+          logAdminAction.updateCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, `Updated category: ${newPageCategoryName.trim()}`);
@@ -617,7 +599,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteCategory = (category: Category) => {
-    // Check if this is a real database category or a song-based category
     const isDbCategory = dbCategories.some(dbCat => dbCat.id === category.id);
 
     if (!isDbCategory) {
@@ -645,14 +626,11 @@ export default function AdminPage() {
     if (!categoryToDelete) return;
 
     try {
-      console.log('🗑️ Deleting category with ID:', categoryToDelete.id);
 
       // Use the Firebase document ID directly
-      console.log('🌍 Deleting category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.deleteCategory(currentZone.id, categoryToDelete.id);
 
       if (result.success) {
-        console.log('✅ Category deleted successfully');
         addToast({
           type: 'success',
           message: 'Category deleted successfully'
@@ -669,8 +647,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.deleteCategory({ 
-            id: user.uid, 
+          logAdminAction.deleteCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, `Deleted category: ${categoryToDelete.name}`);
@@ -694,7 +672,6 @@ export default function AdminPage() {
 
   // Page category management functions
   const handleAddPageCategory = async () => {
-    console.log('🎯 handleAddPageCategory called with name:', newPageCategoryName);
 
     if (!currentZone) {
       addToast({
@@ -721,11 +698,9 @@ export default function AdminPage() {
         updatedAt: new Date()
       };
 
-      console.log('🌍 Creating page category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.createPageCategory(currentZone.id, newPageCategoryData);
 
       if (result.success) {
-        console.log('✅ Page category added successfully');
         addToast({
           type: 'success',
           message: 'Page category added successfully'
@@ -744,8 +719,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.createCategory({ 
-            id: user.uid, 
+          logAdminAction.createCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, newPageCategoryName.trim());
@@ -795,11 +770,9 @@ export default function AdminPage() {
         updatedAt: new Date()
       };
 
-      console.log('🌍 Updating page category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.updatePageCategory(currentZone.id, editingPageCategory.id, updatedData);
 
       if (result.success) {
-        console.log('✅ Page category updated successfully');
         addToast({
           type: 'success',
           message: 'Page category updated successfully'
@@ -819,8 +792,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.updateCategory({ 
-            id: user.uid, 
+          logAdminAction.updateCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, `Updated page category: ${newPageCategoryName.trim()}`);
@@ -854,13 +827,10 @@ export default function AdminPage() {
     if (!pageCategoryToDelete) return;
 
     try {
-      console.log('🗑️ Deleting page category with ID:', pageCategoryToDelete.id);
 
-      console.log('🌍 Deleting page category for zone:', currentZone.id);
       const result = await ZoneDatabaseService.deletePageCategory(currentZone.id, pageCategoryToDelete.id);
 
       if (result.success) {
-        console.log('✅ Page category deleted successfully');
         addToast({
           type: 'success',
           message: 'Page category deleted successfully'
@@ -877,8 +847,8 @@ export default function AdminPage() {
         // Log admin action
         if (user && currentZone) {
           const roleName = getFullRoleName(currentZone.id, profile?.first_name, profile?.last_name);
-          logAdminAction.deleteCategory({ 
-            id: user.uid, 
+          logAdminAction.deleteCategory({
+            id: user.uid,
             username: user.email || getRoleTerminology(currentZone.id).singular.toLowerCase(),
             fullName: roleName
           }, `Deleted page category: ${pageCategoryToDelete.name}`);
@@ -931,22 +901,17 @@ export default function AdminPage() {
         firebaseId: ''
       };
 
-      console.log('🔥 Creating page with data:', newPage);
       const result = await ZoneDatabaseService.createPraiseNight(currentZone?.id || '', newPage);
 
       if (result.success && 'id' in result && result.id) {
-        console.log('✅ Page created with Firebase-generated ID:', result.id);
 
         // Upload banner image if a new file was selected
         let bannerImageUrl = newPageBannerImage;
         if (newPageBannerFile) {
-          console.log('📤 Uploading banner image for Firebase ID:', result.id);
           const uploadResult = await uploadBannerImage(newPageBannerFile, result.id!);
           if (uploadResult.success && uploadResult.url) {
             bannerImageUrl = uploadResult.url;
-            console.log('✅ Banner image uploaded:', bannerImageUrl);
 
-            // Update the page with the banner image URL
             await ZoneDatabaseService.updatePraiseNight(
               result.id!,
               { bannerImage: bannerImageUrl },
@@ -977,7 +942,6 @@ export default function AdminPage() {
         setShowPageModal(false);
         refreshData();
 
-        console.log('✅ Page creation completed successfully');
       } else {
         throw new Error('Failed to add page');
       }
@@ -993,8 +957,6 @@ export default function AdminPage() {
   };
 
   const handleEditPage = (page: PraiseNight) => {
-    console.log('📝 Editing page:', page);
-    console.log('📂 Page category from DB:', page.pageCategory);
     setEditingPage(page);
     setNewPageName(page.name);
     setNewPageDate(page.date);
@@ -1002,7 +964,6 @@ export default function AdminPage() {
     setNewPageDescription(''); // Description not supported in PraiseNight type
     setNewPageCategory(page.category);
     setNewPagePageCategory(page.pageCategory || ''); // Set page category
-    console.log('✅ Set page category to:', page.pageCategory || '');
     // Use countdown object directly
     setNewPageDays(page.countdown.days);
     setNewPageHours(page.countdown.hours);
@@ -1053,9 +1014,7 @@ export default function AdminPage() {
         }
       };
 
-      console.log('🔄 Updating page with data:', pageData);
 
-      // Update the page in Firebase (HQ / Zone aware)
       const result = await ZoneDatabaseService.updatePraiseNight(
         editingPage.firebaseId || editingPage.id.toString(),
         pageData,
@@ -1063,7 +1022,6 @@ export default function AdminPage() {
       );
 
       if (result.success) {
-        console.log('✅ Page updated successfully');
         addToast({
           type: 'success',
           message: 'Page updated successfully'
@@ -1086,7 +1044,6 @@ export default function AdminPage() {
         setShowPageModal(false);
         refreshData();
 
-        console.log('✅ Page update completed successfully');
       } else {
         throw new Error('Failed to update page');
       }
@@ -1116,7 +1073,6 @@ export default function AdminPage() {
       );
 
       if (result.success) {
-        console.log('✅ Page deleted successfully');
         addToast({
           type: 'success',
           message: 'Page deleted successfully'
@@ -1152,7 +1108,6 @@ export default function AdminPage() {
 
   // Song management functions
   const handleEditSong = (song: PraiseNightSong) => {
-    console.log('🎵 [FRESH] Editing song:', song.title, 'ID:', song.id);
     setEditingSong(song);
     setShowSongModal(true);
   };
@@ -1173,7 +1128,6 @@ export default function AdminPage() {
       const result = await PraiseNightSongsService.updateSongStatus(song.id, newStatus, currentZone?.id);
 
       if (result.success) {
-        console.log('✅ [FRESH] Song status updated successfully');
         addToast({
           type: 'success',
           message: `Song marked as ${newStatus}`
@@ -1209,7 +1163,6 @@ export default function AdminPage() {
       }, currentZone?.id);
 
       if (result.success) {
-        console.log('✅ [FRESH] Song active status updated successfully');
         addToast({
           type: 'success',
           message: newActiveStatus ? `🔴 ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
@@ -1234,7 +1187,6 @@ export default function AdminPage() {
 
   const handleSaveSong = async (songData: PraiseNightSong) => {
     try {
-      console.log('💾 [FRESH] Saving song:', songData.title);
 
       let result;
 
@@ -1242,13 +1194,10 @@ export default function AdminPage() {
       const isEditingExistingSong = editingSong && editingSong.id;
 
       if (isEditingExistingSong) {
-        // UPDATE existing song
-        console.log('🔄 [FRESH] Updating song ID:', editingSong.id);
 
         result = await PraiseNightSongsService.updateSong(editingSong.id!, songData, currentZone?.id);
 
         if (result.success) {
-          console.log('✅ [FRESH] Song updated successfully');
           addToast({
             type: 'success',
             message: 'Song updated successfully'
@@ -1267,30 +1216,17 @@ export default function AdminPage() {
         }
       } else {
         // CREATE new song
-        console.log('➕ [FRESH] Creating new song');
-        console.log('🔍 DEBUG - Selected Page:', {
-          selectedPageId: selectedPage?.id,
-          selectedPageFirebaseId: selectedPage?.firebaseId,
-          songDataPraiseNightId: songData.praiseNightId
-        });
 
         // Ensure praiseNightId is set
         const newSongData = {
           ...songData,
           praiseNightId: selectedPage?.firebaseId || selectedPage?.id || songData.praiseNightId
         };
-        
-        console.log('🔍 DEBUG - New Song Data:', {
-          title: newSongData.title,
-          praiseNightId: newSongData.praiseNightId,
-          category: newSongData.category,
-          categories: newSongData.categories
-        });
+
 
         result = await PraiseNightSongsService.createSong(newSongData, currentZone?.id);
 
         if (result.success) {
-          console.log('✅ [FRESH] Song created with ID:', result.id);
           addToast({
             type: 'success',
             message: 'Song added successfully'
@@ -1310,14 +1246,11 @@ export default function AdminPage() {
       }
 
       if (result?.success) {
-        console.log('✅ Song operation successful, refreshing data...');
-        console.log('🎵 Result from song operation:', result);
         setEditingSong(null);
         setShowSongModal(false);
-        
+
         // Add a small delay to ensure Firebase has processed the change
         setTimeout(() => {
-          console.log('🔄 Calling refreshData after delay...');
           refreshData();
         }, 500);
       } else {
@@ -1340,12 +1273,10 @@ export default function AdminPage() {
         throw new Error('No valid song ID found for deletion');
       }
 
-      console.log('🗑️ [FRESH] Deleting song:', songToDelete.title, 'ID:', songToDelete.id);
 
       const deleteResult = await PraiseNightSongsService.deleteSong(songToDelete.id, currentZone?.id);
 
       if (deleteResult.success) {
-        console.log('✅ [FRESH] Song deleted successfully');
         addToast({
           type: 'success',
           message: 'Song deleted successfully'
@@ -1480,12 +1411,30 @@ export default function AdminPage() {
     );
   }
 
+  // Hydration protection - return a stable shell until mounted
+  if (!hasMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex overflow-hidden">
+        {/* Simple skeleton matching the layout structure */}
+        <div className="hidden lg:block w-64 bg-white border-r border-slate-200 h-screen" />
+        <div className="flex-1 flex flex-col">
+          <div className="lg:hidden h-14 bg-white border-b border-slate-100" />
+          <div className="flex-1 p-6 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-slate-400 text-sm animate-pulse">Initializing Dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Content shows immediately - no blocking states
 
-  // Check if user is Boss
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
   const isBossZone = currentZone?.id === 'zone-boss'
-  
+
   // Don't block on zone - show content immediately, zone loads in background
 
   // Temporarily show coordinator status for debugging
@@ -1512,269 +1461,269 @@ export default function AdminPage() {
   // Add PageCategoriesSection to the active sections
   return (
     <AdminThemeProvider>
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex flex-col lg:flex-row overflow-hidden">
-      {/* Sidebar */}
-      <AdminSidebar
-        sidebarCollapsed={!isSidebarOpen}
-        setSidebarCollapsed={(collapsed) => setIsSidebarOpen(!collapsed)}
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        isHQAdmin={isHQAdmin}
-        pendingSubGroupCount={pendingSubGroupCount}
-      />
+      <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex flex-col lg:flex-row overflow-hidden">
+        {/* Sidebar */}
+        <AdminSidebar
+          sidebarCollapsed={!isSidebarOpen}
+          setSidebarCollapsed={(collapsed) => setIsSidebarOpen(!collapsed)}
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          isHQAdmin={isHQAdmin}
+          pendingSubGroupCount={pendingSubGroupCount}
+        />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
-        {/* Mobile Header - Clean native design (single header only) */}
-        {!(activeSection === 'Pages' && selectedPage) && (
-          <AdminMobileHeader
-            title={activeSection}
-          />
-        )}
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0">
+          {/* Mobile Header - Clean native design (single header only) */}
+          {!(activeSection === 'Pages' && selectedPage) && (
+            <AdminMobileHeader
+              title={activeSection}
+            />
+          )}
 
-        {activeSection === 'Dashboard' && <DashboardSection onSectionChange={setActiveSection} />}
-        {activeSection === 'Analytics' && isHQAdmin && <AnalyticsSection />}
-        
-        {activeSection === 'Pages' && (
-          <PagesSection
-            allPraiseNights={allPraiseNights}
-            loading={loading}
-            selectedPage={selectedPage}
-            setSelectedPage={setSelectedPage}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            allSongs={allSongs}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            showPageModal={showPageModal}
-            setShowPageModal={setShowPageModal}
-            editingPage={editingPage}
-            setEditingPage={setEditingPage}
-            newPageName={newPageName}
-            setNewPageName={setNewPageName}
-            newPageDate={newPageDate}
-            setNewPageDate={setNewPageDate}
-            newPageLocation={newPageLocation}
-            setNewPageLocation={setNewPageLocation}
-            newPageDescription={newPageDescription}
-            setNewPageDescription={setNewPageDescription}
-            newPageCategory={newPageCategory}
-            setNewPageCategory={setNewPageCategory}
-            newPagePageCategory={newPagePageCategory}
-            setNewPagePageCategory={setNewPagePageCategory}
-            newPageDays={newPageDays}
-            setNewPageDays={setNewPageDays}
-            newPageHours={newPageHours}
-            setNewPageHours={setNewPageHours}
-            newPageMinutes={newPageMinutes}
-            setNewPageMinutes={setNewPageMinutes}
-            newPageSeconds={newPageSeconds}
-            setNewPageSeconds={setNewPageSeconds}
-            newPageBannerImage={newPageBannerImage}
-            setNewPageBannerImage={setNewPageBannerImage}
-            newPageBannerFile={newPageBannerFile}
-            setNewPageBannerFile={setNewPageBannerFile}
-            isCreatingPage={isCreatingPage}
-            showDeleteDialog={showDeleteDialog}
-            setShowDeleteDialog={setShowDeleteDialog}
-            pageToDelete={pageToDelete}
-            setPageToDelete={setPageToDelete}
-            handleAddPage={handleAddPage}
-            handleEditPage={handleEditPage}
-            handleUpdatePage={handleUpdatePage}
-            handleDeletePage={handleDeletePage}
-            confirmDeletePage={confirmDeletePage}
-            cancelDeletePage={cancelDeletePage}
-            handleEditSong={handleEditSong}
-            handleDeleteSong={handleDeleteSong}
-            handleToggleSongStatus={handleToggleSongStatus}
-            handleToggleSongActive={handleToggleSongActive}
-            allCategories={allCategories}
-            addToast={addToast}
-          />
-        )}
+          {activeSection === 'Dashboard' && <DashboardSection onSectionChange={setActiveSection} />}
+          {activeSection === 'Analytics' && isHQAdmin && <AnalyticsSection />}
 
-        {activeSection === 'Categories' && (
-          <CategoriesSection
-            allCategories={allCategories}
-            allSongs={allSongs}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            showCategoryModal={showCategoryModal}
-            setShowCategoryModal={setShowCategoryModal}
-            editingCategory={editingCategory}
-            setEditingCategory={setEditingCategory}
-            newPageCategoryName={newPageCategoryName}
-            setNewPageCategoryName={setNewPageCategoryName}
-            showDeleteCategoryDialog={showDeleteCategoryDialog}
-            setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
-            categoryToDelete={categoryToDelete}
-            setCategoryToDelete={setCategoryToDelete}
-            handleAddCategory={handleAddCategory}
-            handleEditCategory={handleEditCategory}
-            handleUpdateCategory={handleUpdateCategory}
-            handleDeleteCategory={handleDeleteCategory}
-            confirmDeleteCategory={confirmDeleteCategory}
-            cancelDeleteCategory={cancelDeleteCategory}
-            handleEditCategoryContent={handleEditCategoryContent}
-            handleDeleteCategoryContent={handleDeleteCategoryContent}
-            addToast={addToast}
-          />
-        )}
+          {activeSection === 'Pages' && (
+            <PagesSection
+              allPraiseNights={allPraiseNights}
+              loading={loading}
+              selectedPage={selectedPage}
+              setSelectedPage={setSelectedPage}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              allSongs={allSongs}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              showPageModal={showPageModal}
+              setShowPageModal={setShowPageModal}
+              editingPage={editingPage}
+              setEditingPage={setEditingPage}
+              newPageName={newPageName}
+              setNewPageName={setNewPageName}
+              newPageDate={newPageDate}
+              setNewPageDate={setNewPageDate}
+              newPageLocation={newPageLocation}
+              setNewPageLocation={setNewPageLocation}
+              newPageDescription={newPageDescription}
+              setNewPageDescription={setNewPageDescription}
+              newPageCategory={newPageCategory}
+              setNewPageCategory={setNewPageCategory}
+              newPagePageCategory={newPagePageCategory}
+              setNewPagePageCategory={setNewPagePageCategory}
+              newPageDays={newPageDays}
+              setNewPageDays={setNewPageDays}
+              newPageHours={newPageHours}
+              setNewPageHours={setNewPageHours}
+              newPageMinutes={newPageMinutes}
+              setNewPageMinutes={setNewPageMinutes}
+              newPageSeconds={newPageSeconds}
+              setNewPageSeconds={setNewPageSeconds}
+              newPageBannerImage={newPageBannerImage}
+              setNewPageBannerImage={setNewPageBannerImage}
+              newPageBannerFile={newPageBannerFile}
+              setNewPageBannerFile={setNewPageBannerFile}
+              isCreatingPage={isCreatingPage}
+              showDeleteDialog={showDeleteDialog}
+              setShowDeleteDialog={setShowDeleteDialog}
+              pageToDelete={pageToDelete}
+              setPageToDelete={setPageToDelete}
+              handleAddPage={handleAddPage}
+              handleEditPage={handleEditPage}
+              handleUpdatePage={handleUpdatePage}
+              handleDeletePage={handleDeletePage}
+              confirmDeletePage={confirmDeletePage}
+              cancelDeletePage={cancelDeletePage}
+              handleEditSong={handleEditSong}
+              handleDeleteSong={handleDeleteSong}
+              handleToggleSongStatus={handleToggleSongStatus}
+              handleToggleSongActive={handleToggleSongActive}
+              allCategories={allCategories}
+              addToast={addToast}
+            />
+          )}
 
-        {activeSection === 'Page Categories' && (
-          <PageCategoriesSection
-            pageCategories={pageCategories}
-            pages={pages}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onPageClick={(page) => {
-              // Switch to Pages section and select this page
-              setActiveSection('Pages');
-              setSelectedPage(page);
-              addToast({
-                type: 'success',
-                message: `Viewing "${page.name}"`
-              });
-            }}
-            showPageCategoryModal={showPageCategoryModal}
-            setShowPageCategoryModal={setShowPageCategoryModal}
-            editingPageCategory={editingPageCategory}
-            setEditingPageCategory={setEditingPageCategory}
-            newPageCategoryName={newPageCategoryName}
-            setNewPageCategoryName={setNewPageCategoryName}
-            newPageCategoryDescription={newPageCategoryDescription}
-            setNewPageCategoryDescription={setNewPageCategoryDescription}
-            newPageCategoryImage={newPageCategoryImage}
-            setNewPageCategoryImage={setNewPageCategoryImage}
-            showDeletePageCategoryDialog={showDeletePageCategoryDialog}
-            setShowDeletePageCategoryDialog={setShowDeletePageCategoryDialog}
-            pageCategoryToDelete={pageCategoryToDelete}
-            setPageCategoryToDelete={setPageCategoryToDelete}
-            handleAddPageCategory={handleAddPageCategory}
-            handleEditPageCategory={handleEditPageCategory}
-            handleUpdatePageCategory={handleUpdatePageCategory}
-            handleDeletePageCategory={handleDeletePageCategory}
-            confirmDeletePageCategory={confirmDeletePageCategory}
-            cancelDeletePageCategory={cancelDeletePageCategory}
-            addToast={addToast}
-          />
-        )}
+          {activeSection === 'Categories' && (
+            <CategoriesSection
+              allCategories={allCategories}
+              allSongs={allSongs}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              showCategoryModal={showCategoryModal}
+              setShowCategoryModal={setShowCategoryModal}
+              editingCategory={editingCategory}
+              setEditingCategory={setEditingCategory}
+              newPageCategoryName={newPageCategoryName}
+              setNewPageCategoryName={setNewPageCategoryName}
+              showDeleteCategoryDialog={showDeleteCategoryDialog}
+              setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
+              categoryToDelete={categoryToDelete}
+              setCategoryToDelete={setCategoryToDelete}
+              handleAddCategory={handleAddCategory}
+              handleEditCategory={handleEditCategory}
+              handleUpdateCategory={handleUpdateCategory}
+              handleDeleteCategory={handleDeleteCategory}
+              confirmDeleteCategory={confirmDeleteCategory}
+              cancelDeleteCategory={cancelDeleteCategory}
+              handleEditCategoryContent={handleEditCategoryContent}
+              handleDeleteCategoryContent={handleDeleteCategoryContent}
+              addToast={addToast}
+            />
+          )}
 
-        {activeSection === 'Submitted Songs' && (
-          <div className="h-full overflow-auto bg-gray-50">
-            <SubmittedSongsPage embedded={true} />
-          </div>
-        )}
-        {activeSection === 'Members' && <MembersSection />}
-        {activeSection === 'Media' && <MediaSection />}
-        {activeSection === 'Media Upload' && isHQAdmin && <MediaUploadSection />}
-        {activeSection === 'Master Library' && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
-        {activeSection === 'Sub-Groups' && <SubGroupsSection />}
-        {activeSection === 'Calendar' && <CalendarSection />}
-        {activeSection === 'Notifications' && <SimpleNotificationsSection />}
-        {activeSection === 'Activity Logs' && <ActivityLogsPage />}
+          {activeSection === 'Page Categories' && (
+            <PageCategoriesSection
+              pageCategories={pageCategories}
+              pages={pages}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onPageClick={(page) => {
+                // Switch to Pages section and select this page
+                setActiveSection('Pages');
+                setSelectedPage(page);
+                addToast({
+                  type: 'success',
+                  message: `Viewing "${page.name}"`
+                });
+              }}
+              showPageCategoryModal={showPageCategoryModal}
+              setShowPageCategoryModal={setShowPageCategoryModal}
+              editingPageCategory={editingPageCategory}
+              setEditingPageCategory={setEditingPageCategory}
+              newPageCategoryName={newPageCategoryName}
+              setNewPageCategoryName={setNewPageCategoryName}
+              newPageCategoryDescription={newPageCategoryDescription}
+              setNewPageCategoryDescription={setNewPageCategoryDescription}
+              newPageCategoryImage={newPageCategoryImage}
+              setNewPageCategoryImage={setNewPageCategoryImage}
+              showDeletePageCategoryDialog={showDeletePageCategoryDialog}
+              setShowDeletePageCategoryDialog={setShowDeletePageCategoryDialog}
+              pageCategoryToDelete={pageCategoryToDelete}
+              setPageCategoryToDelete={setPageCategoryToDelete}
+              handleAddPageCategory={handleAddPageCategory}
+              handleEditPageCategory={handleEditPageCategory}
+              handleUpdatePageCategory={handleUpdatePageCategory}
+              handleDeletePageCategory={handleDeletePageCategory}
+              confirmDeletePageCategory={confirmDeletePageCategory}
+              cancelDeletePageCategory={cancelDeletePageCategory}
+              addToast={addToast}
+            />
+          )}
+
+          {activeSection === 'Submitted Songs' && (
+            <div className="h-full overflow-auto bg-gray-50">
+              <SubmittedSongsPage embedded={true} />
+            </div>
+          )}
+          {activeSection === 'Members' && <MembersSection />}
+          {activeSection === 'Media' && <MediaSection />}
+          {activeSection === 'Media Upload' && isHQAdmin && <MediaUploadSection />}
+          {activeSection === 'Master Library' && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
+          {activeSection === 'Sub-Groups' && <SubGroupsSection />}
+          {activeSection === 'Calendar' && <CalendarSection />}
+          {activeSection === 'Notifications' && <SimpleNotificationsSection />}
+          {activeSection === 'Activity Logs' && <ActivityLogsPage />}
+        </div>
+
+        {/* Modals */}
+        <AdminModals
+          showPageModal={showPageModal}
+          setShowPageModal={setShowPageModal}
+          editingPage={editingPage}
+          setEditingPage={setEditingPage}
+          newPageName={newPageName}
+          setNewPageName={setNewPageName}
+          newPageDate={newPageDate}
+          setNewPageDate={setNewPageDate}
+          newPageLocation={newPageLocation}
+          setNewPageLocation={setNewPageLocation}
+          newPageDescription={newPageDescription}
+          setNewPageDescription={setNewPageDescription}
+          newPageCategory={newPageCategory}
+          setNewPageCategory={setNewPageCategory}
+          newPagePageCategory={newPagePageCategory}
+          setNewPagePageCategory={setNewPagePageCategory}
+          newPageDays={newPageDays}
+          setNewPageDays={setNewPageDays}
+          newPageHours={newPageHours}
+          setNewPageHours={setNewPageHours}
+          newPageMinutes={newPageMinutes}
+          setNewPageMinutes={setNewPageMinutes}
+          newPageSeconds={newPageSeconds}
+          setNewPageSeconds={setNewPageSeconds}
+          newPageBannerImage={newPageBannerImage}
+          setNewPageBannerImage={setNewPageBannerImage}
+          newPageBannerFile={newPageBannerFile}
+          setNewPageBannerFile={setNewPageBannerFile}
+          handleAddPage={handleAddPage}
+          handleUpdatePage={handleUpdatePage}
+          showCategoryModal={showCategoryModal}
+          setShowCategoryModal={setShowCategoryModal}
+          editingCategory={editingCategory}
+          setEditingCategory={setEditingCategory}
+          editingPageCategory={editingPageCategory}
+          setEditingPageCategory={setEditingPageCategory}
+          newPageCategoryName={newPageCategoryName}
+          setNewPageCategoryName={setNewPageCategoryName}
+          newPageCategoryDescription={newPageCategoryDescription}
+          setNewPageCategoryDescription={setNewPageCategoryDescription}
+          handleAddCategory={handleAddCategory}
+          handleUpdateCategory={handleUpdateCategory}
+          handleAddPageCategory={handleAddPageCategory}
+          handleUpdatePageCategory={handleUpdatePageCategory}
+          activeSection={activeSection}
+          showSongModal={showSongModal}
+          setShowSongModal={setShowSongModal}
+          editingSong={editingSong}
+          setEditingSong={setEditingSong}
+          allCategories={allCategories}
+          pages={pages}
+          handleSaveSong={handleSaveSong}
+          showDeleteDialog={showDeleteDialog}
+          setShowDeleteDialog={setShowDeleteDialog}
+          pageToDelete={pageToDelete}
+          setPageToDelete={setPageToDelete}
+          confirmDeletePage={confirmDeletePage}
+          cancelDeletePage={cancelDeletePage}
+          showDeleteSongDialog={showDeleteSongDialog}
+          setShowDeleteSongDialog={setShowDeleteSongDialog}
+          songToDelete={songToDelete}
+          setSongToDelete={setSongToDelete}
+          confirmDeleteSong={confirmDeleteSong}
+          cancelDeleteSong={cancelDeleteSong}
+          showDeleteCategoryDialog={showDeleteCategoryDialog}
+          setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
+          categoryToDelete={categoryToDelete}
+          setCategoryToDelete={setCategoryToDelete}
+          confirmDeleteCategory={confirmDeleteCategory}
+          cancelDeleteCategory={cancelDeleteCategory}
+          pageCategories={pageCategories}
+        />
+
+        {/* Mobile Bottom Navigation */}
+        <AdminMobileNav
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+          onMenuOpen={() => setIsSidebarOpen(true)}
+        />
+
+        {/* Toast Notifications */}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>
-
-      {/* Modals */}
-      <AdminModals
-        showPageModal={showPageModal}
-        setShowPageModal={setShowPageModal}
-        editingPage={editingPage}
-        setEditingPage={setEditingPage}
-        newPageName={newPageName}
-        setNewPageName={setNewPageName}
-        newPageDate={newPageDate}
-        setNewPageDate={setNewPageDate}
-        newPageLocation={newPageLocation}
-        setNewPageLocation={setNewPageLocation}
-        newPageDescription={newPageDescription}
-        setNewPageDescription={setNewPageDescription}
-        newPageCategory={newPageCategory}
-        setNewPageCategory={setNewPageCategory}
-        newPagePageCategory={newPagePageCategory}
-        setNewPagePageCategory={setNewPagePageCategory}
-        newPageDays={newPageDays}
-        setNewPageDays={setNewPageDays}
-        newPageHours={newPageHours}
-        setNewPageHours={setNewPageHours}
-        newPageMinutes={newPageMinutes}
-        setNewPageMinutes={setNewPageMinutes}
-        newPageSeconds={newPageSeconds}
-        setNewPageSeconds={setNewPageSeconds}
-        newPageBannerImage={newPageBannerImage}
-        setNewPageBannerImage={setNewPageBannerImage}
-        newPageBannerFile={newPageBannerFile}
-        setNewPageBannerFile={setNewPageBannerFile}
-        handleAddPage={handleAddPage}
-        handleUpdatePage={handleUpdatePage}
-        showCategoryModal={showCategoryModal}
-        setShowCategoryModal={setShowCategoryModal}
-        editingCategory={editingCategory}
-        setEditingCategory={setEditingCategory}
-        editingPageCategory={editingPageCategory}
-        setEditingPageCategory={setEditingPageCategory}
-        newPageCategoryName={newPageCategoryName}
-        setNewPageCategoryName={setNewPageCategoryName}
-        newPageCategoryDescription={newPageCategoryDescription}
-        setNewPageCategoryDescription={setNewPageCategoryDescription}
-        handleAddCategory={handleAddCategory}
-        handleUpdateCategory={handleUpdateCategory}
-        handleAddPageCategory={handleAddPageCategory}
-        handleUpdatePageCategory={handleUpdatePageCategory}
-        activeSection={activeSection}
-        showSongModal={showSongModal}
-        setShowSongModal={setShowSongModal}
-        editingSong={editingSong}
-        setEditingSong={setEditingSong}
-        allCategories={allCategories}
-        pages={pages}
-        handleSaveSong={handleSaveSong}
-        showDeleteDialog={showDeleteDialog}
-        setShowDeleteDialog={setShowDeleteDialog}
-        pageToDelete={pageToDelete}
-        setPageToDelete={setPageToDelete}
-        confirmDeletePage={confirmDeletePage}
-        cancelDeletePage={cancelDeletePage}
-        showDeleteSongDialog={showDeleteSongDialog}
-        setShowDeleteSongDialog={setShowDeleteSongDialog}
-        songToDelete={songToDelete}
-        setSongToDelete={setSongToDelete}
-        confirmDeleteSong={confirmDeleteSong}
-        cancelDeleteSong={cancelDeleteSong}
-        showDeleteCategoryDialog={showDeleteCategoryDialog}
-        setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
-        categoryToDelete={categoryToDelete}
-        setCategoryToDelete={setCategoryToDelete}
-        confirmDeleteCategory={confirmDeleteCategory}
-        cancelDeleteCategory={cancelDeleteCategory}
-        pageCategories={pageCategories}
-      />
-
-      {/* Mobile Bottom Navigation */}
-      <AdminMobileNav
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        onMenuOpen={() => setIsSidebarOpen(true)}
-      />
-
-      {/* Toast Notifications */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-    </div>
     </AdminThemeProvider>
   );
 }

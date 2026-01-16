@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TRACK EFFECTS ENGINE
  * Web Audio API based effects chain for each track
  */
@@ -74,7 +74,7 @@ class TrackEffectsEngine {
     const sampleRate = this.context.sampleRate;
     const length = sampleRate * 2; // 2 second reverb
     const impulse = this.context.createBuffer(2, length, sampleRate);
-    
+
     for (let channel = 0; channel < 2; channel++) {
       const channelData = impulse.getChannelData(channel);
       for (let i = 0; i < length; i++) {
@@ -87,7 +87,39 @@ class TrackEffectsEngine {
 
   createTrackChain(trackId: string, audioElement?: HTMLAudioElement): TrackNodes | null {
     if (!this.context) return null;
-    
+
+        const existing = this.trackNodes.get(trackId);
+
+    // If we have an existing chain and the audio element is the same, return it
+    if (existing && audioElement) {
+      const source = existing.source as MediaElementAudioSourceNode;
+      if (source && source.mediaElement === audioElement) {
+        return existing;
+      }
+
+      // If audio element is different, disconnect the old source and reconnect the new one
+      if (source) {
+        source.disconnect();
+      }
+
+      let newSource: MediaElementAudioSourceNode;
+      const cachedSource = audioElementSources.get(audioElement);
+      if (cachedSource) {
+        newSource = cachedSource;
+      } else {
+        newSource = this.context.createMediaElementSource(audioElement);
+        audioElementSources.set(audioElement, newSource);
+      }
+
+      newSource.connect(existing.gainNode);
+      existing.source = newSource;
+      return existing;
+    }
+
+    if (existing && !audioElement) {
+      return existing;
+    }
+
     // Create all nodes
     const gainNode = this.context.createGain();
     const panNode = this.context.createStereoPanner();
@@ -126,10 +158,11 @@ class TrackEffectsEngine {
     // Create source if audio element provided
     let source: MediaElementAudioSourceNode | null = null;
     if (audioElement) {
-      // Check if this audio element already has a source node
-      const existingSource = audioElementSources.get(audioElement);
+            const existingSource = audioElementSources.get(audioElement);
       if (existingSource) {
         source = existingSource;
+        // Ensure it's disconnected from previous chains if any
+        try { source.disconnect(); } catch (e) { }
       } else {
         source = this.context.createMediaElementSource(audioElement);
         audioElementSources.set(audioElement, source);
@@ -143,12 +176,12 @@ class TrackEffectsEngine {
     panNode.connect(bassFilter);
     bassFilter.connect(trebleFilter);
     trebleFilter.connect(compressor);
-    
+
     // Split to dry and wet
     compressor.connect(dryGain);
     compressor.connect(convolver);
     convolver.connect(reverbGain);
-    
+
     // Mix to destination
     dryGain.connect(this.context.destination);
     reverbGain.connect(this.context.destination);

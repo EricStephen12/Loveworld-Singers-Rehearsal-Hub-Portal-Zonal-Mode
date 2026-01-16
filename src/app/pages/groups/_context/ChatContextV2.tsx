@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -166,7 +166,6 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       // Use 'auto' resource type to handle both images and documents
       const resourceType = isImage ? 'image' : 'raw'
       
-      console.log('[ChatContext] Uploading to Cloudinary...', { cloudName, resourceType, fileName: file.name })
       
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
@@ -180,7 +179,6 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       }
       
       const data = await response.json()
-      console.log('[ChatContext] Upload successful:', data.secure_url)
       
       // Send message with media
       return sendChatMessage(
@@ -207,9 +205,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       console.error('[ChatContext] No current user - cannot start chat')
       return null
     }
-    console.log('[ChatContext] Starting direct chat:', currentUser.name, '->', otherUser.name)
     const result = await getOrCreateDirectChat(currentUser, otherUser)
-    console.log('[ChatContext] getOrCreateDirectChat result:', result)
     return result
   }, [currentUser])
   
@@ -220,8 +216,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   
   const searchUsers = useCallback(async (term: string) => {
     if (!user?.uid) return []
-    // Check if user is boss
-    const isBoss = profile?.role === 'boss' || user?.email?.toLowerCase().startsWith('boss')
+        const isBoss = profile?.role === 'boss' || user?.email?.toLowerCase().startsWith('boss')
     
     // Get existing chat user IDs (users the current user has already chatted with)
     const existingChatUserIds: string[] = []

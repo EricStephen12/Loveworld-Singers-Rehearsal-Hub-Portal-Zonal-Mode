@@ -28,25 +28,21 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReload = () => {
-    // Clear all caches and reload
     if ('caches' in window) {
       caches.keys().then(names => {
-      names.forEach(name => {
-        caches.delete(name)
+        names.forEach(name => {
+          caches.delete(name)
+        })
       })
-    })
     }
-    
-    // Clear localStorage
+
     localStorage.clear()
     sessionStorage.clear()
-    
-    // Reload the page
+
     window.location.reload()
   }
 
   componentDidUpdate(prevProps: Props) {
-    // Reset error state if children change (route change, etc.)
     if (this.state.hasError && prevProps.children !== this.props.children) {
       this.setState({ hasError: false, error: undefined })
     }
@@ -54,14 +50,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // Silently recover from React infinite loop errors
-      if (this.state.error?.message?.includes('Maximum update depth') || 
-          this.state.error?.message?.includes('infinite loop')) {
-        // Reset error state and try to recover
+      if (this.state.error?.message?.includes('Maximum update depth') ||
+        this.state.error?.message?.includes('infinite loop')) {
         setTimeout(() => {
           this.setState({ hasError: false, error: undefined })
         }, 100)
-        // Return children to prevent error UI from showing
         return this.props.children
       }
 
@@ -69,10 +62,7 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
-      // Only show error UI for non-infinite-loop errors in production
-      // In production, silently recover
       if (process.env.NODE_ENV === 'production') {
-        // Silently attempt recovery
         setTimeout(() => {
           this.setState({ hasError: false, error: undefined })
         }, 1000)
@@ -85,15 +75,15 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            
+
             <h1 className="text-xl font-semibold text-gray-900 mb-2">
               Something went wrong
             </h1>
-            
+
             <p className="text-gray-600 mb-6">
               The app encountered an error. This might be due to cache issues.
             </p>
-            
+
             <div className="space-y-3">
               <button
                 onClick={this.handleReload}
@@ -102,7 +92,7 @@ class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="w-4 h-4" />
                 Clear Cache & Reload
               </button>
-              
+
               <button
                 onClick={() => window.location.href = '/'}
                 className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
@@ -110,7 +100,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Go to Home
               </button>
             </div>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-4 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500">

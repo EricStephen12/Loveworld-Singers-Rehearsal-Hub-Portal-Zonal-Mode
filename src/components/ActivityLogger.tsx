@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect } from 'react';
 import { useZone } from '@/hooks/useZone';
@@ -30,7 +30,6 @@ export function ActivityLogger({ children }: { children?: React.ReactNode }) {
             createdAt: new Date().toISOString()
           });
           
-          console.log('Activity logged:', { message, userName, zoneName });
         }
       } catch (error) {
         console.error('Error logging activity:', error);

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WhatsApp-Style Presence System
  * Manages online/offline status and last seen timestamps
  */
@@ -53,7 +53,6 @@ export class WhatsAppPresence {
       })
       
       this.presenceRefs.set(userId, presenceRef)
-      console.log('✅ [WhatsApp Presence] Initialized for user:', userId)
     } catch (error) {
       console.error('❌ [WhatsApp Presence] Failed to initialize:', error)
     }
@@ -174,7 +173,6 @@ export class WhatsAppPresence {
     try {
       await this.updateStatus(userId, 'offline')
       this.presenceRefs.delete(userId)
-      console.log('✅ [WhatsApp Presence] Cleaned up for user:', userId)
     } catch (error) {
       console.error('❌ [WhatsApp Presence] Cleanup failed:', error)
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { HistoryEntry } from '@/types/supabase';
 import { offlineManager } from '@/utils/offlineManager';
@@ -40,7 +40,6 @@ export function useUltraFastSongHistory(songId: string | null) {
         const isExpired = true;
         
         if (!isExpired) {
-          console.log('⚡ Loading cached song history instantly (0ms)');
           return cacheEntry.data;
         }
       }
@@ -60,7 +59,6 @@ export function useUltraFastSongHistory(songId: string | null) {
         version: Date.now().toString()
       };
       await offlineManager.cacheData(CACHE_KEY, cached);
-      console.log('✅ Song history cached for instant access');
     } catch (error) {
       console.error('Error caching song history:', error);
     }
@@ -71,12 +69,10 @@ export function useUltraFastSongHistory(songId: string | null) {
     if (!songId) return;
 
     try {
-      console.log('🚀 Starting ultra-fast song history load for:', songId);
       const startTime = performance.now();
 
       // Use Firebase document ID directly (no need to convert to numeric)
       const firebaseSongId = String(songId).trim();
-      console.log('🔍 Using Firebase document ID for history query:', firebaseSongId);
 
       // INSTANT: Load cached data immediately for zero loading time
       const cachedHistory = await loadCachedHistory(firebaseSongId);
@@ -84,7 +80,6 @@ export function useUltraFastSongHistory(songId: string | null) {
         setHistory(cachedHistory);
         setError(null);
         setIsInitialLoad(false);
-        console.log('⚡ Cached history loaded instantly');
       } else {
         setLoading(true);
       }
@@ -110,8 +105,7 @@ export function useUltraFastSongHistory(songId: string | null) {
         version: entry.title
       }));
 
-      // Update state with fresh data
-      setHistory(historyEntries);
+            setHistory(historyEntries);
       setError(null);
       setIsInitialLoad(false);
 
@@ -119,7 +113,6 @@ export function useUltraFastSongHistory(songId: string | null) {
       await cacheHistory(firebaseSongId, historyEntries);
 
       const endTime = performance.now();
-      console.log(`✅ Song history loaded in ${endTime - startTime}ms`);
 
     } catch (error) {
       console.error('Error loading song history:', error);
@@ -146,7 +139,6 @@ export function useUltraFastSongHistory(songId: string | null) {
     loadCachedHistory(songId).then(cachedHistory => {
       if (cachedHistory.length > 0) {
         setHistory(cachedHistory);
-        console.log('⚡ Cached history loaded instantly');
       }
     });
 
@@ -201,8 +193,7 @@ export function useUltraFastSongHistory(songId: string | null) {
             };
           });
 
-          // Update state with fresh real-time data
-          setHistory(historyEntries);
+                    setHistory(historyEntries);
           setError(null);
           setIsInitialLoad(false);
           setLoading(false);
@@ -210,7 +201,6 @@ export function useUltraFastSongHistory(songId: string | null) {
           // Cache the fresh data using the Firebase ID for consistency
           cacheHistory(firebaseSongId, historyEntries);
           
-          console.log(`✅ Real-time song history updated for ${firebaseSongId}, ${historyEntries.length} entries`);
         } catch (error) {
           console.error('Error processing real-time history update:', error);
           setError(error instanceof Error ? error.message : 'Unknown error');
@@ -236,8 +226,7 @@ export function useUltraFastSongHistory(songId: string | null) {
     
     setLoading(true);
     try {
-      // Clear cache for this song
-      const cached = await offlineManager.getCachedData(CACHE_KEY) as SongHistoryCache || {};
+            const cached = await offlineManager.getCachedData(CACHE_KEY) as SongHistoryCache || {};
       delete cached[songId];
       await offlineManager.cacheData(CACHE_KEY, cached);
       

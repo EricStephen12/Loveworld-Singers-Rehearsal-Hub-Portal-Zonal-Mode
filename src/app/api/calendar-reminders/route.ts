@@ -1,4 +1,4 @@
-// app/api/calendar-reminders/route.ts
+﻿// app/api/calendar-reminders/route.ts
 // Scheduled endpoint for sending calendar event reminders
 // Call this via cron job every hour
 
@@ -22,7 +22,6 @@ if (!admin.apps.length && projectId && clientEmail && privateKey) {
       }),
       databaseURL
     });
-    console.log('✅ Firebase Admin initialized for calendar reminders');
   } catch (error) {
     console.error('❌ Firebase Admin init error:', error);
   }
@@ -65,8 +64,7 @@ export async function GET(req: NextRequest) {
           const eventTitle = event.title || event.name || 'Event';
           const zoneId = event.zoneId;
 
-          // Check if 24-hour reminder needed (between 23-25 hours away)
-          if (eventDate >= in24Hours && eventDate <= in25Hours) {
+                    if (eventDate >= in24Hours && eventDate <= in25Hours) {
             const alreadySent = await checkReminderSent(db, eventId, '24h');
             if (!alreadySent) {
               await sendEventReminder(eventId, eventTitle, eventDate, zoneId, '24h');
@@ -75,8 +73,7 @@ export async function GET(req: NextRequest) {
             }
           }
 
-          // Check if 1-hour reminder needed (between 1-2 hours away)
-          if (eventDate >= in1Hour && eventDate <= in2Hours) {
+                    if (eventDate >= in1Hour && eventDate <= in2Hours) {
             const alreadySent = await checkReminderSent(db, eventId, '1h');
             if (!alreadySent) {
               await sendEventReminder(eventId, eventTitle, eventDate, zoneId, '1h');
@@ -86,11 +83,9 @@ export async function GET(req: NextRequest) {
           }
         }
       } catch (collectionError) {
-        console.log(`[CalendarReminders] Collection ${collectionName} error:`, collectionError);
       }
     }
 
-    console.log('[CalendarReminders] Sent', remindersSent, 'reminders');
     return NextResponse.json({ success: true, remindersSent });
 
   } catch (error) {
@@ -164,7 +159,6 @@ async function sendEventReminder(
     });
 
     if (recipientIds.length === 0) {
-      console.log('[CalendarReminders] No recipients for event:', eventId);
       return;
     }
 
@@ -195,7 +189,6 @@ async function sendEventReminder(
       });
     }
 
-    console.log('[CalendarReminders] Sent', reminderType, 'reminder for', eventTitle, 'to', recipientIds.length, 'users');
   } catch (error) {
     console.error('[CalendarReminders] Error sending reminder:', error);
   }

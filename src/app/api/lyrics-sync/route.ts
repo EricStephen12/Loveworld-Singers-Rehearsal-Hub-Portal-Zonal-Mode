@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lyrics Sync API - Uses AssemblyAI to align existing lyrics with audio timing
  * 
  * This endpoint takes an audio URL and existing lyrics text,
@@ -61,8 +61,7 @@ export async function POST(request: NextRequest) {
       ? extractWordsFromLyrics(existingLyrics)
       : [];
 
-    // Step 1: Submit transcription request with word boost for better alignment
-    const submitResponse = await fetch(`${ASSEMBLYAI_BASE_URL}/transcript`, {
+        const submitResponse = await fetch(`${ASSEMBLYAI_BASE_URL}/transcript`, {
       method: 'POST',
       headers: {
         'Authorization': ASSEMBLYAI_API_KEY,
@@ -89,8 +88,7 @@ export async function POST(request: NextRequest) {
     const submitData = await submitResponse.json();
     const transcriptId = submitData.id;
 
-    // Step 2: Poll for completion
-    let transcript: AssemblyAITranscript | null = null;
+        let transcript: AssemblyAITranscript | null = null;
     let attempts = 0;
     const maxAttempts = 60; // 5 minutes max (5s intervals)
 
@@ -127,8 +125,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 3: If we have existing lyrics, align them with transcription timestamps
-    let lyrics: LyricLine[];
+        let lyrics: LyricLine[];
     
     if (existingLyrics && existingLyrics.trim()) {
       // Align existing lyrics with detected timestamps
@@ -216,8 +213,7 @@ function alignLyricsWithTranscription(
   let wordIndex = 0;
 
   for (const line of lyricLines) {
-    // Get words from this lyric line
-    const lineWords = line.toLowerCase().match(/\b[a-z']+\b/g) || [];
+        const lineWords = line.toLowerCase().match(/\b[a-z']+\b/g) || [];
     
     if (lineWords.length === 0) {
       // Empty line or just punctuation - skip
@@ -236,8 +232,7 @@ function alignLyricsWithTranscription(
     for (let i = searchStart; i < searchEnd; i++) {
       const transcribedWord = wordTimestamps[i];
       
-      // Check if this transcribed word matches any word in the line
-      if (lineWords.some(lw => isSimilarWord(lw, transcribedWord.word))) {
+            if (lineWords.some(lw => isSimilarWord(lw, transcribedWord.word))) {
         if (lineStartTime === null) {
           lineStartTime = transcribedWord.start;
         }
@@ -288,8 +283,7 @@ function isSimilarWord(word1: string, word2: string): boolean {
   if (word1 === word2) return true;
   if (word1.length < 2 || word2.length < 2) return word1 === word2;
   
-  // Check if one contains the other (for contractions, etc.)
-  if (word1.includes(word2) || word2.includes(word1)) return true;
+    if (word1.includes(word2) || word2.includes(word1)) return true;
   
   // Simple edit distance check for minor differences
   if (Math.abs(word1.length - word2.length) <= 2) {

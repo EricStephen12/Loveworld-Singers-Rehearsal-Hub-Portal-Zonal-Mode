@@ -1,4 +1,4 @@
-// Offline Data Manager for LWSRH
+﻿// Offline Data Manager for LWSRH
 export class OfflineManager {
   private static instance: OfflineManager;
   private isOnline: boolean = typeof window !== 'undefined' ? navigator.onLine : true;
@@ -25,13 +25,11 @@ export class OfflineManager {
     if (typeof window === 'undefined') return;
 
     window.addEventListener('online', () => {
-      console.log('Connection restored - syncing data...');
       this.isOnline = true;
       this.syncPendingUpdates();
     });
 
     window.addEventListener('offline', () => {
-      console.log('Connection lost - working offline...');
       this.isOnline = false;
     });
 
@@ -39,7 +37,6 @@ export class OfflineManager {
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data.type === 'DATA_SYNCED') {
-          console.log('Data synced from service worker');
           this.handleDataSync();
         }
       });
@@ -55,7 +52,6 @@ export class OfflineManager {
       if (cachedData) {
         const parsed = JSON.parse(cachedData);
         this.dataCache = new Map(Object.entries(parsed));
-        console.log('Loaded cached data from localStorage');
       }
     } catch (error) {
       console.error('Failed to load cached data:', error);
@@ -85,8 +81,7 @@ export class OfflineManager {
     return null;
   }
 
-  // Check if data is cached
-  public isDataCached(key: string): boolean {
+    public isDataCached(key: string): boolean {
     return this.dataCache.has(key);
   }
 
@@ -98,10 +93,8 @@ export class OfflineManager {
         const freshData = await fetchFn();
         // Cache the fresh data
         await this.cacheData(key, freshData);
-        console.log(`Fetched and cached fresh data: ${key}`);
         return freshData;
       } catch (error) {
-        console.log(`Failed to fetch fresh data for ${key}, using cache:`, error);
       }
     }
 
@@ -113,22 +106,19 @@ export class OfflineManager {
 
     // If no cached data and offline, return null
     if (!this.isOnline) {
-      console.log(`No cached data available for ${key} and offline`);
       return null;
     }
 
     return null;
   }
 
-  // Update data with offline support
-  public async updateData(key: string, data: any, updateFn?: (data: any) => Promise<void>): Promise<boolean> {
+    public async updateData(key: string, data: any, updateFn?: (data: any) => Promise<void>): Promise<boolean> {
     try {
       if (this.isOnline && updateFn) {
         // Try to update on server
         await updateFn(data);
         // Cache the updated data
         await this.cacheData(key, data);
-        console.log(`Data updated and cached: ${key}`);
         return true;
       } else {
         // Store update for later sync
@@ -139,7 +129,6 @@ export class OfflineManager {
         });
         // Cache locally
         await this.cacheData(key, data);
-        console.log(`Data cached for offline sync: ${key}`);
         return false; // Indicates update is pending
       }
     } catch (error) {
@@ -154,13 +143,11 @@ export class OfflineManager {
   private async syncPendingUpdates(): Promise<void> {
     if (this.pendingUpdates.length === 0) return;
 
-    console.log(`Syncing ${this.pendingUpdates.length} pending updates...`);
     
     for (const update of this.pendingUpdates) {
       try {
         // Here you would implement your actual sync logic
         // For now, we'll just log the update
-        console.log(`Syncing update for ${update.key}:`, update.data);
         
         // Remove from pending after successful sync
         const index = this.pendingUpdates.indexOf(update);
@@ -176,7 +163,6 @@ export class OfflineManager {
   // Handle data sync from service worker
   private handleDataSync(): void {
     // Refresh data from cache or trigger re-fetch
-    console.log('Handling data sync...');
     // You can emit events or call callbacks here to update UI
   }
 
@@ -190,14 +176,12 @@ export class OfflineManager {
     return this.pendingUpdates.length;
   }
 
-  // Clear all cached data
-  public async clearCache(): Promise<void> {
+    public async clearCache(): Promise<void> {
     this.dataCache.clear();
     this.pendingUpdates = [];
     if (typeof window !== 'undefined') {
       localStorage.removeItem('lwsrh-cached-data');
     }
-    console.log('All cached data cleared');
   }
 
   // Get cache statistics

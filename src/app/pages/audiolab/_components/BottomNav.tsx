@@ -26,13 +26,13 @@ export function BottomNav() {
 
   const handleCreateProject = async () => {
     if (!user?.uid || !profile?.zone) return;
-    
+
     const result = await createProject({
       name: 'New Recording',
       ownerId: user.uid,
       zoneId: profile.zone
     });
-    
+
     if (result.success && result.id) {
       openProject(result.id);
     }
@@ -43,7 +43,7 @@ export function BottomNav() {
   // Always visible when shown, even when MiniPlayer is visible
 
   return (
-    <nav 
+    <nav
       className={`
         fixed bottom-0 w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl left-1/2 -translate-x-1/2
         border-t border-white/5 pb-5 pt-3 px-6 
@@ -52,30 +52,30 @@ export function BottomNav() {
       `}
     >
       {navItems.slice(0, 2).map(({ id, label, icon: Icon }) => {
-        const isActive = currentView === id || 
+        const isActive = currentView === id ||
           (id === 'library' && currentView === 'playlist-detail');
-        
+
         return (
           <button
             key={id}
             onClick={() => setView(id)}
             className={`
               flex flex-col items-center gap-1 transition-colors
-              ${isActive 
-                ? 'text-violet-500' 
+              ${isActive
+                ? 'text-violet-500'
                 : 'text-slate-400 hover:text-slate-200'
               }
             `}
           >
-            <Icon 
-              size={24} 
+            <Icon
+              size={24}
               className={isActive ? 'fill-current' : ''}
             />
             <span className="text-[10px] font-medium">{label}</span>
           </button>
         );
       })}
-      
+
       {/* Center Create Button */}
       <button
         onClick={handleCreateProject}
@@ -85,25 +85,25 @@ export function BottomNav() {
           <Plus size={28} className="text-white" strokeWidth={2.5} />
         </div>
       </button>
-      
+
       {navItems.slice(2).map(({ id, label, icon: Icon }) => {
-        const isActive = currentView === id || 
+        const isActive = currentView === id ||
           (id === 'library' && currentView === 'playlist-detail');
-        
+
         return (
           <button
             key={id}
             onClick={() => setView(id)}
             className={`
               flex flex-col items-center gap-1 transition-colors
-              ${isActive 
-                ? 'text-violet-500' 
+              ${isActive
+                ? 'text-violet-500'
                 : 'text-slate-400 hover:text-slate-200'
               }
             `}
           >
-            <Icon 
-              size={24} 
+            <Icon
+              size={24}
               className={isActive ? 'fill-current' : ''}
             />
             <span className="text-[10px] font-medium">{label}</span>

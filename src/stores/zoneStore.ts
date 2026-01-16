@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // LEGACY ZONE STORE - For backward compatibility
 // ============================================
 // The main zone flow now uses useZone hook (src/hooks/useZone.ts)
@@ -56,7 +56,6 @@ export const useZoneStore = create<ZoneState>()(
       setCurrentZoneMembership: (membership) => set({ currentZoneMembership: membership }),
       
       clearZoneState: () => {
-        console.log('🧹 Clearing zone state...')
         set({
           currentZone: null,
           userZones: [],
@@ -71,7 +70,6 @@ export const useZoneStore = create<ZoneState>()(
 
       loadUserZones: async (retryCount = 0) => {
         // This is now handled by useZone hook
-        console.log('⚠️ zoneStore.loadUserZones() is deprecated. Use useZone hook instead.')
       },
 
       switchZone: async (zoneId: string) => {
@@ -84,7 +82,6 @@ export const useZoneStore = create<ZoneState>()(
 
       refreshZones: async () => {
         // This is now handled by useZone hook
-        console.log('⚠️ zoneStore.refreshZones() is deprecated. Use useZone hook instead.')
       }
     }),
     {

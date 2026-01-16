@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
@@ -52,14 +52,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
 
     try {
-      console.log('🔍 Loading subscription for zone:', currentZone.id)
       
       // Get zone data which includes subscription info
       const zoneData = await FirebaseDatabaseService.getDocument('zones', currentZone.id)
       
       if (!zoneData) {
         // Zone doesn't exist in Firebase yet, create with free tier
-        console.log('📝 Creating zone with free tier')
         await FirebaseDatabaseService.createDocument('zones', currentZone.id, {
           id: currentZone.id,
           name: currentZone.name,
@@ -103,7 +101,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         })
       }
       
-      console.log('✅ Subscription loaded')
     } catch (error) {
       console.error('❌ Error loading subscription:', error)
       // Default to free tier on error
@@ -124,7 +121,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // Load subscription when zone changes
   useEffect(() => {
-    console.log('📦 Subscription: Zone changed to', currentZone?.id, currentZone?.name)
     loadSubscription()
   }, [currentZone?.id, currentZone?.name])
 
@@ -138,19 +134,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const { bypassesFeatureGates } = require('@/config/zones')
 
   const contextValue = useMemo(() => {
-    // Check if HQ group (unlimited access, no subscription needed)
-    const isHQGroup = currentZone && bypassesFeatureGates(currentZone.id)
+        const isHQGroup = currentZone && bypassesFeatureGates(currentZone.id)
     
-    console.log('📦 Subscription Context Update:', {
-      zoneId: currentZone?.id,
-      zoneName: currentZone?.name,
-      isHQGroup,
-      subscriptionTier: subscription?.tier,
-      isLoading
-    })
     
-    // Check if zone has access to a feature - defined inside useMemo to capture current values
-    const hasFeature = (feature: string) => {
+        const hasFeature = (feature: string) => {
       // Boss bypasses all feature checks
       if (isBoss(profile)) return true
       
@@ -168,8 +155,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       return hasFeatureAccess(subscription.tier, feature as any)
     }
 
-    // Check if zone can add more members
-    const canAddMember = async () => {
+        const canAddMember = async () => {
       if (!currentZone || !subscription) return false
       
       try {
