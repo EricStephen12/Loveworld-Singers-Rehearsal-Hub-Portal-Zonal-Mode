@@ -1,0 +1,167 @@
+# Implementation Plan
+
+- [x] 1. Remove complex UI elements from LibraryView
+  - [x] 1.1 Remove SongActionSheet import and usage from LibraryView
+    - Delete import statement for SongActionSheet
+    - Remove selectedSong and isActionSheetOpen state variables
+    - Remove SongActionSheet component from JSX
+    - _Requirements: 1.1_
+  - [x] 1.2 Remove voice part filter tabs
+    - Remove FilterType type definition (keep only 'All')
+    - Remove filters array with Soprano, Alto, Tenor, Bass, Warm-ups
+    - Remove filter buttons from JSX (keep only refresh button)
+    - Remove activeFilter state and setActiveFilter calls
+    - Update filteredSongs to not filter by vocal part
+    - _Requirements: 1.4, 1.5_
+  - [x] 1.3 Update AudioLabContext to remove player visibility states
+    - Remove isPlayerVisible from state
+    - Remove isFullScreenPlayer from state
+    - Remove SHOW_FULLSCREEN_PLAYER action
+    - Remove HIDE_FULLSCREEN_PLAYER action
+    - Modify HIDE_PLAYER to just stop audio without visibility toggle
+    - Remove showFullScreenPlayer and hideFullScreenPlayer from context value
+    - _Requirements: 1.2, 1.3_
+
+- [x] 2. Create CollapsibleSongCard component
+  - [x] 2.1 Create CollapsibleSongCard component file with props interface
+    - Create src/app/pages/audiolab/_components/CollapsibleSongCard.tsx
+    - Define CollapsibleSongCardProps interface
+    - Implement basic card structure with header section
+    - _Requirements: 2.1, 2.2_
+  - [x] 2.2 Implement card header with song info and expand/collapse toggle
+    - Display album art, title, artist, genre
+    - Add chevron icon that rotates on expand
+    - Handle onToggleExpand click
+    - _Requirements: 2.1, 2.3_
+  - [x] 2.3 Implement expanded content section with vocal parts list
+    - Show available vocal parts from song.availableParts
+    - Display part name and play button for each part
+    - Style each part row with appropriate colors
+    - _Requirements: 2.2, 4.1, 4.5_
+  - [x] 2.4 Add smooth expand/collapse animation
+    - Use CSS transitions or framer-motion for height animation
+    - Animate chevron rotation
+    - _Requirements: 2.4_
+  - [ ] 2.5 Write property test for expanded card shows all available parts
+    - **Property 1: Expanded card shows all available parts**
+    - **Validates: Requirements 2.1, 2.2, 4.1, 4.5**
+
+- [x] 3. Implement accordion behavior in LibraryView
+  - [x] 3.1 Add expandedSongId state to LibraryView
+    - Add expandedSongId state (string | null)
+    - Create handleToggleExpand function that sets/clears expandedSongId
+    - Pass isExpanded prop to each CollapsibleSongCard
+    - _Requirements: 2.5_
+  - [x] 3.2 Implement single-expansion accordion logic
+    - When expanding a card, collapse any previously expanded card
+    - When tapping expanded card header, collapse it
+    - _Requirements: 2.5, 2.3_
+  - [ ] 3.3 Write property test for accordion behavior
+    - **Property 2: Accordion behavior - single expansion**
+    - **Validates: Requirements 2.5**
+  - [ ] 3.4 Write property test for toggle expansion
+    - **Property 3: Toggle expansion**
+    - **Validates: Requirements 2.1, 2.3**
+
+- [x] 4. Implement Play All functionality
+  - [x] 4.1 Add Play All button to expanded card content
+    - Create prominent Play All button at top of expanded content
+    - Style with violet/primary color
+    - _Requirements: 3.1_
+  - [x] 4.2 Implement Play All handler that plays full mix
+    - Call audio engine with 'full' part
+    - Update playingSongId and playingPart state
+    - _Requirements: 3.2_
+  - [ ] 4.3 Write property test for Play All triggers full mix
+    - **Property 4: Play All triggers full mix**
+    - **Validates: Requirements 3.2**
+
+- [x] 5. Implement individual part playback
+  - [x] 5.1 Add play button to each vocal part row
+    - Display play icon button for each available part
+    - Handle onPlayPart callback with part type
+    - _Requirements: 4.1, 4.2_
+  - [x] 5.2 Implement part isolation playback
+    - Call audio engine switchPart with selected part
+    - Update playingPart state
+    - Maintain playback position when switching
+    - _Requirements: 4.2, 4.4_
+  - [x] 5.3 Add visual indication for active playing part
+    - Highlight the currently playing part row
+    - Show playing indicator icon
+    - _Requirements: 4.3_
+  - [ ] 5.4 Write property test for part isolation plays correct track
+    - **Property 5: Part isolation plays correct track**
+    - **Validates: Requirements 4.2**
+  - [ ] 5.5 Write property test for position preservation on part switch
+    - **Property 6: Position preservation on part switch**
+    - **Validates: Requirements 4.4**
+  - [ ] 5.6 Write property test for active part indication
+    - **Property 8: Active part indication**
+    - **Validates: Requirements 4.3**
+
+- [x] 6. Implement inline playback controls
+  - [x] 6.1 Add progress bar to expanded card
+    - Display progress bar showing currentTime/duration
+    - Style to match card design
+    - _Requirements: 5.1_
+  - [x] 6.2 Implement seek functionality on progress bar
+    - Handle drag/click on progress bar
+    - Call onSeek with new position
+    - Update audio engine position
+    - _Requirements: 5.2_
+  - [x] 6.3 Add play/pause toggle and time display
+    - Show play/pause button based on isPlaying state
+    - Display current time and total duration
+    - _Requirements: 3.3, 3.4, 5.3_
+  - [x] 6.4 Implement playback end handling
+    - Reset to beginning when audio ends
+    - Update isPlaying to false
+    - _Requirements: 5.4_
+  - [x] 6.5 Implement collapse stops playback
+    - When card is collapsed, stop audio playback
+    - Clear playingSongId and playingPart
+    - _Requirements: 5.5_
+  - [ ] 6.6 Write property test for playback controls visibility
+    - **Property 7: Playback controls visibility**
+    - **Validates: Requirements 3.3, 3.4, 5.1, 5.3**
+  - [ ] 6.7 Write property test for collapse stops playback
+    - **Property 9: Collapse stops playback**
+    - **Validates: Requirements 5.5**
+  - [ ] 6.8 Write property test for seek updates position
+    - **Property 10: Seek updates position**
+    - **Validates: Requirements 5.2**
+  - [ ] 6.9 Write property test for pause preserves position
+    - **Property 11: Pause preserves position**
+    - **Validates: Requirements 3.5**
+
+- [x] 7. Integrate CollapsibleSongCard into LibraryView
+  - [x] 7.1 Replace existing song list with CollapsibleSongCard components
+    - Remove old song button/card rendering
+    - Map songs to CollapsibleSongCard components
+    - Pass all required props
+    - _Requirements: 2.1_
+  - [x] 7.2 Add local playback state management
+    - Add playingSongId, playingPart, currentTime, duration, isPlaying state
+    - Wire up audio engine callbacks for time updates
+    - Handle play/pause/seek operations
+    - _Requirements: 3.3, 5.1_
+  - [x] 7.3 Remove Continue Session card (uses old player state)
+    - Remove lastPlayedSong, lastPlayedTime, lastPlayedDuration references
+    - Remove Continue Session card JSX
+    - _Requirements: 1.2_
+
+- [x] 8. Cleanup unused code
+  - [x] 8.1 Delete SongActionSheet component file
+    - Remove src/app/pages/audiolab/_components/SongActionSheet.tsx
+    - _Requirements: 1.1_
+  - [x] 8.2 Remove MiniPlayer references if any exist
+    - Search for and remove any MiniPlayer component usage
+    - _Requirements: 1.2_
+  - [x] 8.3 Remove FullScreenPlayer references if any exist
+    - Search for and remove any FullScreenPlayer component usage
+    - _Requirements: 1.3_
+
+- [ ] 9. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
