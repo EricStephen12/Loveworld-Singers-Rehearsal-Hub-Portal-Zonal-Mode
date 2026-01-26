@@ -331,23 +331,36 @@ export default function Members() {
 
   // Delete member handler
   const handleDeleteMember = async (member: Member) => {
-    if (!confirm(`Are you sure you want to delete ${member.first_name} ${member.last_name}? This will remove their account, profile, and zone membership.`)) {
+    if (!confirm(`Are you sure you want to delete ${member.first_name} ${member.last_name}? This will PERMANENTLY remove their account, profile, and all association with this platform. This action cannot be undone.`)) {
       return;
     }
+
+    const { user: currentAdmin } = await import('@/lib/firebase-setup').then(m => ({ user: m.auth.currentUser }));
 
     try {
       setLoading(true);
 
-      // 1. Remove from zone membership
+      // 1. Call our custom API to delete from Auth and Profile
+      // This is more robust than just deleting the document
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: member.id,
+          adminId: currentAdmin?.uid || 'unknown'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete user account');
+      }
+
+      // 2. Remove from zone membership (cleanup)
       if (member.zoneId) {
         await ZoneInvitationService.removeMember(member.id, member.zoneId);
       }
-
-      // 2. Delete profile
-      await FirebaseDatabaseService.deleteDocument('profiles', member.id);
-
-      // 3. Delete auth user (if possible - may require re-authentication)
-      // For now, we'll just mark as inactive
 
       showToast(`✅ ${member.first_name} ${member.last_name} deleted successfully`, 'success');
 
@@ -357,9 +370,9 @@ export default function Members() {
         membersCache.delete(cacheKey);
       }
       loadMembers(true); // Force reload the list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting member:', error);
-      showToast('❌ Failed to delete member. Please try again.', 'error');
+      showToast(`❌ ${error.message || 'Failed to delete member'}`, 'error');
     } finally {
       setLoading(false);
     }

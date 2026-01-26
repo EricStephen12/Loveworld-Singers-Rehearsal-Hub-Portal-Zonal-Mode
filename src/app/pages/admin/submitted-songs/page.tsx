@@ -588,10 +588,18 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                       {activeActionMenuId === song.id && (
                         <>
                           <div
-                            className="fixed inset-0 z-10"
+                            className="fixed inset-0 z-[65] bg-black/40 lg:bg-transparent backdrop-blur-[1px] lg:backdrop-blur-0"
                             onClick={() => setActiveActionMenuId(null)}
                           />
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                          <div className={`
+                            z-[70] py-1 overflow-hidden transition-all duration-200
+                            fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+76px)] lg:absolute lg:inset-auto lg:right-0 lg:top-full lg:mt-1 lg:w-48
+                            bg-white rounded-2xl lg:rounded-xl shadow-2xl lg:shadow-xl border border-gray-200 lg:border-gray-100
+                            animate-in fade-in slide-in-from-bottom-4 lg:zoom-in-95
+                          `}>
+                            {/* Mobile Drag Indicator */}
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-3 lg:hidden" />
+
                             <button
                               onClick={() => {
                                 setSelectedSong(song)
@@ -604,10 +612,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                   })
                                 }
                               }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 lg:gap-2 active:bg-gray-100 lg:active:bg-gray-50 transition-colors"
                             >
-                              <Eye className="w-4 h-4 text-gray-400" />
-                              View Details
+                              <Eye className="w-5 h-5 lg:w-4 lg:h-4 text-gray-400" />
+                              <span className="font-medium lg:font-normal">View Details</span>
                             </button>
 
                             {song.status === 'pending' && (
@@ -617,10 +625,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                     openApproveConfirm(song)
                                     setActiveActionMenuId(null)
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                                  className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-emerald-700 hover:bg-emerald-50 flex items-center gap-3 lg:gap-2 active:bg-emerald-100/50 transition-colors"
                                 >
-                                  <CheckCircle className="w-4 h-4" />
-                                  Approve
+                                  <CheckCircle className="w-5 h-5 lg:w-4 lg:h-4" />
+                                  <span className="font-medium lg:font-normal">Approve Song</span>
                                 </button>
                                 <button
                                   onClick={() => {
@@ -628,9 +636,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                     setShowRejectModal(true)
                                     setActiveActionMenuId(null)
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                                  className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-rose-700 hover:bg-rose-50 flex items-center gap-3 lg:gap-2 active:bg-rose-100/50 transition-colors"
                                 >
-                                  Reject
+                                  <XCircle className="w-5 h-5 lg:w-4 lg:h-4" />
+                                  <span className="font-medium lg:font-normal">Reject Song</span>
                                 </button>
                               </>
                             )}
@@ -643,10 +652,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                 setShowReplyModal(true)
                                 setActiveActionMenuId(null)
                               }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 lg:gap-2 active:bg-gray-100 transition-colors"
                             >
-                              <MessageSquare className="w-4 h-4 text-gray-400" />
-                              Message / Reply
+                              <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4 text-gray-400" />
+                              <span className="font-medium lg:font-normal">Message / Reply</span>
                             </button>
 
                             {song.id && (
@@ -656,10 +665,10 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                     openDeleteConfirm(song)
                                     setActiveActionMenuId(null)
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 lg:gap-2 active:bg-red-100/50 transition-colors"
                                 >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
+                                  <Trash2 className="w-5 h-5 lg:w-4 lg:h-4" />
+                                  <span className="font-medium lg:font-normal">Delete Submission</span>
                                 </button>
                               </div>
                             )}
