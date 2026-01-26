@@ -11,7 +11,8 @@
   orderBy,
   limit,
   Timestamp,
-  startAfter
+  startAfter,
+  writeBatch
 } from 'firebase/firestore'
 
 import { db } from './firebase-setup'
@@ -59,6 +60,33 @@ class MediaVideosService {
     }
 
     return docRef.id
+  }
+
+  async createBatch(videos: (MediaVideoInput & { notifyUsers?: boolean })[]): Promise<void> {
+    const batch = writeBatch(db)
+    const newDocs: { id: string, title: string, forHQ: boolean }[] = []
+
+    videos.forEach((video) => {
+      const { notifyUsers, ...data } = video
+      const docRef = doc(collection(db, COLLECTION))
+      batch.set(docRef, {
+        ...data,
+        views: 0,
+        likes: 0,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      })
+      if (notifyUsers) {
+        newDocs.push({ id: docRef.id, title: data.title, forHQ: data.forHQ })
+      }
+    })
+
+    await batch.commit()
+
+    // Send notifications after commit
+    for (const docInfo of newDocs) {
+      this.sendMediaNotification(docInfo.id, docInfo.title, docInfo.forHQ).catch(() => { })
+    }
   }
 
   // Send push notification for new media to zone members

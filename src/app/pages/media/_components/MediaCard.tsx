@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import AddToPlaylistModal from './AddToPlaylistModal'
 import { isYouTubeUrl } from '@/utils/youtube'
 import { getCategories, MediaCategory } from '@/lib/media-category-service'
+import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary'
 
 // Cache categories to avoid repeated fetches
 let categoriesCache: MediaCategory[] | null = null
@@ -110,7 +111,8 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
   }
 
   // Use thumbnail directly - it's already a proper URL from admin upload
-  const thumbnailUrl = media.thumbnail || media.backdropImage || '/movie/default-hero.jpeg'
+  // Apply repair logic if it looks like a direct video URL or is missing
+  const thumbnailUrl = media.thumbnail || getCloudinaryThumbnailUrl(media.videoUrl || media.youtubeUrl)
 
   return (
     <div
@@ -130,8 +132,15 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             setImageLoaded(true)
-            if (e.currentTarget.src !== '/movie/default-hero.jpeg') {
-              e.currentTarget.src = '/movie/default-hero.jpeg'
+            const fallback = '/movie/default-hero.jpeg'
+            if (e.currentTarget.src !== fallback) {
+              // Try repairing with the video URL if not already done
+              const repaired = getCloudinaryThumbnailUrl(media.videoUrl)
+              if (repaired && e.currentTarget.src !== repaired) {
+                e.currentTarget.src = repaired
+              } else {
+                e.currentTarget.src = fallback
+              }
             }
           }}
         />

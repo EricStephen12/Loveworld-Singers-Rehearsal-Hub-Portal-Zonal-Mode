@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { mediaVideosService, MediaVideo } from '@/lib/media-videos-service'
 import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtube'
+import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary'
 import CustomLoader from '@/components/CustomLoader'
 import {
   getAdminPlaylists,
@@ -30,7 +31,7 @@ import {
 
 import { useZone } from '@/hooks/useZone'
 
-type View = 'videos' | 'playlists' | 'categories' | 'add-video' | 'edit-video' | 'add-playlist' | 'edit-playlist' | 'playlist-detail' | 'add-category' | 'edit-category'
+type View = 'videos' | 'playlists' | 'categories' | 'add-video' | 'edit-video' | 'add-playlist' | 'edit-playlist' | 'playlist-detail' | 'add-category' | 'edit-category' | 'batch-upload'
 
 export default function MediaUploadSection() {
   const { user, profile } = useAuth()
@@ -65,6 +66,7 @@ export default function MediaUploadSection() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isBulkPlaylistOpen, setIsBulkPlaylistOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
+  const [batchFiles, setBatchFiles] = useState<{ url: string; title: string; public_id: string }[]>([])
 
   const [videoForm, setVideoForm] = useState({
     title: '', description: '', videoUrl: '', thumbnail: '',
@@ -320,7 +322,7 @@ export default function MediaUploadSection() {
     } catch (e) { showToast('error', 'Failed to update') }
   }
 
-  const openCloudinaryWidget = (type: 'video' | 'image') => {
+  const openCloudinaryWidget = (type: 'video' | 'image', isBatch: boolean = false) => {
     if (typeof window !== 'undefined' && (window as any).cloudinary) {
       (window as any).cloudinary.createUploadWidget({
         cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -328,7 +330,8 @@ export default function MediaUploadSection() {
         folder: type === 'video' ? 'media/videos' : 'media/thumbnails',
         resourceType: type === 'video' ? 'video' : 'image',
         maxFileSize: type === 'video' ? 500000000 : 10000000,
-        sources: ['local'], multiple: false,
+        sources: ['local'],
+        multiple: isBatch,
         ...(type === 'video' && {
           upload_transformation: [
             { height: 480, crop: 'limit' },
@@ -338,8 +341,28 @@ export default function MediaUploadSection() {
         })
       }, (err: any, res: any) => {
         if (!err && res?.event === 'success') {
-          if (type === 'video') setVideoForm(p => ({ ...p, videoUrl: res.info.secure_url }))
-          else setVideoForm(p => ({ ...p, thumbnail: res.info.secure_url }))
+          if (type === 'video') {
+            if (isBatch) {
+              // Extract filename as title
+              const fileName = res.info.original_filename || 'New Video';
+              const cleanTitle = fileName.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+              setBatchFiles(prev => [...prev, {
+                url: res.info.secure_url,
+                title: cleanTitle,
+                public_id: res.info.public_id
+              }]);
+              if (view !== 'batch-upload') setView('batch-upload');
+            } else {
+              setVideoForm(p => ({ ...p, videoUrl: res.info.secure_url }));
+              // Generate auto thumbnail if not set
+              if (!videoForm.thumbnail) {
+                const autoThumb = getCloudinaryThumbnailUrl(res.info.secure_url);
+                setVideoForm(p => ({ ...p, thumbnail: autoThumb }));
+              }
+            }
+          } else {
+            setVideoForm(p => ({ ...p, thumbnail: res.info.secure_url }))
+          }
         }
       }).open()
     }
@@ -517,13 +540,21 @@ export default function MediaUploadSection() {
             <h1 className="text-2xl font-bold text-gray-900">Channel content</h1>
             <p className="text-sm text-gray-500">Manage your videos and collections</p>
           </div>
-          <button
-            onClick={() => { resetVideoForm(); setView('add-video') }}
-            className="px-4 py-2 hover:opacity-90 text-white rounded font-medium transition-all flex items-center gap-2 shadow-sm"
-            style={{ backgroundColor: zoneColor }}
-          >
-            <Plus className="w-5 h-5" /> CREATE
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => openCloudinaryWidget('video', true)}
+              className="px-4 py-2 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded font-medium transition-all flex items-center gap-2 shadow-sm"
+            >
+              <Cloud className="w-5 h-5" /> UPLOAD BATCH
+            </button>
+            <button
+              onClick={() => { resetVideoForm(); setView('add-video') }}
+              className="px-4 py-2 hover:opacity-90 text-white rounded font-medium transition-all flex items-center gap-2 shadow-sm"
+              style={{ backgroundColor: zoneColor }}
+            >
+              <Plus className="w-5 h-5" /> CREATE
+            </button>
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 p-1 rounded-lg mb-6 shadow-sm flex flex-col md:flex-row gap-2">
@@ -619,7 +650,17 @@ export default function MediaUploadSection() {
                     />
                   </div>
                   <div className="relative aspect-video rounded overflow-hidden border border-gray-200 bg-gray-100">
-                    <img src={video.thumbnail} className="w-full h-full object-cover" />
+                    <img
+                      src={video.thumbnail || getCloudinaryThumbnailUrl(video.videoUrl || '')}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/movie/default-hero.jpeg'
+                        // Try fallback if primary thumbnail fails
+                        if (video.videoUrl && e.currentTarget.src !== getCloudinaryThumbnailUrl(video.videoUrl)) {
+                          e.currentTarget.src = getCloudinaryThumbnailUrl(video.videoUrl);
+                        }
+                      }}
+                    />
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-gray-900 truncate">{video.title}</div>
@@ -672,7 +713,17 @@ export default function MediaUploadSection() {
                   style={isSelected ? { '--tw-ring-color': zoneColor, borderColor: zoneColor } as any : {}}
                 >
                   <div className="relative aspect-video overflow-hidden">
-                    <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={video.thumbnail || getCloudinaryThumbnailUrl(video.videoUrl || '')}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/movie/default-hero.jpeg'
+                        if (video.videoUrl && e.currentTarget.src !== getCloudinaryThumbnailUrl(video.videoUrl)) {
+                          e.currentTarget.src = getCloudinaryThumbnailUrl(video.videoUrl);
+                        }
+                      }}
+                    />
 
                     <button
                       onClick={(e) => {
@@ -752,6 +803,7 @@ export default function MediaUploadSection() {
               if (view === 'add-playlist' || view === 'edit-playlist') return renderPlaylistForm()
               if (view === 'playlist-detail') return renderPlaylistDetail()
               if (view === 'add-category' || view === 'edit-category') return renderCategoryForm()
+              if (view === 'batch-upload') return renderBatchUpload()
               return null
             })()}
           </div>
@@ -1433,6 +1485,123 @@ export default function MediaUploadSection() {
         </div>
       </div>
     )
+  }
+
+  function renderBatchUpload() {
+    return (
+      <div className="p-4 lg:p-8 animate-in fade-in duration-700">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pt-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Batch Upload</h1>
+            <p className="text-sm text-gray-500">Review and publish your {batchFiles.length} uploaded videos</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => openCloudinaryWidget('video', true)}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-medium transition-all flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> ADD MORE
+            </button>
+            <button
+              onClick={handlePublishBatch}
+              disabled={isSubmitting || batchFiles.length === 0}
+              className="px-6 py-2 hover:opacity-90 text-white rounded font-bold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
+              style={{ backgroundColor: zoneColor }}
+            >
+              {isSubmitting ? 'PUBLISHING...' : `PUBLISH ALL (${batchFiles.length})`}
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {batchFiles.map((file, idx) => (
+            <div key={idx} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col group">
+              <div className="relative aspect-video bg-gray-900 overflow-hidden">
+                <video
+                  src={file.url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  onMouseOver={(e) => e.currentTarget.play()}
+                  onMouseOut={(e) => e.currentTarget.pause()}
+                />
+                <div className="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/50 backdrop-blur-md rounded text-[8px] font-bold text-white uppercase tracking-wider">Preview</div>
+                <button
+                  onClick={() => setBatchFiles(prev => prev.filter((_, i) => i !== idx))}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Video Title</label>
+                  <input
+                    type="text"
+                    value={file.title}
+                    onChange={(e) => {
+                      const newFiles = [...batchFiles];
+                      newFiles[idx].title = e.target.value;
+                      setBatchFiles(newFiles);
+                    }}
+                    className="w-full mt-1 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded text-sm font-medium focus:outline-none focus:border-purple-300 transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                  <Cloud className="w-3 h-3" />
+                  <span className="truncate text-xs">{file.url}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {batchFiles.length === 0 && (
+          <div className="text-center py-40">
+            <Upload className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-400 font-medium">Your batch is empty</p>
+            <button onClick={() => openCloudinaryWidget('video', true)} className="mt-4 text-sm font-bold" style={{ color: zoneColor }}>Upload Videos</button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  async function handlePublishBatch() {
+    if (batchFiles.length === 0) return
+    setIsSubmitting(true)
+    try {
+      const videosToCreate = batchFiles.map(file => {
+        // Auto-generate thumbnail correctly
+        const autoThumb = getCloudinaryThumbnailUrl(file.url);
+
+        return {
+          title: file.title || 'Untitled Video',
+          description: '',
+          thumbnail: autoThumb,
+          videoUrl: file.url,
+          isYouTube: false,
+          type: videoForm.type || categories[0]?.slug || 'other',
+          featured: false,
+          forHQ: videoForm.forHQ,
+          hidden: false,
+          createdBy: user?.uid || 'admin',
+          createdByName: profile?.first_name || 'Admin',
+          notifyUsers: videoForm.notifyUsers
+        }
+      })
+
+      await mediaVideosService.createBatch(videosToCreate)
+      showToast('success', `Success! ${batchFiles.length} videos published.`)
+      setBatchFiles([])
+      setView('videos')
+      loadData()
+    } catch (e: any) {
+      console.error(e)
+      showToast('error', 'Failed to publish batch')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   function renderCategoryForm() {

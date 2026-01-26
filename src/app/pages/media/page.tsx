@@ -59,6 +59,21 @@ export default function MediaPage() {
     return () => observer.disconnect()
   }, [hasMore, isLoadingMore, loadMore, viewMode])
 
+  // Mobile Sidebar Auto-Close
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false)
+      } else {
+        setSidebarOpen(true)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Filter media
   const filteredMedia = useMemo(() => {
     let filtered = allMedia.filter(m => m.type !== 'shorts' && !m.genre?.includes('Shorts'))
