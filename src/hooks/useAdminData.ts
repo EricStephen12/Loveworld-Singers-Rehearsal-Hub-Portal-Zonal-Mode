@@ -105,13 +105,17 @@ export function useAdminData(): AdminData {
       setError(null)
 
       if (adminDataCache &&
-        (Date.now() - adminDataCache.timestamp) < CACHE_DURATION &&
         adminDataCache.zoneId === currentZoneId) {
         setPages(adminDataCache.pages)
         setLoading(false)
-        return
+
+        // If the cache is still fresh within 30s, we can skip the background fetch
+        if ((Date.now() - adminDataCache.timestamp) < CACHE_DURATION) {
+          return
+        }
       }
 
+      // Background Fetch / Initial Fetch
       const freshPages = await fetchAdminData(currentZoneId)
 
       adminDataCache = {

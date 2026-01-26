@@ -14,6 +14,7 @@
 } from 'firebase/firestore'
 
 import { db } from './firebase-setup'
+import { isHQGroup } from '@/config/zones'
 
 const SONGS_COLLECTION = 'songs'
 const SUBMITTED_SONGS_COLLECTION = 'submitted_songs'
@@ -276,7 +277,10 @@ export async function approveSong(
 
     const submissionData = submissionDoc.data() as SongSubmission
 
-    const songsRef = collection(db, SONGS_COLLECTION)
+    const isHQ = submissionData.zoneId && isHQGroup(submissionData.zoneId)
+    const targetCollection = isHQ ? 'praise_night_songs' : 'zone_songs'
+    const songsRef = collection(db, targetCollection)
+
     const songData = {
       title: submissionData.title,
       lyrics: submissionData.lyrics,
@@ -293,6 +297,8 @@ export async function approveSong(
       audioUrl: submissionData.audioUrl || '',
       status: 'unheard',
       rehearsalCount: 0,
+      zoneId: submissionData.zoneId || '',
+      praiseNightId: '', // Approved songs usually start unassigned to a specific program
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }

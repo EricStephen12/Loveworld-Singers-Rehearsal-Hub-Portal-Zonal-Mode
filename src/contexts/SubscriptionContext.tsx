@@ -119,29 +119,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       return hasFeatureAccess(subscription.tier, feature as any)
     }
 
-    const canAddMember = async () => {
-      if (!currentZone) return false
-      if (hasFullAccess) return true
-
-      try {
-        const zoneData = await FirebaseDatabaseService.getDocument('zones', currentZone.id)
-        const currentMemberCount = zoneData?.memberCount || 0
-        const limit = getMemberLimit('free') // Zones are always free base now
-        return currentMemberCount < limit
-      } catch (error) {
-        console.error('Error checking member limit:', error)
-        return false
-      }
-    }
+    const canAddMember = async () => true;
 
     return {
       subscription,
       isLoading,
       hasFeature,
       canAddMember,
-      memberLimit: hasFullAccess ? 999999 : 20,
+      memberLimit: 999999,
       isFreeTier: !hasFullAccess && !subscription,
-      isPremiumTier: hasFullAccess || !!subscription,
+      isPremiumTier: true, // Everyone is effectively premium for member features now
       isIndividualPremium: !!subscription && subscription.type === 'individual',
       isExpiringSoon,
       daysRemaining,

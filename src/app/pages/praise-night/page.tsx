@@ -13,11 +13,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SongDetailModal from "@/components/SongDetailModal";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import SharedDrawer from "@/components/SharedDrawer";
+import CustomLoader from "@/components/CustomLoader";
 import AudioWave from "@/components/AudioWave";
 import { PraiseNightSong, PraiseNight } from "@/types/supabase";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
 import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
+import { isHQGroup } from '@/config/zones';
 import { getMenuItems } from "@/config/menuItems";
 import { useAudio } from "@/contexts/AudioContext";
 import { usePageSearch, PageSearchResult } from "@/hooks/usePageSearch";
@@ -225,6 +227,24 @@ function PraiseNightPageContent() {
       window.removeEventListener('focus', handleFocus);
     };
   }, [refreshData]);
+
+  // ✅ SECURITY: Enforce Pre-Rehearsal Access Control
+  const { isZoneCoordinator } = useZone();
+  const { profile } = useAuth();
+
+  useEffect(() => {
+    if (categoryFilter === 'pre-rehearsal') {
+      const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
+      const hasAccess = isZoneCoordinator || profile?.can_access_pre_rehearsal === true;
+
+      // 1. HQ is always hidden/redirected
+      // 2. Others must have permission
+      if (isHQ || !hasAccess) {
+        console.warn('🚫 Access Denied to Pre-Rehearsal category');
+        router.replace('/pages/rehearsals');
+      }
+    }
+  }, [categoryFilter, currentZone, isZoneCoordinator, profile, router]);
 
   // Periodic refresh to ensure data stays up to date (optimized interval)
   useEffect(() => {
@@ -974,6 +994,18 @@ function PraiseNightPageContent() {
     );
   }
 
+  // ✅ Show loading screen while data is being fetched - PREVENTS EMPTY STATE FLASH
+  if (loading || (filteredPraiseNights.length === 0 && !currentPraiseNight && allPraiseNights.length === 0)) {
+    return (
+      <div
+        className="h-screen safe-area-bottom flex items-center justify-center"
+        style={{ background: `linear-gradient(135deg, ${zoneColor}12, #fdfbff)` }}
+      >
+        <CustomLoader message="Loading rehearsal data..." />
+      </div>
+    );
+  }
+
   return (
     <div
       className="h-screen safe-area-bottom overflow-y-auto"
@@ -1324,7 +1356,16 @@ function PraiseNightPageContent() {
                 onTouchStart={() => setShowDropdown(false)}
               />
               <div className="fixed right-3 left-3 sm:right-4 sm:left-auto top-16 sm:top-16 z-[80] w-auto sm:w-64 max-w-2xl mx-auto sm:mx-0 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-64 overflow-y-auto">
-                {filteredPraiseNights.length > 0 ? (
+                {loading ? (
+                  <div className="px-3 sm:px-4 py-12 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                      <RefreshCw className="w-8 h-8 text-slate-400 animate-spin" />
+                    </div>
+                    <div className="text-slate-500 text-sm mb-2 font-medium">
+                      Loading sessions...
+                    </div>
+                  </div>
+                ) : filteredPraiseNights.length > 0 ? (
                   filteredPraiseNights.map((praiseNight) => (
                     <button
                       key={praiseNight.id}

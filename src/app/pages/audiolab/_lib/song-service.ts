@@ -43,8 +43,71 @@ const songCache: Map<string, { data: AudioLabSong[]; timestamp: number }> = new 
 const CACHE_TTL = 5 * 60 * 1000;
 
 // ============================================
+// TYPES
+// ============================================
+
+export interface MasterProgram {
+  id: string;
+  name: string;
+  description?: string;
+  songIds: string[];
+}
+
+// ============================================
 // FETCH OPERATIONS
 // ============================================
+
+/**
+ * Get all programs (categories)
+ */
+export async function getPrograms(): Promise<MasterProgram[]> {
+  try {
+    const q = query(collection(db, 'master_programs'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name || '',
+      description: doc.data().description || '',
+      songIds: doc.data().songIds || []
+    }));
+  } catch (error) {
+    console.error('[SongService] Error fetching programs:', error);
+    return [];
+  }
+}
+
+/**
+ * Get songs for a specific program
+ */
+export async function getSongsByProgram(programId: string): Promise<AudioLabSong[]> {
+  try {
+    if (!programId) return [];
+
+    // 1. Get the program to get song IDs
+    const programRef = doc(db, 'master_programs', programId);
+    const programSnap = await getDoc(programRef);
+
+    if (!programSnap.exists()) return [];
+
+    const songIds = programSnap.data().songIds || [];
+    if (songIds.length === 0) return [];
+
+    // 2. Fetch the actual songs (in batches of 10 due to Firestore 'in' limit, or manually)
+    // For simplicity, we'll fetch all master songs and filter, OR simpler: fetch individually if small number
+    // But optimal way for large lists: Use the existing logic but filter locally if we have cache, 
+    // or since we are "LibraryView", we might want to respect the "getSongs" flow.
+
+    // Better approach: Get all songs (cached) and filter.
+    // Since getSongs() uses cache, this is efficient.
+    const allSongs = await getSongs(undefined, 5000); // Get a large batch
+    return allSongs.filter(song => songIds.includes(song.id));
+
+  } catch (error) {
+    console.error('[SongService] Error fetching program songs:', error);
+    return [];
+  }
+}
 
 /**
  * Get songs from Master Library with pagination support
@@ -696,6 +759,7 @@ export function toLeagcySong(song: AudioLabSong) {
     lyricsUrl: song.lyricsUrl,
     audioUrls: song.audioUrls,
     availableParts: song.availableParts,
-    isHQSong: song.isHQSong
+    isHQSong: song.isHQSong,
+    lyrics: song.lyrics
   };
 }

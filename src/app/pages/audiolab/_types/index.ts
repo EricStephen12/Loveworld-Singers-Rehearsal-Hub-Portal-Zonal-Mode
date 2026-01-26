@@ -81,6 +81,7 @@ export interface Song {
   availableParts?: VocalPart[];
   customParts?: string[]; // Track custom part names
   isHQSong?: boolean;     // true if from master library
+  lyrics?: LyricLine[] | string;
 }
 
 // ============================================

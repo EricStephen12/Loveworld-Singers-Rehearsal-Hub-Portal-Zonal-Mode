@@ -46,7 +46,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
   const [totalSongs, setTotalSongs] = useState(0)
   const [totalPraiseNights, setTotalPraiseNights] = useState(0)
 
-    const isHQ = isHQGroup(currentZone?.id)
+  const isHQ = isHQGroup(currentZone?.id)
 
   useEffect(() => {
     loadData()
@@ -219,14 +219,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
               <p className="text-gray-600 text-xs sm:text-sm mb-1">Total Members</p>
               <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {members.length}
-                <span className="text-base sm:text-lg text-gray-500">/{memberLimit}</span>
               </p>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all"
-                  style={{ width: `${(members.length / memberLimit) * 100}%` }}
-                />
-              </div>
             </div>
 
             <div className="flex-shrink-0 w-[160px] lg:w-auto bg-white rounded-2xl shadow-sm lg:shadow-lg p-4 lg:p-6 border border-gray-100 lg:border-l-4 lg:border-l-yellow-500 lg:border-t-0 lg:border-r-0 lg:border-b-0">

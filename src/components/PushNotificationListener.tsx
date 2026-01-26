@@ -6,6 +6,7 @@ import { useZone } from '@/hooks/useZone'
 import { collection, query, where, orderBy, limit, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 import { webFCMService } from '@/lib/fcm-web'
+import { isHQGroup } from '@/config/zones'
 
 // Store FCM token in Firestore for server-side push
 // Token saving is now handled by webFCMService via API to Realtime Database
@@ -179,7 +180,6 @@ export default function PushNotificationListener() {
   // Listen for new zone messages
   useEffect(() => {
     if (!currentZone?.id) return
-    const { isHQGroup } = require('@/config/zones')
     const isHQ = isHQGroup(currentZone.id)
     const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages'
 

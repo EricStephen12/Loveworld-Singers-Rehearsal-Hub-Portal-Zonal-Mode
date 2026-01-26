@@ -64,6 +64,7 @@ interface Member {
   role?: string;
   zoneId?: string;
   zoneName?: string;
+  can_access_pre_rehearsal?: boolean;
 }
 
 export default function Members() {
@@ -248,7 +249,8 @@ export default function Members() {
           groups: profile?.groups || [],
           role: membership.role || 'member',
           zoneId: membership.zoneId,
-          zoneName: membership.zoneName
+          zoneName: membership.zoneName,
+          can_access_pre_rehearsal: !!profile?.can_access_pre_rehearsal
         };
       });
 
@@ -807,15 +809,47 @@ export default function Members() {
               <div className="p-4">
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Designation</h5>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Designation</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.designation || 'Not set'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Administration</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.administration || 'Not set'}</span>
-                  </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Access Control (Only for non-HQ members if needed, or all) */}
+            <div className="p-4 border-t border-gray-100 bg-purple-50/30">
+              <h5 className="text-xs font-semibold text-purple-600 uppercase mb-3">Access Control</h5>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Pre-Rehearsal Access</p>
+                  <p className="text-xs text-gray-500">Allow this member to access preparing sessions</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const newState = !selectedMember.can_access_pre_rehearsal;
+                      await FirebaseDatabaseService.updateDocument('profiles', selectedMember.id, {
+                        can_access_pre_rehearsal: newState
+                      });
+
+                      // Update local state
+                      const updatedMember = { ...selectedMember, can_access_pre_rehearsal: newState };
+                      setSelectedMember(updatedMember);
+
+                      // Update in list
+                      setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
+
+                      showToast(`✅ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                    } catch (error) {
+                      console.error('Error updating access:', error);
+                      showToast('❌ Failed to update access', 'error');
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedMember.can_access_pre_rehearsal ? 'bg-purple-600' : 'bg-gray-200'
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedMember.can_access_pre_rehearsal ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                  />
+                </button>
               </div>
             </div>
 

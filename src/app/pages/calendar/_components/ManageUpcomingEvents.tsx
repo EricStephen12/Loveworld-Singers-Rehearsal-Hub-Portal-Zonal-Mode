@@ -5,25 +5,30 @@ import { Plus, Edit, Trash2, Calendar, Sparkles } from 'lucide-react'
 import moment from 'moment'
 import { UpcomingEventsService, UpcomingEvent } from '../_lib/upcoming-events-service'
 import UpcomingEventForm from './UpcomingEventForm'
+import { useZone } from '@/hooks/useZone'
 
 interface ManageUpcomingEventsProps {
   themeColor: string
 }
 
 export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEventsProps) {
+  const { currentZone } = useZone()
   const [events, setEvents] = useState<UpcomingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<UpcomingEvent | null>(null)
 
   useEffect(() => {
-    loadEvents()
-  }, [])
+    if (currentZone?.id) {
+      loadEvents()
+    }
+  }, [currentZone?.id])
 
   const loadEvents = async () => {
+    if (!currentZone?.id) return
     setLoading(true)
     try {
-      const allEvents = await UpcomingEventsService.getAllEvents()
+      const allEvents = await UpcomingEventsService.getAllEvents(currentZone.id)
       setEvents(allEvents)
     } catch (error) {
       console.error('Error loading events:', error)
@@ -33,11 +38,15 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
   }
 
   const handleSaveEvent = async (eventData: any) => {
+    if (!currentZone?.id) return
     try {
       if (editingEvent) {
-        await UpcomingEventsService.updateEvent(editingEvent.id, eventData)
+        await UpcomingEventsService.updateEvent(editingEvent.id, eventData, currentZone.id)
       } else {
-        await UpcomingEventsService.createEvent(eventData)
+        await UpcomingEventsService.createEvent({
+          ...eventData,
+          zoneId: currentZone.id
+        })
       }
       await loadEvents()
       setShowForm(false)
@@ -49,10 +58,11 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
   }
 
   const handleDeleteEvent = async (eventId: string) => {
+    if (!currentZone?.id) return
     if (!confirm('Are you sure you want to delete this event?')) return
 
     try {
-      await UpcomingEventsService.deleteEvent(eventId)
+      await UpcomingEventsService.deleteEvent(eventId, currentZone.id)
       await loadEvents()
     } catch (error) {
       console.error('Error deleting event:', error)
@@ -81,7 +91,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className="w-12 h-12 rounded-lg flex items-center justify-center text-white"
             style={{ backgroundColor: themeColor }}
           >

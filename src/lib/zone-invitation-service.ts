@@ -5,7 +5,7 @@ import { HQInvitationService } from './hq-invitation-service'
 import { ZONES, getZoneByInvitationCode, isHQGroup } from '@/config/zones'
 
 export class ZoneInvitationService {
-  
+
   static async joinZoneWithCode(
     userId: string,
     invitationCode: string,
@@ -15,14 +15,14 @@ export class ZoneInvitationService {
   ) {
     try {
       const zone = getZoneByInvitationCode(invitationCode)
-      
+
       if (!zone) {
         return {
           success: false,
           error: 'Invalid invitation code. Please check and try again.'
         }
       }
-      
+
       if (isHQGroup(zone.id)) {
         return await HQInvitationService.joinHQGroup(
           invitationCode,
@@ -31,16 +31,16 @@ export class ZoneInvitationService {
           userName
         )
       }
-      
+
       const existingMembers = await FirebaseDatabaseService.getCollectionWhere(
         'zone_members',
         'userId',
         '==',
         userId
       )
-      
+
       const alreadyMember = existingMembers.some((m: any) => m.zoneId === zone.id)
-      
+
       if (alreadyMember) {
         return {
           success: true,
@@ -49,9 +49,9 @@ export class ZoneInvitationService {
           message: `You are already a member of ${zone.name}`
         }
       }
-      
+
       const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id)
-      
+
       if (!zoneData) {
         await FirebaseDatabaseService.createDocument('zones', zone.id, {
           id: zone.id,
@@ -69,22 +69,10 @@ export class ZoneInvitationService {
           updatedAt: new Date()
         })
       }
-      
-      const currentMemberCount = zoneData?.memberCount || 0
-      const maxMembers = zoneData?.maxMembers || 20
-      const subscriptionTier = zoneData?.subscriptionTier || 'free'
-      
-      if (currentMemberCount >= maxMembers) {
-        const upgradeMessage = subscriptionTier === 'free' 
-          ? 'This zone is on the Free plan (20 members max). The coordinator needs to upgrade to Premium (500 members) to add more members.'
-          : 'This zone has reached its maximum member limit. Please contact the zone coordinator.'
-        
-        return { success: false, error: upgradeMessage }
-      }
-      
+
       const isFirstMember = currentMemberCount === 0
       const finalRole = role || (isFirstMember ? 'coordinator' : 'member')
-      
+
       const memberId = `mem_${Date.now()}_${userId}`
       await FirebaseDatabaseService.createDocument('zone_members', memberId, {
         id: memberId,
@@ -96,7 +84,7 @@ export class ZoneInvitationService {
         joinedAt: new Date(),
         status: 'active'
       })
-      
+
       if (finalRole === 'coordinator') {
         await FirebaseDatabaseService.updateDocument('zones', zone.id, {
           coordinatorId: userId,
@@ -105,19 +93,19 @@ export class ZoneInvitationService {
           updatedAt: new Date()
         })
       }
-      
+
       await FirebaseDatabaseService.updateDocument('zones', zone.id, {
         memberCount: currentMemberCount + 1,
         updatedAt: new Date()
       })
-      
+
       return {
         success: true,
         zoneName: zone.name,
         zoneId: zone.id,
         message: `Welcome to ${zone.name}!`
       }
-      
+
     } catch (error) {
       console.error('Error joining zone:', error)
       return {
@@ -126,25 +114,25 @@ export class ZoneInvitationService {
       }
     }
   }
-  
+
   static getZoneSignupLink(invitationCode: string): string {
-    const baseUrl = typeof window !== 'undefined' 
-      ? window.location.origin 
+    const baseUrl = typeof window !== 'undefined'
+      ? window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    
+
     return `${baseUrl}/auth?zone=${invitationCode}`
   }
-  
+
   static async getAllZonesWithStats() {
     try {
       const zonesWithStats = await Promise.all(
         ZONES.map(async (zone) => {
           const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id)
-          
+
           const members = isHQGroup(zone.id)
             ? await HQMembersService.getHQGroupMembers(zone.id)
             : await FirebaseDatabaseService.getCollectionWhere('zone_members', 'zoneId', '==', zone.id)
-          
+
           return {
             ...zone,
             memberCount: members.length,
@@ -156,34 +144,34 @@ export class ZoneInvitationService {
           }
         })
       )
-      
+
       return zonesWithStats
     } catch (error) {
       console.error('Error getting zones with stats:', error)
       return []
     }
   }
-  
+
   static async getZoneMembers(zoneId: string) {
     try {
       const members = isHQGroup(zoneId)
         ? await HQMembersService.getHQGroupMembers(zoneId)
         : await FirebaseDatabaseService.getCollectionWhere('zone_members', 'zoneId', '==', zoneId)
-      
+
       const membersWithProfiles = await Promise.all(
         members.map(async (member: any) => {
           const profile = await FirebaseDatabaseService.getDocument('profiles', member.userId)
           return { ...member, profile }
         })
       )
-      
+
       return membersWithProfiles
     } catch (error) {
       console.error('Error getting zone members:', error)
       return []
     }
   }
-  
+
   static async removeMember(memberId: string, zoneId: string) {
     try {
       if (isHQGroup(zoneId)) {
@@ -192,7 +180,7 @@ export class ZoneInvitationService {
         await HQMembersService.removeMember(userId, zoneId)
       } else {
         await FirebaseDatabaseService.deleteDocument('zone_members', memberId)
-        
+
         const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId)
         if (zoneData) {
           await FirebaseDatabaseService.updateDocument('zones', zoneId, {
@@ -201,7 +189,7 @@ export class ZoneInvitationService {
           })
         }
       }
-      
+
       return { success: true }
     } catch (error) {
       console.error('Error removing member:', error)

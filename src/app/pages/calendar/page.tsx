@@ -151,10 +151,11 @@ export default function CalendarPage() {
     if (!calendarReady || !moment) return
 
     const loadUpcomingEvents = async () => {
+      if (!currentZone?.id) return
       try {
         const { UpcomingEventsService } = await import('./_lib/upcoming-events-service')
-        const carouselEvents = await UpcomingEventsService.getCarouselEvents()
-        const allUpcoming = await UpcomingEventsService.getUpcomingEvents()
+        const carouselEvents = await UpcomingEventsService.getCarouselEvents(currentZone.id)
+        const allUpcoming = await UpcomingEventsService.getUpcomingEvents(currentZone.id)
 
         setUpcomingEvents(carouselEvents)
 

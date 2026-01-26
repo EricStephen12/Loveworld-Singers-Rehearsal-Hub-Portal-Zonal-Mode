@@ -1,6 +1,6 @@
-'use client';
+import React, { useState } from 'react';
 
-import { Play, Pause, Music, ChevronDown, Mic } from 'lucide-react';
+import { Play, Pause, Music, ChevronDown, Mic, BookOpen } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import type { Song, VocalPart } from '../_types';
 
@@ -20,6 +20,46 @@ export interface SimpleSongCardProps {
     isKaraokeLoading?: boolean;
 }
 
+// Standardized lyrics formatter from MasterSongDetailSheet
+const formatLyricsForDisplay = (lyrics: any): string => {
+    if (!lyrics) return '';
+
+    let html = '';
+    if (Array.isArray(lyrics)) {
+        html = lyrics.map(line => (line as any).text || line).join('\n');
+    } else {
+        html = lyrics as string;
+    }
+
+    // Convert HTML back to plain text format like the edit modal shows
+    let text = html
+        // Convert </div><div> to double newlines (paragraph breaks)
+        .replace(/<\/div>\s*<div>/gi, '\n\n')
+        // Convert <div> opening tags to nothing (start of content)
+        .replace(/<div[^>]*>/gi, '')
+        // Convert </div> closing tags to nothing
+        .replace(/<\/div>/gi, '')
+        // Convert <br> to single newlines
+        .replace(/<br\s*\/?>/gi, '\n')
+        // Keep bold tags for display
+        .replace(/<b>/gi, '<b>')
+        .replace(/<\/b>/gi, '</b>')
+        .replace(/<strong>/gi, '<b>')
+        .replace(/<\/strong>/gi, '</b>')
+        // Remove any other HTML tags
+        .replace(/<(?!b>|\/b>)[^>]*>/g, '')
+        // Convert HTML entities
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        // Clean up excessive newlines
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    return text;
+};
+
 export function SimpleSongCard({
     song,
     songNumber,
@@ -35,6 +75,7 @@ export function SimpleSongCard({
     onStartKaraoke,
     isKaraokeLoading,
 }: SimpleSongCardProps) {
+    const [showLyrics, setShowLyrics] = useState(false);
     const availableParts = song.availableParts || ['full'];
 
     const getPartLabel = (part: VocalPart) => {
@@ -146,8 +187,8 @@ export function SimpleSongCard({
                             }}
                             disabled={isKaraokeLoading}
                             className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl text-white font-bold text-sm transition-all shadow-lg active:scale-[0.98] ${isKaraokeLoading
-                                    ? 'bg-slate-700 cursor-wait'
-                                    : 'bg-pink-600 hover:bg-pink-700 shadow-pink-600/20'
+                                ? 'bg-slate-700 cursor-wait'
+                                : 'bg-pink-600 hover:bg-pink-700 shadow-pink-600/20'
                                 }`}
                         >
                             {isKaraokeLoading ? (
@@ -164,6 +205,51 @@ export function SimpleSongCard({
                                 </>
                             )}
                         </button>
+                    )}
+
+                    {/* Lyrics Section */}
+                    {song.lyrics && (
+                        <div className="mb-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowLyrics(!showLyrics);
+                                }}
+                                className="w-full flex items-center justify-between px-3 py-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <BookOpen size={16} className="text-violet-400" />
+                                    <span className="font-bold text-xs text-white">Lyrics</span>
+                                </div>
+                                <ChevronDown size={16} className={`text-slate-400 transition-transform ${showLyrics ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {showLyrics && (
+                                <div className="mt-2 p-4 bg-white/5 rounded-xl border border-white/5 overflow-hidden">
+                                    <style>{`
+                                        .lyrics-content {
+                                            white-space: pre-wrap;
+                                            word-wrap: break-word;
+                                            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+                                            font-size: 14px;
+                                            line-height: 1.6;
+                                            color: #e2e8f0;
+                                        }
+                                        .lyrics-content b,
+                                        .lyrics-content strong {
+                                            font-weight: 700;
+                                            color: #fff;
+                                        }
+                                    `}</style>
+                                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                        <pre
+                                            className="lyrics-content"
+                                            dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(song.lyrics) }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1 pb-1">

@@ -6,7 +6,15 @@ import { Search, Mic, Music, RefreshCw, ChevronDown } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudio } from '@/contexts/AudioContext';
 import { useAudioLab } from '../_context/AudioLabContext';
-import { getSongsPaginated, searchSongsDeep, toLeagcySong, getTotalSongCount } from '../_lib/song-service';
+import {
+  getSongsPaginated,
+  searchSongsDeep,
+  toLeagcySong,
+  getTotalSongCount,
+  getPrograms,
+  getSongsByProgram,
+  type MasterProgram
+} from '../_lib/song-service';
 import { useZone } from '@/hooks/useZone';
 import { SimpleSongCard } from './SimpleSongCard';
 import type { Song, VocalPart } from '../_types';
@@ -33,6 +41,11 @@ export function LibraryView() {
   const [isSearching, setIsSearching] = useState(false);
   const [loadingKaraokeId, setLoadingKaraokeId] = useState<string | null>(null);
 
+  // Program selection state
+  const [programs, setPrograms] = useState<MasterProgram[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>('all');
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(true);
+
   // Accordion state
   const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
 
@@ -43,8 +56,23 @@ export function LibraryView() {
 
   // Initial load
   useEffect(() => {
+    const fetchPrograms = async () => {
+      setIsLoadingPrograms(true);
+      const fetchedPrograms = await getPrograms();
+      setPrograms(fetchedPrograms);
+      setIsLoadingPrograms(false);
+    };
+
+    fetchPrograms();
     loadSongsInitial();
   }, [currentZone?.id]);
+
+  // Handle program change
+  useEffect(() => {
+    if (!isLoadingPrograms) {
+      loadSongsInitial();
+    }
+  }, [selectedProgramId]);
 
   const loadSongsInitial = async () => {
     try {
@@ -53,18 +81,29 @@ export function LibraryView() {
       setCurrentPage(1);
       setPageStack([null]); // Start with no cursor for page 1
 
-      const [paginatedResult, count] = await Promise.all([
-        getSongsPaginated(null, ITEMS_PER_PAGE),
-        getTotalSongCount()
-      ]);
+      if (selectedProgramId !== 'all') {
+        // Fetch songs for specific program
+        const programSongs = await getSongsByProgram(selectedProgramId);
+        const legacySongs = programSongs.map(toLeagcySong);
+        setSongs(legacySongs);
+        setTotalCount(legacySongs.length);
+        setLastVisibleDoc(null);
+        setHasMore(false); // We fetch all program songs at once for now
+      } else {
+        // Fetch all songs with pagination
+        const [paginatedResult, count] = await Promise.all([
+          getSongsPaginated(null, ITEMS_PER_PAGE),
+          getTotalSongCount()
+        ]);
 
-      const { songs: audioLabSongs, lastDoc } = paginatedResult;
-      const legacySongs = audioLabSongs.map(toLeagcySong);
+        const { songs: audioLabSongs, lastDoc } = paginatedResult;
+        const legacySongs = audioLabSongs.map(toLeagcySong);
 
-      setSongs(legacySongs);
-      setTotalCount(count);
-      setLastVisibleDoc(lastDoc);
-      setHasMore(legacySongs.length === ITEMS_PER_PAGE);
+        setSongs(legacySongs);
+        setTotalCount(count);
+        setLastVisibleDoc(lastDoc);
+        setHasMore(legacySongs.length === ITEMS_PER_PAGE);
+      }
 
     } catch (err) {
       console.error('[LibraryView] Error loading songs:', err);
@@ -226,6 +265,31 @@ export function LibraryView() {
         <div className="flex flex-col gap-1.5 sm:gap-2 mb-2">
           <h1 className="text-white text-2xl sm:text-[28px] font-bold leading-tight tracking-tight">Library</h1>
           <p className="text-slate-400 text-xs sm:text-sm">Tap a song to access vocal parts</p>
+        </div>
+
+        {/* Program Selector Pills */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+          <button
+            onClick={() => setSelectedProgramId('all')}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === 'all'
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+                : 'bg-[#261933] text-slate-400 border border-white/5 hover:bg-white/5'
+              }`}
+          >
+            All Songs
+          </button>
+          {programs.map((program) => (
+            <button
+              key={program.id}
+              onClick={() => setSelectedProgramId(program.id)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === program.id
+                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+                  : 'bg-[#261933] text-slate-400 border border-white/5 hover:bg-white/5'
+                }`}
+            >
+              {program.name}
+            </button>
+          ))}
         </div>
 
         {/* Search Bar */}

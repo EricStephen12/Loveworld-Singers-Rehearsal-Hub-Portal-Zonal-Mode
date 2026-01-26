@@ -52,7 +52,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       yearly: 0
     },
     features: {
-      maxMembers: 20,
+      maxMembers: -1,
       audioLab: false,
       rehearsals: false,
       customSongs: false,

@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { Calendar, Clock, MapPin, FileText, Sparkles, CheckCircle, ArrowLeft } from 'lucide-react'
 import { UpcomingEventsService } from '../_lib/upcoming-events-service'
 import { useRouter } from 'next/navigation'
+import { useZone } from '@/hooks/useZone'
 
 export default function SubmitEventPage() {
   const router = useRouter()
+  const { currentZone } = useZone()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,12 +25,12 @@ export default function SubmitEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validation
     const newErrors: any = {}
     if (!formData.title.trim()) newErrors.title = 'Title is required'
     if (!formData.date) newErrors.date = 'Date is required'
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
@@ -37,6 +39,12 @@ export default function SubmitEventPage() {
     setSubmitting(true)
 
     try {
+      if (!currentZone?.id) {
+        alert('Please select a zone first')
+        setSubmitting(false)
+        return
+      }
+
       await UpcomingEventsService.createEvent({
         title: formData.title,
         description: formData.description,
@@ -44,11 +52,12 @@ export default function SubmitEventPage() {
         time: formData.time,
         location: formData.location,
         type: formData.type as any,
-        showInCarousel: formData.showInCarousel
+        showInCarousel: formData.showInCarousel,
+        zoneId: currentZone.id
       })
 
       setSubmitted(true)
-      
+
       // Reset form after 3 seconds
       setTimeout(() => {
         setFormData({
@@ -141,11 +150,10 @@ export default function SubmitEventPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g., Annual Conference 2024"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.title 
-                    ? 'border-red-300 focus:ring-red-500' 
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.title
+                    ? 'border-red-300 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-purple-500'
-                }`}
+                  }`}
               />
               {errors.title && (
                 <p className="text-sm text-red-600 mt-1">{errors.title}</p>
@@ -177,11 +185,10 @@ export default function SubmitEventPage() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                    errors.date 
-                      ? 'border-red-300 focus:ring-red-500' 
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.date
+                      ? 'border-red-300 focus:ring-red-500'
                       : 'border-gray-300 focus:ring-purple-500'
-                  }`}
+                    }`}
                 />
                 {errors.date && (
                   <p className="text-sm text-red-600 mt-1">{errors.date}</p>
@@ -279,7 +286,7 @@ export default function SubmitEventPage() {
         {/* Info Box */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            <strong>Note:</strong> Your event will be reviewed and will appear in the calendar shortly. 
+            <strong>Note:</strong> Your event will be reviewed and will appear in the calendar shortly.
             Everyone will be able to see it in the calendar and carousel banner.
           </p>
         </div>

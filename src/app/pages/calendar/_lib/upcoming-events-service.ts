@@ -25,10 +25,10 @@ interface EventsCache {
   timestamp: number
 }
 
-function getEventsCache(): EventsCache | null {
+function getEventsCache(cacheKey: string): EventsCache | null {
   if (typeof window === 'undefined') return null
   try {
-    const cached = localStorage.getItem(EVENTS_CACHE_KEY)
+    const cached = localStorage.getItem(cacheKey)
     if (!cached) return null
     const data: EventsCache = JSON.parse(cached)
     if (Date.now() - data.timestamp > EVENTS_CACHE_TTL) {
@@ -40,11 +40,11 @@ function getEventsCache(): EventsCache | null {
   }
 }
 
-function setEventsCache(data: UpcomingEvent[]) {
+function setEventsCache(cacheKey: string, data: UpcomingEvent[]) {
   if (typeof window === 'undefined') return
   try {
     const cache: EventsCache = { data, timestamp: Date.now() }
-    localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(cache))
+    localStorage.setItem(cacheKey, JSON.stringify(cache))
   } catch {
     // Ignore storage errors
   }
@@ -54,15 +54,16 @@ export class UpcomingEventsService {
   private static COLLECTION = 'upcoming_events'
 
   /**
-   * Get all upcoming events (next 30 days)
-   * OPTIMIZED: Uses caching to reduce Firebase reads
+   * Get all upcoming events (next 30 days) for a specific zone
    */
-  static async getUpcomingEvents(): Promise<UpcomingEvent[]> {
+  static async getUpcomingEvents(zoneId: string): Promise<UpcomingEvent[]> {
     try {
+      if (!zoneId) return []
+
       // Check cache first
-      const cached = getEventsCache()
+      const cacheKey = `${EVENTS_CACHE_KEY}_${zoneId}`
+      const cached = getEventsCache(cacheKey)
       if (cached) {
-        // Filter cached data for upcoming events
         const today = moment()
         const next30Days = moment().add(30, 'days')
         return cached.data.filter(event => {
@@ -71,18 +72,24 @@ export class UpcomingEventsService {
         }).sort((a, b) => moment(a.date).diff(moment(b.date)))
       }
 
-      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION, 200) as unknown as UpcomingEvent[]
-      
+      // Fetch from Firestore with zoneId filter
+      const allEvents = await FirebaseDatabaseService.getCollectionWhere(
+        this.COLLECTION,
+        'zoneId',
+        '==',
+        zoneId
+      ) as unknown as UpcomingEvent[]
+
       if (!allEvents || allEvents.length === 0) {
         return []
       }
-      
-      // Cache all events
-      setEventsCache(allEvents)
+
+      // Cache the results for this zone
+      setEventsCache(cacheKey, allEvents)
 
       const today = moment()
       const next30Days = moment().add(30, 'days')
-      
+
       // Filter for upcoming events only
       const upcomingEvents = allEvents.filter(event => {
         const eventDate = moment(event.date)
@@ -94,7 +101,7 @@ export class UpcomingEventsService {
         return moment(a.date).diff(moment(b.date))
       })
     } catch (error) {
-      console.error('Error fetching upcoming events:', error)
+      console.error(`Error fetching upcoming events for zone ${zoneId}:`, error)
       return []
     }
   }
@@ -102,28 +109,27 @@ export class UpcomingEventsService {
   /**
    * Get events for carousel (showInCarousel = true)
    */
-  static async getCarouselEvents(): Promise<UpcomingEvent[]> {
-    const allEvents = await this.getUpcomingEvents()
+  static async getCarouselEvents(zoneId: string): Promise<UpcomingEvent[]> {
+    const allEvents = await this.getUpcomingEvents(zoneId)
     return allEvents.filter(event => event.showInCarousel)
   }
 
   /**
    * Create a new upcoming event
    */
-  static async createEvent(eventData: Omit<UpcomingEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<UpcomingEvent> {
+  static async createEvent(eventData: Omit<UpcomingEvent, 'id' | 'createdAt' | 'updatedAt'> & { zoneId: string }): Promise<UpcomingEvent> {
     try {
-      // Clean up undefined values - Firebase doesn't accept undefined
       const cleanedData: Record<string, any> = {
         title: eventData.title,
         date: eventData.date,
         type: eventData.type,
         showInCarousel: eventData.showInCarousel,
+        zoneId: eventData.zoneId,
         id: `upcoming-${Date.now()}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-      
-      // Only add optional fields if they have values
+
       if (eventData.description) cleanedData.description = eventData.description
       if (eventData.time) cleanedData.time = eventData.time
       if (eventData.location) cleanedData.location = eventData.location
@@ -131,6 +137,10 @@ export class UpcomingEventsService {
       if (eventData.createdBy) cleanedData.createdBy = eventData.createdBy
 
       await FirebaseDatabaseService.createDocument(this.COLLECTION, cleanedData.id, cleanedData)
+
+      // Invalidate cache
+      localStorage.removeItem(`${EVENTS_CACHE_KEY}_${eventData.zoneId}`)
+
       return cleanedData as UpcomingEvent
     } catch (error) {
       console.error('Error creating upcoming event:', error)
@@ -141,7 +151,7 @@ export class UpcomingEventsService {
   /**
    * Update an existing upcoming event
    */
-  static async updateEvent(eventId: string, eventData: Partial<UpcomingEvent>): Promise<void> {
+  static async updateEvent(eventId: string, eventData: Partial<UpcomingEvent>, zoneId: string): Promise<void> {
     try {
       const updateData = {
         ...eventData,
@@ -149,6 +159,7 @@ export class UpcomingEventsService {
       }
 
       await FirebaseDatabaseService.updateDocument(this.COLLECTION, eventId, updateData)
+      localStorage.removeItem(`${EVENTS_CACHE_KEY}_${zoneId}`)
     } catch (error) {
       console.error('Error updating upcoming event:', error)
       throw error
@@ -158,9 +169,10 @@ export class UpcomingEventsService {
   /**
    * Delete an upcoming event
    */
-  static async deleteEvent(eventId: string): Promise<void> {
+  static async deleteEvent(eventId: string, zoneId: string): Promise<void> {
     try {
       await FirebaseDatabaseService.deleteDocument(this.COLLECTION, eventId)
+      localStorage.removeItem(`${EVENTS_CACHE_KEY}_${zoneId}`)
     } catch (error) {
       console.error('Error deleting upcoming event:', error)
       throw error
@@ -170,16 +182,22 @@ export class UpcomingEventsService {
   /**
    * Get all events (for admin management)
    */
-  static async getAllEvents(): Promise<UpcomingEvent[]> {
+  static async getAllEvents(zoneId: string): Promise<UpcomingEvent[]> {
     try {
-      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION) as unknown as UpcomingEvent[]
-      
-      // Sort by date (newest first)
+      if (!zoneId) return []
+
+      const allEvents = await FirebaseDatabaseService.getCollectionWhere(
+        this.COLLECTION,
+        'zoneId',
+        '==',
+        zoneId
+      ) as unknown as UpcomingEvent[]
+
       return (allEvents || []).sort((a, b) => {
         return moment(b.date).diff(moment(a.date))
       })
     } catch (error) {
-      console.error('Error fetching all events:', error)
+      console.error(`Error fetching all events for zone ${zoneId}:`, error)
       return []
     }
   }

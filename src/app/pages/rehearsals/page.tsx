@@ -10,11 +10,14 @@ import SharedDrawer from '@/components/SharedDrawer'
 import { getMenuItems } from '@/config/menuItems'
 import { useAuth } from '@/hooks/useAuth'
 import { handleAppRefresh } from '@/utils/refresh-utils'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup } from '@/config/zones'
 
 export default function RehearsalsPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
-  const { signOut } = useAuth()
+  const { signOut, profile } = useAuth()
+  const { currentZone, isZoneCoordinator } = useZone()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -85,88 +88,74 @@ export default function RehearsalsPage() {
 
   const menuItems = getMenuItems(handleLogout, handleRefresh)
 
-  const rehearsalOptions = [
-    {
-      id: 'all-ministered-songs',
-      title: 'All Ministered Songs',
-      description: 'Browse all songs from the Master Library',
-      icon: Music,
-      href: '/pages/all-ministered-songs',
-      gradient: 'from-pink-600 via-rose-600 to-red-600',
-      iconBg: 'bg-pink-100',
-      iconColor: 'text-pink-600'
-    },
-    {
-      id: 'ongoing-rehearsals',
-      title: 'Ongoing Rehearsals',
-      description: 'Join active rehearsal sessions',
-      icon: Users,
-      href: '/pages/praise-night?category=ongoing',
-      gradient: 'from-emerald-600 via-green-600 to-lime-600',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600'
-    },
-    {
-      id: 'audiolab',
-      title: 'AudioLab Studio',
-      description: 'Record, mix and practice your vocal parts',
-      icon: Mic,
-      href: '/pages/audiolab',
-      gradient: 'from-indigo-600 via-purple-600 to-pink-600',
-      iconBg: 'bg-indigo-100',
-      iconColor: 'text-indigo-600'
-    },
-    {
-      id: 'vocal-warmups',
-      title: 'Vocal Warm-ups',
-      description: 'Practice vocal exercises and breathing techniques',
-      icon: Music,
-      href: '/pages/vocal-warmups',
-      gradient: 'from-purple-600 via-indigo-600 to-blue-600',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600'
-    },
-    {
-      id: 'pre-rehearsals',
-      title: 'Pre-Rehearsals',
-      description: 'Prepare for upcoming rehearsal sessions',
-      icon: Calendar,
-      href: '/pages/praise-night?category=pre-rehearsal',
-      gradient: 'from-blue-600 via-cyan-600 to-teal-600',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600'
-    },
-    // {
-    //   id: 'rehearsal-reviews',
-    //   title: 'Rehearsal Reviews and Assessments',
-    //   description: 'Review performance and get feedback',
-    //   icon: Clock,
-    //   href: '/pages/praise-night?category=unassigned',
-    //   gradient: 'from-amber-600 via-orange-600 to-red-600',
-    //   iconBg: 'bg-amber-100',
-    //   iconColor: 'text-amber-600'
-    // },
-    // {
-    //   id: 'ministry-review',
-    //   title: 'Ministry Review and Assessment',
-    //   description: 'Comprehensive ministry performance evaluation',
-    //   icon: Users,
-    //   href: '/pages/praise-night?category=unassigned',
-    //   gradient: 'from-indigo-600 via-purple-600 to-pink-600',
-    //   iconBg: 'bg-indigo-100',
-    //   iconColor: 'text-indigo-600'
-    // },
-    // {
-    //   id: 'archives',
-    //   title: 'Archives',
-    //   description: 'Access past rehearsal recordings and materials',
-    //   icon: MapPin,
-    //   href: '/pages/praise-night?category=archive',
-    //   gradient: 'from-rose-600 via-pink-600 to-purple-600',
-    //   iconBg: 'bg-rose-100',
-    //   iconColor: 'text-rose-600'
-    // }
-  ]
+  const rehearsalOptions = useMemo(() => {
+    const options = [
+      {
+        id: 'all-ministered-songs',
+        title: 'All Ministered Songs',
+        description: 'Browse all songs from the Master Library',
+        icon: Music,
+        href: '/pages/all-ministered-songs',
+        gradient: 'from-pink-600 via-rose-600 to-red-600',
+        iconBg: 'bg-pink-100',
+        iconColor: 'text-pink-600'
+      },
+      {
+        id: 'ongoing-rehearsals',
+        title: 'Ongoing Rehearsals',
+        description: 'Join active rehearsal sessions',
+        icon: Users,
+        href: '/pages/praise-night?category=ongoing',
+        gradient: 'from-emerald-600 via-green-600 to-lime-600',
+        iconBg: 'bg-emerald-100',
+        iconColor: 'text-emerald-600'
+      },
+      {
+        id: 'audiolab',
+        title: 'AudioLab Studio',
+        description: 'Record, mix and practice your vocal parts',
+        icon: Mic,
+        href: '/pages/audiolab',
+        gradient: 'from-indigo-600 via-purple-600 to-pink-600',
+        iconBg: 'bg-indigo-100',
+        iconColor: 'text-indigo-600'
+      },
+      {
+        id: 'vocal-warmups',
+        title: 'Vocal Warm-ups',
+        description: 'Practice vocal exercises and breathing techniques',
+        icon: Music,
+        href: '/pages/vocal-warmups',
+        gradient: 'from-purple-600 via-indigo-600 to-blue-600',
+        iconBg: 'bg-purple-100',
+        iconColor: 'text-purple-600'
+      },
+      {
+        id: 'pre-rehearsals',
+        title: 'Pre-Rehearsals',
+        description: 'Prepare for upcoming rehearsal sessions',
+        icon: Calendar,
+        href: '/pages/praise-night?category=pre-rehearsal',
+        gradient: 'from-blue-600 via-cyan-600 to-teal-600',
+        iconBg: 'bg-blue-100',
+        iconColor: 'text-blue-600'
+      }
+    ];
+
+    const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
+
+    return options.filter(option => {
+      if (option.id === 'pre-rehearsals') {
+        // Special logic for Pre-Rehearsals:
+        // 1. Hide for HQ
+        if (isHQ) return false;
+
+        // 2. For other zones, visible IF coordinator OR granted access
+        return isZoneCoordinator || profile?.can_access_pre_rehearsal === true;
+      }
+      return true;
+    });
+  }, [currentZone, isZoneCoordinator, profile]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">

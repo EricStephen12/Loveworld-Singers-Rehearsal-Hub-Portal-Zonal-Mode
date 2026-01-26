@@ -43,13 +43,16 @@ export default function CalendarSection() {
   })
 
   useEffect(() => {
-    loadEvents()
-  }, [])
+    if (currentZone?.id) {
+      loadEvents()
+    }
+  }, [currentZone?.id])
 
   const loadEvents = async () => {
+    if (!currentZone?.id) return
     setLoading(true)
     try {
-      const allEvents = await UpcomingEventsService.getAllEvents()
+      const allEvents = await UpcomingEventsService.getAllEvents(currentZone.id)
       setEvents(allEvents)
     } catch (error) {
       console.error('Error loading events:', error)
@@ -121,10 +124,13 @@ export default function CalendarSection() {
 
 
       if (editingEvent) {
-        await UpcomingEventsService.updateEvent(editingEvent.id, eventData)
+        await UpcomingEventsService.updateEvent(editingEvent.id, eventData, currentZone!.id)
         showToast('Event updated successfully!', 'success')
       } else {
-        const result = await UpcomingEventsService.createEvent(eventData)
+        const result = await UpcomingEventsService.createEvent({
+          ...eventData,
+          zoneId: currentZone!.id
+        })
 
         // Trigger immediate FCM for new events
         try {
@@ -152,8 +158,6 @@ export default function CalendarSection() {
 
         showToast('Event created successfully!', 'success')
       }
-
-      localStorage.removeItem('lwsrh-upcoming-events-cache')
 
       setShowModal(false)
       setEditingEvent(null)
@@ -187,8 +191,7 @@ export default function CalendarSection() {
     if (!eventToDelete) return
 
     try {
-      await UpcomingEventsService.deleteEvent(eventToDelete.id)
-      localStorage.removeItem('lwsrh-upcoming-events-cache')
+      await UpcomingEventsService.deleteEvent(eventToDelete.id, currentZone!.id)
       showToast('Event deleted successfully!', 'success')
       setShowDeleteDialog(false)
       setEventToDelete(null)
@@ -203,8 +206,7 @@ export default function CalendarSection() {
     try {
       await UpcomingEventsService.updateEvent(event.id, {
         showInCarousel: !event.showInCarousel
-      })
-      localStorage.removeItem('lwsrh-upcoming-events-cache')
+      }, currentZone!.id)
       showToast(event.showInCarousel ? 'Hidden from carousel' : 'Added to carousel', 'success')
       loadEvents()
     } catch (error) {
