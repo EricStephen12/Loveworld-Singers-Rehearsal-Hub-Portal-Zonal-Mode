@@ -5,7 +5,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import {
   Users, Crown, Music, Calendar, TrendingUp,
   Link as LinkIcon, Copy, CheckCircle, CreditCard,
-  Shield, BarChart3
+  Shield, BarChart3, Upload
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
@@ -20,6 +20,7 @@ interface DashboardCache {
   members: any[];
   totalSongs: number;
   totalPraiseNights: number;
+  pendingSubmissions: number;
   timestamp: number;
   zoneId: string;
 }
@@ -45,6 +46,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
   const [inviteLink, setInviteLink] = useState('')
   const [totalSongs, setTotalSongs] = useState(0)
   const [totalPraiseNights, setTotalPraiseNights] = useState(0)
+  const [pendingSubmissions, setPendingSubmissions] = useState(0)
 
   const isHQ = isHQGroup(currentZone?.id)
 
@@ -63,6 +65,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
         setMembers(cached!.members);
         setTotalSongs(cached!.totalSongs);
         setTotalPraiseNights(cached!.totalPraiseNights);
+        setPendingSubmissions(cached!.pendingSubmissions);
         // Still generate invite link (it's local, no Firebase read)
         const link = ZoneInvitationService.getZoneSignupLink(currentZone.invitationCode);
         setInviteLink(link);
@@ -75,6 +78,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
         setMembers(cached.members);
         setTotalSongs(cached.totalSongs);
         setTotalPraiseNights(cached.totalPraiseNights);
+        setPendingSubmissions(cached.pendingSubmissions);
         const link = ZoneInvitationService.getZoneSignupLink(currentZone.invitationCode);
         setInviteLink(link);
         // Don't show loading skeleton if we have stale data
@@ -157,11 +161,17 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
         setTotalPraiseNights(praiseNightsCount)
       }
 
+      // Load submitted songs count
+      const { getPendingSongs } = await import('@/lib/song-submission-service')
+      const pendingSongs = await getPendingSongs(currentZone.id, isHQZone)
+      setPendingSubmissions(pendingSongs.length)
+
       // Cache the results
       dashboardCache.set(cacheKey, {
         members: zoneMembers,
         totalSongs: songsCount,
         totalPraiseNights: praiseNightsCount,
+        pendingSubmissions: pendingSongs.length,
         timestamp: Date.now(),
         zoneId: currentZone.id
       });
@@ -264,6 +274,24 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
               <p className="text-2xl md:text-3xl font-bold text-gray-900">{totalPraiseNights}</p>
               <p className="text-xs md:text-sm text-gray-500 mt-2">{isHQ ? 'All programs' : 'Active programs'}</p>
             </div>
+
+            {/* Pending Submissions */}
+            <button
+              onClick={() => onSectionChange?.('Submitted Songs')}
+              className="flex-shrink-0 w-[160px] lg:w-auto bg-white rounded-2xl shadow-sm lg:shadow-lg p-4 lg:p-6 border border-gray-100 lg:border-l-4 lg:border-l-red-500 lg:border-t-0 lg:border-r-0 lg:border-b-0 text-left hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${pendingSubmissions > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
+                  <Upload className={`w-6 h-6 ${pendingSubmissions > 0 ? 'text-red-600' : 'text-gray-400'}`} />
+                </div>
+                {pendingSubmissions > 0 && (
+                  <TrendingUp className="w-5 h-5 text-red-500" />
+                )}
+              </div>
+              <p className="text-gray-600 text-xs md:text-sm mb-1">Pending Songs</p>
+              <p className={`text-2xl md:text-3xl font-bold ${pendingSubmissions > 0 ? 'text-red-600' : 'text-gray-900'}`}>{pendingSubmissions}</p>
+              <p className="text-xs md:text-sm text-gray-500 mt-2">Needs review</p>
+            </button>
           </div>
 
           {/* Invite Link Card - Clean mobile design */}

@@ -127,16 +127,20 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
     if (!currentZone?.id) return
 
     const submissionsRef = collection(db, 'submitted_songs')
+
+    // Simplify query to avoid composite index requirements
+    // loadSongs() handles sorting and filtering client-side for 100% reliability
     const q = isHQ
-      ? query(submissionsRef, orderBy('createdAt', 'desc'))
-      : query(submissionsRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'))
+      ? query(submissionsRef)
+      : query(submissionsRef, where('zoneId', '==', currentZone.id))
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Only refresh if there are actual changes (not just metadata)
-      if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
+      // Refresh data on changes
+      if (!snapshot.metadata.hasPendingWrites) {
         loadSongs()
       }
     }, (error) => {
+      console.error('[SubmittedSongs] Real-time listener error:', error)
     })
 
     return () => unsubscribe()

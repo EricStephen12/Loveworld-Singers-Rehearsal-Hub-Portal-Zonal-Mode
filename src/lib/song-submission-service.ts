@@ -164,50 +164,40 @@ async function createSubmissionNotification(
 export async function getAllSubmittedSongs(zoneId?: string, isHQGroup?: boolean): Promise<SongSubmission[]> {
   try {
     const submissionsRef = collection(db, SUBMITTED_SONGS_COLLECTION)
+    const { BOSS_ZONE_ID, HQ_GROUP_IDS } = await import('@/config/zones')
 
-    let q
-    if (isHQGroup && zoneId) {
-      // HQ users: show ALL submissions from ANY HQ zone (C, D, E all see each other's submissions)
-      // Get all submissions and filter client-side for HQ zones
-      const { HQ_GROUP_IDS, BOSS_ZONE_ID } = await import('@/config/zones')
-      const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID]
+    // 1. Get all submissions (ordered by creation date if possible, but safe fallback)
+    // We'll fetch and sort client-side to be 100% safe from missing index errors
+    const snapshot = await getDocs(query(submissionsRef))
+    const allSubmissions = snapshot.docs.map((docSnap) => {
+      const data = docSnap.data()
+      return {
+        id: docSnap.id,
+        ...data,
+        adminSeen: data.adminSeen || false,
+        zoneId: data.zoneId || 'unknown',
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
+      } as SongSubmission
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-      // Get all submissions
-      const allSnapshot = await getDocs(query(submissionsRef, orderBy('createdAt', 'desc')))
-      const allSubmissions = allSnapshot.docs.map((docSnap) => {
-        const data = docSnap.data()
-        return {
-          id: docSnap.id,
-          ...data,
-          adminSeen: data.adminSeen || false,
-          zoneId: data.zoneId || 'unknown',
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
-        } as SongSubmission
-      })
+    // 2. Filter based on user's zone and role
+    if (!zoneId) return []
 
-      // Filter to only HQ zone submissions (all HQ zones see each other's submissions)
-      return allSubmissions.filter(sub => hqZoneIds.includes(sub.zoneId))
-    } else if (zoneId) {
-      // Regular zone: show ONLY submissions for this specific zone (Zone A only sees Zone A, Zone B only sees Zone B)
-      q = query(submissionsRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'))
-      const snapshot = await getDocs(q)
-
-      return snapshot.docs.map((docSnap) => {
-        const data = docSnap.data()
-        return {
-          id: docSnap.id,
-          ...data,
-          adminSeen: data.adminSeen || false,
-          zoneId: data.zoneId || 'unknown',
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
-        } as SongSubmission
-      })
-    } else {
-      // No zone specified: return empty (shouldn't happen)
-      return []
+    // Super Admin / Boss: See EVERYTHING
+    if (zoneId === BOSS_ZONE_ID) {
+      return allSubmissions
     }
+
+    // HQ Group Manager: See all HQ group submissions
+    if (isHQGroup) {
+      const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID]
+      return allSubmissions.filter(sub => hqZoneIds.includes(sub.zoneId))
+    }
+
+    // Regular Zonal Manager: See only their zone
+    return allSubmissions.filter(sub => sub.zoneId === zoneId)
+
   } catch (error) {
     console.error('Error getting submitted songs:', error)
     return []
@@ -216,47 +206,8 @@ export async function getAllSubmittedSongs(zoneId?: string, isHQGroup?: boolean)
 
 export async function getPendingSongs(zoneId?: string, isHQGroup?: boolean): Promise<SongSubmission[]> {
   try {
-    const submissionsRef = collection(db, SUBMITTED_SONGS_COLLECTION)
-
-    let q
-    if (isHQGroup && zoneId) {
-      // HQ users: show ALL pending submissions from ANY HQ zone
-      const { HQ_GROUP_IDS, BOSS_ZONE_ID } = await import('@/config/zones')
-      const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID]
-
-      // Get all pending submissions
-      const allSnapshot = await getDocs(query(submissionsRef, where('status', '==', 'pending'), orderBy('createdAt', 'desc')))
-      const allSubmissions = allSnapshot.docs.map((docSnap) => {
-        const data = docSnap.data()
-        return {
-          id: docSnap.id,
-          ...data,
-          zoneId: data.zoneId || 'unknown',
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
-        } as SongSubmission
-      })
-
-      // Filter to only HQ zone submissions
-      return allSubmissions.filter(sub => hqZoneIds.includes(sub.zoneId))
-    } else if (zoneId) {
-      // Regular zone: show ONLY pending submissions for this specific zone
-      q = query(submissionsRef, where('status', '==', 'pending'), where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'))
-      const snapshot = await getDocs(q)
-
-      return snapshot.docs.map((docSnap) => {
-        const data = docSnap.data()
-        return {
-          id: docSnap.id,
-          ...data,
-          zoneId: data.zoneId || 'unknown',
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt || new Date().toISOString(),
-        } as SongSubmission
-      })
-    } else {
-      return []
-    }
+    const allSubmitted = await getAllSubmittedSongs(zoneId, isHQGroup)
+    return allSubmitted.filter(s => s.status === 'pending')
   } catch (error) {
     console.error('Error getting pending songs:', error)
     return []
@@ -530,7 +481,9 @@ export async function getUserSubmissions(userId: string): Promise<SongSubmission
 export async function getUserSubmissionsByEmail(userEmail: string): Promise<SongSubmission[]> {
   try {
     if (!userEmail) return []
-    const allSubmissions = await getAllSubmittedSongs(undefined, true)
+    const { BOSS_ZONE_ID } = await import('@/config/zones')
+    // Get all submissions using the BOSS_ZONE_ID to bypass any filtering in getAllSubmittedSongs
+    const allSubmissions = await getAllSubmittedSongs(BOSS_ZONE_ID, true)
     const lower = userEmail.toLowerCase()
     return allSubmissions.filter((sub) => (sub.submittedBy?.email || '').toLowerCase() === lower)
   } catch (error) {
