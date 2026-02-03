@@ -51,7 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    return unsubscribe
+    // Failsafe: If Firebase takes too long (e.g. network issues), stop loading
+    // This allows the app to proceed (likely to auth page) instead of hanging
+    const safetyTimeout = setTimeout(() => {
+      setLoading((currentLoading) => {
+        if (currentLoading) {
+          console.warn('⚠️ AuthContext: Firebase init timeout - forcing loading=false')
+          return false
+        }
+        return currentLoading
+      })
+    }, 5000)
+
+    return () => {
+      unsubscribe()
+      clearTimeout(safetyTimeout)
+    }
   }, [])
 
   const handleSignOut = async () => {

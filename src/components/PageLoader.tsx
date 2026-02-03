@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
 import { usePathname, useRouter } from 'next/navigation';
@@ -15,13 +15,18 @@ export function PageLoader({ children }: PageLoaderProps) {
   const { currentZone, isLoading: zoneLoading } = useZone();
   const pathname = usePathname();
   const router = useRouter();
-  // Optimize: Initial state based on cache to prevent flicker
-  const [isReady, setIsReady] = useState(() => {
-    if (typeof window === 'undefined') return false;
+  // Optimize: Initial state MUST match server (false) to prevent hydration mismatch
+  const [isReady, setIsReady] = useState(false);
 
-    // Auth cache
-    const hasCachedUser = localStorage.getItem('lwsrh_has_user') === 'true';
-    const isPublic = [
+  // Check cache immediately on mount
+  useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+
+    // Check if we are already ready (e.g. from a previous nav)
+    if (isReady) return;
+
+    const publicPathsToCheck = [
       '/auth',
       '/',
       '/splash',
@@ -30,27 +35,20 @@ export function PageLoader({ children }: PageLoaderProps) {
       '/qr-code',
       '/support',
       '/pages/support'
-    ].includes(window.location.pathname);
+    ];
 
-    // Zone cache - only verify if not on a public path
+    // Auth cache
+    const hasCachedUser = localStorage.getItem('lwsrh_has_user') === 'true';
+    const isPublic = publicPathsToCheck.includes(window.location.pathname);
+
+
     if (!isPublic && hasCachedUser) {
-      const hasZoneCache = localStorage.getItem('lwsrh-zone-cache-v6');
-      // ✅ CRITICAL FIX: Validate that cache is actually valid JSON, not just exists
-      if (hasZoneCache) {
-        try {
-          const parsed = JSON.parse(hasZoneCache);
-          return !!parsed?.id; // Only trust cache if it has a valid zone ID
-        } catch (e) {
-          console.warn('⚠️ Invalid zone cache detected, clearing...');
-          localStorage.removeItem('lwsrh-zone-cache-v6');
-          return false;
-        }
-      }
-      return false;
+      setIsReady(true);
+      return;
+    } else if (isPublic) {
+      setIsReady(true);
     }
-
-    return isPublic;
-  });
+  }, []);
 
   const lastPathname = useRef<string | null>(null);
 
@@ -72,44 +70,68 @@ export function PageLoader({ children }: PageLoaderProps) {
     }
   }, [pathname]);
 
-  // ✅ CRITICAL FIX: Add timeout to prevent infinite loading from stale cache
+  // Main readiness effect
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!isReady && !authLoading) {
-        console.warn('⏱️ PageLoader timeout - forcing ready state to prevent infinite loading');
-        setIsReady(true);
+    // If we are already ready, do nothing (unless path changed to a protected route while logged out)
+    if (isReady && pathname === lastPathname.current) {
+      // Double check: if we are ready but lost auth on a private route, redirect
+      if (!authLoading && !user && !isPublicPath) {
+        router.replace('/auth');
       }
-    }, 5000); // 5 second timeout
+      return;
+    }
 
-    return () => clearTimeout(timeout);
-  }, [isReady, authLoading]);
-
-  useEffect(() => {
-    // If we're already ready and the path hasn't changed, don't do anything
-    // This allows the initial state from cache to stick
-    if (isReady && pathname === lastPathname.current) return;
-
+    // Still waiting for critical auth state?
     if (authLoading) return;
 
-    if (!user?.uid && !isPublicPath) {
+    // Case 1: Public Path - Always allow
+    if (isPublicPath) {
+      if (!isReady) setIsReady(true);
+      return;
+    }
+
+    // Case 2: Protected Path & No User - Redirect
+    if (!user) {
       router.replace('/auth');
       return;
     }
 
-    if (user?.uid && !zoneLoading) {
-      setIsReady(true);
-      return;
+    // Case 3: Protected Path & User Exists
+    // Wait for zone to load if possible, but don't block forever if user is valid
+    if (user && (!zoneLoading || IsZoneCacheValid())) {
+      if (!isReady) setIsReady(true);
     }
+  }, [authLoading, user, zoneLoading, pathname, isReady, isPublicPath, router]);
 
-    if (!user?.uid && isPublicPath) {
-      setIsReady(true);
-    }
-  }, [authLoading, user?.uid, zoneLoading, pathname, isReady, isPublicPath, router]);
+  // Timeout Fallback: If 5 seconds pass and we're still not ready, force it.
+  // This saves users from being stuck on the splash screen due to network hangs.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isReady) {
+        console.warn('⏱️ PageLoader timeout - resolving stuck state');
+        if (!user && !isPublicPath) {
+          router.replace('/auth');
+        } else {
+          setIsReady(true);
+        }
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isReady, user, isPublicPath, router]);
+
+  // Helper to check if we have a valid zone cache to speed up perceived loading
+  const IsZoneCacheValid = () => {
+    if (typeof window === 'undefined') return false;
+    const cache = localStorage.getItem('lwsrh-zone-cache-v6');
+    return !!cache;
+  };
 
   if (!isReady) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-50">
-        <CustomLoader message="Loading..." />
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+        <CustomLoader message="" />
+        <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Initializing...</p>
       </div>
     );
   }

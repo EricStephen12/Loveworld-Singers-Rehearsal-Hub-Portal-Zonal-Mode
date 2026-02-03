@@ -12,14 +12,19 @@ export class NavigationManager {
     // for simple state restoration if needed.
     if (typeof window !== 'undefined') {
       const currentUrl = window.location.pathname + window.location.search
-      localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
+      // Don't overwrite useful history with the root path or auth path
+      if (currentUrl !== '/' && !currentUrl.startsWith('/auth')) {
+        localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
+      }
     }
 
     // Listen for visibility changes to update last path
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         const currentUrl = window.location.pathname + window.location.search
-        localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
+        if (currentUrl !== '/' && !currentUrl.startsWith('/auth')) {
+          localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
+        }
       }
     })
   }

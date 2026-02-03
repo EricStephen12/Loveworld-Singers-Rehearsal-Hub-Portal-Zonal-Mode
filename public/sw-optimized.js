@@ -1,6 +1,6 @@
 // Optimized Service Worker for Fast First Load
-const CACHE_NAME = 'lwsrh-v2';
-const DATA_CACHE_NAME = 'lwsrh-data-v2';
+const CACHE_NAME = 'lwsrh-v3';
+const DATA_CACHE_NAME = 'lwsrh-data-v3';
 
 // MINIMAL critical files for first load - cache progressively
 const CRITICAL_CACHE_URLS = [
@@ -151,16 +151,14 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache
-        // Return offline page if available ONLY for navigation requests
         if (request.mode === 'navigate') {
           return caches.match('/');
         }
         return null;
       })
-)
+  )
 });
- 
+
 
 // Background sync for offline actions (optional)
 self.addEventListener('sync', (event) => {

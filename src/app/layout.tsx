@@ -39,7 +39,13 @@ import { PageLoader } from '@/components/PageLoader'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-const APP_VERSION = '3.0.0'; 
+// Side effects moved to AppBootstrap
+// import GlobalMiniPlayer from '@/components/GlobalMiniPlayer'
+
+// Use system fonts for faster loading
+
+// Static version for PWA stability (only change when manifest actually changes)
+const APP_VERSION = '3.0.0'; // ✅ Updated for instant loading optimizations
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
