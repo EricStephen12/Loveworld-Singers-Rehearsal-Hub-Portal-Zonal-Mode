@@ -27,6 +27,27 @@ export class NavigationManager {
         }
       }
     })
+
+    // Track internal navigation depth
+    if (typeof window !== 'undefined') {
+      // Initialize or increment depth on load
+      const isRevisit = sessionStorage.getItem('lwsrh_is_revisit')
+      if (!isRevisit) {
+        sessionStorage.setItem('lwsrh_nav_depth', '0')
+        sessionStorage.setItem('lwsrh_is_revisit', 'true')
+      }
+
+      // Hook into Next.js navigation if possible, but for now we rely on explicit calls
+      // or simple history length checks which we are enhancing below.
+    }
+  }
+
+  // Called manually by app components when they navigate deeper
+  // This helps us build a reliable "app stack" even if browser history is complex
+  static push() {
+    if (typeof window === 'undefined') return
+    const depth = parseInt(sessionStorage.getItem('lwsrh_nav_depth') || '0')
+    sessionStorage.setItem('lwsrh_nav_depth', (depth + 1).toString())
   }
 
   static getLastPath(): string {
@@ -63,49 +84,65 @@ export class NavigationManager {
 
   /**
    * Robust Native Back Navigation
-   * 1. Trusts window.history.length > 1 means we can go back.
-   * 2. If history is empty (length <= 1), we fallback safely to avoid App Exit.
-   * 3. Handles modal closing (query params) effectively.
+   * 1. Check internal depth: If we know we pushed > 0 times, we can safely pop.
+   * 2. Check history length: If > 1, arguably safe, but "revisit" can trick this.
+   * 3. Fallback: If unsure, go to logical parent / fallback.
    */
   static handleBack(router: any, fallbackUrl?: string) {
     if (typeof window === 'undefined') return;
 
-    const hasHistory = window.history.length > 1;
-    const hasQueryParams = window.location.search.length > 0;
+    // 1. Internal Depth Check (Best for SPA feeling)
+    const currentDepth = parseInt(sessionStorage.getItem('lwsrh_nav_depth') || '0');
 
-    // 1. Standard Back: If we have history, let browser handle it.
-    if (hasHistory) {
+    // We strictly use browser history now, but we check if we have "room" to go back
+    const hasHistory = window.history.length > 2; // >2 is safer for "revisits" where 1 is current, 0 is unavailable
+    const canGoBack = currentDepth > 0 || hasHistory;
+
+    // Decrement depth if we are going back
+    if (currentDepth > 0) {
+      sessionStorage.setItem('lwsrh_nav_depth', (currentDepth - 1).toString());
+    }
+
+    if (canGoBack) {
       router.back();
       return;
     }
 
-    // 2. Empty History Edge Cases (Deep Links / Refresh):
+    // 2. Fallback needed
+    if (fallbackUrl) {
+      router.replace(fallbackUrl);
+      return;
+    }
 
-    // Case A: We are in a "modal" state (driven by query params like ?song=...)
-    // Action: Stay on page, but strip params to "close" the modal.
-    if (hasQueryParams) {
-      const currentPath = window.location.pathname;
+    // 3. Deduction Logic
+    const currentPath = window.location.pathname;
+
+    // Close modal query params first?
+    if (window.location.search.length > 0) {
       router.replace(currentPath);
       return;
     }
 
-    // Case B: We are on a main page with no history.
-    // Action: Go to explicit fallback or logical parent.
-    if (fallbackUrl) {
-      router.replace(fallbackUrl);
+    // Path deduction: /pages/section/item -> /pages/section
+    const parts = currentPath.split('/').filter(Boolean);
+    if (parts.length > 1) {
+      const parentPath = '/' + parts.slice(0, -1).join('/');
+      router.replace(parentPath);
     } else {
-      // Logical parent fallback logic
-      const currentPath = window.location.pathname;
-      const parts = currentPath.split('/').filter(Boolean);
+      router.replace(this.getSafeFallback());
+    }
+  }
 
-      if (parts.length > 1) {
-        // e.g. /pages/praise-night -> /pages
-        const parentPath = '/' + parts.slice(0, -1).join('/');
-        router.replace(parentPath);
-      } else {
-        // Root or single level -> Go Home/Safe Fallback
-        router.replace(this.getSafeFallback());
-      }
+  /**
+   * Externally update the last path (e.g. from a router listener)
+   * This ensures we track client-side navigations too, not just initial loads
+   */
+  static saveCurrentPath(path: string) {
+    if (typeof window === 'undefined') return
+
+    // Don't save root, auth, or transitions
+    if (path !== '/' && !path.startsWith('/auth') && !path.includes('_next')) {
+      localStorage.setItem(this.LAST_PATH_KEY, path)
     }
   }
 }

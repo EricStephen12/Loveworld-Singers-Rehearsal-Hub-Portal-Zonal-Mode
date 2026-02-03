@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { MasterLibraryService, MasterSong, MasterProgram } from '@/lib/master-library-service'
 import { useAudio } from '@/contexts/AudioContext'
+import { NavigationManager } from '@/utils/navigation'
 import { MasterSongDetailSheet } from '@/components/admin/MasterSongDetailSheet'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { useZone } from '@/hooks/useZone'
@@ -200,7 +201,8 @@ export default function AllMinisteredSongsPage() {
 
 
   const handleBack = () => {
-    router.push('/pages/rehearsals')
+    // Robust back navigation with fallback
+    NavigationManager.handleBack(router, '/pages/rehearsals')
   }
 
   const handlePlayClick = (e: React.MouseEvent, song: MasterSong) => {

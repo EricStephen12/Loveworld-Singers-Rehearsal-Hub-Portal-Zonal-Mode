@@ -11,7 +11,7 @@ import { FirebaseDatabaseService } from "@/lib/firebase-database";
 import { FirebaseCommentService } from "@/lib/firebase-comment-service";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
 import { useRealtimeSongData } from "@/hooks/useRealtimeSongData";
-import { firebaseLowDataService } from "@/lib/firebase-low-data-service";
+import { NavigationManager } from "@/utils/navigation";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -234,6 +234,9 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         // Use encodeURIComponent to handle special characters in song titles
         // Add program=ongoing so LibraryView knows to switch tabs
         router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(currentSongData.title)}`);
+
+        // Push depth since we are navigating deeper
+        NavigationManager.push();
 
         // IMPORTANT: We do NOT call onClose() here.
         // Calling onClose() triggers a router.back() in many layouts (like PraiseNightPage),

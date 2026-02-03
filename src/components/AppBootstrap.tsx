@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { PerformanceOptimizer } from '@/lib/performance-optimizer';
 import { ViewportHeightFix } from '@/utils/viewport-height-fix';
 import { NavigationManager } from '@/utils/navigation';
@@ -9,6 +10,17 @@ import { DeviceSafeArea } from '@/utils/device-safe-area';
 import { lowDataOptimizer } from '@/utils/low-data-optimizer';
 
 export default function AppBootstrap() {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Track navigation changes to save session state
+    useEffect(() => {
+        if (pathname) {
+            const fullPath = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+            NavigationManager.saveCurrentPath(fullPath);
+        }
+    }, [pathname, searchParams]);
+
     useEffect(() => {
         // Client-side only initializations
         PerformanceOptimizer.autoOptimize();
