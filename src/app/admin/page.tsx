@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import { FileText } from "lucide-react";
@@ -38,10 +38,13 @@ const CalendarSection = dynamic(() => import('../../components/admin/CalendarSec
 const ActivityLogsPage = dynamic(() => import('../../components/admin/ActivityLogsPage'), { ssr: false });
 const SubmittedSongsPage = dynamic(() => import('../pages/admin/submitted-songs/page'), { ssr: false });
 const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
+const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
+const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 export default function AdminPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, profile, isLoading: authLoading } = useAuth()
 
   // Hydration guard - must be the first state
@@ -98,6 +101,8 @@ export default function AdminPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingPageCategory, setEditingPageCategory] = useState<any | null>(null);
   const [editingSong, setEditingSong] = useState<PraiseNightSong | null>(null);
+  const [showCategoryOrderModal, setShowCategoryOrderModal] = useState(false);
+  const [showPageCategoryOrderModal, setShowPageCategoryOrderModal] = useState(false);
 
   // Form states
   const [newPageName, setNewPageName] = useState('');
@@ -161,6 +166,60 @@ export default function AdminPage() {
       setZoneId(currentZone.id);
     }
   }, [currentZone, setZoneId]);
+
+  // 🔄 Restore Admin state from URL on mount/change
+  useEffect(() => {
+    const sectionParam = searchParams.get('section');
+    const pageIdParam = searchParams.get('pageId');
+    const categoryParam = searchParams.get('category');
+
+    if (sectionParam && sectionParam !== activeSection) {
+      const validSections = [
+        'Dashboard', 'Pages', 'Categories', 'Media', 'Library',
+        'Members', 'Notifications', 'Sub-Groups', 'Analytics',
+        'Calendar', 'Activity Logs', 'Submitted Songs'
+      ];
+      if (validSections.includes(sectionParam)) {
+        setActiveSection(sectionParam);
+      }
+    }
+
+    if (pageIdParam && (!selectedPage || selectedPage.id !== pageIdParam) && allPraiseNights.length > 0) {
+      const page = allPraiseNights.find(p => p.id === pageIdParam);
+      if (page) {
+        setSelectedPage(page);
+      }
+    }
+
+    if (categoryParam && categoryParam !== selectedCategory) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams, allPraiseNights]);
+
+  // 💾 Save Admin state to URL when changed
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('section', activeSection);
+
+    if (selectedPage) {
+      params.set('pageId', selectedPage.id);
+    } else {
+      params.delete('pageId');
+    }
+
+    if (selectedCategory) {
+      params.set('category', selectedCategory);
+    } else {
+      params.delete('category');
+    }
+
+    const newUrl = `/admin?${params.toString()}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (newUrl !== currentUrl) {
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [activeSection, selectedPage, selectedCategory, router, searchParams]);
 
 
   const [loadingSongs, setLoadingSongs] = useState(false);
@@ -741,6 +800,58 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdatePageCategoryOrder = async (updatedCategories: any[]) => {
+    if (!currentZone) return;
+
+    try {
+      const result = await ZoneDatabaseService.updatePageCategoryOrder(currentZone.id, updatedCategories);
+
+      if (result.success) {
+        addToast({
+          type: 'success',
+          message: 'Page types reordered successfully'
+        });
+
+        // Refresh categories
+        const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
+        setPageCategories(categories);
+        refreshData();
+      } else {
+        throw new Error('Failed to update order');
+      }
+    } catch (error) {
+      console.error('Failed to update page category order:', error);
+      addToast({
+        type: 'error',
+        message: 'Failed to save order'
+      });
+    }
+  };
+
+
+
+  const handleUpdateCategoryOrder = async (pageId: string, categoryOrder: string[]) => {
+    if (!currentZone) return;
+    try {
+      const result = await ZoneDatabaseService.updatePraiseNight(pageId, { categoryOrder }, currentZone.id);
+      if (result.success) {
+        addToast({
+          type: 'success',
+          message: 'Category order saved successfully'
+        });
+        refreshData();
+      } else {
+        throw new Error('Failed to save order');
+      }
+    } catch (error) {
+      console.error('Error saving order:', error);
+      addToast({
+        type: 'error',
+        message: 'Failed to save order'
+      });
+    }
+  };
+
   const handleEditPageCategory = (pageCategory: any) => {
     setEditingPageCategory(pageCategory);
     setNewPageCategoryName(pageCategory.name);
@@ -1162,8 +1273,18 @@ export default function AdminPage() {
         throw new Error('Invalid song ID for active status update');
       }
 
+      console.log('🎯 [Admin] Toggling active status:', {
+        songId: song.id,
+        songTitle: song.title,
+        currentActive: (song as any).isActive,
+        newActive: newActiveStatus,
+        praiseNightId: song.praiseNightId,
+        zoneId: currentZone?.id
+      });
+
       const result = await PraiseNightSongsService.updateSong(song.id, {
-        isActive: newActiveStatus
+        isActive: newActiveStatus,
+        praiseNightId: song.praiseNightId // ✅ CRITICAL: Include praiseNightId for metadata trigger
       }, currentZone?.id);
 
       if (result.success) {
@@ -1511,6 +1632,8 @@ export default function AdminPage() {
               setShowPageModal={setShowPageModal}
               editingPage={editingPage}
               setEditingPage={setEditingPage}
+              showCategoryOrderModal={showCategoryOrderModal}
+              setShowCategoryOrderModal={setShowCategoryOrderModal}
               newPageName={newPageName}
               setNewPageName={setNewPageName}
               newPageDate={newPageDate}
@@ -1552,8 +1675,20 @@ export default function AdminPage() {
               handleToggleSongActive={handleToggleSongActive}
               allCategories={allCategories}
               addToast={addToast}
+              pageCategories={pageCategories}
+              showPageCategoryOrderModal={showPageCategoryOrderModal}
+              setShowPageCategoryOrderModal={setShowPageCategoryOrderModal}
+              handleUpdatePageCategoryOrder={handleUpdatePageCategoryOrder}
             />
           )}
+
+          {/* Page Category Order Modal */}
+          <PageCategoryOrderModal
+            isOpen={showPageCategoryOrderModal}
+            onClose={() => setShowPageCategoryOrderModal(false)}
+            categories={pageCategories}
+            onUpdate={handleUpdatePageCategoryOrder}
+          />
 
           {activeSection === 'Categories' && !isRestrictedAdmin && (
             <CategoriesSection
@@ -1717,6 +1852,14 @@ export default function AdminPage() {
           confirmDeleteCategory={confirmDeleteCategory}
           cancelDeleteCategory={cancelDeleteCategory}
           pageCategories={pageCategories}
+        />
+
+        <CategoryOrderModal
+          isOpen={showCategoryOrderModal}
+          onClose={() => setShowCategoryOrderModal(false)}
+          praiseNight={selectedPage}
+          songs={allSongs}
+          onUpdate={handleUpdateCategoryOrder}
         />
 
         {/* Mobile Bottom Navigation */}

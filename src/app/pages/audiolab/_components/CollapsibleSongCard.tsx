@@ -15,7 +15,6 @@ export interface CollapsibleSongCardProps {
   onPlayPart: (part: VocalPart) => void;
   onPause: () => void;
   onSeek: (time: number) => void;
-  onStartKaraoke?: () => void;
   isBufferLoading?: boolean;
   loadingTarget?: string | null;
 }
@@ -66,7 +65,6 @@ export function CollapsibleSongCard({
   onPlayPart,
   onPause,
   onSeek,
-  onStartKaraoke,
   isBufferLoading,
   loadingTarget,
 }: CollapsibleSongCardProps) {
@@ -138,21 +136,6 @@ export function CollapsibleSongCard({
         className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
       >
         <div className="px-3 pb-4 pt-1 border-t border-white/5">
-          {/* Karaoke Button - Only visible when expanded */}
-          {onStartKaraoke && (
-            <div className="mb-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStartKaraoke();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm transition-colors shadow-lg shadow-pink-500/20"
-              >
-                <Mic size={18} />
-                <span>Start Karaoke Session</span>
-              </button>
-            </div>
-          )}
 
           <div className="space-y-2">
             {availableParts.map((part, index) => {

@@ -57,7 +57,7 @@ function setZoneCache(data: Omit<ZoneCacheData, 'timestamp'>) {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(ZONE_CACHE_KEY, JSON.stringify({ ...data, timestamp: Date.now() }))
-  } catch {}
+  } catch { }
 }
 
 function clearZoneCache() {
@@ -67,7 +67,7 @@ function clearZoneCache() {
 
 export function useZone() {
   const { user } = useAuthContext()
-  
+
   const [currentZone, setCurrentZone] = useState<Zone | null>(null)
   const [userZones, setUserZones] = useState<Zone[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -97,13 +97,13 @@ export function useZone() {
 
     const savedZoneId = getUserZonePreference(user.uid)
     const cached = getZoneCache(user.uid)
-    
+
     if (cached && cached.userZones.length > 0) {
       const preferredZoneId = savedZoneId || cached.currentZoneId
-      const zone = preferredZoneId 
+      const zone = preferredZoneId
         ? cached.userZones.find(z => z.id === preferredZoneId) || cached.userZones[0]
         : cached.userZones[0]
-      
+
       setCurrentZone(zone || null)
       setUserZones(cached.userZones)
       setUserRole(cached.userRole)
@@ -122,22 +122,22 @@ export function useZone() {
     if (isFetching.current && !preferredZoneId) return
     isFetching.current = true
     setIsLoading(true)
-    
+
     try {
       const superAdmin = isSuperAdmin(email, userId)
-      
+
       if (superAdmin) {
-        const targetZone = preferredZoneId 
+        const targetZone = preferredZoneId
           ? ZONES.find(z => z.id === preferredZoneId) || ZONES[0]
           : ZONES[0]
-        
+
         setCurrentZone(targetZone)
         setUserZones(ZONES)
         setIsSuperAdminUser(true)
         setUserRole('super_admin')
         setIsLoading(false)
         lastLoadedUserId.current = userId
-        
+
         setZoneCache({
           userId,
           currentZoneId: targetZone.id,
@@ -176,7 +176,7 @@ export function useZone() {
         .map((m: any) => ZONES.find(z => z.id === m.zoneId))
         .filter((z): z is Zone => z !== undefined)
 
-      const targetZone = preferredZoneId 
+      const targetZone = preferredZoneId
         ? zones.find(z => z.id === preferredZoneId) || zones[0]
         : zones[0]
       const targetMembership = memberships.find((m: any) => m.zoneId === targetZone?.id)
@@ -220,7 +220,7 @@ export function useZone() {
     setCurrentZone(zone)
 
     let membership: any = null
-    
+
     if (isHQGroup(zoneId)) {
       membership = await HQMembersService.getMemberByUserId(user.uid, zoneId)
       if (membership) {
@@ -286,6 +286,7 @@ export function useZone() {
     currentZoneMembership,
     switchZone,
     refreshZones,
-    initialLoadComplete
+    initialLoadComplete,
+    isInitialized: initialLoadComplete
   }
 }

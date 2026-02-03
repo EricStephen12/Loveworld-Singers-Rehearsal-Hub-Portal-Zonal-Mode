@@ -176,6 +176,7 @@ export interface PraiseNight {
   pageCategory?: string; // New field for page categories
   bannerImage?: string;
   songCount?: number; // Added to cache song count for UI
+  categoryOrder?: string[]; // New field for manual category sorting
   countdown: {
     days: number;
     hours: number;
@@ -237,6 +238,17 @@ export interface Category {
   icon: string;
   color: string;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PageCategory {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  zoneId?: string;
+  orderIndex?: number;
   createdAt: Date;
   updatedAt: Date;
 }

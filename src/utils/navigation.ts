@@ -1,94 +1,32 @@
-﻿export class NavigationManager {
-  private static navigationHistory: string[] = []
+﻿import { persistentStorage } from './persistent-storage'
+
+export class NavigationManager {
   private static isInitialized = false
   private static LAST_PATH_KEY = 'lwsrh_last_path'
-  private static HISTORY_KEY = 'lwsrh_nav_history'
 
-  static init() {
+  static async init() {
     if (typeof window === 'undefined' || this.isInitialized) return
-
     this.isInitialized = true
 
-    // Load history from localStorage if available
-    const savedHistory = localStorage.getItem(this.HISTORY_KEY)
-    if (savedHistory) {
-      try {
-        this.navigationHistory = JSON.parse(savedHistory)
-      } catch (e) {
-        console.warn('Failed to parse saved navigation history', e)
-        this.navigationHistory = []
-      }
-    }
-
-    // Add current path if history is empty or last item is different
-    const currentPath = window.location.pathname
-    if (this.navigationHistory.length === 0 || this.navigationHistory[this.navigationHistory.length - 1] !== currentPath) {
-      this.navigationHistory.push(currentPath)
-      this.saveHistory()
-    }
-
-    // Listen for navigation changes
-    const originalPushState = history.pushState
-    const originalReplaceState = history.replaceState
-
-    history.pushState = function (...args) {
-      originalPushState.apply(history, args)
-      NavigationManager.trackNavigation()
-    }
-
-    history.replaceState = function (...args) {
-      originalReplaceState.apply(history, args)
-      NavigationManager.trackNavigation()
-    }
-
-    // Listen for popstate (back/forward buttons)
-    window.addEventListener('popstate', () => {
-      NavigationManager.trackNavigation()
-    })
-  }
-
-  private static saveHistory() {
+    // We strictly use browser history now, but we can keep track of the "last path" 
+    // for simple state restoration if needed.
     if (typeof window !== 'undefined') {
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.navigationHistory))
+      const currentUrl = window.location.pathname + window.location.search
+      localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
     }
-  }
 
-  private static trackNavigation() {
-    const currentPath = window.location.pathname
-    const lastPath = this.navigationHistory[this.navigationHistory.length - 1]
-
-    if (currentPath !== lastPath) {
-      this.navigationHistory.push(currentPath)
-
-      // Persist to localStorage, excluding auth/splash routes
-      if (!currentPath.includes('/auth') && currentPath !== '/' && currentPath !== '/splash') {
-        localStorage.setItem(this.LAST_PATH_KEY, currentPath)
+    // Listen for visibility changes to update last path
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const currentUrl = window.location.pathname + window.location.search
+        localStorage.setItem(this.LAST_PATH_KEY, currentUrl)
       }
-
-      if (this.navigationHistory.length > 15) {
-        this.navigationHistory = this.navigationHistory.slice(-15)
-      }
-
-      this.saveHistory()
-    }
+    })
   }
 
   static getLastPath(): string {
     if (typeof window === 'undefined') return '/home'
     return localStorage.getItem(this.LAST_PATH_KEY) || '/home'
-  }
-
-  static getPreviousPage(): string | null {
-    if (this.navigationHistory.length < 2) return null
-
-    const previousPage = this.navigationHistory[this.navigationHistory.length - 2]
-
-    // Skip auth pages in history
-    if (previousPage === '/auth' || previousPage.startsWith('/auth/')) {
-      return this.getSafeFallback()
-    }
-
-    return previousPage
   }
 
   static getSafeFallback(): string {
@@ -111,72 +49,58 @@
     return '/auth'
   }
 
+  /**
+   * legacy safeBack - now redirected to robust handleBack
+   */
   static safeBack(router: any) {
-    const previousPage = this.getPreviousPage()
-
-    if (previousPage) {
-      // Remove current page from history before going back
-      this.navigationHistory.pop()
-      this.saveHistory()
-      router.push(previousPage)
-    } else {
-      // If no history, try to go to a logical parent or home
-      const currentPath = window.location.pathname
-      const parts = currentPath.split('/').filter(Boolean)
-
-      if (parts.length > 1) {
-        const parentPath = '/' + parts.slice(0, -1).join('/')
-        router.push(parentPath)
-      } else {
-        router.push(this.getSafeFallback())
-      }
-    }
+    this.handleBack(router)
   }
 
   /**
-   * Robust Back Navigation
-   * 1. Checks valid browser history first
-   * 2. Fallbacks to explicit path if provided
-   * 3. Fallbacks to logical parent path
-   * 4. Safe fallback to Home/Admin based on auth
+   * Robust Native Back Navigation
+   * 1. Trusts window.history.length > 1 means we can go back.
+   * 2. If history is empty (length <= 1), we fallback safely to avoid App Exit.
+   * 3. Handles modal closing (query params) effectively.
    */
   static handleBack(router: any, fallbackUrl?: string) {
-    // Robust Back Navigation Strategy:
-    // User reported router.back() fails ("stops working") when app is closed and returned.
-    // This happens because browser history is reset but we want to resume flow.
-    // Solution: Use our persistent internal history (localstorage) which survives "close and return".
-    // 1. Check internal history for a previous page.
-    // 2. If exists, PUSH to it (Reliable "Direct navigation").
-    // 3. If no internal history, use fallbackUrl.
-    // 4. If no fallback, use logical parent / safe fallback.
+    if (typeof window === 'undefined') return;
 
-    const previousPage = this.getPreviousPage()
+    const hasHistory = window.history.length > 1;
+    const hasQueryParams = window.location.search.length > 0;
 
-    if (previousPage) {
-      // Use internal history which is persistent and reliable
-      // We manually pop the current page so we don't grow the stack infinitely with duplicates
-      this.navigationHistory.pop()
-      this.saveHistory()
-      router.push(previousPage)
-    } else if (fallbackUrl) {
-      // No history, use specific fallback
-      router.push(fallbackUrl)
+    // 1. Standard Back: If we have history, let browser handle it.
+    if (hasHistory) {
+      router.back();
+      return;
+    }
+
+    // 2. Empty History Edge Cases (Deep Links / Refresh):
+
+    // Case A: We are in a "modal" state (driven by query params like ?song=...)
+    // Action: Stay on page, but strip params to "close" the modal.
+    if (hasQueryParams) {
+      const currentPath = window.location.pathname;
+      router.replace(currentPath);
+      return;
+    }
+
+    // Case B: We are on a main page with no history.
+    // Action: Go to explicit fallback or logical parent.
+    if (fallbackUrl) {
+      router.replace(fallbackUrl);
     } else {
-      // No specific fallback, try logical parent
-      const currentPath = window.location.pathname
-      const parts = currentPath.split('/').filter(Boolean)
+      // Logical parent fallback logic
+      const currentPath = window.location.pathname;
+      const parts = currentPath.split('/').filter(Boolean);
 
       if (parts.length > 1) {
-        // Try going up one level e.g. /pages/media/player -> /pages/media
-        const parentPath = '/' + parts.slice(0, -1).join('/')
-        router.push(parentPath)
+        // e.g. /pages/praise-night -> /pages
+        const parentPath = '/' + parts.slice(0, -1).join('/');
+        router.replace(parentPath);
       } else {
-        router.push(this.getSafeFallback())
+        // Root or single level -> Go Home/Safe Fallback
+        router.replace(this.getSafeFallback());
       }
     }
-  }
-
-  static getNavigationHistory(): string[] {
-    return [...this.navigationHistory]
   }
 }

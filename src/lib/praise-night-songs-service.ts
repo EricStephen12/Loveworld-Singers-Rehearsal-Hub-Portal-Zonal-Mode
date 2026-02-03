@@ -14,6 +14,7 @@ import {
 import { db } from './firebase-setup'
 import { PraiseNightSong } from '@/types/supabase'
 import { isHQGroup } from '@/config/zones'
+import { FirebaseMetadataService } from './firebase-metadata-service'
 
 function getCollectionName(zoneId?: string): string {
   return (zoneId && isHQGroup(zoneId)) ? 'praise_night_songs' : 'zone_songs'
@@ -144,6 +145,12 @@ export class PraiseNightSongsService {
       const songsRef = collection(db, collectionName)
       const docRef = await addDoc(songsRef, cleanData)
 
+      // 🔔 Trigger metadata update for realtime sync
+      if (zoneId && songData.praiseNightId) {
+        await FirebaseMetadataService.updateSongMetadata(zoneId, songData.praiseNightId, docRef.id)
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, songData.praiseNightId)
+      }
+
       return { success: true, id: docRef.id }
     } catch (error) {
       console.error('Error creating song:', error)
@@ -170,6 +177,27 @@ export class PraiseNightSongsService {
 
       await updateDoc(songRef, { ...cleanedData, updatedAt: serverTimestamp() })
 
+      // 🔔 Trigger metadata update for realtime sync
+      const existingData = songDoc.data()
+      const praiseNightId = songData.praiseNightId || existingData.praiseNightId
+
+      console.log('🔍 [UpdateSong] Metadata trigger check:', {
+        songId,
+        zoneId,
+        praiseNightId,
+        willTrigger: !!(zoneId && praiseNightId),
+        updatedFields: Object.keys(cleanedData)
+      });
+
+      if (zoneId && praiseNightId) {
+        console.log('🔔 [UpdateSong] Triggering metadata updates...');
+        await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, songId)
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
+        console.log('✅ [UpdateSong] Metadata updates completed');
+      } else {
+        console.warn('⚠️ [UpdateSong] Skipping metadata update - missing zoneId or praiseNightId');
+      }
+
       return { success: true }
     } catch (error) {
       console.error('Error updating song:', error)
@@ -187,7 +215,18 @@ export class PraiseNightSongsService {
         return { success: false, error: 'Song not found' }
       }
 
+      // Get praiseNightId before deleting
+      const existingData = songDoc.data()
+      const praiseNightId = existingData.praiseNightId
+
       await deleteDoc(songRef)
+
+      // 🔔 Trigger metadata update for realtime sync
+      if (zoneId && praiseNightId) {
+        await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, songId)
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
+      }
+
       return { success: true }
     } catch (error) {
       console.error('Error deleting song:', error)
@@ -199,8 +238,22 @@ export class PraiseNightSongsService {
     try {
       const collectionName = getCollectionName(zoneId)
       const songRef = doc(db, collectionName, songId)
+      const songDoc = await getDoc(songRef)
+
+      if (!songDoc.exists()) {
+        return { success: false, error: 'Song not found' }
+      }
 
       await updateDoc(songRef, { status, updatedAt: serverTimestamp() })
+
+      // 🔔 Trigger metadata update for realtime sync
+      const existingData = songDoc.data()
+      const praiseNightId = existingData.praiseNightId
+      if (zoneId && praiseNightId) {
+        await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, songId)
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
+      }
+
       return { success: true }
     } catch (error) {
       console.error('Error updating status:', error)

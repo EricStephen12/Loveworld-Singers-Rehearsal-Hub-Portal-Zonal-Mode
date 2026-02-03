@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Play, Music2, Users, AudioLines, ChevronRight, ChevronLeft, Home, UserPlus } from 'lucide-react';
+import { Mic, Play, Music2, Users, AudioLines, ChevronRight, ArrowLeft, UserPlus } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,89 +18,24 @@ interface CachedData {
 }
 
 export function HomeView() {
-  const { setView, openProject } = useAudioLab();
+  const { setView, openProject, state, loadHomeData } = useAudioLab();
   const { user, profile } = useAuth();
   const router = useRouter();
 
-  const [recentProject, setRecentProject] = useState<AudioLabProject | null>(null);
-  const [allProjects, setAllProjects] = useState<AudioLabProject[]>([]);
-  const [sharedProjects, setSharedProjects] = useState<AudioLabProject[]>([]);
-  const [featuredSongs, setFeaturedSongs] = useState<AudioLabSong[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { projects, featuredSongs } = state.homeData;
+  const [isLoading, setIsLoading] = useState(false);
 
-  const songsCache = useRef<CachedData | null>(null);
+  // Derive projects
+  const ownedProjects = projects.filter(p => p.ownerId === user?.uid);
+  const sharedProjects = projects.filter(p => p.ownerId !== user?.uid);
+  const recentProject = ownedProjects[0] || sharedProjects[0] || null;
 
-  // Load recent project and songs with caching
+  // Load home data once or on mount if stale
   useEffect(() => {
-    const loadData = async () => {
-      if (!user?.uid) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const projects = await getUserProjects(user.uid);
-
-        if (projects.length > 0) {
-          // Separate owned projects from shared projects
-          const owned = projects.filter(p => p.ownerId === user.uid);
-          const shared = projects.filter(p => p.ownerId !== user.uid);
-
-          // Most recent owned project for "Continue" card
-          if (owned.length > 0) {
-            setRecentProject(owned[0]);
-          } else if (shared.length > 0) {
-            // If no owned projects, show most recent shared
-            setRecentProject(shared[0]);
-          }
-
-          setAllProjects(owned);
-          setSharedProjects(shared);
-        }
-
-        if (profile?.zone) {
-          const now = Date.now();
-          const isCacheValid = songsCache.current &&
-            (now - songsCache.current.timestamp) < CACHE_TTL;
-
-          if (isCacheValid) {
-            setFeaturedSongs(songsCache.current!.songs.slice(0, 3));
-            setIsLoading(false);
-          } else {
-            const songs = await getSongs(profile.zone, 5);
-            songsCache.current = {
-              songs,
-              timestamp: now
-            };
-            setFeaturedSongs(songs.slice(0, 3));
-          }
-        }
-      } catch (error) {
-        console.error('[HomeView] Error loading data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [user?.uid, profile?.zone]);
-
-  // Listen for real-time updates to invalidate cache
-  useEffect(() => {
-    if (!profile?.zone) return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'audiolab_songs_updated') {
-        songsCache.current = null;
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [profile?.zone]);
+    if (user?.uid) {
+      loadHomeData(user.uid, profile?.zone || undefined);
+    }
+  }, [user?.uid, profile?.zone, loadHomeData]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -124,11 +59,17 @@ export function HomeView() {
     });
 
     if (result.success && result.id) {
+      // Trigger a refresh of home data to show the new project
+      loadHomeData(user.uid, profile?.zone || undefined, true);
       openProject(result.id);
     }
   };
 
-  if (isLoading) {
+  // Determine if we should show a full screen loader
+  // Only show it if we have NO projects at all and no featured songs
+  const isActuallyLoading = projects.length === 0 && featuredSongs.length === 0;
+
+  if (isActuallyLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <CustomLoader message="" />
@@ -146,11 +87,17 @@ export function HomeView() {
           {/* Header Section */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
-              onClick={() => router.push('/home')}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push('/home');
+                }
+              }}
               className="text-violet-500 flex size-9 sm:size-10 items-center justify-center rounded-full bg-violet-500/10 hover:bg-violet-500/20 transition-colors touch-manipulation"
-              title="Back to Home"
+              title="Go Back"
             >
-              <Home size={20} className="sm:w-[22px] sm:h-[22px]" />
+              <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
             </button>
 
             <div className="flex-1 text-center">
@@ -229,12 +176,12 @@ export function HomeView() {
             </button>
 
             {/* All Projects */}
-            {allProjects.length > 1 && (
+            {ownedProjects.length > 1 && (
               <div className="w-full max-w-sm mt-6 sm:mt-8">
                 <h2 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Your Projects</h2>
 
                 <div className="space-y-2 sm:space-y-3">
-                  {allProjects.slice(1).map((project) => (
+                  {ownedProjects.slice(1).map((project: AudioLabProject) => (
                     <button
                       key={project.id}
                       onClick={() => openProject(project.id)}

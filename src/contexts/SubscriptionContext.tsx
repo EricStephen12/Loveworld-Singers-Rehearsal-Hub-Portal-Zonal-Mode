@@ -109,12 +109,18 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const now = new Date()
       const diffTime = expiryDate.getTime() - now.getTime()
       daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
-      isExpiringSoon = daysRemaining <= 3
+      isExpiringSoon = daysRemaining <= 7 // Warn starting at 7 days
     }
+
+    const isMemberPremium = !!subscription && subscription.status === 'active'
+
+    // Final Premium status - either by role, HQ group, or active individual subscription
+    const isPremium = isAdmin || isHQGroup || isMemberPremium
 
     const hasFeature = (feature: string) => {
       if (hasFullAccess) return true
       if (isLoading) return true
+      if (isMemberPremium) return true // Active individual subscription unlocks everything
       if (!subscription) return false
       return hasFeatureAccess(subscription.tier, feature as any)
     }
@@ -127,14 +133,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       hasFeature,
       canAddMember,
       memberLimit: 999999,
-      isFreeTier: !hasFullAccess && !subscription,
-      isPremiumTier: true, // Everyone is effectively premium for member features now
-      isIndividualPremium: !!subscription && subscription.type === 'individual',
+      isFreeTier: !isPremium,
+      isPremiumTier: isPremium,
+      isIndividualPremium: isMemberPremium && subscription.type === 'individual',
       isExpiringSoon,
       daysRemaining,
       refreshSubscription
     }
-  }, [subscription, isLoading, currentZone, profile?.role])
+  }, [subscription, isLoading, currentZone, profile])
 
   return (
     <SubscriptionContext.Provider value={contextValue}>

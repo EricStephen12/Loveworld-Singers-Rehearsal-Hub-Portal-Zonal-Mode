@@ -1,15 +1,17 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { CalendarEvent, CalendarService } from './_lib/firebase-calendar-service'
-import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
+import { Calendar as CalendarIcon, Menu, Home, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle, Sparkles } from 'lucide-react'
 import CalendarStyles from './_components/CalendarStyles'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import moment from 'moment'
+import UnifiedCarousel from './_components/UnifiedCarousel'
 
 // Dynamically import React Big Calendar components to avoid SSR issues
 const Calendar = dynamic(() => import('react-big-calendar').then(mod => mod.Calendar), {
@@ -40,13 +42,8 @@ const EventDetailsModal = dynamic(() => import('./_components/EventDetailsModal'
   ssr: false
 })
 
-const UnifiedCarousel = dynamic(() => import('./_components/UnifiedCarousel'), {
-  ssr: false
-})
-
-// Import moment and localizer dynamically
+// React Big Calendar localizer
 let momentLocalizer: any = null
-let moment: any = null
 
 export default function CalendarPage() {
   const router = useRouter()
@@ -78,12 +75,7 @@ export default function CalendarPage() {
   useEffect(() => {
     const initializeCalendar = async () => {
       try {
-        const [momentModule, { momentLocalizer: localizerFn }] = await Promise.all([
-          import('moment'),
-          import('react-big-calendar')
-        ])
-
-        moment = momentModule.default
+        const { momentLocalizer: localizerFn } = await import('react-big-calendar')
         momentLocalizer = localizerFn(moment)
         setCalendarReady(true)
       } catch (error) {
@@ -114,7 +106,7 @@ export default function CalendarPage() {
 
       // Load fresh events from Firebase in background
       try {
-        const zoneEvents = await calendarService.getZoneEvents(currentZone.id)
+        const zoneEvents = await calendarService.getZoneEvents(currentZone.id, userId, profile?.role)
         setEvents(zoneEvents)
 
         // Cache the events for next time
@@ -144,7 +136,7 @@ export default function CalendarPage() {
     }
 
     loadBirthdays()
-  }, [currentZone])
+  }, [currentZone?.id])
 
   // Load upcoming events for carousel and calendar
   useEffect(() => {
@@ -180,7 +172,46 @@ export default function CalendarPage() {
     }
 
     loadUpcomingEvents()
-  }, [calendarReady])
+  }, [calendarReady, currentZone?.id])
+
+  // Merge all sources for the Unified Carousel
+  const carouselFilteredEvents = useMemo(() => {
+    // 1. Start with dedicated upcoming events (Announcements, etc.)
+    const eventsFromService = upcomingEvents.map(e => ({
+      ...e,
+      type: e.type || 'event'
+    }))
+
+    // 2. Add regular calendar events that aren't already included
+    const gridEvents = (events || [])
+      .filter(e => {
+        if (!e.start) return false
+        const start = moment(e.start)
+        // Show everything from today through next 45 days in carousel
+        const isUpcoming = start.isSameOrAfter(moment().startOf('day')) &&
+          start.isBefore(moment().add(45, 'days'))
+
+        // Avoid duplicates if title and date match
+        const isAlreadyIn = eventsFromService.some(es =>
+          es.title === e.title && moment(es.date).isSame(start, 'day')
+        )
+        return isUpcoming && !isAlreadyIn
+      })
+      .map(e => ({
+        id: e.id,
+        title: e.title,
+        description: e.description || '',
+        date: moment(e.start).format('YYYY-MM-DD'),
+        time: moment(e.start).format('h:mm A'),
+        location: e.location || '',
+        type: 'event' as const,
+        showInCarousel: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }))
+
+    return [...eventsFromService, ...gridEvents]
+  }, [upcomingEvents, events])
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
     setSelectedSlot({ start, end })
@@ -396,15 +427,6 @@ export default function CalendarPage() {
           onClick={() => sidebarOpen && setSidebarOpen(false)}
         >
           <div className="h-full bg-white relative z-0 flex flex-col">
-            {/* Unified Carousel - Birthdays + Events */}
-            {(todaysBirthdays.length > 0 || upcomingEvents.length > 0) && (
-              <UnifiedCarousel
-                birthdays={todaysBirthdays}
-                events={upcomingEvents}
-                themeColor={currentZone?.themeColor || '#10b981'}
-              />
-            )}
-
             {!calendarReady || !moment || loading ? (
               <div className="flex items-center justify-center flex-1 py-20">
                 <div className="text-center">
@@ -415,37 +437,50 @@ export default function CalendarPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 p-2 sm:p-4 min-h-[400px] sm:min-h-[500px]">
-                <Calendar
-                  localizer={momentLocalizer}
-                  events={[...events, ...upcomingEventsList]}
-                  startAccessor={(event: any) => event.start}
-                  endAccessor={(event: any) => event.end}
-                  style={{ height: '100%', minHeight: '400px' }}
-                  view={view}
-                  onView={(newView: any) => setView(newView)}
-                  date={date}
-                  onNavigate={setDate}
-                  selectable
-                  onSelectSlot={handleSelectSlot}
-                  onSelectEvent={handleSelectEvent}
-                  eventPropGetter={eventStyleGetter}
-                  toolbar={false}
-                  formats={{
-                    timeGutterFormat: 'h A',
-                    eventTimeRangeFormat: ({ start, end }: any) =>
-                      `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
-                    agendaTimeRangeFormat: ({ start, end }: any) =>
-                      `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
-                    dayHeaderFormat: (date: Date) => moment(date).format('ddd M/D'),
-                    dayRangeHeaderFormat: ({ start, end }: any) =>
-                      `${moment(start).format('MMM D')} - ${moment(end).format('MMM D, YYYY')}`,
-                  }}
-                  step={30}
-                  timeslots={2}
-                  min={new Date(2024, 0, 1, 6, 0, 0)}
-                  max={new Date(2024, 0, 1, 23, 0, 0)}
-                />
+              <div className="flex-1 flex flex-col min-h-0">
+                {/* Unified Carousel - Birthdays + Events */}
+                {(todaysBirthdays.length > 0 || carouselFilteredEvents.length > 0) && (
+                  <div className="w-full flex-shrink-0 bg-white border-b border-gray-100 shadow-sm overflow-hidden z-10">
+                    <UnifiedCarousel
+                      birthdays={todaysBirthdays}
+                      events={carouselFilteredEvents}
+                      themeColor={currentZone?.themeColor || '#10b981'}
+                    />
+                  </div>
+                )}
+
+                <div className="flex-1 p-2 sm:p-4 min-h-[400px] sm:min-h-[500px]">
+                  <Calendar
+                    localizer={momentLocalizer}
+                    events={[...events, ...upcomingEventsList]}
+                    startAccessor={(event: any) => event.start}
+                    endAccessor={(event: any) => event.end}
+                    style={{ height: '100%', minHeight: '400px' }}
+                    view={view}
+                    onView={(newView: any) => setView(newView)}
+                    date={date}
+                    onNavigate={setDate}
+                    selectable
+                    onSelectSlot={handleSelectSlot}
+                    onSelectEvent={handleSelectEvent}
+                    eventPropGetter={eventStyleGetter}
+                    toolbar={false}
+                    formats={{
+                      timeGutterFormat: 'h A',
+                      eventTimeRangeFormat: ({ start, end }: any) =>
+                        `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
+                      agendaTimeRangeFormat: ({ start, end }: any) =>
+                        `${moment(start).format('h:mm A')} - ${moment(end).format('h:mm A')}`,
+                      dayHeaderFormat: (date: Date) => moment(date).format('ddd M/D'),
+                      dayRangeHeaderFormat: ({ start, end }: any) =>
+                        `${moment(start).format('MMM D')} - ${moment(end).format('MMM D, YYYY')}`,
+                    }}
+                    step={30}
+                    timeslots={2}
+                    min={new Date(2024, 0, 1, 6, 0, 0)}
+                    max={new Date(2024, 0, 1, 23, 0, 0)}
+                  />
+                </div>
               </div>
             )}
           </div>

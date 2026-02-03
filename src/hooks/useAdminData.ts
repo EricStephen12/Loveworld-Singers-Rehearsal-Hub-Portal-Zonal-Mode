@@ -66,6 +66,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: (page as any).bannerImage || '',
+      categoryOrder: (page as any).categoryOrder || [], // ✅ CRITICAL: Added for category reordering
       songCount: allZoneSongs.filter((s: any) => {
         const songPageId = s.praiseNightId || s.praisenightid || s.praisenight_id || s.pageId
         if (!songPageId) return false

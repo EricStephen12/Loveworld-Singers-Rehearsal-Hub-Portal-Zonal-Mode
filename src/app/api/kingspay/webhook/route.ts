@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
         endDate.setDate(endDate.getDate() + 30)
 
         try {
-          await FirebaseDatabaseService.updateDocument('individual_subscriptions', subscriptionId, {
+          await FirebaseDatabaseService.createDocument('individual_subscriptions', subscriptionId, {
             status: 'active',
+            tier: 'premium',
             expiresAt: endDate.toISOString(),
             paymentId: payment_id,
             amount: amount,

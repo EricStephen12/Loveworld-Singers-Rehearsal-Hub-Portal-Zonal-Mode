@@ -9,6 +9,7 @@ import MediaSelectionModal from '../MediaSelectionModal'
 import moment from 'moment'
 import { db } from '@/lib/firebase-setup'
 import { collection, query, getDocs, limit } from 'firebase/firestore'
+import { isHQGroup } from '@/config/zones'
 
 const EVENT_TYPES = [
   { id: 'event', label: 'Event' },
@@ -39,7 +40,8 @@ export default function CalendarSection() {
     time: '',
     image: '',
     type: 'event' as UpcomingEvent['type'],
-    showInCarousel: true
+    showInCarousel: true,
+    isGlobal: false
   })
 
   useEffect(() => {
@@ -77,7 +79,8 @@ export default function CalendarSection() {
         time: event.time || '',
         image: event.image || '',
         type: event.type,
-        showInCarousel: event.showInCarousel
+        showInCarousel: event.showInCarousel,
+        isGlobal: event.isGlobal || false
       })
     } else {
       setEditingEvent(null)
@@ -89,7 +92,8 @@ export default function CalendarSection() {
         time: '',
         image: '',
         type: 'event',
-        showInCarousel: true
+        showInCarousel: true,
+        isGlobal: false
       })
     }
     setShowModal(true)
@@ -113,7 +117,8 @@ export default function CalendarSection() {
         title: formData.title.trim(),
         date: formData.date,
         type: formData.type,
-        showInCarousel: formData.showInCarousel
+        showInCarousel: formData.showInCarousel,
+        isGlobal: formData.isGlobal
       }
 
       // Only add optional fields if they have values
@@ -134,7 +139,7 @@ export default function CalendarSection() {
 
         // Trigger immediate FCM for new events
         try {
-          const membersCollection = currentZone?.id === 'hq' ? 'hq_members' : 'zone_members'
+          const membersCollection = isHQGroup(currentZone?.id) ? 'hq_members' : 'zone_members'
           const membersRef = collection(db, membersCollection)
           const membersSnapshot = await getDocs(query(membersRef, limit(500)))
           const recipientIds = membersSnapshot.docs.map(doc => doc.data().userId).filter(Boolean)
@@ -504,16 +509,35 @@ export default function CalendarSection() {
                 )}
               </div>
 
-              <label className="flex items-center gap-3 cursor-pointer py-2">
-                <input
-                  type="checkbox"
-                  checked={formData.showInCarousel}
-                  onChange={(e) => setFormData({ ...formData, showInCarousel: e.target.checked })}
-                  className="w-5 h-5 rounded border-gray-300"
-                  style={{ accentColor: themeColor }}
-                />
-                <span className="text-sm text-gray-700">Show in calendar carousel</span>
-              </label>
+              <div className="flex flex-col gap-3 p-4 bg-purple-50 rounded-xl">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showInCarousel}
+                    onChange={(e) => setFormData({ ...formData, showInCarousel: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300"
+                    style={{ accentColor: themeColor }}
+                  />
+                  <span className="text-sm font-semibold text-gray-700">Show in calendar carousel</span>
+                </label>
+
+                {/* Only show Global option to HQ groups or Boss */}
+                {isHQGroup(currentZone?.id) && (
+                  <label className="flex items-center gap-3 cursor-pointer pt-2 border-t border-purple-100">
+                    <input
+                      type="checkbox"
+                      checked={formData.isGlobal}
+                      onChange={(e) => setFormData({ ...formData, isGlobal: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300"
+                      style={{ accentColor: '#9333ea' }}
+                    />
+                    <div>
+                      <span className="text-sm font-bold text-purple-700">Make Global Event</span>
+                      <p className="text-[10px] text-purple-400">This event will be visible to ALL zones on the platform.</p>
+                    </div>
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Modal Footer - Fixed */}

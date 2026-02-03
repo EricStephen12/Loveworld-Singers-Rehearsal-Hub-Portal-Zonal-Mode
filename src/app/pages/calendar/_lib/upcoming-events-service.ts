@@ -1,5 +1,6 @@
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import moment from 'moment'
+import { isHQGroup } from '@/config/zones'
 
 export interface UpcomingEvent {
   id: string
@@ -11,6 +12,7 @@ export interface UpcomingEvent {
   image?: string // Ecard/banner image URL
   type: 'announcement' | 'event' | 'reminder' | 'meeting' | 'rehearsal'
   showInCarousel: boolean
+  isGlobal?: boolean // Whether the event is visible to all zones
   createdAt: string
   updatedAt: string
   createdBy?: string
@@ -55,6 +57,7 @@ export class UpcomingEventsService {
 
   /**
    * Get all upcoming events (next 30 days) for a specific zone
+   * Includes global events automatically
    */
   static async getUpcomingEvents(zoneId: string): Promise<UpcomingEvent[]> {
     try {
@@ -72,26 +75,32 @@ export class UpcomingEventsService {
         }).sort((a, b) => moment(a.date).diff(moment(b.date)))
       }
 
-      // Fetch from Firestore with zoneId filter
-      const allEvents = await FirebaseDatabaseService.getCollectionWhere(
-        this.COLLECTION,
-        'zoneId',
-        '==',
-        zoneId
-      ) as unknown as UpcomingEvent[]
+      // Fetch ALL events (events are relatively few, so fetching all is safe and simplifies "OR" logic)
+      // Alternatively, we could do two queries, but this is cleaner for now.
+      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION, 1000) as unknown as UpcomingEvent[]
 
       if (!allEvents || allEvents.length === 0) {
         return []
       }
 
+      // Filter for zone-specific OR global events
+      // ENHANCED: If user is in an HQ group, they also see all other HQ group events automatically
+      const filteredForZone = (allEvents as any[]).filter(event => {
+        const isTargetZone = event.zoneId === zoneId
+        const isGlobal = event.isGlobal === true
+        const isBothHQ = isHQGroup(zoneId) && isHQGroup(event.zoneId)
+
+        return isTargetZone || isGlobal || isBothHQ
+      })
+
       // Cache the results for this zone
-      setEventsCache(cacheKey, allEvents)
+      setEventsCache(cacheKey, filteredForZone)
 
       const today = moment()
       const next30Days = moment().add(30, 'days')
 
       // Filter for upcoming events only
-      const upcomingEvents = allEvents.filter(event => {
+      const upcomingEvents = filteredForZone.filter(event => {
         const eventDate = moment(event.date)
         return eventDate.isBetween(today, next30Days, 'day', '[]')
       })
@@ -111,7 +120,8 @@ export class UpcomingEventsService {
    */
   static async getCarouselEvents(zoneId: string): Promise<UpcomingEvent[]> {
     const allEvents = await this.getUpcomingEvents(zoneId)
-    return allEvents.filter(event => event.showInCarousel)
+    // If an event is not explicitly hidden, show it in carousel
+    return allEvents.filter(event => event.showInCarousel !== false)
   }
 
   /**
@@ -124,6 +134,7 @@ export class UpcomingEventsService {
         date: eventData.date,
         type: eventData.type,
         showInCarousel: eventData.showInCarousel,
+        isGlobal: eventData.isGlobal || false,
         zoneId: eventData.zoneId,
         id: `upcoming-${Date.now()}`,
         createdAt: new Date().toISOString(),
@@ -181,19 +192,21 @@ export class UpcomingEventsService {
 
   /**
    * Get all events (for admin management)
+   * Includes global events if they belong to this zone or are global
    */
   static async getAllEvents(zoneId: string): Promise<UpcomingEvent[]> {
     try {
       if (!zoneId) return []
 
-      const allEvents = await FirebaseDatabaseService.getCollectionWhere(
-        this.COLLECTION,
-        'zoneId',
-        '==',
-        zoneId
-      ) as unknown as UpcomingEvent[]
+      const allEvents = await FirebaseDatabaseService.getCollection(this.COLLECTION, 1000) as unknown as UpcomingEvent[]
 
-      return (allEvents || []).sort((a, b) => {
+      // If HQ or Boss, show EVERYTHING for management.
+      // Otherwise, show ONLY zone-specific events (Management Section).
+      const filtered = isHQGroup(zoneId)
+        ? (allEvents || [])
+        : (allEvents || []).filter(v => (v as any).zoneId === zoneId)
+
+      return filtered.sort((a, b) => {
         return moment(b.date).diff(moment(a.date))
       })
     } catch (error) {

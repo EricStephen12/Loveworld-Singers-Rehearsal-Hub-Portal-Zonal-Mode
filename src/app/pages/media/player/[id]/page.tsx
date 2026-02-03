@@ -13,6 +13,7 @@ import CustomVideoPlayer from '../../_components/CustomVideoPlayer'
 import { toggleLikeVideo, isVideoLiked } from '../../_lib/playlist-service'
 import { mediaCommentService, MediaComment } from '../../_lib/media-comment-service'
 import AddToPlaylistModal from '../../_components/AddToPlaylistModal'
+import { NavigationManager } from '@/utils/navigation'
 
 export default function PlayerPage() {
   const router = useRouter()
@@ -246,7 +247,7 @@ export default function PlayerPage() {
     <div className="h-screen overflow-y-auto bg-[#0f0f0f] text-white">
       {/* Back Button Overlay - Mobile Friendly */}
       <button
-        onClick={() => router.back()}
+        onClick={() => NavigationManager.safeBack(router)}
         className="fixed top-4 left-4 z-[70] p-2 bg-black/50 hover:bg-black/80 rounded-full backdrop-blur-md transition-colors border border-white/10 group active:scale-95"
         title="Go Back"
       >

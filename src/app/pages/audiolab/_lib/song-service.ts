@@ -40,6 +40,8 @@ const COLLECTION_NAME = AUDIOLAB_SONGS_COLLECTION; // Default collection for CRU
 
 // Cache for songs (5 min TTL)
 const songCache: Map<string, { data: AudioLabSong[]; timestamp: number }> = new Map();
+const paginatedCache: Map<string, { data: { songs: AudioLabSong[]; lastDoc: any }; timestamp: number }> = new Map();
+const countCache: { value: number; timestamp: number } | null = { value: 0, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000;
 
 // ============================================
@@ -135,6 +137,16 @@ export async function getSongsPaginated(
       );
     }
 
+    // Cache logic for the FIRST page only
+    const cacheKey = `paginated_first_page_${limitCount}`;
+    if (!lastDoc) {
+      const cached = paginatedCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log('📦 [SongService] Using cached first page of songs');
+        return cached.data;
+      }
+    }
+
     const snapshot = await getDocs(q);
     const songs = snapshot.docs.map(doc => masterSongToAudioLabSong(doc));
 
@@ -145,11 +157,17 @@ export async function getSongsPaginated(
     });
 
     const lastVisible = snapshot.docs[snapshot.docs.length - 1] || null;
-
-    return {
+    const result = {
       songs: songsWithAudio,
       lastDoc: lastVisible
     };
+
+    // Store in cache if first page
+    if (!lastDoc) {
+      paginatedCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+
+    return result;
   } catch (error) {
     console.error('[SongService] Error fetching songs paginated:', error);
     return { songs: [], lastDoc: null };
@@ -157,53 +175,72 @@ export async function getSongsPaginated(
 }
 
 /**
- * Deep search songs across Master Library (Firestore query)
+ * Deep search songs across Master Library and Praise Night (Local filtering on full set for better results)
  */
-export async function searchSongsDeep(searchTerm: string): Promise<AudioLabSong[]> {
+export async function searchSongsDeep(searchTerm: string, zoneId?: string): Promise<AudioLabSong[]> {
   try {
     if (!searchTerm || searchTerm.trim().length < 2) return [];
 
-    const queryTerm = searchTerm.toLowerCase().trim();
-    const masterSongsRef = collection(db, MASTER_SONGS_COLLECTION);
+    // Helper for normalization
+    const normalizeText = (text: string) => {
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .replace(/\s+/g, ' ')    // Normalize spaces
+        .trim();
+    };
 
-    // Firestore doesn't support full-text search easily without external services,
-    // so we'll do common prefix searches and local filtering as a hybrid
+    const queryTerm = normalizeText(searchTerm);
 
-    // 1. Search by title
-    const qTitle = query(
-      masterSongsRef,
-      where('title', '>=', searchTerm),
-      where('title', '<=', searchTerm + '\uf8ff'),
-      limit(20)
+    // 1. Fetch Master Library songs (cached)
+    const masterSongs = await getSongs(undefined, 5000);
+
+    // 2. Fetch Praise Night songs if zoneId is provided
+    let pnSongs: AudioLabSong[] = [];
+    if (zoneId) {
+      try {
+        const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
+        const rawPnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
+
+        // Map Praise Night songs to AudioLab format
+        pnSongs = rawPnSongs.map(pnSong => ({
+          id: pnSong.id as string,
+          title: pnSong.title || 'Untitled',
+          artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
+          duration: 300,
+          audioUrls: {
+            full: pnSong.audioFile || ''
+          },
+          availableParts: (pnSong.audioFile ? ['full'] : []) as VocalPart[],
+          genre: pnSong.category || 'Praise Night',
+          key: pnSong.key || '',
+          tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
+          albumArt: '',
+          lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as LyricLine[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
+          zoneId: zoneId,
+          isHQSong: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'system'
+        })) as AudioLabSong[];
+      } catch (e) {
+        console.error('[SongService] Error fetching PN songs for search:', e);
+      }
+    }
+
+    // Combine both sources
+    const allCombined = [...masterSongs, ...pnSongs];
+
+    // Filter across all fields using normalized text
+    return allCombined.filter(song =>
+      normalizeText(song.title).includes(queryTerm) ||
+      normalizeText(song.artist).includes(queryTerm) ||
+      (song.genre && normalizeText(song.genre).includes(queryTerm)) ||
+      (song.lyrics && Array.isArray(song.lyrics) && song.lyrics.some(line => {
+        const textToSearch = typeof line === 'string' ? line : (line as any).text || '';
+        return normalizeText(textToSearch).includes(queryTerm);
+      }))
     );
-
-    const titleSnap = await getDocs(qTitle);
-    const titleResults = titleSnap.docs.map(doc => masterSongToAudioLabSong(doc));
-
-    // 2. Search by writer (artist)
-    const qWriter = query(
-      masterSongsRef,
-      where('writer', '>=', searchTerm),
-      where('writer', '<=', searchTerm + '\uf8ff'),
-      limit(20)
-    );
-
-    const writerSnap = await getDocs(qWriter);
-    const writerResults = writerSnap.docs.map(doc => masterSongToAudioLabSong(doc));
-
-    // Combine and remove duplicates
-    const combined = [...titleResults, ...writerResults];
-    const seen = new Set();
-    const uniqueResults = combined.filter(song => {
-      if (seen.has(song.id)) return false;
-      seen.add(song.id);
-      return true;
-    });
-
-    return uniqueResults.filter(song => {
-      if (!song.audioUrls) return false;
-      return Object.values(song.audioUrls).some(url => url && url.length > 0);
-    });
   } catch (error) {
     console.error('[SongService] Error performing deep search:', error);
     return [];
@@ -215,9 +252,23 @@ export async function searchSongsDeep(searchTerm: string): Promise<AudioLabSong[
  */
 export async function getTotalSongCount(): Promise<number> {
   try {
+    // Check cache
+    if (countCache && Date.now() - countCache.timestamp < CACHE_TTL) {
+      console.log('📦 [SongService] Using cached total song count');
+      return countCache.value;
+    }
+
     const masterSongsRef = collection(db, MASTER_SONGS_COLLECTION);
     const snapshot = await getCountFromServer(masterSongsRef);
-    return snapshot.data().count;
+    const count = snapshot.data().count;
+
+    // Update cache
+    if (countCache) {
+      countCache.value = count;
+      countCache.timestamp = Date.now();
+    }
+
+    return count;
   } catch (error) {
     console.error('[SongService] Error fetching total count:', error);
     return 0;

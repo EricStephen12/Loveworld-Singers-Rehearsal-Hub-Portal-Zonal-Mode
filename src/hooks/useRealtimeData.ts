@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 import { PraiseNight, PraiseNightSong } from '@/types/supabase'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { ZoneDatabaseService } from '@/lib/zone-database-service'
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
+import { FirebaseMetadataService } from '@/lib/firebase-metadata-service'
 import { lowDataOptimizer } from '@/utils/low-data-optimizer'
 import { isHQGroup } from '@/config/zones'
 
@@ -16,7 +17,10 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
     } else if (zoneId) {
       pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000)
     } else {
-      pages = await FirebaseDatabaseService.getCollection('praise_nights')
+      // If no zoneId is provided, do NOT fall back to fetching all praise nights (data leak prevention)
+      // This happens when app is restoring state and zoneId is temporarily undefined
+      console.warn('⚠️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
+      return []
     }
 
     return pages.map((page) => ({
@@ -28,6 +32,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: (page as any).bannerImage || (page as any).bannerimage || '',
+      categoryOrder: (page as any).categoryOrder || [], // ✅ CRITICAL: Added for category reordering
       countdown: {
         days: (page as any).countdownDays || (page as any).countdown?.days || (page as any).countdowndays || 0,
         hours: (page as any).countdownHours || (page as any).countdown?.hours || (page as any).countdownhours || 0,
@@ -48,61 +53,120 @@ export function useRealtimeData(zoneId?: string) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!zoneId) return
+    if (!zoneId) {
+      // Active Purge: Ensure no stale global data is lurking in the 'undefined' cache slot
+      if (typeof lowDataOptimizer.remove === 'function') {
+        lowDataOptimizer.remove('praise-nights-data-undefined');
+        lowDataOptimizer.remove('praise-nights-data-null');
+      }
+      setPages([])
+      setLoading(false)
+      return
+    }
 
-    async function loadData() {
+    let isMounted = true;
+    const unsubscribes: (() => void)[] = [];
+
+    // Helper to fetch and update cache
+    async function fetchAndCache(timestampOverride?: number) {
       try {
-        setError(null)
-        const cacheKey = `praise-nights-data-${zoneId}`
-        const cachedData = lowDataOptimizer.get(cacheKey)
+        const firebasePages = await fetchFirebaseData(zoneId!)
+        if (firebasePages && isMounted) {
+          setPages(firebasePages)
+          const cacheKey = `praise-nights-data-${zoneId}`
+          const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
+          const metadataKey = `praise-nights-metadata-time-${zoneId}`
 
-        if (cachedData) {
-          setPages(cachedData)
-          // Don't set loading to false yet if we're going to revalidate, 
-          // but allow UI to show data
-        }
+          lowDataOptimizer.set(cacheKey, firebasePages)
+          lowDataOptimizer.set(lastFetchKey, Date.now())
 
-        // Background revalidation: Always fetch fresh data if online,
-        // or if cache is expired/missing.
-        // We only skip background fetch if it's very slow connection and we already have cache.
-        const isExtremelySlow = lowDataOptimizer.isLowDataMode();
-
-        if (!cachedData || !isExtremelySlow) {
-          const firebasePages = await fetchFirebaseData(zoneId)
-          if (firebasePages && firebasePages.length > 0) {
-            setPages(firebasePages)
-            lowDataOptimizer.set(cacheKey, firebasePages)
+          if (timestampOverride) {
+            lowDataOptimizer.set(metadataKey, timestampOverride)
           }
         }
-      } catch (err) {
-        console.error('Failed to load data:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load data')
-
-        const cacheKey = `praise-nights-data-${zoneId}`
-        const cachedData = lowDataOptimizer.get(cacheKey)
-        if (cachedData) {
-          setPages(cachedData)
-        }
-      } finally {
-        setLoading(false)
+      } catch (e) {
+        console.error('Error in fetchAndCache:', e)
       }
     }
 
-    loadData()
+    async function loadInitialData() {
+      try {
+        setError(null)
+        const cacheKey = `praise-nights-data-${zoneId}`
+        const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
+
+        const cachedData = lowDataOptimizer.get(cacheKey)
+        const lastFetchTime = lowDataOptimizer.get(lastFetchKey)
+        const now = Date.now()
+        const CACHE_TTL = 5 * 60 * 1000 // 5 Minutes
+
+        const isCacheValid = cachedData && lastFetchTime && (now - lastFetchTime < CACHE_TTL)
+
+        if (isCacheValid) {
+          console.log('📦 [PraiseNights] Using fresh cache (0 Reads)')
+          if (isMounted) setPages(cachedData)
+          setLoading(false)
+        } else {
+          console.log('🌍 [PraiseNights] Cache stale or missing. Fetching from Firebase...')
+          if (cachedData && isMounted) setPages(cachedData)
+          await fetchAndCache()
+        }
+      } catch (err) {
+        console.error('Failed to load initial data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load data')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    // 1. Load Initial Data
+    loadInitialData();
+
+    // 2. Subscribe to Page Metadata (The Magic)
+    console.log(`📡 [Realtime] Subscribing to praise_nights metadata for ${zoneId}...`);
+    const unsubPraiseNights = FirebaseMetadataService.subscribeToMetadata(zoneId, 'praise_nights', async (serverTimestamp) => {
+      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}`) || 0
+      if (serverTimestamp > lastKnownTimestamp) {
+        console.log('🔔 [Realtime] Praise Nights metadata update detected!')
+        await fetchAndCache(serverTimestamp)
+      }
+    });
+    unsubscribes.push(unsubPraiseNights);
+
+    // 3. Subscribe to Category Metadata (Ensures category changes are picked up)
+    const unsubCategories = FirebaseMetadataService.subscribeToMetadata(zoneId, 'categories', () => {
+      console.log('🔔 [Realtime] Categories metadata update detected! Invalidating cache...');
+      ZoneDatabaseService.invalidateCategoriesCache(zoneId!);
+    });
+    unsubscribes.push(unsubCategories);
+
+    const unsubPageCategories = FirebaseMetadataService.subscribeToMetadata(zoneId, 'page_categories', () => {
+      console.log('🔔 [Realtime] Page Categories metadata update detected! Invalidating cache...');
+      ZoneDatabaseService.invalidatePageCategoriesCache(zoneId!);
+    });
+    unsubscribes.push(unsubPageCategories);
+
+    return () => {
+      isMounted = false;
+      console.log(`🔌 [Realtime] Cleaning up ${unsubscribes.length} listeners for ${zoneId}`);
+      unsubscribes.forEach(unsub => unsub());
+    }
   }, [zoneId])
 
-  const getCurrentPage = (id: number | string): PraiseNight | null => {
+  const getCurrentPage = useCallback((id: number | string): PraiseNight | null => {
     return pages.find(page => page.id === id || page.id === id.toString()) || null
-  }
+  }, [pages])
 
-  const getCurrentSongs = async (pageId: number | string): Promise<PraiseNightSong[]> => {
+  const getCurrentSongs = useCallback(async (pageId: number | string, forceRefresh?: boolean): Promise<PraiseNightSong[]> => {
     try {
+      // Note: forceRefresh parameter added for API compatibility with useAdminData
+      // Currently not used as PraiseNightSongsService.getSongsByPraiseNight always fetches fresh data
       return await PraiseNightSongsService.getSongsByPraiseNight(String(pageId), zoneId)
     } catch (error) {
       console.error(`Error fetching songs for page ${pageId}:`, error)
       return []
     }
-  }
+  }, [zoneId])
 
   return {
     pages,
@@ -115,11 +179,22 @@ export function useRealtimeData(zoneId?: string) {
         setLoading(true)
         setError(null)
 
+        console.log('🔄 [PraiseNights] Manual Refresh: Bypassing Cache...')
         const updatedPages = await fetchFirebaseData(zoneId)
         setPages(updatedPages)
 
-        const cacheKey = `praise-nights-data-${zoneId}`
-        lowDataOptimizer.set(cacheKey, updatedPages)
+        if (zoneId) {
+          const cacheKey = `praise-nights-data-${zoneId}`
+          const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
+
+          lowDataOptimizer.set(cacheKey, updatedPages)
+          lowDataOptimizer.set(lastFetchKey, Date.now()) // Reset timer
+
+          // Also update metadata timestamp to avoid double-fetch
+          // (Since we just fetched fresh data, we are conceptually "up to date")
+          // slightly risky if another user updated EXACTLY now, but acceptable for manual refresh
+          await FirebaseMetadataService.ensureMetadataExists(zoneId, 'praise_nights')
+        }
       } catch (err) {
         console.error('Error refreshing data:', err)
         setError('Failed to refresh data')

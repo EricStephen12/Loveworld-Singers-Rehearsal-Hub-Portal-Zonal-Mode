@@ -1,19 +1,20 @@
-﻿import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+﻿import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   onSnapshot,
   Timestamp,
   serverTimestamp,
   limit
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import { isHQGroup } from '@/config/zones'
 
 export interface CalendarEvent {
   id: string
@@ -28,6 +29,7 @@ export interface CalendarEvent {
   createdBy: string
   createdByName: string
   zoneId: string
+  isGlobal?: boolean // Whether the event is visible to all zones
   type: 'rehearsal' | 'performance' | 'meeting' | 'other'
   isRecurring?: boolean
   recurringPattern?: {
@@ -69,7 +71,7 @@ export class CalendarService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       })
-      
+
       return docRef.id
     } catch (error) {
       console.error('Error creating event:', error)
@@ -77,7 +79,7 @@ export class CalendarService {
     }
   }
 
-    async updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<void> {
+  async updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<void> {
     try {
       const eventRef = doc(this.eventsCollection, eventId)
       const updateData: any = {
@@ -111,14 +113,14 @@ export class CalendarService {
     try {
       const eventRef = doc(this.eventsCollection, eventId)
       await deleteDoc(eventRef)
-      
+
       // Also delete associated attendees
       const attendeesQuery = query(
         this.attendeesCollection,
         where('eventId', '==', eventId)
       )
       const attendeesSnapshot = await getDocs(attendeesQuery)
-      
+
       const deletePromises = attendeesSnapshot.docs.map(doc => deleteDoc(doc.ref))
       await Promise.all(deletePromises)
     } catch (error) {
@@ -127,17 +129,27 @@ export class CalendarService {
     }
   }
 
-  // Get events for a specific zone
-  async getZoneEvents(zoneId: string): Promise<CalendarEvent[]> {
+  // Get events for a specific zone (Includes global events)
+  async getZoneEvents(zoneId: string, userId?: string, userRole?: string): Promise<CalendarEvent[]> {
     try {
-      const q = query(
-        this.eventsCollection,
-        where('zoneId', '==', zoneId),
-        orderBy('start', 'asc')
-      )
-      
-      const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
+      // Fetch all events
+      const querySnapshot = await getDocs(this.eventsCollection)
+      const allEvents = querySnapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
+
+      // If Boss account, show everything for full administration
+      if (userRole === 'boss') {
+        return allEvents.sort((a, b) => a.start.getTime() - b.start.getTime())
+      }
+
+      // Filter logic:
+      // 1. Event is in the current zone
+      // 2. OR Event is marked as Global
+      // 3. OR Event was created by the current user (Private events)
+      return allEvents.filter(event =>
+        event.zoneId === zoneId ||
+        event.isGlobal === true ||
+        (userId && event.createdBy === userId)
+      ).sort((a, b) => a.start.getTime() - b.start.getTime())
     } catch (error) {
       console.error('Error fetching zone events:', error)
       throw error
@@ -154,7 +166,7 @@ export class CalendarService {
         where('start', '<=', Timestamp.fromDate(endDate)),
         orderBy('start', 'asc')
       )
-      
+
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
     } catch (error) {
@@ -172,7 +184,7 @@ export class CalendarService {
         where('createdBy', '==', userId),
         orderBy('start', 'asc')
       )
-      
+
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
     } catch (error) {
@@ -181,18 +193,31 @@ export class CalendarService {
     }
   }
 
-  // Subscribe to real-time events for a zone (OPTIMIZED: limited to 100 events)
-  subscribeToZoneEvents(zoneId: string, callback: (events: CalendarEvent[]) => void): () => void {
+  // Subscribe to real-time events for a zone (Includes global events)
+  subscribeToZoneEvents(zoneId: string, callback: (events: CalendarEvent[]) => void, userId?: string, userRole?: string): () => void {
+    // We subscribe to everything and filter client-side for simplicity with OR logic
     const q = query(
       this.eventsCollection,
-      where('zoneId', '==', zoneId),
       orderBy('start', 'asc'),
-      limit(100) // OPTIMIZED: Limit to 100 events to reduce reads
+      limit(200) // Slightly higher limit since we're fetching everything
     )
 
     return onSnapshot(q, (snapshot) => {
-      const events = snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
-      callback(events)
+      const allEvents = snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
+
+      const filtered = allEvents.filter(event => {
+        // If Boss account, show everything
+        if (userRole === 'boss') return true
+
+        // Filter logic:
+        // 1. Event is in the current zone
+        // 2. OR Event is marked as Global
+        // 3. OR Event was created by the current user (Private events)
+        return event.zoneId === zoneId ||
+          event.isGlobal === true ||
+          (userId && event.createdBy === userId)
+      })
+      callback(filtered)
     }, (error) => {
       console.error('Error in events subscription:', error)
     })
@@ -212,14 +237,14 @@ export class CalendarService {
     }
   }
 
-    async updateAttendeeStatus(eventId: string, userId: string, status: EventAttendee['status']): Promise<void> {
+  async updateAttendeeStatus(eventId: string, userId: string, status: EventAttendee['status']): Promise<void> {
     try {
       const q = query(
         this.attendeesCollection,
         where('eventId', '==', eventId),
         where('userId', '==', userId)
       )
-      
+
       const snapshot = await getDocs(q)
       if (!snapshot.empty) {
         const attendeeRef = snapshot.docs[0].ref
@@ -241,7 +266,7 @@ export class CalendarService {
         this.attendeesCollection,
         where('eventId', '==', eventId)
       )
-      
+
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => {
         const data = doc.data()
@@ -271,6 +296,7 @@ export class CalendarService {
       createdBy: data.createdBy,
       createdByName: data.createdByName,
       zoneId: data.zoneId,
+      isGlobal: data.isGlobal || false,
       type: data.type,
       isRecurring: data.isRecurring || false,
       recurringPattern: data.recurringPattern ? {
@@ -292,7 +318,7 @@ export class CalendarService {
     const events: CalendarEvent[] = []
     const { frequency, interval } = baseEvent.recurringPattern
     const patternEndDate = baseEvent.recurringPattern.endDate || endDate
-    
+
     let currentStart = new Date(baseEvent.start)
     let currentEnd = new Date(baseEvent.end)
     let eventCount = 0

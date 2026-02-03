@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   Edit,
   Trash2,
-  Music
+  Music,
+  ArrowDownUp
 } from "lucide-react";
 import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { Toast } from '../Toast';
@@ -66,6 +67,8 @@ interface PagesSectionProps {
   setShowDeleteDialog: (show: boolean) => void;
   pageToDelete: PraiseNight | null;
   setPageToDelete: (page: PraiseNight | null) => void;
+  showCategoryOrderModal: boolean;
+  setShowCategoryOrderModal: (show: boolean) => void;
   handleAddPage: () => void;
   handleEditPage: (page: PraiseNight) => void;
   handleUpdatePage: () => void;
@@ -78,6 +81,11 @@ interface PagesSectionProps {
   handleToggleSongActive: (song: PraiseNightSong) => void;
   allCategories: Category[];
   addToast: (toast: Omit<Toast, 'id'>) => void;
+  // Page Category Sorting Props
+  pageCategories: any[];
+  showPageCategoryOrderModal: boolean;
+  setShowPageCategoryOrderModal: (show: boolean) => void;
+  handleUpdatePageCategoryOrder: (updatedCategories: any[]) => Promise<void>;
 }
 
 export default function PagesSection(props: PagesSectionProps) {
@@ -133,6 +141,8 @@ export default function PagesSection(props: PagesSectionProps) {
     isCreatingPage,
     showDeleteDialog,
     pageToDelete,
+    showCategoryOrderModal,
+    setShowCategoryOrderModal,
     handleAddPage,
     handleEditPage,
     handleUpdatePage,
@@ -144,7 +154,8 @@ export default function PagesSection(props: PagesSectionProps) {
     handleToggleSongStatus,
     handleToggleSongActive,
     allCategories,
-    addToast
+    addToast,
+    setShowPageCategoryOrderModal
   } = props;
 
   // Get admin pages (same logic as original)
@@ -256,26 +267,36 @@ export default function PagesSection(props: PagesSectionProps) {
         <div className="hidden lg:block p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-900">Pages</h2>
-            <button
-              onClick={() => {
-                setNewPageName('');
-                setNewPageDate('');
-                setNewPageLocation('');
-                setNewPageDescription('');
-                setNewPageCategory('unassigned');
-                setNewPageDays(0);
-                setNewPageHours(0);
-                setNewPageMinutes(0);
-                setNewPageSeconds(0);
-                setNewPageBannerImage('');
-                setNewPageBannerFile(null);
-                setShowPageModal(true);
-              }}
-              className={`flex items-center gap-2 px-3 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors text-sm font-medium`}
-            >
-              <Plus className="w-4 h-4" />
-              Add Page
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowPageCategoryOrderModal(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                title="Sort Page Types"
+              >
+                <ArrowDownUp className="w-4 h-4" />
+                <span className="hidden sm:inline">Sort Types</span>
+              </button>
+              <button
+                onClick={() => {
+                  setNewPageName('');
+                  setNewPageDate('');
+                  setNewPageLocation('');
+                  setNewPageDescription('');
+                  setNewPageCategory('unassigned');
+                  setNewPageDays(0);
+                  setNewPageHours(0);
+                  setNewPageMinutes(0);
+                  setNewPageSeconds(0);
+                  setNewPageBannerImage('');
+                  setNewPageBannerFile(null);
+                  setShowPageModal(true);
+                }}
+                className={`flex items-center gap-2 px-3 py-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors text-sm font-medium`}
+              >
+                <Plus className="w-4 h-4" />
+                Add Page
+              </button>
+            </div>
           </div>
 
           <div className="relative">
@@ -515,6 +536,14 @@ export default function PagesSection(props: PagesSectionProps) {
                   >
                     <Plus className="w-4 h-4" />
                     Add Song
+                  </button>
+                  <button
+                    onClick={() => setShowCategoryOrderModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                    title="Reorder Categories"
+                  >
+                    <ArrowDownUp className="w-4 h-4" />
+                    Sort Categories
                   </button>
                 </div>
               </div>

@@ -157,10 +157,10 @@ self.addEventListener('fetch', (event) => {
           return caches.match('/');
         }
         return null;
-      });
-})
-  );
+      })
+)
 });
+ 
 
 // Background sync for offline actions (optional)
 self.addEventListener('sync', (event) => {

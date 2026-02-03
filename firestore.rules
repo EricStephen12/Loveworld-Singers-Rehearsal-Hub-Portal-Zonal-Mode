@@ -666,6 +666,18 @@ service cloud.firestore {
       allow write: if true;  // Open for API to write aggregated data
     }
 
+    // ===== SYSTEM METADATA (Real-time sync triggers) =====
+    match /sys_metadata/{zoneId} {
+      allow read: if request.auth != null;  // All authenticated users can read
+      allow write: if request.auth != null;  // Authenticated users can write metadata for real-time sync
+      
+      // Nested metadata documents
+      match /{metadataType}/{docId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null;
+      }
+    }
+
     // ===== DEFAULT DENY ALL =====
     match /{document=**} {
       allow read, write: if false;

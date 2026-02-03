@@ -13,7 +13,14 @@ export default function AppBootstrap() {
         // Client-side only initializations
         PerformanceOptimizer.autoOptimize();
         ViewportHeightFix.init();
-        NavigationManager.init();
+
+        // Initialize navigation states (async but we don't block boot)
+        (async () => {
+            await NavigationManager.init();
+            const { navigationStateManager } = await import('@/utils/navigation-state');
+            await navigationStateManager.init();
+        })();
+
         SafeAreaUtils.init();
         DeviceSafeArea.getInstance().init();
         lowDataOptimizer.init();

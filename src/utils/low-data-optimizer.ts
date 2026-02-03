@@ -13,7 +13,7 @@ class LowDataOptimizer {
   private connectionInfo: ConnectionInfo | null = null;
   private isLowData = false;
   private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-  
+
   // Cache TTLs based on connection speed
   private readonly TTL = {
     FAST: 5 * 60 * 1000,      // 5 minutes for fast connections
@@ -45,7 +45,7 @@ class LowDataOptimizer {
       };
 
       // Determine if this is a low data connection
-      this.isLowData = 
+      this.isLowData =
         this.connectionInfo.effectiveType === 'slow-2g' ||
         this.connectionInfo.effectiveType === '2g' ||
         this.connectionInfo.downlink < 1 ||
@@ -79,7 +79,7 @@ class LowDataOptimizer {
   getCacheTTL(): number {
     if (!navigator.onLine) return this.TTL.OFFLINE;
     if (!this.connectionInfo) return this.TTL.FAST;
-    
+
     switch (this.connectionInfo.effectiveType) {
       case 'slow-2g':
       case '2g':
@@ -141,12 +141,25 @@ class LowDataOptimizer {
     return null;
   }
 
-    shouldFetch(key: string): boolean {
+  // Remove specific item from cache
+  remove(key: string): void {
+    // Remove from memory
+    this.cache.delete(key);
+
+    // Remove from storage
+    try {
+      localStorage.removeItem(`lowdata_${key}`);
+    } catch (e) {
+      console.warn('Failed to remove from localStorage:', e);
+    }
+  }
+
+  shouldFetch(key: string): boolean {
     const cached = this.get(key);
     if (cached) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -155,13 +168,13 @@ class LowDataOptimizer {
     return this.connectionInfo;
   }
 
-    isLowDataMode(): boolean {
+  isLowDataMode(): boolean {
     return this.isLowData;
   }
 
-    clearCache(): void {
+  clearCache(): void {
     this.cache.clear();
-        Object.keys(localStorage).forEach(key => {
+    Object.keys(localStorage).forEach(key => {
       if (key.startsWith('lowdata_')) {
         localStorage.removeItem(key);
       }

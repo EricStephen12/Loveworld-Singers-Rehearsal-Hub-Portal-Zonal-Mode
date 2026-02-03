@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X, Calendar, Clock, MapPin, FileText, Sparkles } from 'lucide-react'
 import moment from 'moment'
+import { isHQGroup } from '@/config/zones'
 
 interface UpcomingEventFormProps {
   isOpen: boolean
@@ -10,6 +11,7 @@ interface UpcomingEventFormProps {
   onSave: (event: any) => void
   event?: any
   themeColor: string
+  currentZoneId?: string
 }
 
 export default function UpcomingEventForm({
@@ -17,7 +19,8 @@ export default function UpcomingEventForm({
   onClose,
   onSave,
   event,
-  themeColor
+  themeColor,
+  currentZoneId
 }: UpcomingEventFormProps) {
   const [formData, setFormData] = useState({
     title: event?.title || '',
@@ -26,19 +29,20 @@ export default function UpcomingEventForm({
     time: event?.time || '',
     location: event?.location || '',
     type: event?.type || 'announcement', // announcement, event, reminder
-    showInCarousel: event?.showInCarousel ?? true
+    showInCarousel: event?.showInCarousel ?? true,
+    isGlobal: event?.isGlobal ?? false
   })
 
   const [errors, setErrors] = useState<any>({})
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validation
     const newErrors: any = {}
     if (!formData.title.trim()) newErrors.title = 'Title is required'
     if (!formData.date) newErrors.date = 'Date is required'
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
@@ -54,6 +58,7 @@ export default function UpcomingEventForm({
       location: formData.location,
       type: formData.type,
       showInCarousel: formData.showInCarousel,
+      isGlobal: formData.isGlobal,
       createdAt: event?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -70,7 +75,7 @@ export default function UpcomingEventForm({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
               style={{ backgroundColor: themeColor }}
             >
@@ -103,11 +108,10 @@ export default function UpcomingEventForm({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g., Annual Conference 2024"
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                errors.title 
-                  ? 'border-red-300 focus:ring-red-500' 
-                  : 'border-gray-300 focus:ring-blue-500'
-              }`}
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.title
+                ? 'border-red-300 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+                }`}
             />
             {errors.title && (
               <p className="text-sm text-red-600 mt-1">{errors.title}</p>
@@ -139,11 +143,10 @@ export default function UpcomingEventForm({
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                  errors.date 
-                    ? 'border-red-300 focus:ring-red-500' 
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.date
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+                  }`}
               />
               {errors.date && (
                 <p className="text-sm text-red-600 mt-1">{errors.date}</p>
@@ -199,20 +202,41 @@ export default function UpcomingEventForm({
           </div>
 
           {/* Show in Carousel */}
-          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-            <input
-              type="checkbox"
-              id="showInCarousel"
-              checked={formData.showInCarousel}
-              onChange={(e) => setFormData({ ...formData, showInCarousel: e.target.checked })}
-              className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <label htmlFor="showInCarousel" className="text-sm text-gray-700">
-              <span className="font-semibold">Show in carousel banner</span>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Display this event in the auto-scrolling banner at the top
-              </p>
+          <div className="flex flex-col gap-3 p-4 bg-blue-50 rounded-lg">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                id="showInCarousel"
+                checked={formData.showInCarousel}
+                onChange={(e) => setFormData({ ...formData, showInCarousel: e.target.checked })}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="text-sm text-gray-700">
+                <span className="font-semibold">Show in carousel banner</span>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Display this event in the auto-scrolling banner at the top
+                </p>
+              </div>
             </label>
+
+            {/* Global Event Option - Only for HQ folks or if the event is already global */}
+            {(isHQGroup(currentZoneId) || event?.isGlobal) && (
+              <label className="flex items-center gap-3 cursor-pointer pt-3 border-t border-blue-100">
+                <input
+                  type="checkbox"
+                  id="isGlobal"
+                  checked={formData.isGlobal}
+                  onChange={(e) => setFormData({ ...formData, isGlobal: e.target.checked })}
+                  className="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                />
+                <div className="text-sm text-gray-700">
+                  <span className="font-semibold text-purple-700">Make Global Event</span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    This event will be visible to ALL zones on the platform
+                  </p>
+                </div>
+              </label>
+            )}
           </div>
 
           {/* Actions */}

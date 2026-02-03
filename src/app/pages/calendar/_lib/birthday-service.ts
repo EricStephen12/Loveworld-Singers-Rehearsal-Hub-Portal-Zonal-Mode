@@ -87,32 +87,40 @@ export class BirthdayService {
 
       // Get profiles with limit (birthday data doesn't need all profiles)
       const profiles = await FirebaseDatabaseService.getCollection('profiles', 1000) as unknown as UserProfile[]
-      
+
       if (!profiles || profiles.length === 0) {
         return []
       }
 
       const today = moment()
       const nextWeek = moment().add(7, 'days')
-      
+
       const birthdayUsers: BirthdayUser[] = profiles
         .filter(profile => {
           // Must have birthday
           if (!profile.birthday) return false
-          // If zone filtering, only include zone members
-          if (memberUserIds && !memberUserIds.has(profile.id)) return false
+
+          // Show birthday if:
+          // 1. User is in the specific zone (via zone field)
+          // 2. User is an HQ member (global birthdays)
+          // 3. User is in the zone's member sub-collection (legacy/robust check)
+          const isInZoneField = profile.zone === zoneId
+          const isHQMember = profile.is_hq_member === true
+          const isInMemberCollection = memberUserIds?.has(profile.id)
+
+          if (!isInZoneField && !isHQMember && !isInMemberCollection) return false
           return true
         })
         .map(profile => {
           const birthday = moment(profile.birthday)
-          
+
           // Get birthday this year
           const birthdayThisYear = moment(profile.birthday).year(today.year())
-          
-                    const isToday = birthdayThisYear.isSame(today, 'day')
-          
-                    const isUpcoming = birthdayThisYear.isBetween(today, nextWeek, 'day', '[]')
-          
+
+          const isToday = birthdayThisYear.isSame(today, 'day')
+
+          const isUpcoming = birthdayThisYear.isBetween(today, nextWeek, 'day', '[]')
+
           if (!isToday && !isUpcoming) {
             return null
           }
@@ -137,7 +145,7 @@ export class BirthdayService {
       const sortedBirthdays = birthdayUsers.sort((a, b) => {
         if (a.isToday && !b.isToday) return -1
         if (!a.isToday && b.isToday) return 1
-        
+
         const dateA = moment(a.birthday).month() * 100 + moment(a.birthday).date()
         const dateB = moment(b.birthday).month() * 100 + moment(b.birthday).date()
         return dateA - dateB
@@ -147,7 +155,7 @@ export class BirthdayService {
       if (zoneId) {
         setBirthdayCache(zoneId, sortedBirthdays)
       }
-      
+
       return sortedBirthdays
     } catch (error) {
       console.error('Error fetching birthdays:', error)

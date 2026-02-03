@@ -1,4 +1,5 @@
 import { FirebaseDatabaseService } from './firebase-database'
+import { FirebaseMetadataService } from './firebase-metadata-service'
 
 const CATEGORIES_CACHE_TTL = 5 * 60 * 1000
 
@@ -119,6 +120,9 @@ export class ZoneDatabaseService {
         }));
       }
 
+      // Metadata Update
+      await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights')
+
       return { success: true, id: result.id, firebaseId: result.id }
     } catch (error) {
       console.error('Error creating praise night:', error)
@@ -141,6 +145,14 @@ export class ZoneDatabaseService {
       )
 
       const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
+
+      // 🔔 Trigger metadata update for realtime sync
+      if (result.success && result.id) {
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
+        // Also update individual song metadata
+        await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, result.id)
+      }
+
       return { success: true, id: result.id, song: { ...cleanData, id: result.id } }
     } catch (error) {
       console.error('Error creating zone song:', error)
@@ -172,6 +184,9 @@ export class ZoneDatabaseService {
             }));
           }
 
+          // Metadata Update
+          await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights')
+
           return result
         }
       }
@@ -190,6 +205,11 @@ export class ZoneDatabaseService {
             itemName: data.name || 'Page'
           }
         }));
+      }
+
+      // Metadata Update
+      if (result.success && zoneId) {
+        await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights')
       }
 
       return { success: true }
@@ -211,6 +231,35 @@ export class ZoneDatabaseService {
       )
 
       await FirebaseDatabaseService.updateDocument('zone_songs', songId, cleanData)
+
+      // 🔔 Trigger metadata update for realtime sync
+      // We need praiseNightId to update the correct list
+      // Since we don't have it in data significantly often, we might need it.
+      // However, for updateSong, usually we interact with a loaded song.
+      // If data has praiseNightId, use it. If not, we should probably fetch the song first?
+      // Optimization: Try to get praiseNightId from data, if not, fetch current doc.
+      let praiseNightId = data.praiseNightId;
+      if (!praiseNightId) {
+        // Fetch to get praiseNightId
+        try {
+          const songDoc = await FirebaseDatabaseService.getDocument('zone_songs', songId);
+          if (songDoc) {
+            praiseNightId = (songDoc as any).praiseNightId;
+            const zId = (songDoc as any).zoneId;
+            if (zId && praiseNightId) {
+              await FirebaseMetadataService.updatePraiseNightSongsMetadata(zId, praiseNightId)
+              await FirebaseMetadataService.updateSongMetadata(zId, praiseNightId, songId)
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching song for metadata update:', e);
+        }
+      } else {
+        // If we have praiseNightId and know zoneId? 
+        // updateSong generic doesn't pass zoneId, but the song has it.
+        // We'll rely on the fetch above or if the caller passed it.
+        // Actually, let's just do the fetch approach always to be safe and accurate about zoneId too.
+      }
       return { success: true }
     } catch (error) {
       console.error('Error updating zone song:', error)
@@ -246,6 +295,11 @@ export class ZoneDatabaseService {
         }));
       }
 
+      // Metadata Update
+      if (result.success && zoneId) {
+        await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights')
+      }
+
       return { success: true }
     } catch (error) {
       console.error('Error deleting praise night:', error)
@@ -255,7 +309,26 @@ export class ZoneDatabaseService {
 
   static async deleteSong(songId: string) {
     try {
+      // Get song first to access praiseNightId and zoneId for metadata update
+      let praiseNightId: string | undefined;
+      let zId: string | undefined;
+      try {
+        const songDoc = await FirebaseDatabaseService.getDocument('zone_songs', songId);
+        if (songDoc) {
+          praiseNightId = (songDoc as any).praiseNightId;
+          zId = (songDoc as any).zoneId;
+        }
+      } catch (e) {
+        console.error('Error getting song before delete:', e);
+      }
+
       await FirebaseDatabaseService.deleteDocument('zone_songs', songId)
+
+      // 🔔 Trigger metadata update
+      if (zId && praiseNightId) {
+        await FirebaseMetadataService.updatePraiseNightSongsMetadata(zId, praiseNightId)
+      }
+
       return { success: true }
     } catch (error) {
       console.error('Error deleting zone song:', error)
@@ -291,6 +364,8 @@ export class ZoneDatabaseService {
 
       const result = await FirebaseDatabaseService.addDocument(collection, data)
       this.invalidateCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true, id: result.id, ...data }
     } catch (error) {
       console.error('Error creating category:', error)
@@ -326,6 +401,8 @@ export class ZoneDatabaseService {
 
       const result = await FirebaseDatabaseService.addDocument(collection, categoryData)
       this.invalidatePageCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true, id: result.id }
     } catch (error) {
       console.error('Error creating page category:', error)
@@ -342,6 +419,8 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.updateDocument(collection, pageCategoryId, updateData)
       this.invalidatePageCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
       console.error('Error updating page category:', error)
@@ -356,6 +435,8 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.deleteDocument(collection, pageCategoryId)
       this.invalidatePageCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
       console.error('Error deleting page category:', error)
@@ -372,6 +453,8 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.updateDocument(collection, categoryId, updateData)
       this.invalidateCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {
       console.error('Error updating category:', error)
@@ -386,6 +469,8 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.deleteDocument(collection, categoryId)
       this.invalidateCategoriesCache(zoneId)
+      // 🔔 Trigger metadata update for realtime sync
+      await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {
       console.error('Error deleting category:', error)
@@ -454,8 +539,37 @@ export class ZoneDatabaseService {
       ? await FirebaseDatabaseService.getCollection('page_categories')
       : await this.getPageCategoriesByZone(zoneId)
 
-    pageCategoriesCache.set(cacheKey, { data: pageCategories, timestamp: Date.now(), zoneId })
-    return pageCategories
+    // Sort by orderIndex
+    const sorted = pageCategories.sort((a: any, b: any) => (a.orderIndex || 0) - (b.orderIndex || 0))
+
+    pageCategoriesCache.set(cacheKey, { data: sorted, timestamp: Date.now(), zoneId })
+    return sorted
+  }
+
+  static async updatePageCategoryOrder(zoneId: string, categories: any[]) {
+    try {
+      const { isHQGroup } = await import('@/config/zones')
+      const collection = isHQGroup(zoneId) ? 'page_categories' : 'zone_page_categories'
+
+      // Update each category with its new index
+      // Using Promise.all for parallel updates
+      await Promise.all(categories.map(async (cat, index) => {
+        if (cat.id) {
+          await FirebaseDatabaseService.updateDocument(collection, cat.id, {
+            orderIndex: index,
+            updatedAt: new Date()
+          })
+        }
+      }))
+
+      this.invalidatePageCategoriesCache(zoneId)
+      await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating page category order:', error)
+      return { success: false }
+    }
   }
 
   static invalidateCategoriesCache(zoneId: string) {

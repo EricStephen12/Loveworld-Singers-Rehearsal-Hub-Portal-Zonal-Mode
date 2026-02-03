@@ -211,6 +211,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
         onSave={handleSaveEvent}
         event={editingEvent}
         themeColor={themeColor}
+        currentZoneId={currentZone?.id}
       />
     </div>
   )

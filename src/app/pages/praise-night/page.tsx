@@ -17,6 +17,9 @@ import CustomLoader from "@/components/CustomLoader";
 import AudioWave from "@/components/AudioWave";
 import { PraiseNightSong, PraiseNight } from "@/types/supabase";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
+
+import { useRealtimeSong } from "@/hooks/useRealtimeSong";
+import { FirebaseMetadataService } from "@/lib/firebase-metadata-service";
 import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { isHQGroup } from '@/config/zones';
@@ -29,14 +32,59 @@ import { handleAppRefresh } from "@/utils/refresh-utils";
 import { lowDataOptimizer } from "@/utils/low-data-optimizer";
 import { useFeatureTracking } from "@/hooks/useAnalyticsTracking";
 import { NavigationManager } from "@/utils/navigation";
+import { navigationStateManager } from "@/utils/navigation-state";
 
 function PraiseNightPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { currentZone } = useZone();
+  const { currentZone, userRole, isInitialized } = useZone();
   const categoryFilter = searchParams?.get('category');
   const pageParam = searchParams?.get('page');
   const songParam = searchParams?.get('song');
+  const { currentSong, isPlaying, setCurrentSong, play, isLoading, hasError, audioRef } = useAudio();
+
+  // 🏥 Song detail modal states (moved up to avoid TDZ errors)
+  const [selectedSong, setSelectedSong] = useState<any>(null);
+  const [isSongDetailOpen, setIsSongDetailOpen] = useState(false);
+  const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(null);
+
+  // 🔄 Navigation State Restoration: Restore last category if missing from URL
+  useEffect(() => {
+    // Only restore if:
+    // 1. Zone is initialized (prevents wrong zone data)
+    // 2. No category in URL (user returned without params)
+    // 3. Not already loading
+    if (isInitialized && !categoryFilter && currentZone?.id) {
+      const savedState = navigationStateManager.getNavigationState(currentZone.id);
+
+      if (savedState && savedState.path === '/pages/praise-night' && savedState.query.category) {
+        console.log('🔄 Restoring navigation state:', savedState.query.category);
+
+        // Use replace to avoid adding extra history entry
+        const restoredUrl = navigationStateManager.buildUrlFromState(savedState);
+        router.replace(restoredUrl);
+      } else {
+        // No saved state, default to 'ongoing' (safe fallback)
+        console.log('🔄 No saved state, defaulting to ongoing');
+        router.replace('/pages/praise-night?category=ongoing');
+      }
+    }
+  }, [isInitialized, categoryFilter, currentZone?.id, router]);
+
+  // 💾 Save navigation state whenever category changes
+  useEffect(() => {
+    if (categoryFilter && currentZone?.id) {
+      const query: Record<string, string> = { category: categoryFilter };
+
+      // Include page if present
+      if (pageParam) {
+        query.page = pageParam;
+      }
+
+      navigationStateManager.saveNavigationState('/pages/praise-night', query, currentZone.id);
+      console.log('💾 Saved navigation state:', query);
+    }
+  }, [categoryFilter, pageParam, currentZone?.id]);
 
   // Track praise night usage
   useFeatureTracking('praise_night');
@@ -194,7 +242,13 @@ function PraiseNightPageContent() {
   // No preloading needed - data loads fresh on each request
 
   // Refresh data when page becomes visible (after admin updates)
+  // Refresh data when page becomes visible (after admin updates)
   useEffect(() => {
+    // 🛑 OPTIMIZATION: Disabled aggressive visibility refresh to save costs.
+    // The useRealtimeData hook now handles TTL caching internally.
+    // Manual pull-to-refresh is available if user needs instant update.
+
+    /* 
     const handleVisibilityChange = async () => {
       if (!document.hidden) {
         console.log('🔄 Page became visible, refreshing data...');
@@ -204,7 +258,6 @@ function PraiseNightPageContent() {
         const { SafeAreaManager } = await import('@/utils/safeAreaManager');
         const safeAreaManager = SafeAreaManager.getInstance();
         safeAreaManager.recalculate();
-        console.log('🛡️ Safe area recalculated after page visibility change');
       }
     };
 
@@ -216,7 +269,6 @@ function PraiseNightPageContent() {
       const { SafeAreaManager } = await import('@/utils/safeAreaManager');
       const safeAreaManager = SafeAreaManager.getInstance();
       safeAreaManager.recalculate();
-      console.log('🛡️ Safe area recalculated after page focus');
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -226,7 +278,8 @@ function PraiseNightPageContent() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [refreshData]);
+    */
+  }, []); // Removed refreshData dependency naturally
 
   // ✅ SECURITY: Enforce Pre-Rehearsal Access Control
   const { isZoneCoordinator } = useZone();
@@ -276,32 +329,48 @@ function PraiseNightPageContent() {
     }
   }, [pageParam, allPraiseNights]);
 
-  // Handle song parameter from search results
+  // Handle song parameter from URL
   useEffect(() => {
-    if (songParam && currentPraiseNight && allSongsFromFirebase.length > 0) {
-      const targetSong = allSongsFromFirebase.find(song => song.title === decodeURIComponent(songParam));
-      if (targetSong) {
-        const songIndex = allSongsFromFirebase.indexOf(targetSong);
-        handleSongClick(targetSong, songIndex);
-        console.log('🎯 Opened song from search:', targetSong.title);
+    if (currentPraiseNight && allSongsFromFirebase.length > 0) {
+      if (songParam) {
+        const decodedSong = decodeURIComponent(songParam);
+        const targetSong = allSongsFromFirebase.find(song => song.title === decodedSong);
 
-        // Remove song parameter from URL after opening modal to prevent re-opening on close
-        const url = new URL(window.location.href);
-        url.searchParams.delete('song');
-        window.history.replaceState({}, '', url.toString());
+        if (targetSong && selectedSong?.id !== targetSong.id) {
+          const songIndex = allSongsFromFirebase.indexOf(targetSong);
+          // Set internal state to open modal
+          setSelectedSongIndex(songIndex);
+          setSelectedSong({ ...targetSong, imageIndex: songIndex });
+          setIsSongDetailOpen(true);
+
+          // Ensure it's the current song in the audio player if not already
+          if (currentSong?.id !== targetSong.id) {
+            setCurrentSong(targetSong, false);
+          }
+
+          console.log('🎯 Song modal opened from URL:', targetSong.title);
+        }
+      } else if (isSongDetailOpen) {
+        // If song parameter disappeared (Back button), close the modal
+        setIsSongDetailOpen(false);
+        setSelectedSong(null);
+        console.log('🎯 Song modal closed because URL param disappeared');
       }
     }
-  }, [songParam, currentPraiseNight, allSongsFromFirebase]);
+  }, [songParam, currentPraiseNight, allSongsFromFirebase, isSongDetailOpen, selectedSong?.id, currentSong?.id, setCurrentSong]);
 
-  // Auto-select first page only when no page is selected and no page parameter
+  // Auto-select first page only when no page is selected OR category changes
   useEffect(() => {
-    if (filteredPraiseNights.length > 0 && !currentPraiseNight && !pageParam) {
-      // Only auto-select if no page is currently selected and no page parameter
+    // Check if we need to auto-select or re-select
+    const categoryMismatch = currentPraiseNight && categoryFilter && currentPraiseNight.category !== categoryFilter;
+
+    if (filteredPraiseNights.length > 0 && (!currentPraiseNight || categoryMismatch) && !pageParam) {
+      // Only auto-select if no page parameter is overriding it
       const firstPage = filteredPraiseNights[0];
       setCurrentPraiseNightState(firstPage);
-      console.log('🎯 Auto-selected first page:', firstPage.name, 'Category:', firstPage.category);
+      console.log('🎯 Auto-selected page matching category:', categoryFilter || 'default', firstPage.name);
     }
-  }, [filteredPraiseNights, currentPraiseNight, pageParam]);
+  }, [filteredPraiseNights, currentPraiseNight, pageParam, categoryFilter]);
 
   // Debug page selection
   useEffect(() => {
@@ -331,10 +400,7 @@ function PraiseNightPageContent() {
   const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: { [key: string]: boolean } }>({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Audio context
-  const { currentSong, isPlaying, setCurrentSong, play, isLoading, hasError, audioRef } = useAudio();
-
-  // Add missing state variables that are used but not defined
+  // Audio context (moved to top)
   const [activeTab, setActiveTab] = useState('lyrics');
 
   // Filter states
@@ -356,10 +422,7 @@ function PraiseNightPageContent() {
     }
   }, [currentPraiseNight, previousPageId]);
 
-  // Song detail modal states
-  const [selectedSong, setSelectedSong] = useState<any>(null);
-  const [isSongDetailOpen, setIsSongDetailOpen] = useState(false);
-  const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(null);
+  // Song detail modal states (moved to top)
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
 
@@ -494,47 +557,27 @@ function PraiseNightPageContent() {
     console.log('🎯 Category set to:', category);
   };
 
-  // Handle song card click - opens song detail modal
+  // Handle song card click - now JUST updates URL to trigger the sync effect
   const handleSongClick = (song: any, index: number) => {
-    console.log('🎵 handleSongClick called with:', {
-      songId: song.id,
-      songTitle: song.title,
-      currentSongId: currentSong?.id,
-      currentSongTitle: currentSong?.title,
-      isPlaying: isPlaying,
-      isSameSong: currentSong?.id === song.id
-    });
+    console.log('🎵 handleSongClick updating URL for:', song.title);
 
-    setSelectedSongIndex(index); // Set the selected song index
-    setSelectedSong({ ...song, imageIndex: index });
-    setIsSongDetailOpen(true);
-
-    // Check if this song is already playing
-    if (currentSong?.id === song.id && isPlaying) {
-      // Song is already playing, just open modal without changing anything
-      console.log('🎵 Song already playing, opening modal only - NO setCurrentSong call');
-      // Don't call setCurrentSong at all - just open the modal
-      return; // Exit early to prevent any further processing
-    } else if (currentSong?.id === song.id && !isPlaying) {
-      // Same song but paused - just open modal, don't restart
-      console.log('🎵 Same song but paused, opening modal only - NO setCurrentSong call');
-      // Don't call setCurrentSong at all - just open the modal
-      return; // Exit early to prevent any further processing
-    } else {
-      // Different song - set as current song (will continue from where it left off if it was paused)
-      console.log('🎵 Different song, calling setCurrentSong:', song.title);
-      setCurrentSong(song, false); // Set without auto-play since user clicked
-    }
+    // Update URL with song parameter
+    const params = new URLSearchParams(window.location.search);
+    params.set('song', song.title);
+    router.push(`?${params.toString()}`);
 
     // Dispatch event to hide mini player
     window.dispatchEvent(new CustomEvent('songDetailOpen'));
   };
 
-  // Handle song card click when outside modal - opens modal AND starts playing
+  // Handle song card click when outside modal - opens modal AND updates URL
   const handleSongSwitch = (song: any, index: number) => {
-    setSelectedSongIndex(index); // Set the selected song index
-    setSelectedSong({ ...song, imageIndex: index });
-    setIsSongDetailOpen(true);
+    console.log('🎵 handleSongSwitch updating URL and starting play for:', song.title);
+
+    // Update URL
+    const params = new URLSearchParams(window.location.search);
+    params.set('song', song.title);
+    router.push(`?${params.toString()}`);
 
     // Set the current song with auto-play enabled (only if it has audio)
     if (song.audioFile && song.audioFile.trim() !== '') {
@@ -566,14 +609,13 @@ function PraiseNightPageContent() {
 
   // Handle closing song detail
   const handleCloseSongDetail = () => {
-    setIsSongDetailOpen(false);
-    setSelectedSong(null);
-
-    // Clean up URL parameters if they exist (from global search)
-    const url = new URL(window.location.href);
-    if (url.searchParams.has('song')) {
-      url.searchParams.delete('song');
-      window.history.replaceState({}, '', url.toString());
+    // If we have a song parameter, go back to remove it while keeping other params
+    if (songParam) {
+      NavigationManager.handleBack(router);
+    } else {
+      // Fallback if somehow there's no param
+      setIsSongDetailOpen(false);
+      setSelectedSong(null);
     }
 
     // Dispatch event to show mini player (if song is playing)
@@ -608,7 +650,7 @@ function PraiseNightPageContent() {
       'gospel': HandMetal,
       'ballad': Volume2,
       'fast': SkipForward,
-      'slow': Timer,
+      'slow': Clock,
       'medium': Play,
       'default': Music
     };
@@ -617,12 +659,72 @@ function PraiseNightPageContent() {
     return categoryIconMap[normalizedCategory] || Music; // Default icon
   };
 
-  // Load songs when a page is selected (same as admin)
+  // Load songs when a page is selected OR when real-time metadata changes
+  const [songMetadataTimestamp, setSongMetadataTimestamp] = useState<number>(0);
+
+  // 1. Subscribe to song metadata changes for the current page
+  useEffect(() => {
+    if (!currentPraiseNight || !currentZone?.id) return;
+
+    console.log(`📡 [Realtime] Subscribing to song metadata for page ${currentPraiseNight.id}`);
+    const unsubscribe = FirebaseMetadataService.subscribeToPraiseNightSongsMetadata(
+      currentZone.id,
+      currentPraiseNight.id,
+      (timestamp: number) => {
+        console.log(`🔔 [Realtime] Song list metadata update for page ${currentPraiseNight.id}`);
+        setSongMetadataTimestamp(timestamp);
+      }
+    );
+
+    return () => {
+      console.log(`🔌 [Realtime] Unsubscribing from song metadata for page ${currentPraiseNight.id}`);
+      unsubscribe();
+    };
+  }, [currentPraiseNight?.id, currentZone?.id]);
+
+  // 1b. Subscribe to PRAISE NIGHT metadata (for category order, etc.)
+  useEffect(() => {
+    if (!currentZone?.id) return;
+
+    // Subscribe to general praise_nights metadata
+    const unsubscribe = FirebaseMetadataService.subscribeToMetadata(
+      currentZone.id,
+      'praise_nights',
+      (timestamp) => {
+        console.log('🔔 [Realtime] Praise Night metadata update - refreshing data');
+        refreshData();
+      }
+    );
+
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentZone?.id]); // refreshData removed to prevent listener recreation
+
+  // 1c. Sync currentPraiseNightState with allPraiseNights updates
+  useEffect(() => {
+    if (currentPraiseNight && allPraiseNights.length > 0) {
+      const updatedPage = allPraiseNights.find(p => p.id === currentPraiseNight.id);
+
+      // Deep comparison to avoid infinite loops (simplified check for key props)
+      if (updatedPage && (
+        updatedPage.categoryOrder?.join(',') !== currentPraiseNight.categoryOrder?.join(',') ||
+        updatedPage.name !== currentPraiseNight.name ||
+        updatedPage.category !== currentPraiseNight.category
+      )) {
+        console.log('🔄 [Realtime] Updating current page state from realtime data');
+        setCurrentPraiseNightState(updatedPage);
+      }
+    }
+  }, [allPraiseNights, currentPraiseNight]);
+
+  // 2. Fetch songs when page changes OR metadata timestamp updates
   useEffect(() => {
     if (currentPraiseNight) {
       setSongsLoading(true);
-      getCurrentSongs(currentPraiseNight.id).then(songs => {
-        console.log(`📊 Loaded ${songs.length} songs for page ${currentPraiseNight.id}`);
+      // Force refresh (second arg = true) to bypass useAdminData cache
+      // This ensures we get the latest data when metadata triggers this effect
+      getCurrentSongs(currentPraiseNight.id, true).then(songs => {
+        console.log(`📊 [Sync] Loaded ${songs.length} songs for page ${currentPraiseNight.id} (Metadata time: ${songMetadataTimestamp})`);
         setAllSongsFromFirebase(songs);
         setSongsLoading(false);
       }).catch(error => {
@@ -633,7 +735,18 @@ function PraiseNightPageContent() {
     } else {
       setAllSongsFromFirebase([]);
     }
-  }, [currentPraiseNight, getCurrentSongs]);
+  }, [currentPraiseNight?.id, songMetadataTimestamp, getCurrentSongs]);
+
+  // 🔥 REALTIME SONG UPDATES: Subscribe to individual song changes
+  // This enables instant lyrics updates when admins edit songs
+  const {
+    song: realtimeSongData,
+    loading: realtimeSongLoading
+  } = useRealtimeSong(
+    currentZone?.id,
+    currentPraiseNight?.id,
+    selectedSong?.id
+  );
 
   // Use the songs directly since they're already filtered by page
   const finalSongData = useMemo(() => {
@@ -720,14 +833,39 @@ function PraiseNightPageContent() {
   // All categories in horizontal bar with auto-scroll (prioritize categories that have active songs)
   const mainCategories = useMemo(() => {
     const base = [...songCategories];
-    if (categoriesWithActiveSongs.length === 0) return base;
+    if (base.length === 0) return base;
+
+    const order = currentPraiseNight?.categoryOrder || [];
+
     return base.sort((a, b) => {
+      // 1. Active categories ALWAYS first (highest priority)
       const aActive = categoriesWithActiveSongs.includes(a);
       const bActive = categoriesWithActiveSongs.includes(b);
-      if (aActive === bActive) return 0;
-      return aActive ? -1 : 1; // Active categories first
+
+      if (aActive !== bActive) {
+        return aActive ? -1 : 1;
+      }
+
+      // 2. Manual order from categoryOrder (second priority)
+      const aOrderIndex = order.indexOf(a);
+      const bOrderIndex = order.indexOf(b);
+
+      const hasAOrder = aOrderIndex !== -1;
+      const hasBOrder = bOrderIndex !== -1;
+
+      if (hasAOrder && hasBOrder) {
+        return aOrderIndex - bOrderIndex;
+      } else if (hasAOrder) {
+        return -1; // Items in order list come before items not in it
+      } else if (hasBOrder) {
+        return 1;
+      }
+
+      // 3. Alphabetical (fallback)
+      return a.localeCompare(b);
     });
-  }, [songCategories, categoriesWithActiveSongs]);
+  }, [songCategories, categoriesWithActiveSongs, currentPraiseNight?.categoryOrder]);
+
   // No more FAB categories - all moved to main bar
   const otherCategories: string[] = [];
 
@@ -994,14 +1132,17 @@ function PraiseNightPageContent() {
     );
   }
 
-  // ✅ Show loading screen while data is being fetched - PREVENTS EMPTY STATE FLASH
-  if (loading || (filteredPraiseNights.length === 0 && !currentPraiseNight && allPraiseNights.length === 0)) {
+  // ✅ Show loading screen while data is being fetched OR restoration is pending
+  // This prevents the "default" content from flashing before the URL matches the state
+  const isRestoring = isInitialized && !categoryFilter && currentZone?.id;
+
+  if (loading || !isInitialized || isRestoring || (filteredPraiseNights.length === 0 && !currentPraiseNight && allPraiseNights.length === 0)) {
     return (
       <div
         className="h-screen safe-area-bottom flex items-center justify-center"
         style={{ background: `linear-gradient(135deg, ${zoneColor}12, #fdfbff)` }}
       >
-        <CustomLoader message="Loading rehearsal data..." />
+        <CustomLoader />
       </div>
     );
   }
@@ -1743,7 +1884,23 @@ function PraiseNightPageContent() {
             {/* Song Title Cards - Scrollable - Show for archive individual pages */}
             {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
               <div className="px-1 py-4 max-h-96 lg:max-h-none overflow-y-auto">
-                {filteredSongs.length === 0 ? (
+                {/* ✅ CRITICAL FIX: Show loading skeleton while fetching, not empty state */}
+                {songsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="border-0 rounded-2xl p-3 lg:p-4 shadow-sm bg-white animate-pulse">
+                        <div className="flex items-center gap-3 lg:gap-4">
+                          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-slate-200"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                            <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                          </div>
+                          <div className="w-12 h-6 bg-slate-200 rounded-full"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredSongs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                     <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
                       <Music className="w-8 h-8 text-slate-400" />
@@ -2007,8 +2164,17 @@ function PraiseNightPageContent() {
       {/* Song Detail Modal */}
       {
         isSongDetailOpen && selectedSong && (() => {
-          // Always get the latest song data from finalSongData (real-time)
-          const latestSongData = finalSongData.find(s => s.id === selectedSong.id) || selectedSong;
+          // Use realtime song data if available (for instant lyrics updates)
+          // Otherwise fall back to the song from finalSongData
+          const latestSongData = realtimeSongData || finalSongData.find(s => s.id === selectedSong.id) || selectedSong;
+
+          console.log('🎵 Rendering SongDetailModal with:', {
+            selectedSongId: selectedSong.id,
+            hasRealtimeData: !!realtimeSongData,
+            realtimeSongLoading,
+            usingRealtimeData: !!realtimeSongData
+          });
+
           return (
             <SongDetailModal
               selectedSong={latestSongData}
@@ -2029,16 +2195,9 @@ function PraiseNightPageContent() {
   );
 }
 
-export default function PraiseNightPage() {
+export default function Page() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm">Loading program data...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<CustomLoader />}>
       <PraiseNightPageContent />
     </Suspense>
   );

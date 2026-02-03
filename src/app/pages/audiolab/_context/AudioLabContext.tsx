@@ -58,6 +58,30 @@ interface AudioLabState {
   // UI
   isLoading: boolean;
   error: string | null;
+
+  // Cache for Home View
+  homeData: {
+    projects: any[];
+    featuredSongs: any[];
+    lastFetched: number;
+  };
+
+  // Cache for Practice View
+  practiceData: {
+    progress: any | null;
+    weeklyStats: any | null;
+    featuredSongs: any[];
+    lastFetched: number;
+  };
+
+  // Cache for Library View
+  libraryData: {
+    songs: any[];
+    totalCount: number;
+    lastFetched: number;
+    lastDoc: any | null;
+    hasMore: boolean;
+  };
 }
 
 // ============================================
@@ -93,7 +117,10 @@ type AudioLabAction =
   | { type: 'SET_SESSION'; payload: SessionState['currentSession'] | any }
   | { type: 'CLEAR_SESSION' }
   | { type: 'SET_PROJECT'; payload: string | null }
-  | { type: 'SET_BUFFER_LOADING'; payload: { isLoading: boolean; target?: string | null } };
+  | { type: 'SET_BUFFER_LOADING'; payload: { isLoading: boolean; target?: string | null } }
+  | { type: 'SET_HOME_DATA'; payload: { projects: any[]; featuredSongs: any[] } }
+  | { type: 'SET_PRACTICE_DATA'; payload: { progress: any; weeklyStats: any; featuredSongs: any[] } }
+  | { type: 'SET_LIBRARY_DATA'; payload: { songs: any[]; totalCount: number; lastDoc: any; hasMore: boolean } };
 
 // ============================================
 // INITIAL STATE
@@ -134,6 +161,24 @@ const initialState: AudioLabState = {
   currentPitch: null,
   isLoading: false,
   error: null,
+  homeData: {
+    projects: [],
+    featuredSongs: [],
+    lastFetched: 0,
+  },
+  practiceData: {
+    progress: null,
+    weeklyStats: null,
+    featuredSongs: [],
+    lastFetched: 0,
+  },
+  libraryData: {
+    songs: [],
+    totalCount: 0,
+    lastFetched: 0,
+    lastDoc: null,
+    hasMore: true,
+  },
 };
 
 // ============================================
@@ -322,6 +367,33 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
         }
       };
 
+    case 'SET_HOME_DATA':
+      return {
+        ...state,
+        homeData: {
+          ...action.payload,
+          lastFetched: Date.now()
+        }
+      };
+
+    case 'SET_PRACTICE_DATA':
+      return {
+        ...state,
+        practiceData: {
+          ...action.payload,
+          lastFetched: Date.now()
+        }
+      };
+
+    case 'SET_LIBRARY_DATA':
+      return {
+        ...state,
+        libraryData: {
+          ...action.payload,
+          lastFetched: Date.now()
+        }
+      };
+
     default:
       return state;
   }
@@ -377,6 +449,9 @@ interface AudioLabContextValue {
   // Utilities
   formatTime: (seconds: number) => string;
   initializeAudio: () => Promise<boolean>;
+  loadHomeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
+  loadPracticeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
+  loadLibraryData: (zoneId: string, limitCount: number, forceRefresh?: boolean) => Promise<void>;
 }
 
 // ============================================
@@ -410,6 +485,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     const viewParam = searchParams?.get('view');
     const projectParam = searchParams?.get('project');
     const roomIdParam = searchParams?.get('roomId');
+    const songParam = searchParams?.get('song');
 
     if (viewParam && viewParam !== state.currentView) {
       const validViews = ['home', 'library', 'practice', 'karaoke', 'warmup', 'studio', 'collab', 'collab-chat', 'live-session'];
@@ -420,6 +496,14 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
     if (projectParam && projectParam !== state.currentProjectId) {
       dispatch({ type: 'SET_PROJECT', payload: projectParam });
+    }
+
+    // Restore song from URL if not already playing it
+    if (songParam && (!state.player.currentSong || state.player.currentSong.title !== decodeURIComponent(songParam))) {
+      // Find the song and play it (this will be handled by the view once it loads the list, 
+      // but we can at least signal the player to be ready or try to find it if we have context)
+      // For now, we'll let the individual views (Library/Practice) handle the find-and-play 
+      // based on the URL parameter.
     }
 
     // Auto-join room if ID is in URL
@@ -437,7 +521,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     // to handle the actual join logic once the view is set
   };
 
-  const updateUrl = useCallback((view: ViewType, projectId: string | null = null, roomId: string | null = null) => {
+  const updateUrl = useCallback((view: ViewType, projectId: string | null = null, roomId: string | null = null, songTitle: string | null = null) => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('view', view);
 
@@ -453,14 +537,20 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       params.delete('roomId');
     }
 
-    // Only push if the URL actually changed to avoid infinite cycles
+    if (songTitle || state.player.currentSong?.title) {
+      params.set('song', songTitle || state.player.currentSong!.title);
+    } else {
+      params.delete('song');
+    }
+
+    // Only update if URL changed
     const newUrl = `/pages/audiolab?${params.toString()}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
 
     if (newUrl !== currentUrl) {
-      router.push(newUrl);
+      router.replace(newUrl); // Use replace for sub-view changes to avoid cluttering history
     }
-  }, [router, searchParams]);
+  }, [router, searchParams, state.player.currentSong?.title, state.session.currentSession?.id]);
 
   // ============================================
   // AUDIO ENGINE SETUP
@@ -524,8 +614,8 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
   const setView = useCallback((view: ViewType) => {
     dispatch({ type: 'SET_VIEW', payload: view });
-    updateUrl(view, state.currentProjectId, state.session.currentSession?.id);
-  }, [updateUrl, state.currentProjectId, state.session.currentSession?.id]);
+    updateUrl(view, state.currentProjectId, state.session.currentSession?.id, state.player.currentSong?.title);
+  }, [updateUrl, state.currentProjectId, state.session.currentSession?.id, state.player.currentSong?.title]);
 
   const goBack = useCallback(() => {
     dispatch({ type: 'GO_BACK' });
@@ -547,6 +637,9 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
       dispatch({ type: 'PLAY_SONG', payload: legacySong });
       dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: true, target: 'full' } });
+
+      // Update URL with song info
+      updateUrl(state.currentView, state.currentProjectId, state.session.currentSession?.id, legacySong.title);
 
       // Load audio
       console.log(`💎 [AudioLabContext] Fetching audio parts for: ${legacySong.title}`);
@@ -693,6 +786,146 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
+  const HOME_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  const loadHomeData = useCallback(async (userId: string, zoneId?: string, forceRefresh: boolean = false) => {
+    const now = Date.now();
+    const { lastFetched, projects } = stateRef.current.homeData;
+
+    if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && projects.length > 0) {
+      console.log('📦 [AudioLabContext] Using cached home data');
+      return;
+    }
+
+    console.log('🚀 [AudioLabContext] Fetching home data from Firestore...');
+    try {
+      const { getUserProjects } = await import('../_lib/project-service');
+      const { getSongs } = await import('../_lib/song-service');
+
+      const [newProjects, newSongs] = await Promise.all([
+        getUserProjects(userId),
+        zoneId ? getSongs(zoneId, 5) : Promise.resolve([])
+      ]);
+
+      dispatch({
+        type: 'SET_HOME_DATA',
+        payload: {
+          projects: newProjects,
+          featuredSongs: zoneId ? newSongs.slice(0, 3) : stateRef.current.homeData.featuredSongs
+        }
+      });
+    } catch (error) {
+      console.error('❌ [AudioLabContext] Error loading home data:', error);
+    }
+  }, []);
+
+  const loadPracticeData = useCallback(async (userId: string, zoneId?: string, forceRefresh: boolean = false) => {
+    const now = Date.now();
+    const { lastFetched, progress } = stateRef.current.practiceData;
+
+    if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && progress) {
+      console.log('📦 [AudioLabContext] Using cached practice data');
+      return;
+    }
+
+    console.log('🚀 [AudioLabContext] Fetching practice data from Firestore...');
+    try {
+      const { getUserProgress, getWeeklyStats } = await import('../_lib/practice-service');
+      const { getSongs } = await import('../_lib/song-service');
+
+      const [userProgress, stats, songs] = await Promise.all([
+        getUserProgress(userId),
+        getWeeklyStats(userId),
+        getSongs(zoneId || '', 10)
+      ]);
+
+      dispatch({
+        type: 'SET_PRACTICE_DATA',
+        payload: {
+          progress: userProgress,
+          weeklyStats: stats,
+          featuredSongs: songs.slice(0, 5)
+        }
+      });
+    } catch (error) {
+      console.error('❌ [AudioLabContext] Error loading practice data:', error);
+    }
+  }, []);
+
+  const loadLibraryData = useCallback(async (zoneId: string, limitCount: number, forceRefresh: boolean = false) => {
+    const now = Date.now();
+    const { lastFetched, songs } = stateRef.current.libraryData;
+
+    if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) {
+      console.log('📦 [AudioLabContext] Using cached library data');
+      return;
+    }
+
+    console.log('🚀 [AudioLabContext] Fetching library songs (Master + Praise Night)...');
+    try {
+      const { getSongsPaginated, getTotalSongCount } = await import('../_lib/song-service');
+
+      // Execute fetches in parallel
+      const songPromises: Promise<any>[] = [
+        getSongsPaginated(null, limitCount),
+        getTotalSongCount()
+      ];
+
+      // If zoneId is available, also fetch Praise Night songs
+      if (zoneId) {
+        const fetchPraiseNight = async () => {
+          try {
+            const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
+            const pnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
+            return pnSongs.map((pnSong: any) => ({
+              id: pnSong.id as string,
+              title: pnSong.title || 'Untitled',
+              artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
+              duration: 300,
+              audioUrls: { full: pnSong.audioFile || '' },
+              availableParts: (pnSong.audioFile ? ['full'] : []) as any[],
+              genre: pnSong.category || 'Praise Night',
+              key: pnSong.key || '',
+              tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
+              albumArt: '',
+              lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as any[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
+              zoneId: zoneId,
+              isHQSong: false,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              createdBy: 'system'
+            }));
+          } catch (e) {
+            console.error('[AudioLabContext] Failed to fetch PN songs:', e);
+            return [];
+          }
+        };
+        songPromises.push(fetchPraiseNight());
+      } else {
+        songPromises.push(Promise.resolve([]));
+      }
+
+      const [masterResult, masterTotal, praiseNightSongs] = await Promise.all(songPromises);
+
+      // Simple merge: Prepend Praise Night songs (usually newer) or append? 
+      // User likely wants to see them mixed. For now, we'll put them at top as "New"
+      const allSongs = [...praiseNightSongs, ...masterResult.songs];
+      const combinedTotal = masterTotal + praiseNightSongs.length;
+
+      dispatch({
+        type: 'SET_LIBRARY_DATA',
+        payload: {
+          songs: allSongs,
+          totalCount: combinedTotal,
+          lastDoc: masterResult.lastDoc, // Only track pagination for Master List
+          hasMore: masterResult.songs.length < masterTotal // Logic mostly for master list pagination
+        }
+      });
+    } catch (error) {
+      console.error('❌ [AudioLabContext] Error loading library data:', error);
+    }
+  }, []);
+
   // ============================================
   // CONTEXT VALUE
   // ============================================
@@ -725,6 +958,9 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     openProject,
     formatTime,
     initializeAudio,
+    loadHomeData,
+    loadPracticeData,
+    loadLibraryData,
   };
 
   return (

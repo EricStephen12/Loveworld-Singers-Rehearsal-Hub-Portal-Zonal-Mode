@@ -52,7 +52,7 @@ export interface AudioLabSong {
   lyricsUrl?: string;
 
   // Lyrics data for karaoke
-  lyrics?: LyricLine[];
+  lyrics?: LyricLine[] | string;
 
   // Access control
   zoneId?: string;      // null = available to all zones (HQ songs)

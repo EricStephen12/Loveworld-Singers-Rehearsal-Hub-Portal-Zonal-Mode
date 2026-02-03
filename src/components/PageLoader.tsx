@@ -35,7 +35,18 @@ export function PageLoader({ children }: PageLoaderProps) {
     // Zone cache - only verify if not on a public path
     if (!isPublic && hasCachedUser) {
       const hasZoneCache = localStorage.getItem('lwsrh-zone-cache-v6');
-      return !!hasZoneCache;
+      // ✅ CRITICAL FIX: Validate that cache is actually valid JSON, not just exists
+      if (hasZoneCache) {
+        try {
+          const parsed = JSON.parse(hasZoneCache);
+          return !!parsed?.id; // Only trust cache if it has a valid zone ID
+        } catch (e) {
+          console.warn('⚠️ Invalid zone cache detected, clearing...');
+          localStorage.removeItem('lwsrh-zone-cache-v6');
+          return false;
+        }
+      }
+      return false;
     }
 
     return isPublic;
@@ -60,6 +71,18 @@ export function PageLoader({ children }: PageLoaderProps) {
       lastPathname.current = pathname;
     }
   }, [pathname]);
+
+  // ✅ CRITICAL FIX: Add timeout to prevent infinite loading from stale cache
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isReady && !authLoading) {
+        console.warn('⏱️ PageLoader timeout - forcing ready state to prevent infinite loading');
+        setIsReady(true);
+      }
+    }, 5000); // 5 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [isReady, authLoading]);
 
   useEffect(() => {
     // If we're already ready and the path hasn't changed, don't do anything

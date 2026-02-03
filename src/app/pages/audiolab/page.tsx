@@ -65,7 +65,7 @@ export default function AudioLabPage() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden bg-[#0f0f12]">
 
       <main className={`
         flex-1 overflow-y-auto overflow-x-hidden relative

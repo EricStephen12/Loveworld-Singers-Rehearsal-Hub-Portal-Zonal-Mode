@@ -59,51 +59,21 @@ const practiceCards: (PracticeCard & { available: boolean; needsSong?: boolean }
 ];
 
 export function PracticeView() {
-  const { state, setView, playSong } = useAudioLab();
+  const { state, setView, playSong, loadPracticeData } = useAudioLab();
   const { practiceStats } = state;
   const { user, profile } = useAuth();
 
-  // Real progress data
-  const [progress, setProgress] = useState<PracticeProgress | null>(null);
-  const [weeklyStats, setWeeklyStats] = useState<{
-    minutesPracticed: number;
-    sessionsCompleted: number;
-    averageScore: number;
-    averageAccuracy: number;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [featuredSongs, setFeaturedSongs] = useState<AudioLabSong[]>([]);
+  const { progress, weeklyStats, featuredSongs } = state.practiceData;
 
   // Load user progress
   useEffect(() => {
     if (user?.uid) {
-      loadProgress();
-    } else {
-      setIsLoading(false);
+      loadPracticeData(user.uid, profile?.zone || undefined);
     }
-  }, [user?.uid]);
+  }, [user?.uid, profile?.zone, loadPracticeData]);
 
-  const loadProgress = async () => {
-    if (!user?.uid) return;
-
-    try {
-      setIsLoading(true);
-      const [userProgress, stats, songs] = await Promise.all([
-        getUserProgress(user.uid),
-        getWeeklyStats(user.uid),
-        getSongs(profile?.zone || '', 10)
-      ]);
-
-      setProgress(userProgress);
-      setWeeklyStats(stats);
-      setFeaturedSongs(songs.slice(0, 5));
-    } catch (error) {
-      console.error('[PracticeView] Error loading progress:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Determine if we should show a full screen loader
+  const isActuallyLoading = !progress;
 
   const [challengeAccepted, setChallengeAccepted] = useState(false);
 
@@ -304,7 +274,7 @@ export function PracticeView() {
         {/* Session Stats Footer */}
         <section className="relative z-10 px-4 mt-8 mb-6">
           <h2 className="text-white text-xl font-bold tracking-tight mb-4">Your Stats</h2>
-          {isLoading ? (
+          {isActuallyLoading ? (
             <div className="flex items-center justify-center py-8">
               <CustomLoader size="md" />
             </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle } from 'lucide-react'
+import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown } from 'lucide-react'
 
 import { ScreenHeader } from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
@@ -19,11 +19,10 @@ import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
 import { AccountLinkingService } from '@/lib/account-linking'
-import { isZoneLeader } from '@/lib/user-role-utils'
+import { isZoneLeader, isBoss } from '@/lib/user-role-utils'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { isHQGroup } from '@/config/zones'
 import { useSubscription } from '@/contexts/SubscriptionContext'
-import { Crown } from 'lucide-react'
 
 // Helper function to adjust color brightness for gradient
 const adjustColor = (color: string, amount: number) => {
@@ -38,7 +37,7 @@ function ProfilePage() {
   const router = useRouter()
   const { user, signOut, profile: currentProfile, refreshProfile, isLoading } = useAuth()
   const { userZones, currentZone, isSuperAdmin, isZoneCoordinator } = useZone()
-  const { isPremiumTier, isIndividualPremium, subscription } = useSubscription()
+  const { isPremiumTier, isIndividualPremium, subscription, isExpiringSoon, daysRemaining } = useSubscription()
 
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -653,7 +652,7 @@ function ProfilePage() {
 
 
 
-  const isBossUser = currentProfile?.role === 'boss' || currentProfile?.email?.toLowerCase().startsWith('boss')
+  const isBossUser = isBoss(currentProfile || profileData)
 
   const menuItems = getMenuItems(handleLogout, handleAppRefresh, isCoordinator, isBossUser)
 
@@ -828,8 +827,8 @@ function ProfilePage() {
                 className="w-full px-3 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors active:bg-gray-100"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-gray-400" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
+                    <Shield className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-bold text-gray-900">Account</h3>
@@ -892,34 +891,75 @@ function ProfilePage() {
             </div>
           </div>
 
+          {/* Subscription Status Banner - Only show if expiring soon */}
+          {isExpiringSoon && (
+            <div className="mx-4 mt-3">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 text-amber-600">
+                  <AlertCircle className="w-6 h-6 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-black text-amber-900 leading-tight">Subscription Expiring Soon</p>
+                  <p className="text-[10px] text-amber-700 font-medium">Your premium access ends in {daysRemaining} days. Renew now to avoid interruption.</p>
+                </div>
+                <button
+                  onClick={() => router.push('/subscription')}
+                  className="px-3 py-1.5 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md active:scale-95 transition-all"
+                >
+                  Renew
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Subscription Section - Always visible entry point */}
           <div className="px-4 mt-3">
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 p-3">
+            <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border p-4 transition-all ${isPremiumTier ? 'border-yellow-200' : 'border-gray-100'}`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
-                    <Crown className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transform rotate-3 ${isPremiumTier ? 'bg-gradient-to-br from-yellow-400 to-amber-600' : 'bg-gray-100'}`}>
+                    <Crown className={`w-5 h-5 ${isPremiumTier ? 'text-white' : 'text-gray-400'}`} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900">Subscription</h3>
-                    <p className="text-[10px] text-gray-500">
-                      {isIndividualPremium ? 'Individual Premium Active' : 'Free Account'}
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Account Status</h3>
+                    <p className={`text-[10px] font-bold ${isPremiumTier ? 'text-amber-600' : 'text-gray-500'}`}>
+                      {isPremiumTier ? 'PREMIUM' : 'STANDARD ACCOUNT'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push('/subscription')}
-                  className="px-4 py-1.5 text-white text-xs font-black rounded-lg transition-all active:scale-95 shadow-md flex items-center gap-1.5"
+                  className="px-5 py-2 text-white text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all active:scale-95 shadow-xl flex items-center gap-2 group"
                   style={{
-                    backgroundColor: currentZone?.themeColor || '#111827',
-                    boxShadow: `0 4px 12px ${currentZone?.themeColor || '#111827'}40`
+                    backgroundColor: isPremiumTier ? '#111827' : (currentZone?.themeColor || '#111827'),
+                    boxShadow: `0 8px 16px ${isPremiumTier ? '#11182740' : (currentZone?.themeColor || '#111827') + '40'}`
                   }}
                 >
-                  {isIndividualPremium ? (
-                    subscription?.status === 'active' ? 'CURRENT' : 'RENEW'
-                  ) : 'UPGRADE'}
+                  {isIndividualPremium && isExpiringSoon ? 'RENEW' :
+                    isPremiumTier ? 'CURRENT' :
+                      'UPGRADE'}
                 </button>
               </div>
+
+              {isIndividualPremium && subscription?.expiresAt && (
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Renews on</span>
+                    <span className="text-[10px] text-gray-700 font-black">{new Date(subscription.expiresAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter bg-blue-50 px-2 py-0.5 rounded-full">
+                      Annual Billing
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {(!isPremiumTier) && (
+                <p className="mt-3 pt-3 border-t border-gray-100 text-[9px] text-gray-400 font-medium italic">
+                  * Experience the full platform with Premium access.
+                </p>
+              )}
             </div>
           </div>
 
@@ -931,8 +971,8 @@ function ProfilePage() {
                 className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors active:bg-gray-100"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center">
-                    <Users className="w-5 h-5 text-gray-400" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform -rotate-3">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-bold text-gray-900">My Zones</h3>
@@ -941,17 +981,15 @@ function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Link
                     href="/pages/join-zone"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1 bg-gray-50 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-lg border border-gray-200 hover:bg-gray-100 transition-all active:scale-95 mr-2"
+                    className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 transition-colors py-1"
                   >
-                    Join
+                    JOIN
                   </Link>
-                  <div className={`transform transition-transform duration-200 ${expandedSections.zones ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transform transition-transform duration-200 ${expandedSections.zones ? 'rotate-180' : ''}`} />
                 </div>
               </button>
 
@@ -1003,8 +1041,8 @@ function ProfilePage() {
                 className="w-full px-3 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors active:bg-gray-100"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-400" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
+                    <User className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-bold text-gray-900">Personal Info</h3>
@@ -1298,8 +1336,8 @@ function ProfilePage() {
                 className="w-full px-3 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors active:bg-gray-100"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center shadow-md">
-                    <MapPin className="w-4 h-4 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
+                    <MapPin className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-bold text-gray-900">Location</h3>
@@ -1335,8 +1373,8 @@ function ProfilePage() {
                 className="w-full px-3 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors active:bg-gray-100"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
-                    <Briefcase className="w-4 h-4 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg transform -rotate-3">
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-bold text-gray-900">Designation</h3>

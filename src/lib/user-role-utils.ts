@@ -2,6 +2,7 @@
 // Determines user permissions based on email prefix and zone context
 
 import type { UserProfile } from '@/types/supabase'
+import { isHQAdminEmail } from '@/config/roles'
 
 // Boss emails that have full access to all features in all zones
 const BOSS_EMAILS = [
@@ -9,7 +10,7 @@ const BOSS_EMAILS = [
 ];
 
 /**
- * Check if user is a Boss (has BOSS prefix in email, boss role, or is in boss emails list)
+ * Check if user is a Boss or HQ Admin (has Boss/Admin status across all zones)
  */
 export function isBoss(user: UserProfile | null): boolean {
   if (!user) return false
@@ -21,6 +22,8 @@ export function isBoss(user: UserProfile | null): boolean {
   if (email?.startsWith('boss')) return true;
 
   if (email && BOSS_EMAILS.includes(email)) return true;
+
+  if (email && isHQAdminEmail(email)) return true;
 
   return false;
 }

@@ -227,9 +227,19 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     // Navigate to AudioLab library with song title to auto-expand
     if (currentSongData?.title) {
       setIsNavigatingToAudioLab(true);
-      // Use encodeURIComponent to handle special characters in song titles
-      router.push(`/pages/audiolab?song=${encodeURIComponent(currentSongData.title)}`);
-      onClose();
+
+      // We add a small delay to ensure the user sees the spinner 
+      // and to let any pending state updates settle
+      setTimeout(() => {
+        // Use encodeURIComponent to handle special characters in song titles
+        // Add program=ongoing so LibraryView knows to switch tabs
+        router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(currentSongData.title)}`);
+
+        // IMPORTANT: We do NOT call onClose() here.
+        // Calling onClose() triggers a router.back() in many layouts (like PraiseNightPage),
+        // which can cancel the forward navigation to AudioLab.
+        // The page transition will naturally unmount this modal.
+      }, 500);
     }
   };
 
@@ -894,8 +904,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
                     >
                       <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'lyrics'
-                          ? 'bg-white text-black'
-                          : 'text-white hover:bg-white/20'
+                        ? 'bg-white text-black'
+                        : 'text-white hover:bg-white/20'
                         }`}>
                         <BookOpen className="w-4 h-4" />
                       </div>
@@ -906,8 +916,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
                     >
                       <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'solfas'
-                          ? 'bg-white text-black'
-                          : 'text-white hover:bg-white/20'
+                        ? 'bg-white text-black'
+                        : 'text-white hover:bg-white/20'
                         }`}>
                         <Music className="w-4 h-4" />
                       </div>
@@ -918,8 +928,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
                     >
                       <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'comments'
-                          ? 'bg-white text-black'
-                          : 'text-white hover:bg-white/20'
+                        ? 'bg-white text-black'
+                        : 'text-white hover:bg-white/20'
                         }`}>
                         <Users className="w-4 h-4" />
                       </div>
@@ -930,8 +940,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
                     >
                       <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'history'
-                          ? 'bg-white text-black'
-                          : 'text-white hover:bg-white/20'
+                        ? 'bg-white text-black'
+                        : 'text-white hover:bg-white/20'
                         }`}>
                         <Clock className="w-4 h-4" />
                       </div>
@@ -1034,8 +1044,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <button
                         onClick={() => setActiveHistoryTab('lyrics')}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'lyrics'
-                            ? 'text-white shadow-md'
-                            : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                           }`}
                         style={activeHistoryTab === 'lyrics' ? { backgroundColor: zoneColor } : {}}
                       >
@@ -1044,8 +1054,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <button
                         onClick={() => setActiveHistoryTab('audio')}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'audio'
-                            ? 'text-white shadow-md'
-                            : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                           }`}
                         style={activeHistoryTab === 'audio' ? { backgroundColor: zoneColor } : {}}
                       >
@@ -1054,8 +1064,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <button
                         onClick={() => setActiveHistoryTab('solfas')}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'solfas'
-                            ? 'text-white shadow-md'
-                            : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                           }`}
                         style={activeHistoryTab === 'solfas' ? { backgroundColor: zoneColor } : {}}
                       >
@@ -1064,8 +1074,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <button
                         onClick={() => setActiveHistoryTab('comments')}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'comments'
-                            ? 'text-white shadow-md'
-                            : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                           }`}
                         style={activeHistoryTab === 'comments' ? { backgroundColor: zoneColor } : {}}
                       >
@@ -1074,8 +1084,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <button
                         onClick={() => setActiveHistoryTab('metadata')}
                         className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'metadata'
-                            ? 'text-white shadow-md'
-                            : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
                           }`}
                         style={activeHistoryTab === 'metadata' ? { backgroundColor: zoneColor } : {}}
                       >
@@ -1644,10 +1654,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                     }}
                     disabled={isLoading || hasError}
                     className={`w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-sm ${hasError
-                        ? 'bg-red-500 cursor-not-allowed'
-                        : isLoading
-                          ? 'bg-gray-400 cursor-wait'
-                          : 'bg-gray-600'
+                      ? 'bg-red-500 cursor-not-allowed'
+                      : isLoading
+                        ? 'bg-gray-400 cursor-wait'
+                        : 'bg-gray-600'
                       }`}
                   >
                     {isLoading ? (

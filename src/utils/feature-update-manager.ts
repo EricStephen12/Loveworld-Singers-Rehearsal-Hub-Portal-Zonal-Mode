@@ -22,7 +22,7 @@ class FeatureUpdateManager {
   private readonly FEATURE_KEY = 'app-features';
   private readonly VERSION_KEY = 'app-version-info';
   private readonly LAST_CHECK_KEY = 'last-feature-check';
-  
+
   // Current app version - update this when you add new features
   private readonly CURRENT_VERSION: AppVersion = {
     version: '3.1.0', // Increment this when adding new features
@@ -97,7 +97,7 @@ class FeatureUpdateManager {
 
       localStorage.setItem(this.LAST_CHECK_KEY, now.toString());
 
-            const needsUpdate = !storedVersion || 
+      const needsUpdate = !storedVersion ||
         storedVersion !== this.CURRENT_VERSION.version ||
         this.CURRENT_VERSION.forceUpdate;
 
@@ -117,25 +117,25 @@ class FeatureUpdateManager {
   // Handle feature update - clear relevant caches
   private async handleFeatureUpdate(): Promise<void> {
     try {
-            const cacheKeysToClear = new Set<string>();
-      
+      const cacheKeysToClear = new Set<string>();
+
       this.FEATURES.forEach(feature => {
         if (feature.enabled) {
           feature.cacheKeys.forEach(key => cacheKeysToClear.add(key));
         }
       });
 
-            const keysToRemove: string[] = [];
+      const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
-                    cacheKeysToClear.forEach(cacheKey => {
+          cacheKeysToClear.forEach(cacheKey => {
             if (key.includes(cacheKey)) {
               keysToRemove.push(key);
             }
           });
-          
-                    if (key.includes('cache') || key.includes('Cache')) {
+
+          if (key.includes('cache') || key.includes('Cache')) {
             keysToRemove.push(key);
           }
         }
@@ -145,7 +145,7 @@ class FeatureUpdateManager {
         localStorage.removeItem(key);
       });
 
-            if ('serviceWorker' in navigator && 'caches' in window) {
+      if ('serviceWorker' in navigator && 'caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(
           cacheNames.map(cacheName => {
@@ -154,7 +154,7 @@ class FeatureUpdateManager {
         );
       }
 
-            localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION.version);
+      localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION.version);
       localStorage.setItem(this.FEATURE_KEY, JSON.stringify(this.CURRENT_VERSION.features));
 
       // Show update notification
@@ -165,14 +165,14 @@ class FeatureUpdateManager {
     }
   }
 
-    public isFeatureEnabled(featureId: string): boolean {
+  public isFeatureEnabled(featureId: string): boolean {
     if (typeof window === 'undefined') return false;
 
     try {
       const feature = this.FEATURES.find(f => f.featureId === featureId);
       if (!feature) return false;
 
-            if (!feature.enabled) return false;
+      if (!feature.enabled) return false;
 
       // Check rollout percentage (like Instagram does)
       const userId = this.getUserId();
@@ -193,13 +193,13 @@ class FeatureUpdateManager {
     if (authUser) {
       return authUser;
     }
-    
+
     // Generate consistent ID based on browser fingerprint
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     ctx?.fillText('feature-rollout', 10, 10);
     const fingerprint = canvas.toDataURL();
-    
+
     return btoa(fingerprint).slice(0, 16);
   }
 
@@ -225,11 +225,11 @@ class FeatureUpdateManager {
   public forceRefresh(): void {
     if (typeof window === 'undefined') return;
 
-    
-        localStorage.clear();
+
+    localStorage.clear();
     sessionStorage.clear();
-    
-        if ('serviceWorker' in navigator && 'caches' in window) {
+
+    if ('serviceWorker' in navigator && 'caches' in window) {
       caches.keys().then(cacheNames => {
         return Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
       });
