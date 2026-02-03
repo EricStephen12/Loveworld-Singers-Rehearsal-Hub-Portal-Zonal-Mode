@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useMedia } from '../../_context/MediaContext'
@@ -15,7 +15,7 @@ import { mediaCommentService, MediaComment } from '../../_lib/media-comment-serv
 import AddToPlaylistModal from '../../_components/AddToPlaylistModal'
 import { NavigationManager } from '@/utils/navigation'
 
-export default function PlayerPage() {
+function PlayerContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -580,5 +580,17 @@ export default function PlayerPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function PlayerPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    }>
+      <PlayerContent />
+    </Suspense>
   )
 }

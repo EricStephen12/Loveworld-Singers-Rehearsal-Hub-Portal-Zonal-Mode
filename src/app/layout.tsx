@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
 import PWAInstall from '@/components/PWAInstall'
@@ -147,7 +148,9 @@ export default function RootLayout({
         <script src="/fcm-handler.js"></script>
       </head>
       <body className="font-sans">
-        <AppBootstrap />
+        <Suspense fallback={null}>
+          <AppBootstrap />
+        </Suspense>
         <ErrorBoundary>
           <AuthProvider>
             <CallProvider>

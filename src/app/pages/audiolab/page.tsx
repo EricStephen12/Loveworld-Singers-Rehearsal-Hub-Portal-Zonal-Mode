@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAudioLab } from './_context/AudioLabContext';
 import { useFeatureTracking } from '@/hooks/useAnalyticsTracking';
@@ -17,7 +17,7 @@ import {
   WarmUpView,
 } from './_components';
 
-export default function AudioLabPage() {
+function AudioLabContent() {
   const { state, setView } = useAudioLab();
   const { currentView } = state;
   const searchParams = useSearchParams();
@@ -84,4 +84,17 @@ export default function AudioLabPage() {
       {showBottomNav && <BottomNav />}
     </div>
   );
+}
+
+export default function AudioLabPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-full items-center justify-center bg-[#0f0f12]">
+        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-400 font-medium animate-pulse">Entering AudioLab...</p>
+      </div>
+    }>
+      <AudioLabContent />
+    </Suspense>
+  )
 }
