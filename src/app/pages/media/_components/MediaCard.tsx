@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Play, Plus, CheckCircle } from 'lucide-react'
+import { Play, Plus, CheckCircle, MoreVertical } from 'lucide-react'
 import { MediaItem } from '../_lib'
 import { useAuth } from '@/hooks/useAuth'
 import AddToPlaylistModal from './AddToPlaylistModal'
@@ -176,30 +176,27 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
             </div>
           </div>
 
-          {media.description && (
-            <p className="text-[#aaa] text-[12px] sm:text-[13px] line-clamp-2 mt-2 leading-snug group-hover:text-[#ccc] transition-colors">
-              {media.description}
-            </p>
-          )}
         </div>
 
-        {/* Add to Playlist Action */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              if (user?.uid) {
-                setShowAddModal(true)
-              } else {
-                router.push('/login')
-              }
-            }}
-            className="p-1.5 hover:bg-white/10 rounded-full text-white transition-colors"
-            title="Add to Playlist"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
+      </div>
+
+      {/* Action Menu (Three dots) */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            // Menu logic would go here, for now just a visual placeholder or direct action
+            if (user?.uid) {
+              setShowAddModal(true)
+            } else {
+              router.push('/login')
+            }
+          }}
+          className="p-1 hover:bg-white/10 rounded-full text-white transition-colors"
+          title="More actions"
+        >
+          <MoreVertical className="w-5 h-5 text-white" />
+        </button>
       </div>
 
       {user?.uid && (

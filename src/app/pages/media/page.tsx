@@ -9,9 +9,14 @@ import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import YouTubeHeader from './_components/YouTubeHeader'
 import MediaCard from './_components/MediaCard'
 import YouTubeSidebar from './_components/YouTubeSidebar'
+import LiveStreamPlayer from './_components/LiveStreamPlayer'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup } from '@/config/zones'
+import MediaCardSkeleton from './_components/MediaCardSkeleton'
 
 export default function MediaPage() {
   const router = useRouter()
+  const { currentZone } = useZone()
   const { user, profile } = useAuth()
   const {
     allMedia,
@@ -194,7 +199,7 @@ export default function MediaPage() {
         )}
 
         {/* Sidebar */}
-        <div className={`fixed lg:relative z-40 transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className={`fixed lg:relative z-40 transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:w-[72px] lg:translate-x-0'}`}>
           <YouTubeSidebar
             sidebarOpen={sidebarOpen}
             viewMode={viewMode === 'shorts' ? 'shorts' : 'all'}
@@ -208,8 +213,14 @@ export default function MediaPage() {
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto bg-[#0f0f0f]">
           <div className="pt-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-[2100px] mx-auto transition-all duration-300">
+            {/* Live Stream Section - HQ ONLY */}
+            {isHQGroup(currentZone?.id) && viewMode === 'all' && selectedCategory === 'all' && !searchQuery && (
+              <div className="w-full max-w-[1280px] mx-auto mb-6">
+                <LiveStreamPlayer isPreview={true} />
+              </div>
+            )}
             {viewMode === 'playlists' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
                 {adminPlaylists.map((playlist) => (
                   <div
                     key={playlist.id}
@@ -256,7 +267,7 @@ export default function MediaPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-4 gap-y-8">
                 {filteredMedia.map((video) => (
                   <MediaCard
                     key={video.id}
@@ -266,19 +277,11 @@ export default function MediaPage() {
                 ))}
 
                 {/* Loading Skeleton */}
+                {/* Loading Skeleton */}
                 {isLoading && (
                   <>
-                    {[...Array(8)].map((_, i) => (
-                      <div key={i} className="flex flex-col gap-3">
-                        <div className="w-full aspect-video bg-[#272727] animate-pulse sm:rounded-xl" />
-                        <div className="flex gap-3 px-3 sm:px-1">
-                          <div className="w-10 h-10 rounded-full bg-[#272727] animate-pulse flex-shrink-0" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-5 bg-[#272727] rounded w-full animate-pulse" />
-                            <div className="h-4 bg-[#272727] rounded w-2/3 animate-pulse" />
-                          </div>
-                        </div>
-                      </div>
+                    {[...Array(10)].map((_, i) => (
+                      <MediaCardSkeleton key={`skeleton-${i}`} />
                     ))}
                   </>
                 )}
