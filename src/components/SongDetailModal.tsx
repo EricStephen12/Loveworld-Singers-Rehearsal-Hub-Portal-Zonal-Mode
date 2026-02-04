@@ -60,6 +60,36 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
   };
 
+  // Helper to format comment text with bold and larger font for *text*, **text**, or (text)
+  const formatCommentText = (text: string) => {
+    if (!text) return null;
+
+    // Clean up HTML tags and &nbsp;
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
+    // Pattern to match: **bold**, *bold*, or (bold)
+    // Using capturing groups to preserve the content for splitting
+    const parts = cleanText.split(/(\*\*.*?\*\*|\*.*?\*|\(.*?\))/g);
+
+    return parts.map((part, i) => {
+      const isAsteriskMatch = (part.startsWith('**') && part.endsWith('**')) || (part.startsWith('*') && part.endsWith('*'));
+      const isParenthesesMatch = part.startsWith('(') && part.endsWith(')');
+
+      if (isAsteriskMatch || isParenthesesMatch) {
+        let content = part;
+        if (part.startsWith('**')) content = part.slice(2, -2);
+        else if (part.startsWith('*')) content = part.slice(1, -1);
+
+        return (
+          <span key={i} className="font-bold text-[1.1em] text-slate-900 leading-tight inline-block">
+            {content}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   // Toggle fullscreen functions
   const toggleFullscreenLyrics = () => {
     setIsFullscreenLyrics(!isFullscreenLyrics);
@@ -1018,7 +1048,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         <div className="space-y-4">
                           {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
                             <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                              <p className="text-gray-900 leading-relaxed mb-2 whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+                              <div className="text-gray-900 leading-relaxed mb-2 whitespace-pre-wrap">{formatCommentText(comment.text)}</div>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span className="font-medium">{comment.author}</span>
                                 <span>•</span>
@@ -1421,7 +1451,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
                                         <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <p className="whitespace-pre-wrap">{entry.new_value?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+                                          <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
                                         </div>
                                       </div>
                                     )}
@@ -1495,7 +1525,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
                                         <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <p className="whitespace-pre-wrap">{entry.new_value?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+                                          <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
                                         </div>
                                       </div>
                                     )}
