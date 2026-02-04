@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Share2, ThumbsUp } from 'lucide-react'
 import LiveStreamPlayer from '../_components/LiveStreamPlayer'
+import { useZone } from '@/hooks/useZone'
 
 export default function LivePage() {
     const router = useRouter()
+    const { currentZone } = useZone()
 
     return (
         <div className="h-screen w-full bg-black flex flex-col lg:flex-row overflow-hidden">
@@ -25,7 +27,7 @@ export default function LivePage() {
                 {/* Video Area - Centered */}
                 <div className="flex-1 flex flex-col bg-black overflow-y-auto">
                     <div className="w-full relative max-w-[1600px] mx-auto">
-                        <LiveStreamPlayer />
+                        <LiveStreamPlayer zoneId={currentZone?.id} />
                     </div>
 
                     {/* Stream Info / Mobile Actions */}

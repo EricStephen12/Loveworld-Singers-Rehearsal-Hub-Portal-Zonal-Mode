@@ -31,6 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isHQGroup, isBossZone } from '@/config/zones';
 import { MasterSongDetailSheet } from './MasterSongDetailSheet';
 import { MasterEditSongModal } from './MasterEditSongModal';
+import MasterProgramOrderModal from './MasterProgramOrderModal';
 import CustomLoader from '@/components/CustomLoader';
 
 interface MasterLibrarySectionProps {
@@ -88,7 +89,8 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
   const [showCreateProgramModal, setShowCreateProgramModal] = useState(false);
   const [isAssigningToProgram, setIsAssigningToProgram] = useState(false);
   const [selectedSongIds, setSelectedSongIds] = useState<Set<string>>(new Set())
-  const [songsToAssign, setSongsToAssign] = useState<MasterSong[]>([]) // For modal (single or multi);
+  const [songsToAssign, setSongsToAssign] = useState<MasterSong[]>([])
+  const [showOrderProgramsModal, setShowOrderProgramsModal] = useState(false);
 
   // Normalize name: remove trailing punctuation and trim
   const normalizeName = (name: string): string => {
@@ -352,6 +354,21 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
     } catch (error) {
       console.error('Error toggling song in program:', error);
       showToast('error', 'An unexpected error occurred');
+    }
+  };
+
+  const handleUpdateProgramOrder = async (updatedPrograms: MasterProgram[]) => {
+    try {
+      const result = await MasterLibraryService.updateMasterProgramsOrder(updatedPrograms);
+      if (result.success) {
+        showToast('success', 'Program order updated');
+        loadData();
+      } else {
+        showToast('error', result.error || 'Failed to update order');
+      }
+    } catch (error) {
+      console.error('Error updating program order:', error);
+      showToast('error', 'An error occurred');
     }
   };
 
@@ -772,16 +789,28 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
                       <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter by Program</p>
                         {canManage && (
-                          <button
-                            onClick={() => {
-                              setShowCreateProgramModal(true);
-                              setIsProgramsDropdownOpen(false);
-                            }}
-                            className="p-1 hover:bg-slate-200 rounded text-purple-600"
-                            title="Create Program"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setShowOrderProgramsModal(true);
+                                setIsProgramsDropdownOpen(false);
+                              }}
+                              className="p-1 hover:bg-slate-200 rounded text-amber-600"
+                              title="Reorder Programs"
+                            >
+                              <ArrowUpDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowCreateProgramModal(true);
+                                setIsProgramsDropdownOpen(false);
+                              }}
+                              className="p-1 hover:bg-slate-200 rounded text-purple-600"
+                              title="Create Program"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </div>
                       <button
@@ -1155,6 +1184,16 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
             setIsAssigningToProgram(false)
             setSongsToAssign([])
           }}
+        />
+      )}
+
+      {/* Program Order Modal */}
+      {showOrderProgramsModal && (
+        <MasterProgramOrderModal
+          isOpen={showOrderProgramsModal}
+          onClose={() => setShowOrderProgramsModal(false)}
+          programs={programs}
+          onUpdate={handleUpdateProgramOrder}
         />
       )}
     </div>

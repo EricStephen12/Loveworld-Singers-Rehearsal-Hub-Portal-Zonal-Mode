@@ -60,28 +60,27 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
   };
 
-  // Helper to format comment text with bold and larger font for *text*, **text**, or (text)
+  // Helper to format comment text with bold and larger font for *text* or **text**
   const formatCommentText = (text: string) => {
     if (!text) return null;
 
     // Clean up HTML tags and &nbsp;
     const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 
-    // Pattern to match: **bold**, *bold*, or (bold)
+    // Pattern to match: **bold** or *bold*
     // Using capturing groups to preserve the content for splitting
-    const parts = cleanText.split(/(\*\*.*?\*\*|\*.*?\*|\(.*?\))/g);
+    const parts = cleanText.split(/(\*\*.*?\*\*|\*.*?\*)/g);
 
     return parts.map((part, i) => {
       const isAsteriskMatch = (part.startsWith('**') && part.endsWith('**')) || (part.startsWith('*') && part.endsWith('*'));
-      const isParenthesesMatch = part.startsWith('(') && part.endsWith(')');
 
-      if (isAsteriskMatch || isParenthesesMatch) {
+      if (isAsteriskMatch) {
         let content = part;
         if (part.startsWith('**')) content = part.slice(2, -2);
         else if (part.startsWith('*')) content = part.slice(1, -1);
 
         return (
-          <span key={i} className="font-bold text-[1.1em] text-slate-900 leading-tight inline-block">
+          <span key={i} className="font-bold text-[1.1em] text-black leading-tight inline-block">
             {content}
           </span>
         );
@@ -740,7 +739,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                     <Minimize2 className="w-5 h-5 text-gray-600" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{currentSongData?.title}</h2>
+                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
                     <p className="text-sm text-gray-500">{currentSongData?.writer}</p>
                   </div>
                 </div>
@@ -752,11 +751,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               {/* Fullscreen Lyrics Content - Properly scrollable */}
               <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
                 <div className="max-w-4xl mx-auto">
-                  <div className="text-gray-900 leading-relaxed space-y-6 text-base text-left font-poppins">
+                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
                     {currentSongData?.lyrics ? (
                       <div
                         dangerouslySetInnerHTML={{ __html: currentSongData.lyrics }}
                         className="prose prose-lg max-w-none"
+                        style={{ color: '#000000' }}
                       />
                     ) : (
                       <div className="text-center py-12">
@@ -780,7 +780,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                     <Minimize2 className="w-5 h-5 text-gray-600" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{currentSongData?.title}</h2>
+                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
                     <p className="text-sm text-gray-500">Comments</p>
                   </div>
                 </div>
@@ -789,7 +789,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               {/* Fullscreen Comments Content - Properly scrollable */}
               <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
                 <div className="max-w-4xl mx-auto">
-                  <div className="text-gray-900 leading-relaxed space-y-6 text-base text-left font-poppins">
+                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
                     {(!currentSongData?.comments || !Array.isArray(currentSongData.comments) || currentSongData.comments.length === 0) ? (
                       <div className="text-center py-12">
                         <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -799,7 +799,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       <div className="space-y-6">
                         {(Array.isArray(currentSongData.comments) ? currentSongData.comments : []).map((comment: any) => (
                           <div key={comment.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                            <p className="text-gray-900 leading-relaxed mb-3 text-base whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+                            <p className="text-black leading-relaxed mb-3 text-base whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                               <span className="font-medium">{comment.author}</span>
                               <span>•</span>
@@ -833,7 +833,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                     <Minimize2 className="w-5 h-5 text-gray-600" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{currentSongData?.title}</h2>
+                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
                     <p className="text-sm text-gray-500">Conductor's Guide</p>
                   </div>
                 </div>
@@ -842,7 +842,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               {/* Fullscreen Solfas Content - Properly scrollable */}
               <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
                 <div className="max-w-4xl mx-auto">
-                  <div className="text-gray-900 leading-relaxed space-y-6 text-base text-left font-poppins">
+                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
                     {currentSongData?.solfas && currentSongData.solfas.trim() !== '' ? (
                       <div
                         dangerouslySetInnerHTML={{ __html: currentSongData.solfas }}
@@ -988,7 +988,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               <div className="flex-1 px-6 py-4 overflow-y-auto" style={{ paddingBottom: '180px' }}>
                 {activeTab === 'lyrics' && (
                   <div className="max-w-none">
-                    <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
+                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
                       {displayedSongData?.lyrics ? (
                         <div
                           dangerouslySetInnerHTML={{ __html: displayedSongData.lyrics }}
@@ -997,7 +997,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                             lineHeight: '1.8',
                             fontSize: '14px',
                             textAlign: 'left',
-                            direction: 'ltr'
+                            direction: 'ltr',
+                            color: '#000000'
                           }}
                         />
                       ) : (
@@ -1012,7 +1013,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
                 {activeTab === 'solfas' && (
                   <div className="max-w-none">
-                    <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
+                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
                       {displayedSongData?.solfas && displayedSongData.solfas.trim() !== '' ? (
                         <div
                           dangerouslySetInnerHTML={{ __html: displayedSongData.solfas }}
@@ -1023,7 +1024,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                             fontFamily: 'monospace',
                             fontStyle: 'italic',
                             textAlign: 'left',
-                            direction: 'ltr'
+                            direction: 'ltr',
+                            color: '#000000'
                           }}
                         />
                       ) : (
@@ -1038,7 +1040,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
                 {activeTab === 'comments' && (
                   <div className="max-w-none">
-                    <div className="text-gray-900 leading-relaxed space-y-6 text-sm text-left font-poppins">
+                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
                       {(!displayedSongData?.comments || !Array.isArray(displayedSongData.comments) || displayedSongData.comments.length === 0) ? (
                         <div className="text-center py-8">
                           <div className="text-gray-500 text-sm mb-2">No Comments Available</div>
@@ -1048,7 +1050,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         <div className="space-y-4">
                           {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
                             <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                              <div className="text-gray-900 leading-relaxed mb-2 whitespace-pre-wrap">{formatCommentText(comment.text)}</div>
+                              <div className="text-black leading-relaxed mb-2 whitespace-pre-wrap">{formatCommentText(comment.text)}</div>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span className="font-medium">{comment.author}</span>
                                 <span>•</span>
@@ -1189,8 +1191,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     </div>
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
-                                        <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} />
+                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
+                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
                                         </div>
                                       </div>
                                     )}
@@ -1376,8 +1378,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     </div>
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
-                                        <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} />
+                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
+                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
                                         </div>
                                       </div>
                                     )}
@@ -1450,7 +1452,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     </div>
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
-                                        <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
+                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
                                           <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
                                         </div>
                                       </div>
@@ -1524,7 +1526,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                     </div>
                                     {isExpanded && (
                                       <div className="px-4 pb-4">
-                                        <div className="text-sm text-slate-700 bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
+                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
                                           <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
                                         </div>
                                       </div>

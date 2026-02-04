@@ -53,6 +53,7 @@ export interface MasterProgram {
   name: string;
   description?: string;
   songIds: string[];
+  sortOrder?: number;
 }
 
 // ============================================
@@ -64,15 +65,26 @@ export interface MasterProgram {
  */
 export async function getPrograms(): Promise<MasterProgram[]> {
   try {
-    const q = query(collection(db, 'master_programs'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'master_programs'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    const programs = snapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().name || '',
       description: doc.data().description || '',
-      songIds: doc.data().songIds || []
+      songIds: doc.data().songIds || [],
+      sortOrder: doc.data().sortOrder
     }));
+
+    // Sort by sortOrder first, then name
+    return programs.sort((a, b) => {
+      if (a.sortOrder !== undefined && b.sortOrder !== undefined) {
+        return a.sortOrder - b.sortOrder
+      }
+      if (a.sortOrder !== undefined) return -1
+      if (b.sortOrder !== undefined) return 1
+      return a.name.localeCompare(b.name)
+    })
   } catch (error) {
     console.error('[SongService] Error fetching programs:', error);
     return [];

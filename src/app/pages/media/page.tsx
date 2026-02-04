@@ -216,7 +216,7 @@ export default function MediaPage() {
             {/* Live Stream Section - HQ ONLY */}
             {isHQGroup(currentZone?.id) && viewMode === 'all' && selectedCategory === 'all' && !searchQuery && (
               <div className="w-full max-w-[1280px] mx-auto mb-6">
-                <LiveStreamPlayer isPreview={true} />
+                <LiveStreamPlayer isPreview={true} zoneId={currentZone?.id} />
               </div>
             )}
             {viewMode === 'playlists' ? (

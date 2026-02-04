@@ -24,15 +24,15 @@
 }
 
 .rbc-header {
-  padding: 10px 8px;
-  font-weight: 500;
-  font-size: 11px;
-  color: #70757a;
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #3c4043;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  border-bottom: none;
+  border-bottom: 1px solid #dadce0;
   border-left: 1px solid #dadce0;
-  background-color: white;
+  background-color: #f8f9fa;
 }
 
 .rbc-header:first-child {
@@ -71,17 +71,27 @@
 }
 
 .rbc-today {
-  background-color: #e8f0fe;
+  background-color: #f1f8ff !important;
+}
+
+.rbc-header.rbc-today {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+  border-bottom: 2px solid #1a73e8 !important;
 }
 
 .rbc-date-cell.rbc-now > a {
-  background-color: #1a73e8;
-  color: white;
-  font-weight: 500;
+  background-color: #1a73e8 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  width: 32px !important;
+  height: 32px !important;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
 }
 
 .rbc-date-cell.rbc-now > a:hover {
-  background-color: #1557b0;
+  background-color: #1a73e8 !important;
+  filter: brightness(1.1);
 }
 
 /* Week and Day views */
@@ -101,10 +111,10 @@
 }
 
 .rbc-time-header-cell {
-  padding: 8px;
-  font-weight: 500;
-  font-size: 11px;
-  color: #70757a;
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #3c4043;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -319,9 +329,10 @@
   }
   
   .rbc-header {
-    padding: 6px 2px;
-    font-size: 9px;
+    padding: 8px 2px;
+    font-size: 11px;
     letter-spacing: 0.3px;
+    font-weight: 700;
   }
   
   .rbc-date-cell {

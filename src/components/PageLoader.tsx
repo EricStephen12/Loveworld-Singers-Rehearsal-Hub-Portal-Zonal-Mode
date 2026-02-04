@@ -72,40 +72,43 @@ export function PageLoader({ children }: PageLoaderProps) {
 
   // Main readiness effect
   useEffect(() => {
-    // If we are already ready, do nothing (unless path changed to a protected route while logged out)
+    // 1. Initial Load Cleanup: If we are already ready, do nothing (unless path changed to a protected route while logged out)
     if (isReady && pathname === lastPathname.current) {
-      // Double check: if we are ready but lost auth on a private route, redirect
       if (!authLoading && !user && !isPublicPath) {
         router.replace('/auth');
       }
       return;
     }
 
-    // Still waiting for critical auth state?
+    // 2. Patience for Cached Users: If we have a cached user but Firebase is still loading, wait.
+    // This prevents the "flash" of redirect on refresh.
+    const hasCachedUser = typeof window !== 'undefined' && localStorage.getItem('lwsrh_has_user') === 'true';
+    if (authLoading && hasCachedUser && !isPublicPath) {
+      // We know the user was logged in last time. Let's wait for Firebase.
+      return;
+    }
+
+    // 3. Critically: If auth is still loading and we don't have cache, we might still want to wait 
+    // a tiny bit to be safe, but generally it's okay to wait for the standard timeout.
     if (authLoading) return;
 
-    // Case 1: Public Path - Always allow
+    // 4. Case 1: Public Path - Always allow
     if (isPublicPath) {
-      // BOUNCE BACK: If user is logged in but on /auth, send them home
       if (user && pathname === '/auth') {
-        console.log('🔄 PageLoader: User logged in on auth page, redirecting home');
         router.replace('/home');
         return;
       }
-
       if (!isReady) setIsReady(true);
       return;
     }
 
-    // Case 2: Protected Path & No User - Redirect
-    // ONLY redirect if initial load is complete and we truly have no user
+    // 5. Case 2: Protected Path & No User - Redirect
     if (!user && !authLoading) {
       router.replace('/auth');
       return;
     }
 
-    // Case 3: Protected Path & User Exists
-    // Wait for zone to load if possible, but don't block forever if user is valid
+    // 6. Case 3: Protected Path & User Exists
     if (user && (!zoneLoading || IsZoneCacheValid())) {
       if (!isReady) setIsReady(true);
     }

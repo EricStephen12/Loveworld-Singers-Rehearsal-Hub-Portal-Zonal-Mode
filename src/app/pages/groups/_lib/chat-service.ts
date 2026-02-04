@@ -4,18 +4,18 @@
  * Collections: chats_v2, messages_v2
  */
 
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  onSnapshot, 
-  getDocs, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  getDocs,
   getDoc,
   serverTimestamp,
   increment
@@ -38,7 +38,7 @@ export interface ChatUser {
 export type ReactionType = '❤️' | '👍' | '😂' | '😮' | '😢' | '🙏' | '🔥' | '👏' | '💯' | '🎉'
 
 // Message types
-export type MessageType = 'text' | 'image' | 'document' | 'system'
+export type MessageType = 'text' | 'image' | 'document' | 'voice' | 'system'
 
 export interface MessageAttachment {
   url: string
@@ -58,6 +58,8 @@ export interface Message {
   type: MessageType
   imageUrl?: string
   attachment?: MessageAttachment
+  voiceUrl?: string
+  voiceDuration?: number
   replyTo?: {
     id: string
     text: string
@@ -66,6 +68,7 @@ export interface Message {
   reactions?: { [userId: string]: ReactionType }
   edited?: boolean
   deleted?: boolean
+  status?: 'sent' | 'delivered' | 'read'
 }
 
 export interface Chat {
@@ -105,7 +108,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
     const zoneMembersRef = collection(db, 'zone_members')
     const q = query(zoneMembersRef, where('userId', '==', userId), limit(1))
     const snapshot = await getDocs(q)
-    
+
     if (!snapshot.empty) {
       const data = snapshot.docs[0].data()
       return {
@@ -115,7 +118,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
         zoneName: data.zoneName
       }
     }
-    
+
     // Fallback to profiles
     const profileDoc = await getDoc(doc(db, 'profiles', userId))
     if (profileDoc.exists()) {
@@ -126,7 +129,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
         avatar: data.profile_image_url
       }
     }
-    
+
     return null
   } catch (error) {
     console.error('[ChatService] getUserInfo error:', error)
@@ -149,29 +152,29 @@ function isSeniorMember(zoneId: string, groupId: string, userName: string): bool
   const lowerZoneId = (zoneId || '').toLowerCase()
   const lowerGroupId = (groupId || '').toLowerCase()
   const lowerName = (userName || '').toLowerCase()
-  
-    if (SENIOR_ZONES.includes(zoneId) || SENIOR_ZONES.includes(groupId)) {
+
+  if (SENIOR_ZONES.includes(zoneId) || SENIOR_ZONES.includes(groupId)) {
     return true
   }
-  
-    for (const title of SENIOR_TITLES) {
+
+  for (const title of SENIOR_TITLES) {
     if (lowerZoneId.includes(title) || lowerGroupId.includes(title)) {
       return true
     }
   }
-  
-    // Only match if it's clearly a title, not just part of a name
-  if (lowerName.includes('the president') || 
-      lowerName.includes('zone president') ||
-      lowerName.includes('zone director') ||
-      lowerName.includes('the director') ||
-      lowerName.includes('zone oftp') ||
-      lowerName === 'president' ||
-      lowerName === 'director' ||
-      lowerName === 'oftp') {
+
+  // Only match if it's clearly a title, not just part of a name
+  if (lowerName.includes('the president') ||
+    lowerName.includes('zone president') ||
+    lowerName.includes('zone director') ||
+    lowerName.includes('the director') ||
+    lowerName.includes('zone oftp') ||
+    lowerName === 'president' ||
+    lowerName === 'director' ||
+    lowerName === 'oftp') {
     return true
   }
-  
+
   return false
 }
 
@@ -182,8 +185,8 @@ function isSeniorMember(zoneId: string, groupId: string, userName: string): bool
  * - Hides senior zone members UNLESS user is in senior zone, is boss, or has existing chat
  */
 export async function searchZoneUsers(
-  searchTerm: string, 
-  currentUserId: string, 
+  searchTerm: string,
+  currentUserId: string,
   currentUserZoneId?: string,
   isBoss: boolean = false,
   existingChatUserIds: string[] = [] // Users the current user has already chatted with
@@ -191,50 +194,50 @@ export async function searchZoneUsers(
   try {
     const users: ChatUser[] = []
     const seenIds = new Set<string>()
-    
-        // First check by zone ID, then we'll also check by user's own name/role
-    const isInSeniorZone = currentUserZoneId ? 
-      (SENIOR_ZONES.includes(currentUserZoneId) || 
-       SENIOR_TITLES.some(title => currentUserZoneId.toLowerCase().includes(title))) : false
-    
+
+    // First check by zone ID, then we'll also check by user's own name/role
+    const isInSeniorZone = currentUserZoneId ?
+      (SENIOR_ZONES.includes(currentUserZoneId) ||
+        SENIOR_TITLES.some(title => currentUserZoneId.toLowerCase().includes(title))) : false
+
     // Convert existing chat user IDs to a Set for fast lookup
     const existingChatUsers = new Set(existingChatUserIds)
-    
-    
+
+
     // Get ALL zone members
     const zoneMembersRef = collection(db, 'zone_members')
     const zoneMembersSnapshot = await getDocs(zoneMembersRef)
-    
+
     // Get ALL HQ members
     const hqMembersRef = collection(db, 'hq_members')
     const hqMembersSnapshot = await getDocs(hqMembersRef)
-    
+
     // Process zone_members
     zoneMembersSnapshot.forEach(docSnap => {
       const data = docSnap.data()
       if (data.userId === currentUserId) return
       if (seenIds.has(data.userId)) return
-      
+
       const memberZoneId = data.zoneId || ''
       const memberGroupId = data.groupId || ''
       const name = (data.userName || '').trim()
-      
+
       // Use the new helper function to check if this is a senior member
       const isInProtectedZone = isSeniorMember(memberZoneId, memberGroupId, name)
       const hasExistingChat = existingChatUsers.has(data.userId)
-      
+
       // Log senior members for debugging
       if (isInProtectedZone) {
       }
-      
+
       // Hide protected zone members from regular users
       if (isInProtectedZone && !isInSeniorZone && !isBoss && !hasExistingChat) {
         return
       }
-      
-      const matchesSearch = !searchTerm || 
+
+      const matchesSearch = !searchTerm ||
         name.toLowerCase().includes(searchTerm.toLowerCase())
-      
+
       if (matchesSearch && name) {
         seenIds.add(data.userId)
         users.push({
@@ -245,33 +248,33 @@ export async function searchZoneUsers(
         })
       }
     })
-    
+
     // Process hq_members
     hqMembersSnapshot.forEach(docSnap => {
       const data = docSnap.data()
       if (data.userId === currentUserId) return
       if (seenIds.has(data.userId)) return
-      
+
       const memberZoneId = data.zoneId || ''
       const memberGroupId = data.groupId || ''
       const name = (data.userName || '').trim()
-      
+
       // Use the new helper function to check if this is a senior member
       const isInProtectedZone = isSeniorMember(memberZoneId, memberGroupId, name)
       const hasExistingChat = existingChatUsers.has(data.userId)
-      
+
       // Log senior members for debugging
       if (isInProtectedZone) {
       }
-      
+
       // Hide protected zone members from regular users
       if (isInProtectedZone && !isInSeniorZone && !isBoss && !hasExistingChat) {
         return
       }
-      
-      const matchesSearch = !searchTerm || 
+
+      const matchesSearch = !searchTerm ||
         name.toLowerCase().includes(searchTerm.toLowerCase())
-      
+
       if (matchesSearch && name) {
         seenIds.add(data.userId)
         users.push({
@@ -282,11 +285,11 @@ export async function searchZoneUsers(
         })
       }
     })
-    
-    
+
+
     // Sort alphabetically
     users.sort((a, b) => a.name.localeCompare(b.name))
-    
+
     return users.slice(0, 100) // Limit to 100 results
   } catch (error) {
     console.error('[ChatService] searchZoneUsers error:', error)
@@ -309,16 +312,16 @@ export async function findDirectChat(user1Id: string, user2Id: string): Promise<
       where('type', '==', 'direct'),
       where('participants', 'array-contains', user1Id)
     )
-    
+
     const snapshot = await getDocs(q)
-    
+
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data()
       if (data.participants.includes(user2Id) && data.participants.length === 2) {
         return docToChat(docSnap)
       }
     }
-    
+
     return null
   } catch (error) {
     console.error('[ChatService] findDirectChat error:', error)
@@ -334,20 +337,20 @@ export async function getOrCreateDirectChat(
   otherUser: ChatUser
 ): Promise<string | null> {
   try {
-    
+
     // Prevent self-chat
     if (currentUser.id === otherUser.id) {
       console.error('[ChatService] Cannot create self-chat')
       return null
     }
-    
+
     // Check for existing chat
     const existing = await findDirectChat(currentUser.id, otherUser.id)
     if (existing) {
       return existing.id
     }
-    
-    
+
+
     // Create new chat - filter out undefined values
     const chatData: any = {
       type: 'direct',
@@ -363,7 +366,7 @@ export async function getOrCreateDirectChat(
         [otherUser.id]: 0
       }
     }
-    
+
     // Only add avatar if it exists (Firestore doesn't allow undefined)
     if (currentUser.avatar) {
       chatData.participantDetails[currentUser.id].avatar = currentUser.avatar
@@ -371,7 +374,7 @@ export async function getOrCreateDirectChat(
     if (otherUser.avatar) {
       chatData.participantDetails[otherUser.id].avatar = otherUser.avatar
     }
-    
+
     const docRef = await addDoc(collection(db, CHATS_COLLECTION), chatData)
     return docRef.id
   } catch (error) {
@@ -390,18 +393,18 @@ export async function createGroupChat(
 ): Promise<string | null> {
   try {
     const allMembers = [creator, ...members.filter(m => m.id !== creator.id)]
-    
+
     const participantDetails: { [key: string]: { name: string; avatar?: string } } = {}
     const unreadCount: { [key: string]: number } = {}
-    
+
     allMembers.forEach(m => {
       // Only include avatar if it's defined (Firestore doesn't allow undefined values)
-      participantDetails[m.id] = m.avatar 
+      participantDetails[m.id] = m.avatar
         ? { name: m.name, avatar: m.avatar }
         : { name: m.name }
       unreadCount[m.id] = 0
     })
-    
+
     const chatData = {
       type: 'group',
       name,
@@ -411,9 +414,9 @@ export async function createGroupChat(
       createdAt: serverTimestamp(),
       unreadCount
     }
-    
+
     const docRef = await addDoc(collection(db, CHATS_COLLECTION), chatData)
-    
+
     // Add system message
     await addDoc(collection(db, MESSAGES_COLLECTION), {
       chatId: docRef.id,
@@ -423,7 +426,7 @@ export async function createGroupChat(
       type: 'system',
       timestamp: serverTimestamp()
     })
-    
+
     return docRef.id
   } catch (error) {
     console.error('[ChatService] createGroupChat error:', error)
@@ -443,29 +446,29 @@ export function subscribeToChats(
     chatsRef,
     where('participants', 'array-contains', userId)
   )
-  
+
   return onSnapshot(q, (snapshot) => {
     const chats: Chat[] = []
-    
+
     snapshot.forEach(docSnap => {
       const chat = docToChat(docSnap)
-      
+
       // Validate direct chats
       if (chat.type === 'direct') {
         if (chat.participants.length !== 2) return
         if (chat.participants[0] === chat.participants[1]) return
       }
-      
+
       chats.push(chat)
     })
-    
+
     // Sort by last message time
     chats.sort((a, b) => {
       const aTime = a.lastMessage?.timestamp || a.createdAt
       const bTime = b.lastMessage?.timestamp || b.createdAt
       return new Date(bTime).getTime() - new Date(aTime).getTime()
     })
-    
+
     callback(chats)
   }, (error) => {
     console.error('[ChatService] subscribeToChats error:', error)
@@ -481,16 +484,16 @@ export async function deleteChat(chatId: string, userId: string): Promise<boolea
     // Verify user is participant
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (!chatDoc.exists()) return false
-    
+
     const chat = chatDoc.data()
     if (!chat.participants.includes(userId)) return false
-    
+
     // For direct chats, just delete
     // For groups, only creator can delete
     if (chat.type === 'group' && chat.createdBy !== userId) {
       return false
     }
-    
+
     await deleteDoc(doc(db, CHATS_COLLECTION, chatId))
     return true
   } catch (error) {
@@ -513,7 +516,7 @@ export async function sendCallMessage(
   duration?: number // in seconds
 ): Promise<boolean> {
   try {
-    
+
     let text = ''
     if (callType === 'missed') {
       text = `📞 Missed call from ${callerName}`
@@ -540,7 +543,7 @@ export async function sendCallMessage(
     if (chatDoc.exists()) {
       const chatData = chatDoc.data()
       const participants = chatData.participants || []
-      
+
       // For missed calls, increment unread for all participants
       // For answered calls, don't increment (both parties were on the call)
       const unreadUpdates: { [key: string]: any } = {}
@@ -549,8 +552,8 @@ export async function sendCallMessage(
           unreadUpdates[`unreadCount.${participantId}`] = increment(1)
         })
       }
-      
-            await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+
+      await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text,
           senderId: 'system',
@@ -588,14 +591,139 @@ function formatCallDuration(seconds: number): string {
  */
 export async function markChatAsRead(chatId: string, userId: string): Promise<boolean> {
   try {
-    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+    const chatRef = doc(db, CHATS_COLLECTION, chatId)
+    await updateDoc(chatRef, {
       [`unreadCount.${userId}`]: 0
     })
+
+    // Also mark all messages sent TO this user as 'read'
+    const messagesQuery = query(
+      collection(db, MESSAGES_COLLECTION),
+      where('chatId', '==', chatId),
+      where('status', '!=', 'read')
+    )
+    const snapshot = await getDocs(messagesQuery)
+    const updates = snapshot.docs
+      .filter(d => d.data().senderId !== userId)
+      .map(d => updateDoc(doc(db, MESSAGES_COLLECTION, d.id), { status: 'read' }))
+
+    await Promise.all(updates)
+
     return true
   } catch (error) {
     console.error('[ChatService] markChatAsRead error:', error)
     return false
   }
+}
+
+/**
+ * Update group name (creator only)
+ */
+export async function renameGroup(
+  chatId: string,
+  userId: string,
+  newName: string
+): Promise<boolean> {
+  try {
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (!chatDoc.exists()) return false
+
+    const chat = chatDoc.data()
+    if (chat.type !== 'group') return false
+    if (chat.createdBy !== userId) {
+      console.error('[ChatService] Only creator can rename group')
+      return false
+    }
+
+    const oldName = chat.name || 'Group'
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      name: newName
+    })
+
+    // Add system message
+    await addDoc(collection(db, MESSAGES_COLLECTION), {
+      chatId,
+      senderId: 'system',
+      senderName: 'System',
+      text: `Group renamed from "${oldName}" to "${newName}"`,
+      type: 'system',
+      timestamp: serverTimestamp()
+    })
+
+    return true
+  } catch (error) {
+    console.error('[ChatService] renameGroup error:', error)
+    return false
+  }
+}
+
+/**
+ * Typing indicator collection
+ */
+const TYPING_COLLECTION = 'typing_v2'
+
+/**
+ * Set typing status
+ */
+export async function setTypingStatus(
+  chatId: string,
+  userId: string,
+  userName: string,
+  isTyping: boolean
+): Promise<void> {
+  try {
+    const typingRef = doc(db, TYPING_COLLECTION, `${chatId}_${userId}`)
+    if (isTyping) {
+      await updateDoc(typingRef, {
+        isTyping: true,
+        userName,
+        timestamp: serverTimestamp()
+      }).catch(async () => {
+        // Doc might not exist, create it
+        await addDoc(collection(db, TYPING_COLLECTION), {
+          id: `${chatId}_${userId}`,
+          chatId,
+          userId,
+          userName,
+          isTyping: true,
+          timestamp: serverTimestamp()
+        })
+      })
+    } else {
+      await deleteDoc(typingRef).catch(() => { })
+    }
+  } catch (error) {
+    // Silently fail typing status
+  }
+}
+
+/**
+ * Subscribe to typing status in a chat
+ */
+export function subscribeToTyping(
+  chatId: string,
+  currentUserId: string,
+  callback: (typingUsers: string[]) => void
+): () => void {
+  const q = query(
+    collection(db, TYPING_COLLECTION),
+    where('chatId', '==', chatId),
+    where('isTyping', '==', true)
+  )
+
+  return onSnapshot(q, (snapshot) => {
+    const typingUsers = snapshot.docs
+      .map(doc => doc.data())
+      .filter(data => data.userId !== currentUserId)
+      // Filter out stale typing indicators (older than 10 seconds)
+      .filter(data => {
+        const ts = data.timestamp?.toMillis() || Date.now()
+        return Date.now() - ts < 10000
+      })
+      .map(data => data.userName as string)
+
+    callback(typingUsers)
+  })
 }
 
 /**
@@ -617,15 +745,15 @@ export async function sendMessage(
       type: media?.type || 'text',
       timestamp: serverTimestamp()
     }
-    
+
     if (sender.avatar) {
       messageData.senderAvatar = sender.avatar
     }
-    
+
     if (replyTo) {
       messageData.replyTo = replyTo
     }
-    
+
     // Add media data
     if (media) {
       if (media.type === 'image') {
@@ -637,17 +765,20 @@ export async function sendMessage(
           size: media.size,
           mimeType: media.mimeType
         }
+      } else if (media.type === 'voice') {
+        messageData.voiceUrl = media.url
+        messageData.voiceDuration = (media as any).duration // Using any to avoid TS issues with the existing param
       }
     }
-    
+
     await addDoc(collection(db, MESSAGES_COLLECTION), messageData)
-    
+
     // Get chat to update unread counts for other participants
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (chatDoc.exists()) {
       const chatData = chatDoc.data()
       const participants = chatData.participants || []
-      
+
       // Use atomic increment for unread counts - prevents race conditions
       const unreadUpdates: { [key: string]: any } = {}
       participants.forEach((participantId: string) => {
@@ -655,8 +786,8 @@ export async function sendMessage(
           unreadUpdates[`unreadCount.${participantId}`] = increment(1)
         }
       })
-      
-            const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
+
+      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : media?.type === 'voice' ? '🎤 Voice message' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text: lastMessageText,
@@ -665,24 +796,24 @@ export async function sendMessage(
         },
         ...unreadUpdates
       })
-      
+
       // Send push notification to other participants
       const otherParticipants = participants.filter((id: string) => id !== sender.id)
       if (otherParticipants.length > 0) {
         const isGroup = chatData.type === 'group'
         const chatName = isGroup ? chatData.name : sender.name
         const notifTitle = chatName || sender.name || 'New Message'
-        const notifBody = isGroup 
+        const notifBody = isGroup
           ? `${sender.name || 'Someone'}: ${lastMessageText}`
           : lastMessageText
-        
+
         // Fire and forget - don't block message sending
         sendChatNotification(otherParticipants, notifTitle, notifBody, chatId, sender.id, sender.name).catch(err => {
         })
       }
     } else {
       // Fallback: just update last message if chat doc not found
-      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : text.slice(0, 100)
+      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : media?.type === 'voice' ? '🎤 Voice message' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text: lastMessageText,
@@ -691,7 +822,7 @@ export async function sendMessage(
         }
       })
     }
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] sendMessage error:', error)
@@ -719,7 +850,7 @@ async function sendChatNotification(
         recipientIds,
         title,
         body,
-        data: { 
+        data: {
           chatId,
           senderName: senderName || 'Someone'
         },
@@ -745,14 +876,14 @@ export function subscribeToMessages(
     orderBy('timestamp', 'asc'),
     limit(100)
   )
-  
+
   return onSnapshot(q, (snapshot) => {
     const messages: Message[] = []
-    
+
     snapshot.forEach(docSnap => {
       messages.push(docToMessage(docSnap))
     })
-    
+
     callback(messages)
   }, (error) => {
     console.error('[ChatService] subscribeToMessages error:', error)
@@ -763,14 +894,14 @@ export function subscribeToMessages(
         where('chatId', '==', chatId),
         limit(100)
       )
-      
+
       return onSnapshot(fallbackQ, (snapshot) => {
         const messages: Message[] = []
         snapshot.forEach(docSnap => {
           messages.push(docToMessage(docSnap))
         })
         // Sort client-side
-        messages.sort((a, b) => 
+        messages.sort((a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         )
         callback(messages)
@@ -787,15 +918,15 @@ export async function deleteMessage(messageId: string, userId: string): Promise<
   try {
     const messageDoc = await getDoc(doc(db, MESSAGES_COLLECTION, messageId))
     if (!messageDoc.exists()) return false
-    
+
     const message = messageDoc.data()
     if (message.senderId !== userId) return false
-    
+
     await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
       text: 'This message was deleted',
       deleted: true
     })
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] deleteMessage error:', error)
@@ -807,17 +938,17 @@ export async function deleteMessage(messageId: string, userId: string): Promise<
  * Add or remove reaction to a message
  */
 export async function toggleReaction(
-  messageId: string, 
-  userId: string, 
+  messageId: string,
+  userId: string,
   reaction: ReactionType
 ): Promise<boolean> {
   try {
     const messageDoc = await getDoc(doc(db, MESSAGES_COLLECTION, messageId))
     if (!messageDoc.exists()) return false
-    
+
     const message = messageDoc.data()
     const currentReactions = message.reactions || {}
-    
+
     // Toggle: if same reaction exists, remove it; otherwise add/change it
     if (currentReactions[userId] === reaction) {
       // Remove reaction
@@ -826,11 +957,11 @@ export async function toggleReaction(
       // Add or change reaction
       currentReactions[userId] = reaction
     }
-    
+
     await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
       reactions: currentReactions
     })
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] toggleReaction error:', error)
@@ -849,34 +980,34 @@ export async function addGroupMembers(
   try {
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (!chatDoc.exists()) return false
-    
+
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy !== userId) {
       console.error('[ChatService] Only creator can add members')
       return false
     }
-    
+
     const currentParticipants = chat.participants || []
     const currentDetails = chat.participantDetails || {}
     const currentUnread = chat.unreadCount || {}
-    
+
     // Add new members
     const membersToAdd = newMembers.filter(m => !currentParticipants.includes(m.id))
     if (membersToAdd.length === 0) return true // Already members
-    
+
     membersToAdd.forEach(m => {
       currentParticipants.push(m.id)
       currentDetails[m.id] = m.avatar ? { name: m.name, avatar: m.avatar } : { name: m.name }
       currentUnread[m.id] = 0
     })
-    
+
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
       participants: currentParticipants,
       participantDetails: currentDetails,
       unreadCount: currentUnread
     })
-    
+
     // Add system message
     const names = membersToAdd.map(m => m.name).join(', ')
     await addDoc(collection(db, MESSAGES_COLLECTION), {
@@ -887,7 +1018,7 @@ export async function addGroupMembers(
       type: 'system',
       timestamp: serverTimestamp()
     })
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] addGroupMembers error:', error)
@@ -906,7 +1037,7 @@ export async function removeGroupMember(
   try {
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (!chatDoc.exists()) return false
-    
+
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy !== userId) {
@@ -917,21 +1048,21 @@ export async function removeGroupMember(
       console.error('[ChatService] Cannot remove the creator')
       return false
     }
-    
+
     const currentParticipants = (chat.participants || []).filter((id: string) => id !== memberIdToRemove)
     const currentDetails = { ...chat.participantDetails }
     const removedName = currentDetails[memberIdToRemove]?.name || 'A member'
     delete currentDetails[memberIdToRemove]
-    
+
     const currentUnread = { ...chat.unreadCount }
     delete currentUnread[memberIdToRemove]
-    
+
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
       participants: currentParticipants,
       participantDetails: currentDetails,
       unreadCount: currentUnread
     })
-    
+
     // Add system message
     await addDoc(collection(db, MESSAGES_COLLECTION), {
       chatId,
@@ -941,7 +1072,7 @@ export async function removeGroupMember(
       type: 'system',
       timestamp: serverTimestamp()
     })
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] removeGroupMember error:', error)
@@ -959,28 +1090,28 @@ export async function leaveGroup(
   try {
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (!chatDoc.exists()) return false
-    
+
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy === userId) {
       console.error('[ChatService] Creator cannot leave, must delete group instead')
       return false
     }
-    
+
     const currentParticipants = (chat.participants || []).filter((id: string) => id !== userId)
     const currentDetails = { ...chat.participantDetails }
     const leavingName = currentDetails[userId]?.name || 'A member'
     delete currentDetails[userId]
-    
+
     const currentUnread = { ...chat.unreadCount }
     delete currentUnread[userId]
-    
+
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
       participants: currentParticipants,
       participantDetails: currentDetails,
       unreadCount: currentUnread
     })
-    
+
     // Add system message
     await addDoc(collection(db, MESSAGES_COLLECTION), {
       chatId,
@@ -990,7 +1121,7 @@ export async function leaveGroup(
       type: 'system',
       timestamp: serverTimestamp()
     })
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] leaveGroup error:', error)
@@ -1008,29 +1139,29 @@ export async function deleteGroup(
   try {
     const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
     if (!chatDoc.exists()) return false
-    
+
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy !== userId) {
       console.error('[ChatService] Only creator can delete the group')
       return false
     }
-    
+
     // Delete all messages in the group
     const messagesQuery = query(
       collection(db, MESSAGES_COLLECTION),
       where('chatId', '==', chatId)
     )
     const messagesSnapshot = await getDocs(messagesQuery)
-    
-    const deletePromises = messagesSnapshot.docs.map(msgDoc => 
+
+    const deletePromises = messagesSnapshot.docs.map(msgDoc =>
       deleteDoc(doc(db, MESSAGES_COLLECTION, msgDoc.id))
     )
     await Promise.all(deletePromises)
-    
+
     // Delete the chat
     await deleteDoc(doc(db, CHATS_COLLECTION, chatId))
-    
+
     return true
   } catch (error) {
     console.error('[ChatService] deleteGroup error:', error)

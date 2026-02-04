@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { audioEngine } from '../_lib/audio-engine';
-import { toLeagcySong } from '../_lib/song-service';
+import { toLeagcySong, getSongsPaginated, getTotalSongCount } from '../_lib/song-service';
 import type {
   Song,
   AudioLabSong,
@@ -863,7 +863,6 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
     console.log('🚀 [AudioLabContext] Fetching library songs (Master + Praise Night)...');
     try {
-      const { getSongsPaginated, getTotalSongCount } = await import('../_lib/song-service');
 
       // Execute fetches in parallel
       const songPromises: Promise<any>[] = [
@@ -905,12 +904,13 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
         songPromises.push(Promise.resolve([]));
       }
 
-      const [masterResult, masterTotal, praiseNightSongs] = await Promise.all(songPromises);
+      const [masterResult, masterTotal] = await Promise.all(songPromises);
 
-      // Simple merge: Prepend Praise Night songs (usually newer) or append? 
-      // User likely wants to see them mixed. For now, we'll put them at top as "New"
-      const allSongs = [...praiseNightSongs, ...masterResult.songs];
-      const combinedTotal = masterTotal + praiseNightSongs.length;
+      // We no longer prepend Praise Night songs to the Master Library list
+      // This ensures consistent numbering across all zones for the Master Library.
+      // Praise Night songs are fetched separately by the "Ongoing" tab in LibraryView.
+      const allSongs = masterResult.songs;
+      const combinedTotal = masterTotal;
 
       dispatch({
         type: 'SET_LIBRARY_DATA',

@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { CalendarEvent, CalendarService } from '../_lib/firebase-calendar-service'
-import { 
-  X, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  User, 
-  Edit3, 
-  Trash2, 
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Edit3,
+  Trash2,
   Users,
   Repeat,
   Bell,
@@ -25,11 +25,12 @@ interface EventDetailsModalProps {
   onEdit: () => void
   onDelete: (eventId: string) => void
   themeColor: string
+  canManage?: boolean
 }
 
 const EVENT_TYPE_LABELS = {
   rehearsal: 'Rehearsal',
-  performance: 'Performance', 
+  performance: 'Performance',
   meeting: 'Meeting',
   other: 'Other'
 }
@@ -47,7 +48,8 @@ export default function EventDetailsModal({
   event,
   onEdit,
   onDelete,
-  themeColor
+  themeColor,
+  canManage = false
 }: EventDetailsModalProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -57,9 +59,8 @@ export default function EventDetailsModal({
   // Toast helper
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const toast = document.createElement('div')
-    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
-      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+      }`
     toast.textContent = message
     document.body.appendChild(toast)
     setTimeout(() => {
@@ -74,14 +75,14 @@ export default function EventDetailsModal({
     setDeleting(true)
     try {
       await calendarService.deleteEvent(event.id)
-      
-            try {
+
+      try {
         const { CalendarCache } = await import('@/utils/calendar-cache')
         CalendarCache.clearEvents(event.zoneId)
       } catch {
         // Cache util might not exist, ignore
       }
-      
+
       showToast('Event deleted successfully')
       onDelete(event.id)
       setShowDeleteConfirm(false)
@@ -97,7 +98,7 @@ export default function EventDetailsModal({
 
   const eventTypeColor = EVENT_TYPE_COLORS[event.type] || themeColor
   const duration = moment(event.end).diff(moment(event.start), 'minutes')
-  const durationText = duration >= 60 
+  const durationText = duration >= 60
     ? `${Math.floor(duration / 60)}h ${duration % 60}m`
     : `${duration}m`
 
@@ -105,7 +106,7 @@ export default function EventDetailsModal({
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div 
+        <div
           className="p-6 text-white relative"
           style={{
             background: `linear-gradient(135deg, ${eventTypeColor} 0%, ${adjustColor(eventTypeColor, -20)} 100%)`
@@ -114,7 +115,7 @@ export default function EventDetailsModal({
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span 
+                <span
                   className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium"
                 >
                   {EVENT_TYPE_LABELS[event.type]}
@@ -133,7 +134,7 @@ export default function EventDetailsModal({
                 Created by {event.createdByName}
               </p>
             </div>
-            
+
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0 ml-2"
@@ -148,7 +149,7 @@ export default function EventDetailsModal({
           <div className="space-y-4">
             {/* Date and Time */}
             <div className="flex items-start gap-3">
-              <div 
+              <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: `${eventTypeColor}20` }}
               >
@@ -176,7 +177,7 @@ export default function EventDetailsModal({
             {/* Location */}
             {event.location && (
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${eventTypeColor}20` }}
                 >
@@ -192,7 +193,7 @@ export default function EventDetailsModal({
             {/* Description */}
             {event.description && (
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${eventTypeColor}20` }}
                 >
@@ -208,7 +209,7 @@ export default function EventDetailsModal({
             {/* Recurring Pattern */}
             {event.isRecurring && event.recurringPattern && (
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${eventTypeColor}20` }}
                 >
@@ -229,7 +230,7 @@ export default function EventDetailsModal({
             {/* Reminders */}
             {event.reminders && event.reminders.length > 0 && (
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${eventTypeColor}20` }}
                 >
@@ -251,7 +252,7 @@ export default function EventDetailsModal({
             {/* Attendees */}
             {event.attendees && event.attendees.length > 0 && (
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${eventTypeColor}20` }}
                 >
@@ -263,7 +264,7 @@ export default function EventDetailsModal({
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {event.attendees.map((attendeeId, index) => (
-                      <span 
+                      <span
                         key={index}
                         className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
                       >
@@ -287,65 +288,67 @@ export default function EventDetailsModal({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
-          {showDeleteConfirm ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-red-900">Delete Event</h4>
-                  <p className="text-sm text-red-700">
-                    Are you sure you want to delete this event? This action cannot be undone.
-                  </p>
+        {/* Actions - Only for authorized users */}
+        {canManage && (
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            {showDeleteConfirm ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-red-900">Delete Event</h4>
+                    <p className="text-sm text-red-700">
+                      Are you sure you want to delete this event? This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Delete Event
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-              
+            ) : (
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  onClick={onEdit}
+                  className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                 >
-                  Cancel
+                  <Edit3 className="w-4 h-4" />
+                  Edit Event
                 </button>
                 <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex-1 py-3 bg-red-100 text-red-700 rounded-xl font-semibold hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
                 >
-                  {deleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4" />
-                      Delete Event
-                    </>
-                  )}
+                  <Trash2 className="w-4 h-4" />
+                  Delete Event
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={onEdit}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-              >
-                <Edit3 className="w-4 h-4" />
-                Edit Event
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex-1 py-3 bg-red-100 text-red-700 rounded-xl font-semibold hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Event
-              </button>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

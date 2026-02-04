@@ -1,6 +1,13 @@
 // Zone configuration for LWSRH multi-tenant platform
 // 9 HQ groups (unfiltered data) + 78 regional zones (filtered by zone_id) + 1 admin zone
 
+export interface StreamConfig {
+  id: string
+  name: string
+  publicId: string
+  playerLink: string
+}
+
 export interface Zone {
   id: string
   name: string
@@ -8,6 +15,7 @@ export interface Zone {
   region: string
   invitationCode: string
   themeColor: string
+  streams?: StreamConfig[]
 }
 
 export const ZONES: Zone[] = [
@@ -18,7 +26,28 @@ export const ZONES: Zone[] = [
   { id: 'zone-004', name: 'Loveworld Singers Teens Choir', slug: 'lws-teens', region: 'Headquarters', invitationCode: 'ZONE004', themeColor: '#9333EA' },
   { id: 'zone-005', name: 'Presidential Mass Choir', slug: 'presidential-mass-choir', region: 'Headquarters', invitationCode: 'ZONE005', themeColor: '#9333EA' },
   { id: 'zone-orchestra', name: 'Loveworld Singers Orchestra', slug: 'lws-orchestra', region: 'Headquarters', invitationCode: 'ZONEORCH', themeColor: '#9333EA' },
-  { id: 'zone-president', name: 'The President Zone', slug: 'president-zone', region: 'Headquarters', invitationCode: 'ZONEPRES', themeColor: '#9333EA' },
+  {
+    id: 'zone-president',
+    name: 'The President Zone',
+    slug: 'president-zone',
+    region: 'Headquarters',
+    invitationCode: 'ZONEPRES',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
   { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
   { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
   { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug: 'national-zone', region: 'Headquarters', invitationCode: 'ZONENAT', themeColor: '#9333EA' },

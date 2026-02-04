@@ -464,7 +464,7 @@ export function LibraryView() {
               : 'bg-[#261933] text-slate-400 border border-white/5 hover:bg-white/5'
               }`}
           >
-            All Songs
+            All Ministered Songs
           </button>
 
           {/* Ongoing Tab */}
@@ -481,22 +481,6 @@ export function LibraryView() {
 
 
 
-          {/* Praise Night Pages Pills */}
-          {praiseNightPages
-            .filter(page => page.category !== 'ongoing') // Optional: don't double show if needed, but usually we want to see them all. Or show all.
-            // Actually user wants "pages" added.
-            .map((page) => (
-              <button
-                key={page.id}
-                onClick={() => setSelectedProgramId(page.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === page.id
-                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                  : 'bg-[#261933] text-slate-400 border border-white/5 hover:bg-white/5'
-                  }`}
-              >
-                {page.name}
-              </button>
-            ))}
 
           {/* Master Programs Pills */}
           {programs.map((program) => (

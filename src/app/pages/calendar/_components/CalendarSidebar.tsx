@@ -19,6 +19,7 @@ interface CalendarSidebarProps {
     end: Date
     color?: string
   }>
+  canManage?: boolean
 }
 
 export default function CalendarSidebar({
@@ -29,10 +30,11 @@ export default function CalendarSidebar({
   zoneName,
   view = 'month',
   onViewChange,
-  upcomingEvents = []
+  upcomingEvents = [],
+  canManage = false
 }: CalendarSidebarProps) {
   const [ministryCalendarOpen, setMinistryCalendarOpen] = useState(false)
-  
+
   // Get upcoming events (next 7 days)
   const today = new Date()
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -56,22 +58,42 @@ export default function CalendarSidebar({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Today's Date */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-12 h-12 rounded-lg flex flex-col items-center justify-center"
+        {/* Today's Real Date Indicator */}
+        <div className="p-4 border-b border-gray-100 bg-blue-50/50">
+          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2">Today</p>
+          <div className="flex items-center gap-3 cursor-pointer hover:bg-white/50 p-1 rounded-lg transition-colors" onClick={() => onDateSelect(new Date())}>
+            <div
+              className="w-10 h-10 rounded-lg flex flex-col items-center justify-center shadow-sm"
               style={{ backgroundColor: themeColor }}
             >
-              <span className="text-xs font-medium uppercase text-white">{moment(date).format('MMM')}</span>
-              <span className="text-lg font-bold text-white">{moment(date).format('D')}</span>
+              <span className="text-[10px] font-medium uppercase text-white/90">{moment().format('MMM')}</span>
+              <span className="text-base font-bold text-white">{moment().format('D')}</span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{moment(date).format('dddd')}</p>
-              <p className="text-xs text-gray-500">{moment(date).format('MMMM D, YYYY')}</p>
+              <p className="text-sm font-bold text-gray-900">{moment().format('dddd')}</p>
+              <p className="text-[10px] text-gray-500">{moment().format('MMMM D, YYYY')}</p>
             </div>
           </div>
         </div>
+
+        {/* Selected Date Indicator (if different from today) */}
+        {!moment(date).isSame(moment(), 'day') && (
+          <div className="p-4 border-b border-gray-100 bg-slate-50">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Viewing</p>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-lg flex flex-col items-center justify-center border border-slate-200 bg-white"
+              >
+                <span className="text-[10px] font-medium uppercase text-slate-400">{moment(date).format('MMM')}</span>
+                <span className="text-base font-bold text-slate-700">{moment(date).format('D')}</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">{moment(date).format('dddd')}</p>
+                <p className="text-[10px] text-slate-500">{moment(date).format('MMMM D, YYYY')}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* View Options */}
         {onViewChange && (
@@ -82,11 +104,10 @@ export default function CalendarSidebar({
                 <button
                   key={option.id}
                   onClick={() => onViewChange(option.id)}
-                  className={`w-full flex items-center gap-4 px-4 py-3 text-sm transition-colors ${
-                    view === option.id 
-                      ? 'text-white' 
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`w-full flex items-center gap-4 px-4 py-3 text-sm transition-colors ${view === option.id
+                    ? 'text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                    }`}
                   style={view === option.id ? { backgroundColor: themeColor } : {}}
                 >
                   <Icon className="w-5 h-5" />
@@ -114,7 +135,7 @@ export default function CalendarSidebar({
             <CalendarIcon className="w-5 h-5" style={{ color: themeColor }} />
             <span className="font-medium">Ministry Calendar</span>
             {upcoming.length > 0 && (
-              <span 
+              <span
                 className="ml-auto px-2 py-0.5 text-xs rounded-full text-white"
                 style={{ backgroundColor: themeColor }}
               >
@@ -122,7 +143,7 @@ export default function CalendarSidebar({
               </span>
             )}
           </button>
-          
+
           {/* Upcoming Events - Shows when expanded */}
           {ministryCalendarOpen && (
             <div className="px-4 pb-2">
@@ -164,17 +185,19 @@ export default function CalendarSidebar({
           </button>
         </div>
 
-        {/* Add Event Button */}
-        <div className="p-4">
-          <button
-            onClick={onCreateEvent}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium hover:opacity-90 transition-all active:scale-95 shadow-sm text-white"
-            style={{ backgroundColor: themeColor }}
-          >
-            <span className="text-xl leading-none">+</span>
-            <span>Add Event</span>
-          </button>
-        </div>
+        {/* Add Event Button - Only for authorized users */}
+        {canManage && (
+          <div className="p-4">
+            <button
+              onClick={onCreateEvent}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium hover:opacity-90 transition-all active:scale-95 shadow-sm text-white"
+              style={{ backgroundColor: themeColor }}
+            >
+              <span className="text-xl leading-none">+</span>
+              <span>Add Event</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Zone Info */}

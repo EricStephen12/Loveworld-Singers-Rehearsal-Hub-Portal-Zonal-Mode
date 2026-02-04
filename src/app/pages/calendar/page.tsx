@@ -64,6 +64,14 @@ export default function CalendarPage() {
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
   const [upcomingEventsList, setUpcomingEventsList] = useState<any[]>([])
 
+  // Calculate permissions
+  const canManage = useMemo(() => {
+    if (!profile) return false
+    const isAdmin = profile.role === 'admin' || profile.role === 'boss'
+    const isCoordinator = profile.administration === 'Coordinator' || profile.administration === 'Assistant Coordinator'
+    return isAdmin || isCoordinator
+  }, [profile])
+
   const calendarService = new CalendarService()
 
   // Mark calendar as seen when page loads
@@ -214,6 +222,7 @@ export default function CalendarPage() {
   }, [upcomingEvents, events])
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
+    if (!canManage) return
     setSelectedSlot({ start, end })
     setSelectedEvent(null)
     setShowEventModal(true)
@@ -300,6 +309,7 @@ export default function CalendarPage() {
         <ScreenHeader
           title={calendarReady && moment ? moment(date).format('MMM YYYY') : ''}
           showBackButton={true}
+          showMenuButton={true}
           backPath="/home"
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           leftButtons={
@@ -409,6 +419,7 @@ export default function CalendarPage() {
                 }
               }}
               upcomingEvents={upcomingEventsList}
+              canManage={canManage}
             />
           )}
         </div>
@@ -460,7 +471,7 @@ export default function CalendarPage() {
                     onView={(newView: any) => setView(newView)}
                     date={date}
                     onNavigate={setDate}
-                    selectable
+                    selectable={canManage}
                     onSelectSlot={handleSelectSlot}
                     onSelectEvent={handleSelectEvent}
                     eventPropGetter={eventStyleGetter}
@@ -475,10 +486,11 @@ export default function CalendarPage() {
                       dayRangeHeaderFormat: ({ start, end }: any) =>
                         `${moment(start).format('MMM D')} - ${moment(end).format('MMM D, YYYY')}`,
                     }}
+                    scrollToTime={new Date()}
                     step={30}
                     timeslots={2}
-                    min={new Date(2024, 0, 1, 6, 0, 0)}
-                    max={new Date(2024, 0, 1, 23, 0, 0)}
+                    min={new Date(new Date().setHours(6, 0, 0, 0))}
+                    max={new Date(new Date().setHours(23, 30, 0, 0))}
                   />
                 </div>
               </div>
@@ -520,6 +532,7 @@ export default function CalendarPage() {
           }}
           onDelete={handleEventDeleted}
           themeColor={currentZone.themeColor || '#10b981'}
+          canManage={canManage}
         />
       )}
     </div>

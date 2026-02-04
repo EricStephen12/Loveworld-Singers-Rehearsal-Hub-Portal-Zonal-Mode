@@ -72,6 +72,7 @@ export interface MasterProgram {
   publishedByName: string
   createdAt: Date
   updatedAt: Date
+  sortOrder?: number
 }
 
 export class MasterLibraryService {
@@ -513,14 +514,24 @@ export class MasterLibraryService {
 
   static async getMasterPrograms(): Promise<MasterProgram[]> {
     try {
-      const q = query(collection(db, 'master_programs'), orderBy('name', 'asc'))
+      const q = query(collection(db, 'master_programs'))
       const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => ({
+      const programsList = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate?.() || new Date()
       })) as MasterProgram[]
+
+      // Sort by sortOrder first, then name
+      return programsList.sort((a, b) => {
+        if (a.sortOrder !== undefined && b.sortOrder !== undefined) {
+          return a.sortOrder - b.sortOrder
+        }
+        if (a.sortOrder !== undefined) return -1
+        if (b.sortOrder !== undefined) return 1
+        return a.name.localeCompare(b.name)
+      })
     } catch (error) {
       console.error('Error getting Master programs:', error)
       return []
@@ -615,6 +626,23 @@ export class MasterLibraryService {
     } catch (error) {
       console.error('Error removing song from program:', error)
       return { success: false, error: 'Failed to remove song' }
+    }
+  }
+
+  static async updateMasterProgramsOrder(updatedPrograms: MasterProgram[]): Promise<{ success: boolean; error?: string }> {
+    try {
+      const promises = updatedPrograms.map((program, index) => {
+        const programRef = doc(db, 'master_programs', program.id)
+        return updateDoc(programRef, {
+          sortOrder: index,
+          updatedAt: new Date()
+        })
+      })
+      await Promise.all(promises)
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating Master programs order:', error)
+      return { success: false, error: 'Failed to update program order' }
     }
   }
 }
