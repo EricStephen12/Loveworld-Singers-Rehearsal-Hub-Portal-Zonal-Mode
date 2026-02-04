@@ -86,12 +86,20 @@ export function PageLoader({ children }: PageLoaderProps) {
 
     // Case 1: Public Path - Always allow
     if (isPublicPath) {
+      // BOUNCE BACK: If user is logged in but on /auth, send them home
+      if (user && pathname === '/auth') {
+        console.log('🔄 PageLoader: User logged in on auth page, redirecting home');
+        router.replace('/home');
+        return;
+      }
+
       if (!isReady) setIsReady(true);
       return;
     }
 
     // Case 2: Protected Path & No User - Redirect
-    if (!user) {
+    // ONLY redirect if initial load is complete and we truly have no user
+    if (!user && !authLoading) {
       router.replace('/auth');
       return;
     }

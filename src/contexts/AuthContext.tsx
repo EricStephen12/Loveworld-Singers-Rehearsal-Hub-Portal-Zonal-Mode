@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return currentLoading
       })
-    }, 5000)
+    }, 12000)
 
     return () => {
       unsubscribe()
