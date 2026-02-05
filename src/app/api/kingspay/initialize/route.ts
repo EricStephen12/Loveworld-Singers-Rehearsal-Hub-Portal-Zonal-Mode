@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       merchant_webhook_url: webhookUrl,
       metadata: {
         userId,
+        zoneId: zoneId || 'global',
         type: 'individual_subscription',
         product: 'individual_premium'
       },

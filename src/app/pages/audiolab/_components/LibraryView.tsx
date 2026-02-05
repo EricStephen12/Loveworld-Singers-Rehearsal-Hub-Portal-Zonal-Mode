@@ -11,9 +11,7 @@ import {
   searchSongsDeep,
   toLeagcySong,
   getTotalSongCount,
-  getPrograms,
-  getSongsByProgram,
-  type MasterProgram
+  getSongsByProgram
 } from '../_lib/song-service';
 import { useZone } from '@/hooks/useZone';
 import { useRealtimeData } from '@/hooks/useRealtimeData';
@@ -29,11 +27,8 @@ export function LibraryView() {
   const { setView, playSong: playInAudioLab, state, loadLibraryData } = useAudioLab();
   const { currentZone } = useZone();
   const searchParams = useSearchParams();
-
-  // Program selection state (Declare early for hooks)
-  const [programs, setPrograms] = useState<MasterProgram[]>([]);
+  // Program selection state
   const [selectedProgramId, setSelectedProgramId] = useState<string>('all');
-  const [isLoadingPrograms, setIsLoadingPrograms] = useState(true);
 
   // Initialize from global cache if available
   const [songs, setSongs] = useState<Song[]>(state.libraryData.songs || []);
@@ -56,6 +51,7 @@ export function LibraryView() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const isFetchingRef = useRef(false);
 
   // Sync with global cache when it updates in background
   useEffect(() => {
@@ -83,14 +79,19 @@ export function LibraryView() {
   const praiseNightSongToAudioLabSong = useCallback((pnSong: PraiseNightSong): AudioLabSong => {
     // Basic lyrics parsing if it's HTML/String
     let parsedLyrics: LyricLine[] = [];
-    if (pnSong.lyrics) {
-      // Very basic strip HTML
-      const text = pnSong.lyrics.replace(/<[^>]*>/g, '');
-      parsedLyrics = text.split('\n').map((line, i) => ({
-        time: i * 5,
-        text: line,
-        duration: 5
-      })).filter(l => l.text.trim());
+    const lyricsSource = pnSong.lyrics;
+    if (lyricsSource) {
+      if (typeof lyricsSource === 'string') {
+        // Basic strip HTML
+        const text = lyricsSource.replace(/<[^>]*>/g, '');
+        parsedLyrics = text.split('\n').map((line, i) => ({
+          time: i * 5,
+          text: line,
+          duration: 5
+        })).filter(l => l.text.trim());
+      } else if (Array.isArray(lyricsSource)) {
+        parsedLyrics = lyricsSource as unknown as LyricLine[];
+      }
     }
 
     return {
@@ -117,14 +118,6 @@ export function LibraryView() {
 
   // Initial load
   useEffect(() => {
-    const fetchPrograms = async () => {
-      setIsLoadingPrograms(true);
-      const fetchedPrograms = await getPrograms();
-      setPrograms(fetchedPrograms);
-      setIsLoadingPrograms(false);
-    };
-
-    fetchPrograms();
     // Load initial songs (e.g. 'all' or if param is set)
     loadSongs();
   }, [currentZone?.id]);
@@ -135,14 +128,14 @@ export function LibraryView() {
     const programParam = searchParams?.get('program');
     const songParam = searchParams?.get('song');
 
-    if (programParam && programParam !== selectedProgramId && !isLoadingPrograms) {
+    if (programParam && programParam !== selectedProgramId) {
       setSelectedProgramId(programParam);
     }
 
     if (songParam && songParam !== searchQuery) {
       setSearchQuery(songParam);
     }
-  }, [searchParams, isLoadingPrograms]);
+  }, [searchParams]);
 
   useEffect(() => {
     console.log('🔄 [LibraryView] Triggering loadSongs due to change:', { selectedProgramId, metadataTimestamp, pagesCount: praiseNightPages.length });
@@ -190,6 +183,9 @@ export function LibraryView() {
   }, [currentZone?.id, selectedProgramId, praiseNightPages]);
 
   const loadSongs = async (isManualRefresh = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       // Only show full screen loader if no songs are currently displayed OR if switching views
       if (songs.length === 0 || isManualRefresh || selectedProgramId !== 'all') {
@@ -242,28 +238,22 @@ export function LibraryView() {
             setHasMore(state.libraryData.hasMore);
           } else {
             console.log('🚀 [LibraryView] Cache empty or manual refresh. Triggering context load...');
-            // loadLibraryData now handles its own TTL check internally unless forceRefresh=true
             await loadLibraryData(currentZone?.id || '', ITEMS_PER_PAGE, isManualRefresh);
 
-            // The context update will trigger a re-render. 
-            // However, to satisfy the immediate songsList need:
             if (!isManualRefresh && state.libraryData.songs.length > 0) {
               songsList = state.libraryData.songs.map(toLeagcySong);
               setTotalCount(state.libraryData.totalCount);
               setLastVisibleDoc(state.libraryData.lastDoc);
               setHasMore(state.libraryData.hasMore);
             }
-            // If it was a forced refresh or truly empty, the NEXT render cycle will pick it up
-            // because loadSongs is run in an Effect that depends on selectedProgramId.
           }
         }
       }
 
       setSongs(songsList);
-      setHasMore(songsList.length < totalCount); // Double check local vs total
+      setHasMore(songsList.length < totalCount);
       console.log(`✅ [LibraryView] Loaded ${songsList.length} songs for ${selectedProgramId}`);
 
-      // If we were showing a background refresh, we're done
       if (isLoading) setIsLoading(false);
 
     } catch (err) {
@@ -273,6 +263,7 @@ export function LibraryView() {
     } finally {
       setIsLoading(false);
       setIsSearching(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -482,19 +473,6 @@ export function LibraryView() {
 
 
 
-          {/* Master Programs Pills */}
-          {programs.map((program) => (
-            <button
-              key={program.id}
-              onClick={() => setSelectedProgramId(program.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === program.id
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                : 'bg-[#261933] text-slate-400 border border-white/5 hover:bg-white/5'
-                }`}
-            >
-              {program.name}
-            </button>
-          ))}
         </div>
 
         {/* Search Bar */}

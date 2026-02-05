@@ -4,12 +4,14 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react'
 import { getKingsPayPaymentStatus } from '@/lib/kingspay-service'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 function SubscriptionCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'checking' | 'success' | 'failed' | 'pending'>('checking')
   const [message, setMessage] = useState('Verifying your payment...')
+  const { refreshSubscription } = useSubscription()
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -35,6 +37,8 @@ function SubscriptionCallbackContent() {
           case 'SUCCESS':
             setStatus('success')
             setMessage('Payment successful! Your subscription has been activated.')
+            // Refresh subscription context
+            await refreshSubscription()
             // Redirect to home after 3 seconds
             setTimeout(() => router.push('/home?subscribed=true'), 3000)
             break

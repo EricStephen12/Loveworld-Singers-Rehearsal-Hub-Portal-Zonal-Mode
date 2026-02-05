@@ -159,3 +159,17 @@ export async function hasPremiumAccess(userId: string, zoneId?: string): Promise
     return false
   }
 }
+
+export async function cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const subscriptionId = userId;
+    await FirebaseDatabaseService.updateDocument('individual_subscriptions', subscriptionId, {
+      status: 'cancelled',
+      updatedAt: new Date().toISOString()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error cancelling subscription:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

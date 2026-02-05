@@ -27,10 +27,10 @@ export async function POST(request: NextRequest) {
       const { metadata, payment_id, amount, status } = data
 
       if (status === 'SUCCESS' && metadata) {
-        const { zoneId, userId } = metadata
+        const { userId } = metadata
 
-        if (!userId || !zoneId) {
-          console.error('❌ Webhook metadata missing userId or zoneId')
+        if (!userId) {
+          console.error('❌ Webhook metadata missing userId')
           return NextResponse.json({ error: 'Invalid metadata' }, { status: 400 })
         }
 
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
         try {
           await FirebaseDatabaseService.createDocument('individual_subscriptions', subscriptionId, {
+            userId: userId,
             status: 'active',
             tier: 'premium',
             expiresAt: endDate.toISOString(),

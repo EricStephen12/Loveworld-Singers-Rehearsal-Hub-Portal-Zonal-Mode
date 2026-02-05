@@ -3,7 +3,7 @@
  * Handles SDP/ICE exchange via Firebase Realtime Database
  */
 
-import { ref, set, onValue, remove, push } from 'firebase/database';
+import { ref, set, onValue, remove, push, onDisconnect } from 'firebase/database';
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup';
 
 export interface SignalMessage {
@@ -50,29 +50,40 @@ export class WebRTCSignaling {
 
   startListening(onMessage: (message: SignalMessage) => void): () => void {
     this.onMessage = onMessage;
-    
+
     if (!isRealtimeDbAvailable() || !realtimeDb) {
       console.warn('[WebRTCSignaling] Realtime Database not available');
-      return () => {};
+      return () => { };
     }
     const mySignalPath = `audiolab_sessions/${this.sessionId}/signals/${this.userId}`;
     const signalRef = ref(realtimeDb, mySignalPath);
-    
+
     const unsubscribe = onValue(signalRef, (snapshot) => {
       if (snapshot.exists()) {
         const signals = snapshot.val();
+        const now = Date.now();
+
         Object.entries(signals).forEach(([key, signal]: [string, any]) => {
-          if (this.onMessage) {
-            this.onMessage(signal as SignalMessage);
+          const sig = signal as SignalMessage;
+
+          // Ignore signals older than 30 seconds to prevent "zombie" connections
+          if (now - sig.timestamp < 30000) {
+            if (this.onMessage) {
+              this.onMessage(sig);
+            }
           }
-          
-          // Remove the signal after processing
+
+          // Always remove the signal after processing (or if it's too old)
           if (realtimeDb) {
-            remove(ref(realtimeDb, `${mySignalPath}/${key}`));
+            const itemRef = ref(realtimeDb, `${mySignalPath}/${key}`);
+            remove(itemRef);
           }
         });
       }
     });
+
+    // Cleanup: Remove my signal queue if I disconnect abruptly
+    onDisconnect(signalRef).remove().catch(() => { });
 
     return unsubscribe;
   }

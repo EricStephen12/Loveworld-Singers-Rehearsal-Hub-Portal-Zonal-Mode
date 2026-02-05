@@ -25,6 +25,9 @@ export interface PeerConnection {
 export class WebRTCService {
   private peerConnections: Map<string, PeerConnection> = new Map();
   private localStream: MediaStream | null = null;
+  private screenStream: MediaStream | null = null;
+  private videoEnabled: boolean = false;
+  private isScreenSharing: boolean = false;
   private config: WebRTCConfig;
   private onRemoteStreamAdded: ((userId: string, stream: MediaStream) => void) | null = null;
   private onDataReceived: ((userId: string, data: any) => void) | null = null;
@@ -299,6 +302,110 @@ export class WebRTCService {
     return pc;
   }
 
+  async setVideoEnabled(enabled: boolean): Promise<boolean> {
+    this.videoEnabled = enabled;
+
+    // If we already have a stream, we need to add/remove the video track
+    if (this.localStream) {
+      if (enabled) {
+        try {
+          const videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              frameRate: { ideal: 15 } // Lower frame rate for rehearsal efficiency
+            }
+          });
+          const videoTrack = videoStream.getVideoTracks()[0];
+          this.localStream.addTrack(videoTrack);
+
+          // Add to all peer connections
+          this.peerConnections.forEach(peer => {
+            peer.connection.addTrack(videoTrack, this.localStream!);
+            // Renegotiate
+            this.initiateConnection(peer.id);
+          });
+          return true;
+        } catch (e) {
+          console.error('[WebRTC] Error enabling video:', e);
+          return false;
+        }
+      } else {
+        const videoTrack = this.localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.stop();
+          this.localStream.removeTrack(videoTrack);
+
+          // Remove from all peer connections
+          this.peerConnections.forEach(peer => {
+            const sender = peer.connection.getSenders().find(s => s.track?.id === videoTrack.id);
+            if (sender) peer.connection.removeTrack(sender);
+            // Renegotiate
+            this.initiateConnection(peer.id);
+          });
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async startScreenShare(): Promise<boolean> {
+    try {
+      this.screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false // Screen audio is complex, keeping it simple for now
+      });
+
+      this.isScreenSharing = true;
+      const screenTrack = this.screenStream.getVideoTracks()[0];
+
+      // Stop screen sharing if track ends (user clicks "Stop sharing" in browser)
+      screenTrack.onended = () => this.stopScreenShare();
+
+      // Replace video track in all active connections
+      this.peerConnections.forEach(peer => {
+        const senders = peer.connection.getSenders();
+        const videoSender = senders.find(s => s.track?.kind === 'video');
+
+        if (videoSender) {
+          videoSender.replaceTrack(screenTrack);
+        } else {
+          // If no video track exists, add the screen track
+          peer.connection.addTrack(screenTrack, this.screenStream!);
+          this.initiateConnection(peer.id); // Renegotiate
+        }
+      });
+
+      return true;
+    } catch (e) {
+      console.error('[WebRTC] Error starting screen share:', e);
+      return false;
+    }
+  }
+
+  async stopScreenShare(): Promise<void> {
+    if (this.screenStream) {
+      this.screenStream.getTracks().forEach(t => t.stop());
+      this.screenStream = null;
+    }
+    this.isScreenSharing = false;
+
+    // Switch back to camera video if it was enabled
+    const videoTrack = this.localStream?.getVideoTracks()[0];
+
+    this.peerConnections.forEach(peer => {
+      const videoSender = peer.connection.getSenders().find(s => s.track?.kind === 'video');
+      if (videoSender) {
+        videoSender.replaceTrack(videoTrack || null);
+        if (!videoTrack) {
+          peer.connection.removeTrack(videoSender);
+          this.initiateConnection(peer.id); // Renegotiate to clean up
+        }
+      }
+    });
+  }
+
   async createOffer(userId: string): Promise<RTCSessionDescriptionInit> {
     const pc = this.getPeerConnection(userId);
     if (!pc) throw new Error('Peer connection not found');
@@ -306,7 +413,7 @@ export class WebRTCService {
     // Optimized offer settings for audio
     const offer = await pc.createOffer({
       offerToReceiveAudio: true,
-      offerToReceiveVideo: false
+      offerToReceiveVideo: true
     });
     await pc.setLocalDescription(offer);
     return offer;

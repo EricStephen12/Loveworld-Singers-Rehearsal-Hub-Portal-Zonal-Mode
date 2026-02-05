@@ -904,7 +904,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
         songPromises.push(Promise.resolve([]));
       }
 
-      const [masterResult, masterTotal] = await Promise.all(songPromises);
+      const [masterResult, masterTotal, _pnResult] = await Promise.all(songPromises);
 
       // We no longer prepend Praise Night songs to the Master Library list
       // This ensures consistent numbering across all zones for the Master Library.

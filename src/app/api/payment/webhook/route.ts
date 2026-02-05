@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const secretKey = environment === 'production'
       ? process.env.NEXT_PUBLIC_KINGSPAY_PRODUCTION_SECRET_KEY || ''
       : process.env.NEXT_PUBLIC_KINGSPAY_TEST_SECRET_KEY || '';
-      
+
     if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
       console.error('❌ Invalid webhook signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Handle payment.succeeded event
     if (data.event === 'payment.succeeded') {
       const paymentData = data.data;
-      
+
 
       // Store payment record in Firebase
       try {
@@ -44,14 +44,14 @@ export async function POST(request: NextRequest) {
 
         // Handle different subscription types
         const subscriptionType = paymentData.metadata?.type;
-        
+
         if (subscriptionType === 'zone_subscription') {
           // Zone subscription (Coordinator pays for entire zone)
           const { zoneId, coordinatorId, memberCount } = paymentData.metadata;
-          
+
           const expiresAt = new Date();
           expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year subscription
-          
+
           await FirebaseDatabaseService.updateDocument('zone_subscriptions', zoneId, {
             status: 'active',
             plan: 'premium',
@@ -65,15 +65,15 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date().toISOString(),
           });
 
-          
+
         } else if (subscriptionType === 'individual_subscription') {
           // Individual subscription (Member pays for themselves)
-          const { userId, zoneId } = paymentData.metadata;
-          
+          const { userId } = paymentData.metadata;
+
           const expiresAt = new Date();
           expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year subscription
-          
-          const subscriptionId = `${userId}_${zoneId}`;
+
+          const subscriptionId = userId;
           await FirebaseDatabaseService.updateDocument('individual_subscriptions', subscriptionId, {
             status: 'active',
             paymentId: paymentData.payment_id,

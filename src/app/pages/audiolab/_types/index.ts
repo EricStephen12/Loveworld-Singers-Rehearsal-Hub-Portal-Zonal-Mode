@@ -174,6 +174,7 @@ export interface Participant {
   role: 'host' | 'participant';
   isOnline: boolean;
   isMuted: boolean;
+  isCameraOn: boolean;
   joinedAt: number;     // timestamp
 }
 

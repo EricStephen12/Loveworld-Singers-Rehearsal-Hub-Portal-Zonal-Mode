@@ -16,7 +16,11 @@ import {
   onChildAdded,
   onChildChanged,
   onChildRemoved,
-  off
+  off,
+  query,
+  orderByChild,
+  equalTo,
+  onDisconnect
 } from 'firebase/database';
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup';
 import type {
@@ -31,10 +35,10 @@ import type {
 // ============================================
 
 /**
- * Generate a unique 6-digit session code
+ * Generate a unique 6-character alphanumeric meeting code
  */
-function generateSessionCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function generateMeetingId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed ambiguous chars
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -56,7 +60,7 @@ export async function createClassroom(
 
     const sessionRef = push(ref(realtimeDb, 'audiolab_sessions'));
     const id = sessionRef.key!;
-    const code = generateSessionCode();
+    const code = generateMeetingId();
 
     const classroom = {
       id,
@@ -105,28 +109,70 @@ export async function getClassroom(id: string): Promise<any | null> {
 export async function getLiveSessionForClassroom(classroomId: string): Promise<LiveSession | null> {
   try {
     if (!isRealtimeDbAvailable() || !realtimeDb) return null;
+
+    // Optimized: Only query sessions linked to this classroom
     const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
-    const snap = await get(sessionsRef);
-    if (!snap.exists()) return null;
+    const classroomQuery = query(
+      sessionsRef,
+      orderByChild('classroomId'),
+      equalTo(classroomId)
+    );
 
-    const sessions = snap.val();
-    let activeSession: LiveSession | null = null;
-
-    for (const [id, sData] of Object.entries(sessions)) {
-      const s = sData as any;
-      // It's either the classroom itself being active, or a session linked to this classroom
-      if (
-        (id === classroomId && s.isClassroom && s.status === 'active') ||
-        (s.classroomId === classroomId && s.status === 'active' && !s.isClassroom)
-      ) {
-        activeSession = { ...s, id };
-        break;
+    const snap = await get(classroomQuery);
+    if (!snap.exists()) {
+      // Fallback: Check if the classroom itself is active
+      const roomSnap = await get(ref(realtimeDb, `audiolab_sessions/${classroomId}`));
+      if (roomSnap.exists() && roomSnap.val().status === 'active') {
+        return { ...roomSnap.val(), id: classroomId };
       }
+      return null;
     }
+
+    // Find the first active session
+    let activeSession: LiveSession | null = null;
+    snap.forEach((child) => {
+      const s = child.val();
+      if (s.status === 'active') {
+        activeSession = { ...s, id: child.key! };
+        return true; // Break
+      }
+    });
+
     return activeSession;
   } catch (e) {
     console.error('[SessionService] getLiveSessionForClassroom error:', e);
     return null;
+  }
+}
+
+/**
+ * Delete a classroom (only host can delete)
+ */
+export async function deleteClassroom(
+  classroomId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isRealtimeDbAvailable() || !realtimeDb) {
+      return { success: false, error: 'DB Unavailable' };
+    }
+
+    // Verify the user is the host
+    const classroom = await getClassroom(classroomId);
+    if (!classroom) {
+      return { success: false, error: 'Classroom not found' };
+    }
+
+    if (classroom.hostId !== userId) {
+      return { success: false, error: 'Only the host can delete this classroom' };
+    }
+
+    // Delete the classroom
+    await remove(ref(realtimeDb, `audiolab_sessions/${classroomId}`));
+    return { success: true };
+  } catch (e) {
+    console.error('[SessionService] deleteClassroom error:', e);
+    return { success: false, error: 'Failed to delete classroom' };
   }
 }
 
@@ -152,7 +198,7 @@ export async function createSession(
       return { success: false, error: 'Realtime Database not available' };
     }
 
-    const code = generateSessionCode();
+    const code = generateMeetingId();
     const sessionRef = push(ref(realtimeDb, 'audiolab_sessions'));
     const sessionId = sessionRef.key!;
 
@@ -172,6 +218,7 @@ export async function createSession(
           role: 'host',
           isOnline: true,
           isMuted: false,
+          isCameraOn: false,
           joinedAt: Date.now()
         }
       },
@@ -249,10 +296,18 @@ export async function joinSession(
       role: 'participant',
       isOnline: true,
       isMuted: false,
+      isCameraOn: false,
       joinedAt: Date.now()
     };
 
     await set(participantRef, participant);
+
+    // Setup Presence: Auto-remove participant on disconnect
+    if (realtimeDb) {
+      onDisconnect(participantRef).remove().catch(err => {
+        console.warn('[SessionService] onDisconnect setup failed:', err);
+      });
+    }
 
     if (session.status !== 'active') {
       await update(ref(realtimeDb, `audiolab_sessions/${session.id}`), { status: 'active' });
@@ -417,6 +472,11 @@ export async function toggleMute(sessionId: string, userId: string, isMuted: boo
   await update(ref(realtimeDb, `audiolab_sessions/${sessionId}/participants/${userId}`), { isMuted });
 }
 
+export async function toggleCamera(sessionId: string, userId: string, isCameraOn: boolean): Promise<void> {
+  if (!realtimeDb) return;
+  await update(ref(realtimeDb, `audiolab_sessions/${sessionId}/participants/${userId}`), { isCameraOn });
+}
+
 export async function updatePlaybackState(sessionId: string, state: Partial<PlaybackState>, userId: string): Promise<void> {
   if (!realtimeDb) return;
   await update(ref(realtimeDb, `audiolab_sessions/${sessionId}/playback`), { ...state, updatedAt: Date.now(), updatedBy: userId });
@@ -442,18 +502,31 @@ export async function getActiveSessions(limitCount: number = 10): Promise<LiveSe
 
 export async function getUserClassrooms(userId: string): Promise<any[]> {
   try {
-    if (!realtimeDb) return [];
-    const snap = await get(ref(realtimeDb, 'audiolab_sessions'));
-    if (!snap.exists()) return [];
+    if (!isRealtimeDbAvailable() || !realtimeDb) return [];
+
+    // Optimized: Only fetch rooms where this user is the host
+    const sessionsRef = ref(realtimeDb, 'audiolab_sessions');
+    const hostQuery = query(
+      sessionsRef,
+      orderByChild('hostId'),
+      equalTo(userId)
+    );
+
+    const snap = await get(hostQuery);
     const rooms: any[] = [];
-    snap.forEach((child) => {
-      const room = child.val();
-      // Show if it's a classroom AND (User is host OR room is active/idle)
-      // Basically show all persistent classrooms for now to encourage collaboration
-      if (room.isClassroom) {
-        rooms.push({ ...room, id: child.key });
-      }
-    });
+
+    if (snap.exists()) {
+      snap.forEach((child) => {
+        const room = child.val();
+        if (room.isClassroom) {
+          rooms.push({ ...room, id: child.key });
+        }
+      });
+    }
+
     return rooms.sort((a, b) => b.createdAt - a.createdAt);
-  } catch (e) { return []; }
+  } catch (e) {
+    console.error('[SessionService] getUserClassrooms error:', e);
+    return [];
+  }
 }

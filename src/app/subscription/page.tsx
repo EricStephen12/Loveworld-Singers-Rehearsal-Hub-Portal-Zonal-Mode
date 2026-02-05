@@ -5,18 +5,38 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { SUBSCRIPTION_PLANS, formatPrice, ESPEES_CONFIG } from '@/config/subscriptions'
-import { Check, CreditCard, Shield, Crown, X, Upload, Copy, CheckCircle, AlertCircle, Home as HomeIcon, User as UserIcon, Sparkles } from 'lucide-react'
+import { Check, CreditCard, Shield, Crown, X, Upload, Copy, CheckCircle, AlertCircle, Home as HomeIcon, User as UserIcon, Sparkles, Calendar, Trash2, Info } from 'lucide-react'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { cancelSubscription } from '@/lib/subscription-service'
+import { useEffect } from 'react'
 
 
 export default function SubscriptionPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
   const { currentZone } = useZone()
+  const {
+    subscription,
+    isIndividualPremium,
+    isPremiumTier,
+    isOfficialAccess,
+    daysRemaining,
+    refreshSubscription,
+    isLoading: subLoading
+  } = useSubscription()
 
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState<'plans' | 'success'>('plans')
+  const [step, setStep] = useState<'plans' | 'success' | 'manage'>('plans')
+
+  // Keep state in sync with premium status
+  useEffect(() => {
+    if (!subLoading && isPremiumTier && step === 'plans') {
+      setStep('manage')
+    }
+  }, [isPremiumTier, step, subLoading])
 
   const handlePayWithKingsPay = async () => {
     if (!user || !currentZone) {
@@ -83,10 +103,34 @@ export default function SubscriptionPage() {
     }
   }
 
-  if (!currentZone) {
+  const handleCancelSubscription = async () => {
+    if (!user || !confirm('Are you sure you want to cancel your Premium subscription? Your access will be revoked immediately.')) {
+      return
+    }
+
+    setIsCancelling(true)
+    try {
+      const result = await cancelSubscription(user.uid)
+      if (result.success) {
+        await refreshSubscription()
+        setStep('plans')
+        alert('Your subscription has been cancelled.')
+      } else {
+        setError(result.error || 'Failed to cancel subscription')
+      }
+    } catch (err) {
+      console.error('Cancellation error:', err)
+      setError('An error occurred while cancelling. Please contact support.')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  if (!currentZone || subLoading) {
     return (
-      <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+      <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin mb-4" />
+        <p className="text-gray-500 font-bold animate-pulse">Syncing Subscription...</p>
       </div>
     )
   }
@@ -95,9 +139,9 @@ export default function SubscriptionPage() {
     <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
       {/* Header */}
       <ScreenHeader
-        title={step === 'plans' ? 'Upgrade to Premium' : 'Success'}
+        title={step === 'plans' ? 'Upgrade to Premium' : step === 'success' ? 'Success' : 'Subscription'}
         showBackButton={true}
-        onBackClick={() => step === 'plans' ? router.push('/home') : setStep('plans')}
+        onBackClick={() => router.push('/home')}
         rightImageSrc="/logo.png"
       />
 
@@ -108,9 +152,24 @@ export default function SubscriptionPage() {
             {/* Header Section */}
             <div className="text-center mb-12">
               <h2 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Go Premium</h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-lg mb-6">
                 Unlock the full power of Loveworld Singers Rehearsal Hub.
               </p>
+
+              {/* HQ / Admin Acknowledgement */}
+              {isPremiumTier && !isIndividualPremium && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto flex items-start gap-4 text-left shadow-sm">
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Crown className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-amber-900 text-sm">Zone Premium Access</h4>
+                    <p className="text-amber-800/70 text-xs mt-1 leading-relaxed">
+                      You already have Premium features unlocked through your current Zone or administrative role. You don't need to purchase a plan, but you can still buy an individual subscription to maintain Premium status across all zones.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Pricing Card: Premium Individual */}
@@ -235,6 +294,127 @@ export default function SubscriptionPage() {
             >
               <HomeIcon className="w-6 h-6" />
               TAKE ME HOME
+            </button>
+          </div>
+        )}
+
+        {step === 'manage' && isPremiumTier && (
+          <div className="max-w-2xl mx-auto py-8">
+            <div className="text-center mb-10">
+              <div className="w-20 h-20 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <Crown className="w-10 h-10 text-amber-600" />
+              </div>
+              <h2 className="text-3xl font-black text-gray-900 mb-2">Subscription Details</h2>
+              <p className="text-gray-500">
+                {isIndividualPremium ? 'You are a Premium Individual member' : 'You have Complimentary Premium access'}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden mb-8">
+              <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Current Status</h3>
+                    <p className="text-sm text-gray-500">
+                      {isOfficialAccess ? 'Official Unlimited Plan' : 'Premium Individual Plan'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-black text-amber-600">
+                      {isOfficialAccess ? 'UNLIMITED' : '1 ESPEE'}
+                    </p>
+                    <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                      {isOfficialAccess ? 'OFFICIAL ACCESS' : 'RENEWAL ACTIVE'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Health</p>
+                      <p className={`text-xs text-green-600 font-medium`}>
+                        ACTIVE
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {subscription && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">Next Renewal</p>
+                        <p className="text-xs text-gray-500">
+                          {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'N/A'}
+                          {daysRemaining !== null && ` (${daysRemaining} days left)`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!subscription && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Access Basis</p>
+                      <p className="text-xs text-gray-500">
+                        Unlocked via {currentZone?.name || 'HQ Status'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {isIndividualPremium && (
+                <div className="p-8 bg-red-50/30 border-t border-red-100/50">
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={isCancelling}
+                    className="w-full py-4 bg-white border border-red-200 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-300 transition-all active:scale-[0.98] shadow-sm"
+                  >
+                    {isCancelling ? (
+                      <div className="w-5 h-5 border-2 border-red-600/30 border-t-red-600 rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Trash2 className="w-5 h-5" />
+                        CANCEL SUBSCRIPTION
+                      </>
+                    )}
+                  </button>
+                  <p className="text-center text-[10px] text-gray-400 mt-4 px-4">
+                    Note: Access will be revoked immediately upon cancellation.
+                  </p>
+                </div>
+              )}
+
+              {!isIndividualPremium && (
+                <div className="p-8 bg-green-50 border-t border-green-100/50">
+                  <div className="flex items-center justify-center gap-3 text-green-700">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-bold">Full Access Granted by HQ</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => router.push('/home')}
+              className="w-full py-4 text-gray-500 font-bold flex items-center justify-center gap-2 hover:text-gray-900 transition-colors"
+            >
+              <HomeIcon className="w-5 h-5" />
+              BACK TO HOME
             </button>
           </div>
         )}

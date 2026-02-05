@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit } from '@/config/subscriptions'
 import { isBoss } from '@/lib/user-role-utils'
+import { bypassesFeatureGates } from '@/config/zones'
 
 interface Subscription {
   id: string;
@@ -32,6 +33,7 @@ interface SubscriptionContextType {
   isFreeTier: boolean;
   isPremiumTier: boolean;
   isIndividualPremium: boolean;
+  isOfficialAccess: boolean;
   isExpiringSoon: boolean;
   daysRemaining: number | null;
   refreshSubscription: () => Promise<void>;
@@ -47,21 +49,54 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // Load individual subscription
   const loadSubscription = async () => {
-    if (!user || !currentZone) {
+    if (!user) {
       setSubscription(null)
       setIsLoading(false)
       return
     }
 
     try {
-      const individualId = user.uid // Global account-based lookup
-      const individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', individualId)
+      const individualId = user.uid // Global account-based lookup (New Standard)
+      let individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', individualId)
+
+      // Fallback 1: Search by userId field (finds legacy subs from ANY zone)
+      if (!individualData) {
+        const results = await FirebaseDatabaseService.getCollectionWhere('individual_subscriptions', 'userId', '==', user.uid)
+        if (results && results.length > 0) {
+          individualData = results[0]
+          console.log('🔄 SubscriptionContext: Found subscription via userId query.')
+        }
+      }
+
+      // Fallback 2: Check legacy ID format for current zone specifically
+      if (!individualData && currentZone) {
+        const legacyId = `${user.uid}_${currentZone.id}`
+        individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', legacyId)
+        if (individualData) {
+          console.log('🔄 SubscriptionContext: Found legacy subscription ID.')
+        }
+      }
 
       if (individualData && individualData.status === 'active') {
-        const zoneId = currentZone?.id || 'global'
+        // Migration: If we found a legacy sub, move it to the global ID format for future 
+        if (individualData.id !== individualId) {
+          console.log('⚡ SubscriptionContext: Migrating legacy subscription to global ID.')
+          try {
+            await FirebaseDatabaseService.createDocument('individual_subscriptions', individualId, {
+              ...individualData,
+              id: individualId,
+              userId: user.uid,
+              updatedAt: new Date().toISOString()
+            })
+            // Optional: delete old one? Maybe safer to keep for now.
+          } catch (migErr) {
+            console.error('❌ Migration failed:', migErr)
+          }
+        }
+
         setSubscription({
           id: individualData.id || individualId,
-          zoneId: zoneId,
+          zoneId: currentZone?.id || 'global',
           tier: 'premium',
           status: individualData.status,
           type: 'individual',
@@ -92,13 +127,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     await loadSubscription()
   }
 
-  // Import bypassesFeatureGates
-  const { bypassesFeatureGates } = require('@/config/zones')
 
   const contextValue = useMemo(() => {
-    const isHQGroup = currentZone && bypassesFeatureGates(currentZone.id)
+    const isHQMember = currentZone && bypassesFeatureGates(currentZone.id)
     const isAdmin = isBoss(profile)
-    const hasFullAccess = isHQGroup || isAdmin
+    const hasComplimentaryAccess = isHQMember || isAdmin
 
     // Calculate expiration info
     let daysRemaining: number | null = null
@@ -112,30 +145,46 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       isExpiringSoon = daysRemaining <= 7 // Warn starting at 7 days
     }
 
-    const isMemberPremium = !!subscription && subscription.status === 'active'
+    const isMemberPaidPremium = !!subscription &&
+      subscription.status === 'active' &&
+      (!subscription.expiresAt || new Date(subscription.expiresAt) > new Date())
 
     // Final Premium status - either by role, HQ group, or active individual subscription
-    const isPremium = isAdmin || isHQGroup || isMemberPremium
+    const isPremium = hasComplimentaryAccess || isMemberPaidPremium
+
+    // Virtual Plan for HQ/Admin if they don't have a paid one
+    const activeSubscription = subscription || (hasComplimentaryAccess ? {
+      id: 'official_bypass',
+      tier: 'premium',
+      status: 'active',
+      type: 'official',
+      startDate: new Date(),
+      expiresAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      zoneId: currentZone?.id || 'global'
+    } : null)
 
     const hasFeature = (feature: string) => {
-      if (hasFullAccess) return true
+      if (hasComplimentaryAccess) return true
       if (isLoading) return true
-      if (isMemberPremium) return true // Active individual subscription unlocks everything
-      if (!subscription) return false
-      return hasFeatureAccess(subscription.tier, feature as any)
+      if (isMemberPaidPremium) return true // Active individual subscription unlocks everything
+      if (!activeSubscription) return false
+      return hasFeatureAccess(activeSubscription.tier, feature as any)
     }
 
     const canAddMember = async () => true;
 
     return {
-      subscription,
+      subscription: activeSubscription,
       isLoading,
       hasFeature,
       canAddMember,
       memberLimit: 999999,
       isFreeTier: !isPremium,
       isPremiumTier: isPremium,
-      isIndividualPremium: isMemberPremium && subscription.type === 'individual',
+      isIndividualPremium: isMemberPaidPremium, // Explicitly paid
+      isOfficialAccess: hasComplimentaryAccess, // New flag for official status
       isExpiringSoon,
       daysRemaining,
       refreshSubscription
