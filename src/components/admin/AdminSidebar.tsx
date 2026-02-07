@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Bell,
   BarChart3,
+  MessageCircle,
   FolderOpen,
   Upload,
   X,
@@ -53,6 +54,7 @@ const AdminSidebar = React.memo(({
   // Group sidebar items by category
   const mainItems = [
     { icon: Home, label: 'Dashboard', active: activeSection === 'Dashboard' },
+    { icon: MessageCircle, label: 'Support Chat', active: activeSection === 'Support Chat' },
     { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqZoneOnly: true },
   ];
 

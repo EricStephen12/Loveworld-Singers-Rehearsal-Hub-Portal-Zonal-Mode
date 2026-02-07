@@ -33,7 +33,7 @@ const supportOptions = [
     title: 'Chat with Admin',
     description: 'Get direct help from our support team',
     icon: MessageCircle,
-    href: '/pages/groups',
+    href: '/pages/support/chat',
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600'
   },

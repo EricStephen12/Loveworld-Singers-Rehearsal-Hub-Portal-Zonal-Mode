@@ -25,63 +25,93 @@ interface FAQ {
 const faqData: FAQ[] = [
   {
     id: '1',
-    question: 'How do I reset my password?',
-    answer: 'Go to the login page and click "Forgot Password". Enter your email address and check your inbox for reset instructions.',
-    category: 'account'
+    question: 'What is AudioLab and how do I use it?',
+    answer: 'AudioLab is a practice tool where you can listen to songs and switch between different vocal parts (Soprano, Alto, Tenor, Bass). Navigate to AudioLab from the menu, select a song, and tap the part buttons to practice your specific vocal part.',
+    category: 'features'
   },
   {
     id: '2',
-    question: 'Why can\'t I access the media player?',
-    answer: 'Make sure you have a stable internet connection and try refreshing the page. If the issue persists, clear your browser cache.',
-    category: 'technical'
+    question: 'How do I access premium features?',
+    answer: 'Premium features require an active subscription. Go to Settings > Subscription to view available plans and subscribe using Espees payment.',
+    category: 'subscription'
   },
   {
     id: '3',
-    question: 'How do I update my profile information?',
-    answer: 'Go to your Profile page and tap the edit button next to any field you want to change. Don\'t forget to save your changes.',
-    category: 'account'
+    question: 'How do I join a live classroom session?',
+    answer: 'Go to AudioLab > Classroom. You can either create a new classroom or join an existing one using the 6-digit code shared by the host. Make sure to allow microphone and camera permissions.',
+    category: 'features'
   },
   {
     id: '4',
-    question: 'The app is running slowly, what should I do?',
-    answer: 'Try closing other apps on your device and restart the LoveWorld Singers app. Make sure you have a good internet connection.',
-    category: 'technical'
+    question: 'Can I view songs from different Praise Nights?',
+    answer: 'Yes! Use the Calendar to browse upcoming and past Praise Nights. Tap on any event to see the song list. Songs are organized by categories like Pre-Rehearsal, Ongoing, and Archive.',
+    category: 'features'
   },
   {
     id: '5',
-    question: 'How do I join a rehearsal group?',
-    answer: 'Go to the Groups section and browse available groups. Tap "Join Group" on any group you\'re interested in.',
-    category: 'general'
+    question: 'How do I chat with other singers in my group?',
+    answer: 'Go to Groups from the menu. Select or create a group, then use the chat feature to communicate with other members. You can send text messages, voice notes, and files.',
+    category: 'groups'
   },
   {
     id: '6',
-    question: 'Can I download songs for offline use?',
-    answer: 'Currently, songs are only available for streaming. Offline downloads will be available in a future update.',
-    category: 'feature'
+    question: 'What\'s the difference between zones?',
+    answer: 'The app supports multiple zones (regions). Your zone determines which songs and events you see. You can switch zones from your profile settings.',
+    category: 'general'
   },
   {
     id: '7',
-    question: 'How do I change my profile picture?',
-    answer: 'Go to your Profile page, tap the edit button, then tap on your profile picture to upload a new one.',
+    question: 'How do I update my profile information?',
+    answer: 'Tap the menu icon, go to Profile, then tap Edit Profile. You can update your name, designation (Soprano/Alto/Tenor/Bass), church, zone, and profile picture.',
     category: 'account'
   },
   {
     id: '8',
-    question: 'Why can\'t I hear audio in the app?',
-    answer: 'Check your device volume, ensure your browser allows audio playback, and make sure you have a stable internet connection.',
+    question: 'Why can\'t I hear audio in songs?',
+    answer: 'Check your device volume and internet connection. Make sure your browser allows audio playback. For AudioLab, ensure you\'ve selected a vocal part and the song has audio uploaded.',
     category: 'technical'
   },
   {
     id: '9',
-    question: 'How do I contact other choir members?',
-    answer: 'Use the Groups feature to connect with other members in your choir group.',
-    category: 'general'
+    question: 'How do I view song lyrics and solfas?',
+    answer: 'Open any song from the song list. Tap on the song card to view details including lyrics, solfas, personnel, and comments. You can also see the rehearsal history.',
+    category: 'features'
   },
   {
     id: '10',
+    question: 'What are the different subscription plans?',
+    answer: 'We offer Monthly (1 Espee) and Yearly (12 Espees) premium plans. Subscriptions unlock premium features like AudioLab, advanced practice tools, and full access to all songs.',
+    category: 'subscription'
+  },
+  {
+    id: '11',
+    question: 'How do I cancel my subscription?',
+    answer: 'Go to Settings > Subscription > Manage Subscription. You can cancel anytime. Your access will continue until the end of your current billing period.',
+    category: 'subscription'
+  },
+  {
+    id: '12',
+    question: 'Can I download songs for offline use?',
+    answer: 'Currently, songs are only available for streaming to ensure you always have the latest versions. Offline downloads may be available in a future update.',
+    category: 'features'
+  },
+  {
+    id: '13',
+    question: 'How do I report a bug or request a feature?',
+    answer: 'Go to Support > Contact Us to send feedback, report bugs, or request new features. We review all submissions and appreciate your input!',
+    category: 'support'
+  },
+  {
+    id: '14',
     question: 'What devices are supported?',
-    answer: 'The app works on smartphones, tablets, and desktop computers with modern web browsers.',
+    answer: 'The app works on smartphones, tablets, and desktop computers with modern web browsers (Chrome, Safari, Edge, Firefox). For best experience, use the latest browser version.',
     category: 'technical'
+  },
+  {
+    id: '15',
+    question: 'How do I reset my password?',
+    answer: 'On the login page, tap "Forgot Password". Enter your email address and check your inbox for reset instructions. Follow the link to create a new password.',
+    category: 'account'
   }
 ];
 
@@ -133,19 +163,6 @@ export default function FAQPage() {
         WebkitOverflowScrolling: 'touch'
       }}>
         <div className="mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6 pb-24">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-              <BookOpen className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Frequently Asked Questions
-            </h1>
-            <p className="text-gray-600">
-              Find quick answers to common questions about the LoveWorld Singers app.
-            </p>
-          </div>
-
           {/* Search */}
           <div className="mb-6">
             <div className="relative">
@@ -159,23 +176,6 @@ export default function FAQPage() {
               />
             </div>
           </div>
-
-          {/* FAQ Categories */}
-          {!searchQuery && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Browse by Category</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <button className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/90 transition-all duration-300 active:scale-[0.97] ring-1 ring-black/5 shadow-sm">
-                  <BookOpen className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                  <span className="text-sm font-medium text-gray-800">Account</span>
-                </button>
-                <button className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 text-center hover:bg-white/90 transition-all duration-300 active:scale-[0.97] ring-1 ring-black/5 shadow-sm">
-                  <HelpCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-                  <span className="text-sm font-medium text-gray-800">Technical</span>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* FAQ List */}
           <div>
@@ -192,10 +192,13 @@ export default function FAQPage() {
                           {faq.question}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${faq.category === 'account' ? 'bg-blue-100 text-blue-700' :
-                              faq.category === 'technical' ? 'bg-orange-100 text-orange-700' :
-                                faq.category === 'general' ? 'bg-green-100 text-green-700' :
-                                  'bg-purple-100 text-purple-700'
+                          <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${faq.category === 'features' ? 'bg-purple-100 text-purple-700' :
+                            faq.category === 'subscription' ? 'bg-green-100 text-green-700' :
+                              faq.category === 'account' ? 'bg-blue-100 text-blue-700' :
+                                faq.category === 'technical' ? 'bg-orange-100 text-orange-700' :
+                                  faq.category === 'groups' ? 'bg-pink-100 text-pink-700' :
+                                    faq.category === 'support' ? 'bg-indigo-100 text-indigo-700' :
+                                      'bg-gray-100 text-gray-700'
                             }`}>
                             {faq.category}
                           </span>

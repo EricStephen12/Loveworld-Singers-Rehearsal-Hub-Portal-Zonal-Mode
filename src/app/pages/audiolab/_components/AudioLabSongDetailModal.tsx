@@ -34,9 +34,10 @@ export function AudioLabSongDetailModal({
     const availableParts = song.availableParts || (song.audioUrls ? Object.keys(song.audioUrls) as VocalPart[] : ['full']);
 
     const handlePlayPart = (part: VocalPart) => {
+        // Full Mix = main audio file, other parts = vocal parts from audioUrls (S/A/T/B + custom)
         const audioUrl = part === 'full'
-            ? song.audioUrls?.full || song.audioUrl
-            : song.audioUrls?.[part];
+            ? song.audioUrl // Main audio file
+            : song.audioUrls?.[part]; // Vocal part from audioUrls
 
         if (!audioUrl) return;
 
@@ -85,38 +86,6 @@ export function AudioLabSongDetailModal({
         return labels[part] || part;
     };
 
-    // Helper function to convert HTML back to plain text for display (matching master song detail format)
-    const formatLyricsForDisplay = (html: string): string => {
-        if (!html) return '';
-
-        // Convert HTML back to plain text format like the edit modal shows
-        let text = html
-            // Convert </div><div> to double newlines (paragraph breaks)
-            .replace(/<\/div>\s*<div>/gi, '\n\n')
-            // Convert <div> opening tags to nothing (start of content)
-            .replace(/<div[^>]*>/gi, '')
-            // Convert </div> closing tags to nothing
-            .replace(/<\/div>/gi, '')
-            // Convert <br> to single newlines
-            .replace(/<br\s*\/?>/gi, '\n')
-            // Keep bold tags for display
-            .replace(/<b>/gi, '<b>')
-            .replace(/<\/b>/gi, '</b>')
-            .replace(/<strong>/gi, '<b>')
-            .replace(/<\/strong>/gi, '</b>')
-            // Remove any other HTML tags
-            .replace(/<(?!b>|\/b>)[^>]*>/g, '')
-            // Convert HTML entities
-            .replace(/&nbsp;/gi, ' ')
-            .replace(/&amp;/gi, '&')
-            .replace(/&lt;/gi, '<')
-            .replace(/&gt;/gi, '>')
-            // Clean up excessive newlines
-            .replace(/\n{3,}/g, '\n\n')
-            .trim();
-
-        return text;
-    };
 
     // Detect if lyrics contain HTML tags (to decide if we should show timed view or static view)
     const hasHtmlTags = (text: string) => /<[a-z][\s\S]*>/i.test(text);
@@ -298,23 +267,19 @@ export function AudioLabSongDetailModal({
                                 <div className="rounded-2xl bg-[#191022] border border-white/5 p-6 shadow-sm overflow-hidden">
                                     <style>{`
                                         .lyrics-content {
-                                          white-space: pre-wrap;
-                                          word-wrap: break-word;
-                                          font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+                                          font-family: 'Poppins', sans-serif;
                                           font-size: 14px;
-                                          line-height: 1.6;
+                                          line-height: 1.8;
+                                          text-align: left;
                                         }
+                                        .lyrics-content p, 
                                         .lyrics-content div {
-                                          margin-bottom: 0;
-                                          padding: 0;
-                                        }
-                                        .lyrics-content br {
-                                          display: block;
-                                          content: "";
+                                          margin-bottom: 0.5rem;
                                         }
                                         .lyrics-content b,
                                         .lyrics-content strong {
                                           font-weight: 700;
+                                          color: #a78bfa; /* Violet-400 for bold in dark theme */
                                         }
                                     `}</style>
 
@@ -336,15 +301,12 @@ export function AudioLabSongDetailModal({
                                             })}
                                         </div>
                                     ) : song.lyrics ? (
-                                        <pre
-                                            className="lyrics-content text-slate-300 whitespace-pre-wrap font-mono text-sm"
+                                        <div
+                                            className={`lyrics-content text-slate-300 ${!containsHtml ? 'whitespace-pre-wrap' : ''}`}
                                             dangerouslySetInnerHTML={{
-                                                // Join array elements if necessary, otherwise treat as simple text
-                                                __html: formatLyricsForDisplay(
-                                                    Array.isArray(song.lyrics)
-                                                        ? song.lyrics.map(l => l.text).join('\n')
-                                                        : song.lyrics
-                                                )
+                                                __html: Array.isArray(song.lyrics)
+                                                    ? song.lyrics.map(l => l.text).join('\n')
+                                                    : song.lyrics || ''
                                             }}
                                         />
                                     ) : (

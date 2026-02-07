@@ -11,9 +11,14 @@ import {
   Send,
   Paperclip,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  Info,
+  ChevronLeft
 } from 'lucide-react';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { HQ_ADMIN_EMAILS } from '@/config/roles';
+import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import type { UserProfile } from '@/types/supabase';
 
 import {
   collection,
@@ -21,7 +26,10 @@ import {
   query,
   orderBy,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  where,
+  getDocs,
+  limit
 } from 'firebase/firestore';
 
 interface ChatMessage {
@@ -29,46 +37,56 @@ interface ChatMessage {
   text: string;
   senderId: string;
   senderName: string;
+  senderType: 'user' | 'admin';
   timestamp: any;
   isCurrentUser: boolean;
 }
 
 export default function ChatSupportPage() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [adminProfiles, setAdminProfiles] = useState<UserProfile[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentUser = {
     id: user?.uid || 'support-user-123',
-    name: user?.displayName || 'Support User'
+    name: profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}` : user?.displayName || 'Singer'
   };
-
-  const supportAgent = {
-    id: 'admin-support-456',
-    name: 'Admin Support'
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const menuItems = getMenuItems(handleLogout);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Fetch Admin Profiles for Header
   useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const q = query(
+          collection(db, 'profiles'),
+          where('email', 'in', HQ_ADMIN_EMAILS),
+          limit(3)
+        );
+        const snapshot = await getDocs(q);
+        const admins: UserProfile[] = [];
+        snapshot.forEach(doc => admins.push(doc.data() as UserProfile));
+        setAdminProfiles(admins);
+      } catch (err) {
+        console.error("Error fetching admin profiles:", err);
+      }
+    };
+    fetchAdmins();
+  }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
     const messagesQuery = query(
       collection(db, 'support_messages'),
+      where('chatId', '==', user.uid),
       orderBy('timestamp', 'asc')
     );
 
@@ -81,32 +99,36 @@ export default function ChatSupportPage() {
           text: data.text,
           senderId: data.senderId,
           senderName: data.senderName,
+          senderType: data.senderType,
           timestamp: data.timestamp,
-          isCurrentUser: data.senderId === currentUser.id
+          isCurrentUser: data.senderId === user.uid
         });
       });
 
       setMessages(msgs);
       setLoading(false);
-      scrollToBottom();
+      setTimeout(scrollToBottom, 100);
     });
 
     return () => unsubscribe();
-  }, [currentUser.id]);
+  }, [user?.uid]);
 
   const sendMessage = async () => {
-    if (newMessage.trim() === '') return;
+    if (newMessage.trim() === '' || !user?.uid) return;
+
+    const textToSend = newMessage;
+    setNewMessage('');
 
     try {
       await addDoc(collection(db, 'support_messages'), {
-        text: newMessage,
-        senderId: currentUser.id,
+        chatId: user.uid,
+        text: textToSend,
+        senderId: user.uid,
         senderName: currentUser.name,
+        senderType: 'user',
         timestamp: serverTimestamp(),
-        recipientId: supportAgent.id
+        status: 'sent'
       });
-
-      setNewMessage('');
       scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
@@ -121,118 +143,168 @@ export default function ChatSupportPage() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50 flex flex-col">
-      {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
-        <ScreenHeader
-          title="Chat Support"
-          showBackButton={true}
-          backPath="/pages/support"
-          onMenuClick={() => setIsMenuOpen(true)}
-          rightImageSrc="/logo.png"
-        />
-      </div>
+    <div className="h-screen w-screen overflow-hidden bg-slate-50 flex flex-col">
+      {/* SaaS Style Header */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors active:scale-90"
+          >
+            <ChevronLeft className="w-5 h-5 text-slate-600" />
+          </button>
 
-
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide pt-16 pb-24" style={{
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }}>
-        <div className="mx-auto max-w-2xl px-3 sm:px-4 py-4 sm:py-6">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Admin Support</h1>
-              <p className="text-sm text-gray-600">We&apos;re here to help you</p>
-            </div>
+          <div className="flex -space-x-2">
+            {adminProfiles.length > 0 ? (
+              adminProfiles.map((admin) => (
+                <div key={admin.id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center overflow-hidden shadow-sm">
+                  {admin.profile_image_url || admin.avatar_url ? (
+                    <img
+                      src={admin.profile_image_url || admin.avatar_url || ''}
+                      alt={admin.first_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-indigo-600 bg-indigo-50">
+                      {(admin.first_name?.[0] || 'A').toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center overflow-hidden">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`} alt="Support" className="w-full h-full object-cover" />
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Messages Container */}
-          <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl p-4 shadow-sm ring-1 ring-black/5 min-h-[50vh]">
-            {loading ? (
-              <div className="flex items-center justify-center h-full min-h-[40vh]">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-gray-300 border-t-green-500 rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-gray-500 text-sm">Loading messages...</p>
-                </div>
+          <div>
+            <h1 className="text-sm font-bold text-slate-900 leading-tight">Support Team</h1>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Typically replies in 10m</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+        >
+          <div className="w-5 h-5 flex flex-col justify-center gap-0.5">
+            <span className="w-full h-0.5 bg-slate-600 rounded-full"></span>
+            <span className="w-full h-0.5 bg-slate-600 rounded-full"></span>
+            <span className="w-2/3 h-0.5 bg-slate-600 rounded-full ml-auto"></span>
+          </div>
+        </button>
+      </div>
+
+      {/* Modern Conversation Area */}
+      <div className="flex-1 overflow-y-auto pt-4 pb-20 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+        <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* Welcome Message Card */}
+          {messages.length === 0 && !loading && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center my-8">
+              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-8 h-8 text-indigo-600" />
               </div>
-            ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full min-h-[40vh]">
-                <div className="text-center">
-                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium mb-2">No messages yet</p>
-                  <p className="text-gray-400 text-sm">Start a conversation with our support team</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
+              <h2 className="text-lg font-bold text-slate-900 mb-2">How can we help?</h2>
+              <p className="text-sm text-slate-500 leading-relaxed px-4">
+                Ask {adminProfiles.map(a => a.first_name).join(', ') || 'us'} anything about the app or your account. Our team is ready to assist you.
+              </p>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+              <p className="text-xs text-slate-400 font-medium">Connecting to support...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, idx) => {
+                const isSystem = message.senderType === 'admin';
+                const showAvatar = idx === 0 || messages[idx - 1]?.senderType !== message.senderType;
+
+                return (
                   <div
                     key={message.id}
-                    className={`flex ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                    className={`flex items-end gap-2 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}
                   >
+                    {!message.isCurrentUser && showAvatar && (
+                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex-shrink-0 mb-1 overflow-hidden border border-slate-200 shadow-sm">
+                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=admin`} alt="A" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    {!message.isCurrentUser && !showAvatar && <div className="w-7"></div>}
+
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.isCurrentUser
-                        ? 'bg-green-500 text-white rounded-br-md'
-                        : 'bg-white text-gray-800 rounded-bl-md shadow-sm ring-1 ring-black/5'
+                      className={`max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm transition-all ${message.isCurrentUser
+                        ? 'bg-indigo-600 text-white rounded-br-sm'
+                        : 'bg-white text-slate-800 rounded-bl-sm border border-slate-100'
                         }`}
                     >
-                      {!message.isCurrentUser && (
-                        <p className="text-xs font-semibold mb-1">{message.senderName}</p>
-                      )}
-                      <p className="text-sm">{message.text}</p>
-                      <div className={`flex items-center justify-end mt-1 ${message.isCurrentUser ? 'text-green-100' : 'text-gray-400'}`}>
-                        <Clock className="w-3 h-3 mr-1" />
-                        <span className="text-xs">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                      <div className={`flex items-center justify-end mt-1 opacity-60`}>
+                        <span className="text-[9px] font-medium uppercase tracking-tighter">
                           {message.timestamp?.toDate ?
                             message.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
-                            'Now'}
+                            'Syncing...'}
                         </span>
                       </div>
                     </div>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Fixed Message Input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100/50 p-3 safe-area-bottom">
-        <div className="mx-auto max-w-2xl">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-2 shadow-sm ring-1 ring-black/5">
-            <div className="flex items-center gap-2">
-              <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors active:scale-95">
-                <Paperclip className="w-5 h-5" />
-              </button>
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
-                className="flex-1 bg-transparent py-2 px-2 text-gray-800 placeholder-gray-400 focus:outline-none text-sm"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!newMessage.trim()}
-                className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-              >
-                <Send className="w-5 h-5" />
-              </button>
+                );
+              })}
+              <div ref={messagesEndRef} className="h-4" />
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      <SharedDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} title="Menu" items={menuItems} />
+      {/* Slick SaaS Input Bar */}
+      <div className="bg-white/80 backdrop-blur-xl border-t border-slate-200 p-4 pb-8 sticky bottom-0 z-50">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-2 flex items-center gap-2 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500/50 transition-all shadow-inner">
+            <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+              <Paperclip className="w-5 h-5" />
+            </button>
+            <textarea
+              rows={1}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Send us a message..."
+              className="flex-1 bg-transparent py-2 px-1 text-sm text-slate-800 placeholder-slate-400 focus:outline-none resize-none max-h-32"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${target.scrollHeight}px`;
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!newMessage.trim()}
+              className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-all disabled:opacity-30 disabled:grayscale active:scale-90 shadow-md shadow-indigo-200"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-[9px] text-center text-slate-400 mt-2 font-medium flex items-center justify-center gap-1 uppercase tracking-widest">
+            <Info className="w-2.5 h-2.5" />
+            End-to-end encrypted support
+          </p>
+        </div>
+      </div>
+
+      <SharedDrawer
+        open={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        items={getMenuItems(() => signOut())}
+      />
     </div>
   );
 }

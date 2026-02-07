@@ -36,6 +36,7 @@ const SubGroupsSection = dynamic(() => import('../../components/admin/SubGroupsS
 const AnalyticsSection = dynamic(() => import('../../components/admin/AnalyticsSection'), { ssr: false });
 const CalendarSection = dynamic(() => import('../../components/admin/CalendarSection'), { ssr: false });
 const ActivityLogsPage = dynamic(() => import('../../components/admin/ActivityLogsPage'), { ssr: false });
+const SupportChatSection = dynamic(() => import('../../components/admin/SupportChatSection'), { ssr: false });
 const SubmittedSongsPage = dynamic(() => import('../pages/admin/submitted-songs/page'), { ssr: false });
 const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
@@ -177,7 +178,7 @@ function AdminContent() {
       const validSections = [
         'Dashboard', 'Pages', 'Categories', 'Media', 'Library',
         'Members', 'Notifications', 'Sub-Groups', 'Analytics',
-        'Calendar', 'Activity Logs', 'Submitted Songs'
+        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat'
       ];
       if (validSections.includes(sectionParam)) {
         setActiveSection(sectionParam);
@@ -1777,6 +1778,7 @@ function AdminContent() {
           {activeSection === 'Calendar' && !isRestrictedAdmin && <CalendarSection />}
           {activeSection === 'Notifications' && !isRestrictedAdmin && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
+          {activeSection === 'Support Chat' && !isRestrictedAdmin && <SupportChatSection />}
         </div>
 
         {/* Modals */}

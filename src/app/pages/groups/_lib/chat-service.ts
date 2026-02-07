@@ -10,6 +10,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   query,
   where,
   orderBy,
@@ -114,6 +115,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
       return {
         id: userId,
         name: data.userName || 'Unknown',
+        avatar: data.photoURL || data.avatar || data.profileImage || data.profile_image_url || data.avatar_url,
         zoneId: data.zoneId,
         zoneName: data.zoneName
       }
@@ -126,7 +128,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
       return {
         id: userId,
         name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown',
-        avatar: data.profile_image_url
+        avatar: data.profile_image_url || data.avatar_url || data.photoURL || data.avatar
       }
     }
 
@@ -243,6 +245,7 @@ export async function searchZoneUsers(
         users.push({
           id: data.userId,
           name: name,
+          avatar: data.photoURL || data.avatar || data.profileImage,
           zoneId: data.zoneId,
           zoneName: data.zoneName
         })
@@ -280,6 +283,7 @@ export async function searchZoneUsers(
         users.push({
           id: data.userId,
           name: name,
+          avatar: data.photoURL || data.avatar || data.profileImage,
           zoneId: memberGroupId || memberZoneId,
           zoneName: data.groupName || data.zoneName
         })
@@ -519,12 +523,12 @@ export async function sendCallMessage(
 
     let text = ''
     if (callType === 'missed') {
-      text = `📞 Missed call from ${callerName}`
+      text = `Missed call from ${callerName}`
     } else if (callType === 'declined') {
-      text = `📞 Call declined`
+      text = `Call declined`
     } else if (callType === 'answered') {
       const durationStr = duration ? formatCallDuration(duration) : '0:00'
-      text = `📞 Voice call • ${durationStr}`
+      text = `Voice call • ${durationStr}`
     }
 
     const messageData = {
@@ -669,23 +673,23 @@ export async function setTypingStatus(
   chatId: string,
   userId: string,
   userName: string,
-  isTyping: boolean
+  status: 'typing' | 'recording_voice' | null
 ): Promise<void> {
   try {
     const typingRef = doc(db, TYPING_COLLECTION, `${chatId}_${userId}`)
-    if (isTyping) {
+    if (status) {
       await updateDoc(typingRef, {
-        isTyping: true,
+        status,
         userName,
         timestamp: serverTimestamp()
       }).catch(async () => {
         // Doc might not exist, create it
-        await addDoc(collection(db, TYPING_COLLECTION), {
+        await setDoc(doc(db, TYPING_COLLECTION, `${chatId}_${userId}`), {
           id: `${chatId}_${userId}`,
           chatId,
           userId,
           userName,
-          isTyping: true,
+          status,
           timestamp: serverTimestamp()
         })
       })
@@ -703,12 +707,11 @@ export async function setTypingStatus(
 export function subscribeToTyping(
   chatId: string,
   currentUserId: string,
-  callback: (typingUsers: string[]) => void
+  callback: (typingUsers: { userName: string, status: string }[]) => void
 ): () => void {
   const q = query(
     collection(db, TYPING_COLLECTION),
-    where('chatId', '==', chatId),
-    where('isTyping', '==', true)
+    where('chatId', '==', chatId)
   )
 
   return onSnapshot(q, (snapshot) => {
@@ -720,7 +723,10 @@ export function subscribeToTyping(
         const ts = data.timestamp?.toMillis() || Date.now()
         return Date.now() - ts < 10000
       })
-      .map(data => data.userName as string)
+      .map(data => ({
+        userName: data.userName as string,
+        status: data.status as string || 'typing'
+      }))
 
     callback(typingUsers)
   })
@@ -741,7 +747,7 @@ export async function sendMessage(
       chatId,
       senderId: sender.id,
       senderName: sender.name,
-      text: text || (media?.type === 'image' ? '📷 Image' : '📄 Document'),
+      text: text || (media?.type === 'image' ? 'Image' : 'Document'),
       type: media?.type || 'text',
       timestamp: serverTimestamp()
     }
@@ -787,7 +793,7 @@ export async function sendMessage(
         }
       })
 
-      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : media?.type === 'voice' ? '🎤 Voice message' : text.slice(0, 100)
+      const lastMessageText = media?.type === 'image' ? 'Image' : media?.type === 'document' ? 'Document' : media?.type === 'voice' ? 'Voice message' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text: lastMessageText,
@@ -813,7 +819,7 @@ export async function sendMessage(
       }
     } else {
       // Fallback: just update last message if chat doc not found
-      const lastMessageText = media?.type === 'image' ? '📷 Image' : media?.type === 'document' ? '📄 Document' : media?.type === 'voice' ? '🎤 Voice message' : text.slice(0, 100)
+      const lastMessageText = media?.type === 'image' ? 'Image' : media?.type === 'document' ? 'Document' : media?.type === 'voice' ? 'Voice message' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
         lastMessage: {
           text: lastMessageText,

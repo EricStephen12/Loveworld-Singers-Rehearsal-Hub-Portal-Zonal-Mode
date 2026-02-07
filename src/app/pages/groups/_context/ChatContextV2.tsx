@@ -56,11 +56,12 @@ interface ChatContextType {
   leaveGroup: () => Promise<boolean>
   deleteGroup: () => Promise<boolean>
   renameGroup: (newName: string) => Promise<boolean>
-  setTypingStatus: (isTyping: boolean) => Promise<void>
+  setTypingStatus: (status: 'typing' | 'recording_voice' | null) => Promise<void>
   isGroupCreator: () => boolean
   getChatDisplayName: (chat: Chat) => string
   getChatAvatar: (chat: Chat) => string | undefined
-  typingUsers: string[]
+  typingUsers: { userName: string, status: string }[]
+  allTypingUsers: { [chatId: string]: { userName: string, status: string }[] }
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -72,7 +73,8 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([])
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
-  const [typingUsers, setTypingUsers] = useState<string[]>([])
+  const [typingUsers, setTypingUsers] = useState<{ userName: string, status: string }[]>([])
+  const [allTypingUsers, setAllTypingUsers] = useState<{ [chatId: string]: { userName: string, status: string }[] }>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isMessagesLoading, setIsMessagesLoading] = useState(false)
 
@@ -80,7 +82,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   const currentUser: ChatUser | null = user && profile ? {
     id: user.uid,
     name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email || 'User',
-    avatar: (profile as any).profile_image_url,
+    avatar: profile.profile_image_url || profile.avatar_url || (profile as any).photoURL,
     zoneId: currentZone?.id,
     zoneName: currentZone?.name
   } : null
@@ -147,6 +149,22 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       unsubscribeTyping()
     }
   }, [selectedChat?.id, user?.uid])
+
+  // Global typing subscription for sidebar
+  useEffect(() => {
+    if (!user?.uid || chats.length === 0) return
+
+    const unsubscribes = chats.map(chat => {
+      return subscribeToTyping(chat.id, user.uid, (users) => {
+        setAllTypingUsers(prev => ({
+          ...prev,
+          [chat.id]: users
+        }))
+      })
+    })
+
+    return () => unsubscribes.forEach(unsub => unsub())
+  }, [user?.uid, chats.length]) // Only rebinding if user or chat count changes
 
   // Actions
   const selectChat = useCallback((chat: Chat | null) => {
@@ -343,9 +361,9 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return await renameGroupService(selectedChat.id, user.uid, newName)
   }, [selectedChat, user])
 
-  const setTypingStatus = useCallback(async (isTyping: boolean) => {
+  const setTypingStatus = useCallback(async (status: 'typing' | 'recording_voice' | null) => {
     if (!selectedChat || !user || !currentUser) return
-    await setTypingStatusService(selectedChat.id, user.uid, currentUser.name, isTyping)
+    await setTypingStatusService(selectedChat.id, user.uid, currentUser.name, status)
   }, [selectedChat, user, currentUser])
 
   const isGroupCreator = useCallback(() => {
@@ -407,7 +425,8 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       setTypingStatus,
       isGroupCreator,
       getChatDisplayName,
-      getChatAvatar
+      getChatAvatar,
+      allTypingUsers
     }}>
       {children}
     </ChatContext.Provider>

@@ -208,6 +208,10 @@ export interface PraiseNightSong {
   rehearsalCount?: number; // Manual rehearsal count
   audioFile?: string;
   mediaId?: number; // Reference to media table for uploaded audio files
+  // Multiple audio parts for AudioLab
+  audioUrls?: Record<string, string>; // { full: url, soprano: url, alto: url, tenor: url, bass: url, custom: url }
+  customParts?: string[]; // Array of custom part names beyond default S/A/T/B
+  availableParts?: string[]; // List of available parts (computed from audioUrls keys)
   comments: Comment[];
   history: HistoryEntry[];
 }

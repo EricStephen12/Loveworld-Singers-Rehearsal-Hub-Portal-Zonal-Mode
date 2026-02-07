@@ -684,6 +684,16 @@ service cloud.firestore {
       allow write: if request.auth != null && (subscriptionId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
 
+    // ===== SUPPORT MESSAGES (Support Chat) =====
+    match /support_messages/{messageId} {
+      // Users can only read/create messages in their own thread
+      allow read: if request.auth != null && (resource.data.chatId == request.auth.uid || request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com']);
+      allow create: if request.auth != null && (request.resource.data.chatId == request.auth.uid || request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com']);
+      
+      // Admins can manage all messages (update/delete)
+      allow update, delete: if request.auth != null && request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com'];
+    }
+
     // ===== DEFAULT DENY ALL =====
     match /{document=**} {
       allow read, write: if false;
