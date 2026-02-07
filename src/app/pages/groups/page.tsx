@@ -923,6 +923,15 @@ function GroupsContent() {
                       <div className="space-y-1">
                         {messages
                           .filter((msg, index, self) => self.findIndex(m => m.id === msg.id) === index)
+                          .filter(msg => {
+                            if (!messageSearchTerm) return true
+                            const term = messageSearchTerm.toLowerCase()
+                            return (
+                              msg.text?.toLowerCase().includes(term) ||
+                              msg.senderName?.toLowerCase().includes(term) ||
+                              msg.attachment?.name?.toLowerCase().includes(term)
+                            )
+                          })
                           .map((msg, index, filteredMessages) => {
                             const prevMsg = index > 0 ? filteredMessages[index - 1] : undefined
                             const nextMsg = index < filteredMessages.length - 1 ? filteredMessages[index + 1] : undefined
@@ -968,31 +977,10 @@ function GroupsContent() {
                                       setSelectedMessageId(isSelected ? null : msg.id)
                                     }}
                                   >
-                                    <motion.div
-                                      drag="x"
-                                      dragConstraints={{ left: 0, right: 150 }}
-                                      dragElastic={0.1}
-                                      onDragEnd={(_, info) => {
-                                        if (info.offset.x > 80) {
-                                          setReplyingTo({
-                                            id: msg.id,
-                                            text: msg.text || (msg.type === 'image' ? 'Image' : (msg.type === 'voice' ? 'Voice note' : 'Document')),
-                                            senderName: msg.senderName
-                                          })
-                                          inputRef.current?.focus()
-                                        }
-                                      }}
+                                    <div
                                       className={`flex items-center gap-1 ${isOwn ? 'flex-row-reverse self-end' : 'self-start'}`}
                                     >
-                                      <motion.div
-                                        initial={{ opacity: 0, scale: 0.5, x: -20 }}
-                                        className="absolute -left-12 top-1/2 -translate-y-1/2 bg-white/20 p-2 rounded-full backdrop-blur-sm pointer-events-none"
-                                        style={{ opacity: 0 }}
-                                        whileDrag={{ opacity: 1, x: 20 }}
-                                      >
-                                        <Reply className="w-5 h-5" />
-                                      </motion.div>
-                                      <div className={`max-w-[85%] sm:max-w-[70%] lg:max-w-[60%] relative group ${isOwn ? 'order-2' : ''}`}>
+                                      <div className={`max-w-[85%] sm:max-w-[70%] lg:max-w-[80%] relative group ${isOwn ? 'order-2' : ''}`}>
                                         {/* Sender Avatar for Groups */}
                                         {!isOwn && selectedChat?.type === 'group' && !isGroupedWithPrev && (
                                           <div className="absolute -left-12 bottom-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm" style={{ backgroundColor: adjustColor(primaryColor, -20) }}>
@@ -1030,8 +1018,8 @@ function GroupsContent() {
                                             ? 'bg-emerald-500 text-white rounded-tr-none border-emerald-400'
                                             : 'bg-white text-gray-800 rounded-tl-none border-gray-200'
                                             } ${isSelected ? 'ring-2 ring-offset-2 ring-emerald-500 scale-[1.02]' : ''} ${isGroupedWithPrev ? (isOwn ? 'rounded-tr-2xl' : 'rounded-tl-2xl') : ''
-                                            } ${isGroupedWithNext ? (isOwn ? 'rounded-br-none' : 'rounded-bl-none') : ''} ${msg.type === 'image' ? 'p-1' : 'px-3.5 py-2'
-                                            }`}
+                                            } ${isGroupedWithNext ? (isOwn ? 'rounded-br-none' : 'rounded-bl-none') : ''} ${msg.type === 'image' ? 'p-1' : (msg.type === 'voice' ? 'p-1.5' : 'px-3.5 py-2 pr-12')
+                                            } ${msg.type === 'text' || msg.deleted ? 'min-w-[85px]' : ''}`}
                                           onClick={() => setSelectedMessageId(isSelected ? null : msg.id)}
                                         >
                                           {/* Reply content */}
@@ -1079,23 +1067,20 @@ function GroupsContent() {
                                             </div>
                                           )}
 
-                                          {/* Text */}
-                                          {(msg.type === 'text' || msg.deleted || (msg.text && msg.type !== 'image' && msg.type !== 'document' && msg.type !== 'voice')) && (
-                                            <p className={`text-[14px] leading-relaxed relative ${msg.deleted ? 'italic opacity-60 text-xs' : ''}`}>
+                                          {/* Text / Caption */}
+                                          {(msg.type === 'text' || msg.deleted || (msg.text && !['image', 'document', 'voice'].includes(msg.type)) || (msg.text && msg.text !== 'Voice message' && msg.text !== 'Image' && msg.text !== 'Document')) && (
+                                            <p className={`text-[14px] leading-relaxed relative break-words ${msg.deleted ? 'italic opacity-60 text-xs' : ''}`}>
                                               {msg.deleted ? 'This message was deleted' : msg.text}
-                                              {/* Invisible spacer for time */}
-                                              <span className="inline-block w-12" />
                                             </p>
                                           )}
 
-                                          {/* Timestamp & Status in bubble */}
                                           {!msg.deleted && (
-                                            <div className={`absolute bottom-1 right-2 flex items-center gap-1 opacity-70`}>
-                                              <span className={`text-[9.5px] font-medium ${isOwn ? 'text-white' : 'text-gray-400'}`}>
+                                            <div className={`absolute bottom-1.5 right-2 flex items-center gap-1 opacity-70`}>
+                                              <span className={`text-[9.5px] font-medium leading-none ${isOwn ? 'text-white' : 'text-gray-400'}`}>
                                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                               </span>
                                               {isOwn && (
-                                                <div className={`flex ${msg.status === 'read' ? 'text-white' : 'text-white/70'}`}>
+                                                <div className={`flex items-center leading-none ${msg.status === 'read' ? 'text-white' : 'text-white/70'}`}>
                                                   <Check className={`w-3 h-3 ${msg.status === 'read' || msg.status === 'delivered' ? '-mr-1.5' : ''}`} />
                                                   {(msg.status === 'read' || msg.status === 'delivered') && <Check className="w-3 h-3" />}
                                                 </div>
@@ -1154,9 +1139,10 @@ function GroupsContent() {
                                           )}
                                         </AnimatePresence>
                                       </div>
-                                    </motion.div>
+                                    </div>
                                   </motion.div>
-                                )}
+                                )
+                                }
                               </div>
                             )
                           })}
@@ -1904,7 +1890,7 @@ function GroupsContent() {
             </div>
           )
         }
-      </div>
+      </div >
     </>
   )
 }

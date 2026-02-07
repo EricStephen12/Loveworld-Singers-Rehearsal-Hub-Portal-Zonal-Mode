@@ -747,7 +747,7 @@ export async function sendMessage(
       chatId,
       senderId: sender.id,
       senderName: sender.name,
-      text: text || (media?.type === 'image' ? 'Image' : 'Document'),
+      text: text || (media?.type === 'image' ? 'Image' : (media?.type === 'document' ? 'Document' : (media?.type === 'voice' ? 'Voice message' : ''))),
       type: media?.type || 'text',
       timestamp: serverTimestamp()
     }
@@ -1211,10 +1211,14 @@ function docToMessage(docSnap: any): Message {
     timestamp: toDate(data.timestamp),
     type: data.type || 'text',
     imageUrl: data.imageUrl,
+    attachment: data.attachment,
+    voiceUrl: data.voiceUrl,
+    voiceDuration: data.voiceDuration,
     replyTo: data.replyTo,
     reactions: data.reactions,
     edited: data.edited,
-    deleted: data.deleted
+    deleted: data.deleted,
+    status: data.status
   }
 }
 
