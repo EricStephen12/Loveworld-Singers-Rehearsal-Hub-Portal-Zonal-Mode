@@ -206,7 +206,7 @@ export function LibraryView() {
 
         if (ongoingPage) {
           const pnSongs = await getPraiseNightSongs(ongoingPage.id);
-          const validSongs = pnSongs.filter(s => s.audioFile).map(praiseNightSongToAudioLabSong);
+          const validSongs = pnSongs.map(praiseNightSongToAudioLabSong);
           songsList = validSongs.map(toLeagcySong);
           setTotalCount(songsList.length);
           setHasMore(false);
@@ -219,7 +219,7 @@ export function LibraryView() {
 
         if (specificPNPage) {
           const pnSongs = await getPraiseNightSongs(specificPNPage.id);
-          const validSongs = pnSongs.filter(s => s.audioFile).map(praiseNightSongToAudioLabSong);
+          const validSongs = pnSongs.map(praiseNightSongToAudioLabSong);
           songsList = validSongs.map(toLeagcySong);
           setTotalCount(songsList.length);
           setHasMore(false);
@@ -251,8 +251,16 @@ export function LibraryView() {
       }
 
       setSongs(songsList);
-      setHasMore(songsList.length < totalCount);
-      console.log(`✅ [LibraryView] Loaded ${songsList.length} songs for ${selectedProgramId}`);
+
+      // Determine hasMore based on the fetched list length vs ITEMS_PER_PAGE
+      // This is more robust than relying on the async totalCount state
+      if (selectedProgramId === 'all') {
+        const hasMoreData = songsList.length >= ITEMS_PER_PAGE;
+        setHasMore(hasMoreData);
+        console.log(`✅ [LibraryView] All songs loaded. hasMore: ${hasMoreData}`);
+      } else {
+        setHasMore(false);
+      }
 
       if (isLoading) setIsLoading(false);
 
@@ -297,7 +305,7 @@ export function LibraryView() {
           handleLoadMore();
         }
       },
-      { threshold: 0.1, rootMargin: '400px' } // Increased rootMargin for seamless loading
+      { threshold: 0.1, rootMargin: '400px' }
     );
 
     if (loaderRef.current) {
@@ -305,7 +313,7 @@ export function LibraryView() {
     }
 
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, isLoading, lastVisibleDoc, selectedProgramId, searchQuery]);
+  }, [hasMore, isLoadingMore, isLoading, lastVisibleDoc, selectedProgramId, searchQuery, handleLoadMore]);
 
   // Deep Search fallback for songs not in the current 500
   useEffect(() => {
@@ -535,30 +543,24 @@ export function LibraryView() {
                 );
               })}
 
-              {/* Load More / Infinite Scroll Sentinel */}
-              {!searchQuery && hasMore && (
-                <div
-                  ref={(node) => {
-                    loaderRef.current = node;
-                    if (node) {
-                      const observer = new IntersectionObserver(
-                        (entries) => {
-                          if (entries[0].isIntersecting && !isLoadingMore) {
-                            handleLoadMore();
-                          }
-                        },
-                        { threshold: 0.1, rootMargin: '100px' }
-                      );
-                      observer.observe(node);
-                      return () => observer.disconnect();
-                    }
-                  }}
-                  className="py-12 flex flex-col items-center justify-center min-h-[100px]"
-                >
-                  <div className="flex flex-col items-center gap-3">
-                    <CustomLoader size="md" />
-                    <p className="text-violet-400 text-sm font-bold animate-pulse">Loading next batch...</p>
-                  </div>
+              {/* Load More Button */}
+              {!searchQuery && hasMore && selectedProgramId === 'all' && (
+                <div className="py-12 flex flex-col items-center justify-center min-h-[100px]">
+                  {isLoadingMore ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <CustomLoader size="md" />
+                      <p className="text-violet-400 text-sm font-bold animate-pulse">Loading next batch...</p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleLoadMore}
+                      className="group relative flex items-center gap-3 px-8 py-4 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-2xl transition-all active:scale-95 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                      <RefreshCw size={20} className="text-violet-400 group-hover:rotate-180 transition-transform duration-500" />
+                      <span className="text-white font-bold tracking-wide">Load More Songs</span>
+                    </button>
+                  )}
                 </div>
               )}
 

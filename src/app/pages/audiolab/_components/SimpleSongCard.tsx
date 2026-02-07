@@ -31,6 +31,7 @@ export function SimpleSongCard({
 }: SimpleSongCardProps) {
 
     const availableParts = song.availableParts || ['full'];
+    const hasAudio = !!(song.audioUrls && Object.values(song.audioUrls).some(url => url && url.length > 0)) || !!song.audioUrl;
 
     const getPartLabel = (part: VocalPart) => {
         const labels: Record<string, string> = {
@@ -82,7 +83,9 @@ export function SimpleSongCard({
           w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
           ${isPlaying
                         ? 'bg-violet-600'
-                        : 'bg-gradient-to-br from-violet-500 to-purple-600'
+                        : hasAudio
+                            ? 'bg-gradient-to-br from-violet-500 to-purple-600'
+                            : 'bg-slate-700'
                     }
         `}>
                     {isPlaying ? (
@@ -96,14 +99,25 @@ export function SimpleSongCard({
                             ))}
                         </div>
                     ) : (
-                        <span className="text-white font-bold text-sm">{songNumber}</span>
+                        hasAudio ? (
+                            <span className="text-white font-bold text-sm">{songNumber}</span>
+                        ) : (
+                            <BookOpen className="w-5 h-5 text-slate-400" />
+                        )
                     )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                    <h3 className={`font-medium text-sm truncate ${isPlaying ? 'text-violet-200' : 'text-white'}`}>
-                        {song.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className={`font-medium text-sm truncate ${isPlaying ? 'text-violet-200' : 'text-white'}`}>
+                            {song.title}
+                        </h3>
+                        {!hasAudio && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-slate-800 text-[8px] font-bold text-slate-400 uppercase tracking-tighter border border-white/5">
+                                Lyrics Only
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-slate-400 truncate">
                         {song.artist || 'Unknown artist'}
                         {song.key && ` • ${song.key}`}

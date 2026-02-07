@@ -918,7 +918,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
           songs: allSongs,
           totalCount: combinedTotal,
           lastDoc: masterResult.lastDoc, // Only track pagination for Master List
-          hasMore: masterResult.songs.length < masterTotal // Logic mostly for master list pagination
+          hasMore: masterResult.songs.length >= limitCount // More robust check for next batch availability
         }
       });
     } catch (error) {

@@ -69,7 +69,7 @@ export interface Message {
   reactions?: { [userId: string]: ReactionType }
   edited?: boolean
   deleted?: boolean
-  status?: 'sent' | 'delivered' | 'read'
+  status?: 'sent' | 'delivered' | 'read' | 'forwarded'
 }
 
 export interface Chat {
@@ -77,8 +77,10 @@ export interface Chat {
   type: 'direct' | 'group'
   name?: string
   avatar?: string
+  description?: string
   participants: string[]
   participantDetails: { [userId: string]: { name: string; avatar?: string } }
+  admins: string[]
   createdBy: string
   createdAt: Date
   lastMessage?: {
@@ -87,6 +89,8 @@ export interface Chat {
     timestamp: Date
   }
   unreadCount: { [userId: string]: number }
+  pinnedBy?: { [userId: string]: boolean }
+  clearedAt?: { [userId: string]: any }
 }
 
 // ============================================
@@ -402,7 +406,6 @@ export async function createGroupChat(
     const unreadCount: { [key: string]: number } = {}
 
     allMembers.forEach(m => {
-      // Only include avatar if it's defined (Firestore doesn't allow undefined values)
       participantDetails[m.id] = m.avatar
         ? { name: m.name, avatar: m.avatar }
         : { name: m.name }
@@ -414,6 +417,7 @@ export async function createGroupChat(
       name,
       participants: allMembers.map(m => m.id),
       participantDetails,
+      admins: [creator.id], // Creator is the first admin
       createdBy: creator.id,
       createdAt: serverTimestamp(),
       unreadCount
@@ -634,8 +638,11 @@ export async function renameGroup(
 
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
-    if (chat.createdBy !== userId) {
-      console.error('[ChatService] Only creator can rename group')
+
+    // Check if user is creator or admin
+    const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
+    if (!isAdmin) {
+      console.error('[ChatService] Only creator or admins can rename group')
       return false
     }
 
@@ -657,6 +664,179 @@ export async function renameGroup(
     return true
   } catch (error) {
     console.error('[ChatService] renameGroup error:', error)
+    return false
+  }
+}
+
+/**
+ * Update group description
+ */
+export async function updateGroupDescription(
+  chatId: string,
+  userId: string,
+  description: string
+): Promise<boolean> {
+  try {
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (!chatDoc.exists()) return false
+
+    const chat = chatDoc.data()
+    const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
+    if (!isAdmin) return false
+
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      description
+    })
+
+    return true
+  } catch (error) {
+    console.error('[ChatService] updateGroupDescription error:', error)
+    return false
+  }
+}
+
+/**
+ * Update group/chat avatar
+ */
+export async function updateChatAvatar(
+  chatId: string,
+  userId: string,
+  avatarUrl: string
+): Promise<boolean> {
+  try {
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (!chatDoc.exists()) return false
+
+    const chat = chatDoc.data()
+    const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
+    if (!isAdmin) return false
+
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      avatar: avatarUrl
+    })
+
+    return true
+  } catch (error) {
+    console.error('[ChatService] updateChatAvatar error:', error)
+    return false
+  }
+}
+
+/**
+ * Toggle admin status for a group member
+ */
+export async function toggleGroupAdmin(
+  chatId: string,
+  userId: string, // Performer
+  targetUserId: string,
+  status: boolean
+): Promise<boolean> {
+  try {
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (!chatDoc.exists()) return false
+
+    const chat = chatDoc.data()
+    if (chat.type !== 'group') return false
+    // Only creator can promote/demote admins
+    if (chat.createdBy !== userId) return false
+
+    let admins = chat.admins || []
+    if (status) {
+      if (!admins.includes(targetUserId)) admins.push(targetUserId)
+    } else {
+      admins = admins.filter((id: string) => id !== targetUserId)
+    }
+
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), { admins })
+    return true
+  } catch (error) {
+    console.error('[ChatService] toggleGroupAdmin error:', error)
+    return false
+  }
+}
+
+/**
+ * Pin or unpin a chat for current user
+ */
+export async function togglePinChat(
+  chatId: string,
+  userId: string,
+  pinned: boolean
+): Promise<boolean> {
+  try {
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      [`pinnedBy.${userId}`]: pinned
+    })
+    return true
+  } catch (error) {
+    console.error('[ChatService] togglePinChat error:', error)
+    return false
+  }
+}
+
+/**
+ * Clear chat for current user (local only)
+ */
+export async function clearChat(
+  chatId: string,
+  userId: string
+): Promise<boolean> {
+  try {
+    await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
+      [`clearedAt.${userId}`]: serverTimestamp()
+    })
+    return true
+  } catch (error) {
+    console.error('[ChatService] clearChat error:', error)
+    return false
+  }
+}
+
+/**
+ * Edit a message
+ */
+export async function editMessage(
+  messageId: string,
+  userId: string,
+  newText: string
+): Promise<boolean> {
+  try {
+    const messageDoc = await getDoc(doc(db, MESSAGES_COLLECTION, messageId))
+    if (!messageDoc.exists()) return false
+
+    const message = messageDoc.data()
+    if (message.senderId !== userId) return false
+
+    await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
+      text: newText,
+      edited: true
+    })
+
+    return true
+  } catch (error) {
+    console.error('[ChatService] editMessage error:', error)
+    return false
+  }
+}
+
+/**
+ * Forward a message
+ */
+export async function forwardMessage(
+  targetChatId: string,
+  sender: ChatUser,
+  originalMessage: Message
+): Promise<boolean> {
+  try {
+    const text = originalMessage.text
+    const media = originalMessage.imageUrl ? { type: 'image' as const, url: originalMessage.imageUrl } :
+      originalMessage.attachment ? { type: 'document' as const, url: originalMessage.attachment.url, name: originalMessage.attachment.name, size: originalMessage.attachment.size, mimeType: originalMessage.attachment.mimeType } :
+        originalMessage.voiceUrl ? { type: 'voice' as const, url: originalMessage.voiceUrl, duration: originalMessage.voiceDuration } :
+          undefined
+
+    return sendMessage(targetChatId, sender, text || '', undefined, media as any)
+  } catch (error) {
+    console.error('[ChatService] forwardMessage error:', error)
     return false
   }
 }
@@ -920,18 +1100,43 @@ export function subscribeToMessages(
 /**
  * Delete message (soft delete)
  */
-export async function deleteMessage(messageId: string, userId: string): Promise<boolean> {
+export async function deleteMessage(messageId: string, userId: string, forEveryone: boolean = false): Promise<boolean> {
   try {
     const messageDoc = await getDoc(doc(db, MESSAGES_COLLECTION, messageId))
     if (!messageDoc.exists()) return false
 
     const message = messageDoc.data()
-    if (message.senderId !== userId) return false
 
-    await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
-      text: 'This message was deleted',
-      deleted: true
-    })
+    // Permission check: 
+    // - For me: always allowed (local delete logic would be better but soft delete for now)
+    // - For everyone: sender OR group admin/creator
+    if (forEveryone) {
+      const isSender = message.senderId === userId
+      let hasAdminPrivileges = false
+
+      // Check group admin status
+      const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, message.chatId))
+      if (chatDoc.exists()) {
+        const chat = chatDoc.data()
+        hasAdminPrivileges = chat.createdBy === userId || (chat.admins || []).includes(userId)
+      }
+
+      if (!isSender && !hasAdminPrivileges) return false
+
+      await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
+        text: 'This message was deleted for everyone',
+        deleted: true
+      })
+    } else {
+      // "Delete for me" - in a real app this would be a local flag or a per-user subcollection
+      // For this implementation, we'll just soft delete it for now but limited to the sender
+      if (message.senderId !== userId) return false
+
+      await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
+        text: 'This message was deleted',
+        deleted: true
+      })
+    }
 
     return true
   } catch (error) {
@@ -989,8 +1194,10 @@ export async function addGroupMembers(
 
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
-    if (chat.createdBy !== userId) {
-      console.error('[ChatService] Only creator can add members')
+
+    const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
+    if (!isAdmin) {
+      console.error('[ChatService] Only creator or admins can add members')
       return false
     }
 
@@ -1046,10 +1253,13 @@ export async function removeGroupMember(
 
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
-    if (chat.createdBy !== userId) {
-      console.error('[ChatService] Only creator can remove members')
+
+    const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
+    if (!isAdmin) {
+      console.error('[ChatService] Only creator or admins can remove members')
       return false
     }
+
     if (memberIdToRemove === chat.createdBy) {
       console.error('[ChatService] Cannot remove the creator')
       return false
@@ -1063,10 +1273,17 @@ export async function removeGroupMember(
     const currentUnread = { ...chat.unreadCount }
     delete currentUnread[memberIdToRemove]
 
+    // Also remove from admins if they were one
+    let admins = chat.admins || []
+    if (admins.includes(memberIdToRemove)) {
+      admins = admins.filter((id: string) => id !== memberIdToRemove)
+    }
+
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
       participants: currentParticipants,
       participantDetails: currentDetails,
-      unreadCount: currentUnread
+      unreadCount: currentUnread,
+      admins
     })
 
     // Add system message
@@ -1186,8 +1403,10 @@ function docToChat(docSnap: any): Chat {
     type: data.type || 'direct',
     name: data.name,
     avatar: data.avatar,
+    description: data.description,
     participants: data.participants || [],
     participantDetails: data.participantDetails || {},
+    admins: data.admins || [],
     createdBy: data.createdBy || '',
     createdAt: toDate(data.createdAt),
     lastMessage: data.lastMessage ? {
@@ -1195,7 +1414,9 @@ function docToChat(docSnap: any): Chat {
       senderId: data.lastMessage.senderId,
       timestamp: toDate(data.lastMessage.timestamp)
     } : undefined,
-    unreadCount: data.unreadCount || {}
+    unreadCount: data.unreadCount || {},
+    pinnedBy: data.pinnedBy || {},
+    clearedAt: data.clearedAt || {}
   }
 }
 

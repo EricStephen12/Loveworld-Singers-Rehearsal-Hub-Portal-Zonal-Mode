@@ -24,6 +24,13 @@ import {
   deleteGroup as deleteGroupService,
   markChatAsRead,
   renameGroup as renameGroupService,
+  updateGroupDescription as updateGroupDescriptionService,
+  updateChatAvatar as updateChatAvatarService,
+  toggleGroupAdmin as toggleGroupAdminService,
+  togglePinChat as togglePinChatService,
+  clearChat as clearChatService,
+  editMessage as editMessageService,
+  forwardMessage as forwardMessageService,
   setTypingStatus as setTypingStatusService,
   subscribeToTyping
 } from '../_lib/chat-service'
@@ -48,7 +55,7 @@ interface ChatContextType {
   createGroupChat: (name: string, members: ChatUser[]) => Promise<string | null>
   searchUsers: (term: string) => Promise<ChatUser[]>
   deleteChat: (chatId: string) => Promise<boolean>
-  deleteMessage: (messageId: string) => Promise<boolean>
+  deleteMessage: (messageId: string, forEveryone?: boolean) => Promise<boolean>
   toggleReaction: (messageId: string, reaction: ReactionType) => Promise<boolean>
   // Group management
   addGroupMembers: (members: ChatUser[]) => Promise<boolean>
@@ -56,8 +63,16 @@ interface ChatContextType {
   leaveGroup: () => Promise<boolean>
   deleteGroup: () => Promise<boolean>
   renameGroup: (newName: string) => Promise<boolean>
+  updateGroupDescription: (description: string) => Promise<boolean>
+  updateChatAvatar: (avatarUrl: string) => Promise<boolean>
+  toggleGroupAdmin: (targetUserId: string, status: boolean) => Promise<boolean>
+  togglePinChat: (pinned: boolean) => Promise<boolean>
+  clearChat: () => Promise<boolean>
+  editMessage: (messageId: string, newText: string) => Promise<boolean>
+  forwardMessage: (targetChatId: string, originalMessage: Message) => Promise<boolean>
   setTypingStatus: (status: 'typing' | 'recording_voice' | null) => Promise<void>
   isGroupCreator: () => boolean
+  isGroupAdmin: (userId?: string) => boolean
   getChatDisplayName: (chat: Chat) => string
   getChatAvatar: (chat: Chat) => string | undefined
   typingUsers: { userName: string, status: string }[]
@@ -317,9 +332,9 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return result
   }, [user?.uid, selectedChat?.id])
 
-  const deleteMessage = useCallback(async (messageId: string) => {
+  const deleteMessage = useCallback(async (messageId: string, forEveryone: boolean = false) => {
     if (!user?.uid) return false
-    return deleteMessageService(messageId, user.uid)
+    return deleteMessageService(messageId, user.uid, forEveryone)
   }, [user?.uid])
 
   const toggleReaction = useCallback(async (messageId: string, reaction: ReactionType) => {
@@ -370,6 +385,47 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     if (!user?.uid || !selectedChat || selectedChat.type !== 'group') return false
     return selectedChat.createdBy === user.uid
   }, [user?.uid, selectedChat])
+
+  const isGroupAdmin = useCallback((userId?: string) => {
+    const idToCheck = userId || user?.uid
+    if (!idToCheck || !selectedChat || selectedChat.type !== 'group') return false
+    return selectedChat.createdBy === idToCheck || (selectedChat.admins || []).includes(idToCheck)
+  }, [user?.uid, selectedChat])
+
+  const updateGroupDescription = useCallback(async (description: string) => {
+    if (!selectedChat || !user) return false
+    return await updateGroupDescriptionService(selectedChat.id, user.uid, description)
+  }, [selectedChat, user])
+
+  const updateChatAvatar = useCallback(async (avatarUrl: string) => {
+    if (!selectedChat || !user) return false
+    return await updateChatAvatarService(selectedChat.id, user.uid, avatarUrl)
+  }, [selectedChat, user])
+
+  const toggleGroupAdmin = useCallback(async (targetUserId: string, status: boolean) => {
+    if (!selectedChat || !user) return false
+    return await toggleGroupAdminService(selectedChat.id, user.uid, targetUserId, status)
+  }, [selectedChat, user])
+
+  const togglePinChat = useCallback(async (pinned: boolean) => {
+    if (!selectedChat || !user) return false
+    return await togglePinChatService(selectedChat.id, user.uid, pinned)
+  }, [selectedChat, user])
+
+  const clearChat = useCallback(async () => {
+    if (!selectedChat || !user) return false
+    return await clearChatService(selectedChat.id, user.uid)
+  }, [selectedChat, user])
+
+  const editMessage = useCallback(async (messageId: string, newText: string) => {
+    if (!user) return false
+    return await editMessageService(messageId, user.uid, newText)
+  }, [user])
+
+  const forwardMessage = useCallback(async (targetChatId: string, originalMessage: Message) => {
+    if (!user || !currentUser) return false
+    return await forwardMessageService(targetChatId, currentUser, originalMessage)
+  }, [user, currentUser])
 
   const getChatDisplayName = useCallback((chat: Chat) => {
     if (chat.type === 'group') {
@@ -422,8 +478,16 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       leaveGroup,
       deleteGroup,
       renameGroup,
+      updateGroupDescription,
+      updateChatAvatar,
+      toggleGroupAdmin,
+      togglePinChat,
+      clearChat,
+      editMessage,
+      forwardMessage,
       setTypingStatus,
       isGroupCreator,
+      isGroupAdmin,
       getChatDisplayName,
       getChatAvatar,
       allTypingUsers

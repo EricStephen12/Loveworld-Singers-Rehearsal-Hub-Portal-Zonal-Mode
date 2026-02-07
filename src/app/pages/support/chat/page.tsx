@@ -161,7 +161,7 @@ export default function ChatSupportPage() {
                   {admin.profile_image_url || admin.avatar_url ? (
                     <img
                       src={admin.profile_image_url || admin.avatar_url || ''}
-                      alt={admin.first_name}
+                      alt="Support Team"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -213,7 +213,7 @@ export default function ChatSupportPage() {
               </div>
               <h2 className="text-lg font-bold text-slate-900 mb-2">How can we help?</h2>
               <p className="text-sm text-slate-500 leading-relaxed px-4">
-                Ask {adminProfiles.map(a => a.first_name).join(', ') || 'us'} anything about the app or your account. Our team is ready to assist you.
+                Ask the support team anything about the app or your account. Our team is ready to assist you.
               </p>
             </div>
           )}

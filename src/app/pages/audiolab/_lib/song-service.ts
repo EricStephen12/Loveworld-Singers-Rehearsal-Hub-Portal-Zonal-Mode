@@ -162,15 +162,9 @@ export async function getSongsPaginated(
     const snapshot = await getDocs(q);
     const songs = snapshot.docs.map(doc => masterSongToAudioLabSong(doc));
 
-    // Filter to only songs that have audio files
-    const songsWithAudio = songs.filter(song => {
-      if (!song.audioUrls) return false;
-      return Object.values(song.audioUrls).some(url => url && url.length > 0);
-    });
-
     const lastVisible = snapshot.docs[snapshot.docs.length - 1] || null;
     const result = {
-      songs: songsWithAudio,
+      songs,
       lastDoc: lastVisible
     };
 
@@ -308,17 +302,9 @@ export async function getSongs(zoneId?: string, limitCount: number = 500): Promi
     const snapshot = await getDocs(q);
     const songs = snapshot.docs.map(doc => masterSongToAudioLabSong(doc));
 
-    // Filter to only songs that have audio files (including custom parts)
-    const songsWithAudio = songs.filter(song => {
-      if (!song.audioUrls) return false;
+    songCache.set(cacheKey, { data: songs, timestamp: Date.now() });
 
-      const hasAudio = Object.values(song.audioUrls).some(url => url && url.length > 0);
-      return hasAudio;
-    });
-
-    songCache.set(cacheKey, { data: songsWithAudio, timestamp: Date.now() });
-
-    return songsWithAudio;
+    return songs;
   } catch (error) {
     console.error('[SongService] Error fetching songs from Master Library:', error);
     return [];

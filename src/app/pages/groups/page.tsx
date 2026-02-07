@@ -11,9 +11,12 @@ import {
   ArrowLeft, MessageCircle, Users, Search, Plus, Send,
   Trash2, X, Check, Loader2, ChevronLeft, Phone, PhoneOff, Mic, MicOff,
   MoreVertical, FileText, Download, Reply, Copy, Smile, LogOut, UserPlus, Image as ImageIcon,
-  Maximize2, Paperclip, Settings, UserMinus, PhoneMissed, Edit3
+  Maximize2, Paperclip, Settings, UserMinus, PhoneMissed, Edit3, Camera, User, Mail, Info
 } from 'lucide-react'
+import type { UserProfile } from '@/types/supabase'
+import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import type { ChatUser, ReactionType, Message } from './_lib/chat-service'
+import { togglePinChat as togglePinChatService } from './_lib/chat-service'
 import { useCall } from '@/contexts/CallContext'
 
 // Reaction options - more variety
@@ -121,7 +124,7 @@ export default function GroupsPage() {
 
 function GroupsContent() {
   const router = useRouter()
-  const { user, profile, isLoading: authLoading } = useAuth()
+  const { user, profile, isLoading: authLoading, refreshProfile } = useAuth()
   const { currentZone } = useZone()
 
   // Track groups/chat usage
@@ -160,6 +163,7 @@ function GroupsContent() {
   const [showNewChat, setShowNewChat] = useState(false)
   const [showNewGroup, setShowNewGroup] = useState(false)
   const [showGroupSettings, setShowGroupSettings] = useState(false)
+  const [showDirectChatSettings, setShowDirectChatSettings] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<ChatUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -168,6 +172,8 @@ function GroupsContent() {
   const [isGroupSettingsSearching, setIsGroupSettingsSearching] = useState(false)
   const [groupSettingsSearchResults, setGroupSettingsSearchResults] = useState<ChatUser[]>([])
   const [isRenaming, setIsRenaming] = useState(false)
+  const [showChatActions, setShowChatActions] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [messageText, setMessageText] = useState('')
@@ -198,6 +204,10 @@ function GroupsContent() {
   const [viewingImage, setViewingImage] = useState<string | null>(null)
   const [replyingTo, setReplyingTo] = useState<{ id: string; text: string; senderName: string } | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showUserProfile, setShowUserProfile] = useState<string | null>(null)
+  const [showMyProfile, setShowMyProfile] = useState(false)
+  const [viewingProfileData, setViewingProfileData] = useState<UserProfile | null>(null)
+  const [isEditingMyProfile, setIsEditingMyProfile] = useState(false)
   const EMOJI_LIST = ['😊', '😂', '❤️', '👍', '🔥', '🙌', '🙏', '😮', '😢', '👏', '💯', '✨', '🎉', '😎', '🤔', '😅', '😍', '👋', '👀', '💪']
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -223,6 +233,20 @@ function GroupsContent() {
       setTypingStatus(null)
     }, 3000)
   }
+
+  // Handle profile viewing
+  useEffect(() => {
+    if (showUserProfile) {
+      if (viewingProfileData?.id !== showUserProfile) {
+        setViewingProfileData(null)
+      }
+      FirebaseDatabaseService.getUserProfile(showUserProfile)
+        .then(data => {
+          if (data) setViewingProfileData(data as UserProfile)
+        })
+        .catch(err => console.error('Error fetching profile:', err))
+    }
+  }, [showUserProfile])
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -352,6 +376,7 @@ function GroupsContent() {
               [currentUser?.id || '']: { name: currentUser?.name || '' },
               [user.id]: { name: user.name }
             },
+            admins: [],
             createdBy: currentUser?.id || '',
             createdAt: new Date(),
             unreadCount: {}
@@ -571,6 +596,13 @@ function GroupsContent() {
               >
                 <Plus className="w-5 h-5" />
               </button>
+              <button
+                onClick={() => setShowMyProfile(true)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                title="My Profile"
+              >
+                <User className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -581,7 +613,24 @@ function GroupsContent() {
           <div className={`w-full md:w-80 lg:w-[400px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
             {/* List Header - Hidden on mobile as the main header handles it */}
             <div className="p-4 bg-white border-b border-gray-100 hidden md:flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">Chats</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowMyProfile(true)}
+                  className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0"
+                >
+                  {profile?.profile_image_url ? (
+                    <img src={profile.profile_image_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center text-white text-xs font-bold"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {profile?.first_name?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                </button>
+                <h2 className="text-xl font-bold text-gray-800">Chats</h2>
+              </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowNewChat(true)}
@@ -654,7 +703,7 @@ function GroupsContent() {
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.2 }}
                             onClick={() => selectChat(chat)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all relative ${isSelected ? 'bg-emerald-50/50' : ''
+                            className={`group w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all relative ${isSelected ? 'bg-emerald-50/50' : ''
                               }`}
                           >
                             {/* Selection Indicator */}
@@ -668,18 +717,13 @@ function GroupsContent() {
 
                             {/* Avatar Wrapper */}
                             <div className="relative flex-shrink-0">
-                              <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden shadow-sm"
-                                style={{ backgroundColor: chat.type === 'group' ? adjustColor(primaryColor, -30) : primaryColor }}
-                              >
-                                {chat.type === 'group' ? (
-                                  <Users className="w-6 h-6" />
-                                ) : avatar ? (
-                                  <img src={avatar} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  displayName.charAt(0).toUpperCase()
-                                )}
-                              </div>
+                              <SyncAvatar
+                                userId={chat.type === 'direct' ? chat.participants.find(id => id !== user?.uid) : undefined}
+                                initialAvatar={avatar}
+                                fallbackName={displayName}
+                                bgColor={chat.type === 'group' ? adjustColor(primaryColor, -30) : primaryColor}
+                                isGroup={chat.type === 'group'}
+                              />
                               {/* Status Dot for Direct Chats */}
                               {chat.type === 'direct' && (
                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
@@ -757,6 +801,17 @@ function GroupsContent() {
                                     {unreadCount}
                                   </div>
                                 )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    setMenuPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                                    setShowChatActions(showChatActions === chat.id ? null : chat.id)
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-gray-200 rounded-full transition-all"
+                                >
+                                  <MoreVertical className="w-4 h-4 text-gray-600" />
+                                </button>
                               </div>
                             </div>
                           </motion.button>
@@ -766,6 +821,41 @@ function GroupsContent() {
                 </motion.div>
               )}
             </div>
+
+            {/* Fixed position dropdown menu */}
+            {showChatActions && menuPosition && (
+              <div
+                className="fixed bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-[100] min-w-[160px]"
+                style={{ top: `${menuPosition.top}px`, right: `${menuPosition.right}px` }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={async () => {
+                    const chat = chats.find(c => c.id === showChatActions)
+                    if (chat) {
+                      selectChat(chat)
+                      const isPinned = chat.pinnedBy?.[currentUser?.id || '']
+                      await togglePinChatService(chat.id, currentUser?.id || '', !isPinned)
+                    }
+                    setShowChatActions(null)
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                >
+                  {chats.find(c => c.id === showChatActions)?.pinnedBy?.[currentUser?.id || ''] ? '📌 Unpin' : '📍 Pin Chat'}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirm('Delete this chat permanently?')) {
+                      await deleteChat(showChatActions!)
+                    }
+                    setShowChatActions(null)
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 flex items-center gap-2 text-red-600 border-t border-gray-100"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Chat view */}
@@ -786,26 +876,41 @@ function GroupsContent() {
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 cursor-pointer shadow-sm relative overflow-hidden"
                     style={{ backgroundColor: selectedChat.type === 'group' ? adjustColor(themeColor, -30) : themeColor }}
-                    onClick={() => selectedChat.type === 'group' && setShowGroupSettings(true)}
+                    onClick={() => {
+                      if (selectedChat.type === 'direct') {
+                        const otherUserId = selectedChat.participants.find(id => id !== user?.uid)
+                        if (otherUserId) setShowUserProfile(otherUserId)
+                      } else {
+                        setShowGroupSettings(true)
+                      }
+                    }}
                   >
-                    {selectedChat.type === 'group' ? (
-                      getChatAvatar(selectedChat) ? (
-                        <img src={getChatAvatar(selectedChat)} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <Users className="w-5 h-5" />
-                      )
-                    ) : getChatAvatar(selectedChat) ? (
-                      <img src={getChatAvatar(selectedChat)} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      getChatDisplayName(selectedChat).charAt(0).toUpperCase()
-                    )}
+                    <SyncAvatar
+                      userId={selectedChat.type === 'direct' ? selectedChat.participants.find(id => id !== user?.uid) : undefined}
+                      initialAvatar={getChatAvatar(selectedChat)}
+                      fallbackName={getChatDisplayName(selectedChat)}
+                      size="w-10 h-10"
+                      textClassName="text-lg"
+                      bgColor={selectedChat.type === 'group' ? adjustColor(themeColor, -30) : themeColor}
+                      isGroup={selectedChat.type === 'group'}
+                    />
                     {/* Status dot in header */}
                     {selectedChat.type === 'direct' && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => selectedChat.type === 'group' && setShowGroupSettings(true)}>
+                  <div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
+                      if (selectedChat.type === 'direct') {
+                        const otherUserId = selectedChat.participants.find(id => id !== user?.uid)
+                        if (otherUserId) setShowUserProfile(otherUserId)
+                      } else {
+                        setShowGroupSettings(true)
+                      }
+                    }}
+                  >
                     <h2 className="font-bold text-gray-800 truncate">
                       {getChatDisplayName(selectedChat)}
                     </h2>
@@ -851,8 +956,15 @@ function GroupsContent() {
                     )}
 
                     <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      onClick={() => setShowGroupSettings(true)}
+                      className={`p-2 rounded-full transition-colors ${showDirectChatSettings || showGroupSettings ? 'bg-gray-100 text-emerald-600' : 'hover:bg-gray-100'}`}
+                      onClick={() => {
+                        if (selectedChat.type === 'direct') {
+                          setShowDirectChatSettings(!showDirectChatSettings)
+                        } else {
+                          setShowGroupSettings(true)
+                        }
+                      }}
+                      title="More options"
                     >
                       <MoreVertical className="w-5 h-5" />
                     </button>
@@ -980,16 +1092,18 @@ function GroupsContent() {
                                     <div
                                       className={`flex items-center gap-1 ${isOwn ? 'flex-row-reverse self-end' : 'self-start'}`}
                                     >
-                                      <div className={`max-w-[85%] sm:max-w-[70%] lg:max-w-[80%] relative group ${isOwn ? 'order-2' : ''}`}>
+                                      <div className={`inline-flex flex-col max-w-full relative group ${isOwn ? 'order-2' : ''}`}>
                                         {/* Sender Avatar for Groups */}
                                         {!isOwn && selectedChat?.type === 'group' && !isGroupedWithPrev && (
-                                          <div className="absolute -left-12 bottom-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm" style={{ backgroundColor: adjustColor(primaryColor, -20) }}>
-                                            {msg.senderAvatar ? (
-                                              <img src={msg.senderAvatar} alt="" className="w-full h-full object-cover" />
-                                            ) : (
-                                              msg.senderName.charAt(0).toUpperCase()
-                                            )}
-                                          </div>
+                                          <SyncAvatar
+                                            userId={msg.senderId}
+                                            initialAvatar={msg.senderAvatar}
+                                            fallbackName={msg.senderName}
+                                            size="w-8 h-8"
+                                            textClassName="text-xs"
+                                            bgColor={adjustColor(primaryColor, -20)}
+                                            className="absolute -left-12 bottom-0"
+                                          />
                                         )}
 
                                         {/* Bubble Tail - Only for first message in group */}
@@ -1759,14 +1873,23 @@ function GroupsContent() {
                         return (
                           <div
                             key={participantId}
-                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
+                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                            onClick={() => {
+                              if (isCurrentUser) {
+                                setShowMyProfile(true)
+                              } else {
+                                setShowUserProfile(participantId)
+                              }
+                            }}
                           >
-                            <div
-                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                              style={{ backgroundColor: primaryColor }}
-                            >
-                              {details?.name?.charAt(0).toUpperCase() || '?'}
-                            </div>
+                            <SyncAvatar
+                              userId={participantId}
+                              initialAvatar={details?.avatar}
+                              fallbackName={details?.name}
+                              size="w-10 h-10"
+                              textClassName="text-base"
+                              bgColor={primaryColor}
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 truncate">
                                 {details?.name || 'Unknown'}
@@ -1890,7 +2013,315 @@ function GroupsContent() {
             </div>
           )
         }
-      </div >
+
+        {/* User Profile Viewing Modal */}
+        {showUserProfile && (
+          <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center" onClick={() => setShowUserProfile(null)}>
+            <div
+              className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!viewingProfileData ? (
+                <div className="p-12 text-center flex flex-col items-center justify-center">
+                  <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mb-4" />
+                  <p className="text-gray-500">Loading profile...</p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="relative h-48 flex-shrink-0"
+                    style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -30)} 100%)` }}
+                  >
+                    <button
+                      onClick={() => setShowUserProfile(null)}
+                      className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/30 rounded-full text-white transition-colors z-10"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                    <div className="absolute inset-x-0 -bottom-12 flex justify-center">
+                      <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 overflow-hidden shadow-lg">
+                        {viewingProfileData.profile_image_url ? (
+                          <img src={viewingProfileData.profile_image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: primaryColor }}>
+                            {viewingProfileData.first_name?.charAt(0) || 'U'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-16 pb-6 px-6 text-center">
+                    <h3 className="text-2xl font-bold text-gray-900">
+                      {viewingProfileData.first_name} {viewingProfileData.last_name}
+                    </h3>
+                    <p className="text-emerald-600 font-medium">{viewingProfileData.designation || 'Member'}</p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
+                    <div className="p-4 bg-gray-50 rounded-xl space-y-3">
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Mail className="w-4 h-4" />
+                        <span className="text-sm truncate">{viewingProfileData.email}</span>
+                      </div>
+                      {viewingProfileData.phone_number && (
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <Phone className="w-4 h-4" />
+                          <span className="text-sm">{viewingProfileData.phone_number}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Users className="w-4 h-4" />
+                        <span className="text-sm">{viewingProfileData.zone || 'No Zone'}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Info className="w-4 h-4" />
+                        <span className="text-sm">{viewingProfileData.church || 'No Church'}</span>
+                      </div>
+                    </div>
+                    {!(selectedChat?.type === 'direct' && selectedChat.participants.includes(viewingProfileData.id)) && (
+                      <button
+                        onClick={() => {
+                          const chatUser: ChatUser = {
+                            id: viewingProfileData.id,
+                            name: viewingProfileData.first_name + ' ' + (viewingProfileData.last_name || ''),
+                            avatar: viewingProfileData.profile_image_url || undefined
+                          }
+                          startDirectChat(chatUser)
+                          setShowUserProfile(null)
+                        }}
+                        className="w-full py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Message
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Direct Chat Settings Modal (Individual Chat Options) */}
+        {showDirectChatSettings && selectedChat?.type === 'direct' && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setShowDirectChatSettings(false)}>
+            <div
+              className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-5 border-b border-gray-100 flex items-center gap-4">
+                <div className="relative">
+                  <SyncAvatar
+                    userId={selectedChat.participants.find(id => id !== user?.uid)}
+                    initialAvatar={getChatAvatar(selectedChat)}
+                    fallbackName={getChatDisplayName(selectedChat)}
+                    size="w-12 h-12"
+                    textClassName="text-lg"
+                    bgColor={themeColor}
+                  />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-gray-900 truncate text-lg">{getChatDisplayName(selectedChat)}</h3>
+                  <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider opacity-80">Online</p>
+                </div>
+                <button
+                  onClick={() => setShowDirectChatSettings(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="p-3 space-y-2">
+                <button
+                  onClick={() => {
+                    const otherUserId = selectedChat.participants.find(id => id !== user?.uid)
+                    if (otherUserId) setShowUserProfile(otherUserId)
+                    setShowDirectChatSettings(false)
+                  }}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-emerald-50 rounded-2xl transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-gray-800">View Profile</p>
+                    <p className="text-[10px] text-gray-500 font-medium">Media, info & status</p>
+                  </div>
+                  <ChevronLeft className="w-4 h-4 text-gray-300 rotate-180" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowMessageSearch(true)
+                    setShowDirectChatSettings(false)
+                  }}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-blue-50 rounded-2xl transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                    <Search className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-gray-800">Search Messages</p>
+                    <p className="text-[10px] text-gray-500 font-medium">Find specific history</p>
+                  </div>
+                  <ChevronLeft className="w-4 h-4 text-gray-300 rotate-180" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (confirm('Clear all messages in this chat? This cannot be undone.')) {
+                      alert('This feature will be available in the next update!')
+                    }
+                    setShowDirectChatSettings(false)
+                  }}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-red-50 rounded-2xl transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-red-600">Clear Chat</p>
+                    <p className="text-[10px] text-red-400 font-medium">Remove history</p>
+                  </div>
+                  <ChevronLeft className="w-4 h-4 text-gray-300 rotate-180" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-gray-50 border-t border-gray-100">
+                <button
+                  onClick={() => setShowDirectChatSettings(false)}
+                  className="w-full py-4 bg-white text-gray-500 font-bold rounded-2xl border border-gray-200 hover:bg-gray-100 transition-colors shadow-sm text-sm uppercase tracking-widest"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Profile Editing Modal */}
+        {showMyProfile && (
+          <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center">
+            <div
+              className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="relative h-48 flex-shrink-0"
+                style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -30)} 100%)` }}
+              >
+                <div className="absolute top-4 left-4 flex items-center gap-2 text-white">
+                  <Settings className="w-5 h-5 opacity-80" />
+                  <span className="font-semibold">My Profile</span>
+                </div>
+                <button
+                  onClick={() => setShowMyProfile(false)}
+                  className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/30 rounded-full text-white transition-colors z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="absolute inset-x-0 -bottom-12 flex justify-center">
+                  <div className="relative group">
+                    <div className="w-24 h-24 rounded-full border-4 border-white bg-gray-200 overflow-hidden shadow-lg">
+                      {profile?.profile_image_url ? (
+                        <img src={profile.profile_image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold" style={{ backgroundColor: primaryColor }}>
+                          {profile?.first_name?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                    </div>
+                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity">
+                      <Camera className="w-8 h-8 text-white" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            try {
+                              setIsUploading(true)
+                              const { uploadImageToCloudinary } = await import('@/lib/cloudinary-storage')
+                              const url = await uploadImageToCloudinary(file)
+                              await FirebaseDatabaseService.updateUserProfile(user!.uid, { profile_image_url: url })
+                              await refreshProfile()
+                            } catch (err) {
+                              console.error('Upload failed:', err)
+                            } finally {
+                              setIsUploading(false)
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-16 pb-6 px-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Your Name</label>
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        defaultValue={profile?.first_name + ' ' + (profile?.last_name || '')}
+                        disabled={!isEditingMyProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-0 bg-gray-50 focus:ring-2 focus:ring-emerald-500/20 text-gray-800 font-medium ${!isEditingMyProfile && 'cursor-default'}`}
+                        onBlur={async (e) => {
+                          if (e.target.value.trim() && isEditingMyProfile) {
+                            const [first, ...last] = e.target.value.split(' ')
+                            await FirebaseDatabaseService.updateUserProfile(user!.uid, {
+                              first_name: first,
+                              last_name: last.join(' ')
+                            })
+                            await refreshProfile()
+                            setIsEditingMyProfile(false)
+                          }
+                        }}
+                      />
+                      {!isEditingMyProfile && (
+                        <button
+                          onClick={() => setIsEditingMyProfile(true)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg text-gray-400 transition-colors"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Status / Designation</label>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-800 text-sm">
+                      {profile?.designation || 'Member'}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <Info className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-emerald-800 font-semibold uppercase tracking-tighter">Verified Member</p>
+                        <p className="text-[11px] text-emerald-600 font-medium">Your profile is visible to other rehearsal hub members.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 border-t border-gray-100">
+                <button
+                  onClick={() => setShowMyProfile(false)}
+                  className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   )
 }
@@ -1946,4 +2377,63 @@ function formatFileSize(bytes?: number): string {
   const kb = bytes / 1024
   if (kb < 1024) return kb.toFixed(1) + ' KB'
   return (kb / 1024).toFixed(1) + ' MB'
+}
+
+// ---------------------------------------------------------
+// SyncAvatar: Ensures avatars are consistent with profiles
+// ---------------------------------------------------------
+function SyncAvatar({
+  userId,
+  initialAvatar,
+  fallbackName,
+  size = "w-12 h-12",
+  bgColor,
+  isGroup = false,
+  textClassName = "text-lg",
+  className = ""
+}: {
+  userId?: string,
+  initialAvatar?: string,
+  fallbackName?: string,
+  size?: string,
+  bgColor: string,
+  isGroup?: boolean,
+  textClassName?: string,
+  className?: string
+}) {
+  const [avatar, setAvatar] = useState(initialAvatar)
+
+  useEffect(() => {
+    // If we have an initial avatar, use it immediately
+    if (initialAvatar) setAvatar(initialAvatar)
+  }, [initialAvatar])
+
+  useEffect(() => {
+    // Then try to fetch the latest from profile
+    if (!isGroup && userId) {
+      FirebaseDatabaseService.getUserProfile(userId).then(profileData => {
+        const p = profileData as any
+        if (p?.profile_image_url) {
+          setAvatar(p.profile_image_url)
+        } else if (p?.avatar_url) {
+          setAvatar(p.avatar_url)
+        }
+      }).catch(err => console.error('[SyncAvatar] error:', err))
+    }
+  }, [userId, isGroup])
+
+  return (
+    <div
+      className={`${size} rounded-full flex items-center justify-center text-white font-bold ${textClassName} overflow-hidden shadow-sm flex-shrink-0 ${className}`}
+      style={{ backgroundColor: bgColor }}
+    >
+      {avatar ? (
+        <img src={avatar} alt="" className="w-full h-full object-cover" />
+      ) : isGroup ? (
+        <Users className="w-6 h-6" />
+      ) : (
+        (fallbackName || '?').charAt(0).toUpperCase()
+      )}
+    </div>
+  )
 }

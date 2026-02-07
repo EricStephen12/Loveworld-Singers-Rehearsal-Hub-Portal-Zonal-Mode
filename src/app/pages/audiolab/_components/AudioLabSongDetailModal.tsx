@@ -20,6 +20,7 @@ export function AudioLabSongDetailModal({
     const { currentSong, isPlaying, currentTime, duration, setCurrentSong, togglePlayPause, setCurrentTime: seekTo } = useAudio();
     const [activePart, setActivePart] = useState<VocalPart>('full');
     const [showLyrics, setShowLyrics] = useState(true);
+    const hasAudio = !!(song.audioUrls && Object.values(song.audioUrls).some(url => url && url.length > 0)) || !!song.audioUrl;
 
     // Sync active part with current playing sub-id if applicable
     useEffect(() => {
@@ -188,65 +189,67 @@ export function AudioLabSongDetailModal({
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 bg-[#0f0f12] space-y-6">
 
-                        {/* Audio Player & Parts */}
-                        <div className="bg-[#191022] rounded-2xl p-5 border border-white/5 shadow-sm">
-                            <div className="flex flex-col gap-6">
-                                {/* Player UI */}
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => handlePlayPart(activePart)}
-                                        className="w-12 h-12 rounded-full bg-violet-600 flex items-center justify-center text-white hover:bg-violet-700 active:scale-95 transition-all shrink-0"
-                                    >
-                                        {isThisSongPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} className="ml-1" fill="currentColor" />}
-                                    </button>
+                        {/* Audio Player & Parts (Only if audio available) */}
+                        {hasAudio && (
+                            <div className="bg-[#191022] rounded-2xl p-5 border border-white/5 shadow-sm">
+                                <div className="flex flex-col gap-6">
+                                    {/* Player UI */}
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={() => handlePlayPart(activePart)}
+                                            className="w-12 h-12 rounded-full bg-violet-600 flex items-center justify-center text-white hover:bg-violet-700 active:scale-95 transition-all shrink-0"
+                                        >
+                                            {isThisSongPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} className="ml-1" fill="currentColor" />}
+                                        </button>
 
-                                    <div className="flex-1 space-y-1.5">
-                                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 tabular-nums">
-                                            <span>{formatTime(isThisSongPlaying ? currentTime : 0)}</span>
-                                            <span>{formatTime(isThisSongPlaying ? duration : (song.duration || 0))}</span>
-                                        </div>
-                                        <div className="relative h-6 flex items-center group">
-                                            <div className="absolute inset-x-0 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-violet-500 rounded-full"
-                                                    style={{ width: `${isThisSongPlaying && duration ? (currentTime / duration) * 100 : 0}%` }}
+                                        <div className="flex-1 space-y-1.5">
+                                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 tabular-nums">
+                                                <span>{formatTime(isThisSongPlaying ? currentTime : 0)}</span>
+                                                <span>{formatTime(isThisSongPlaying ? duration : (song.duration || 0))}</span>
+                                            </div>
+                                            <div className="relative h-6 flex items-center group">
+                                                <div className="absolute inset-x-0 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-violet-500 rounded-full"
+                                                        style={{ width: `${isThisSongPlaying && duration ? (currentTime / duration) * 100 : 0}%` }}
+                                                    />
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min={0}
+                                                    max={isThisSongPlaying ? duration || 100 : 100}
+                                                    value={isThisSongPlaying ? currentTime : 0}
+                                                    onChange={handleSeek}
+                                                    disabled={!isThisSongPlaying}
+                                                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
                                                 />
                                             </div>
-                                            <input
-                                                type="range"
-                                                min={0}
-                                                max={isThisSongPlaying ? duration || 100 : 100}
-                                                value={isThisSongPlaying ? currentTime : 0}
-                                                onChange={handleSeek}
-                                                disabled={!isThisSongPlaying}
-                                                className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
-                                            />
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Vocal Parts (Enhanced pills) */}
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Parts</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {availableParts.map((part) => (
-                                            <button
-                                                key={part}
-                                                onClick={() => handlePlayPart(part)}
-                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${activePart === part && isThisSongPlaying
-                                                    ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-500/20'
-                                                    : activePart === part
-                                                        ? 'bg-white/10 text-white border-white/10'
-                                                        : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/20'
-                                                    }`}
-                                            >
-                                                {getPartLabel(part)}
-                                            </button>
-                                        ))}
+                                    {/* Vocal Parts (Enhanced pills) */}
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Available Parts</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availableParts.map((part) => (
+                                                <button
+                                                    key={part}
+                                                    onClick={() => handlePlayPart(part)}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${activePart === part && isThisSongPlaying
+                                                        ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-500/20'
+                                                        : activePart === part
+                                                            ? 'bg-white/10 text-white border-white/10'
+                                                            : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/20'
+                                                        }`}
+                                                >
+                                                    {getPartLabel(part)}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Lyrics Section */}
                         <div className="space-y-3 pb-6">
