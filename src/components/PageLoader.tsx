@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { usePathname, useRouter } from 'next/navigation';
 import CustomLoader from '@/components/CustomLoader';
 import { isPublicPath as checkIsPublicPath, AUTH_CACHE_KEY, ZONE_CACHE_KEY } from '@/config/routes';
@@ -12,8 +13,10 @@ interface PageLoaderProps {
 }
 
 export function PageLoader({ children }: PageLoaderProps) {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isProfileLoading } = useAuth();
   const { currentZone, isLoading: zoneLoading } = useZone();
+  // We explicitly wait for subscription to settle to avoid "flash of wrong rights"
+  const { isLoading: subscriptionLoading } = useSubscription();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -88,10 +91,18 @@ export function PageLoader({ children }: PageLoaderProps) {
     }
 
     // 6. Case 3: Protected Path & User Exists
-    if (user && (!zoneLoading || IsZoneCacheValid())) {
+    // Optimization: If we have valid zone cache OR we have a loaded zone, permit entry.
+    // We do NOT wait for subscriptionLoading because SubscriptionContext now handles optimistic caching.
+    // This removes the "double wait" penalty.
+    const isZoneReady = !zoneLoading || IsZoneCacheValid();
+
+    // We treat profile as "ready" if we have a user object, profile data loads in background mostly.
+    // But if we want to be strict about profile specific data usage, we might check it.
+    // For splash screen speed: User + Zone Cache + (Subscription Cache handles itself) = GO.
+    if (user && isZoneReady) {
       if (!isReady) setIsReady(true);
     }
-  }, [authLoading, user, zoneLoading, pathname, isReady, router]);
+  }, [authLoading, user, zoneLoading, subscriptionLoading, isProfileLoading, pathname, isReady, router]);
 
   // Timeout Fallback: If 5 seconds pass and we're still not ready, force it.
   // This saves users from being stuck on the splash screen due to network hangs.
@@ -106,7 +117,7 @@ export function PageLoader({ children }: PageLoaderProps) {
           setIsReady(true);
         }
       }
-    }, 5000);
+    }, 1500); // Faster fallback for better UX
 
     return () => clearTimeout(timeout);
   }, [isReady, user, pathname, router]);
@@ -118,7 +129,17 @@ export function PageLoader({ children }: PageLoaderProps) {
     return !!cache;
   };
 
-  if (!isReady) {
+  // No Double Loaders: 
+  // If we're optimistically ready or have a cached session, we show the app content immediately.
+  // The pages (like Home) will show their own Skeletons.
+  const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
+
+  if (!isReady && !hasAuthCache) {
+    // DIAGNOSTIC LOG (Silent in prod mostly, but helpful for this fix)
+    if (typeof window !== 'undefined' && !window.location.host.includes('localhost')) {
+      console.log('⚡ PageLoader: Showing initial spinner (No cache found)');
+    }
+
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />

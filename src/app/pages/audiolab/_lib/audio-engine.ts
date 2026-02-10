@@ -85,7 +85,7 @@ class AudioEngine {
       this.notifyStateChange({ isInitialized: !!this.context });
       return !!this.context;
     } catch (error) {
-      console.warn('⚠️ [AudioEngine] Web Audio init failed, continuing in Fallback mode.');
+      console.warn('[AudioEngine] Web Audio init failed, continuing in Fallback mode.');
       return false;
     }
   }
@@ -146,14 +146,14 @@ class AudioEngine {
       const success = this.audioBuffers.size > 0;
 
       if (!success && urls.full) {
-        console.warn('⚠️ [AudioEngine] Web Audio buffers failed. Attempting HTML5 Audio Fallback (CORS workaround)...');
+
         return await this.loadFallback(urls.full);
       }
 
       this.useFallback = false;
       return success;
     } catch (error) {
-      console.error('❌ [AudioEngine] Critical error in loadSongParts:', error);
+      console.error('[AudioEngine] Critical error in loadSongParts:', error);
       if (urls.full) return await this.loadFallback(urls.full);
       return false;
     }
@@ -167,7 +167,7 @@ class AudioEngine {
         this.fallbackAudio.load();
       }
 
-      console.log('🔗 [AudioEngine] Initializing Fallback Player for:', url);
+
       const audio = new Audio();
       audio.crossOrigin = "anonymous";
       audio.src = url;
@@ -193,7 +193,7 @@ class AudioEngine {
       };
 
       const onError = (e: any) => {
-        console.error('❌ [AudioEngine] Fallback Player Error:', audio.error || e);
+        console.error('[AudioEngine] Fallback Player Error:', audio.error || e);
         resolve(false);
       };
 
@@ -214,7 +214,7 @@ class AudioEngine {
 
   async play(part?: VocalPart): Promise<boolean> {
     if (this.useFallback && this.fallbackAudio) {
-      console.log('🚀 [AudioEngine] Playing via Fallback Engine');
+
       this.isPlaying = true;
       this.fallbackAudio.play();
       return true;
@@ -284,7 +284,7 @@ class AudioEngine {
 
       return true;
     } catch (error) {
-      console.error('❌ [AudioEngine] Play error:', error);
+      console.error('[AudioEngine] Play error:', error);
       if (requestId === this.playRequestId) {
         this.isPlaying = false;
       }
@@ -372,7 +372,7 @@ class AudioEngine {
 
   async switchPart(part: VocalPart): Promise<boolean> {
     if (this.useFallback) {
-      console.warn('⚠️ [AudioEngine] Part switching is disabled in Fallback (CORS) mode.');
+      console.warn('[AudioEngine] Part switching is disabled in Fallback (CORS) mode.');
       return false;
     }
 

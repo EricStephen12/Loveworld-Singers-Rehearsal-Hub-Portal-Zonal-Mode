@@ -138,7 +138,7 @@ export function LibraryView() {
   }, [searchParams]);
 
   useEffect(() => {
-    console.log('🔄 [LibraryView] Triggering loadSongs due to change:', { selectedProgramId, metadataTimestamp, pagesCount: praiseNightPages.length });
+
     loadSongs();
   }, [selectedProgramId, metadataTimestamp, praiseNightPages.length]);
 
@@ -166,18 +166,18 @@ export function LibraryView() {
 
     if (!pageIdToSubscribe) return;
 
-    console.log(`📡 [LibraryView] Subscribing to song metadata for page ${pageIdToSubscribe}`);
+    // Subscribing to song metadata
     const unsubscribe = FirebaseMetadataService.subscribeToPraiseNightSongsMetadata(
       currentZone.id,
       pageIdToSubscribe,
       (timestamp) => {
-        console.log(`🔔 [LibraryView] Song list update detected for ${pageIdToSubscribe}`);
+
         setMetadataTimestamp(timestamp);
       }
     );
 
     return () => {
-      console.log(`🔌 [LibraryView] Unsubscribing from ${pageIdToSubscribe}`);
+
       unsubscribe();
     };
   }, [currentZone?.id, selectedProgramId, praiseNightPages]);
@@ -231,13 +231,13 @@ export function LibraryView() {
         } else {
           // Check for cached data in context for 'all' view
           if (!isManualRefresh && state.libraryData.songs.length > 0) {
-            console.log('📦 [LibraryView] Using cached all-songs from context');
+
             songsList = state.libraryData.songs.map(toLeagcySong);
             setTotalCount(state.libraryData.totalCount);
             setLastVisibleDoc(state.libraryData.lastDoc);
             setHasMore(state.libraryData.hasMore);
           } else {
-            console.log('🚀 [LibraryView] Cache empty or manual refresh. Triggering context load...');
+
             await loadLibraryData(currentZone?.id || '', ITEMS_PER_PAGE, isManualRefresh);
 
             if (!isManualRefresh && state.libraryData.songs.length > 0) {
@@ -257,7 +257,7 @@ export function LibraryView() {
       if (selectedProgramId === 'all') {
         const hasMoreData = songsList.length >= ITEMS_PER_PAGE;
         setHasMore(hasMoreData);
-        console.log(`✅ [LibraryView] All songs loaded. hasMore: ${hasMoreData}`);
+
       } else {
         setHasMore(false);
       }

@@ -126,7 +126,7 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
     setIsSending(true);
     try {
       await sendChatMessage(sessionId, { type: 'text', content: text, senderId: user.uid, senderName: fullName, ...(userAvatar && { senderAvatar: userAvatar }) });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error('Failed to send message:', e); }
     setIsSending(false);
   };
 

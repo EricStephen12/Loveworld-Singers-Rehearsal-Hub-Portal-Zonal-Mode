@@ -103,11 +103,11 @@ export function useRealtimeData(zoneId?: string) {
         const isCacheValid = cachedData && lastFetchTime && (now - lastFetchTime < CACHE_TTL)
 
         if (isCacheValid) {
-          console.log('📦 [PraiseNights] Using fresh cache (0 Reads)')
+
           if (isMounted) setPages(cachedData)
           setLoading(false)
         } else {
-          console.log('🌍 [PraiseNights] Cache stale or missing. Fetching from Firebase...')
+
           if (cachedData && isMounted) setPages(cachedData)
           await fetchAndCache()
         }
@@ -123,11 +123,11 @@ export function useRealtimeData(zoneId?: string) {
     loadInitialData();
 
     // 2. Subscribe to Page Metadata (The Magic)
-    console.log(`📡 [Realtime] Subscribing to praise_nights metadata for ${zoneId}...`);
+
     const unsubPraiseNights = FirebaseMetadataService.subscribeToMetadata(zoneId, 'praise_nights', async (serverTimestamp) => {
       const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}`) || 0
       if (serverTimestamp > lastKnownTimestamp) {
-        console.log('🔔 [Realtime] Praise Nights metadata update detected!')
+
         await fetchAndCache(serverTimestamp)
       }
     });
@@ -135,20 +135,20 @@ export function useRealtimeData(zoneId?: string) {
 
     // 3. Subscribe to Category Metadata (Ensures category changes are picked up)
     const unsubCategories = FirebaseMetadataService.subscribeToMetadata(zoneId, 'categories', () => {
-      console.log('🔔 [Realtime] Categories metadata update detected! Invalidating cache...');
+
       ZoneDatabaseService.invalidateCategoriesCache(zoneId!);
     });
     unsubscribes.push(unsubCategories);
 
     const unsubPageCategories = FirebaseMetadataService.subscribeToMetadata(zoneId, 'page_categories', () => {
-      console.log('🔔 [Realtime] Page Categories metadata update detected! Invalidating cache...');
+
       ZoneDatabaseService.invalidatePageCategoriesCache(zoneId!);
     });
     unsubscribes.push(unsubPageCategories);
 
     return () => {
       isMounted = false;
-      console.log(`🔌 [Realtime] Cleaning up ${unsubscribes.length} listeners for ${zoneId}`);
+
       unsubscribes.forEach(unsub => unsub());
     }
   }, [zoneId])
@@ -179,7 +179,7 @@ export function useRealtimeData(zoneId?: string) {
         setLoading(true)
         setError(null)
 
-        console.log('🔄 [PraiseNights] Manual Refresh: Bypassing Cache...')
+
         const updatedPages = await fetchFirebaseData(zoneId)
         setPages(updatedPages)
 

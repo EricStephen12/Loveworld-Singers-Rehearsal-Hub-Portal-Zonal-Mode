@@ -694,6 +694,43 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com'];
     }
 
+    // ===== PAYMENT TRACKING SYSTEM =====
+    
+    // Payment Records (Detailed payment information)
+    // Payment Records (Detailed payment information)
+    match /payment_records/{paymentId} {
+      // Allow read/create for system/server compatibility
+      allow read, create: if true;
+      allow update, delete: if request.auth != null;
+    }
+
+    // Subscription Audit Logs (Immutable audit trail)
+    match /subscription_audit_logs/{logId} {
+      allow read, create: if true;
+      allow update: if false;
+      allow delete: if request.auth != null; // HQ admin can delete if needed
+    }
+
+    // Zone Subscriptions (Zone-level subscriptions)
+    match /zone_subscriptions/{zoneId} {
+      // Zone members can read their zone's subscription
+      allow read: if request.auth != null;
+      // Only system/webhook and HQ admins can write
+      allow write: if true;  // Allow webhook and admin to manage
+    }
+
+    // Payments Collection (KingsPay webhook data)
+    match /payments/{paymentId} {
+      // HQ admins can read all payments
+      allow read: if request.auth != null && 
+                     request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com', 'joykures@gmail.com'];
+      // Only webhook can create payments
+      allow create: if true;  // Allow webhook to create
+      // HQ admins can update/delete
+      allow update, delete: if request.auth != null && 
+                               request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com', 'joykures@gmail.com'];
+    }
+
     // ===== DEFAULT DENY ALL =====
     match /{document=**} {
       allow read, write: if false;

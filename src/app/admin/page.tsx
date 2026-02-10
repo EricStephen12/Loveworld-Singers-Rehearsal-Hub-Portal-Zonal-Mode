@@ -38,6 +38,7 @@ const CalendarSection = dynamic(() => import('../../components/admin/CalendarSec
 const ActivityLogsPage = dynamic(() => import('../../components/admin/ActivityLogsPage'), { ssr: false });
 const SupportChatSection = dynamic(() => import('../../components/admin/SupportChatSection'), { ssr: false });
 const SubmittedSongsPage = dynamic(() => import('../pages/admin/submitted-songs/page'), { ssr: false });
+const PaymentDashboardSection = dynamic(() => import('../../components/admin/PaymentDashboardSection'), { ssr: false });
 const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
@@ -178,7 +179,7 @@ function AdminContent() {
       const validSections = [
         'Dashboard', 'Pages', 'Categories', 'Media', 'Library',
         'Members', 'Notifications', 'Sub-Groups', 'Analytics',
-        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat'
+        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat', 'Payments'
       ];
       if (validSections.includes(sectionParam)) {
         setActiveSection(sectionParam);
@@ -1274,7 +1275,7 @@ function AdminContent() {
         throw new Error('Invalid song ID for active status update');
       }
 
-      console.log('🎯 [Admin] Toggling active status:', {
+      console.debug('🎯 [Admin] Toggling active status:', {
         songId: song.id,
         songTitle: song.title,
         currentActive: (song as any).isActive,
@@ -1610,6 +1611,7 @@ function AdminContent() {
 
           {activeSection === 'Dashboard' && !isRestrictedAdmin && <DashboardSection onSectionChange={setActiveSection} />}
           {activeSection === 'Analytics' && isHQAdmin && !isRestrictedAdmin && <AnalyticsSection />}
+          {activeSection === 'Payments' && isHQAdmin && !isRestrictedAdmin && <PaymentDashboardSection />}
 
           {activeSection === 'Pages' && (
             <PagesSection

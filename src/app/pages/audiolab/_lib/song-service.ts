@@ -154,7 +154,7 @@ export async function getSongsPaginated(
     if (!lastDoc) {
       const cached = paginatedCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        console.log('📦 [SongService] Using cached first page of songs');
+
         return cached.data;
       }
     }
@@ -260,7 +260,7 @@ export async function getTotalSongCount(): Promise<number> {
   try {
     // Check cache
     if (countCache && Date.now() - countCache.timestamp < CACHE_TTL) {
-      console.log('📦 [SongService] Using cached total song count');
+
       return countCache.value;
     }
 

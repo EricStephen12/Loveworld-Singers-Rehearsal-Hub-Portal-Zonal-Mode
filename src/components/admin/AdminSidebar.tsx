@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Calendar,
   Activity,
+  DollarSign,
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
@@ -73,6 +74,7 @@ const AdminSidebar = React.memo(({
     { icon: Upload, label: 'Video Manager', active: activeSection === 'Video Manager', hqZoneOnly: true },
     { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar', hqZoneOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
+    { icon: DollarSign, label: 'Payments', active: activeSection === 'Payments', hqOnly: true },
     { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
   ];
 

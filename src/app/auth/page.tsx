@@ -104,6 +104,9 @@ function AuthPageContent() {
 
   // Check for URL parameters on mount (error, recovery)
   useEffect(() => {
+    // Prefetch for instant login
+    router.prefetch('/home')
+
     const urlParams = new URLSearchParams(window.location.search)
     const urlError = urlParams.get('error')
     const urlMessage = urlParams.get('message')
@@ -304,13 +307,15 @@ function AuthPageContent() {
           sessionStorage.setItem('justLoggedIn', 'true')
         }
 
-        // Redirect after showing success message
+        // Redirect after showing success message - Faster transition (500ms)
         setTimeout(() => {
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('justLoggedIn')
+            const { AUTH_CACHE_KEY } = require('@/config/routes')
+            localStorage.setItem(AUTH_CACHE_KEY, 'true')
           }
-          router.push('/home')
-        }, 1000)
+          router.replace('/home')
+        }, 500)
       }
     } catch (error: any) {
       console.error('Auth error:', error)

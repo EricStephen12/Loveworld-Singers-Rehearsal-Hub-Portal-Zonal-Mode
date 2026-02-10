@@ -63,6 +63,12 @@ export default function SplashPage() {
     }
   }, [pathname, router])
 
+  // Big Tech optimization: If we know we're redirecting, show NOTHING to prevent the "old loader" flicker
+  const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
+  const isRedirecting = (pathname === '/' && hasAuthCache);
+
+  if (isRedirecting) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-4">
       <link rel="preload" href="/logo.png" as="image" />

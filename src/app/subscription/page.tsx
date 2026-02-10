@@ -30,11 +30,35 @@ export default function SubscriptionPage() {
   const [isCancelling, setIsCancelling] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState<'plans' | 'success' | 'manage'>('plans')
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  // Load payment history when on manage view
+  const loadPaymentHistory = async () => {
+    if (!user) return
+
+    setLoadingHistory(true)
+    try {
+      const response = await fetch(`/api/payments/history?userId=${user.uid}`)
+      if (response.ok) {
+        const data = await response.json()
+        setPaymentHistory(data.payments || [])
+      }
+    } catch (error) {
+      console.error('Error loading payment history:', error)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
 
   // Keep state in sync with premium status
   useEffect(() => {
     if (!subLoading && isPremiumTier && step === 'plans') {
       setStep('manage')
+    }
+    // Load payment history when entering manage view
+    if (step === 'manage' && isPremiumTier) {
+      loadPaymentHistory()
     }
   }, [isPremiumTier, step, subLoading])
 
@@ -60,7 +84,7 @@ export default function SubscriptionPage() {
         type: 'individual_subscription'
       }
 
-      console.log('💎 Initializing payment with payload:', payload)
+
 
       const response = await fetch('/api/kingspay/initialize', {
         method: 'POST',
@@ -70,16 +94,16 @@ export default function SubscriptionPage() {
         body: JSON.stringify(payload)
       })
 
-      console.log('💎 API Response Status:', response.status)
+
 
       let data
       const responseText = await response.text()
-      console.log('💎 API Response Text:', responseText)
+
 
       try {
         data = JSON.parse(responseText)
       } catch (parseErr) {
-        console.error('💎 Failed to parse API response:', parseErr)
+        console.error('Failed to parse API response:', parseErr)
         setError('Server returned an invalid response. Please check your connection.')
         setIsProcessing(false)
         return
@@ -288,6 +312,132 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
+            {/* Payment History Section */}
+            {isIndividualPremium && (
+              <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden mb-8">
+                <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                  <h3 className="text-lg font-bold text-gray-900">Payment History</h3>
+                  <p className="text-sm text-gray-500">View all your subscription payments</p>
+                </div>
+
+                <div className="p-8">
+                  {loadingHistory ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-8 h-8 border-3 border-purple-600/30 border-t-purple-600 rounded-full animate-spin" />
+                    </div>
+                  ) : paymentHistory.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <CreditCard className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 font-medium">No payment history yet</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto -mx-8 px-8">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Period</th>
+                            <th className="text-right py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Receipt</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {paymentHistory.map((payment) => (
+                            <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="py-4 px-4">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </td>
+                              <td className="py-4 px-4">
+                                <p className="text-sm font-bold text-gray-900">
+                                  {payment.amount / 100} {payment.currency}
+                                </p>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${payment.status === 'success'
+                                  ? 'bg-green-100 text-green-700'
+                                  : payment.status === 'pending'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : payment.status === 'refunded'
+                                      ? 'bg-orange-100 text-orange-700'
+                                      : 'bg-red-100 text-red-700'
+                                  }`}>
+                                  {payment.status.toUpperCase()}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <p className="text-xs text-gray-500">
+                                  {payment.subscriptionPeriod?.start && payment.subscriptionPeriod?.end ? (
+                                    <>
+                                      {new Date(payment.subscriptionPeriod.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                      {' - '}
+                                      {new Date(payment.subscriptionPeriod.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </>
+                                  ) : 'N/A'}
+                                </p>
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(`/api/payments/receipt/${payment.id}`)
+                                      if (response.ok) {
+                                        const data = await response.json()
+                                        const receiptWindow = window.open('', '_blank')
+                                        if (receiptWindow) {
+                                          receiptWindow.document.write(`
+                                            <html>
+                                              <head>
+                                                <title>Receipt - ${payment.paymentCode || payment.id}</title>
+                                                <style>
+                                                  body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+                                                  h1 { color: #6366f1; }
+                                                  .detail { margin: 10px 0; }
+                                                  .label { font-weight: bold; }
+                                                </style>
+                                              </head>
+                                              <body>
+                                                <h1>Payment Receipt</h1>
+                                                <div class="detail"><span class="label">Receipt ID:</span> ${data.receipt.paymentCode || data.receipt.id}</div>
+                                                <div class="detail"><span class="label">Date:</span> ${new Date(data.receipt.createdAt).toLocaleString()}</div>
+                                                <div class="detail"><span class="label">Amount:</span> ${data.receipt.amount / 100} ${data.receipt.currency}</div>
+                                                <div class="detail"><span class="label">Status:</span> ${data.receipt.status}</div>
+                                                <div class="detail"><span class="label">Subscription Type:</span> ${data.receipt.subscriptionType}</div>
+                                                <div class="detail"><span class="label">Period:</span> ${new Date(data.receipt.subscriptionPeriod.start).toLocaleDateString()} - ${new Date(data.receipt.subscriptionPeriod.end).toLocaleDateString()}</div>
+                                                <div class="detail"><span class="label">User:</span> ${data.receipt.userName} (${data.receipt.userEmail})</div>
+                                              </body>
+                                            </html>
+                                          `)
+                                        }
+                                      }
+                                    } catch (error) {
+                                      console.error('Error fetching receipt:', error)
+                                      alert('Failed to load receipt')
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ml-auto"
+                                >
+                                  <Info className="w-3.5 h-3.5" />
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <button
               onClick={() => router.push('/home')}
               className="w-full py-6 bg-gray-900 text-white rounded-[2rem] font-black text-xl shadow-2xl hover:bg-purple-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
@@ -309,6 +459,33 @@ export default function SubscriptionPage() {
                 {isIndividualPremium ? 'You are a Premium Individual member' : 'You have Complimentary Premium access'}
               </p>
             </div>
+
+            {/* Expiring Soon Alert */}
+            {isIndividualPremium && daysRemaining !== null && daysRemaining <= 7 && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-[2rem] p-6 mb-8 shadow-lg">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <AlertCircle className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-black text-amber-900 mb-1">Subscription Expiring Soon</h3>
+                    <p className="text-amber-800 text-sm mb-4">
+                      Your Premium subscription expires in <strong>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</strong>.
+                      Renew now to maintain uninterrupted access.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setStep('plans')
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md"
+                    >
+                      Renew Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden mb-8">
               <div className="p-8 border-b border-gray-50 bg-gray-50/50">

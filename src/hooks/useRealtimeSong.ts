@@ -33,7 +33,7 @@ export function useRealtimeSong(
 
         try {
             setError(null)
-            console.log(`🔄 [Song] Fetching song ${songId}...`)
+
             const songData = await PraiseNightSongsService.getSongById(songId, zoneId)
             setSong(songData)
         } catch (err) {
@@ -61,7 +61,7 @@ export function useRealtimeSong(
         fetchSong()
 
         // 2. Subscribe to metadata changes
-        console.log(`📡 [Song] Setting up realtime listener for song ${songId}...`)
+
         const unsubscribe = FirebaseMetadataService.subscribeToSongMetadata(
             zoneId,
             praiseNightId,
@@ -69,7 +69,7 @@ export function useRealtimeSong(
             async (timestamp) => {
                 if (timestamp > 0) {
                     // Metadata changed! Re-fetch the song
-                    console.log(`🔔 [Song] Metadata update detected for song ${songId}! Fetching fresh data...`)
+
                     await fetchSong()
                 }
             }
@@ -77,7 +77,7 @@ export function useRealtimeSong(
 
         // 3. Cleanup on unmount
         return () => {
-            console.log(`🔌 [Song] Unsubscribing from song ${songId} metadata`)
+
             unsubscribe()
         }
     }, [zoneId, praiseNightId, songId, fetchSong])

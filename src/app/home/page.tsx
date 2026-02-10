@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import CustomLoader from '@/components/CustomLoader'
+import { DashboardSkeleton } from '@/components/DashboardSkeleton'
 
 import { Music, Calendar, Users, BarChart3, Search, X, Home, User, Bell, HelpCircle, Flag, Play, ChevronDown, ChevronUp, Info, Shield, Lock, Mic, Sparkles, Crown, ArrowRight } from 'lucide-react'
 import { Suspense } from 'react'
@@ -336,19 +337,17 @@ function HomePageContent() {
 
   const isBossZone = currentZone?.id === 'zone-boss'
 
-  // OPTIMIZED: Don't show full-screen loading for zone
-  // Zone data is cached, so this should be instant most of the time
-  // Only show loading if we're truly loading AND have no zone data at all
+  // OPTIMIZED: Show Skeleton instead of blocking loader
+  // This provides immediate structure matching the visual layout
+  if (zoneLoading && !currentZone) {
+    return <DashboardSkeleton />
+  }
 
   // Show join zone prompt if user has no zone (after loading completes and retries exhausted)
   if (!zoneLoading && !currentZone && user && initialLoadComplete) {
     // If still retrying or haven't exhausted retries, show loading/retry screen
     if (isRetrying || retryCount < 2) {
-      return (
-        <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50 p-4">
-          <CustomLoader message="" />
-        </div>
-      )
+      return <DashboardSkeleton />
     }
 
     // After retries exhausted, show options
@@ -637,7 +636,7 @@ function HomePageContent() {
                     if (feature.title === 'Submit Song') featureKey = 'customSongs'
                     if (feature.title === 'Analytics') featureKey = 'analytics'
 
-                    const hasAccess = !isPremiumFeature || hasFeature(featureKey)
+                    const hasAccess = !isPremiumFeature || hasFeature(featureKey as any)
                     const isExternal = (feature as any).external
 
                     const handleClick = (e: React.MouseEvent) => {

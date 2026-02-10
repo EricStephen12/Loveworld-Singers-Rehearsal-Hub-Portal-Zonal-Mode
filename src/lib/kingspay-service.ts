@@ -43,7 +43,7 @@ export async function initializeKingsPayPayment(
       return { success: false, error: 'Payment system not configured' }
     }
 
-    console.log(`Sending request to KingsPay: ${KINGSPAY_CONFIG.apiUrl}/initialize`)
+
 
     // Add a timeout to the fetch request
     const controller = new AbortController()
@@ -67,7 +67,7 @@ export async function initializeKingsPayPayment(
       requestBody.email = params.email
     }
 
-    console.log('Final KingsPay payload:', JSON.stringify(requestBody, null, 2))
+
 
     const response = await fetch(`${KINGSPAY_CONFIG.apiUrl}/initialize`, {
       method: 'POST',
@@ -82,7 +82,6 @@ export async function initializeKingsPayPayment(
     clearTimeout(timeoutId)
 
     const responseText = await response.text()
-    console.log(`KingsPay Raw Response (${response.status}):`, responseText)
 
     let data
     try {

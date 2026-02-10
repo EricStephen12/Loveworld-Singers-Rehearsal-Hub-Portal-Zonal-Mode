@@ -516,7 +516,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     // Only join if we are logged in
     // This depends on external auth state which might not be in this context
     // But we can check if we have enough info to show the loading state
-    console.log('[AudioLabContext] Auto-joining room:', roomId);
+
     // We will rely on individual components (LiveSessionView or CollabView) 
     // to handle the actual join logic once the view is set
   };
@@ -590,7 +590,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Engine now handles fallback internally, so we don't strictly require isAudioInitialized for HTML5 mode
     if (state.player.isPlaying && !isLoadingRef.current) {
-      audioEngine.play().catch(err => console.error('❌ [AudioLabContext] Auto-play failed:', err));
+      audioEngine.play().catch(err => console.error('[AudioLabContext] Auto-play failed:', err));
     } else if (!state.player.isPlaying) {
       audioEngine.pause();
     }
@@ -642,7 +642,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       updateUrl(state.currentView, state.currentProjectId, state.session.currentSession?.id, legacySong.title);
 
       // Load audio
-      console.log(`💎 [AudioLabContext] Fetching audio parts for: ${legacySong.title}`);
+
       const audioUrls: AudioUrls = legacySong.audioUrls || { full: legacySong.audioUrl };
 
       const loaded = await audioEngine.loadSongParts(audioUrls);
@@ -651,21 +651,21 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
       if (loaded) {
         const duration = audioEngine.getDuration();
-        console.log(`✅ [AudioLabContext] Audio loaded successfully. Duration: ${duration}s`);
+        // Audio loaded successfully
         dispatch({ type: 'SET_DURATION', payload: duration });
 
         // Only start playing if the user hasn't paused while we were loading
         if (stateRef.current.player.isPlaying) {
-          console.log('🚀 [AudioLabContext] Triggering engine.play()');
+
           const started = await audioEngine.play();
-          if (!started) console.error('❌ [AudioLabContext] AudioEngine failed to start playback');
+          if (!started) console.error('[AudioLabContext] AudioEngine failed to start playback');
         }
       } else {
-        console.error('❌ [AudioLabContext] Failed to load audio parts. Check CORS or URL validity.', audioUrls);
+        console.error('[AudioLabContext] Failed to load audio parts. Check CORS or URL validity.', audioUrls);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load audio' });
       }
     } catch (error) {
-      console.error('❌ [AudioLabContext] Error in playSong flow:', error);
+      console.error('[AudioLabContext] Error in playSong flow:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to play song' });
     } finally {
       isLoadingRef.current = false;
@@ -793,11 +793,11 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     const { lastFetched, projects } = stateRef.current.homeData;
 
     if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && projects.length > 0) {
-      console.log('📦 [AudioLabContext] Using cached home data');
+
       return;
     }
 
-    console.log('🚀 [AudioLabContext] Fetching home data from Firestore...');
+
     try {
       const { getUserProjects } = await import('../_lib/project-service');
       const { getSongs } = await import('../_lib/song-service');
@@ -824,11 +824,11 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     const { lastFetched, progress } = stateRef.current.practiceData;
 
     if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && progress) {
-      console.log('📦 [AudioLabContext] Using cached practice data');
+
       return;
     }
 
-    console.log('🚀 [AudioLabContext] Fetching practice data from Firestore...');
+
     try {
       const { getUserProgress, getWeeklyStats } = await import('../_lib/practice-service');
       const { getSongs } = await import('../_lib/song-service');
@@ -848,7 +848,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
         }
       });
     } catch (error) {
-      console.error('❌ [AudioLabContext] Error loading practice data:', error);
+      console.error('[AudioLabContext] Error loading practice data:', error);
     }
   }, []);
 
@@ -857,11 +857,11 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     const { lastFetched, songs } = stateRef.current.libraryData;
 
     if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) {
-      console.log('📦 [AudioLabContext] Using cached library data');
+
       return;
     }
 
-    console.log('🚀 [AudioLabContext] Fetching library songs (Master + Praise Night)...');
+
     try {
 
       // Execute fetches in parallel
@@ -922,7 +922,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
         }
       });
     } catch (error) {
-      console.error('❌ [AudioLabContext] Error loading library data:', error);
+      console.error('[AudioLabContext] Error loading library data:', error);
     }
   }, []);
 

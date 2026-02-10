@@ -17,7 +17,7 @@ if (!admin.apps.length) {
                 }),
                 databaseURL
             });
-            console.log('✅ Firebase Admin initialized successfully');
+
         } else {
             console.warn('⚠️ Firebase Admin credentials missing');
         }

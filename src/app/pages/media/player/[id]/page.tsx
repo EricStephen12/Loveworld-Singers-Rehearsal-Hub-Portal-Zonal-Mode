@@ -111,7 +111,7 @@ function PlayerContent() {
           url: window.location.href
         })
       } catch (err) {
-        console.log('Share cancelled')
+        // Share cancelled
       }
     } else {
       navigator.clipboard.writeText(window.location.href)

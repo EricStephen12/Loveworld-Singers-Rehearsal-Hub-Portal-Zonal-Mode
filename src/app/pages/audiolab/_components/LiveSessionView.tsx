@@ -136,7 +136,7 @@ export function LiveSessionView() {
     });
 
     webRTCService.current.setOnRemoteStreamAdded((userId, stream) => {
-      console.log(`[LiveSession] Remote stream added from ${userId}`);
+
       setRemoteStreams(prev => new Map(prev).set(userId, stream));
     });
 
@@ -157,7 +157,7 @@ export function LiveSessionView() {
           // Mesh Logic: If someone NEW joins and their ID is "higher" than mine, I'll initiate.
           // This prevents double-offers.
           if (p.id !== user.uid && user.uid < p.id) {
-            console.log(`[WebRTC] Initiating mesh connection to NEW participant: ${p.id}`);
+
             webRTCService.current?.initiateConnection(p.id);
           }
 
@@ -187,7 +187,7 @@ export function LiveSessionView() {
       const currentParticipants = participants.filter(p => p.id !== user.uid);
       for (const p of currentParticipants) {
         if (user.uid < p.id) {
-          console.log(`[WebRTC] Initiating mesh connection to EXISTING participant: ${p.id}`);
+
           webRTCService.current?.initiateConnection(p.id);
         }
       }

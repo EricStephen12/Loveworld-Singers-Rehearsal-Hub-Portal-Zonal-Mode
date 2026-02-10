@@ -50,12 +50,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
 
     if (pages.length === 0) return []
 
-    console.log('[Debug] ZoneID:', zoneId)
-    console.log('[Debug] Pages Found:', pages.length)
-    console.log('[Debug] Songs Found:', allZoneSongs.length)
-    if (allZoneSongs.length > 0) {
-      console.log('[Debug] Sample Song:', allZoneSongs[0])
-    }
+
 
     return pages.map((page) => ({
       id: page.id,

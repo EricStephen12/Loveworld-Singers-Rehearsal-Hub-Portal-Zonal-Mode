@@ -44,7 +44,7 @@ class NavigationStateManager {
             const idbState = await persistentStorage.getItem<NavigationState>(this.STATE_KEY);
             if (idbState && !localStorage.getItem(this.STATE_KEY)) {
                 localStorage.setItem(this.STATE_KEY, JSON.stringify(idbState));
-                console.log('✅ Navigation state restored from IndexedDB');
+
             }
         } catch (error) {
             console.warn('Failed to init navigation state from IDB:', error);

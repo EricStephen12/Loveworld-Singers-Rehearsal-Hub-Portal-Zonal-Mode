@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { FirebaseDatabaseService } from './firebase-database'
 import { HQMembersService } from './hq-members-service'
 import { HQInvitationService } from './hq-invitation-service'
-import { ZONES, getZoneByInvitationCode, isHQGroup } from '@/config/zones'
+import { ZONES, getZoneByInvitationCode, isHQGroup, Zone } from '@/config/zones'
+import { UserProfile } from '@/types/supabase'
 
 export class ZoneInvitationService {
 
@@ -50,7 +50,9 @@ export class ZoneInvitationService {
         }
       }
 
-      const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id)
+      // We explicitly check legacy document structure or standard zone structure
+      const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id) as any
+      const currentMemberCount = zoneData?.memberCount || 0
 
       if (!zoneData) {
         await FirebaseDatabaseService.createDocument('zones', zone.id, {
@@ -127,7 +129,7 @@ export class ZoneInvitationService {
     try {
       const zonesWithStats = await Promise.all(
         ZONES.map(async (zone) => {
-          const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id)
+          const zoneData = await FirebaseDatabaseService.getDocument('zones', zone.id) as any
 
           const members = isHQGroup(zone.id)
             ? await HQMembersService.getHQGroupMembers(zone.id)
@@ -181,7 +183,7 @@ export class ZoneInvitationService {
       } else {
         await FirebaseDatabaseService.deleteDocument('zone_members', memberId)
 
-        const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId)
+        const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId) as any
         if (zoneData) {
           await FirebaseDatabaseService.updateDocument('zones', zoneId, {
             memberCount: Math.max(0, (zoneData.memberCount || 1) - 1),

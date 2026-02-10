@@ -1,14 +1,7 @@
-﻿// @ts-nocheck
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
-import { useSubscription } from '@/contexts/SubscriptionContext'
-import { FirebaseDatabaseService } from '@/lib/firebase-database'
-import { canSeeUpgradePrompts } from '@/lib/user-role-utils'
-import { Users, AlertTriangle, Crown } from 'lucide-react'
 
 interface MemberLimitGuardProps {
   onLimitReached?: () => void;

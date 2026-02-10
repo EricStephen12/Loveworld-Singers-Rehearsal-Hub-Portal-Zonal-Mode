@@ -1,11 +1,10 @@
-﻿// @ts-nocheck
-'use client'
+﻿'use client'
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { useZone } from '@/hooks/useZone'
 import { useAuth } from '@/hooks/useAuth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
-import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit } from '@/config/subscriptions'
+import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit, SubscriptionFeatures } from '@/config/subscriptions'
 import { isBoss } from '@/lib/user-role-utils'
 import { bypassesFeatureGates } from '@/config/zones'
 
@@ -21,13 +20,13 @@ interface Subscription {
   currency?: string;
   createdAt: Date;
   updatedAt: Date;
-  type?: 'zone' | 'individual';
+  type?: 'zone' | 'individual' | 'official';
 }
 
 interface SubscriptionContextType {
   subscription: Subscription | null;
   isLoading: boolean;
-  hasFeature: (feature: string) => boolean;
+  hasFeature: (feature: keyof SubscriptionFeatures) => boolean;
   canAddMember: () => Promise<boolean>;
   memberLimit: number;
   isFreeTier: boolean;
@@ -41,46 +40,91 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
+const SUBSCRIPTION_CACHE_KEY = 'lwsrh-subscription-cache-v1'
+
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const { currentZone } = useZone()
+  const { currentZone, isLoading: isZoneLoading } = useZone()
   const { user, profile } = useAuth()
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  // Initialize from cache if possible
+  const [subscription, setSubscription] = useState<Subscription | null>(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const cached = localStorage.getItem(SUBSCRIPTION_CACHE_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        // Check if cache is fresh (e.g. < 1 hour) - simplistic check for now
+        return {
+          ...parsed,
+          startDate: new Date(parsed.startDate),
+          expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null,
+          createdAt: new Date(parsed.createdAt),
+          updatedAt: new Date(parsed.updatedAt)
+        }
+      }
+    } catch (e) { console.error('Cache parse error', e) }
+    return null
+  })
+
+  // Start loading if we don't have a subscription, or if we just want to refresh safely
+  // If we have a cached subscription, we are NOT loading visually (optimistic)
+  const [isLoading, setIsLoading] = useState(!subscription)
 
   // Load individual subscription
   const loadSubscription = async () => {
     if (!user) {
       setSubscription(null)
       setIsLoading(false)
+      localStorage.removeItem(SUBSCRIPTION_CACHE_KEY)
       return
     }
 
+    // Optimization: We don't strictly need to wait for zone to load to check global subscription
+    // But we might need it for legacy fallback. 
+    // We will proceed with global lookup immediately.
+
     try {
       const individualId = user.uid // Global account-based lookup (New Standard)
-      let individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', individualId)
+      // Cast to any to handle dynamic firestore data
+      let individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', individualId) as any
 
       // Fallback 1: Search by userId field (finds legacy subs from ANY zone)
       if (!individualData) {
         const results = await FirebaseDatabaseService.getCollectionWhere('individual_subscriptions', 'userId', '==', user.uid)
         if (results && results.length > 0) {
-          individualData = results[0]
-          console.log('🔄 SubscriptionContext: Found subscription via userId query.')
+          individualData = results[0] as any
         }
       }
 
-      // Fallback 2: Check legacy ID format for current zone specifically
-      if (!individualData && currentZone) {
+      // Fallback 2: Check legacy ID format for current zone specifically (Only if zone is ready)
+      if (!individualData && !isZoneLoading && currentZone) {
         const legacyId = `${user.uid}_${currentZone.id}`
-        individualData = await FirebaseDatabaseService.getDocument('individual_subscriptions', legacyId)
-        if (individualData) {
-          console.log('🔄 SubscriptionContext: Found legacy subscription ID.')
+        const legacyData = await FirebaseDatabaseService.getDocument('individual_subscriptions', legacyId)
+        if (legacyData) {
+          individualData = legacyData as any
         }
       }
 
       if (individualData && individualData.status === 'active') {
+        const subData: Subscription = {
+          id: individualData.id || individualId,
+          zoneId: currentZone?.id || 'global',
+          tier: 'premium',
+          status: individualData.status,
+          type: 'individual',
+          startDate: individualData.startDate ? new Date(individualData.startDate.seconds * 1000) : new Date(),
+          expiresAt: individualData.expiresAt ? new Date(individualData.expiresAt.seconds * 1000) : null,
+          createdAt: individualData.createdAt ? new Date(individualData.createdAt.seconds * 1000) : new Date(),
+          updatedAt: individualData.updatedAt ? new Date(individualData.updatedAt.seconds * 1000) : new Date()
+        }
+
+        // Save to state and cache
+        setSubscription(subData)
+        localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify(subData))
+
         // Migration: If we found a legacy sub, move it to the global ID format for future 
         if (individualData.id !== individualId) {
-          console.log('⚡ SubscriptionContext: Migrating legacy subscription to global ID.')
+          // (Migration logic preserved)
           try {
             await FirebaseDatabaseService.createDocument('individual_subscriptions', individualId, {
               ...individualData,
@@ -88,38 +132,28 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
               userId: user.uid,
               updatedAt: new Date().toISOString()
             })
-            // Optional: delete old one? Maybe safer to keep for now.
-          } catch (migErr) {
-            console.error('❌ Migration failed:', migErr)
-          }
+          } catch (migErr) { console.error('❌ Migration failed:', migErr) }
         }
 
-        setSubscription({
-          id: individualData.id || individualId,
-          zoneId: currentZone?.id || 'global',
-          tier: 'premium',
-          status: individualData.status,
-          type: 'individual',
-          startDate: individualData.startDate || new Date(),
-          expiresAt: individualData.expiresAt || null,
-          createdAt: individualData.createdAt || new Date(),
-          updatedAt: individualData.updatedAt || new Date()
-        })
       } else {
         setSubscription(null)
+        localStorage.removeItem(SUBSCRIPTION_CACHE_KEY)
       }
     } catch (error) {
       console.error('❌ Error loading individual subscription:', error)
-      setSubscription(null)
+      // Don't clear subscription on error if we have cached data? 
+      // For now, let's keep cached data if error occurs to prevent lockout during outage
+      if (!subscription) setSubscription(null)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Load subscription when zone or user changes
+  // Load subscription when user changes or zone initializes
+  // Added: Re-run when zone finishes loading to check legacy fallbacks if needed
   useEffect(() => {
     loadSubscription()
-  }, [currentZone?.id, user?.uid])
+  }, [user?.uid, isZoneLoading, currentZone?.id])
 
   // Refresh subscription
   const refreshSubscription = async () => {
@@ -170,7 +204,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       if (isLoading) return true
       if (isMemberPaidPremium) return true // Active individual subscription unlocks everything
       if (!activeSubscription) return false
-      return hasFeatureAccess(activeSubscription.tier, feature as any)
+      return hasFeatureAccess(activeSubscription.tier, feature as keyof SubscriptionFeatures)
     }
 
     const canAddMember = async () => true;

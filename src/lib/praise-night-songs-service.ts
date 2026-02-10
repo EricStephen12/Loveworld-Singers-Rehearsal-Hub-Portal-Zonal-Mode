@@ -181,19 +181,13 @@ export class PraiseNightSongsService {
       const existingData = songDoc.data()
       const praiseNightId = songData.praiseNightId || existingData.praiseNightId
 
-      console.log('🔍 [UpdateSong] Metadata trigger check:', {
-        songId,
-        zoneId,
-        praiseNightId,
-        willTrigger: !!(zoneId && praiseNightId),
-        updatedFields: Object.keys(cleanedData)
-      });
+
 
       if (zoneId && praiseNightId) {
-        console.log('🔔 [UpdateSong] Triggering metadata updates...');
+
         await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, songId)
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
-        console.log('✅ [UpdateSong] Metadata updates completed');
+
       } else {
         console.warn('⚠️ [UpdateSong] Skipping metadata update - missing zoneId or praiseNightId');
       }

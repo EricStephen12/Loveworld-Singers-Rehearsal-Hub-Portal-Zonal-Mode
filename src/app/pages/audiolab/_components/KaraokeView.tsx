@@ -70,7 +70,7 @@ export function KaraokeView() {
           // If we have text but no sync, trigger auto-sync
           const audioUrl = (currentSong as any).audioUrls?.full || currentSong.audioUrl;
           if (lyricsText && audioUrl) {
-            console.log('💎 [KaraokeView] Checking for AI Sync capability...');
+
 
             const syncResult = await generateSyncedLyrics(audioUrl, currentSong.id, lyricsText);
 
@@ -85,12 +85,12 @@ export function KaraokeView() {
               // Persist globally for everyone else
               const isHQ = (currentSong as any).isHQSong;
               await saveLyricsToSong(currentSong.id, syncResult.lyrics, lyricsText, isHQ);
-              console.log('💎 [KaraokeView] AI Sync complete and saved globally.');
+
               setLyricsError(null);
               setLyricsLoading(false);
               return;
             } else {
-              console.error('💎 [KaraokeView] AI Sync failed:', syncResult.error);
+              console.error('[KaraokeView] AI Sync failed:', syncResult.error);
               setLyricsError('AI Sync failed, using auto-timing');
             }
           }

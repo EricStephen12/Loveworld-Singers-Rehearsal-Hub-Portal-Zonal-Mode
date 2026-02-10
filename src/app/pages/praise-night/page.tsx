@@ -58,14 +58,14 @@ function PraiseNightPageContent() {
       const savedState = navigationStateManager.getNavigationState(currentZone.id);
 
       if (savedState && savedState.path === '/pages/praise-night' && savedState.query.category) {
-        console.log('🔄 Restoring navigation state:', savedState.query.category);
+
 
         // Use replace to avoid adding extra history entry
         const restoredUrl = navigationStateManager.buildUrlFromState(savedState);
         router.replace(restoredUrl);
       } else {
         // No saved state, default to 'ongoing' (safe fallback)
-        console.log('🔄 No saved state, defaulting to ongoing');
+
         router.replace('/pages/praise-night?category=ongoing');
       }
     }
@@ -82,7 +82,7 @@ function PraiseNightPageContent() {
       }
 
       navigationStateManager.saveNavigationState('/pages/praise-night', query, currentZone.id);
-      console.log('💾 Saved navigation state:', query);
+
     }
   }, [categoryFilter, pageParam, currentZone?.id]);
 
@@ -126,9 +126,7 @@ function PraiseNightPageContent() {
   // Debug dropdown state
   useEffect(() => {
     if (showDropdown) {
-      console.log('🔽 Dropdown opened, categoryFilter:', categoryFilter);
-    } else {
-      console.log('🔼 Dropdown closed, categoryFilter:', categoryFilter);
+
     }
   }, [showDropdown, categoryFilter]);
 
@@ -147,7 +145,7 @@ function PraiseNightPageContent() {
           window.dispatchEvent(new Event('resize'));
         }, 100);
 
-        console.log('🛡️ Re-initializing safe area for category:', categoryFilter);
+
       }
     };
 
@@ -170,7 +168,7 @@ function PraiseNightPageContent() {
   useEffect(() => {
     const loadPageCategories = async () => {
       if (!currentZone?.id) {
-        console.log('⏳ Waiting for zone to load page categories...');
+
         return;
       }
 
@@ -178,7 +176,7 @@ function PraiseNightPageContent() {
       const cacheKey = `page-categories-${currentZone.id}`;
       const cached = lowDataOptimizer.get(cacheKey);
       if (cached) {
-        console.log('📦 [PageCategories] Using cached data');
+
         setPageCategories(cached);
         setLoadingPageCategories(false);
         return;
@@ -186,10 +184,10 @@ function PraiseNightPageContent() {
 
       setLoadingPageCategories(true);
       try {
-        console.log('🌍 Loading page categories for zone:', currentZone.id);
+
         // Use getPageCategories which handles both HQ (unfiltered) and zone (filtered) cases
         const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
-        console.log('📂 Loaded page categories:', categories);
+
         setPageCategories(categories);
 
         // Cache for 5 minutes
@@ -213,7 +211,7 @@ function PraiseNightPageContent() {
     // Filter by category (archive, ongoing, etc.)
     if (categoryFilter) {
       filtered = filtered.filter(praiseNight => praiseNight.category === categoryFilter);
-      console.log(`🔍 After category filter (${categoryFilter}):`, filtered.length, 'pages');
+
     } else {
       // When no category filter, exclude unassigned pages from regular view
       filtered = filtered.filter(praiseNight => praiseNight.category !== 'unassigned');
@@ -221,18 +219,16 @@ function PraiseNightPageContent() {
 
     // Filter by page category if selected
     if (selectedPageCategory) {
-      console.log(`🔍 Filtering by page category: "${selectedPageCategory}"`);
+
       const beforeCount = filtered.length;
       filtered = filtered.filter(praiseNight => {
         const matches = praiseNight.pageCategory === selectedPageCategory;
         if (!matches) {
-          console.log(`❌ Page "${praiseNight.name}" pageCategory="${praiseNight.pageCategory}" !== "${selectedPageCategory}"`);
-        } else {
-          console.log(`✅ Page "${praiseNight.name}" matches!`);
+
         }
         return matches;
       });
-      console.log(`🔍 After page category filter: ${filtered.length} pages (was ${beforeCount})`);
+
     }
 
     return filtered;
@@ -302,7 +298,7 @@ function PraiseNightPageContent() {
   // Periodic refresh to ensure data stays up to date (optimized interval)
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      console.log('🔄 Periodic refresh...');
+
       refreshData();
     }, 60000); // Refresh every 60 seconds (reduced from 30s to save Firebase reads)
 
@@ -322,9 +318,9 @@ function PraiseNightPageContent() {
       );
       if (targetPage) {
         setCurrentPraiseNightState(targetPage);
-        console.log('🎯 Navigated to page from search:', targetPage.name, 'ID:', targetPage.id);
+
       } else {
-        console.log('❌ Page not found for param:', pageParam, 'Available pages:', allPraiseNights.map(p => ({ id: p.id, name: p.name })));
+
       }
     }
   }, [pageParam, allPraiseNights]);
@@ -348,13 +344,13 @@ function PraiseNightPageContent() {
             setCurrentSong(targetSong, false);
           }
 
-          console.log('🎯 Song modal opened from URL:', targetSong.title);
+
         }
       } else if (isSongDetailOpen) {
         // If song parameter disappeared (Back button), close the modal
         setIsSongDetailOpen(false);
         setSelectedSong(null);
-        console.log('🎯 Song modal closed because URL param disappeared');
+
       }
     }
   }, [songParam, currentPraiseNight, allSongsFromFirebase, isSongDetailOpen, selectedSong?.id, currentSong?.id, setCurrentSong]);
@@ -368,20 +364,13 @@ function PraiseNightPageContent() {
       // Only auto-select if no page parameter is overriding it
       const firstPage = filteredPraiseNights[0];
       setCurrentPraiseNightState(firstPage);
-      console.log('🎯 Auto-selected page matching category:', categoryFilter || 'default', firstPage.name);
+
     }
   }, [filteredPraiseNights, currentPraiseNight, pageParam, categoryFilter]);
 
   // Debug page selection
   useEffect(() => {
-    console.log('🔍 Page Selection Debug:', {
-      categoryFilter,
-      pageParam,
-      currentPraiseNightName: currentPraiseNight?.name,
-      currentPraiseNightCategory: currentPraiseNight?.category,
-      filteredPraiseNights: filteredPraiseNights.map(p => ({ name: p.name, category: p.category, hasCountdown: !!p.countdown })),
-      allPraiseNights: allPraiseNights.map(p => ({ name: p.name, category: p.category, hasCountdown: !!p.countdown }))
-    });
+
   }, [categoryFilter, pageParam, currentPraiseNight, filteredPraiseNights, allPraiseNights]);
 
   // Auto-select a page with countdown data if current page has none
@@ -389,7 +378,7 @@ function PraiseNightPageContent() {
     if (currentPraiseNight && !currentPraiseNight.countdown && allPraiseNights.length > 0) {
       const pageWithCountdown = allPraiseNights.find(p => p.countdown && (p.countdown.days > 0 || p.countdown.hours > 0 || p.countdown.minutes > 0 || p.countdown.seconds > 0));
       if (pageWithCountdown) {
-        console.log('🔄 Switching to page with countdown:', pageWithCountdown.name);
+
         setCurrentPraiseNightState(pageWithCountdown);
       }
     }
@@ -450,20 +439,15 @@ function PraiseNightPageContent() {
   const ecardSrc = useMemo(() => {
     if (!currentPraiseNight) return "/Ecards/1000876785.png";
 
-    console.log('🖼️ Banner Image Debug:', {
-      pageId: currentPraiseNight.id,
-      pageName: currentPraiseNight.name,
-      bannerImage: currentPraiseNight.bannerImage,
-      hasBannerImage: !!currentPraiseNight.bannerImage
-    });
+
 
     // Use the bannerImage from the database if available
     if (currentPraiseNight.bannerImage) {
-      console.log('✅ Using database banner image:', currentPraiseNight.bannerImage);
+
       return currentPraiseNight.bannerImage;
     }
 
-    console.log('⚠️ No banner image in database, using fallback');
+
 
     // Fallback to default image
     return "/Ecards/1000876785.png";
@@ -502,64 +486,25 @@ function PraiseNightPageContent() {
   })
 
   // Debug what's being passed to useServerCountdown
-  console.log('🔍 useServerCountdown Input:', {
-    currentPraiseNightName: currentPraiseNight?.name,
-    currentPraiseNightId: currentPraiseNight?.id,
-    countdownData: currentPraiseNight?.countdown,
-    hasCountdown: !!currentPraiseNight?.countdown,
-    categoryFilter,
-    filteredPraiseNightsCount: filteredPraiseNights.length,
-    allPraiseNightsCount: allPraiseNights.length,
-    allPraiseNightsNames: allPraiseNights.map(p => p.name),
-    filteredPraiseNightsNames: filteredPraiseNights.map(p => p.name)
-  });
+
 
   // Debug countdown timer output
-  console.log('🕐 Countdown Timer Output:', {
-    timeLeft,
-    countdownLoading,
-    countdownError,
-    hasTimeLeft: timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0
-  });
+
 
   // Debug countdown and rehearsal count data
   useEffect(() => {
-    console.log('🔍 Debug - Current Praise Night:', {
-      id: currentPraiseNight?.id,
-      name: currentPraiseNight?.name,
-      countdown: currentPraiseNight?.countdown,
-      category: currentPraiseNight?.category,
-      hasCountdown: !!currentPraiseNight?.countdown,
-      categoryFilter,
-      shouldShowCountdown: categoryFilter !== 'archive' && currentPraiseNight && !(categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0),
-      songsCount: currentPraiseNight?.songs?.length,
-      firstSong: currentPraiseNight?.songs?.[0] ? {
-        title: currentPraiseNight.songs[0].title,
-        rehearsalCount: currentPraiseNight.songs[0].rehearsalCount
-      } : null
-    });
-    console.log('🔍 Debug - Countdown Hook:', {
-      timeLeft,
-      countdownLoading,
-      countdownError
-    });
+
   }, [currentPraiseNight, timeLeft, countdownLoading, countdownError, categoryFilter, filteredPraiseNights.length]);
 
 
   // Handle category selection and close drawer
   const handleCategorySelect = (category: string) => {
-    console.log('🎯 Category selected:', category);
-    console.log('🎯 Current active category:', activeCategory);
-    console.log('🎯 Modal open:', isSongDetailOpen);
-    console.log('🎯 Song playing:', isPlaying);
-    setActiveCategory(category);
-    setIsCategoryDrawerOpen(false);
-    console.log('🎯 Category set to:', category);
+
   };
 
   // Handle song card click - now JUST updates URL to trigger the sync effect
   const handleSongClick = (song: any, index: number) => {
-    console.log('🎵 handleSongClick updating URL for:', song.title);
+
 
     // Update URL with song parameter
     const params = new URLSearchParams(window.location.search);
@@ -572,7 +517,7 @@ function PraiseNightPageContent() {
 
   // Handle song card click when outside modal - opens modal AND updates URL
   const handleSongSwitch = (song: any, index: number) => {
-    console.log('🎵 handleSongSwitch updating URL and starting play for:', song.title);
+
 
     // Update URL
     const params = new URLSearchParams(window.location.search);
@@ -666,18 +611,18 @@ function PraiseNightPageContent() {
   useEffect(() => {
     if (!currentPraiseNight || !currentZone?.id) return;
 
-    console.log(`📡 [Realtime] Subscribing to song metadata for page ${currentPraiseNight.id}`);
+
     const unsubscribe = FirebaseMetadataService.subscribeToPraiseNightSongsMetadata(
       currentZone.id,
       currentPraiseNight.id,
       (timestamp: number) => {
-        console.log(`🔔 [Realtime] Song list metadata update for page ${currentPraiseNight.id}`);
+
         setSongMetadataTimestamp(timestamp);
       }
     );
 
     return () => {
-      console.log(`🔌 [Realtime] Unsubscribing from song metadata for page ${currentPraiseNight.id}`);
+
       unsubscribe();
     };
   }, [currentPraiseNight?.id, currentZone?.id]);
@@ -691,7 +636,7 @@ function PraiseNightPageContent() {
       currentZone.id,
       'praise_nights',
       (timestamp) => {
-        console.log('🔔 [Realtime] Praise Night metadata update - refreshing data');
+
         refreshData();
       }
     );
@@ -711,7 +656,7 @@ function PraiseNightPageContent() {
         updatedPage.name !== currentPraiseNight.name ||
         updatedPage.category !== currentPraiseNight.category
       )) {
-        console.log('🔄 [Realtime] Updating current page state from realtime data');
+
         setCurrentPraiseNightState(updatedPage);
       }
     }
@@ -724,7 +669,7 @@ function PraiseNightPageContent() {
       // Force refresh (second arg = true) to bypass useAdminData cache
       // This ensures we get the latest data when metadata triggers this effect
       getCurrentSongs(currentPraiseNight.id, true).then(songs => {
-        console.log(`📊 [Sync] Loaded ${songs.length} songs for page ${currentPraiseNight.id} (Metadata time: ${songMetadataTimestamp})`);
+
         setAllSongsFromFirebase(songs);
         setSongsLoading(false);
       }).catch(error => {
@@ -750,18 +695,7 @@ function PraiseNightPageContent() {
 
   // Use the songs directly since they're already filtered by page
   const finalSongData = useMemo(() => {
-    console.log('🎵 Using songs for page:', {
-      pageName: currentPraiseNight?.name,
-      pageId: currentPraiseNight?.id,
-      songsCount: allSongsFromFirebase.length,
-      songsWithAudio: allSongsFromFirebase.filter(s => s.audioFile).length,
-      sampleSong: allSongsFromFirebase[0] ? {
-        title: allSongsFromFirebase[0].title,
-        leadSinger: allSongsFromFirebase[0].leadSinger,
-        writer: allSongsFromFirebase[0].writer,
-        audioFile: allSongsFromFirebase[0].audioFile ? 'Has audio' : 'No audio'
-      } : 'No songs'
-    });
+
 
     return allSongsFromFirebase;
   }, [currentPraiseNight, allSongsFromFirebase]);
@@ -769,21 +703,7 @@ function PraiseNightPageContent() {
   const isDataLoaded = !loading && !songsLoading && currentPraiseNight !== null;
 
   // Debug logging for song data
-  console.log('🎵 Final song data (using debug page logic):', {
-    isDataLoaded,
-    finalSongDataLength: finalSongData.length,
-    currentPraiseNight: currentPraiseNight?.name,
-    currentPraiseNightId: currentPraiseNight?.id,
-    allSongsFromFirebaseCount: allSongsFromFirebase.length,
-    songs: finalSongData.map(song => ({
-      title: song.title,
-      category: song.category,
-      status: song.status,
-      leadSinger: song.leadSinger,
-      rehearsalCount: song.rehearsalCount,
-      allFields: Object.keys(song)
-    }))
-  });
+
 
   // Song categories - get from Supabase data (supports both single and multiple categories)
   const songCategories = useMemo(() => {
@@ -791,7 +711,7 @@ function PraiseNightPageContent() {
     const songsToUse = finalSongData.length > 0 ? finalSongData : (currentPraiseNight?.songs || []);
 
     if (songsToUse.length === 0) {
-      console.log('🎵 No songs available for categories');
+
       return [];
     }
 
@@ -870,7 +790,7 @@ function PraiseNightPageContent() {
   const otherCategories: string[] = [];
 
   // Debug logging for categories
-  console.log('🎵 Category bar data:', {
+  console.log(' Category bar data:', {
     songCategories: songCategories,
     mainCategories: mainCategories,
     otherCategories: otherCategories,
@@ -946,15 +866,7 @@ function PraiseNightPageContent() {
     const matchesStatus = song.status === activeFilter;
 
     // Debug logging
-    if (activeCategory && !matchesCategory) {
-      console.log('🎵 Song category mismatch:', {
-        songTitle: song.title,
-        songCategory: song.category,
-        songCategories: song.categories,
-        activeCategory: activeCategory,
-        matches: matchesCategory
-      });
-    }
+
 
     return matchesCategory && matchesStatus;
   });
@@ -1005,18 +917,11 @@ function PraiseNightPageContent() {
   };
 
   // Debug loading and error states
-  console.log('🔍 Page Render Debug:', {
-    loading,
-    error,
-    allPraiseNightsLength: allPraiseNights?.length,
-    filteredPraiseNightsLength: filteredPraiseNights?.length,
-    currentPraiseNight: currentPraiseNight?.name,
-    categoryFilter
-  });
+
 
   // Show loading state only when initially loading with no data
   if (loading && allPraiseNights.length === 0 && !currentPraiseNight) {
-    console.log('🔄 Showing initial loading state');
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -1029,7 +934,7 @@ function PraiseNightPageContent() {
 
   // Show error state - but allow navigation
   if (error) {
-    console.log('❌ Showing error state:', error);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -1051,11 +956,11 @@ function PraiseNightPageContent() {
     );
   }
 
-  console.log('✅ Rendering main page content');
+
 
   // Show empty state when there's no data for the current category (but not when still loading)
   if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || filteredPraiseNights.length === 0)) {
-    console.log('⚠️ No data for category, showing empty state');
+
     return (
       <div
         className="h-screen flex flex-col safe-area-bottom overflow-y-auto"
@@ -1111,9 +1016,7 @@ function PraiseNightPageContent() {
             {/* Back Button */}
             <button
               onClick={() => {
-                console.log('🔙 Back button clicked, navigating to /pages/rehearsals');
-                window.location.href = '/pages/rehearsals';
-                console.log('🔙 Navigation command sent');
+
               }}
               className="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200"
               style={{
@@ -1594,20 +1497,19 @@ function PraiseNightPageContent() {
                         const pagesInCategory = allPraiseNights.filter(p => {
                           const isArchive = p.category === 'archive';
                           const matchesCategory = p.pageCategory === category.name;
-                          console.log(`🔍 Page "${p.name}": category="${p.category}", pageCategory="${p.pageCategory}", matches="${category.name}"? ${matchesCategory}`);
+
                           return isArchive && matchesCategory;
                         });
                         const pageCount = pagesInCategory.length;
 
-                        console.log(`📊 Category "${category.name}" has ${pageCount} archived pages:`, pagesInCategory.map(p => p.name));
+
 
                         // Show all categories, even with 0 pages (for testing)
                         return (
                           <button
                             key={category.id}
                             onClick={() => {
-                              console.log(`🎯 Selected category: ${category.name}`);
-                              setSelectedPageCategory(category.name);
+
                             }}
                             className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-200 text-left"
                           >
@@ -1742,12 +1644,12 @@ function PraiseNightPageContent() {
                     className="object-cover object-center"
                     priority={false}
                     onError={(e) => {
-                      console.error('❌ Image failed to load:', ecardSrc);
+                      console.error('Image failed to load:', ecardSrc);
                       // Fallback to default image
                       e.currentTarget.src = "/Ecards/1000876785.png";
                     }}
                     onLoad={() => {
-                      console.log('✅ Image loaded successfully:', ecardSrc);
+
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -1934,7 +1836,7 @@ function PraiseNightPageContent() {
                           : (() => {
                             const isActive = currentSong?.id === song.id;
                             if (isActive) {
-                              console.log('🎵 Active song detected:', song.title, 'Current song:', currentSong?.title);
+
                             }
                             return isActive;
                           })()
@@ -2168,12 +2070,7 @@ function PraiseNightPageContent() {
           // Otherwise fall back to the song from finalSongData
           const latestSongData = realtimeSongData || finalSongData.find(s => s.id === selectedSong.id) || selectedSong;
 
-          console.log('🎵 Rendering SongDetailModal with:', {
-            selectedSongId: selectedSong.id,
-            hasRealtimeData: !!realtimeSongData,
-            realtimeSongLoading,
-            usingRealtimeData: !!realtimeSongData
-          });
+
 
           return (
             <SongDetailModal
