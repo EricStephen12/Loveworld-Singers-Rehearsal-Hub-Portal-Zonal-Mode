@@ -146,12 +146,16 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
+  /* High z-index to ensure it's above all content */
+  z-index: 100 !important;
   /* Use CSS custom properties for dynamic safe area */
   padding-bottom: var(--enhanced-safe-area-bottom, 24px);
   /* Ensure content is not cut off */
   min-height: 60px;
   /* Better touch target */
   touch-action: manipulation;
+  /* Ensure pointer events work */
+  pointer-events: auto;
 }
 
 /* Device-specific enhancements */

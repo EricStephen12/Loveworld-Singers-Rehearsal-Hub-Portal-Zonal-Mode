@@ -499,7 +499,13 @@ function PraiseNightPageContent() {
 
   // Handle category selection and close drawer
   const handleCategorySelect = (category: string) => {
+    setActiveCategory(category);
+    setIsCategoryDrawerOpen(false);
 
+    // Smooth scroll for better UX
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Handle song card click - now JUST updates URL to trigger the sync effect
@@ -1927,7 +1933,7 @@ function PraiseNightPageContent() {
       {
         categoryFilter === 'archive' && pageParam && (
           <div
-            className="bottom-bar-enhanced flex-shrink-0 z-30 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
+            className="bottom-bar-enhanced flex-shrink-0 z-[100] backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
             style={{
               background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
             }}
@@ -1970,7 +1976,7 @@ function PraiseNightPageContent() {
       {
         filteredPraiseNights.length > 0 && categoryFilter !== 'archive' && (
           <div
-            className="bottom-bar-enhanced flex-shrink-0 z-30 backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
+            className="bottom-bar-enhanced flex-shrink-0 z-[100] backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
             style={{
               background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
             }}
