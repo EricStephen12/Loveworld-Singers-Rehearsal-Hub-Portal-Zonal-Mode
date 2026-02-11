@@ -39,21 +39,21 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
 
   const isGroupChat = selectedChat.type === 'group'
   const isAdmin = selectedChat.admins?.includes(user?.uid || '') || false
-  
+
   // Fetch other user's name for direct chats
   useEffect(() => {
     const fetchOtherUserName = async () => {
       if (!selectedChat || selectedChat.type === 'group' || !user) return
-      
+
       const otherParticipantId = selectedChat.participants.find(id => id !== user.uid)
       if (!otherParticipantId) return
-      
+
       // Use participant names mapping if available
       if (selectedChat.participantNames && selectedChat.participantNames[otherParticipantId]) {
         setOtherUserName(selectedChat.participantNames[otherParticipantId])
         return
       }
-      
+
       // Fetch user name from database
       try {
         const userData = await FirebaseChatService.getUser(otherParticipantId)
@@ -65,7 +65,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         console.error('Error fetching user name:', error)
       }
     }
-    
+
     fetchOtherUserName()
   }, [selectedChat, user])
 
@@ -87,8 +87,8 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         return 'Online'
       } else if (otherUserProfile?.lastSeen) {
         try {
-          const lastSeenDate = otherUserProfile.lastSeen instanceof Date 
-            ? otherUserProfile.lastSeen 
+          const lastSeenDate = otherUserProfile.lastSeen instanceof Date
+            ? otherUserProfile.lastSeen
             : new Date(otherUserProfile.lastSeen)
           if (!isNaN(lastSeenDate.getTime())) {
             return `Last seen ${formatDistanceToNow(lastSeenDate, { addSuffix: true })}`
@@ -238,7 +238,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
   }
 
   return (
-    <div 
+    <div
       className="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm"
     >
       {/* Chat Info */}
@@ -251,9 +251,9 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
-        
+
         {/* Avatar */}
-        <div 
+        <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md"
           style={{ backgroundColor: currentZone?.themeColor || '#10b981' }}
         >
@@ -263,7 +263,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
             getOtherParticipantName()[0]?.toUpperCase() || '?'
           )}
         </div>
-        
+
         {/* Name and Status */}
         <div>
           <div className="flex items-center gap-2">
@@ -293,56 +293,56 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
             <Search className="w-5 h-5 text-gray-600" />
           </button>
         )}
-        
+
         {/* Menu */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => setShowMenu(!showMenu)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <MoreVertical className="w-5 h-5 text-gray-600" />
           </button>
-          
+
           {/* Dropdown Menu */}
           {showMenu && (
             <div className="absolute right-0 top-full mt-2 min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
               {isGroupChat ? (
                 <>
                   {isAdmin && (
-                <>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                    onClick={() => {
-                      setShowMenu(false)
-                      handleAddMembers()
-                    }}
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Add Members
-                  </button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                    onClick={() => {
-                      setShowMenu(false)
-                      handleGroupSettings()
-                    }}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Group Settings
-                  </button>
-                  <button 
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                    onClick={() => {
-                      setShowMenu(false)
-                      handleManageAdmins()
-                    }}
-                  >
-                    <Shield className="w-4 h-4" />
-                    Manage Admins
-                  </button>
-                  <hr className="my-2" />
-                </>
-              )}
+                    <>
+                      <button
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                        onClick={() => {
+                          setShowMenu(false)
+                          handleAddMembers()
+                        }}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Add Members
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                        onClick={() => {
+                          setShowMenu(false)
+                          handleGroupSettings()
+                        }}
+                      >
+                        <Settings className="w-4 h-4" />
+                        Group Settings
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                        onClick={() => {
+                          setShowMenu(false)
+                          handleManageAdmins()
+                        }}
+                      >
+                        <Shield className="w-4 h-4" />
+                        Manage Admins
+                      </button>
+                      <hr className="my-2" />
+                    </>
+                  )}
                   <button
                     className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
                     onClick={() => {
@@ -350,20 +350,20 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                       handleViewMembers()
                     }}
                   >
-                <Users className="w-4 h-4" />
-                View Members
-              </button>
-                <button 
-                  className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2"
-                  onClick={() => {
-                    setShowMenu(false)
-                    handleLeaveGroup()
-                  }}
-                  disabled={isLeavingGroup}
-                >
-                  <UserMinus className="w-4 h-4" />
-                  {isLeavingGroup ? 'Leaving...' : 'Leave Group'}
-                </button>
+                    <Users className="w-4 h-4" />
+                    View Members
+                  </button>
+                  <button
+                    className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2"
+                    onClick={() => {
+                      setShowMenu(false)
+                      handleLeaveGroup()
+                    }}
+                    disabled={isLeavingGroup}
+                  >
+                    <UserMinus className="w-4 h-4" />
+                    {isLeavingGroup ? 'Leaving...' : 'Leave Group'}
+                  </button>
                 </>
               ) : (
                 <button
@@ -381,11 +381,11 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
           )}
         </div>
       </div>
-      
+
       {/* Click outside to close menu */}
       {showMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowMenu(false)}
         />
       )}
@@ -426,8 +426,8 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                 {groupMembers.length > 0 ? (
                   <div className="divide-y divide-gray-100">
                     {groupMembers.map((member, index) => (
-                      <div 
-                        key={member.id} 
+                      <div
+                        key={member.id}
                         className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
@@ -438,13 +438,13 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                           >
                             {member.fullName?.[0]?.toUpperCase() || '?'}
                           </div>
-                          
+
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                               {member.fullName || 'Unknown User'}
                             </p>
-                            <p 
+                            <p
                               className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
                               title={member.email}
                             >
@@ -496,9 +496,9 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                 <div>
                   <p className="text-xl font-semibold text-gray-900">{otherUserProfile.fullName}</p>
                   <p className="text-sm text-gray-500">
-                    {otherUserProfile.isOnline 
-                      ? 'Online' 
-                      : otherUserProfile.lastSeen 
+                    {otherUserProfile.isOnline
+                      ? 'Online'
+                      : otherUserProfile.lastSeen
                         ? `Last seen ${formatDistanceToNow(otherUserProfile.lastSeen instanceof Date ? otherUserProfile.lastSeen : new Date(otherUserProfile.lastSeen), { addSuffix: true })}`
                         : 'Offline'}
                   </p>
@@ -509,14 +509,14 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                   <Mail className="w-4 h-4 text-gray-500" />
                   <span>{otherUserProfile.email || 'No email available'}</span>
                 </div>
-                {otherUserProfile.zoneName && 
-                 otherUserProfile.zoneName !== 'No zone assigned' && 
-                 otherUserProfile.zoneName !== 'No zone info' && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-500" />
-                    <span>{otherUserProfile.zoneName}</span>
-                  </div>
-                )}
+                {otherUserProfile.zoneName &&
+                  otherUserProfile.zoneName !== 'No zone assigned' &&
+                  otherUserProfile.zoneName !== 'No zone info' && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span>{otherUserProfile.zoneName}</span>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -577,8 +577,8 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
               ) : availableUsers.length > 0 ? (
                 <div className="divide-y divide-gray-100">
                   {availableUsers.map(user => (
-                    <div 
-                      key={user.id} 
+                    <div
+                      key={user.id}
                       className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-3 sm:gap-4">
@@ -590,13 +590,13 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                           >
                             {user.fullName?.[0]?.toUpperCase() || '?'}
                           </div>
-                          
+
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                               {user.fullName || 'Unknown User'}
                             </p>
-                            <p 
+                            <p
                               className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
                               title={user.email}
                             >
@@ -604,7 +604,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Add Button */}
                         <button
                           onClick={() => handleAddUserToGroup(user.id)}
@@ -751,8 +751,8 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                       const isMemberAdmin = selectedChat?.admins?.includes(member.id) || false
                       const isCurrentUser = member.id === user?.uid
                       return (
-                        <div 
-                          key={member.id} 
+                        <div
+                          key={member.id}
                           className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                         >
                           <div className="flex items-center gap-3 sm:gap-4">
@@ -768,7 +768,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -781,7 +781,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
                                   </span>
                                 )}
                               </div>
-                              <p 
+                              <p
                                 className="text-xs sm:text-sm text-gray-500 truncate mt-0.5"
                                 title={member.email}
                               >

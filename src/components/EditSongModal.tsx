@@ -2,10 +2,11 @@
 
 // Smart Auto-History System - Fixed icon imports
 import React, { useState, useEffect } from 'react';
-import { X, Save, Trash2, FolderOpen, Clock, Plus, History, Edit, Check } from 'lucide-react';
+import { X, Save, Trash2, FolderOpen, Clock, Plus, History, Edit, Check, Mic } from 'lucide-react';
 import { PraiseNightSong, Comment, Category } from '../types/supabase';
 import MediaSelectionModal from './MediaSelectionModal';
 import BasicTextEditor from './BasicTextEditor';
+import CommentAudioPlayer from './CommentAudioPlayer';
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 // import { createHistoryEntry, deleteHistoryEntry } from '@/lib/firebase-database-service';
@@ -76,6 +77,7 @@ export default function EditSongModal({
   const [songComments, setSongComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [coordinatorComment, setCoordinatorComment] = useState('');
+  const [coordinatorAudioUrl, setCoordinatorAudioUrl] = useState('');
 
   // History management state
   const [rehearsalCount, setRehearsalCount] = useState(0);
@@ -433,12 +435,15 @@ export default function EditSongModal({
 
   // Handle media file selection from MediaManager
   const handleMediaFileSelect = (mediaFile: any) => {
-
     // Supabase Storage URLs work directly - no CORS issues!
     let fixedUrl = mediaFile.url;
 
     // Check if we're selecting for a specific part or the main audio
-    if (selectingPart) {
+    if (selectingPart === 'comment-audio') {
+      // Selecting for coordinator/pastor comment
+      setCoordinatorAudioUrl(fixedUrl);
+      setSelectingPart(null);
+    } else if (selectingPart) {
       // Selecting for a specific part (AudioLab multi-part)
       setAudioUrls(prev => ({ ...prev, [selectingPart]: fixedUrl }));
       setSelectingPart(null);
@@ -640,6 +645,7 @@ export default function EditSongModal({
           .filter(c => c.author === commentAuthor || c.author === 'Coordinator' || c.author === 'Pastor')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         setCoordinatorComment((latestComment as any)?.text || (latestComment as any)?.content || '');
+        setCoordinatorAudioUrl((latestComment as any)?.audioUrl || '');
       } catch { }
 
       // Load rehearsal count from song data, default to 0 if not set
@@ -696,6 +702,7 @@ export default function EditSongModal({
       setSongComments([]);
       setNewComment('');
       setCoordinatorComment('');
+      setCoordinatorAudioUrl('');
       setRehearsalCount(0);
 
       // Reset audio parts for new song
@@ -766,10 +773,11 @@ export default function EditSongModal({
 
       const finalAudioFile = audioFile ? audioFile.url : songAudioFile;
 
-      const finalComments = coordinatorComment && coordinatorComment.trim() !== '' ? [
+      const finalComments = (coordinatorComment && coordinatorComment.trim() !== '') || coordinatorAudioUrl ? [
         {
           id: `comment-${Date.now()}`,
           text: coordinatorComment,
+          audioUrl: coordinatorAudioUrl,
           date: new Date().toISOString(),
           author: getCommentLabel() // Dynamic: "Pastor" for HQ groups, "Coordinator" for zones
         }
@@ -1598,9 +1606,48 @@ Do Re Mi Fa Sol La Ti Do"
                         id="coordinator-comment-editor"
                         value={coordinatorComment}
                         onChange={(value) => setCoordinatorComment(value)}
-                        placeholder={`Enter ${getCommentLabel()}'s comment here...`}
+                        placeholder="Add your notes or instructions for the team here..."
                         className="w-full"
                       />
+
+                      {/* Audio Comment Selection */}
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">
+                          Audio Comment / Voice Note
+                        </label>
+
+                        {coordinatorAudioUrl ? (
+                          <div className="bg-purple-50 rounded-xl p-3 border border-purple-100 flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                <span className="text-xs font-medium text-purple-700 truncate">
+                                  {coordinatorAudioUrl.split('/').pop()?.split('?')[0] || 'Voice Note'}
+                                </span>
+                              </div>
+                              <CommentAudioPlayer
+                                src={coordinatorAudioUrl}
+                                accentColor="#8B5CF6"
+                              />
+                            </div>
+                            <button
+                              onClick={() => setCoordinatorAudioUrl('')}
+                              className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors flex-shrink-0"
+                              title="Remove Audio Comment"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleOpenMediaSelectorForPart('comment-audio')}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors w-full justify-center"
+                          >
+                            <Mic size={16} className="text-purple-500" />
+                            Add Audio Comment / Voice Note
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

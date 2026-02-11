@@ -16,6 +16,7 @@ import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { Toast } from '../Toast';
 import { useAdminTheme } from './AdminThemeProvider';
 import CustomLoader from '@/components/CustomLoader';
+import { normalizeSearchString } from '@/utils/string-utils';
 
 interface PagesSectionProps {
   allPraiseNights: PraiseNight[] | null;
@@ -178,10 +179,13 @@ export default function PagesSection(props: PagesSectionProps) {
 
     if (!searchTerm) return pages;
 
+    const query = normalizeSearchString(searchTerm);
+    if (!query) return pages;
+
     // Filter by page category name or page name
     return pages.filter(page =>
-      page.pageCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      page.name.toLowerCase().includes(searchTerm.toLowerCase())
+      normalizeSearchString(page.pageCategory).includes(query) ||
+      normalizeSearchString(page.name).includes(query)
     );
   }, [pages, searchTerm]);
 
@@ -231,16 +235,18 @@ export default function PagesSection(props: PagesSectionProps) {
         return songPraiseNightId === pageId || songPraiseNightId === pageId.toString();
       })
       .filter(song => {
-        const query = searchTerm.toLowerCase();
+        const query = normalizeSearchString(searchTerm);
+        if (!query) return true;
+
         const matchesSearch =
-          song.title.toLowerCase().includes(query) ||
-          song.writer?.toLowerCase().includes(query) ||
-          song.leadSinger?.toLowerCase().includes(query) ||
-          song.lyrics?.toLowerCase().includes(query) ||
-          song.solfas?.toLowerCase().includes(query) ||
-          song.key?.toLowerCase().includes(query) ||
-          song.tempo?.toLowerCase().includes(query) ||
-          (song.comments && Array.isArray(song.comments) && song.comments.some(c => c.text?.toLowerCase().includes(query)));
+          normalizeSearchString(song.title).includes(query) ||
+          normalizeSearchString(song.writer).includes(query) ||
+          normalizeSearchString(song.leadSinger).includes(query) ||
+          normalizeSearchString(song.lyrics).includes(query) ||
+          normalizeSearchString(song.solfas).includes(query) ||
+          normalizeSearchString(song.key).includes(query) ||
+          normalizeSearchString(song.tempo).includes(query) ||
+          (song.comments && Array.isArray(song.comments) && song.comments.some(c => normalizeSearchString(c.text).includes(query)));
 
         const matchesStatus = statusFilter === 'all' || song.status === statusFilter;
         const matchesCategory = categoryFilter === 'all' || song.category === categoryFilter;

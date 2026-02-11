@@ -896,7 +896,7 @@ function GroupsContent() {
                     />
                     {/* Status dot in header */}
                     {selectedChat.type === 'direct' && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full" style={{ backgroundColor: primaryColor }} />
                     )}
                   </div>
 
@@ -915,11 +915,11 @@ function GroupsContent() {
                       {getChatDisplayName(selectedChat)}
                     </h2>
                     {typingUsers.length > 0 ? (
-                      <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 font-bold animate-pulse">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold animate-pulse" style={{ color: primaryColor }}>
                         {typingUsers[0].status === 'recording_voice' ? (
-                          <Mic className="w-3 h-3 text-emerald-500" />
+                          <Mic className="w-3 h-3" style={{ color: primaryColor }} />
                         ) : (
-                          <Edit3 className="w-3 h-3 text-emerald-500" />
+                          <Edit3 className="w-3 h-3" style={{ color: primaryColor }} />
                         )}
                         <span>
                           {typingUsers.length === 1
@@ -939,7 +939,8 @@ function GroupsContent() {
                   <div className="flex items-center gap-1 text-gray-400">
                     <button
                       onClick={() => setShowMessageSearch(!showMessageSearch)}
-                      className={`p-2 rounded-full transition-colors ${showMessageSearch ? 'bg-gray-100 text-emerald-600' : 'hover:bg-gray-100'}`}
+                      className={`p-2 rounded-full transition-colors ${showMessageSearch ? 'bg-gray-100' : 'hover:bg-gray-100'}`}
+                      style={showMessageSearch ? { color: primaryColor } : {}}
                       title="Search messages"
                     >
                       <Search className="w-5 h-5" />
@@ -956,7 +957,8 @@ function GroupsContent() {
                     )}
 
                     <button
-                      className={`p-2 rounded-full transition-colors ${showDirectChatSettings || showGroupSettings ? 'bg-gray-100 text-emerald-600' : 'hover:bg-gray-100'}`}
+                      className={`p-2 rounded-full transition-colors ${showDirectChatSettings || showGroupSettings ? 'bg-gray-100' : 'hover:bg-gray-100'}`}
+                      style={showDirectChatSettings || showGroupSettings ? { color: primaryColor } : {}}
                       onClick={() => {
                         if (selectedChat.type === 'direct') {
                           setShowDirectChatSettings(!showDirectChatSettings)
@@ -988,7 +990,8 @@ function GroupsContent() {
                             value={messageSearchTerm}
                             onChange={(e) => setMessageSearchTerm(e.target.value)}
                             placeholder="Search messages..."
-                            className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2"
+                            style={{ '--tw-ring-color': `${primaryColor}33` } as any}
                             autoFocus
                           />
                         </div>
@@ -1022,7 +1025,7 @@ function GroupsContent() {
 
                     {isMessagesLoading ? (
                       <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                        <Loader2 className="w-6 h-6 animate-spin" style={{ color: primaryColor }} />
                       </div>
                     ) : messages.length === 0 ? (
                       <div className="text-center py-12 flex flex-col items-center">
@@ -1109,7 +1112,7 @@ function GroupsContent() {
                                         {/* Bubble Tail - Only for first message in group */}
                                         {!isGroupedWithPrev && (
                                           <div className={`absolute top-0 w-4 h-4 z-0 ${isOwn ? '-right-2' : '-left-2'}`}>
-                                            <svg viewBox="0 0 16 16" className={`w-full h-full ${isOwn ? 'text-emerald-500 fill-current' : 'text-white fill-current'}`}>
+                                            <svg viewBox="0 0 16 16" className="w-full h-full" style={{ color: isOwn ? primaryColor : 'white', fill: 'currentColor' }}>
                                               {isOwn ? (
                                                 <path d="M0 0h16v16C12 16 4 12 0 0z" />
                                               ) : (
@@ -1121,7 +1124,7 @@ function GroupsContent() {
 
                                         {/* Sender name for groups */}
                                         {!isOwn && selectedChat?.type === 'group' && !isGroupedWithPrev && (
-                                          <p className="text-[11px] font-bold text-emerald-700 mb-0.5 ml-1 opacity-90">
+                                          <p className="text-[11px] font-bold mb-0.5 ml-1 opacity-90" style={{ color: adjustColor(primaryColor, -20) }}>
                                             {msg.senderName}
                                           </p>
                                         )}
@@ -1129,22 +1132,25 @@ function GroupsContent() {
                                         {/* Message bubble */}
                                         <div
                                           className={`rounded-2xl cursor-pointer transition-all relative z-10 shadow-sm border ${isOwn
-                                            ? 'bg-emerald-500 text-white rounded-tr-none border-emerald-400'
+                                            ? 'text-white rounded-tr-none'
                                             : 'bg-white text-gray-800 rounded-tl-none border-gray-200'
                                             } ${isSelected ? 'ring-2 ring-offset-2 ring-emerald-500 scale-[1.02]' : ''} ${isGroupedWithPrev ? (isOwn ? 'rounded-tr-2xl' : 'rounded-tl-2xl') : ''
                                             } ${isGroupedWithNext ? (isOwn ? 'rounded-br-none' : 'rounded-bl-none') : ''} ${msg.type === 'image' ? 'p-1' : (msg.type === 'voice' ? 'p-1.5' : 'px-3.5 py-2 pr-12')
                                             } ${msg.type === 'text' || msg.deleted ? 'min-w-[85px]' : ''}`}
+                                          style={isOwn ? { backgroundColor: primaryColor, borderColor: adjustColor(primaryColor, -10) } : {}}
                                           onClick={() => setSelectedMessageId(isSelected ? null : msg.id)}
                                         >
                                           {/* Reply content */}
+                                          {/* Reply indicator */}
                                           {msg.replyTo && (
-                                            <div className={`text-xs mb-1.5 p-2 rounded-lg border-l-4 overflow-hidden ${isOwn ? 'bg-black/10 border-white/40 text-white/90' : 'bg-gray-100 border-emerald-500 text-gray-600'
-                                              }`}>
-                                              <p className="font-bold text-[10px] uppercase opacity-80">{msg.replyTo.senderName}</p>
-                                              <p className="truncate opacity-90">{msg.replyTo.text.slice(0, 60)}</p>
+                                            <div
+                                              className={`text-xs mb-2 p-2 rounded-lg border-l-[4px] overflow-hidden flex flex-col gap-0.5 ${isOwn ? 'bg-black/10 text-white/90 border-l-white/90' : 'bg-gray-100 text-gray-500'}`}
+                                              style={!isOwn ? { borderLeftColor: primaryColor, backgroundColor: 'rgba(0,0,0,0.05)' } : {}}
+                                            >
+                                              <div className="font-bold text-[11px] uppercase tracking-wide" style={!isOwn ? { color: primaryColor } : { color: 'white' }}>{msg.replyTo.senderName}</div>
+                                              <div className="truncate opacity-75 leading-tight text-[13px]">{msg.replyTo.text}</div>
                                             </div>
                                           )}
-
                                           {/* Image */}
                                           {msg.type === 'image' && msg.imageUrl && !msg.deleted && (
                                             <div className="relative group/img overflow-hidden rounded-xl">
@@ -1163,8 +1169,8 @@ function GroupsContent() {
                                           {/* Document */}
                                           {msg.type === 'document' && msg.attachment && !msg.deleted && (
                                             <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={`flex items-center gap-3 p-2.5 rounded-xl ${isOwn ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-100 hover:bg-gray-200'} transition-all`}>
-                                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isOwn ? 'bg-white/20' : 'bg-emerald-100'}`}>
-                                                <FileText className={`w-5 h-5 ${isOwn ? 'text-white' : 'text-emerald-600'}`} />
+                                              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: isOwn ? 'rgba(255,255,255,0.2)' : `${primaryColor}20` }}>
+                                                <FileText className="w-5 h-5" style={{ color: isOwn ? 'white' : primaryColor }} />
                                               </div>
                                               <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-bold truncate ${isOwn ? 'text-white' : 'text-gray-900'}`}>{msg.attachment.name}</p>
@@ -1237,7 +1243,7 @@ function GroupsContent() {
                                                     </button>
                                                   ))}
                                                 </div>
-                                                <button onClick={() => { setReplyingTo({ id: msg.id, text: msg.text || (msg.type === 'image' ? 'Image' : 'Document'), senderName: msg.senderName }); setSelectedMessageId(null); inputRef.current?.focus() }} className="w-8 h-8 flex items-center justify-center hover:bg-emerald-50 rounded-full text-emerald-600" title="Reply">
+                                                <button onClick={() => { setReplyingTo({ id: msg.id, text: msg.text || (msg.type === 'image' ? 'Image' : 'Document'), senderName: msg.senderName }); setSelectedMessageId(null); inputRef.current?.focus() }} className="w-8 h-8 flex items-center justify-center hover:bg-opacity-20 rounded-full" style={{ color: primaryColor }} title="Reply">
                                                   <Reply className="w-4 h-4" />
                                                 </button>
                                                 <button onClick={() => { navigator.clipboard.writeText(msg.text); setSelectedMessageId(null) }} className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-full text-gray-500" title="Copy">
@@ -1277,9 +1283,9 @@ function GroupsContent() {
                         className="mb-2 p-3 bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-emerald-100 flex items-center justify-between mx-auto max-w-2xl"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-1 h-10 bg-emerald-500 rounded-full flex-shrink-0" />
+                          <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: primaryColor }} />
                           <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Replying to {replyingTo.senderName}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: primaryColor }}>Replying to {replyingTo.senderName}</p>
                             <p className="text-gray-600 text-sm truncate">{replyingTo.text}</p>
                           </div>
                         </div>
@@ -1302,7 +1308,8 @@ function GroupsContent() {
                       <div className="relative">
                         <button
                           onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                          className={`p-3 rounded-full transition-all ${showAttachmentMenu ? 'bg-emerald-500 text-white rotate-45' : 'hover:bg-gray-100 text-gray-400'}`}
+                          className={`p-3 rounded-full transition-all ${showAttachmentMenu ? 'text-white rotate-45' : 'hover:bg-gray-100 text-gray-400'}`}
+                          style={showAttachmentMenu ? { backgroundColor: primaryColor } : {}}
                         >
                           <Plus className="w-6 h-6" />
                         </button>
@@ -1318,9 +1325,12 @@ function GroupsContent() {
                               <div className="grid grid-cols-1 gap-1">
                                 <button
                                   onClick={() => { setShowAttachmentMenu(false); imageInputRef.current?.click() }}
-                                  className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-2xl group transition-all"
+                                  className="flex items-center gap-3 p-3 rounded-2xl group transition-all"
+                                  style={{ backgroundColor: 'transparent' }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}15`}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                  <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
                                     <ImageIcon className="w-5 h-5" />
                                   </div>
                                   <div className="text-left">
@@ -1379,7 +1389,10 @@ function GroupsContent() {
                         <div className="relative">
                           <button
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className={`p-2 transition-colors ${showEmojiPicker ? 'text-emerald-500' : 'text-gray-400 hover:text-emerald-500'}`}
+                            className="p-2 transition-colors hover:text-opacity-80"
+                            style={{ color: showEmojiPicker ? primaryColor : '#9ca3af' }}
+                            onMouseEnter={(e) => !showEmojiPicker && (e.currentTarget.style.color = primaryColor)}
+                            onMouseLeave={(e) => !showEmojiPicker && (e.currentTarget.style.color = '#9ca3af')}
                             title="Add emoji"
                           >
                             <Smile className="w-6 h-6" />
@@ -1448,7 +1461,9 @@ function GroupsContent() {
                                   animate={{ scale: 1 }}
                                   exit={{ scale: 0 }}
                                   onClick={startRecording}
-                                  className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-500 transition-all transform active:scale-90"
+                                  className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 transition-all transform active:scale-90"
+                                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${primaryColor}15`; e.currentTarget.style.color = primaryColor }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#6b7280' }}
                                 >
                                   <Mic className="w-6 h-6" />
                                 </motion.button>

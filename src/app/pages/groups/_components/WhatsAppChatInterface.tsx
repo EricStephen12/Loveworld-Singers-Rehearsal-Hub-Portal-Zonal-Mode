@@ -1,13 +1,13 @@
 ﻿'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { 
-  Send, 
-  Check, 
-  CheckCheck, 
-  Clock, 
-  Image, 
-  Paperclip, 
+import {
+  Send,
+  Check,
+  CheckCheck,
+  Clock,
+  Image,
+  Paperclip,
   Smile,
   MoreVertical,
   Reply,
@@ -22,6 +22,7 @@ import { WhatsAppMessageStatus, MessageStatus } from '../_lib/whatsapp-message-s
 import { WhatsAppPresence, PresenceData } from '../_lib/whatsapp-presence'
 import { ChatMessage, ChatUser } from '../_lib/firebase-chat-service'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 
 interface WhatsAppChatInterfaceProps {
   onBack?: () => void
@@ -30,28 +31,30 @@ interface WhatsAppChatInterfaceProps {
 
 export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatInterfaceProps) {
   const { user } = useAuth()
-  const { 
-    selectedChat, 
-    messages: realMessages, 
-    sendMessage, 
+  const { currentZone } = useZone()
+  const themeColor = currentZone?.themeColor || '#10b981'
+  const {
+    selectedChat,
+    messages: realMessages,
+    sendMessage,
     toggleReaction,
     setReplyToMessage,
     replyToMessage,
     isMessagesLoading
   } = useChat()
-  
+
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [presenceData, setPresenceData] = useState<Map<string, PresenceData>>(new Map())
   const [displayMessages, setDisplayMessages] = useState<(ChatMessage | OptimisticMessage)[]>([])
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Get other participant for direct chats
-  const otherParticipant = selectedChat?.type === 'direct' 
+  const otherParticipant = selectedChat?.type === 'direct'
     ? selectedChat.participants.find(p => p !== user?.uid)
     : null
 
@@ -97,11 +100,11 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
   // Handle typing indicator
   const handleTyping = useCallback(() => {
     setIsTyping(true)
-    
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current)
     }
-    
+
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false)
     }, 3000)
@@ -113,7 +116,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
 
     const messageText = newMessage.trim()
     setNewMessage('')
-    
+
     // Create optimistic message (shows immediately)
     const optimisticMessage = WhatsAppOptimisticUI.createOptimisticMessage(
       selectedChat.id,
@@ -122,11 +125,11 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
       { text: messageText }
     )
 
-        setDisplayMessages(prev => [...prev, optimisticMessage])
+    setDisplayMessages(prev => [...prev, optimisticMessage])
 
     try {
       // Send to server
-      const success = await sendMessage({ 
+      const success = await sendMessage({
         text: messageText
       })
 
@@ -141,7 +144,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
       WhatsAppOptimisticUI.markOptimisticMessageFailed(optimisticMessage.id, 'Network error')
     }
 
-        setReplyToMessage(null)
+    setReplyToMessage(null)
   }, [newMessage, selectedChat, user, sendMessage, replyToMessage, setReplyToMessage])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -160,7 +163,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
 
   const getStatusIcon = (status: MessageStatus, isOwn: boolean) => {
     if (!isOwn) return null
-    
+
     switch (status) {
       case 'sending':
         return <Clock className="w-4 h-4 text-gray-400" />
@@ -179,17 +182,17 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
 
   const getPresenceStatus = () => {
     if (!otherParticipant) return null
-    
+
     const presence = presenceData.get(otherParticipant)
     if (!presence) return 'last seen recently'
-    
+
     if (presence.status === 'online') {
       return 'online'
     } else {
       const lastSeen = new Date(presence.lastSeen)
       const now = new Date()
       const diffMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60))
-      
+
       if (diffMinutes < 1) return 'last seen just now'
       if (diffMinutes < 60) return `last seen ${diffMinutes}m ago`
       if (diffMinutes < 1440) return `last seen ${Math.floor(diffMinutes / 60)}h ago`
@@ -218,28 +221,29 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
   return (
     <div className={`flex flex-col h-full bg-gray-50 ${className}`}>
       {/* Header */}
-      <div className="bg-emerald-600 text-white p-4 shadow-md">
+      <div className="text-white p-4 shadow-md" style={{ backgroundColor: themeColor }}>
         <div className="flex items-center space-x-3">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2 hover:bg-emerald-700 rounded-lg transition-colors md:hidden"
+              className="p-2 rounded-lg transition-colors md:hidden"
+              style={{ backgroundColor: 'rgba(0,0,0,0.1)' }}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          
-          <div className="w-10 h-10 bg-emerald-400 rounded-full flex items-center justify-center font-semibold">
+
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             {otherParticipantName.charAt(0).toUpperCase()}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold truncate">{otherParticipantName}</h2>
             <p className="text-xs text-emerald-100 truncate">
               {getPresenceStatus()}
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <button className="p-2 hover:bg-emerald-700 rounded-lg transition-colors">
               <Phone className="w-5 h-5" />
@@ -264,42 +268,42 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
           displayMessages.map((message) => {
             const isOwn = message.senderId === user?.uid
             const isOptimistic = 'isOptimistic' in message && message.isOptimistic
-            
+
             return (
               <div
                 key={message.id}
                 className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm relative group ${
-                    isOwn
-                      ? 'bg-emerald-500 text-white rounded-br-none'
-                      : 'bg-white text-gray-800 rounded-bl-none'
-                  } ${isOptimistic ? 'opacity-75' : ''}`}
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm relative group ${isOwn
+                    ? 'text-white rounded-br-none'
+                    : 'bg-white text-gray-800 rounded-bl-none'
+                    } ${isOptimistic ? 'opacity-75' : ''}`}
+                  style={isOwn ? { backgroundColor: themeColor } : {}}
                 >
                   {/* Reply indicator */}
                   {message.replyTo && (
-                    <div className={`text-xs mb-2 p-2 rounded ${
-                      isOwn ? 'bg-emerald-600' : 'bg-gray-100'
-                    }`}>
-                      <div className="font-semibold">{message.replySenderName}</div>
-                      <div className="truncate">{message.replySnippet}</div>
+                    <div
+                      className={`text-xs mb-2 p-2 rounded-lg border-l-[4px] overflow-hidden flex flex-col gap-0.5 ${isOwn ? 'bg-black/10 text-white/90 border-l-white/90' : 'bg-gray-100 text-gray-500'}`}
+                      style={!isOwn ? { borderLeftColor: themeColor, backgroundColor: 'rgba(0,0,0,0.05)' } : {}}
+                    >
+                      <div className="font-bold text-[11px] uppercase tracking-wide" style={!isOwn ? { color: themeColor } : { color: 'white' }}>{message.replySenderName}</div>
+                      <div className="truncate opacity-75 text-[13px] leading-tight">{message.replySnippet}</div>
                     </div>
                   )}
-                  
+
                   {/* Message content */}
                   <p className="text-sm break-words">{message.text}</p>
-                  
+
                   {/* Message footer */}
                   <div className="flex items-center justify-end space-x-1 mt-1">
-                    <span className={`text-xs ${
-                      isOwn ? 'text-emerald-100' : 'text-gray-500'
-                    }`}>
+                    <span className={`text-xs ${isOwn ? 'text-emerald-100' : 'text-gray-500'
+                      }`}>
                       {formatTime(message.timestamp)}
                     </span>
                     {getStatusIcon(('status' in message ? message.status : 'sent') || 'sent', isOwn)}
                   </div>
-                  
+
                   {/* Reactions */}
                   {message.reactions && message.reactions.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -313,7 +317,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Quick actions (on hover) */}
                   <div className="absolute -top-8 right-0 hidden group-hover:flex bg-white rounded-lg shadow-lg border p-1 space-x-1">
                     <button
@@ -334,7 +338,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
             )
           })
         )}
-        
+
         {/* Typing indicator */}
         {isTyping && (
           <div className="flex justify-start">
@@ -347,7 +351,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -382,14 +386,14 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
           >
             <Paperclip className="w-6 h-6" />
           </button>
-          
+
           <button
             type="button"
             className="p-2 text-gray-500 hover:text-emerald-600 transition-colors"
           >
             <Image className="w-6 h-6" />
           </button>
-          
+
           <input
             ref={inputRef}
             type="text"
@@ -402,19 +406,20 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
             placeholder="Type a message..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
           />
-          
+
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="p-2 text-gray-500 hover:text-emerald-600 transition-colors"
           >
             <Smile className="w-6 h-6" />
           </button>
-          
+
           <button
             type="button"
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            className="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="p-2 text-white rounded-full transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            style={newMessage.trim() ? { backgroundColor: themeColor } : {}}
           >
             <Send className="w-5 h-5" />
           </button>

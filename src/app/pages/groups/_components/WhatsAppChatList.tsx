@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-  Search, 
-  MessageCircle, 
-  Users, 
+import {
+  Search,
+  MessageCircle,
+  Users,
   Pin,
   Archive,
   MoreVertical,
@@ -24,15 +24,15 @@ interface WhatsAppChatListProps {
 
 export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatListProps) {
   const { user } = useAuth()
-  const { 
-    chats, 
-    selectedChat, 
-    setSelectedChat, 
+  const {
+    chats,
+    selectedChat,
+    setSelectedChat,
     isChatsLoading,
     deleteChat,
     togglePinChat
   } = useChat()
-  
+
   const [searchTerm, setSearchTerm] = useState('')
   const [presenceData, setPresenceData] = useState<Map<string, PresenceData>>(new Map())
   const [showArchived, setShowArchived] = useState(false)
@@ -63,22 +63,22 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
   // Filter chats based on search
   const filteredChats = chats.filter(chat => {
     if (!searchTerm) return true
-    
+
     const searchLower = searchTerm.toLowerCase()
-    
+
     // Search in chat name (for groups)
     if (chat.name?.toLowerCase().includes(searchLower)) return true
-    
+
     // Search in participant names (for direct chats)
     if (chat.participantNames) {
-      return Object.values(chat.participantNames).some(name => 
+      return Object.values(chat.participantNames).some(name =>
         name.toLowerCase().includes(searchLower)
       )
     }
-    
+
     // Search in last message
     if (chat.lastMessage?.text?.toLowerCase().includes(searchLower)) return true
-    
+
     return false
   })
 
@@ -99,10 +99,10 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
     if (diffMinutes < 60) return `${diffMinutes}m`
     if (diffHours < 24) return `${diffHours}h`
     if (diffDays < 7) return `${diffDays}d`
-    
-    return messageDate.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
+
+    return messageDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
     })
   }
 
@@ -110,13 +110,13 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
     if (chat.type === 'group') {
       return chat.name || 'Group Chat'
     }
-    
+
     // For direct chats, get the other participant's name
     const otherParticipant = chat.participants.find(p => p !== user?.uid)
     if (otherParticipant && chat.participantNames) {
       return chat.participantNames[otherParticipant] || 'Unknown User'
     }
-    
+
     return 'Direct Chat'
   }
 
@@ -127,17 +127,17 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
 
   const getPresenceIndicator = (chat: Chat) => {
     if (chat.type === 'group') return null
-    
+
     const otherParticipant = chat.participants.find(p => p !== user?.uid)
     if (!otherParticipant) return null
-    
+
     const presence = presenceData.get(otherParticipant)
     if (presence?.status === 'online') {
       return (
         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
       )
     }
-    
+
     return null
   }
 
@@ -197,7 +197,7 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
               {searchTerm ? 'No chats found' : 'No conversations yet'}
             </h3>
             <p className="text-gray-500 text-sm">
-              {searchTerm 
+              {searchTerm
                 ? 'Try a different search term'
                 : 'Start a conversation with your fellow singers'
               }
@@ -210,20 +210,18 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
               const isSelected = selectedChat?.id === chat.id
               const displayName = getChatDisplayName(chat)
               const lastMessage = chat.lastMessage
-              
+
               return (
                 <div
                   key={chat.id}
                   onClick={() => handleChatClick(chat)}
-                  className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors relative ${
-                    isSelected ? 'bg-emerald-50 border-r-4 border-emerald-500' : ''
-                  }`}
+                  className={`flex items-center p-4 hover:bg-gray-50 cursor-pointer transition-colors relative ${isSelected ? 'bg-emerald-50 border-r-4 border-emerald-500' : ''
+                    }`}
                 >
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-white ${
-                      chat.type === 'group' ? 'bg-blue-500' : 'bg-emerald-500'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-white ${chat.type === 'group' ? 'bg-blue-500' : 'bg-emerald-500'
+                      }`}>
                       {chat.type === 'group' ? (
                         <Users className="w-6 h-6" />
                       ) : (
@@ -237,16 +235,15 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
                   <div className="flex-1 min-w-0 ml-3">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center space-x-2">
-                        <h3 className={`font-semibold truncate ${
-                          unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'
-                        }`}>
+                        <h3 className={`font-semibold truncate ${unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'
+                          }`}>
                           {displayName}
                         </h3>
                         {isPinned(chat) && (
                           <Pin className="w-4 h-4 text-gray-400" />
                         )}
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         {lastMessage && (
                           <span className="text-xs text-gray-500">
@@ -258,19 +255,18 @@ export function WhatsAppChatList({ onChatSelect, className = '' }: WhatsAppChatL
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         {lastMessage && lastMessage.senderId === user?.uid && (
                           <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />
                         )}
-                        <p className={`text-sm truncate ${
-                          unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'
-                        }`}>
+                        <p className={`text-sm truncate ${unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'
+                          }`}>
                           {lastMessage?.text || 'No messages yet'}
                         </p>
                       </div>
-                      
+
                       {unreadCount > 0 && (
                         <div className="bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-2">
                           {unreadCount > 99 ? '99+' : unreadCount}

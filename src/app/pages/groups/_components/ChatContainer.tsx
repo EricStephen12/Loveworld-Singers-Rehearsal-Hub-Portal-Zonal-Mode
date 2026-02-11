@@ -59,26 +59,26 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
     }
 
     setIsSearching(true)
-    
+
     // Search within currently loaded messages
     const searchLower = searchTerm.toLowerCase().trim()
     const matchingMessageIds: string[] = []
-    
+
     messages.forEach(message => {
       if (message.deleted) return
-      
+
       const messageText = (message.text || '').toLowerCase()
       const senderName = (message.senderName || '').toLowerCase()
-      
-            if (messageText.includes(searchLower) || senderName.includes(searchLower)) {
+
+      if (messageText.includes(searchLower) || senderName.includes(searchLower)) {
         matchingMessageIds.push(message.id)
       }
     })
-    
+
     setSearchResults(matchingMessageIds)
     setCurrentSearchIndex(0)
     setIsSearching(false)
-    
+
     // Scroll to first result
     if (matchingMessageIds.length > 0 && messageRefs.current[matchingMessageIds[0]]) {
       setTimeout(() => {
@@ -202,6 +202,10 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div
+                className="w-12 h-12 rounded-full border-4 border-gray-100 animate-spin mx-auto mb-4"
+                style={{ borderTopColor: currentZone?.themeColor || '#10b981' }}
+              />
+              <div
                 className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
                 style={{ backgroundColor: `${currentZone?.themeColor || '#10b981'}20` }}
               >
@@ -229,14 +233,14 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
 
               const isSearchMatch = searchResults.includes(message.id)
               const isCurrentMatch = searchResults[currentSearchIndex] === message.id
-              
+
               // Debug first message only
               if (index === 0) {
               }
-              
+
               return (
-                <div 
-                  key={message.id} 
+                <div
+                  key={message.id}
                   ref={(el) => { messageRefs.current[message.id] = el }}
                   className={`flex flex-col gap-1 w-full ${isSearchMatch ? 'bg-yellow-50' : ''} ${isCurrentMatch ? 'ring-2 ring-yellow-400' : ''}`}
                 >
@@ -258,22 +262,18 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                           </span>
                         )}
                         <div
-                          className={`rounded-2xl px-3 sm:px-4 py-2 text-sm sm:text-base ${
-                            isOwnMessage ? 'text-white rounded-br-none' : 'bg-white text-gray-900 rounded-bl-none shadow-sm'
-                          }`}
+                          className={`rounded-2xl px-3 sm:px-4 py-2 text-sm sm:text-base ${isOwnMessage ? 'text-white rounded-br-none' : 'bg-white text-gray-900 rounded-bl-none shadow-sm'
+                            }`}
                           style={isOwnMessage ? { backgroundColor: currentZone?.themeColor || '#10b981' } : {}}
                         >
-                          {message.replyTo && !message.deleted && (
-                            <div className={`mb-2 border-l-3 rounded-r-lg px-3 py-2 text-xs ${
-                              isOwnMessage 
-                                ? 'bg-white/20 border-white/40 text-white' 
-                                : 'bg-gray-50 border-gray-300 text-gray-700'
-                            }`}>
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <Reply className={`w-3 h-3 ${isOwnMessage ? 'text-white/80' : 'text-gray-500'}`} />
-                                <p className="font-semibold">{message.replySenderName || 'Reply'}</p>
-                              </div>
-                              <p className="truncate opacity-90">{message.replySnippet || 'Message'}</p>
+                          {/* Reply indicator */}
+                          {message.replyTo && (
+                            <div
+                              className={`text-xs mb-2 p-2 rounded-lg border-l-[4px] overflow-hidden flex flex-col gap-0.5 ${isOwnMessage ? 'bg-black/10 text-white/90 border-l-white/90' : 'bg-gray-100 text-gray-500'}`}
+                              style={!isOwnMessage ? { borderLeftColor: currentZone?.themeColor || '#10b981', backgroundColor: 'rgba(0,0,0,0.05)' } : {}}
+                            >
+                              <div className="font-bold text-[11px] uppercase tracking-wide" style={!isOwnMessage ? { color: currentZone?.themeColor || '#10b981' } : { color: 'white' }}>{message.replySenderName}</div>
+                              <div className="truncate opacity-75 leading-tight text-[13px]">{message.replySnippet}</div>
                             </div>
                           )}
 
@@ -284,7 +284,7 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                               {message.text && (
                                 <p className="whitespace-pre-wrap break-words">
                                   {searchTerm && isSearchMatch ? (
-                                    message.text.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) => 
+                                    message.text.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) =>
                                       part.toLowerCase() === searchTerm.toLowerCase() ? (
                                         <mark key={i} className="bg-yellow-300 text-gray-900">{part}</mark>
                                       ) : (
@@ -299,9 +299,9 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                               {message.image && (
                                 <div className="mt-2 -mx-1">
                                   {typeof message.image === 'string' && message.image.startsWith('http') ? (
-                                    <img 
-                                      src={message.image} 
-                                      alt="Shared image" 
+                                    <img
+                                      src={message.image}
+                                      alt="Shared image"
                                       className="w-full max-w-sm max-h-96 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity shadow-sm"
                                       onClick={() => window.open(message.image, '_blank')}
                                       onError={(e) => {
@@ -323,9 +323,9 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                                       loading="lazy"
                                     />
                                   ) : (
-                                    <a 
-                                      href={message.image} 
-                                      target="_blank" 
+                                    <a
+                                      href={message.image}
+                                      target="_blank"
                                       rel="noopener noreferrer"
                                       className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm text-blue-600"
                                     >
@@ -383,9 +383,8 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                       {!message.deleted && (
                         <button
                           onClick={() => setActiveActionMessage(prev => prev === message.id ? null : message.id)}
-                          className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${
-                            isOwnMessage ? 'hover:bg-white/20 text-white/80' : 'hover:bg-gray-200 text-gray-500'
-                          }`}
+                          className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${isOwnMessage ? 'hover:bg-white/20 text-white/80' : 'hover:bg-gray-200 text-gray-500'
+                            }`}
                           aria-label="Message actions"
                         >
                           <MoreHorizontal className="w-4 h-4" />
@@ -398,11 +397,10 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                     <div className={`flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-xs ${isOwnMessage ? 'justify-end' : 'justify-start'} w-full px-1`}>
                       <button
                         onClick={() => toggleReaction(message.id)}
-                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${
-                          isOwnMessage 
-                            ? 'hover:bg-white/20 text-white/90' 
-                            : 'hover:bg-gray-100 text-gray-600'
-                        }`}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${isOwnMessage
+                          ? 'hover:bg-white/20 text-white/90'
+                          : 'hover:bg-gray-100 text-gray-600'
+                          }`}
                       >
                         <Heart className={`w-3.5 h-3.5 ${hasLiked ? (isOwnMessage ? 'text-white' : 'text-red-500') : ''} ${hasLiked ? 'fill-current' : ''}`} />
                         {likeCount > 0 && <span>{likeCount}</span>}
@@ -413,11 +411,10 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                           setReplyToMessage(message)
                           setActiveActionMessage(null)
                         }}
-                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${
-                          isOwnMessage 
-                            ? 'hover:bg-white/20 text-white/90' 
-                            : 'hover:bg-gray-100 text-gray-600'
-                        }`}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${isOwnMessage
+                          ? 'hover:bg-white/20 text-white/90'
+                          : 'hover:bg-gray-100 text-gray-600'
+                          }`}
                       >
                         <Reply className="w-3.5 h-3.5" />
                         Reply
@@ -426,7 +423,7 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                         onClick={async () => {
                           const isStarred = starredMessages.has(message.id)
                           await toggleStarMessage(message.id)
-                                                    const newStarred = new Set(starredMessages)
+                          const newStarred = new Set(starredMessages)
                           if (isStarred) {
                             newStarred.delete(message.id)
                           } else {
@@ -435,13 +432,12 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                           setStarredMessages(newStarred)
                           setActiveActionMessage(null)
                         }}
-                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${
-                          starredMessages.has(message.id)
-                            ? (isOwnMessage ? 'bg-yellow-500/30 text-yellow-200' : 'bg-yellow-100 text-yellow-700')
-                            : (isOwnMessage 
-                                ? 'hover:bg-white/20 text-white/90' 
-                                : 'hover:bg-gray-100 text-gray-600')
-                        }`}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${starredMessages.has(message.id)
+                          ? (isOwnMessage ? 'bg-yellow-500/30 text-yellow-200' : 'bg-yellow-100 text-yellow-700')
+                          : (isOwnMessage
+                            ? 'hover:bg-white/20 text-white/90'
+                            : 'hover:bg-gray-100 text-gray-600')
+                          }`}
                         title={starredMessages.has(message.id) ? 'Unstar message' : 'Star message'}
                       >
                         <Star className={`w-3.5 h-3.5 ${starredMessages.has(message.id) ? 'fill-current' : ''}`} />
@@ -453,11 +449,10 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                             setMessageToDelete(message.id)
                             setActiveActionMessage(null)
                           }}
-                          className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${
-                            isOwnMessage 
-                              ? 'hover:bg-red-500/30 text-white/90 hover:text-white' 
-                              : 'hover:bg-red-50 text-red-600'
-                          }`}
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors ${isOwnMessage
+                            ? 'hover:bg-red-500/30 text-white/90 hover:text-white'
+                            : 'hover:bg-red-50 text-red-600'
+                            }`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Delete
@@ -472,11 +467,10 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
                               setActiveActionMessage(null)
                             }
                           }}
-                          className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-40 ${
-                            isOwnMessage 
-                              ? 'hover:bg-white/20 text-white/90' 
-                              : 'hover:bg-gray-100 text-gray-600'
-                          }`}
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors disabled:opacity-40 ${isOwnMessage
+                            ? 'hover:bg-white/20 text-white/90'
+                            : 'hover:bg-gray-100 text-gray-600'
+                            }`}
                           disabled={!message.text}
                         >
                           <Pencil className="w-3.5 h-3.5" />

@@ -12,6 +12,7 @@ import { FirebaseCommentService } from "@/lib/firebase-comment-service";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
 import { useRealtimeSongData } from "@/hooks/useRealtimeSongData";
 import { NavigationManager } from "@/utils/navigation";
+import CommentAudioPlayer from "./CommentAudioPlayer";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -790,16 +791,25 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
                 <div className="max-w-4xl mx-auto">
                   <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
-                    {(!currentSongData?.comments || !Array.isArray(currentSongData.comments) || currentSongData.comments.length === 0) ? (
+                    {(!displayedSongData?.comments || !Array.isArray(displayedSongData.comments) || displayedSongData.comments.length === 0) ? (
                       <div className="text-center py-12">
                         <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg">No comments available</p>
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        {(Array.isArray(currentSongData.comments) ? currentSongData.comments : []).map((comment: any) => (
-                          <div key={comment.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                            <p className="text-black leading-relaxed mb-3 text-base whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+                        {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
+                          <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
+                            <p className="text-black leading-relaxed mb-4 text-base whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
+
+                            {comment.audioUrl && (
+                              <div className="mb-4 max-w-md">
+                                <CommentAudioPlayer
+                                  src={comment.audioUrl}
+                                  accentColor={zoneColor}
+                                />
+                              </div>
+                            )}
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                               <span className="font-medium">{comment.author}</span>
                               <span>•</span>
@@ -1049,8 +1059,17 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       ) : (
                         <div className="space-y-4">
                           {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
-                            <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                              <div className="text-black leading-relaxed mb-2 whitespace-pre-wrap">{formatCommentText(comment.text)}</div>
+                            <div key={comment.id} className="border-b border-slate-100 pb-4 last:border-b-0 group">
+                              <div className="text-slate-900 leading-relaxed mb-3 whitespace-pre-wrap text-sm">{formatCommentText(comment.text)}</div>
+
+                              {comment.audioUrl && (
+                                <div className="mb-3 max-w-md">
+                                  <CommentAudioPlayer
+                                    src={comment.audioUrl}
+                                    accentColor={zoneColor}
+                                  />
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span className="font-medium">{comment.author}</span>
                                 <span>•</span>

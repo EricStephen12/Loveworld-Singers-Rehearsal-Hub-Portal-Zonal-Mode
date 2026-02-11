@@ -219,6 +219,7 @@ export interface PraiseNightSong {
 export interface Comment {
   id: string;
   text: string;
+  audioUrl?: string; // Optional audio comment
   date: string;
   author: string;
 }
