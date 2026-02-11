@@ -98,6 +98,16 @@ export default function AllMinisteredSongsPage() {
       .trim()
   }
 
+  // Lenient Search Normalization: lowercase, no punctuation, single spaces
+  const normalizeSearchText = (text: string): string => {
+    if (!text) return ''
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove all non-word characters (except spaces)
+      .replace(/\s+/g, ' ')    // Normalize multiple spaces
+      .trim()
+  }
+
   // Get unique lead singers with normalization (handle case differences, duplicates, and punctuation)
   const leadSingers = useMemo(() => {
     // Map: normalized (lowercase, no punctuation) -> canonical name (first occurrence with proper case)
@@ -159,18 +169,18 @@ export default function AllMinisteredSongsPage() {
       }
     }
 
-    // Filter by search query
+    // Filter by search query (Lenient Matching)
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
+      const query = normalizeSearchText(searchQuery)
       filtered = filtered.filter(song =>
-        song.title?.toLowerCase().includes(query) ||
-        song.writer?.toLowerCase().includes(query) ||
-        song.leadSinger?.toLowerCase().includes(query) ||
-        song.category?.toLowerCase().includes(query) ||
-        song.lyrics?.toLowerCase().includes(query) ||
-        song.solfa?.toLowerCase().includes(query) ||
-        song.key?.toLowerCase().includes(query) ||
-        song.tempo?.toLowerCase().includes(query)
+        normalizeSearchText(song.title || '').includes(query) ||
+        normalizeSearchText(song.writer || '').includes(query) ||
+        normalizeSearchText(song.leadSinger || '').includes(query) ||
+        normalizeSearchText(song.category || '').includes(query) ||
+        normalizeSearchText(song.lyrics || '').includes(query) ||
+        normalizeSearchText(song.solfa || '').includes(query) ||
+        normalizeSearchText(song.key || '').includes(query) ||
+        normalizeSearchText(song.tempo?.toString() || '').includes(query)
       )
     }
 
