@@ -101,17 +101,29 @@ export default function PlaylistsPage() {
         userEmail={user?.email || undefined}
       />
 
-      <div className="flex">
-        <YouTubeSidebar
-          sidebarOpen={sidebarOpen}
-          viewMode={viewMode}
-          selectedCategory={selectedCategory}
-          setViewMode={setViewMode}
-          setSelectedCategory={setSelectedCategory}
-          categories={[]}
-        />
+      <div className="flex flex-1 pt-14 lg:pt-0 overflow-hidden h-[calc(100vh-56px)] lg:h-screen">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-        <main className="flex-1 max-w-[2100px] mx-auto px-4 py-6 overflow-x-hidden">
+        {/* Sidebar Container */}
+        <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
+          <YouTubeSidebar
+            sidebarOpen={sidebarOpen}
+            viewMode={viewMode}
+            selectedCategory={selectedCategory}
+            setViewMode={setViewMode}
+            setSelectedCategory={setSelectedCategory}
+            categories={[]}
+            onClose={() => setSidebarOpen(false)}
+          />
+        </div>
+
+        <main className="flex-1 max-w-[2100px] mx-auto px-4 py-6 overflow-y-auto bg-[#0f0f0f]">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-bold">Collections</h1>
             <button

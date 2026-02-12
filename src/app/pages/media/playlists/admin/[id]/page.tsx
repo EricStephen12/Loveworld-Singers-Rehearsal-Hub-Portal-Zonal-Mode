@@ -36,7 +36,7 @@ export default function AdminPlaylistDetailPage() {
   // Header State
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (playlistId) {
@@ -116,21 +116,32 @@ export default function AdminPlaylistDetailPage() {
           setSearchQuery={setSearchQuery}
           showMobileSearch={showMobileSearch}
           setShowMobileSearch={setShowMobileSearch}
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           userName={profile?.first_name || profile?.display_name || profile?.email || undefined}
         />
       </div>
 
-      <div className="flex flex-1 pt-14 overflow-hidden">
-        {/* Sidebar - Desktop Only */}
-        <YouTubeSidebar
-          sidebarOpen={isSidebarOpen}
-          viewMode="all"
-          selectedCategory="all"
-          setViewMode={() => { }}
-          setSelectedCategory={() => { }}
-          categories={[]} // Future: fetch categories here too
-        />
+      <div className="flex flex-1 pt-14 lg:pt-0 overflow-hidden">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar Container */}
+        <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
+          <YouTubeSidebar
+            sidebarOpen={sidebarOpen}
+            viewMode="all"
+            selectedCategory="all"
+            setViewMode={() => { }}
+            setSelectedCategory={() => { }}
+            categories={[]} // Future: fetch categories here too
+            onClose={() => setSidebarOpen(false)}
+          />
+        </div>
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto scrollbar-hide bg-[#0f0f0f] relative">

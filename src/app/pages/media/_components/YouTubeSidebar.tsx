@@ -2,9 +2,10 @@
 
 import {
     Home as HomeIcon, Play, ListVideo, History,
-    PlaySquare, Clock, ThumbsUp, FolderOpen
+    PlaySquare, Clock, ThumbsUp, FolderOpen, X
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
 
 interface SidebarItemProps {
     icon: any
@@ -46,6 +47,7 @@ interface YouTubeSidebarProps {
     setViewMode: (mode: 'all' | 'shorts') => void
     setSelectedCategory: (category: string) => void
     categories: any[]
+    onClose?: () => void
 }
 
 export default function YouTubeSidebar({
@@ -54,12 +56,31 @@ export default function YouTubeSidebar({
     selectedCategory,
     setViewMode,
     setSelectedCategory,
-    categories
+    categories,
+    onClose
 }: YouTubeSidebarProps) {
     const router = useRouter()
 
+    const { user } = useAuth()
+    const userId = user?.uid
+
     return (
-        <aside className={`${sidebarOpen ? 'w-[240px] px-3' : 'w-[72px] px-1'} flex flex-col gap-0.5 py-3 overflow-y-auto scrollbar-hide transition-all duration-300 h-[calc(100vh-56px)] sticky top-14 bg-[#0f0f0f] z-[100]`}>
+        <aside className={`${sidebarOpen ? 'w-[240px] px-3' : 'w-[72px] px-1'} flex flex-col gap-0.5 py-3 overflow-y-auto scrollbar-hide transition-all duration-300 h-screen lg:h-[calc(100vh-56px)] fixed lg:sticky top-0 lg:top-14 bg-[#0f0f0f] z-[120]`}>
+            {/* Mobile Sidebar Header */}
+            {sidebarOpen && (
+                <div className="flex lg:hidden items-center gap-4 px-2 mb-4 h-14 shrink-0">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <X className="w-6 h-6 text-white" />
+                    </button>
+                    <div className="flex items-center gap-1">
+                        <span className="text-white font-bold tracking-tight text-lg pl-1">MEDIA</span>
+                    </div>
+                </div>
+            )}
+
             <SidebarItem
                 icon={HomeIcon}
                 label="Home"
@@ -103,9 +124,24 @@ export default function YouTubeSidebar({
 
             {sidebarOpen && <hr className="my-3 border-white/10 mx-3" />}
             {sidebarOpen && <div className="px-6 py-2 text-base font-semibold text-white mb-1">Explore</div>}
-            <SidebarItem icon={History} label="History" compact={!sidebarOpen} />
-            <SidebarItem icon={Clock} label="Watch later" compact={!sidebarOpen} />
-            <SidebarItem icon={ThumbsUp} label="Liked videos" compact={!sidebarOpen} />
+            <SidebarItem
+                icon={History}
+                label="History"
+                compact={!sidebarOpen}
+                onClick={() => router.push('/pages/media/history')}
+            />
+            <SidebarItem
+                icon={Clock}
+                label="Watch later"
+                compact={!sidebarOpen}
+                onClick={() => userId && router.push(`/pages/media/playlists/${userId}_watch_later`)}
+            />
+            <SidebarItem
+                icon={ThumbsUp}
+                label="Liked videos"
+                compact={!sidebarOpen}
+                onClick={() => userId && router.push(`/pages/media/playlists/${userId}_liked`)}
+            />
 
             {sidebarOpen && <hr className="my-3 border-white/10 mx-3" />}
             {sidebarOpen && <div className="px-6 py-2 text-base font-semibold text-white mb-1">Categories</div>}

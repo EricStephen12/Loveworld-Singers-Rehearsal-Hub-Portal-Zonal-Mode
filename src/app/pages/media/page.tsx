@@ -193,13 +193,13 @@ export default function MediaPage() {
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Sidebar */}
-        <div className={`fixed lg:relative z-40 transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:w-[72px] lg:translate-x-0'}`}>
+        <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
           <YouTubeSidebar
             sidebarOpen={sidebarOpen}
             viewMode={viewMode === 'shorts' ? 'shorts' : 'all'}
@@ -207,6 +207,7 @@ export default function MediaPage() {
             setViewMode={(mode) => setViewMode(mode as any)}
             setSelectedCategory={setSelectedCategory}
             categories={categories}
+            onClose={() => setSidebarOpen(false)}
           />
         </div>
 

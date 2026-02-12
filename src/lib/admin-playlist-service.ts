@@ -27,6 +27,7 @@ export interface AdminPlaylist {
   isPublic: boolean
   isFeatured: boolean
   forHQ: boolean // Zone targeting
+  zoneId?: string // Link to specific zone
   type?: string // Category type (same as video categories)
   createdBy: string
   createdByName: string
@@ -54,7 +55,7 @@ export async function getAdminPlaylists(): Promise<AdminPlaylist[]> {
 }
 
 // Get public playlists (excludes nested playlists)
-export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: string): Promise<AdminPlaylist[]> {
+export async function getPublicAdminPlaylists(isHQZone: boolean, currentZoneId?: string, categoryType?: string): Promise<AdminPlaylist[]> {
   try {
     const q = query(
       collection(db, COLLECTION),
@@ -77,9 +78,21 @@ export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: 
     })
 
     // Filter by zone and exclude nested
-    let filtered = allPlaylists.filter(p =>
-      p.forHQ === isHQZone && !nestedPlaylistIds.has(p.id)
-    )
+    let filtered = allPlaylists.filter(p => {
+      // 1. Must not be a nested playlist
+      if (nestedPlaylistIds.has(p.id)) return false
+
+      // 2. Zone Filtering
+      if (isHQZone) {
+        // HQ users see HQ playlists
+        return p.forHQ === true
+      } else {
+        // Zonal users see:
+        // a) Playlists marked as NOT for HQ (Zonal content)
+        // b) AND either no specific zoneId (Global Zonal) OR matches their zoneId
+        return p.forHQ === false && (!p.zoneId || p.zoneId === currentZoneId)
+      }
+    })
 
     if (categoryType && categoryType !== 'all') {
       filtered = filtered.filter(p => p.type === categoryType)
@@ -104,7 +117,17 @@ export async function getPublicAdminPlaylists(isHQZone: boolean, categoryType?: 
         p.childPlaylistIds?.forEach(childId => nestedPlaylistIds.add(childId))
       })
 
-      let filtered = all.filter(p => p.isPublic && p.forHQ === isHQZone && !nestedPlaylistIds.has(p.id))
+      let filtered = all.filter(p => {
+        if (nestedPlaylistIds.has(p.id)) return false
+        if (!p.isPublic) return false
+
+        if (isHQZone) {
+          return p.forHQ === true
+        } else {
+          return p.forHQ === false && (!p.zoneId || p.zoneId === currentZoneId)
+        }
+      })
+
       if (categoryType && categoryType !== 'all') {
         filtered = filtered.filter(p => p.type === categoryType)
       }
@@ -163,6 +186,7 @@ export async function createAdminPlaylist(data: {
   isPublic?: boolean
   isFeatured?: boolean
   forHQ?: boolean
+  zoneId?: string
   type?: string
   createdBy: string
   createdByName: string
@@ -176,6 +200,7 @@ export async function createAdminPlaylist(data: {
       isPublic: data.isPublic ?? true,
       isFeatured: data.isFeatured ?? false,
       forHQ: data.forHQ ?? true,
+      zoneId: data.zoneId || null,
       type: data.type || null,
       createdBy: data.createdBy,
       createdByName: data.createdByName,

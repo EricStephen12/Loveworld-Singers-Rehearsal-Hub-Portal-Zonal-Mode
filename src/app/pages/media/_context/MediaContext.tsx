@@ -114,7 +114,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
         firebaseMediaService.getFeaturedMedia(),
         getCategories(),
         getPublicPlaylists(20),
-        getPublicAdminPlaylists(userIsHQ)
+        getPublicAdminPlaylists(userIsHQ, currentZone?.id)
       ])
 
       setAllMedia(media)
@@ -142,7 +142,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
 
       const [pubPlaylists, admPlaylists] = await Promise.all([
         getPublicPlaylists(20),
-        getPublicAdminPlaylists(userIsHQ)
+        getPublicAdminPlaylists(userIsHQ, currentZone?.id)
       ])
 
       setPlaylists(pubPlaylists)
