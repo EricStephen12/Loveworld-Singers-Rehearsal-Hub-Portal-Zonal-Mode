@@ -98,8 +98,8 @@ export function MasterSongDetailSheet({
 
   const goToAudioLab = () => {
     setIsNavigating(true);
-    // Navigate to AudioLab library with song ID to auto-expand
-    router.push(`/pages/audiolab?song=${song.id}`);
+    // Navigate to AudioLab library with song title to auto-search
+    router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(song.title)}`);
     onClose();
   };
 

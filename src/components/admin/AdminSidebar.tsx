@@ -55,7 +55,7 @@ const AdminSidebar = React.memo(({
   // Group sidebar items by category
   const mainItems = [
     { icon: Home, label: 'Dashboard', active: activeSection === 'Dashboard' },
-    { icon: MessageCircle, label: 'Support Chat', active: activeSection === 'Support Chat' },
+    { icon: MessageCircle, label: 'Support Chat', active: activeSection === 'Support Chat', hqOnly: true, restrictedAdminHidden: true },
     { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqZoneOnly: true },
   ];
 
@@ -82,7 +82,7 @@ const AdminSidebar = React.memo(({
   const filterItems = (items: any[]) => items.filter(item => {
     // If restricted, only show Pages
     if (isRestrictedAdmin) {
-      return item.label === 'Pages';
+      return item.label === 'Pages' || !item.restrictedAdminHidden;
     }
 
     if (item.hqOnly && !isHQAdmin) return false;

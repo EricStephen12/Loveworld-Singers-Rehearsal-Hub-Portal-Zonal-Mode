@@ -45,6 +45,8 @@ const AdminMobileNav = React.memo(({
       case 'Media Upload':
       case 'Calendar':
       case 'Activity Logs':
+      case 'Support Chat':
+      case 'Payments':
         return 'More';
       default:
         return 'Dashboard';

@@ -1780,7 +1780,7 @@ function AdminContent() {
           {activeSection === 'Calendar' && !isRestrictedAdmin && <CalendarSection />}
           {activeSection === 'Notifications' && !isRestrictedAdmin && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
-          {activeSection === 'Support Chat' && !isRestrictedAdmin && <SupportChatSection />}
+          {activeSection === 'Support Chat' && isHQAdmin && !isRestrictedAdmin && <SupportChatSection />}
         </div>
 
         {/* Modals */}

@@ -385,6 +385,7 @@ export function LibraryView() {
 
     const decodedSong = decodeURIComponent(songParam);
     const matchedSong = songs.find(s =>
+      s.id === decodedSong || // Match by ID first
       s.title.toLowerCase() === decodedSong.toLowerCase() ||
       s.title.toLowerCase().includes(decodedSong.toLowerCase())
     );
