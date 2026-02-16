@@ -274,13 +274,13 @@ export function AudioLabSongDetailModal({
                                           font-size: 14px;
                                           line-height: 1.8;
                                           text-align: left;
-                                          color: #cbd5e1 !important; /* Force slate-300 */
+                                          color: #ffffff !important; /* Force white text */
                                           background-color: transparent !important;
                                         }
                                         /* Override ANY inline styles from rich text editors */
                                         .lyrics-content * {
                                           background-color: transparent !important;
-                                          color: inherit; /* Inherit slate-300 unless overridden below */
+                                          color: inherit; /* Inherit white unless overridden below */
                                           font-family: inherit !important;
                                           font-size: inherit !important;
                                         }
