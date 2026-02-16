@@ -283,7 +283,7 @@ export async function getTotalSongCount(): Promise<number> {
 
 export async function getSongs(zoneId?: string, limitCount: number = 500): Promise<AudioLabSong[]> {
   try {
-    const cacheKey = 'master_library';
+    const cacheKey = `master_library_${limitCount}`;
     const cached = songCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {

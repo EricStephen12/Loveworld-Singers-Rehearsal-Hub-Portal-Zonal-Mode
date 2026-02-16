@@ -803,7 +803,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       const { getSongs } = await import('../_lib/song-service');
 
       const [newProjects, newSongs] = await Promise.all([
-        getUserProjects(userId),
+        getUserProjects(userId, 20),
         zoneId ? getSongs(zoneId, 5) : Promise.resolve([])
       ]);
 

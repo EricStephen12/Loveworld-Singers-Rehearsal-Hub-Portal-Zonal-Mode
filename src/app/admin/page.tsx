@@ -199,8 +199,12 @@ function AdminContent() {
   }, [searchParams, allPraiseNights]);
 
   // 💾 Save Admin state to URL when changed
+  // 💾 Save Admin state to URL when changed
   useEffect(() => {
+    // Create new params based on current searchParams to preserve other values
     const params = new URLSearchParams(searchParams.toString());
+
+    // Update only the tracked parameters
     params.set('section', activeSection);
 
     if (selectedPage) {
@@ -218,10 +222,12 @@ function AdminContent() {
     const newUrl = `/admin?${params.toString()}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
 
+    // Only replace if the relevant parts of the URL are actually different
     if (newUrl !== currentUrl) {
       router.replace(newUrl, { scroll: false });
     }
-  }, [activeSection, selectedPage, selectedCategory, router, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection, selectedPage, selectedCategory]);
 
 
   const [loadingSongs, setLoadingSongs] = useState(false);

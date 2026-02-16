@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Mic, Activity, Music2, Dumbbell, Flame, Zap, Clock, ListChecks, GraduationCap, Award, Bell, Play } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Mic, Activity, Music2, Dumbbell, Flame, Zap, Clock, ListChecks, GraduationCap, Award, Bell, Play, ArrowLeft } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,6 +61,7 @@ const practiceCards: (PracticeCard & { available: boolean; needsSong?: boolean }
 
 export function PracticeView() {
   const { state, setView, playSong, loadPracticeData } = useAudioLab();
+  const router = useRouter();
   const { practiceStats } = state;
   const { user, profile } = useAuth();
 
@@ -146,6 +148,18 @@ export function PracticeView() {
         {/* Top AppBar */}
         <header className="relative z-10 flex items-center justify-between p-3 sm:p-4 md:p-6 lg:p-8 pt-4 sm:pt-6 bg-transparent">
           <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  setView('home');
+                }
+              }}
+              className="text-white/70 hover:text-white flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors touch-manipulation"
+            >
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+            </button>
             <div className="relative">
               <div
                 className="bg-center bg-no-repeat bg-cover rounded-full size-10 sm:size-12 border-2 border-violet-500 bg-violet-500/20 flex items-center justify-center"

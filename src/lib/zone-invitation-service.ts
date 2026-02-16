@@ -198,4 +198,47 @@ export class ZoneInvitationService {
       return { success: false }
     }
   }
+
+  /**
+   * Removes ALL membership records for a user in a specific zone.
+   * Useful for cleaning up duplicate records.
+   */
+  static async removeUserFromZone(userId: string, zoneId: string) {
+    try {
+      if (isHQGroup(zoneId)) {
+        // HQ members have deterministic IDs, so duplicates are synonymous with standard removal
+        await HQMembersService.removeMember(userId, zoneId)
+      } else {
+        // 1. Find ALL membership records for this user in this zone
+        const members = await FirebaseDatabaseService.getCollectionWhere('zone_members', 'userId', '==', userId);
+        const zoneMembers = members.filter((m: any) => m.zoneId === zoneId);
+
+        console.log(`[ZoneInvitation] Found ${zoneMembers.length} records for user ${userId} in zone ${zoneId}`);
+
+        // 2. Delete each one
+        let deletedCount = 0;
+        for (const member of zoneMembers) {
+          await FirebaseDatabaseService.deleteDocument('zone_members', member.id);
+          deletedCount++;
+        }
+
+        // 3. Update count
+        if (deletedCount > 0) {
+          const zoneData = await FirebaseDatabaseService.getDocument('zones', zoneId) as any
+          if (zoneData) {
+            const newCount = Math.max(0, (zoneData.memberCount || 0) - deletedCount);
+            await FirebaseDatabaseService.updateDocument('zones', zoneId, {
+              memberCount: newCount,
+              updatedAt: new Date()
+            })
+          }
+        }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error removing user from zone:', error)
+      return { success: false }
+    }
+  }
 }

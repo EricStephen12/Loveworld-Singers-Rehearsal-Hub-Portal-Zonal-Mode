@@ -65,17 +65,9 @@ export function HomeView() {
     }
   };
 
-  // Determine if we should show a full screen loader
-  // Only show it if we have NO projects at all and no featured songs
-  const isActuallyLoading = projects.length === 0 && featuredSongs.length === 0;
-
-  if (isActuallyLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <CustomLoader message="" />
-      </div>
-    );
-  }
+  // Determine if we are in the initial loading state (no data fetched yet)
+  // We use this to show skeletons instead of a full screen loader
+  const isInitialLoad = state.homeData.lastFetched === 0;
 
   return (
     <>
@@ -176,7 +168,16 @@ export function HomeView() {
             </button>
 
             {/* All Projects */}
-            {ownedProjects.length > 1 && (
+            {isInitialLoad ? (
+              <div className="w-full max-w-sm mt-6 sm:mt-8">
+                <div className="h-6 w-32 bg-white/5 rounded animate-pulse mb-3 sm:mb-4" />
+                <div className="space-y-2 sm:space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="w-full h-[72px] rounded-xl bg-[#261933] border border-white/5 animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ) : ownedProjects.length > 1 ? (
               <div className="w-full max-w-sm mt-6 sm:mt-8">
                 <h2 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Your Projects</h2>
 
@@ -203,7 +204,7 @@ export function HomeView() {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Shared Projects - Projects where user is a collaborator */}
             {sharedProjects.length > 0 && (
@@ -242,7 +243,19 @@ export function HomeView() {
             )}
 
             {/* Library Songs Feed */}
-            {featuredSongs.length > 0 && (
+            {isInitialLoad ? (
+              <div className="w-full max-w-sm mt-6 sm:mt-8">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="h-6 w-24 bg-white/5 rounded animate-pulse" />
+                  <div className="h-4 w-16 bg-white/5 rounded animate-pulse" />
+                </div>
+                <div className="space-y-2 sm:space-y-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="w-full h-[72px] rounded-xl bg-[#261933] border border-white/5 animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ) : featuredSongs.length > 0 ? (
               <div className="w-full max-w-sm mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="text-base sm:text-lg font-bold text-white">Library Songs</h2>
@@ -278,7 +291,7 @@ export function HomeView() {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </main >
       </div >

@@ -1,8 +1,8 @@
 ﻿'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Search, Mic, Music, RefreshCw, ChevronDown, Sparkles } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Mic, Music, RefreshCw, ChevronDown, Sparkles, ArrowLeft } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudio } from '@/contexts/AudioContext';
 import { useAudioLab } from '../_context/AudioLabContext';
@@ -27,6 +27,7 @@ export function LibraryView() {
   const { setView, playSong: playInAudioLab, state, loadLibraryData } = useAudioLab();
   const { currentZone } = useZone();
   const searchParams = useSearchParams();
+  const router = useRouter();
   // Program selection state
   const [selectedProgramId, setSelectedProgramId] = useState<string>('all');
 
@@ -450,9 +451,17 @@ export function LibraryView() {
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-violet-500/10 via-transparent to-transparent pointer-events-none z-0" />
 
       <main className="relative z-10 flex flex-col gap-4 sm:gap-6 px-3 sm:px-4 pt-4 sm:pt-6">
-        <div className="flex flex-col gap-1.5 sm:gap-2 mb-2">
-          <h1 className="text-white text-2xl sm:text-[28px] font-bold leading-tight tracking-tight">Library</h1>
-          <p className="text-slate-400 text-xs sm:text-sm">Tap a song to access vocal parts</p>
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={() => setView('home')}
+            className="text-white/70 hover:text-white flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors touch-manipulation"
+          >
+            <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+          </button>
+          <div className="flex flex-col gap-0.5 sm:gap-1">
+            <h1 className="text-white text-2xl sm:text-[28px] font-bold leading-tight tracking-tight">Library</h1>
+            <p className="text-slate-400 text-xs sm:text-sm">Tap a song to access vocal parts</p>
+          </div>
         </div>
 
         {/* Program Selector Pills */}

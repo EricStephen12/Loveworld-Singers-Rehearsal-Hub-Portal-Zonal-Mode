@@ -44,7 +44,8 @@ function isCacheValid(cache: MembersCache | undefined): boolean {
 }
 
 interface Member {
-  id: string;
+  id: string; // This is the User ID
+  membershipId?: string; // This is the Document ID in zone_members or hq_members
   first_name: string;
   last_name: string;
   middle_name?: string;
@@ -77,6 +78,8 @@ export default function Members() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [allZones, setAllZones] = useState<any[]>([]);
   const [displayLimit, setDisplayLimit] = useState(50); // Show 50 initially
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Member>>({});
 
   // Toast helper
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
@@ -144,6 +147,7 @@ export default function Members() {
           const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members');
           const hqMemberships = allHQMembers.map((member: any) => ({
             ...member,
+            membershipId: member.id, // Capture unique doc ID
             zoneId: member.groupId || member.zoneId,
             zoneName: allZones.find(z => z.id === (member.groupId || member.zoneId))?.name || member.groupId || 'HQ'
           }));
@@ -152,6 +156,7 @@ export default function Members() {
           const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members');
           const zoneMembersList = allZoneMembers.map((member: any) => ({
             ...member,
+            membershipId: member.id, // Capture unique doc ID
             zoneId: member.zoneId,
             zoneName: allZones.find(z => z.id === member.zoneId)?.name || member.zoneId
           }));
@@ -163,6 +168,7 @@ export default function Members() {
           zoneMemberships = await HQMembersService.getHQGroupMembers(filterZone);
           zoneMemberships = zoneMemberships.map((member: any) => ({
             ...member,
+            membershipId: member.id, // Capture unique doc ID
             zoneId: filterZone,
             zoneName: allZones.find(z => z.id === filterZone)?.name || filterZone
           }));
@@ -171,12 +177,18 @@ export default function Members() {
           zoneMemberships = await ZoneInvitationService.getZoneMembers(filterZone);
           zoneMemberships = zoneMemberships.map((member: any) => ({
             ...member,
+            membershipId: member.id, // Capture unique doc ID
             zoneId: filterZone,
             zoneName: allZones.find(z => z.id === filterZone)?.name || filterZone
           }));
         }
       } else {
         zoneMemberships = await ZoneInvitationService.getZoneMembers(currentZone.id);
+        // Ensure membershipId is captured for standard zones too
+        zoneMemberships = zoneMemberships.map((member: any) => ({
+          ...member,
+          membershipId: member.id
+        }));
       }
 
 
@@ -231,6 +243,7 @@ export default function Members() {
 
         return {
           id: membership.userId,
+          membershipId: membership.membershipId || membership.id, // Store key for deletion
           first_name: firstName,
           last_name: lastName,
           middle_name: (profile?.middle_name || '').trim(),
@@ -358,8 +371,10 @@ export default function Members() {
       }
 
       // 2. Remove from zone membership (cleanup)
+      // FIXED: Use removeUserFromZone to delete ALL membership records for this user in this zone
+      // This handles cases where duplicate membership records exist
       if (member.zoneId) {
-        await ZoneInvitationService.removeMember(member.id, member.zoneId);
+        await ZoneInvitationService.removeUserFromZone(member.id, member.zoneId);
       }
 
       showToast(`✅ ${member.first_name} ${member.last_name} deleted successfully`, 'success');
@@ -376,6 +391,63 @@ export default function Members() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Save changes to member profile
+  const handleSaveMember = async () => {
+    if (!selectedMember || !editForm) return;
+
+    try {
+      setLoading(true);
+
+      // Clean up undefined values
+      const updates = Object.fromEntries(
+        Object.entries(editForm).filter(([_, v]) => v !== undefined)
+      );
+
+      // Update profile in Firestore
+      await FirebaseDatabaseService.updateUserProfile(selectedMember.id, updates);
+
+      // Update local state
+      const updatedMember = { ...selectedMember, ...updates };
+      setSelectedMember(updatedMember);
+      setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
+
+      // Update cache
+      if (currentZone) {
+        const cacheKey = getCacheKey(currentZone.id, filterZone);
+        const cached = membersCache.get(cacheKey);
+        if (cached) {
+          const updatedData = cached.data.map(m => m.id === selectedMember.id ? updatedMember : m);
+          membersCache.set(cacheKey, { ...cached, data: updatedData });
+        }
+      }
+
+      setIsEditing(false);
+      showToast('✅ Member profile updated successfully', 'success');
+    } catch (error: any) {
+      console.error('Error updating member:', error);
+      showToast(`❌ Failed to update member: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Start editing
+  const startEditing = (member: Member) => {
+    setEditForm({
+      first_name: member.first_name,
+      last_name: member.last_name,
+      middle_name: member.middle_name,
+      phone: member.phone,
+      gender: member.gender,
+      birthday: member.birthday,
+      region: member.region,
+      church: member.church,
+      designation: member.designation,
+      administration: member.administration,
+    });
+    setIsEditing(true);
   };
 
   return (
@@ -747,13 +819,24 @@ export default function Members() {
           <div className="bg-white rounded-xl max-w-md w-full shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-lg font-semibold text-gray-900">Member Profile</h3>
-              <button
-                onClick={() => setSelectedMember(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+              <h3 className="text-lg font-semibold text-gray-900">{isEditing ? 'Edit Profile' : 'Member Profile'}</h3>
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <button
+                    onClick={() => startEditing(selectedMember)}
+                    className="p-2 hover:bg-gray-100 rounded-lg text-purple-600 transition-colors"
+                    title="Edit Member"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => { setSelectedMember(null); setIsEditing(false); }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Content */}
@@ -773,116 +856,242 @@ export default function Members() {
                     </span>
                   </div>
                 )}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    {selectedMember.first_name} {selectedMember.middle_name ? selectedMember.middle_name + ' ' : ''}{selectedMember.last_name}
-                  </h4>
-                  <p className="text-sm text-gray-500">{selectedMember.email}</p>
-                  {selectedMember.zoneName && (
-                    <p className="text-xs text-purple-600 font-medium mt-1">{selectedMember.zoneName}</p>
-                  )}
-                </div>
+
+                {isEditing ? (
+                  <div className="flex-1 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={editForm.first_name || ''}
+                        onChange={e => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                        placeholder="First Name"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                      <input
+                        value={editForm.last_name || ''}
+                        onChange={e => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
+                        placeholder="Last Name"
+                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                    </div>
+                    <input
+                      value={editForm.email || selectedMember.email}
+                      disabled
+                      className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 text-gray-500"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {selectedMember.first_name} {selectedMember.middle_name ? selectedMember.middle_name + ' ' : ''}{selectedMember.last_name}
+                    </h4>
+                    <p className="text-sm text-gray-500">{selectedMember.email}</p>
+                    {selectedMember.zoneName && (
+                      <p className="text-xs text-purple-600 font-medium mt-1">{selectedMember.zoneName}</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Personal Information */}
               <div className="p-4 border-b border-gray-100">
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Personal Information</h5>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Phone</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.phone || 'Not set'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Gender</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.gender || 'Not set'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Birthday</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.birthday || 'Not set'}</span>
-                  </div>
+                <div className="space-y-3">
+                  {isEditing ? (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">Phone</label>
+                        <input
+                          value={editForm.phone || ''}
+                          onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Gender</label>
+                          <select
+                            value={editForm.gender || ''}
+                            onChange={e => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                          >
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block mb-1">Birthday</label>
+                          <input
+                            type="date"
+                            value={editForm.birthday || ''}
+                            onChange={e => setEditForm(prev => ({ ...prev, birthday: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Phone</span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedMember.phone || 'Not set'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Gender</span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedMember.gender || 'Not set'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Birthday</span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedMember.birthday || 'Not set'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Location Information */}
               <div className="p-4 border-b border-gray-100">
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Location</h5>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Region</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.region || 'Not set'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Church</span>
-                    <span className="text-sm text-gray-900 font-medium">{selectedMember.church || 'Not set'}</span>
-                  </div>
+                <div className="space-y-3">
+                  {isEditing ? (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">Region</label>
+                        <input
+                          value={editForm.region || ''}
+                          onChange={e => setEditForm(prev => ({ ...prev, region: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">Church</label>
+                        <input
+                          value={editForm.church || ''}
+                          onChange={e => setEditForm(prev => ({ ...prev, church: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Region</span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedMember.region || 'Not set'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Church</span>
+                        <span className="text-sm text-gray-900 font-medium">{selectedMember.church || 'Not set'}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Designation Information */}
               <div className="p-4">
                 <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Designation</h5>
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  {isEditing ? (
+                    <>
+                      <div>
+                        <label className="text-xs text-gray-500 block mb-1">Designation</label>
+                        <input
+                          value={editForm.designation || ''}
+                          onChange={e => setEditForm(prev => ({ ...prev, designation: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          placeholder="e.g. Soprano, Alto, Tenor"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Role</span>
+                      <span className="text-sm text-gray-900 font-medium">{selectedMember.designation || 'Member'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Access Control (Only for non-HQ members if needed, or all) */}
-            <div className="p-4 border-t border-gray-100 bg-purple-50/30">
-              <h5 className="text-xs font-semibold text-purple-600 uppercase mb-3">Access Control</h5>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Pre-Rehearsal Access</p>
-                  <p className="text-xs text-gray-500">Allow this member to access preparing sessions</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      const newState = !selectedMember.can_access_pre_rehearsal;
-                      await FirebaseDatabaseService.updateDocument('profiles', selectedMember.id, {
-                        can_access_pre_rehearsal: newState
-                      });
+            {/* Access Control - Hide in Edit Mode */}
+            {!isEditing && (
+              <div className="p-4 border-t border-gray-100 bg-purple-50/30">
+                <h5 className="text-xs font-semibold text-purple-600 uppercase mb-3">Access Control</h5>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Pre-Rehearsal Access</p>
+                    <p className="text-xs text-gray-500">Allow this member to access preparing sessions</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const newState = !selectedMember.can_access_pre_rehearsal;
+                        await FirebaseDatabaseService.updateDocument('profiles', selectedMember.id, {
+                          can_access_pre_rehearsal: newState
+                        });
 
-                      // Update local state
-                      const updatedMember = { ...selectedMember, can_access_pre_rehearsal: newState };
-                      setSelectedMember(updatedMember);
+                        // Update local state
+                        const updatedMember = { ...selectedMember, can_access_pre_rehearsal: newState };
+                        setSelectedMember(updatedMember);
 
-                      // Update in list
-                      setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
+                        // Update in list
+                        setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
 
-                      showToast(`✅ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                    } catch (error) {
-                      console.error('Error updating access:', error);
-                      showToast('❌ Failed to update access', 'error');
-                    }
-                  }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedMember.can_access_pre_rehearsal ? 'bg-purple-600' : 'bg-gray-200'
-                    }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedMember.can_access_pre_rehearsal ? 'translate-x-6' : 'translate-x-1'
+                        showToast(`✅ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                      } catch (error) {
+                        console.error('Error updating access:', error);
+                        showToast('❌ Failed to update access', 'error');
+                      }
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedMember.can_access_pre_rehearsal ? 'bg-purple-600' : 'bg-gray-200'
                       }`}
-                  />
-                </button>
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedMember.can_access_pre_rehearsal ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="p-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
-              <button
-                onClick={() => setSelectedMember(null)}
-                className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  handleDeleteMember(selectedMember);
-                  setSelectedMember(null);
-                }}
-                className="px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm"
-              >
-                Delete
-              </button>
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveMember}
+                    disabled={loading}
+                    className="flex-1 px-4 py-2.5 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                  >
+                    {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setSelectedMember(null)}
+                    className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDeleteMember(selectedMember);
+                      setSelectedMember(null);
+                    }}
+                    className="px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

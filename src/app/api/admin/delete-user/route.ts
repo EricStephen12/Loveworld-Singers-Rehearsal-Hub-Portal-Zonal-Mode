@@ -33,11 +33,59 @@ export async function POST(request: NextRequest) {
             console.log(`[DeleteUser] Auth account deleted: ${userId}`);
         } catch (authError: any) {
             console.error('[DeleteUser] Auth deletion error:', authError);
-            if (authError.code !== 'auth/user-not-found') {
+            // Check for various ways the error code might be presented
+            const isUserNotFound =
+                authError.code === 'auth/user-not-found' ||
+                authError.errorInfo?.code === 'auth/user-not-found' ||
+                authError.message?.includes('no user record');
+
+            if (!isUserNotFound) {
                 return NextResponse.json({
                     success: false,
                     error: `Auth deletion failed: ${authError.message}`
                 }, { status: 500 });
+            }
+            console.log('[DeleteUser] User already missing from Auth, proceeding.');
+        }
+
+        // 4. GLOBAL CLEANUP: Remove user from ALL zones and HQ groups
+        // This ensures they don't remain as "orphan" members in other zones
+        try {
+            console.log(`[DeleteUser] Starting global cleanup for user: ${userId}`);
+
+            // A. Clean up zone_members
+            const zoneMembersSnapshot = await db.collection('zone_members').where('userId', '==', userId).get();
+            if (!zoneMembersSnapshot.empty) {
+                const batch = db.batch();
+                zoneMembersSnapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log(`[DeleteUser] Removed ${zoneMembersSnapshot.size} zone_members records.`);
+            }
+
+            // B. Clean up hq_members
+            const hqMembersSnapshot = await db.collection('hq_members').where('userId', '==', userId).get();
+            if (!hqMembersSnapshot.empty) {
+                const batch = db.batch();
+                hqMembersSnapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log(`[DeleteUser] Removed ${hqMembersSnapshot.size} hq_members records.`);
+            }
+
+        } catch (cleanupError: any) {
+            console.error('[DeleteUser] Global cleanup error:', cleanupError);
+
+            // Check for Quota Exceeded error (Code 8)
+            if (cleanupError.code === 8 || cleanupError.message?.includes('Quota exceeded')) {
+                console.warn('[DeleteUser] Firebase Quota Exceeded. Skipping global cleanup.');
+                return NextResponse.json({
+                    success: true,
+                    message: 'User deleted, but cleanup of zone memberships was skipped due to server limits. Please try again later to remove residual records.',
+                    warning: 'QuotaExceeded'
+                });
             }
         }
 

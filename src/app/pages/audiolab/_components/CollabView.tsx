@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Hash, Mic, Copy, Users, Volume2, MicOff, Share2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Hash, Mic, Copy, Users, Volume2, MicOff, Share2, Trash2, ArrowLeft } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useZone } from '@/hooks/useZone';
 import {
   getUserClassrooms,
   createClassroom,
@@ -17,8 +19,10 @@ import {
 import type { LiveSession } from '../_types';
 
 export function CollabView() {
-  const { setView, setCurrentSession } = useAudioLab();
+  const { setView, state, setCurrentSession, clearSession } = useAudioLab();
+  const router = useRouter();
   const { user, profile } = useAuth();
+  const { currentZone } = useZone();
 
   const [activeClassrooms, setActiveClassrooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -195,9 +199,23 @@ export function CollabView() {
 
       <main className="relative z-10 flex flex-col gap-6 px-4 pt-6">
         <div className="flex flex-col gap-2 mb-2">
-          <h1 className="text-white text-[28px] font-bold leading-tight tracking-tight">
-            Classrooms
-          </h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  setView('home');
+                }
+              }}
+              className="text-white/70 hover:text-white flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors touch-manipulation"
+            >
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+            </button>
+            <h1 className="text-white text-[28px] font-bold leading-tight tracking-tight">
+              Classrooms
+            </h1>
+          </div>
           <p className="text-slate-400 text-sm">
             Join a persistent room or start a new rehearsal
           </p>
