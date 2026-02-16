@@ -274,6 +274,15 @@ export function AudioLabSongDetailModal({
                                           font-size: 14px;
                                           line-height: 1.8;
                                           text-align: left;
+                                          color: #cbd5e1 !important; /* Force slate-300 */
+                                          background-color: transparent !important;
+                                        }
+                                        /* Override ANY inline styles from rich text editors */
+                                        .lyrics-content * {
+                                          background-color: transparent !important;
+                                          color: inherit; /* Inherit slate-300 unless overridden below */
+                                          font-family: inherit !important;
+                                          font-size: inherit !important;
                                         }
                                         .lyrics-content p, 
                                         .lyrics-content div {
@@ -282,7 +291,7 @@ export function AudioLabSongDetailModal({
                                         .lyrics-content b,
                                         .lyrics-content strong {
                                           font-weight: 700;
-                                          color: #a78bfa; /* Violet-400 for bold in dark theme */
+                                          color: #a78bfa !important; /* Force Violet-400 */
                                         }
                                     `}</style>
 
