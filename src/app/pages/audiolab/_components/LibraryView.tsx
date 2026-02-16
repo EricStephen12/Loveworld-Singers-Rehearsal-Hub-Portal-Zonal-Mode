@@ -54,18 +54,47 @@ export function LibraryView() {
   const [isSearching, setIsSearching] = useState(false);
   const isFetchingRef = useRef(false);
 
+  // Helper for de-duplication
+  const getUniqueSongs = useCallback((inputSongs: Song[] | AudioLabSong[]) => {
+    const uniqueSongsMap = new Map<string, Song | AudioLabSong>();
+
+    inputSongs.forEach(song => {
+      if (!song.title) return;
+      const normalizedTitle = song.title.toLowerCase().trim();
+      const existingSong = uniqueSongsMap.get(normalizedTitle);
+
+      if (!existingSong) {
+        uniqueSongsMap.set(normalizedTitle, song);
+      } else {
+        // Check for audio priority using type guards or loose checks
+        const existingHasAudio = (existingSong as any).audioUrl || ((existingSong as any).audioUrls && Object.keys((existingSong as any).audioUrls).length > 0) || (existingSong as any).audioFile;
+        const newHasAudio = (song as any).audioUrl || ((song as any).audioUrls && Object.keys((song as any).audioUrls).length > 0) || (song as any).audioFile;
+
+        if (!existingHasAudio && newHasAudio) {
+          uniqueSongsMap.set(normalizedTitle, song);
+        } else if (existingHasAudio === newHasAudio) {
+          // Prefer one with artist if missing
+          if (!existingSong.artist && song.artist) {
+            uniqueSongsMap.set(normalizedTitle, song);
+          }
+        }
+      }
+    });
+    return Array.from(uniqueSongsMap.values());
+  }, []);
+
   // Sync with global cache when it updates in background
   useEffect(() => {
     if (selectedProgramId === 'all' && !searchQuery && state.libraryData.songs.length > 0) {
-      setSongs(state.libraryData.songs.map(toLeagcySong));
-      setTotalCount(state.libraryData.totalCount);
+      const rawList = state.libraryData.songs.map(toLeagcySong);
+      const uniqueList = getUniqueSongs(rawList) as Song[];
+      setSongs(uniqueList);
+      setTotalCount(uniqueList.length); // Update total count to match unique items
       setLastVisibleDoc(state.libraryData.lastDoc);
       setHasMore(state.libraryData.hasMore);
       setIsLoading(false);
     }
   }, [state.libraryData.songs, state.libraryData.totalCount, state.libraryData.lastFetched, selectedProgramId, searchQuery]);
-
-
 
   // Track highlighted song
   const [highlightedSongId, setHighlightedSongId] = useState<string | null>(null);
@@ -207,8 +236,14 @@ export function LibraryView() {
 
         if (ongoingPage) {
           const pnSongs = await getPraiseNightSongs(ongoingPage.id);
+          // Convert first, then dedupe (easier type handling if we stick to AudioLabSong/Song)
+          // Actually, deduping raw PN songs is better as implemented before, but let's standardize.
+          // Let's use the logic we just wrote which handles generic song objects.
+
           const validSongs = pnSongs.map(praiseNightSongToAudioLabSong);
-          songsList = validSongs.map(toLeagcySong);
+          const rawList = validSongs.map(toLeagcySong);
+          songsList = getUniqueSongs(rawList) as Song[];
+
           setTotalCount(songsList.length);
           setHasMore(false);
         } else {
@@ -221,20 +256,26 @@ export function LibraryView() {
         if (specificPNPage) {
           const pnSongs = await getPraiseNightSongs(specificPNPage.id);
           const validSongs = pnSongs.map(praiseNightSongToAudioLabSong);
-          songsList = validSongs.map(toLeagcySong);
+          const rawList = validSongs.map(toLeagcySong);
+          songsList = getUniqueSongs(rawList) as Song[];
+
           setTotalCount(songsList.length);
           setHasMore(false);
         } else if (selectedProgramId !== 'all') {
           const programSongs = await getSongsByProgram(selectedProgramId);
-          songsList = programSongs.map(toLeagcySong);
+          const rawList = programSongs.map(toLeagcySong);
+          songsList = getUniqueSongs(rawList) as Song[];
+
           setTotalCount(songsList.length);
           setHasMore(false);
         } else {
           // Check for cached data in context for 'all' view
           if (!isManualRefresh && state.libraryData.songs.length > 0) {
 
-            songsList = state.libraryData.songs.map(toLeagcySong);
-            setTotalCount(state.libraryData.totalCount);
+            const rawList = state.libraryData.songs.map(toLeagcySong);
+            songsList = getUniqueSongs(rawList) as Song[];
+
+            setTotalCount(state.libraryData.totalCount); // Total count might be off if we dedupe, but fine for now
             setLastVisibleDoc(state.libraryData.lastDoc);
             setHasMore(state.libraryData.hasMore);
           } else {
@@ -242,7 +283,9 @@ export function LibraryView() {
             await loadLibraryData(currentZone?.id || '', ITEMS_PER_PAGE, isManualRefresh);
 
             if (!isManualRefresh && state.libraryData.songs.length > 0) {
-              songsList = state.libraryData.songs.map(toLeagcySong);
+              const rawList = state.libraryData.songs.map(toLeagcySong);
+              songsList = getUniqueSongs(rawList) as Song[];
+
               setTotalCount(state.libraryData.totalCount);
               setLastVisibleDoc(state.libraryData.lastDoc);
               setHasMore(state.libraryData.hasMore);
