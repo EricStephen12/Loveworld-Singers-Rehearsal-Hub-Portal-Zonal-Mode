@@ -169,7 +169,14 @@ export default function PagesSection(props: PagesSectionProps) {
       return [];
     }
 
-    return allPraiseNights;
+    return [...allPraiseNights].sort((a, b) => {
+      // Prioritize 'ongoing' category
+      if (a.category === 'ongoing' && b.category !== 'ongoing') return -1;
+      if (a.category !== 'ongoing' && b.category === 'ongoing') return 1;
+
+      // Secondary sort by Date (descending - newest first)
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
   }, [allPraiseNights, loading]);
 
   // Filter pages by page category (when searchTerm matches a page category name)
