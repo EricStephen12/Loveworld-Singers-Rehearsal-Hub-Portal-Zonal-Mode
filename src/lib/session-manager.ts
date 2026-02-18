@@ -1,10 +1,11 @@
 ﻿// Session Management Service - Concurrent Login Prevention
 import { doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from './firebase-setup'
-import { User } from 'firebase/auth'
+import { signOut, User } from 'firebase/auth' // Static import
+import { db, auth } from './firebase-setup' // Static import
 
 interface UserSession {
   userId: string
+  sessionId: string // NEW: Unique ID for this specific login instance
   deviceId: string
   deviceInfo: string
   deviceModel: string
@@ -20,6 +21,7 @@ interface UserSession {
 
 export class SessionManager {
   private static deviceId: string = ''
+  private static sessionId: string = '' // NEW
   private static sessionListener: (() => void) | null = null
 
   // Generate unique device ID (Persist in SessionStorage to survive reloads)
@@ -58,6 +60,11 @@ export class SessionManager {
     }
 
     return this.deviceId
+  }
+
+  // Generate Session ID (UUID) - Ephemeral, one per login
+  static generateSessionId(): string {
+    return 'sess_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
   }
 
   // Get device info for display
@@ -146,6 +153,7 @@ export class SessionManager {
     try {
       // FORCE NEW ID on login
       const deviceId = this.generateDeviceId(true)
+      this.sessionId = this.generateSessionId() // Generate new Session ID
       const deviceInfo = this.getDeviceInfo()
       const deviceModel = this.getDeviceModel(navigator.userAgent) || 'Unknown'
       const browserInfo = this.getBrowserInfo()
@@ -153,6 +161,7 @@ export class SessionManager {
 
       const session: UserSession = {
         userId: user.uid,
+        sessionId: this.sessionId, // Store it
         deviceId,
         deviceInfo,
         deviceModel,
@@ -165,6 +174,11 @@ export class SessionManager {
 
       const sessionRef = doc(db, 'user_sessions', user.uid)
       await setDoc(sessionRef, session)
+
+      // Store Session ID locally for validity checks
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('lwsrh_session_id', this.sessionId)
+      }
 
       // Start tracking immediately
       this.startActivityTracking(user.uid)
@@ -181,70 +195,107 @@ export class SessionManager {
 
   static async updateActivity(userId: string): Promise<void> {
     try {
-      // Debounce updates to avoid spamming Firestore
+      // Retrieve local session ID
+      const storedSessionId = typeof window !== 'undefined' ? sessionStorage.getItem('lwsrh_session_id') : this.sessionId
+
+      // Safety check: If we don't have a session ID, we might be in a bad state
+      if (!storedSessionId) return
+
+      // Attempt update
       const sessionRef = doc(db, 'user_sessions', userId)
+
+      // We perform a "Pre-condition check" implicitly via Security Rules (to be added)
+      // OR we just try to write. if it fails with permission denied, we know we are dead.
       await setDoc(sessionRef, {
         lastActivity: serverTimestamp()
       }, { merge: true })
-    } catch (error) {
-      console.error('Error updating activity:', error)
+
+    } catch (error: any) {
+      // TRAP: If write fails (Permission Denied implies our Session ID is old), we die.
+      if (error.code === 'permission-denied') {
+        console.warn('[Session] 💀 Activity update blocked! Session invalid. Logging out.')
+        this.handleSessionTermination()
+      } else {
+        console.error('Error updating activity:', error)
+      }
     }
   }
 
-  // Start tracking user session validity
+  // Start tracking user session validity (Cost: 0 reads while idle, 1 read ONLY when conflict happens)
   static startActivityTracking(userId: string): void {
     if (this.sessionListener) {
       this.sessionListener() // Unsubscribe pending
     }
 
-    // Ensure we have an ID (recover from storage if needed)
+    // Ensure we have an ID
     if (!this.deviceId) {
       this.generateDeviceId()
     }
+    if (!this.sessionId && typeof window !== 'undefined') {
+      this.sessionId = sessionStorage.getItem('lwsrh_session_id') || ''
+    }
 
-    console.log(`[Session] Tracking ${userId} on ${this.deviceId}`)
+    console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
 
     const sessionRef = doc(db, 'user_sessions', userId)
 
-    // Real-time listener for "Kick Out"
-    const unsubscribe = onSnapshot(sessionRef, (doc) => {
+    // Real-time listener (Push Model - Industry Standard)
+    // This is NOT polling. It waits for the server to say "Change happened".
+    const unsubscribe = onSnapshot(sessionRef, { includeMetadataChanges: true }, (doc) => {
       // Ignore local writes (latency compensation)
       if (doc.metadata.hasPendingWrites) return
 
       if (doc.exists()) {
         const data = doc.data() as UserSession
 
-        // Check if OUR device ID matches the ACTIVE device ID in DB
-        // If they don't match, it means someone else logged in and overwrote the session
-        if (data.deviceId && data.deviceId !== this.deviceId) {
-          console.warn(`[Session] Mismatch! DB:${data.deviceId} vs ME:${this.deviceId}. Logging out.`)
+        // The "Highlander" Check (UUID Version - stronger than DeviceID)
+        // If the DB says "Session is X" and I am "Session Y", I am dead.
+        if (data.sessionId && data.sessionId !== this.sessionId) {
+          console.warn(`[Session] ❌ Session ID Mismatch! Active=${data.sessionId} vs Me=${this.sessionId}`)
           this.handleSessionTermination()
         }
       } else {
-        // Session deleted (e.g. by admin)
+        console.warn(`[Session] ❌ Session deleted.`)
         this.handleSessionTermination()
       }
+    }, (error: any) => {
+      console.error('[Session] ⚠️ Listener error:', error)
     })
 
     this.sessionListener = unsubscribe
   }
 
   // Handle session termination (user logged in elsewhere)
-  static handleSessionTermination(): void {
+  static async handleSessionTermination(): Promise<void> {
+    // 1. Stop listening immediately to prevent loops
     if (this.sessionListener) {
       this.sessionListener()
       this.sessionListener = null
     }
 
-    // Sign out functionality
-    import('./firebase-auth').then(({ FirebaseAuthService }) => {
-      FirebaseAuthService.signOut().then(() => {
-        // Redirect with message
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth?error=session_taken_over&message=You have been logged out because this account was logged in on another device.'
-        }
-      })
-    })
+    console.warn('⚡ SESSION TERMINATED ⚡')
+    const currentPath = window.location.pathname
+
+    // Don't kick if already on auth page
+    if (currentPath.includes('/auth')) return
+
+    try {
+      await signOut(auth)
+
+      // Force redirect to login with message
+      if (typeof window !== 'undefined') {
+        // Clear local storage
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('userId')
+        localStorage.removeItem('lwsrh_has_user') // Clear cache flag
+
+        window.location.href = '/auth?error=session_taken_over&message=You were logged out because this account was used on another device.'
+      }
+    } catch (e) {
+      console.error('Logout failed', e)
+      // Failsafe redirect
+      window.location.href = '/auth'
+    }
   }
 
   // End session
@@ -257,7 +308,6 @@ export class SessionManager {
         this.sessionListener()
         this.sessionListener = null
       }
-
     } catch (error) {
       console.error('Error ending session:', error)
     }
