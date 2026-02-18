@@ -42,6 +42,7 @@ const PaymentDashboardSection = dynamic(() => import('../../components/admin/Pay
 const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
+const ScheduleManagerSection = dynamic(() => import('../../components/admin/ScheduleManagerSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -1787,6 +1788,7 @@ function AdminContent() {
           {activeSection === 'Notifications' && !isRestrictedAdmin && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
           {activeSection === 'Support Chat' && isHQAdmin && !isRestrictedAdmin && <SupportChatSection />}
+          {activeSection === 'Schedule Manager' && !isRestrictedAdmin && <ScheduleManagerSection />}
         </div>
 
         {/* Modals */}

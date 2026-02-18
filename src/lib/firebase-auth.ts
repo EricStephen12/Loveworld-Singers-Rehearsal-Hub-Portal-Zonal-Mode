@@ -1,4 +1,4 @@
-import { 
+import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
   onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider,
   deleteUser, setPersistence, browserLocalPersistence
@@ -17,27 +17,18 @@ export class FirebaseAuthService {
       if (emailError) {
         return { user: null, error: emailError, userFriendly: true }
       }
-      
+
       const passwordError = ErrorHandler.validatePassword(password)
       if (passwordError) {
         return { user: null, error: passwordError, userFriendly: true }
       }
-      
+
       await setPersistence(auth, browserLocalPersistence)
       const result = await signInWithEmailAndPassword(auth, email, password)
-      
-      const sessionCheck = await SessionManager.canUserLogin(result.user.uid)
-      if (!sessionCheck.canLogin) {
-        await signOut(auth)
-        return { 
-          user: null, 
-          error: `This account is already logged in on ${sessionCheck.activeDevice}. Please ask the account owner to log out from that device first, or sign up for your own account instead.`,
-          userFriendly: true 
-        }
-      }
-      
+
+      // Kick-Out Strategy: Always allow login, overwrite previous session
       await SessionManager.createSession(result.user)
-      
+
       // Track login analytics
       try {
         await SimplifiedAnalyticsService.incrementLogins(1)
@@ -46,7 +37,7 @@ export class FirebaseAuthService {
       } catch (analyticsError) {
         console.error('Analytics tracking failed:', analyticsError)
       }
-      
+
       if (rememberMe && typeof window !== 'undefined') {
         const token = await result.user.getIdToken()
         localStorage.setItem('authToken', token)
@@ -54,25 +45,25 @@ export class FirebaseAuthService {
         localStorage.setItem('userId', result.user.uid)
         localStorage.setItem('lastLoginTime', Date.now().toString())
       }
-      
+
       return { user: result.user, error: null }
     } catch (error: any) {
       const friendlyError = ErrorHandler.getErrorMessage(error, 'auth')
       return { user: null, error: friendlyError, userFriendly: true }
     }
   }
-  
+
   static async signUp(email: string, password: string, userData: any) {
     try {
       await setPersistence(auth, browserLocalPersistence)
       const result = await createUserWithEmailAndPassword(auth, email, password)
-      
+
       await setDoc(doc(db, 'profiles', result.user.uid), {
         ...userData,
         createdAt: new Date(),
         updatedAt: new Date()
       })
-      
+
       // Track signup analytics
       try {
         await SimplifiedAnalyticsService.incrementSignups(1)
@@ -81,7 +72,7 @@ export class FirebaseAuthService {
       } catch (analyticsError) {
         console.error('Analytics tracking failed:', analyticsError)
       }
-      
+
       return { user: result.user, error: null }
     } catch (error: any) {
       return { user: null, error: error.message }
@@ -160,8 +151,8 @@ export class FirebaseAuthService {
         return { status: 'error', message: 'Firebase Auth not initialized' }
       }
       const currentUser = auth.currentUser
-      return { 
-        status: 'success', 
+      return {
+        status: 'success',
         message: 'Firebase Auth connected successfully',
         currentUser: currentUser ? 'User logged in' : 'No user logged in'
       }
@@ -187,14 +178,14 @@ export class FirebaseAuthService {
           }
           await setDoc(doc(db, 'profiles', result.user.uid), profileData)
         }
-        
+
         // Track signup analytics
         try {
           await SimplifiedAnalyticsService.incrementSignups(1)
         } catch (analyticsError) {
           console.error('Analytics tracking failed:', analyticsError)
         }
-        
+
         return { user: result.user, error: null }
       } catch (profileError: any) {
         try {
@@ -220,11 +211,11 @@ export class FirebaseAuthService {
         return { user: null, error: 'Not in browser' }
       }
 
-      const isLoggingOut = localStorage.getItem('isLoggingOut') === 'true' || 
-                          localStorage.getItem('logging_out') === 'true'
+      const isLoggingOut = localStorage.getItem('isLoggingOut') === 'true' ||
+        localStorage.getItem('logging_out') === 'true'
       const urlParams = new URLSearchParams(window.location.search)
       const logoutFromUrl = urlParams.get('logout') === 'true'
-      
+
       if (isLoggingOut || logoutFromUrl) {
         return { user: null, error: 'Logout in progress' }
       }
@@ -311,9 +302,9 @@ export class FirebaseAuthService {
       await setPersistence(auth, browserLocalPersistence)
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
-      
+
       const userProfile = await this.getUserProfile(result.user.uid)
-      
+
       if (!userProfile) {
         const displayName = result.user.displayName || ''
         const nameParts = displayName.split(' ')
@@ -327,7 +318,7 @@ export class FirebaseAuthService {
           updated_at: new Date().toISOString()
         })
       }
-      
+
       return { user: result.user, error: null }
     } catch (error: any) {
       return { user: null, error: error.message }

@@ -1680,12 +1680,11 @@ function PraiseNightPageContent() {
                   <div className="flex items-center gap-2 sm:gap-3 animate-scroll">
                     {/* First set of pills */}
                     <button
-                      disabled
-                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-400 cursor-not-allowed opacity-60 transition flex-shrink-0 snap-start"
-                      title="Coming Soon"
+                      onClick={() => router.push('/pages/praise-night/schedule')}
+                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
                     >
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100">
-                        <Music className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">
+                        <Music className="w-3.5 h-3.5 text-purple-600" />
                       </span>
                       <span className="text-xs sm:text-sm font-medium">Songs Schedule</span>
                     </button>
@@ -1716,7 +1715,7 @@ function PraiseNightPageContent() {
 
                     {/* Duplicate set for seamless scrolling */}
                     <button
-                      onClick={() => router.push('#')}
+                      onClick={() => router.push('/pages/praise-night/schedule')}
                       className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
                     >
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">

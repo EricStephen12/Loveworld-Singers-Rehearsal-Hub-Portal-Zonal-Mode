@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import {
@@ -12,276 +12,270 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, FileText, Music, User } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronRight, Heart, Music, Sparkles, User, FileText, Loader2 } from 'lucide-react';
+import { useSchedule } from '@/hooks/useSchedule';
 
-// Mock Data for Rehearsal Schedule
-const MOCK_REHEARSAL_DATA = [
-    {
-        id: '1',
-        title: 'Mighty God',
-        writer: 'Pastor Chris',
-        leadSinger: 'Sarah Johnson',
-        status: 'Pending',
-        date: '2024-05-20',
-        submitted: '2024-05-15',
-    },
-    {
-        id: '2',
-        title: 'King of Glory',
-        writer: 'Sinach',
-        leadSinger: 'Joe Praize',
-        status: 'Approved',
-        date: '2024-05-21',
-        submitted: '2024-05-16',
-    },
-    {
-        id: '3',
-        title: 'I Lift My Hands',
-        writer: 'Eben',
-        leadSinger: 'Eben',
-        status: 'Rejected',
-        date: '2024-05-22',
-        submitted: '2024-05-17',
-    },
-];
-
-// Mock Data for Daily Schedule (Placeholder)
-const MOCK_DAILY_DATA = [
-    {
-        id: '1',
-        time: '08:00 AM',
-        activity: 'Morning Prayer',
-        location: 'Main Hall',
-    },
-    {
-        id: '2',
-        time: '10:00 AM',
-        activity: 'Vocal Warmups',
-        location: 'Rehearsal Room A',
-    },
-    {
-        id: '3',
-        time: '02:00 PM',
-        activity: 'Band Rehearsal',
-        location: 'Studio 1',
-    },
-];
+// Map icon names to components
+const ICON_MAP: Record<string, any> = {
+    Music, Sparkles, Heart, User, Calendar, FileText
+};
 
 export default function SongSchedulePage() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'rehearsal' | 'daily'>('rehearsal');
+    const { categories, songs, program, isLoading, loadSongsForCategory } = useSchedule();
+
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+    // Filter out categories that aren't "Daily Schedule" for the main list
+    // The "Daily Schedule" (if it exists) should be treated specially or just as another category?
+    // The previous design had it as the last item. We'll stick to the order from the DB.
+
+    // Auto-load songs when entering a category
+    useEffect(() => {
+        if (activeCategory) {
+            loadSongsForCategory(activeCategory);
+        }
+    }, [activeCategory, loadSongsForCategory]);
+
+    const handleCategoryClick = (id: string) => {
+        setActiveCategory(id);
+    };
+
+    const activeCatData = categories.find(c => c.id === activeCategory);
+    const categorySongs = activeCategory ? (songs[activeCategory] || []) : [];
+
+    const isDailySchedule = activeCatData?.label.toLowerCase().includes('daily');
+
+    if (isLoading && categories.length === 0) {
+        return (
+            <div className="h-screen w-screen flex items-center justify-center bg-white">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-slate-50 safe-area-bottom pb-20 sm:pb-0">
+        <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50 flex flex-col">
+            <style jsx global>{`
+                html { scroll-behavior: smooth; }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
+
             {/* Header */}
             <ScreenHeader
-                title="Song Schedule"
+                title={activeCategory ? (activeCatData?.label || "Details") : "Schedule"}
                 showBackButton={true}
-                backPath="/pages/praise-night"
+                backPath={activeCategory ? undefined : "/pages/praise-night"}
+                onBackClick={activeCategory ? () => setActiveCategory(null) : undefined}
+                rightImageSrc="/logo.png"
             />
 
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-                {/* Toggle Switcher - Mobile Optimized */}
-                <div className="flex justify-center mb-6 sm:mb-8">
-                    <div className="bg-white p-1 rounded-full shadow-sm border border-slate-200 flex w-full sm:w-auto relative">
-                        <button
-                            onClick={() => setActiveTab('rehearsal')}
-                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap z-10 ${activeTab === 'rehearsal'
-                                    ? 'text-white'
-                                    : 'text-slate-600 hover:bg-slate-50'
-                                }`}
-                        >
-                            Rehearsal Schedule
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('daily')}
-                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap z-10 ${activeTab === 'daily'
-                                    ? 'text-white'
-                                    : 'text-slate-600 hover:bg-slate-50'
-                                }`}
-                        >
-                            Daily Schedule
-                        </button>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide h-[calc(100vh-80px)]">
+                <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 content-bottom-safe">
 
-                        {/* Animated indicator background */}
-                        <div
-                            className={`absolute top-1 bottom-1 rounded-full bg-purple-600 shadow-md transition-all duration-300 ease-out`}
-                            style={{
-                                left: activeTab === 'rehearsal' ? '4px' : '50%',
-                                width: 'calc(50% - 4px)',
-                                transform: activeTab === 'daily' ? 'translateX(0)' : 'translateX(0)'
-                            }}
-                        />
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
-                    {activeTab === 'rehearsal' ? (
-                        <div className="p-4 sm:p-6">
-                            <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                                <Music className="w-5 h-5 text-purple-600" />
-                                <h2 className="text-lg sm:text-xl font-bold text-slate-800">Rehearsal Schedule</h2>
-                            </div>
-
-                            {/* Desktop Table View */}
-                            <div className="hidden sm:block overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                            <TableHead className="font-semibold text-slate-700">Song Title</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Writer</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Lead Singer</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Date</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Submitted</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {MOCK_REHEARSAL_DATA.map((item) => (
-                                            <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <TableCell className="font-medium text-slate-900">{item.title}</TableCell>
-                                                <TableCell className="text-slate-600">{item.writer}</TableCell>
-                                                <TableCell className="text-slate-600">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700">
-                                                            {item.leadSinger.charAt(0)}
-                                                        </div>
-                                                        {item.leadSinger}
+                    {!activeCategory ? (
+                        <div className="flex flex-col gap-3">
+                            {categories.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <p className="text-slate-400 text-sm">No schedule categories found.</p>
+                                </div>
+                            ) : (
+                                categories.map((cat) => {
+                                    const Icon = ICON_MAP[cat.icon] || Music;
+                                    return (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => handleCategoryClick(cat.id)}
+                                            role="button"
+                                            tabIndex={0}
+                                            className="bg-white rounded-2xl p-3 shadow-sm border border-gray-300 hover:shadow-lg transition-all duration-300 active:scale-[0.97] group mb-3 w-full cursor-pointer"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <div className={`w-10 h-10 ${cat.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm`}>
+                                                        <Icon className={`w-4 h-4 ${cat.iconColor}`} />
                                                     </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        className={`
-                              ${item.status === 'Approved' ? 'bg-green-100 text-green-700 hover:bg-green-200 border-green-200' : ''}
-                              ${item.status === 'Pending' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200' : ''}
-                              ${item.status === 'Rejected' ? 'bg-red-100 text-red-700 hover:bg-red-200 border-red-200' : ''}
-                            `}
-                                                        variant="outline"
-                                                    >
-                                                        {item.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-slate-600">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                        {item.date}
+                                                    <div className="flex-1">
+                                                        <h3 className="font-medium text-slate-900 text-sm group-hover:text-black leading-tight">
+                                                            {cat.label}
+                                                        </h3>
+                                                        <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                                                            {cat.description}
+                                                        </p>
                                                     </div>
-                                                </TableCell>
-                                                <TableCell className="text-slate-500 text-sm">
-                                                    {item.submitted}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            {/* Mobile Card View */}
-                            <div className="sm:hidden space-y-3">
-                                {MOCK_REHEARSAL_DATA.map((item) => (
-                                    <div key={item.id} className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                                                <p className="text-xs text-slate-500">by {item.writer}</p>
+                                                </div>
+                                                <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                                                    <ChevronRight className="w-3 h-3 text-slate-500" />
+                                                </div>
                                             </div>
-                                            <Badge
-                                                className={`
-                          ${item.status === 'Approved' ? 'bg-green-100 text-green-700 border-green-200' : ''}
-                          ${item.status === 'Pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : ''}
-                          ${item.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' : ''}
-                        `}
-                                                variant="outline"
-                                            >
-                                                {item.status}
-                                            </Badge>
                                         </div>
-
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-700">
-                                                {item.leadSinger.charAt(0)}
-                                            </div>
-                                            <span className="text-sm text-slate-700">{item.leadSinger}</span>
-                                        </div>
-
-                                        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-200">
-                                            <div className="flex items-center gap-1.5">
-                                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>Rehearsal: {item.date}</span>
-                                            </div>
-                                            <span>Sub: {item.submitted}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    );
+                                })
+                            )}
                         </div>
                     ) : (
-                        <div className="p-4 sm:p-6">
-                            <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                                <Clock className="w-5 h-5 text-purple-600" />
-                                <h2 className="text-lg sm:text-xl font-bold text-slate-800">Daily Schedule</h2>
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            {/* Back Button (Desktop) */}
+                            <div className="hidden sm:flex items-center justify-between mb-4">
+                                <button
+                                    onClick={() => setActiveCategory(null)}
+                                    className="flex items-center gap-2 text-sm font-outfit-bold text-purple-600 bg-purple-100 px-6 py-2.5 rounded-full hover:bg-purple-200 transition-all active:scale-95 shadow-sm"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back to Categories
+                                </button>
                             </div>
 
-                            {/* Desktop Table View */}
-                            <div className="hidden sm:block overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                            <TableHead className="font-semibold text-slate-700 w-32">Time</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Activity</TableHead>
-                                            <TableHead className="font-semibold text-slate-700">Location</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {MOCK_DAILY_DATA.map((item) => (
-                                            <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <TableCell className="font-medium text-slate-900 whitespace-nowrap">
-                                                    {item.time}
-                                                </TableCell>
-                                                <TableCell className="text-slate-700 font-medium">
-                                                    {item.activity}
-                                                </TableCell>
-                                                <TableCell className="text-slate-600">
-                                                    {item.location}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                            <div className="bg-white/70 backdrop-blur-2xl rounded-3xl ring-1 ring-black/5 shadow-xl shadow-purple-500/5 overflow-hidden mb-10 min-h-[50vh]">
 
-                            {/* Mobile Timeline View */}
-                            <div className="sm:hidden space-y-4 pl-2">
-                                {MOCK_DAILY_DATA.map((item, index) => (
-                                    <div key={item.id} className="relative flex gap-4">
-                                        {/* Timeline Line */}
-                                        {index !== MOCK_DAILY_DATA.length - 1 && (
-                                            <div className="absolute left-[5.5px] top-6 bottom-[-24px] w-px bg-slate-200"></div>
-                                        )}
-
-                                        {/* Dot */}
-                                        <div className="mt-1.5 w-3 h-3 rounded-full bg-purple-600 border-2 border-white shadow-sm flex-shrink-0 z-10"></div>
-
-                                        <div className="flex-1 pb-2">
-                                            <span className="text-xs font-semibold text-purple-600 block mb-0.5">{item.time}</span>
-                                            <h4 className="text-sm font-medium text-slate-900 mb-0.5">{item.activity}</h4>
-                                            <span className="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md inline-block">
-                                                {item.location}
-                                            </span>
+                                {isDailySchedule && program ? (
+                                    /* Daily Schedule Program Header */
+                                    <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <CardInfo label="Program" value={program.program} />
+                                            <CardInfo label="Date" value={program.date} />
+                                            <CardInfo label="Time" value={program.time} />
+                                            <CardInfo label="Daily Target" value={program.dailyTarget} accent />
                                         </div>
                                     </div>
-                                ))}
+                                ) : null}
+
+                                {categorySongs.length === 0 ? (
+                                    <div className="py-12 text-center">
+                                        <p className="text-slate-400 text-sm">No songs scheduled yet.</p>
+                                    </div>
+                                ) : (
+                                    isDailySchedule ? (
+                                        /* Simple List for Daily Schedule */
+                                        <div className="divide-y divide-slate-100">
+                                            {categorySongs.map((song, index) => (
+                                                <div key={song.id} className="flex items-center gap-3 px-5 py-4 hover:bg-purple-50/30 transition-colors group">
+                                                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-xs font-bold text-slate-500">{index + 1}</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">{song.title}</h4>
+                                                        <p className="text-xs text-slate-500 mt-0.5">by {song.writer}</p>
+                                                        <p className="text-xs text-slate-400">Lead: {song.leadSinger}</p>
+                                                    </div>
+                                                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 border border-purple-100">
+                                                        <span className="font-bold text-purple-700 text-xs">x{song.rehearsalCount}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Desktop Table */}
+                                            <div className="hidden sm:block overflow-x-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-slate-50/50 border-none hover:bg-transparent">
+                                                            <TableHead className="font-outfit-bold text-slate-500 py-5 px-8 uppercase text-[10px] tracking-widest">Song</TableHead>
+                                                            <TableHead className="font-outfit-bold text-slate-500 py-5 px-4 uppercase text-[10px] tracking-widest text-center">Date Received</TableHead>
+                                                            <TableHead className="font-outfit-bold text-slate-500 py-5 px-8 uppercase text-[10px] tracking-widest text-right">Rehearsed</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {categorySongs.map((song) => (
+                                                            <TableRow key={song.id} className="border-b border-slate-100/50 hover:bg-purple-50/30 transition-colors group">
+                                                                <TableCell className="py-5 px-8">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-outfit-bold text-slate-900 text-base group-hover:text-purple-700 transition-colors">{song.title}</span>
+                                                                        <span className="text-xs text-slate-500 mt-0.5">by {song.writer}</span>
+                                                                        <span className="text-xs text-slate-400 mt-0.5">Lead: {song.leadSinger}</span>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="py-5 px-4 text-center">
+                                                                    <div className="flex flex-col items-center">
+                                                                        <span className="text-xs font-medium text-slate-700">
+                                                                            {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-slate-400 mt-0.5">Received</span>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="py-5 px-8 text-right">
+                                                                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 text-purple-700 font-outfit-bold text-sm border border-purple-100">
+                                                                        x{song.rehearsalCount}
+                                                                    </span>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile Card View */}
+                                            <div className="sm:hidden space-y-3 pb-8">
+                                                {categorySongs.map((song, index) => (
+                                                    <div
+                                                        key={song.id}
+                                                        className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3 active:scale-[0.98] transition-all duration-200"
+                                                        style={{ animationDelay: `${index * 50}ms` }}
+                                                    >
+                                                        {/* Index Badge */}
+                                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mt-0.5">
+                                                            <span className="text-xs font-bold text-slate-400">{index + 1}</span>
+                                                        </div>
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-outfit-bold text-base text-slate-900 leading-snug line-clamp-2">
+                                                                {song.title}
+                                                            </h3>
+                                                            <p className="text-xs text-slate-500 mt-1 font-medium">
+                                                                {song.writer}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 mt-2">
+                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
+                                                                    <User className="w-3 h-3 text-slate-400" />
+                                                                    <span className="text-[10px] text-slate-600 font-medium">{song.leadSinger}</span>
+                                                                </span>
+                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
+                                                                    <Calendar className="w-3 h-3 text-slate-400" />
+                                                                    <span className="text-[10px] text-slate-600 font-medium">
+                                                                        {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Rehearsal Count Badge */}
+                                                        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                                            <div className="w-10 h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shadow-sm">
+                                                                <span className="font-outfit-bold text-purple-600 text-sm">x{song.rehearsalCount}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )
+                                )}
                             </div>
 
-                            <div className="mt-8 flex flex-col items-center justify-center py-12 text-slate-400">
-                                <FileText className="w-12 h-12 mb-3 opacity-20" />
-                                <p className="text-sm">Full daily schedule integration coming soon.</p>
-                            </div>
+                            <p className="text-center text-slate-400 text-[10px] font-poppins-medium uppercase tracking-widest pt-4">
+                                Details: {activeCatData?.label}
+                            </p>
                         </div>
                     )}
                 </div>
             </div>
+        </div>
+    );
+}
+
+function CardInfo({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+    return (
+        <div className={`rounded-2xl p-3 ${accent ? 'bg-emerald-50 col-span-2' : 'bg-slate-50'}`}>
+            <p className={`text-[10px] uppercase tracking-widest font-medium mb-1 ${accent ? 'text-emerald-500' : 'text-slate-400'}`}>{label}</p>
+            <p className={`text-sm font-semibold leading-tight ${accent ? 'text-emerald-800' : 'text-slate-800'}`}>{value || '—'}</p>
         </div>
     );
 }

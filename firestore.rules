@@ -731,6 +731,22 @@ service cloud.firestore {
                                request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com', 'joykures@gmail.com'];
     }
 
+    // ===== SCHEDULE MANAGER =====
+    match /schedule_categories/{categoryId} {
+      allow read: if request.auth != null;
+      allow write: if true;  // Open for admin panel
+    }
+
+    match /schedule_songs/{songId} {
+      allow read: if request.auth != null;
+      allow write: if true;  // Open for admin panel
+    }
+    
+    match /schedule_programs/{programId} {
+      allow read: if request.auth != null;
+      allow write: if true;  // Open for admin panel
+    }
+
     // ===== DEFAULT DENY ALL =====
     match /{document=**} {
       allow read, write: if false;

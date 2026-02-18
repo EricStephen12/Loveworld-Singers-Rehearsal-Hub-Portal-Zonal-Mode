@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase-setup'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
+import { SessionManager } from '@/lib/session-manager'
 
 
 interface AuthContextType {
@@ -44,6 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)
+
+      // Start Session Tracking (Kick-Out Logic)
+      if (firebaseUser) {
+        SessionManager.startActivityTracking(firebaseUser.uid)
+      }
 
       // Update cache for instant next load
       if (typeof window !== 'undefined') {
