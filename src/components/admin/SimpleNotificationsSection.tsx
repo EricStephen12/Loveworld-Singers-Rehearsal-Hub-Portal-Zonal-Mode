@@ -38,15 +38,9 @@ export default function SimpleNotificationsSection() {
 
   // Set up real-time listener for messages
   useEffect(() => {
-    if (!currentZone?.id) return;
+    const messagesRef = collection(db, 'admin_messages');
 
-    const isHQ = isHQGroup(currentZone.id);
-    const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages';
-    const messagesRef = collection(db, collectionName);
-
-    const q = isHQ
-      ? query(messagesRef, orderBy('createdAt', 'desc'))
-      : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'));
+    const q = query(messagesRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.metadata.hasPendingWrites) {

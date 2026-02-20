@@ -1034,12 +1034,7 @@ export class FirebaseDatabaseService {
    */
   static async getUserNotifications(userId: string, currentZoneId?: string) {
     try {
-      const isHQ = currentZoneId ? isHQGroup(currentZoneId) : false
-      const collectionName = currentZoneId && isHQ ? 'admin_messages' : 'zone_admin_messages'
-
-      const q = currentZoneId && !isHQ
-        ? query(collection(db, collectionName), where('zoneId', '==', currentZoneId), orderBy('createdAt', 'desc'), limit(50))
-        : query(collection(db, collectionName), orderBy('createdAt', 'desc'), limit(50))
+      const q = query(collection(db, 'admin_messages'), orderBy('createdAt', 'desc'), limit(50))
 
       const snapshot = await getDocs(q)
       const allNotifications = snapshot.docs.map(doc => ({

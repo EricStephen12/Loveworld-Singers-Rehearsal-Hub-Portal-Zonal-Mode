@@ -36,12 +36,15 @@ export interface ScheduleSong {
     id: string
     zoneId: string | null
     categoryId: string
+    type?: 'song' | 'activity' | 'title'
     title: string
+    comment?: string
     writer: string
     leadSinger: string
     rehearsalCount: number
     dateReceived: string
     order: number
+    date?: string       // YYYY-MM-DD
     createdAt: string
     updatedAt: string
     createdBy: string
@@ -51,9 +54,10 @@ export interface ScheduleProgram {
     id?: string
     zoneId: string | null
     program: string
-    date: string
+    date: string        // This is the formatted date string "Feb 19" (legacy) OR YYYY-MM-DD
     time: string
     dailyTarget: string
+
     updatedAt: string
     updatedBy: string
 }
@@ -151,12 +155,27 @@ export class ScheduleCategoryService {
 
 export class ScheduleSongService {
 
-    static async getSongs(categoryId: string, zoneId?: string | null): Promise<ScheduleSong[]> {
+    static async getSongs(categoryId: string, zoneId?: string | null, date?: string): Promise<ScheduleSong[]> {
         try {
             const ref = collection(db, 'schedule_songs')
-            const q = isHQ(zoneId)
-                ? query(ref, where('categoryId', '==', categoryId))
-                : query(ref, where('categoryId', '==', categoryId), where('zoneId', '==', zoneId))
+            let q = query(ref, where('categoryId', '==', categoryId))
+
+            if (!isHQ(zoneId)) {
+                q = query(q, where('zoneId', '==', zoneId))
+            }
+
+            // Filter by date if provided, otherwise assume general/daily
+            if (date) {
+                q = query(q, where('date', '==', date))
+            } else {
+                // Legacy support or "General" songs? 
+                // For now, if no date is passed, we might get songs with NO date (if we allow that).
+                // But typically we should always pass date for daily schedule.
+                // Let's assume if date is missing, we fetch songs with NO date field (legacy).
+                // Or we can just ignore date filter (fetch all).
+                // The prompt implies we want date-specific. 
+                // Let's filter by date ONLY if provided.
+            }
 
             const snap = await getDocs(q)
             return snap.docs
@@ -184,7 +203,7 @@ export class ScheduleSongService {
         try {
             const ref = collection(db, 'schedule_songs')
             const docRef = await addDoc(ref, {
-                ...data,
+                ...data, // data should include 'date' now
                 zoneId: isHQ(zoneId) ? null : zoneId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -228,13 +247,14 @@ export class ScheduleSongService {
 
 export class ScheduleProgramService {
 
-    private static getProgramDocId(zoneId?: string | null): string {
-        return isHQ(zoneId) ? 'hq_program' : `zone_${zoneId}_program`
+    private static getProgramDocId(zoneId?: string | null, date?: string): string {
+        const dateSuffix = date ? `_${date}` : ''
+        return isHQ(zoneId) ? `hq_program${dateSuffix}` : `zone_${zoneId}_program${dateSuffix}`
     }
 
-    static async getProgram(zoneId?: string | null): Promise<ScheduleProgram | null> {
+    static async getProgram(zoneId?: string | null, date?: string): Promise<ScheduleProgram | null> {
         try {
-            const docId = this.getProgramDocId(zoneId)
+            const docId = this.getProgramDocId(zoneId, date)
             const ref = doc(db, 'schedule_programs', docId)
             const snap = await getDoc(ref)
             if (!snap.exists()) return null
@@ -250,12 +270,37 @@ export class ScheduleProgramService {
         }
     }
 
+    static async getAllPrograms(zoneId?: string | null): Promise<ScheduleProgram[]> {
+        try {
+            const ref = collection(db, 'schedule_programs')
+            let q = query(ref)
+
+            if (!isHQ(zoneId)) {
+                q = query(q, where('zoneId', '==', zoneId))
+            }
+
+            const snap = await getDocs(q)
+            return snap.docs.map(d => {
+                const data = d.data()
+                return {
+                    ...data,
+                    id: d.id,
+                    updatedAt: toDate(data.updatedAt),
+                } as ScheduleProgram
+            }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Newest first
+        } catch (error) {
+            console.error('Error getting all programs:', error)
+            return []
+        }
+    }
+
     static async updateProgram(
         data: Omit<ScheduleProgram, 'id' | 'updatedAt'>,
-        zoneId?: string | null
+        zoneId?: string | null,
+        date?: string
     ): Promise<boolean> {
         try {
-            const docId = this.getProgramDocId(zoneId)
+            const docId = this.getProgramDocId(zoneId, date)
             const ref = doc(db, 'schedule_programs', docId)
             await setDoc(ref, {
                 ...data,

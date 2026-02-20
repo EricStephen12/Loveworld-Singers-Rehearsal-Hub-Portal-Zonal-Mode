@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { CalendarEvent, CalendarService } from '../_lib/firebase-calendar-service'
 import { X, Calendar, Clock, MapPin, Users, Repeat, Bell, Save, Loader2 } from 'lucide-react'
+import { isHQGroup } from '@/config/zones'
 import moment from 'moment'
 
 interface EventModalProps {
@@ -25,7 +26,7 @@ const EVENT_TYPES = [
 ]
 
 const EVENT_COLORS = [
-  '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', 
+  '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6',
   '#ef4444', '#06b6d4', '#84cc16', '#f97316'
 ]
 
@@ -54,7 +55,8 @@ export default function EventModal({
     recurringFrequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
     recurringInterval: 1,
     recurringEndDate: '',
-    reminders: [] as { type: 'email' | 'notification'; minutes: number }[]
+    reminders: [] as { type: 'email' | 'notification'; minutes: number }[],
+    isGlobal: false
   })
 
   const calendarService = new CalendarService()
@@ -75,10 +77,11 @@ export default function EventModal({
         isRecurring: event.isRecurring || false,
         recurringFrequency: event.recurringPattern?.frequency || 'weekly',
         recurringInterval: event.recurringPattern?.interval || 1,
-        recurringEndDate: event.recurringPattern?.endDate 
+        recurringEndDate: event.recurringPattern?.endDate
           ? moment(event.recurringPattern.endDate).format('YYYY-MM-DD')
           : '',
-        reminders: event.reminders || []
+        reminders: event.reminders || [],
+        isGlobal: event.isGlobal || false
       })
     } else if (defaultStart && defaultEnd) {
       // Creating new event with default times
@@ -92,7 +95,7 @@ export default function EventModal({
       // Reset form
       const now = new Date()
       const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
-      
+
       setFormData({
         title: '',
         description: '',
@@ -106,7 +109,8 @@ export default function EventModal({
         recurringFrequency: 'weekly',
         recurringInterval: 1,
         recurringEndDate: '',
-        reminders: []
+        reminders: [],
+        isGlobal: false
       })
     }
   }, [event, defaultStart, defaultEnd, themeColor, isOpen])
@@ -114,9 +118,8 @@ export default function EventModal({
   // Toast helper
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const toast = document.createElement('div')
-    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${
-      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`
+    toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg z-[100] text-sm font-medium transition-all ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+      }`
     toast.textContent = message
     document.body.appendChild(toast)
     setTimeout(() => {
@@ -158,26 +161,27 @@ export default function EventModal({
           endDate: formData.recurringEndDate ? new Date(formData.recurringEndDate) : undefined
         } : undefined,
         reminders: formData.reminders,
+        isGlobal: formData.isGlobal,
         attendees: []
       }
 
       if (event) {
-                await calendarService.updateEvent(event.id, eventData)
+        await calendarService.updateEvent(event.id, eventData)
         onSave({ ...event, ...eventData })
         showToast('Event updated successfully')
       } else {
         // Create new event
         const eventId = await calendarService.createEvent(eventData)
-        onSave({ 
-          id: eventId, 
-          ...eventData, 
-          createdAt: new Date(), 
-          updatedAt: new Date() 
+        onSave({
+          id: eventId,
+          ...eventData,
+          createdAt: new Date(),
+          updatedAt: new Date()
         })
         showToast('Event created successfully')
       }
-      
-            try {
+
+      try {
         const { CalendarCache } = await import('@/utils/calendar-cache')
         CalendarCache.clearEvents(zoneId)
       } catch {
@@ -208,7 +212,7 @@ export default function EventModal({
   const updateReminder = (index: number, field: 'type' | 'minutes', value: any) => {
     setFormData(prev => ({
       ...prev,
-      reminders: prev.reminders.map((reminder, i) => 
+      reminders: prev.reminders.map((reminder, i) =>
         i === index ? { ...reminder, [field]: value } : reminder
       )
     }))
@@ -220,7 +224,7 @@ export default function EventModal({
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div 
+        <div
           className="p-6 text-white"
           style={{
             background: `linear-gradient(135deg, ${themeColor} 0%, ${adjustColor(themeColor, -20)} 100%)`
@@ -273,8 +277,8 @@ export default function EventModal({
                 </label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
                     type: e.target.value as CalendarEvent['type']
                   }))}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -297,9 +301,8 @@ export default function EventModal({
                       key={color}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, color }))}
-                      className={`w-8 h-8 rounded-full border-2 ${
-                        formData.color === color ? 'border-gray-400' : 'border-gray-200'
-                      }`}
+                      className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-gray-400' : 'border-gray-200'
+                        }`}
                       style={{ backgroundColor: color }}
                     />
                   ))}
@@ -379,70 +382,96 @@ export default function EventModal({
               />
             </div>
 
-            {/* Recurring Event */}
-            <div className="border border-gray-200 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <input
-                  type="checkbox"
-                  id="recurring"
-                  checked={formData.isRecurring}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <label htmlFor="recurring" className="text-sm font-medium text-gray-700">
-                  <Repeat className="w-4 h-4 inline mr-1" />
-                  Recurring event
-                </label>
+            {/* Recurring Event & Global Toggle */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <input
+                    type="checkbox"
+                    id="recurring"
+                    checked={formData.isRecurring}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
+                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <label htmlFor="recurring" className="text-sm font-medium text-gray-700">
+                    <Repeat className="w-4 h-4 inline mr-1" />
+                    Recurring event
+                  </label>
+                </div>
+
+                {formData.isRecurring && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Frequency
+                      </label>
+                      <select
+                        value={formData.recurringFrequency}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          recurringFrequency: e.target.value as 'daily' | 'weekly' | 'monthly'
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Interval
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={formData.recurringInterval}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            recurringInterval: parseInt(e.target.value) || 1
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.recurringEndDate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, recurringEndDate: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {formData.isRecurring && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Frequency
-                    </label>
-                    <select
-                      value={formData.recurringFrequency}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        recurringFrequency: e.target.value as 'daily' | 'weekly' | 'monthly'
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Interval
-                    </label>
+              {/* Global Event Toggle (HQ Only) */}
+              {isHQGroup(zoneId) && (
+                <div className="border border-gray-200 rounded-xl p-4 flex flex-col justify-center">
+                  <div className="flex items-center gap-3">
                     <input
-                      type="number"
-                      min="1"
-                      max="12"
-                      value={formData.recurringInterval}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        recurringInterval: parseInt(e.target.value) || 1
-                      }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      type="checkbox"
+                      id="isGlobal"
+                      checked={formData.isGlobal}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isGlobal: e.target.checked }))}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      End Date
+                    <label htmlFor="isGlobal" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-blue-500" />
+                      Make Global Notification
                     </label>
-                    <input
-                      type="date"
-                      value={formData.recurringEndDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurringEndDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
                   </div>
+                  <p className="mt-2 text-[10px] text-gray-500 leading-tight">
+                    This event will be visible to ALL zones in their notification center and calendar. Use for global masterclasses or meetings.
+                  </p>
                 </div>
               )}
             </div>

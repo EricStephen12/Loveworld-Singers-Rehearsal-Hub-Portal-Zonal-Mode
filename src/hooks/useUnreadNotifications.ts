@@ -69,15 +69,10 @@ export function useUnreadNotifications() {
     } catch (e) {
     }
 
-    // Listen for zone/admin messages
+    // Listen for global admin messages
     try {
-      const isHQ = isHQGroup(currentZone.id)
-      const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages'
-
-      const messagesRef = collection(db, collectionName)
-      const messagesQuery = isHQ
-        ? query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
-        : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'), limit(1))
+      const messagesRef = collection(db, 'admin_messages')
+      const messagesQuery = query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
 
       const zoneUnsub = onSnapshot(messagesQuery, (snapshot) => {
         snapshot.docChanges().forEach(change => {

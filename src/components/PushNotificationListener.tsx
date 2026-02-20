@@ -177,16 +177,12 @@ export default function PushNotificationListener() {
     }
   }, [])
 
-  // Listen for new zone messages
+  // Listen for new global admin messages
   useEffect(() => {
     if (!currentZone?.id) return
-    const isHQ = isHQGroup(currentZone.id)
-    const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages'
 
-    const messagesRef = collection(db, collectionName)
-    const q = isHQ
-      ? query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
-      : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'), limit(1))
+    const messagesRef = collection(db, 'admin_messages')
+    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach(change => {
@@ -205,6 +201,41 @@ export default function PushNotificationListener() {
         }
       })
     }, (error) => {
+      console.error('[Push] Error listening to admin_messages:', error)
+    })
+    return () => unsubscribe()
+  }, [currentZone?.id])
+
+  // Listen for new global calendar events
+  useEffect(() => {
+    if (!currentZone?.id) return
+
+    const eventsRef = collection(db, 'calendar_events')
+    // We listen for any new event, then filter for Global-only in the snapshot
+    const q = query(eventsRef, orderBy('createdAt', 'desc'), limit(1))
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const data = change.doc.data()
+          const isGlobal = data.isGlobal === true
+          const createdAt = data.createdAt?.toDate?.()?.getTime() || 0
+
+          if (isGlobal && createdAt > lastNotifTime.current) {
+            showNotification(
+              data.title || 'New Global Event',
+              `New global event scheduled: ${data.title}`,
+              `event-${change.doc.id}`,
+              '/pages/calendar'
+            )
+            // No need to update lastNotifTime here as it's shared with admin_messages
+            // Actually, we should probably update it to prevent race conditions if multiple listeners trigger
+            lastNotifTime.current = Date.now()
+          }
+        }
+      })
+    }, (error) => {
+      console.error('[Push] Error listening to calendar_events:', error)
     })
     return () => unsubscribe()
   }, [currentZone?.id])

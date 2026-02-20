@@ -63,265 +63,17 @@ const STATUS_CONFIG: Record<SubGroupStatus, { label: string; color: string; icon
 };
 
 export default function SubGroupsSection() {
-  const {
-    subGroups,
-    pendingCount,
-    isLoading,
-    approveSubGroup,
-    rejectSubGroup,
-    refresh
-  } = useZoneSubGroups();
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<SubGroupStatus | 'all'>('all');
-  const [selectedSubGroup, setSelectedSubGroup] = useState<SubGroup | null>(null);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [processing, setProcessing] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  // Filter sub-groups
-  const filteredSubGroups = subGroups.filter(sg => {
-    const matchesSearch =
-      sg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sg.coordinatorName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || sg.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const showToast = (type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleApprove = async (subGroup: SubGroup) => {
-    setProcessing(true);
-    const result = await approveSubGroup(subGroup.id);
-    setProcessing(false);
-
-    if (result.success) {
-      // Get real user info
-      const userName = localStorage.getItem('userName') ||
-        localStorage.getItem('userEmail') ||
-        'Admin';
-
-      // Global toast event with activity logging data
-      window.dispatchEvent(new CustomEvent('showToast', {
-        detail: {
-          message: `"${subGroup.name}" has been approved`,
-          type: 'success',
-          userName: userName,
-          action: 'updated',
-          section: 'subgroups',
-          itemName: subGroup.name
-        }
-      }));
-    } else {
-      window.dispatchEvent(new CustomEvent('showToast', {
-        detail: {
-          message: result.error || 'Failed to approve',
-          type: 'error'
-        }
-      }));
-    }
-  };
-
-  const handleReject = async () => {
-    if (!selectedSubGroup || !rejectReason.trim()) return;
-
-    setProcessing(true);
-    const result = await rejectSubGroup(selectedSubGroup.id, rejectReason);
-    setProcessing(false);
-
-    if (result.success) {
-      // Get real user info
-      const userName = localStorage.getItem('userName') ||
-        localStorage.getItem('userEmail') ||
-        'Admin';
-
-      window.dispatchEvent(new CustomEvent('showToast', {
-        detail: {
-          message: `"${selectedSubGroup.name}" has been rejected`,
-          type: 'success',
-          userName: userName,
-          action: 'updated',
-          section: 'subgroups',
-          itemName: selectedSubGroup.name
-        }
-      }));
-      setShowRejectModal(false);
-      setSelectedSubGroup(null);
-      setRejectReason('');
-    } else {
-      window.dispatchEvent(new CustomEvent('showToast', {
-        detail: {
-          message: result.error || 'Failed to reject',
-          type: 'error'
-        }
-      }));
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-purple-50">
-        <CustomLoader message="Loading sub-groups..." />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-purple-50">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}>
-          {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-          {toast.message}
+    <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-purple-50">
+      <div className="p-6 md:p-12 max-w-4xl mx-auto flex flex-col items-center justify-center text-center min-h-[60vh]">
+        <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <UsersRound className="w-12 h-12 text-purple-600" />
         </div>
-      )}
-
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <UsersRound className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Sub-Groups</h1>
-                <p className="text-slate-500 text-sm">
-                  Manage sub-group requests and active groups
-                </p>
-              </div>
-            </div>
-
-            {pendingCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-full">
-                <Clock className="w-4 h-4" />
-                <span className="font-medium">{pendingCount} pending</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Stats - Horizontal Scroll on Mobile */}
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 mb-6 scrollbar-hide">
-          <StatCard
-            label="Total"
-            value={subGroups.length}
-            icon={<UsersRound className="w-5 h-5 text-purple-600" />}
-            bgColor="bg-purple-100"
-          />
-          <StatCard
-            label="Active"
-            value={subGroups.filter(sg => sg.status === 'active').length}
-            icon={<CheckCircle className="w-5 h-5 text-green-600" />}
-            bgColor="bg-green-100"
-          />
-          <StatCard
-            label="Pending"
-            value={subGroups.filter(sg => sg.status === 'pending').length}
-            icon={<Clock className="w-5 h-5 text-yellow-600" />}
-            bgColor="bg-yellow-100"
-          />
-          <StatCard
-            label="Awaiting"
-            value={subGroups.filter(sg => sg.status === 'approved_pending_payment').length}
-            icon={<CreditCard className="w-5 h-5 text-blue-600" />}
-            bgColor="bg-blue-100"
-          />
-        </div>
-
-        {/* Filters - Instagram Style */}
-        <div className="space-y-3 mb-6">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name or coordinator..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 lg:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-            />
-          </div>
-
-          {/* Status Filter Pills - Horizontal Scroll on Mobile */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-hide">
-            {[
-              { value: 'all', label: 'All', count: subGroups.length },
-              { value: 'pending', label: 'Pending', count: subGroups.filter(sg => sg.status === 'pending').length },
-              { value: 'approved_pending_payment', label: 'Awaiting Pay', count: subGroups.filter(sg => sg.status === 'approved_pending_payment').length },
-              { value: 'active', label: 'Active', count: subGroups.filter(sg => sg.status === 'active').length },
-              { value: 'rejected', label: 'Rejected', count: subGroups.filter(sg => sg.status === 'rejected').length },
-            ].map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => setStatusFilter(filter.value as SubGroupStatus | 'all')}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${statusFilter === filter.value
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
-                  }`}
-              >
-                {filter.label}
-                {filter.count > 0 && (
-                  <span className={`ml-1.5 ${statusFilter === filter.value ? 'text-purple-200' : 'text-slate-400'}`}>
-                    {filter.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sub-Groups List */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          {filteredSubGroups.length === 0 ? (
-            <div className="p-8 text-center">
-              <UsersRound className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">
-                {searchTerm || statusFilter !== 'all'
-                  ? 'No sub-groups match your filters'
-                  : 'No sub-group requests yet'}
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {filteredSubGroups.map((subGroup) => (
-                <SubGroupRow
-                  key={subGroup.id}
-                  subGroup={subGroup}
-                  onApprove={() => handleApprove(subGroup)}
-                  onReject={() => {
-                    setSelectedSubGroup(subGroup);
-                    setShowRejectModal(true);
-                  }}
-                  onView={() => setSelectedSubGroup(subGroup)}
-                  processing={processing}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Sub-Groups<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Coming Soon</span></h1>
+        <p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
+          We are currently putting the finishing touches on the Sub-Groups administration features. Please check back later!
+        </p>
       </div>
-
-      {/* Reject Modal */}
-      {showRejectModal && selectedSubGroup && (
-        <RejectModal
-          subGroup={selectedSubGroup}
-          reason={rejectReason}
-          onReasonChange={setRejectReason}
-          onConfirm={handleReject}
-          onClose={() => {
-            setShowRejectModal(false);
-            setSelectedSubGroup(null);
-            setRejectReason('');
-          }}
-          processing={processing}
-        />
-      )}
     </div>
   );
 }
@@ -381,12 +133,12 @@ function SubGroupRow({
       >
         {/* Icon with gradient */}
         <div className={`w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-lg flex-shrink-0 flex items-center justify-center ${subGroup.status === 'active'
-            ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-            : subGroup.status === 'pending'
-              ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-              : subGroup.status === 'approved_pending_payment'
-                ? 'bg-gradient-to-br from-blue-400 to-indigo-500'
-                : 'bg-gradient-to-br from-slate-400 to-slate-500'
+          ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+          : subGroup.status === 'pending'
+            ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+            : subGroup.status === 'approved_pending_payment'
+              ? 'bg-gradient-to-br from-blue-400 to-indigo-500'
+              : 'bg-gradient-to-br from-slate-400 to-slate-500'
           }`}>
           <span className="text-white">{typeIcon}</span>
         </div>

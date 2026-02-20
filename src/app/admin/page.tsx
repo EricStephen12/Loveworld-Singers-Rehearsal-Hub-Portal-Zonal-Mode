@@ -1785,10 +1785,10 @@ function AdminContent() {
           {activeSection === 'Master Library' && !isRestrictedAdmin && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
           {activeSection === 'Sub-Groups' && !isRestrictedAdmin && <SubGroupsSection />}
           {activeSection === 'Calendar' && !isRestrictedAdmin && <CalendarSection />}
-          {activeSection === 'Notifications' && !isRestrictedAdmin && <SimpleNotificationsSection />}
+          {activeSection === 'Notifications' && isHQAdmin && !isRestrictedAdmin && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
           {activeSection === 'Support Chat' && isHQAdmin && !isRestrictedAdmin && <SupportChatSection />}
-          {activeSection === 'Schedule Manager' && !isRestrictedAdmin && <ScheduleManagerSection />}
+          {activeSection === 'Schedule Manager' && !isRestrictedAdmin && <ScheduleManagerSection allSongs={allSongs} />}
         </div>
 
         {/* Modals */}

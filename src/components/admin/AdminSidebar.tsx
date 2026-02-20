@@ -16,7 +16,7 @@ import {
   Upload,
   X,
   Library,
-  UsersRound,
+  User,
   Home,
   ChevronLeft,
   Calendar,
@@ -71,11 +71,11 @@ const AdminSidebar = React.memo(({
 
   const managementItems = [
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
-    { icon: UsersRound, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
+    { icon: User, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
     { icon: Upload, label: 'Video Manager', active: activeSection === 'Video Manager', hqZoneOnly: true },
     { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar', hqZoneOnly: true },
-    { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
+    { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications', hqOnly: true },
     { icon: DollarSign, label: 'Payments', active: activeSection === 'Payments', hqOnly: true },
     { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
   ];
@@ -99,6 +99,9 @@ const AdminSidebar = React.memo(({
 
   const renderNavItem = (item: any, index: number) => {
     const Icon = item.icon;
+    const isActive = item.active;
+    const hasBadge = !!item.badge && Number(item.badge) > 0;
+
     return (
       <button
         key={index}
@@ -111,29 +114,33 @@ const AdminSidebar = React.memo(({
         }}
         className={`
           relative w-full flex items-center gap-3 px-4 py-3 lg:px-3 lg:py-2.5 rounded-xl lg:rounded-lg transition-all duration-200 active:scale-[0.98]
-          ${item.active
-            ? 'bg-purple-600 text-white lg:bg-gradient-to-r lg:from-purple-600 lg:to-purple-500 lg:text-white lg:shadow-md lg:shadow-purple-200'
+          ${isActive
+            ? `text-white shadow-md opacity-100`
             : 'text-slate-600 hover:bg-slate-100 lg:hover:bg-slate-50 active:bg-slate-100'
           }
           ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''}
         `}
+        style={isActive ? {
+          backgroundColor: currentZone?.themeColor || '#9333ea',
+          boxShadow: `0 4px 6px -1px ${(currentZone?.themeColor || '#9333ea')}40`
+        } : {}}
         title={sidebarCollapsed ? item.label : undefined}
       >
         <Icon className={`w-5 h-5 flex-shrink-0 ${item.active ? 'text-white' : ''}`} />
         <span className={`font-medium text-sm ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
           {item.label}
         </span>
-        {item.badge && item.badge > 0 && !sidebarCollapsed && (
+        {hasBadge && !sidebarCollapsed && (
           <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-yellow-400 text-yellow-900 rounded-full">
             {item.badge}
           </span>
         )}
-        {item.badge && item.badge > 0 && sidebarCollapsed && (
+        {hasBadge && sidebarCollapsed && (
           <span className="hidden lg:flex absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold bg-yellow-400 text-yellow-900 rounded-full items-center justify-center">
             {item.badge}
           </span>
         )}
-        {item.active && !item.badge && !sidebarCollapsed && (
+        {item.active && !hasBadge && !sidebarCollapsed && (
           <ChevronRight className={`w-4 h-4 ml-auto ${item.active ? 'text-white/70' : 'text-slate-400'}`} />
         )}
       </button>
@@ -174,7 +181,13 @@ const AdminSidebar = React.memo(({
               href="/home"
               className={`flex items-center gap-3 hover:opacity-80 transition-opacity ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''}`}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-200">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
+                style={{
+                  backgroundColor: currentZone?.themeColor || '#9333ea',
+                  boxShadow: `0 4px 6px -1px ${(currentZone?.themeColor || '#9333ea')}40`
+                }}
+              >
                 <img
                   src="/logo.png"
                   alt="Logo"

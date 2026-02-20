@@ -36,7 +36,8 @@ function invalidateCache(zoneId?: string): void {
 }
 
 function getMessagesCollectionName(zoneId?: string): string {
-  return (zoneId && isHQGroup(zoneId)) ? 'admin_messages' : 'zone_admin_messages'
+  // All admin messages are global now
+  return 'admin_messages'
 }
 
 export interface AdminMessage {
@@ -56,24 +57,24 @@ export async function sendMessageToAllUsers(
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const collectionName = getMessagesCollectionName(zoneId)
-    
+
     const messageData = {
       title: title.trim(),
       message: message.trim(),
       sentBy: adminUsername,
       sentAt: new Date().toISOString(),
-      zoneId: zoneId || '',
+      zoneId: 'global', // Always global now
       createdAt: serverTimestamp()
     }
-    
+
     const messagesRef = collection(db, collectionName)
     const docRef = await addDoc(messagesRef, messageData)
     invalidateCache(zoneId)
-    
+
     // Send push notification to zone members
     sendZoneAnnouncementNotification(docRef.id, title.trim(), message.trim(), zoneId).catch(err => {
     })
-    
+
     return { success: true, id: docRef.id }
   } catch (error) {
     console.error('Error sending message:', error)
@@ -89,18 +90,14 @@ async function sendZoneAnnouncementNotification(
   zoneId?: string
 ): Promise<void> {
   try {
-    // Get zone members to notify
-    const isHQ = zoneId ? isHQGroup(zoneId) : false
-    const membersCollection = isHQ ? 'hq_members' : 'zone_members'
-    const membersRef = collection(db, membersCollection)
-    
-    // For non-HQ zones, filter by zoneId
-    const membersQuery = (!isHQ && zoneId)
-      ? query(membersRef, where('zoneId', '==', zoneId))
-      : query(membersRef)
-    
+    // Send to all members globally
+    const membersRef = collection(db, 'zone_members')
+
+    // Get ALL zone members globally
+    const membersQuery = query(membersRef)
+
     const snapshot = await getDocs(membersQuery)
-    
+
     const recipientIds: string[] = []
     snapshot.forEach(doc => {
       const data = doc.data()
@@ -108,11 +105,11 @@ async function sendZoneAnnouncementNotification(
         recipientIds.push(data.userId)
       }
     })
-    
+
     if (recipientIds.length === 0) {
       return
     }
-    
+
     // Send in batches of 100
     const batchSize = 100
     for (let i = 0; i < recipientIds.length; i += batchSize) {
@@ -129,7 +126,7 @@ async function sendZoneAnnouncementNotification(
         })
       })
     }
-    
+
   } catch (error) {
     console.error('[Notifications] Error sending zone announcement:', error)
   }
@@ -138,23 +135,21 @@ async function sendZoneAnnouncementNotification(
 export async function getAllMessages(zoneId?: string, forceRefresh = false): Promise<AdminMessage[]> {
   try {
     const cacheKey = getCacheKey(zoneId)
-    
+
     if (!forceRefresh) {
       const cached = messagesCache.get(cacheKey)
       if (isCacheValid(cached)) {
         return cached!.data
       }
     }
-    
+
     const collectionName = getMessagesCollectionName(zoneId)
     const messagesRef = collection(db, collectionName)
-    
-    const q = (zoneId && !isHQGroup(zoneId))
-      ? query(messagesRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'))
-      : query(messagesRef, orderBy('createdAt', 'desc'))
-    
+
+    const q = query(messagesRef, orderBy('createdAt', 'desc'))
+
     const snapshot = await getDocs(q)
-    
+
     const messages = snapshot.docs.map((docSnap) => {
       const data = docSnap.data()
       return {
@@ -164,9 +159,9 @@ export async function getAllMessages(zoneId?: string, forceRefresh = false): Pro
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
       }
     }) as AdminMessage[]
-    
+
     messagesCache.set(cacheKey, { data: messages, timestamp: Date.now() })
-    
+
     return messages
   } catch (error) {
     console.error('Error getting messages:', error)
@@ -175,7 +170,7 @@ export async function getAllMessages(zoneId?: string, forceRefresh = false): Pro
 }
 
 export async function deleteMessage(
-  messageId: string, 
+  messageId: string,
   zoneId?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -183,7 +178,7 @@ export async function deleteMessage(
     const messageRef = doc(db, collectionName, messageId)
     await deleteDoc(messageRef)
     invalidateCache(zoneId)
-    
+
     return { success: true }
   } catch (error) {
     console.error('Error deleting message:', error)

@@ -156,18 +156,31 @@ export default function SongSchedulePage() {
                                         /* Simple List for Daily Schedule */
                                         <div className="divide-y divide-slate-100">
                                             {categorySongs.map((song, index) => (
-                                                <div key={song.id} className="flex items-center gap-3 px-5 py-4 hover:bg-purple-50/30 transition-colors group">
+                                                <div key={song.id} className={`flex items-center gap-3 px-5 py-4 transition-colors group ${song.type === 'activity' ? 'bg-slate-50/50 hover:bg-slate-100' : 'hover:bg-purple-50/30'}`}>
                                                     <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
                                                         <span className="text-xs font-bold text-slate-500">{index + 1}</span>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">{song.title}</h4>
-                                                        <p className="text-xs text-slate-500 mt-0.5">by {song.writer}</p>
-                                                        <p className="text-xs text-slate-400">Lead: {song.leadSinger}</p>
-                                                    </div>
-                                                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 border border-purple-100">
-                                                        <span className="font-bold text-purple-700 text-xs">x{song.rehearsalCount}</span>
-                                                    </div>
+
+                                                    {song.type === 'activity' ? (
+                                                        <div className="flex-1 min-w-0 flex items-center gap-3">
+                                                            <FileText className="w-4 h-4 text-slate-400" />
+                                                            <div>
+                                                                <h4 className="font-medium text-slate-700 text-sm leading-tight italic">{song.title}</h4>
+                                                                {song.writer && <p className="text-xs text-slate-400 mt-0.5">{song.writer}</p>}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">{song.title}</h4>
+                                                                <p className="text-xs text-slate-500 mt-0.5">by {song.writer}</p>
+                                                                <p className="text-xs text-slate-400">Lead: {song.leadSinger}</p>
+                                                            </div>
+                                                            <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 border border-purple-100">
+                                                                <span className="font-bold text-purple-700 text-xs">x{song.rehearsalCount}</span>
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -217,7 +230,7 @@ export default function SongSchedulePage() {
                                                 {categorySongs.map((song, index) => (
                                                     <div
                                                         key={song.id}
-                                                        className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3 active:scale-[0.98] transition-all duration-200"
+                                                        className={`p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3 active:scale-[0.98] transition-all duration-200 ${song.type === 'activity' ? 'bg-slate-50' : 'bg-white'}`}
                                                         style={{ animationDelay: `${index * 50}ms` }}
                                                     >
                                                         {/* Index Badge */}
@@ -225,33 +238,48 @@ export default function SongSchedulePage() {
                                                             <span className="text-xs font-bold text-slate-400">{index + 1}</span>
                                                         </div>
 
-                                                        <div className="flex-1 min-w-0">
-                                                            <h3 className="font-outfit-bold text-base text-slate-900 leading-snug line-clamp-2">
-                                                                {song.title}
-                                                            </h3>
-                                                            <p className="text-xs text-slate-500 mt-1 font-medium">
-                                                                {song.writer}
-                                                            </p>
-                                                            <div className="flex items-center gap-2 mt-2">
-                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
-                                                                    <User className="w-3 h-3 text-slate-400" />
-                                                                    <span className="text-[10px] text-slate-600 font-medium">{song.leadSinger}</span>
-                                                                </span>
-                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
-                                                                    <Calendar className="w-3 h-3 text-slate-400" />
-                                                                    <span className="text-[10px] text-slate-600 font-medium">
-                                                                        {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                                                                    </span>
-                                                                </span>
+                                                        {song.type === 'activity' ? (
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-outfit-bold text-base text-slate-700 leading-snug line-clamp-2 italic">
+                                                                    {song.title}
+                                                                </h3>
+                                                                {song.writer && (
+                                                                    <p className="text-xs text-slate-500 mt-1">
+                                                                        {song.writer}
+                                                                    </p>
+                                                                )}
                                                             </div>
-                                                        </div>
+                                                        ) : (
+                                                            <>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <h3 className="font-outfit-bold text-base text-slate-900 leading-snug line-clamp-2">
+                                                                        {song.title}
+                                                                    </h3>
+                                                                    <p className="text-xs text-slate-500 mt-1 font-medium">
+                                                                        {song.writer}
+                                                                    </p>
+                                                                    <div className="flex items-center gap-2 mt-2">
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
+                                                                            <User className="w-3 h-3 text-slate-400" />
+                                                                            <span className="text-[10px] text-slate-600 font-medium">{song.leadSinger}</span>
+                                                                        </span>
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 border border-slate-100">
+                                                                            <Calendar className="w-3 h-3 text-slate-400" />
+                                                                            <span className="text-[10px] text-slate-600 font-medium">
+                                                                                {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                                                            </span>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
 
-                                                        {/* Rehearsal Count Badge */}
-                                                        <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                                                            <div className="w-10 h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shadow-sm">
-                                                                <span className="font-outfit-bold text-purple-600 text-sm">x{song.rehearsalCount}</span>
-                                                            </div>
-                                                        </div>
+                                                                {/* Rehearsal Count Badge */}
+                                                                <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                                                    <div className="w-10 h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shadow-sm">
+                                                                        <span className="font-outfit-bold text-purple-600 text-sm">x{song.rehearsalCount}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

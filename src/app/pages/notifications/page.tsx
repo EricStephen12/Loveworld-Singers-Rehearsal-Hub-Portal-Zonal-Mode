@@ -52,9 +52,6 @@ interface CombinedNotification {
 const FILTER_TABS: { id: string; label: string; icon: React.ElementType }[] = [
   { id: 'all', label: 'All', icon: Bell },
   { id: 'unread', label: 'Unread', icon: AlertCircle },
-  { id: 'chat', label: 'Chats', icon: MessageCircle },
-  { id: 'zone', label: 'Zone', icon: Building2 },
-  { id: 'song', label: 'Songs', icon: Music },
   { id: 'audiolab', label: 'Studio', icon: Mic },
   { id: 'calendar', label: 'Events', icon: Calendar },
   { id: 'media', label: 'Media', icon: Image },
@@ -151,26 +148,31 @@ export default function NotificationsPage() {
       // Run all queries in parallel
       const [
         richNotifsResult,
-        subGroupNotifs,
         audiolabProjects,
         calendarEvents,
         mediaNotifs,
-        songNotifs,
-        birthdays,
-        chatNotifs
+        birthdays
       ] = await Promise.allSettled([
-        // 1. Unified rich notifications (Zone/Admin broadcasts)
-        FirebaseDatabaseService.getUserNotifications(userId, currentZone.id),
-
-        // 2. Sub-group notifications
-        SubGroupDatabaseService.getUserNotifications(userId, 50).catch(async () => {
-          // Fallback query
+        // 1. Unified rich notifications (Admin broadcasts)
+        (async () => {
           try {
-            const q = query(collection(db, 'user_notifications'), where('userId', '==', userId), limit(50))
+            const q = query(collection(db, 'admin_messages'), orderBy('createdAt', 'desc'), limit(50))
             const snapshot = await getDocs(q)
-            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-          } catch { return [] }
-        }),
+            const allNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+            // Load read status from user_notifications (persistence)
+            const readNotifs = await FirebaseDatabaseService.getCollectionWhere('user_notifications', 'user_id', '==', userId)
+            const readMap = new Map(readNotifs.map((rn: any) => [rn.notification_id, rn.read_at]))
+
+            return allNotifications.map((notif: any) => ({
+              ...notif,
+              is_read: readMap.has(notif.id),
+              read_at: readMap.get(notif.id) || undefined
+            }))
+          } catch (e) {
+            return []
+          }
+        })(),
 
         // 3. AudioLab projects
         (async () => {
@@ -192,12 +194,26 @@ export default function NotificationsPage() {
         (async () => {
           const events: any[] = []
           const collections = ['upcoming_events', 'calendar_events', 'zone_praise_nights']
+
           await Promise.all(collections.map(async (col) => {
             try {
-              const q = query(collection(db, col), where('zoneId', '==', currentZone.id), limit(20))
-              const snapshot = await getDocs(q)
-              snapshot.docs.forEach(d => events.push({ id: d.id, collection: col, ...d.data() }))
-            } catch { }
+              // Query 1: Zone-specific events
+              const q1 = query(collection(db, col), where('zoneId', '==', currentZone.id), limit(20))
+              const s1 = await getDocs(q1)
+              s1.docs.forEach(d => events.push({ id: d.id, collection: col, ...d.data() }))
+
+              // Query 2: Global events (only for certain collections or all)
+              const q2 = query(collection(db, col), where('isGlobal', '==', true), limit(20))
+              const s2 = await getDocs(q2)
+              s2.docs.forEach(d => {
+                // De-duplicate if already added by zoneId query
+                if (!events.find(e => e.id === d.id)) {
+                  events.push({ id: d.id, collection: col, ...d.data() })
+                }
+              })
+            } catch (e) {
+              console.error(`Error fetching from ${col}:`, e)
+            }
           }))
           return events
         })(),
@@ -223,20 +239,8 @@ export default function NotificationsPage() {
           return media
         })(),
 
-        // 6. Song notifications
-        userEmail ? getUserSongNotifications(userEmail).catch(() => []) : Promise.resolve([]),
-
-        // 7. Birthdays
-        BirthdayService.getTodayAndUpcomingBirthdays().catch(() => []),
-
-        // 8. Chat notifications (show recent, not just unread)
-        (async () => {
-          try {
-            const q = query(collection(db, 'chats_v2'), where('participants', 'array-contains', userId), limit(50))
-            const snapshot = await getDocs(q)
-            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-          } catch { return [] }
-        })()
+        // 5. Birthdays
+        BirthdayService.getTodayAndUpcomingBirthdays().catch(() => [])
       ])
 
       const allNotifications: CombinedNotification[] = []
@@ -247,26 +251,13 @@ export default function NotificationsPage() {
           allNotifications.push({
             id: `rich-${msg.id}`, title: msg.title, message: msg.message,
             sentBy: msg.sentBy || 'Admin', sentAt: msg.created_at || msg.sentAt,
-            type: msg.category === 'song' ? 'song' : 'zone',
+            type: 'zone',
             is_read: msg.is_read
           })
         })
       }
 
-      // Process subgroup notifications
-      if (subGroupNotifs.status === 'fulfilled') {
-        (subGroupNotifs.value as any[]).forEach(notif => {
-          allNotifications.push({
-            id: `subgroup-${notif.id}`,
-            title: notif.title || 'Notification',
-            message: notif.message || '',
-            sentAt: notif.createdAt?.toISOString?.() || notif.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-            type: 'subgroup',
-            subGroupName: notif.subGroupName,
-            read: notif.read
-          })
-        })
-      }
+
 
       // Process audiolab projects
       if (audiolabProjects.status === 'fulfilled') {
@@ -299,11 +290,15 @@ export default function NotificationsPage() {
             const isRehearsal = event.collection === 'zone_praise_nights'
             const prefix = isRehearsal ? 'Rehearsal' : 'Event'
 
+            const sentAtDate = event.createdAt?.toDate?.() ||
+              (event.createdAt instanceof Date ? event.createdAt :
+                (typeof event.createdAt === 'string' ? new Date(event.createdAt) : eventDate));
+
             allNotifications.push({
               id: `calendar-${event.collection}-${event.id}`,
               title: daysUntil === 0 ? `${prefix} Today!` : daysUntil === 1 ? `${prefix} Tomorrow` : `${prefix} in ${daysUntil} days`,
               message: event.title || event.name || event.description || `Upcoming ${prefix.toLowerCase()}`,
-              sentAt: eventDate.toISOString(), // Use event date for proper sorting
+              sentAt: sentAtDate.toISOString(),
               type: 'calendar',
               eventDate: event.date || event.eventDate
             })
@@ -340,26 +335,7 @@ export default function NotificationsPage() {
         })
       }
 
-      // Process song notifications
-      // Filter out notifications about user's own replies (those are for admin)
-      if (songNotifs.status === 'fulfilled') {
-        (songNotifs.value as SongNotification[]).forEach(notif => {
-          // Skip "User replied:" notifications - those are meant for admin, not the user
-          if (notif.type === 'replied' && notif.message?.startsWith('User replied:')) {
-            return
-          }
 
-          allNotifications.push({
-            id: `song-${notif.id}`,
-            title: notif.type === 'approved' ? 'Song Approved' : notif.type === 'rejected' ? 'Song Rejected' : 'Song Reply',
-            message: notif.message,
-            sentAt: notif.createdAt,
-            type: 'song',
-            songStatus: notif.type as 'approved' | 'rejected' | 'replied',
-            read: notif.read
-          })
-        })
-      }
 
       // Process birthdays - use actual birthday date for sorting
       if (birthdays.status === 'fulfilled') {
@@ -386,65 +362,7 @@ export default function NotificationsPage() {
         })
       }
 
-      // Process chat notifications - show recent chats with activity
-      // Don't show chats where user sent the last message (unless there are unread from others)
-      if (chatNotifs.status === 'fulfilled') {
-        (chatNotifs.value as any[]).forEach(chat => {
-          const unreadCount = chat.unreadCount?.[userId] || 0
-          const lastSenderId = chat.lastMessage?.senderId
 
-          // Skip if user sent the last message
-          if (lastSenderId === userId) {
-            return
-          }
-
-          const hasRecentMessage = chat.lastMessage?.timestamp
-
-          // Show if unread OR has recent message (within last 24 hours) from someone else
-          let sentAt = new Date().toISOString()
-          if (chat.lastMessage?.timestamp) {
-            if (typeof chat.lastMessage.timestamp.toDate === 'function') {
-              sentAt = chat.lastMessage.timestamp.toDate().toISOString()
-            } else if (chat.lastMessage.timestamp.seconds) {
-              sentAt = new Date(chat.lastMessage.timestamp.seconds * 1000).toISOString()
-            }
-          }
-
-          const messageTime = new Date(sentAt)
-          const isRecent = (now.getTime() - messageTime.getTime()) < 24 * 60 * 60 * 1000
-
-          // Only show if there are unread messages OR recent message from someone else
-          if (unreadCount > 0 || (hasRecentMessage && isRecent)) {
-            const isGroup = chat.type === 'group'
-            let senderName = lastSenderId ? (chat.participantDetails?.[lastSenderId]?.name || 'Someone') : 'Someone'
-            let chatName = chat.name || 'Chat'
-
-            if (!isGroup && chat.participantDetails) {
-              const other = Object.entries(chat.participantDetails).find(([id]) => id !== userId)
-              if (other) chatName = (other[1] as any).name || 'Chat'
-            }
-
-            let messagePreview = chat.lastMessage?.text || 'New message'
-            if (messagePreview.startsWith('📷')) messagePreview = '📷 Photo'
-            else if (messagePreview.startsWith('📄')) messagePreview = '📄 Document'
-            else if (messagePreview.startsWith('📞')) messagePreview = '📞 Call'
-
-            allNotifications.push({
-              id: `chat-${chat.id}`,
-              title: isGroup ? chatName : (senderName !== 'Someone' ? senderName : chatName),
-              message: isGroup ? `${senderName}: ${messagePreview}` : messagePreview,
-              sentBy: senderName,
-              sentAt,
-              type: 'chat',
-              chatId: chat.id,
-              chatName,
-              isGroup,
-              read: unreadCount === 0,
-              senderAvatar: lastSenderId ? chat.participantDetails?.[lastSenderId]?.avatar : undefined
-            })
-          }
-        })
-      }
 
       // Sort by date
       allNotifications.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
@@ -473,21 +391,9 @@ export default function NotificationsPage() {
   useEffect(() => {
     if (!currentZone?.id) return
 
-    const isHQ = isHQGroup(currentZone.id)
-    const collectionName = isHQ ? 'admin_messages' : 'zone_admin_messages'
-    const messagesRef = collection(db, collectionName)
+    const messagesRef = collection(db, 'admin_messages')
 
-    let q
-    try {
-      q = isHQ
-        ? query(messagesRef, orderBy('createdAt', 'desc'), limit(20))
-        : query(messagesRef, where('zoneId', '==', currentZone.id), orderBy('createdAt', 'desc'), limit(20))
-    } catch {
-      // Fallback without orderBy if index not ready
-      q = isHQ
-        ? query(messagesRef, limit(20))
-        : query(messagesRef, where('zoneId', '==', currentZone.id), limit(20))
-    }
+    let q = query(messagesRef, orderBy('createdAt', 'desc'), limit(20))
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {
@@ -503,11 +409,8 @@ export default function NotificationsPage() {
   // Filtered notifications
   const filteredNotifications = useMemo(() => {
     return notifications.filter(n => {
-      if (filter === 'unread') return n.is_read === false || (n.read === false && n.type !== 'chat')
+      if (filter === 'unread') return n.is_read === false || (n.read === false)
       if (filter === 'all') return true
-      if (filter === 'chat') return n.type === 'chat'
-      if (filter === 'zone') return n.type === 'zone' || n.type === 'subgroup'
-      if (filter === 'song') return n.type === 'song'
       if (filter === 'audiolab') return n.type === 'audiolab'
       if (filter === 'calendar') return n.type === 'calendar' || n.type === 'birthday'
       if (filter === 'media') return n.type === 'media'
@@ -540,6 +443,8 @@ export default function NotificationsPage() {
     const diffMins = Math.floor(diffMs / 60000)
     const diffHours = Math.floor(diffMs / 3600000)
     const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMs < 0) return date.toLocaleDateString()
     if (diffMins < 1) return 'Just now'
     if (diffMins < 60) return `${diffMins}m ago`
     if (diffHours < 24) return `${diffHours}h ago`
@@ -556,11 +461,6 @@ export default function NotificationsPage() {
   }
 
   const getIconBg = (type: NotificationType, songStatus?: string) => {
-    if (type === 'song') {
-      if (songStatus === 'approved') return 'bg-green-100 text-green-600'
-      if (songStatus === 'rejected') return 'bg-red-100 text-red-600'
-      return 'bg-purple-100 text-purple-600'
-    }
     const colors: Record<NotificationType, string> = {
       zone: 'bg-blue-100 text-blue-600',
       subgroup: 'bg-purple-100 text-purple-600',
@@ -585,17 +485,6 @@ export default function NotificationsPage() {
         break
       case 'media':
         router.push('/pages/media')
-        break
-      case 'song':
-        router.push('/pages/submit-song')
-        break
-      case 'chat':
-        router.push(notif.chatId ? `/pages/groups?chat=${notif.chatId}` : '/pages/groups')
-        break
-      case 'zone':
-      case 'subgroup':
-        // Zone/subgroup notifications - could navigate to a specific page if needed
-        // For now, just stay on notifications page
         break
     }
   }
@@ -632,7 +521,6 @@ export default function NotificationsPage() {
                 const Icon = tab.icon
                 const count = tab.id === 'all' ? notifications.length
                   : notifications.filter(n => {
-                    if (tab.id === 'zone') return n.type === 'zone' || n.type === 'subgroup'
                     if (tab.id === 'calendar') return n.type === 'calendar' || n.type === 'birthday'
                     return n.type === tab.id
                   }).length
@@ -749,9 +637,12 @@ export default function NotificationsPage() {
                                 {notif.type === 'audiolab' && <span className="px-2.5 py-0.5 bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-wider rounded-lg">Studio</span>}
                               </div>
                               <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">{notif.message}</p>
-                              <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                {notif.sentBy && notif.type !== 'chat' && <><span>{notif.sentBy}</span><span>•</span></>}
-                                <span>{formatDate(notif.sentAt)}</span>
+                              <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest min-w-0">
+                                {notif.sentBy && notif.type !== 'chat' && <>
+                                  <span className="truncate max-w-[140px] sm:max-w-[250px]" title={notif.sentBy}>{notif.sentBy}</span>
+                                  <span className="flex-shrink-0">•</span>
+                                </>}
+                                <span className="flex-shrink-0">{formatDate(notif.sentAt)}</span>
                               </div>
                             </div>
                           </div>

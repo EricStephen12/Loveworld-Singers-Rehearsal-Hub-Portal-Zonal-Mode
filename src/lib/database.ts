@@ -2,15 +2,17 @@
 // This service bridges your existing data structure with Supabase
 
 import { createClient } from '@supabase/supabase-js';
-import type { 
-  PraiseNight, 
-  PraiseNightSong, 
-  Comment, 
+import type {
+  PraiseNight,
+  PraiseNightSong,
+  Comment,
   HistoryEntry,
   Category
 } from '../types/supabase';
 import { offlineManager } from '../utils/offlineManager';
 import { getCacheBuster } from '../utils/cacheBuster';
+import { getCommentsBySongId, createComment } from './comment-service';
+import { getHistoryBySongId, createHistoryEntry } from './history-service';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -25,16 +27,16 @@ export async function getAudioFromMedia(mediaId: number): Promise<string | null>
       .select('url')
       .eq('id', mediaId)
       .single();
-    
+
     if (error) {
       console.error('Error fetching media file:', error);
       return null;
     }
-    
+
     let url = mediaFile?.url || null;
-    
+
     // Supabase Storage URLs work directly - no conversion needed!
-    
+
     return url;
   } catch (error) {
     console.error('Error in getAudioFromMedia:', error);
@@ -103,8 +105,8 @@ export interface DatabaseHistoryEntry {
 
 export async function getAllPages(): Promise<PraiseNight[]> {
   try {
-        const isOnline = navigator.onLine;
-    
+    const isOnline = navigator.onLine;
+
     if (!isOnline) {
       const cachedData = await offlineManager.getCachedData('pages');
       if (cachedData) {
@@ -150,7 +152,7 @@ export async function getAllPages(): Promise<PraiseNight[]> {
 
     // Convert database pages to your PraiseNight format
     const praiseNights: PraiseNight[] = [];
-    
+
     for (const page of pagesWithSongs || []) {
       // Process songs in parallel for this page
       const songs = await Promise.all(
@@ -188,7 +190,7 @@ export async function getAllPages(): Promise<PraiseNight[]> {
           };
         })
       );
-      
+
       praiseNights.push({
         id: page.id,
         name: page.name,
@@ -216,13 +218,13 @@ export async function getAllPages(): Promise<PraiseNight[]> {
     return praiseNights;
   } catch (error) {
     console.error('Error fetching pages:', error);
-    
+
     // Try to get cached data as fallback
     const cachedData = await offlineManager.getCachedData('pages');
     if (cachedData) {
       return cachedData;
     }
-    
+
     return [];
   }
 }
@@ -264,7 +266,7 @@ export async function getPageById(id: number): Promise<PraiseNight | null> {
 
 export async function createPage(pageData: Omit<PraiseNight, 'songs'>): Promise<PraiseNight | null> {
   try {
-        if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -311,7 +313,7 @@ export async function createPage(pageData: Omit<PraiseNight, 'songs'>): Promise<
 export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight, 'songs'>>): Promise<boolean> {
   try {
 
-        if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -335,22 +337,22 @@ export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight,
       .from('pages')
       .update(updateData)
       .eq('id', id);
-      
+
 
     if (error) {
-            if (error.code === '42703' && error.message.includes('updated_at')) {
-        
+      if (error.code === '42703' && error.message.includes('updated_at')) {
+
         // Remove any fields that might not exist in the database
         const cleanUpdateData = { ...updateData };
         delete cleanUpdateData.updated_at;
         delete cleanUpdateData.created_at;
         delete cleanUpdateData.id;
-        
+
         const { error: retryError } = await supabase
           .from('pages')
           .update(cleanUpdateData)
           .eq('id', id);
-          
+
         if (retryError) throw retryError;
         return true;
       }
@@ -365,7 +367,7 @@ export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight,
 
 export async function deletePage(id: number): Promise<boolean> {
   try {
-        if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -396,7 +398,7 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
     if (error) throw error;
 
     const praiseNightSongs: PraiseNightSong[] = [];
-    
+
     for (const song of songs || []) {
       // Get comments and history for this song
       const [comments, history] = await Promise.all([
@@ -412,7 +414,7 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
           audioFile = mediaAudioUrl;
         }
       }
-      
+
       // Supabase Storage URLs work directly - no CORS issues!
 
       praiseNightSongs.push({
@@ -448,7 +450,7 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
 export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'history'>): Promise<PraiseNightSong | null> {
   try {
 
-        if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -511,7 +513,7 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
 export async function updateSong(songId: number, songData: Partial<PraiseNightSong>): Promise<boolean> {
   try {
 
-        if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('cached_pages_data');
       localStorage.removeItem('cached_pages_timestamp');
     }
@@ -539,7 +541,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
     // Handle audio file updates - always update both fields together
     if (songData.audioFile !== undefined) updateData.audiofile = songData.audioFile || null;
     if (songData.mediaId !== undefined) updateData.mediaid = songData.mediaId || null;
-    
+
     // Remove any fields that might not exist in the database
     delete updateData.history; // Don't try to update history field directly
     delete updateData.id; // Don't try to update the ID
@@ -559,27 +561,27 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
       console.error('❌ Database error updating song:', error);
       console.error('❌ Full error details:', JSON.stringify(error, null, 2));
       console.error('❌ Update data that failed:', JSON.stringify(updateData, null, 2));
-      
+
       // If it's the comments field error, try again without comments
       if (error.code === 'PGRST204' && error.message.includes('comments')) {
         delete updateData.comments;
-        
+
         const { error: retryError } = await supabase
           .from('songs')
           .update(updateData)
           .eq('id', songId);
-          
+
         if (retryError) {
           console.error('❌ Retry also failed:', retryError);
           throw retryError;
         }
-        
+
         return true;
       }
-      
+
       // If it's the updated_at field error, try again with a minimal update
       if (error.code === '42703' && error.message.includes('updated_at')) {
-        
+
         // Create a minimal update object with only essential fields
         const minimalUpdateData: any = {};
         if (updateData.title) minimalUpdateData.title = updateData.title;
@@ -599,13 +601,13 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
         if (updateData.comments) minimalUpdateData.comments = updateData.comments;
         if (updateData.audiofile !== undefined) minimalUpdateData.audiofile = updateData.audiofile;
         if (updateData.mediaid !== undefined) minimalUpdateData.mediaid = updateData.mediaid;
-        
-        
+
+
         const { error: retryError } = await supabase
           .from('songs')
           .update(minimalUpdateData)
           .eq('id', songId);
-          
+
         if (retryError) {
           console.error('❌ Retry also failed:', retryError);
           throw retryError;
@@ -619,26 +621,26 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
 
     // Save history entries if provided
     if (songData.history && songData.history.length > 0) {
-      
+
       // Get existing history to avoid duplicates
       const existingHistory = await getHistoryBySongId(songId);
       const existingIds = new Set(existingHistory.map(h => h.id));
-      
+
       // Only save new history entries
       const newHistoryEntries = songData.history.filter(h => !existingIds.has(h.id));
-      
+
       for (const historyEntry of newHistoryEntries) {
         const savedEntry = await createHistoryEntry({
           ...historyEntry,
           song_id: songId
         });
-        
+
         if (savedEntry) {
         } else {
           console.error('❌ Failed to save history entry:', historyEntry.type);
         }
       }
-      
+
     }
 
     return true;
@@ -665,131 +667,18 @@ export async function deleteSong(songId: number): Promise<boolean> {
 
 // ===== COMMENTS OPERATIONS =====
 
-export async function getCommentsBySongId(songId: number): Promise<Comment[]> {
-  try {
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('songid', songId)
-      .order('createdat', { ascending: false });
-
-    if (error) throw error;
-
-    return (data || []).map(comment => ({
-      id: comment.id,
-      text: comment.text,
-      date: comment.date,
-      author: comment.author
-    }));
-  } catch (error) {
-    console.error('Error fetching comments:', error);
-    return [];
-  }
-}
-
-export async function createComment(commentData: Omit<Comment, 'id'> & { songId: number }): Promise<Comment | null> {
-  try {
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({
-        id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        songid: commentData.songId,
-        text: commentData.text,
-        date: commentData.date,
-        author: commentData.author
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      id: data.id,
-      text: data.text,
-      date: data.date,
-      author: data.author
-    };
-  } catch (error) {
-    console.error('Error creating comment:', error);
-    return null;
-  }
-}
+export { getCommentsBySongId, createComment } from './comment-service';
 
 // ===== HISTORY OPERATIONS =====
 
-export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]> {
-  try {
-    
-    const { data, error } = await supabase
-      .from('song_history')
-      .select('*')
-      .eq('song_id', songId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('🎯 Supabase error fetching history:', error);
-      throw error;
-    }
-
-
-    const historyEntries = (data || []).map(entry => ({
-      id: entry.id,
-      type: entry.type,
-      title: entry.title,
-      description: entry.description,
-      old_value: entry.old_value,
-      new_value: entry.new_value,
-      created_by: entry.created_by,
-      date: entry.created_at,
-      version: entry.title // Use title as version since we don't have a separate version field
-    }));
-
-    return historyEntries;
-  } catch (error) {
-    console.error('Error fetching history:', error);
-    return [];
-  }
-}
+export { getHistoryBySongId, createHistoryEntry } from './history-service';
 
 
 // ===== FILE UPLOAD OPERATIONS =====
 
-export async function uploadFile(file: File, bucket: string = 'loveworld-praise'): Promise<string | null> {
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-    const filePath = `uploads/${fileName}`;
+// ===== FILE UPLOAD OPERATIONS =====
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    return null;
-  }
-}
-
-export async function deleteFile(filePath: string, bucket: string = 'loveworld-praise'): Promise<boolean> {
-  try {
-    const { error } = await supabase.storage
-      .from(bucket)
-      .remove([filePath]);
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error deleting file:', error);
-    return false;
-  }
-}
+export { uploadFile, deleteFile } from './file-service';
 
 // ===== CATEGORY MANAGEMENT FUNCTIONS =====
 
@@ -802,7 +691,7 @@ export async function getAllCategories(): Promise<Category[]> {
       .order('name');
 
     if (error) throw error;
-    
+
     return data.map(cat => ({
       id: cat.id.toString(),
       name: cat.name,
@@ -842,7 +731,7 @@ export async function createCategory(categoryData: Omit<Category, 'id' | 'create
 export async function updateCategory(categoryId: number, categoryData: Partial<Category>): Promise<boolean> {
   try {
     const updateData: any = {};
-    
+
     if (categoryData.name) updateData.name = categoryData.name;
     if (categoryData.description !== undefined) updateData.description = categoryData.description;
     if (categoryData.color) updateData.color = categoryData.color;
@@ -887,7 +776,7 @@ export async function updateSongsCategory(oldCategoryName: string, newCategoryNa
       .eq('category', oldCategoryName);
 
     if (error) throw error;
-    
+
     return true;
   } catch (error) {
     console.error('Error updating songs category:', error);
@@ -906,7 +795,7 @@ export async function getSongsByCategory(categoryName: string): Promise<PraiseNi
     if (error) throw error;
 
     const praiseNightSongs: PraiseNightSong[] = [];
-    
+
     for (const song of songs || []) {
       // Get comments and history for this song
       const [comments, history] = await Promise.all([
@@ -957,13 +846,13 @@ export async function handleCategoryDeletion(categoryName: string, fallbackCateg
     if (checkError) throw checkError;
 
     if (songs && songs.length > 0) {
-            const { error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('songs')
         .update({ category: fallbackCategory })
         .eq('category', categoryName);
 
       if (updateError) throw updateError;
-      
+
     }
 
     return true;
@@ -1003,12 +892,12 @@ export async function getAllMedia(): Promise<MediaFile[]> {
     if (typeof window !== 'undefined') {
       const cachedData = localStorage.getItem('media_cache');
       const cacheTimestamp = localStorage.getItem('media_cache_timestamp');
-      
+
       if (cachedData && cacheTimestamp) {
         const age = Date.now() - parseInt(cacheTimestamp);
         if (age < MEDIA_CACHE_DURATION) {
           const parsedData = JSON.parse(cachedData);
-                    mediaCache = { data: parsedData, timestamp: parseInt(cacheTimestamp) };
+          mediaCache = { data: parsedData, timestamp: parseInt(cacheTimestamp) };
           return parsedData;
         }
       }
@@ -1062,12 +951,12 @@ export async function getAllMedia(): Promise<MediaFile[]> {
     return mediaFiles;
   } catch (error) {
     console.error('Error fetching media files:', error);
-    
+
     // Return cached data if available, even if expired
     if (mediaCache) {
       return mediaCache.data;
     }
-    
+
     return [];
   }
 }
@@ -1095,7 +984,7 @@ export async function getAllUsers(): Promise<any[]> {
   }
 }
 
-export async function getUserStats(): Promise<{total: number, recent: number, active: number}> {
+export async function getUserStats(): Promise<{ total: number, recent: number, active: number }> {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -1109,7 +998,7 @@ export async function getUserStats(): Promise<{total: number, recent: number, ac
 
     const total = data?.length || 0;
     const recent = data?.filter(user => new Date(user.created_at) > lastWeek).length || 0;
-    const active = data?.filter(user => 
+    const active = data?.filter(user =>
       user.updated_at && new Date(user.updated_at) > lastMonth
     ).length || 0;
 
@@ -1147,7 +1036,7 @@ export async function createMediaFile(mediaData: Omit<MediaFile, 'id' | 'created
 
     if (error) throw error;
 
-        clearMediaCache();
+    clearMediaCache();
 
     return {
       id: data.id,
@@ -1175,9 +1064,9 @@ export async function deleteMediaFile(mediaId: number): Promise<boolean> {
       .eq('id', mediaId);
 
     if (error) throw error;
-    
-        clearMediaCache();
-    
+
+    clearMediaCache();
+
     return true;
   } catch (error) {
     console.error('Error deleting media file:', error);
@@ -1186,45 +1075,12 @@ export async function deleteMediaFile(mediaId: number): Promise<boolean> {
 }
 
 // Create history entry with the new format
-export async function createHistoryEntry(historyData: {
-  song_id: number;
-  title: string;
-  description: string;
-  type: string;
-  old_value: string;
-  new_value: string;
-  created_by: string;
-}): Promise<boolean> {
-  try {
-    
-    const { data, error } = await supabase
-      .from('song_history')
-      .insert({
-        song_id: historyData.song_id,
-        title: historyData.title,
-        description: historyData.description,
-        type: historyData.type,
-        old_value: historyData.old_value,
-        new_value: historyData.new_value,
-        created_by: historyData.created_by
-      });
 
-    if (error) {
-      console.error('🎯 Supabase error:', error);
-      throw error;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error creating history entry:', error);
-    return false;
-  }
-}
 
 // Delete history entry
 export async function deleteHistoryEntry(historyId: string): Promise<boolean> {
   try {
-    
+
     const { error } = await supabase
       .from('song_history')
       .delete()
@@ -1234,7 +1090,7 @@ export async function deleteHistoryEntry(historyId: string): Promise<boolean> {
       console.error('🎯 Supabase error:', error);
       throw error;
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error deleting history entry:', error);
