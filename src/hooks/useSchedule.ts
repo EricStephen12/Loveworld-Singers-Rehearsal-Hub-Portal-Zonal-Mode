@@ -15,8 +15,10 @@ interface UseScheduleReturn {
     categories: ScheduleCategory[]
     songs: Record<string, ScheduleSong[]>   // keyed by categoryId
     program: ScheduleProgram | null
+    allPrograms: ScheduleProgram[]
     isLoading: boolean
     loadSongsForCategory: (categoryId: string) => Promise<void>
+    loadProgram: (date?: string) => Promise<void>
     refetchCategories: () => Promise<void>
     refetchProgram: () => Promise<void>
 }
@@ -28,6 +30,7 @@ export function useSchedule(): UseScheduleReturn {
     const [categories, setCategories] = useState<ScheduleCategory[]>([])
     const [songs, setSongs] = useState<Record<string, ScheduleSong[]>>({})
     const [program, setProgram] = useState<ScheduleProgram | null>(null)
+    const [allPrograms, setAllPrograms] = useState<ScheduleProgram[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
     const fetchCategories = useCallback(async () => {
@@ -42,12 +45,24 @@ export function useSchedule(): UseScheduleReturn {
         }
     }, [zoneId])
 
-    const fetchProgram = useCallback(async () => {
+    const fetchProgram = useCallback(async (date?: string) => {
+        setIsLoading(true)
         try {
-            const prog = await ScheduleProgramService.getProgram(zoneId)
+            const prog = await ScheduleProgramService.getProgram(zoneId, date)
             setProgram(prog)
         } catch (e) {
             console.error('useSchedule: error fetching program', e)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [zoneId])
+
+    const fetchAllPrograms = useCallback(async () => {
+        try {
+            const list = await ScheduleProgramService.getAllPrograms(zoneId)
+            setAllPrograms(list)
+        } catch (e) {
+            console.error('useSchedule: error fetching all programs', e)
         }
     }, [zoneId])
 
@@ -65,6 +80,7 @@ export function useSchedule(): UseScheduleReturn {
         if (zoneId !== undefined) {
             fetchCategories()
             fetchProgram()
+            fetchAllPrograms()
         }
     }, [zoneId])
 
@@ -72,8 +88,10 @@ export function useSchedule(): UseScheduleReturn {
         categories,
         songs,
         program,
+        allPrograms,
         isLoading,
         loadSongsForCategory,
+        loadProgram: fetchProgram,
         refetchCategories: fetchCategories,
         refetchProgram: fetchProgram,
     }

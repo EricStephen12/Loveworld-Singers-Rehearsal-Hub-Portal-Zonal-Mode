@@ -304,7 +304,7 @@ export function AudioLabSongDetailModal({
                                                         key={i}
                                                         className={`text-[15px] leading-relaxed font-medium transition-all duration-300 ${isActive
                                                             ? 'text-violet-400 scale-[1.02] transform origin-left'
-                                                            : 'text-slate-400'
+                                                            : 'text-white'
                                                             }`}
                                                     >
                                                         {line.text}
@@ -314,7 +314,7 @@ export function AudioLabSongDetailModal({
                                         </div>
                                     ) : song.lyrics ? (
                                         <div
-                                            className={`lyrics-content text-slate-300 ${!containsHtml ? 'whitespace-pre-wrap' : ''}`}
+                                            className={`lyrics-content text-white ${!containsHtml ? 'whitespace-pre-wrap' : ''}`}
                                             dangerouslySetInnerHTML={{
                                                 __html: Array.isArray(song.lyrics)
                                                     ? song.lyrics.map(l => l.text).join('\n')

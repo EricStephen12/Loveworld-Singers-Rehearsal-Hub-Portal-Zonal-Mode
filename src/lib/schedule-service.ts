@@ -30,6 +30,7 @@ export interface ScheduleCategory {
     createdAt: string
     updatedAt: string
     createdBy: string
+    spreadsheetData?: SpreadsheetData
 }
 
 export interface ScheduleSong {
@@ -50,13 +51,28 @@ export interface ScheduleSong {
     createdBy: string
 }
 
+export interface GridCell {
+    value: string
+    bold?: boolean
+    italic?: boolean
+    align?: 'left' | 'center' | 'right'
+    color?: string
+}
+
+export interface SpreadsheetData {
+    columns: { width: number; label?: string }[]
+    rows: { height: number; label?: string }[]
+    data: Record<string, GridCell> // key is "row:col"
+}
+
 export interface ScheduleProgram {
     id?: string
     zoneId: string | null
     program: string
-    date: string        // This is the formatted date string "Feb 19" (legacy) OR YYYY-MM-DD
+    date: string        // YYYY-MM-DD
     time: string
     dailyTarget: string
+    spreadsheetData?: SpreadsheetData
 
     updatedAt: string
     updatedBy: string

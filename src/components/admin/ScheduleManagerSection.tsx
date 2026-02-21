@@ -24,6 +24,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import SpreadsheetEditor from './SpreadsheetEditor'
+import { SpreadsheetData } from '@/lib/schedule-service'
 
 // ─── Icon map ─────────────────────────────────────────────────────────────────
 const ICON_OPTIONS = [
@@ -110,8 +112,14 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
     const [programForm, setProgramForm] = useState({ program: '', date: '', time: '', dailyTarget: '' })
     const [savingProgram, setSavingProgram] = useState(false)
 
+    // Spreadsheet State
+    const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData | undefined>(undefined)
+
     // Accordion state
     const [expandedDate, setExpandedDate] = useState<string | null>(null)
+    const [showNewScheduleModal, setShowNewScheduleModal] = useState(false)
+    const [newScheduleDate, setNewScheduleDate] = useState(new Date().toISOString().split('T')[0])
+
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type })
         setTimeout(() => setToast(null), 3000)
@@ -128,8 +136,10 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         setLoading(false)
     }, [zoneId])
 
+    const [editorLoading, setEditorLoading] = useState(false)
+
     const loadEditorData = useCallback(async (date: string) => {
-        setLoading(true)
+        setEditorLoading(true)
         const prog = await ScheduleProgramService.getProgram(zoneId, date)
         setProgram(prog)
 
@@ -140,8 +150,10 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 time: prog.time,
                 dailyTarget: prog.dailyTarget
             })
+            setSpreadsheetData(prog.spreadsheetData)
         } else {
             setProgramForm({ program: '', date: date, time: '', dailyTarget: '' })
+            setSpreadsheetData(undefined)
         }
 
         // Auto-load daily songs
@@ -150,7 +162,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
             const list = await ScheduleSongService.getSongs(daily.id, zoneId, date)
             setSongs(prev => ({ ...prev, [daily.id]: list }))
         }
-        setLoading(false)
+        setEditorLoading(false)
     }, [zoneId, categories])
 
     const loadSongs = useCallback(async (categoryId: string) => {
@@ -167,19 +179,37 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
     // ── Program CRUD ───────────────────────────────────────────────────────────
 
-    const saveProgram = async () => {
+    const saveProgram = async (grid?: SpreadsheetData) => {
         setSavingProgram(true)
-        await ScheduleProgramService.updateProgram({ ...programForm, zoneId, updatedBy: 'admin' }, zoneId)
+        const finalData = {
+            ...programForm,
+            spreadsheetData: grid || spreadsheetData,
+            zoneId,
+            updatedBy: 'admin'
+        }
+        await ScheduleProgramService.updateProgram(finalData, zoneId, currentDate)
         showToast('Program info saved!')
 
         // Update local state
         setProgram(prev => ({
             ...(prev || {}),
-            ...programForm,
+            ...finalData,
             updatedAt: new Date().toISOString(),
-            id: prev?.id || 'temp-id',
+            id: prev?.id || `temp_${currentDate}`,
             zoneId: zoneId
         } as ScheduleProgram))
+
+        // Ensure history list updates
+        setAllPrograms(prev => prev.map(p => {
+            if (p.date === currentDate) {
+                return {
+                    ...p,
+                    ...finalData,
+                    updatedAt: new Date().toISOString(),
+                }
+            }
+            return p
+        }))
 
         setSavingProgram(false)
         setEditingProgram(false)
@@ -199,19 +229,27 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         setShowCatForm(true)
     }
 
-    const saveCat = async () => {
+    const saveCat = async (grid?: SpreadsheetData) => {
         if (!catForm.label.trim()) return showToast('Label is required', 'error')
         setSavingCat(true)
 
+        const payload = {
+            ...catForm,
+            spreadsheetData: grid || (editingCat?.spreadsheetData || selectedCategory?.spreadsheetData)
+        }
+
         try {
             if (editingCat) {
-                await ScheduleCategoryService.updateCategory(editingCat.id, catForm)
+                await ScheduleCategoryService.updateCategory(editingCat.id, payload)
                 // Update local state
-                setCategories(prev => prev.map(c => c.id === editingCat.id ? { ...c, ...catForm } : c))
+                setCategories(prev => prev.map(c => c.id === editingCat.id ? { ...c, ...payload } : c))
+                if (selectedCategory?.id === editingCat.id) {
+                    setSelectedCategory(prev => prev ? ({ ...prev, ...payload }) : null)
+                }
                 showToast('Category updated!')
             } else {
                 const newId = await ScheduleCategoryService.addCategory({
-                    ...catForm,
+                    ...payload,
                     zoneId,
                     order: categories.length,
                     isActive: true,
@@ -222,13 +260,13 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                     const newCat: ScheduleCategory = {
                         id: newId,
                         zoneId,
-                        ...catForm,
+                        ...payload,
                         order: categories.length,
                         isActive: true,
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                         createdBy: 'admin'
-                    }
+                    } as ScheduleCategory
                     setCategories(prev => [...prev, newCat])
                     showToast('Category added!')
                 }
@@ -240,6 +278,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
         setSavingCat(false)
         setShowCatForm(false)
+        setEditingCat(null)
     }
 
     const deleteCat = async (id: string) => {
@@ -387,27 +426,37 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         }
     }
 
-    const handleCreateSchedule = () => {
-        const today = new Date().toISOString().split('T')[0]
-        if (expandedDate === today) return
+    const handleCreateScheduleClick = () => {
+        setNewScheduleDate(new Date().toISOString().split('T')[0])
+        setShowNewScheduleModal(true)
+    }
 
-        setExpandedDate(today)
-        setCurrentDate(today)
+    const confirmCreateSchedule = () => {
+        if (!newScheduleDate) return
+        const date = newScheduleDate
+        setShowNewScheduleModal(false)
 
-        const exists = allPrograms.find(p => p.date === today)
-        if (!exists) {
-            setAllPrograms(prev => [{
-                id: `temp_${today}`,
+        setExpandedDate(date)
+        setCurrentDate(date)
+
+        // Only add if it doesn't already exist in the list
+        setAllPrograms(prev => {
+            const exists = prev.find(p => p.date === date)
+            if (exists) return prev
+
+            return [{
+                id: `temp_${date}`,
                 zoneId,
                 program: '',
-                date: today,
+                date: date,
                 time: '',
                 dailyTarget: '',
                 updatedAt: new Date().toISOString(),
                 updatedBy: 'admin'
-            }, ...prev])
-        }
-        loadEditorData(today)
+            }, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        })
+
+        loadEditorData(date)
     }
 
     const handleEditSchedule = (prog: ScheduleProgram) => {
@@ -519,7 +568,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                 <div className="flex gap-3 mt-6">
                                     <button onClick={() => setShowCatForm(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
                                     <button
-                                        onClick={saveCat}
+                                        onClick={() => saveCat()}
                                         disabled={savingCat}
                                         className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                                         style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
@@ -532,6 +581,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                     )}
                 </div>
             )}
+
 
             {/* ── View: Sub-Schedule List ────────────────────────────────────── */}
             {viewMode === 'sub-schedules' && (
@@ -546,10 +596,42 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                 <p className="text-sm text-slate-500">History of all created schedules</p>
                             </div>
                         </div>
-                        <button onClick={handleCreateSchedule} className="flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 px-4 py-2 rounded-full hover:bg-indigo-700 transition-colors shadow-sm">
+                        <button onClick={handleCreateScheduleClick} className="flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 px-4 py-2 rounded-full hover:bg-indigo-700 transition-colors shadow-sm">
                             <Plus className="w-4 h-4" /> Create New Schedule
                         </button>
                     </div>
+
+                    {/* New Schedule Modal */}
+                    {showNewScheduleModal && (
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4">Select Date</h3>
+                                <p className="text-sm text-slate-500 mb-6">Choose the date for the new program schedule.</p>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <input
+                                            type="date"
+                                            value={newScheduleDate}
+                                            onChange={e => setNewScheduleDate(e.target.value)}
+                                            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all font-medium text-slate-700"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-8">
+                                    <button onClick={() => setShowNewScheduleModal(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
+                                    <button
+                                        onClick={confirmCreateSchedule}
+                                        disabled={!newScheduleDate}
+                                        className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+                                    >
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-4">
                         {allPrograms.length === 0 && expandedDate === null ? (
@@ -570,8 +652,8 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-white rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-sm">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider">{new Date(prog.date).toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                <span className="text-lg font-bold leading-none">{new Date(prog.date).getDate()}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">{new Date(prog.date + "T12:00:00").toLocaleDateString('en-US', { month: 'short' })}</span>
+                                                <span className="text-lg font-bold leading-none">{new Date(prog.date + "T12:00:00").getDate()}</span>
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{prog.program || 'Untitled Program'}</h4>
@@ -595,267 +677,86 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                     {/* Accordion Body (Inline Editor) */}
                                     {expandedDate === prog.date && (
                                         <div className="bg-slate-50/50 border-t border-indigo-100 animate-in slide-in-from-top-2">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200/60">
-                                                {/* Program Info */}
-                                                <div className="p-5 md:col-span-1 bg-white/50">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Program Context</h4>
-                                                        {canEdit && !editingProgram && (
-                                                            <button onClick={() => setEditingProgram(true)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 text-indigo-600">
-                                                                <Edit className="w-3.5 h-3.5" />
-                                                            </button>
+                                            {editorLoading ? (
+                                                <div className="flex items-center justify-center py-16">
+                                                    <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200/60">
+                                                    {/* Program Info */}
+                                                    <div className="p-5 md:col-span-1 bg-white/50">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Program Context</h4>
+                                                            {canEdit && !editingProgram && (
+                                                                <button onClick={() => setEditingProgram(true)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 text-indigo-600">
+                                                                    <Edit className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {editingProgram ? (
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <label className="text-xs text-slate-500 font-medium block mb-1">Program Name</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={programForm.program}
+                                                                        onChange={e => setProgramForm(p => ({ ...p, program: e.target.value }))}
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                                                                        placeholder="e.g. Sunday Service"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-xs text-slate-500 font-medium block mb-1">Target / Goal</label>
+                                                                    <textarea
+                                                                        rows={2}
+                                                                        value={programForm.dailyTarget}
+                                                                        onChange={e => setProgramForm(p => ({ ...p, dailyTarget: e.target.value }))}
+                                                                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none bg-white"
+                                                                        placeholder="Goal for today..."
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="text-xs text-slate-500 font-medium block mb-1">Time</label>
+                                                                    <input type="time" value={programForm.time} onChange={e => setProgramForm(p => ({ ...p, time: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+                                                                </div>
+                                                                <div className="flex gap-2 pt-1">
+                                                                    <button
+                                                                        onClick={() => saveProgram()}
+                                                                        disabled={savingProgram}
+                                                                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+                                                                    >
+                                                                        {savingProgram ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                                                                    </button>
+                                                                    <button onClick={() => setEditingProgram(false)} className="px-3 py-1.5 rounded-lg bg-slate-200/50 text-xs font-medium text-slate-500 hover:bg-slate-200">Cancel</button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="space-y-4">
+                                                                <div>
+                                                                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium mb-1">Program</p>
+                                                                    <p className="text-sm font-bold text-indigo-900 leading-tight">{programForm.program || 'No program set'}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium mb-1">Target</p>
+                                                                    <p className="text-sm font-medium text-slate-700 leading-relaxed">{programForm.dailyTarget || 'No target set.'}</p>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
 
-                                                    {editingProgram ? (
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <label className="text-xs text-slate-500 font-medium block mb-1">Program Name</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={programForm.program}
-                                                                    onChange={e => setProgramForm(p => ({ ...p, program: e.target.value }))}
-                                                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
-                                                                    placeholder="e.g. Sunday Service"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-xs text-slate-500 font-medium block mb-1">Target / Goal</label>
-                                                                <textarea
-                                                                    rows={2}
-                                                                    value={programForm.dailyTarget}
-                                                                    onChange={e => setProgramForm(p => ({ ...p, dailyTarget: e.target.value }))}
-                                                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none bg-white"
-                                                                    placeholder="Goal for today..."
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-xs text-slate-500 font-medium block mb-1">Time</label>
-                                                                <input type="time" value={programForm.time} onChange={e => setProgramForm(p => ({ ...p, time: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
-                                                            </div>
-                                                            <div className="flex gap-2 pt-1">
-                                                                <button
-                                                                    onClick={async () => {
-                                                                        setSavingProgram(true)
-                                                                        await ScheduleProgramService.updateProgram({
-                                                                            ...programForm,
-                                                                            date: currentDate,
-                                                                            zoneId,
-                                                                            updatedBy: 'admin'
-                                                                        }, zoneId, currentDate)
-                                                                        showToast('Context saved')
-                                                                        setProgram(prev => ({ ...prev!, ...programForm, date: currentDate }))
-                                                                        setSavingProgram(false)
-                                                                        setEditingProgram(false)
-                                                                    }}
-                                                                    disabled={savingProgram}
-                                                                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
-                                                                >
-                                                                    {savingProgram ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
-                                                                </button>
-                                                                <button onClick={() => setEditingProgram(false)} className="px-3 py-1.5 rounded-lg bg-slate-200/50 text-xs font-medium text-slate-500 hover:bg-slate-200">Cancel</button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="space-y-4">
-                                                            <div>
-                                                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium mb-1">Program</p>
-                                                                <p className="text-sm font-bold text-indigo-900 leading-tight">{programForm.program || 'No program set'}</p>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium mb-1">Target</p>
-                                                                <p className="text-sm font-medium text-slate-700 leading-relaxed">{programForm.dailyTarget || 'No target set.'}</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Daily Songs List & Quick Add */}
-                                                <div className="p-0 md:col-span-2 flex flex-col bg-white">
-                                                    {/* Songs List */}
-                                                    <div className="flex-1 p-5">
-                                                        <div className="flex items-center justify-between mb-4">
-                                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Schedule Flow</h4>
-                                                            <div className="flex gap-2">
-                                                                {canEdit && dailyCategory && (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => openAddSong(dailyCategory.id, 'title')}
-                                                                            className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition-colors"
-                                                                        >
-                                                                            <Plus className="w-3 h-3" /> Title
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => openAddSong(dailyCategory.id, 'activity')}
-                                                                            className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md hover:bg-slate-200 transition-colors"
-                                                                        >
-                                                                            <Plus className="w-3 h-3" /> Activity
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="border-t border-slate-100 mt-2">
-                                                            <Table>
-                                                                <TableHeader>
-                                                                    <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-100">
-                                                                        <TableHead className="w-[50px] text-center font-bold text-slate-500">#</TableHead>
-                                                                        <TableHead className="font-bold text-slate-500">Schedule Item</TableHead>
-                                                                        <TableHead className="text-center font-bold text-slate-500 w-[100px]">Rehearsals</TableHead>
-                                                                        {canEdit && <TableHead className="text-right font-bold text-slate-500 w-[100px]">Actions</TableHead>}
-                                                                    </TableRow>
-                                                                </TableHeader>
-                                                                <TableBody>
-                                                                    {dailyCategory && songs[dailyCategory.id]?.filter(s => s.date === currentDate).length > 0 ? (
-                                                                        songs[dailyCategory.id].filter(s => s.date === currentDate).map((song, idx) => (
-                                                                            song.type === 'title' ? (
-                                                                                <TableRow key={song.id} className="bg-slate-50/50 hover:bg-slate-50/80 group">
-                                                                                    <TableCell colSpan={canEdit ? 4 : 3} className="py-4">
-                                                                                        <div className="flex items-center gap-3">
-                                                                                            <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider">{song.title}</h3>
-                                                                                            <div className="flex-1 h-px bg-indigo-100/50"></div>
-                                                                                            {canEdit && (
-                                                                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 pl-2">
-                                                                                                    <button onClick={() => openEditSong(song)} className="p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                                                                                                        <Edit className="w-3.5 h-3.5" />
-                                                                                                    </button>
-                                                                                                    <button onClick={() => deleteSong(song)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
-                                                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                                                    </button>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </TableCell>
-                                                                                </TableRow>
-                                                                            ) : (
-                                                                                <TableRow key={song.id} className="hover:bg-slate-50/50 group">
-                                                                                    <TableCell className="text-center font-bold text-slate-300">
-                                                                                        {idx + 1}
-                                                                                    </TableCell>
-                                                                                    <TableCell>
-                                                                                        {song.type === 'activity' ? (
-                                                                                            <div className="flex items-center gap-3">
-                                                                                                <FileText className="w-4 h-4 text-slate-400" />
-                                                                                                <div className="flex flex-col">
-                                                                                                    <p className="font-medium text-slate-700 italic">{song.title}</p>
-                                                                                                    {song.writer && <p className="text-xs text-slate-400 mt-0.5">{song.writer}</p>}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        ) : (
-                                                                                            <div className="flex flex-col">
-                                                                                                <span className="font-semibold text-slate-800">{song.title}</span>
-                                                                                                <span className="text-xs text-slate-500 mt-0.5">{song.writer} {song.leadSinger ? `• ${song.leadSinger}` : ''}</span>
-                                                                                                {song.comment && (
-                                                                                                    <div className="mt-2 inline-flex border border-amber-100/50 bg-amber-50 px-2 py-1 rounded-md">
-                                                                                                        <p className="text-[11px] font-medium text-amber-700 flex items-start gap-1">
-                                                                                                            <span className="text-amber-400/80 font-serif">"</span>
-                                                                                                            {song.comment}
-                                                                                                        </p>
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </TableCell>
-                                                                                    <TableCell className="text-center">
-                                                                                        {song.type !== 'activity' ? (
-                                                                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
-                                                                                                {song.rehearsalCount}
-                                                                                            </span>
-                                                                                        ) : (
-                                                                                            <span className="text-slate-300">-</span>
-                                                                                        )}
-                                                                                    </TableCell>
-                                                                                    {canEdit && (
-                                                                                        <TableCell className="text-right">
-                                                                                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                                <button onClick={() => openEditSong(song)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-indigo-600 transition-colors">
-                                                                                                    <Edit className="w-4 h-4" />
-                                                                                                </button>
-                                                                                                <button onClick={() => deleteSong(song)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-rose-600 transition-colors">
-                                                                                                    <Trash2 className="w-4 h-4" />
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        </TableCell>
-                                                                                    )}
-                                                                                </TableRow>
-                                                                            )
-                                                                        ))
-                                                                    ) : (
-                                                                        <TableRow>
-                                                                            <TableCell colSpan={canEdit ? 4 : 3} className="h-32 text-center border-b-0">
-                                                                                <p className="text-sm font-medium text-slate-500">Empty schedule for {new Date(currentDate).toLocaleDateString()}.</p>
-                                                                                <p className="text-xs text-slate-400 mt-1">Use the quick add below.</p>
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    )}
-                                                                </TableBody>
-                                                            </Table>
-                                                        </div>
+                                                    {/* Daily Songs List & Quick Add */}
+                                                    <div className="p-5 md:col-span-2 flex flex-col bg-white min-h-[500px]">
+                                                        <SpreadsheetEditor
+                                                            initialData={spreadsheetData}
+                                                            onChange={(data) => setSpreadsheetData(data)}
+                                                            onSave={(data) => saveProgram(data)}
+                                                            isSaving={savingProgram}
+                                                            themeColor={currentZone?.themeColor === 'blue' ? '#2563EB' : currentZone?.themeColor === 'emerald' ? '#059669' : currentZone?.themeColor === 'rose' ? '#E11D48' : currentZone?.themeColor === 'amber' ? '#D97706' : '#9333ea'}
+                                                        />
                                                     </div>
-
-                                                    {/* Quick Add Bar */}
-                                                    {canEdit && (
-                                                        <div className="p-5 border-t border-slate-100 bg-slate-50/30">
-                                                            <div className="relative flex items-center">
-                                                                <input
-                                                                    value={quickAddInput}
-                                                                    onChange={(e) => {
-                                                                        const val = e.target.value
-                                                                        setQuickAddInput(val)
-                                                                        if (val.trim()) {
-                                                                            const matches = allSongs.filter(s => s.title.toLowerCase().includes(val.toLowerCase())).slice(0, 5)
-                                                                            setQuickAddResults(matches)
-                                                                            setShowQuickAddResults(matches.length > 0)
-                                                                        } else {
-                                                                            setQuickAddResults([])
-                                                                            setShowQuickAddResults(false)
-                                                                        }
-                                                                    }}
-                                                                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all placeholder:text-slate-400"
-                                                                    placeholder="Quick add song from library..."
-                                                                />
-                                                                <Music className="w-4 h-4 text-slate-400 absolute left-3.5" />
-
-                                                                {/* Autocomplete Results */}
-                                                                {showQuickAddResults && (
-                                                                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20">
-                                                                        {quickAddResults.map(s => (
-                                                                            <button
-                                                                                key={s.id}
-                                                                                onClick={() => {
-                                                                                    if (dailyCategory) {
-                                                                                        setSongForm({
-                                                                                            title: s.title,
-                                                                                            writer: s.writer || '',
-                                                                                            leadSinger: '',
-                                                                                            rehearsalCount: 1,
-                                                                                            dateReceived: new Date().toISOString().split('T')[0],
-                                                                                            type: 'song',
-                                                                                            comment: ''
-                                                                                        })
-                                                                                        setEditingSong(null)
-                                                                                        setShowSongForm(dailyCategory.id)
-                                                                                        setQuickAddInput('')
-                                                                                        setShowQuickAddResults(false)
-                                                                                    }
-                                                                                }}
-                                                                                className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex items-center justify-between group"
-                                                                            >
-                                                                                <div>
-                                                                                    <p className="text-sm font-semibold text-slate-800">{s.title}</p>
-                                                                                    <p className="text-xs text-slate-500">{s.writer}</p>
-                                                                                </div>
-                                                                                <Plus className="w-4 h-4 text-slate-300 group-hover:text-indigo-600" />
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -884,69 +785,14 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-                            <h4 className="text-sm font-bold text-slate-700">Category Songs</h4>
-                            {canEdit && (
-                                <button
-                                    onClick={() => openAddSong(selectedCategory.id, 'song')}
-                                    className="flex items-center gap-2 text-xs font-medium text-white px-3 py-1.5 rounded-full transition-colors shadow-sm"
-                                    style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Add Song
-                                </button>
-                            )}
-                        </div>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                    <TableHead className="w-[40%] font-bold text-slate-500">Song Details</TableHead>
-                                    <TableHead className="font-bold text-slate-500">Received</TableHead>
-                                    <TableHead className="text-center font-bold text-slate-500">Rehearsals</TableHead>
-                                    {canEdit && <TableHead className="text-right font-bold text-slate-500">Actions</TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {(songs[selectedCategory.id] || []).length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-32 text-center text-slate-400">
-                                            No songs in this category yet.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    (songs[selectedCategory.id] || []).map((song) => (
-                                        <TableRow key={song.id} className="hover:bg-slate-50/50">
-                                            <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium text-slate-900">{song.title}</span>
-                                                    <span className="text-xs text-slate-500">{song.writer} • {song.leadSinger}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-sm text-slate-600">
-                                                {new Date(song.dateReceived).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">
-                                                    {song.rehearsalCount}
-                                                </span>
-                                            </TableCell>
-                                            {canEdit && (
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-1">
-                                                        <button onClick={() => openEditSong(song)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-purple-600 transition-colors">
-                                                            <Edit className="w-4 h-4" />
-                                                        </button>
-                                                        <button onClick={() => deleteSong(song)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-600 transition-colors">
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </TableCell>
-                                            )}
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px] flex flex-col">
+                        <SpreadsheetEditor
+                            initialData={selectedCategory.spreadsheetData}
+                            onChange={(data) => setSelectedCategory(prev => prev ? ({ ...prev, spreadsheetData: data }) : null)}
+                            onSave={(data) => saveCat(data)}
+                            isSaving={savingCat}
+                            themeColor={currentZone?.themeColor === 'blue' ? '#2563EB' : currentZone?.themeColor === 'emerald' ? '#059669' : currentZone?.themeColor === 'rose' ? '#E11D48' : currentZone?.themeColor === 'amber' ? '#D97706' : '#9333ea'}
+                        />
                     </div>
                 </div>
             )}
