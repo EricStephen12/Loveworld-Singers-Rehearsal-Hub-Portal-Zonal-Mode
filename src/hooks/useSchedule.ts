@@ -18,7 +18,7 @@ interface UseScheduleReturn {
     allPrograms: ScheduleProgram[]
     isLoading: boolean
     loadSongsForCategory: (categoryId: string) => Promise<void>
-    loadProgram: (date?: string) => Promise<void>
+    loadProgram: (date?: string, categoryId?: string) => Promise<void>
     refetchCategories: () => Promise<void>
     refetchProgram: () => Promise<void>
 }
@@ -45,10 +45,10 @@ export function useSchedule(): UseScheduleReturn {
         }
     }, [zoneId])
 
-    const fetchProgram = useCallback(async (date?: string) => {
+    const fetchProgram = useCallback(async (date?: string, categoryId?: string) => {
         setIsLoading(true)
         try {
-            const prog = await ScheduleProgramService.getProgram(zoneId, date)
+            const prog = await ScheduleProgramService.getProgram(zoneId, date, categoryId)
             setProgram(prog)
         } catch (e) {
             console.error('useSchedule: error fetching program', e)

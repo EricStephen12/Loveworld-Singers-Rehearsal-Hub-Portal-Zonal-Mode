@@ -45,17 +45,16 @@ export default function SongSchedulePage() {
         setActiveCategory(id);
     };
 
-    const handleDateSelect = (date: string) => {
+    const handleDateSelect = (date: string, categoryId?: string) => {
         setSelectedDate(date);
-        loadProgram(date);
+        loadProgram(date, categoryId);
     };
 
     const handleBack = () => {
-        if (isDailySchedule && selectedDate) {
-            setSelectedDate(null);
+        if (selectedDate) {
+            setSelectedDate(null); // Just close the program/sub-list view
         } else {
-            setActiveCategory(null);
-            setSelectedDate(null); // Reset date when going back to main list
+            setActiveCategory(null); // Go back to the main categories list
         }
     };
 
@@ -144,51 +143,96 @@ export default function SongSchedulePage() {
                                     className="flex items-center gap-2 text-sm font-outfit-bold text-purple-600 bg-purple-100 px-6 py-2.5 rounded-full hover:bg-purple-200 transition-all active:scale-95 shadow-sm"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
-                                    {isDailySchedule && selectedDate ? "Back to Dates" : "Back to Categories"}
+                                    {selectedDate ? "Back to Lists" : "Back to Categories"}
                                 </button>
                             </div>
 
                             <div className="flex flex-col gap-6">
-                                {isDailySchedule && program && selectedDate ? (
-                                    /* Daily Schedule Program Header */
-                                    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-sm border border-slate-200">
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <CardInfo label="Program" value={program.program} />
-                                            <CardInfo label="Date" value={program.date} />
-                                            <CardInfo label="Time" value={program.time} />
-                                            <CardInfo label="Daily Target" value={program.dailyTarget} accent />
-                                        </div>
-                                    </div>
-                                ) : null}
+                                {selectedDate && program ? (
+                                    <>
+                                        {/* Header for selected sub-category */}
+                                        {isDailySchedule ? (
+                                            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-sm border border-slate-200">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <CardInfo label="Program" value={program.program} />
+                                                    <CardInfo label="Date" value={program.date} />
+                                                    <CardInfo label="Time" value={program.time} />
+                                                    <CardInfo label="Daily Target" value={program.dailyTarget} accent />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-sm border border-slate-200">
+                                                <CardInfo label="List Name" value={program.date} accent />
+                                            </div>
+                                        )}
 
-                                {isDailySchedule && !selectedDate ? (
-                                    /* Date Selection List for Daily Schedule */
-                                    <div className="space-y-4">
-                                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider px-2">Select a Date</h3>
-                                        <div className="flex flex-col gap-3">
-                                            {allPrograms.length === 0 ? (
-                                                <div className="py-20 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                        <Calendar className="w-8 h-8 text-slate-300" />
-                                                    </div>
-                                                    <p className="text-slate-400 text-sm">No scheduled dates found.</p>
+                                        {/* Spreadsheet for selected sub-category */}
+                                        <div className="w-full">
+                                            {isLoading ? (
+                                                <div className="py-32 flex flex-col items-center justify-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                                                    <Loader2 className="w-10 h-10 animate-spin text-purple-600 mb-4" />
+                                                    <p className="text-slate-400 text-sm font-medium">Fetching details...</p>
+                                                </div>
+                                            ) : program.spreadsheetData ? (
+                                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[40vh]">
+                                                    <SpreadsheetViewer data={program.spreadsheetData} />
                                                 </div>
                                             ) : (
-                                                allPrograms.map((p) => (
+                                                <div className="py-24 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                        <FileText className="w-8 h-8 text-slate-200" />
+                                                    </div>
+                                                    <p className="text-slate-400 text-sm">No items in this list yet.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {/* Main Category Spreadsheet */}
+                                        {!isDailySchedule && activeCatData?.spreadsheetData && (
+                                            <div className="mb-8 animate-in fade-in slide-in-from-bottom-2">
+                                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider px-2 mb-3">Main List</h3>
+                                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[30vh]">
+                                                    <SpreadsheetViewer data={activeCatData.spreadsheetData} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <h3 className={`text-sm font-bold text-slate-500 uppercase tracking-wider px-2 ${!isDailySchedule && activeCatData?.spreadsheetData ? 'mt-8' : ''}`}>
+                                            {isDailySchedule ? 'Select a Date' : 'Additional Lists'}
+                                        </h3>
+
+                                        <div className="flex flex-col gap-3">
+                                            {allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).length === 0 ? (
+                                                <div className="py-12 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                        {isDailySchedule ? <Calendar className="w-8 h-8 text-slate-300" /> : <FileText className="w-8 h-8 text-slate-300" />}
+                                                    </div>
+                                                    <p className="text-slate-400 text-sm">
+                                                        {isDailySchedule ? 'No scheduled dates found.' : 'No additional lists found.'}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).map((p) => (
                                                     <div
-                                                        key={p.date}
-                                                        onClick={() => handleDateSelect(p.date)}
-                                                        className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98] shadow-sm"
+                                                        key={p.id}
+                                                        onClick={() => handleDateSelect(p.date, isDailySchedule ? undefined : activeCategory!)}
+                                                        className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98] shadow-sm animate-in fade-in zoom-in-95"
                                                     >
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors shadow-inner">
-                                                                <Calendar className="w-6 h-6 text-purple-600" />
+                                                                {isDailySchedule ? <Calendar className="w-6 h-6 text-purple-600" /> : <FileText className="w-6 h-6 text-purple-600" />}
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-bold text-slate-900 text-lg group-hover:text-purple-700 transition-colors">{p.program || 'Song Schedule'}</h4>
-                                                                <p className="text-xs text-slate-500 font-medium">
-                                                                    {new Date(p.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                                                                </p>
+                                                                <h4 className="font-bold text-slate-900 text-lg group-hover:text-purple-700 transition-colors">
+                                                                    {isDailySchedule ? (p.program || 'Song Schedule') : p.date}
+                                                                </h4>
+                                                                {isDailySchedule && (
+                                                                    <p className="text-xs text-slate-500 font-medium">
+                                                                        {new Date(p.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-purple-50 transition-colors">
@@ -198,166 +242,6 @@ export default function SongSchedulePage() {
                                                 ))
                                             )}
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="w-full">
-                                        {isLoading ? (
-                                            <div className="py-32 flex flex-col items-center justify-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                                                <Loader2 className="w-10 h-10 animate-spin text-purple-600 mb-4" />
-                                                <p className="text-slate-400 text-sm font-medium">Fetching details...</p>
-                                            </div>
-                                        ) : activeCatData?.spreadsheetData ? (
-                                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[50vh]">
-                                                <SpreadsheetViewer data={activeCatData.spreadsheetData} />
-                                            </div>
-                                        ) : categorySongs.length === 0 ? (
-                                            <div className="py-24 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                    <Music className="w-8 h-8 text-slate-200" />
-                                                </div>
-                                                <p className="text-slate-400 text-sm">No songs scheduled yet.</p>
-                                            </div>
-                                        ) : (
-                                            isDailySchedule ? (
-                                                program?.spreadsheetData ? (
-                                                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[40vh]">
-                                                        <SpreadsheetViewer data={program.spreadsheetData} />
-                                                    </div>
-                                                ) : (
-                                                    /* Simple List for Daily Schedule (Legacy/Fallback) */
-                                                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden divide-y divide-slate-100">
-                                                        {categorySongs.map((song, index) => (
-                                                            <div key={song.id} className={`flex items-center gap-3 px-5 py-4 transition-colors group ${song.type === 'activity' ? 'bg-slate-50/50 hover:bg-slate-100' : 'hover:bg-purple-50/30'}`}>
-                                                                <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                                                    <span className="text-xs font-bold text-slate-500">{index + 1}</span>
-                                                                </div>
-
-                                                                {song.type === 'activity' ? (
-                                                                    <div className="flex-1 min-w-0 flex items-center gap-3">
-                                                                        <FileText className="w-4 h-4 text-slate-400" />
-                                                                        <div>
-                                                                            <h4 className="font-medium text-slate-700 text-sm leading-tight italic">{song.title}</h4>
-                                                                            {song.writer && <p className="text-xs text-slate-400 mt-0.5">{song.writer}</p>}
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">{song.title}</h4>
-                                                                            <p className="text-xs text-slate-500 mt-0.5">by {song.writer}</p>
-                                                                            <p className="text-xs text-slate-400">Lead: {song.leadSinger}</p>
-                                                                        </div>
-                                                                        <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 border border-purple-100">
-                                                                            <span className="font-bold text-purple-700 text-xs">x{song.rehearsalCount}</span>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    {/* Desktop Table View */}
-                                                    <div className="hidden sm:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                                        <Table>
-                                                            <TableHeader>
-                                                                <TableRow className="bg-slate-50/50 border-none hover:bg-transparent">
-                                                                    <TableHead className="font-outfit-bold text-slate-500 py-5 px-8 uppercase text-[10px] tracking-widest">Song</TableHead>
-                                                                    <TableHead className="font-outfit-bold text-slate-500 py-5 px-4 uppercase text-[10px] tracking-widest text-center">Date Received</TableHead>
-                                                                    <TableHead className="font-outfit-bold text-slate-500 py-5 px-8 uppercase text-[10px] tracking-widest text-right">Rehearsed</TableHead>
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {categorySongs.map((song) => (
-                                                                    <TableRow key={song.id} className="border-b border-slate-100/50 hover:bg-purple-50/30 transition-colors group">
-                                                                        <TableCell className="py-5 px-8">
-                                                                            <div className="flex flex-col">
-                                                                                <span className="font-outfit-bold text-slate-900 text-base group-hover:text-purple-700 transition-colors">{song.title}</span>
-                                                                                <span className="text-xs text-slate-500 mt-0.5">by {song.writer}</span>
-                                                                                <span className="text-xs text-slate-400 mt-0.5">Lead: {song.leadSinger}</span>
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell className="py-5 px-4 text-center">
-                                                                            <div className="flex flex-col items-center">
-                                                                                <span className="text-xs font-medium text-slate-700">
-                                                                                    {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                                                </span>
-                                                                                <span className="text-[10px] text-slate-400 mt-0.5">Received</span>
-                                                                            </div>
-                                                                        </TableCell>
-                                                                        <TableCell className="py-5 px-8 text-right">
-                                                                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-50 text-purple-700 font-outfit-bold text-sm border border-purple-100">
-                                                                                x{song.rehearsalCount}
-                                                                            </span>
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                ))}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </div>
-
-                                                    {/* Mobile Card View */}
-                                                    <div className="sm:hidden space-y-3 pb-8">
-                                                        {categorySongs.map((song, index) => (
-                                                            <div
-                                                                key={song.id}
-                                                                className={`p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-4 active:scale-[0.98] transition-all duration-200 ${song.type === 'activity' ? 'bg-slate-50' : 'bg-white'}`}
-                                                                style={{ animationDelay: `${index * 50}ms` }}
-                                                            >
-                                                                {/* Index Badge */}
-                                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mt-0.5">
-                                                                    <span className="text-xs font-bold text-slate-400">{index + 1}</span>
-                                                                </div>
-
-                                                                {song.type === 'activity' ? (
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-outfit-bold text-base text-slate-700 leading-snug italic">
-                                                                            {song.title}
-                                                                        </h3>
-                                                                        {song.writer && (
-                                                                            <p className="text-xs text-slate-500 mt-1">
-                                                                                {song.writer}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                ) : (
-                                                                    <>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h3 className="font-outfit-bold text-base text-slate-900 leading-snug group-hover:text-purple-700 transition-colors">
-                                                                                {song.title}
-                                                                            </h3>
-                                                                            <p className="text-xs text-slate-500 mt-1 font-medium">
-                                                                                {song.writer}
-                                                                            </p>
-                                                                            <div className="flex items-center gap-2 mt-2">
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-100">
-                                                                                    <User className="w-3 h-3 text-slate-400" />
-                                                                                    <span className="text-[10px] text-slate-600 font-medium">{song.leadSinger}</span>
-                                                                                </span>
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-100">
-                                                                                    <Calendar className="w-3 h-3 text-slate-400" />
-                                                                                    <span className="text-[10px] text-slate-600 font-medium">
-                                                                                        {new Date(song.dateReceived).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                                                                                    </span>
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Rehearsal Count Badge */}
-                                                                        <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                                                                            <div className="w-10 h-10 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shadow-sm">
-                                                                                <span className="font-outfit-bold text-purple-600 text-sm">x{song.rehearsalCount}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )
-                                        )}
                                     </div>
                                 )}
                             </div>

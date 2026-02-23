@@ -68,8 +68,9 @@ export interface SpreadsheetData {
 export interface ScheduleProgram {
     id?: string
     zoneId: string | null
+    categoryId?: string // For generic sub-categories
     program: string
-    date: string        // YYYY-MM-DD
+    date: string        // YYYY-MM-DD (also serves as a logical sort key for dates)
     time: string
     dailyTarget: string
     spreadsheetData?: SpreadsheetData
@@ -263,14 +264,15 @@ export class ScheduleSongService {
 
 export class ScheduleProgramService {
 
-    private static getProgramDocId(zoneId?: string | null, date?: string): string {
+    private static getProgramDocId(zoneId?: string | null, date?: string, categoryId?: string): string {
         const dateSuffix = date ? `_${date}` : ''
-        return isHQ(zoneId) ? `hq_program${dateSuffix}` : `zone_${zoneId}_program${dateSuffix}`
+        const catSuffix = categoryId ? `_cat_${categoryId}` : ''
+        return isHQ(zoneId) ? `hq_program${catSuffix}${dateSuffix}` : `zone_${zoneId}_program${catSuffix}${dateSuffix}`
     }
 
-    static async getProgram(zoneId?: string | null, date?: string): Promise<ScheduleProgram | null> {
+    static async getProgram(zoneId?: string | null, date?: string, categoryId?: string): Promise<ScheduleProgram | null> {
         try {
-            const docId = this.getProgramDocId(zoneId, date)
+            const docId = this.getProgramDocId(zoneId, date, categoryId)
             const ref = doc(db, 'schedule_programs', docId)
             const snap = await getDoc(ref)
             if (!snap.exists()) return null
@@ -303,7 +305,14 @@ export class ScheduleProgramService {
                     id: d.id,
                     updatedAt: toDate(data.updatedAt),
                 } as ScheduleProgram
-            }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Newest first
+            }).sort((a, b) => {
+                const timeA = new Date(a.date).getTime();
+                const timeB = new Date(b.date).getTime();
+                if (!isNaN(timeA) && !isNaN(timeB)) {
+                    return timeB - timeA;
+                }
+                return (b.date || "").localeCompare(a.date || "");
+            })
         } catch (error) {
             console.error('Error getting all programs:', error)
             return []
@@ -316,16 +325,45 @@ export class ScheduleProgramService {
         date?: string
     ): Promise<boolean> {
         try {
-            const docId = this.getProgramDocId(zoneId, date)
+            const docId = this.getProgramDocId(zoneId, date, data.categoryId)
             const ref = doc(db, 'schedule_programs', docId)
+
+            const cleanUndefined = (o: any): any => {
+                if (o === undefined) return null;
+                if (o === null) return null;
+                if (typeof o !== 'object') return o;
+                if (Array.isArray(o)) return o.map(i => i === undefined ? null : cleanUndefined(i));
+                const res: any = {};
+                for (const k in o) {
+                    if (o[k] !== undefined) {
+                        res[k] = cleanUndefined(o[k]);
+                    }
+                }
+                return res;
+            }
+
+            const cleanData = cleanUndefined(data);
+
             await setDoc(ref, {
-                ...data,
+                ...cleanData,
                 zoneId: isHQ(zoneId) ? null : zoneId,
                 updatedAt: serverTimestamp(),
             }, { merge: true })
             return true
         } catch (error) {
             console.error('Error updating schedule program:', error)
+            return false
+        }
+    }
+
+    static async deleteProgram(zoneId?: string | null, date?: string, categoryId?: string): Promise<boolean> {
+        try {
+            const docId = this.getProgramDocId(zoneId, date, categoryId)
+            const ref = doc(db, 'schedule_programs', docId)
+            await deleteDoc(ref)
+            return true
+        } catch (error) {
+            console.error('Error deleting schedule program:', error)
             return false
         }
     }
