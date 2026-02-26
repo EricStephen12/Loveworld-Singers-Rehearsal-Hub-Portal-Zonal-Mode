@@ -412,9 +412,64 @@ export function LibraryView() {
     );
   }, [songs, searchQuery]);
 
+  // Auto-play Next Song (Library View)
+  useEffect(() => {
+    const handleAudioEnded = (e: any) => {
+      const endedSong = e.detail?.song;
+      if (!endedSong) return;
 
+      // In AudioLab, currentSong ID might have a vocal part suffix like "-full" or "-soprano"
+      // Our song.id in filteredSongs won't have this suffix, so we match the base ID.
+      const baseEndedSongId = endedSong.id?.split('-')[0] || endedSong.id;
 
-  const handleOpenDetail = useCallback((song: Song) => {
+      const currentIndex = filteredSongs.findIndex(s => s.id === baseEndedSongId);
+      if (currentIndex === -1) return;
+
+      let nextIndex = currentIndex + 1;
+      while (nextIndex < filteredSongs.length) {
+        const nextSong = filteredSongs[nextIndex];
+        // For AudioLab Library, we look for audio in `audioUrl`, `audioFile`, or `audioUrls.full`
+        const hasAudio = (nextSong as any).audioUrl ||
+          nextSong.audioUrls?.full ||
+          (nextSong as any).audioFile;
+
+        if (hasAudio) {
+          const audioUrl = (nextSong as any).audioUrl || nextSong.audioUrls?.full || (nextSong as any).audioFile;
+
+          // Construct the audio object for AudioContext
+          const audioSong = {
+            id: `${nextSong.id}-full`, // Default to full track
+            title: `${nextSong.title} (full)`,
+            audioFile: audioUrl,
+            writer: nextSong.artist,
+          };
+
+          setCurrentSong(audioSong as any, true);
+
+          // Update the open detail modal if it's currently open
+          if (isDetailModalOpen) {
+            setSelectedDetailSong(nextSong);
+          }
+
+          // Optional: Scroll to the next song so it becomes visible
+          setTimeout(() => {
+            const element = document.getElementById(`song-${nextSong.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+
+          return;
+        }
+        nextIndex++;
+      }
+    };
+
+    window.addEventListener('audioEnded', handleAudioEnded);
+    return () => {
+      window.removeEventListener('audioEnded', handleAudioEnded);
+    };
+  }, [filteredSongs, setCurrentSong, isDetailModalOpen]); const handleOpenDetail = useCallback((song: Song) => {
     setSelectedDetailSong(song);
     setIsDetailModalOpen(true);
   }, []);
