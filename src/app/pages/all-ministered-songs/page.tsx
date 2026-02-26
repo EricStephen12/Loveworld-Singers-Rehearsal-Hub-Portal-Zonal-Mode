@@ -196,6 +196,60 @@ export default function AllMinisteredSongsPage() {
     return filtered
   }, [songs, searchQuery, selectedLeadSinger, sortOrder, selectedProgramId, programs])
 
+  // Auto-play Next Song
+  useEffect(() => {
+    const handleAudioEnded = (e: any) => {
+      const endedSong = e.detail?.song;
+      if (!endedSong) return;
+
+      // Ensure we are playing from our filtered list
+      const currentIndex = filteredSongs.findIndex(s => s.id === endedSong.id);
+      if (currentIndex === -1) return; // Song not in list
+
+      // Find the next song with valid audio
+      let nextIndex = currentIndex + 1;
+      while (nextIndex < filteredSongs.length) {
+        const nextSong = filteredSongs[nextIndex];
+        const hasAudio = nextSong.audioUrls?.full || nextSong.audioFile;
+
+        if (hasAudio) {
+          // Play next song
+          const audioUrl = nextSong.audioUrls?.full || nextSong.audioFile;
+          const audioSong = {
+            id: nextSong.id,
+            title: nextSong.title,
+            audioFile: audioUrl,
+            writer: nextSong.writer,
+            leadSinger: nextSong.leadSinger,
+          };
+
+          // Switch page if necessary to show the playing song
+          const targetPage = Math.floor(nextIndex / itemsPerPage) + 1;
+          if (targetPage !== currentPage) {
+            setCurrentPage(targetPage);
+          }
+
+          setCurrentSong(audioSong as any, true);
+
+          // If the detail sheet is open, update it to the new song
+          if (isSongDetailOpen) {
+            setSelectedSong(nextSong);
+            window.dispatchEvent(new CustomEvent('songDetailOpen'));
+          }
+
+          return;
+        }
+        nextIndex++;
+      }
+      // Reached the end with no more audio
+    };
+
+    window.addEventListener('audioEnded', handleAudioEnded);
+    return () => {
+      window.removeEventListener('audioEnded', handleAudioEnded);
+    };
+  }, [filteredSongs, currentPage, setCurrentSong, isSongDetailOpen]);
+
   // Paginated Songs
   const paginatedSongs = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
