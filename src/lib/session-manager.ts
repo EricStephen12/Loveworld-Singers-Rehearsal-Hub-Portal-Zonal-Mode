@@ -26,9 +26,9 @@ export class SessionManager {
 
   // Generate unique device ID (Persist in SessionStorage to survive reloads)
   static generateDeviceId(forceNew: boolean = false): string {
-    // Try to recover from session storage first (unless forcing new)
+    // Try to recover from local storage first (unless forcing new)
     if (!forceNew && typeof window !== 'undefined') {
-      const storedId = sessionStorage.getItem('lwsrh_device_id')
+      const storedId = localStorage.getItem('lwsrh_device_id')
       if (storedId) {
         this.deviceId = storedId
         return storedId
@@ -56,7 +56,7 @@ export class SessionManager {
 
     // Persist
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('lwsrh_device_id', this.deviceId)
+      localStorage.setItem('lwsrh_device_id', this.deviceId)
     }
 
     return this.deviceId
@@ -177,7 +177,7 @@ export class SessionManager {
 
       // Store Session ID locally for validity checks
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('lwsrh_session_id', this.sessionId)
+        localStorage.setItem('lwsrh_session_id', this.sessionId)
       }
 
       // Start tracking immediately
@@ -196,7 +196,7 @@ export class SessionManager {
   static async updateActivity(userId: string): Promise<void> {
     try {
       // Retrieve local session ID
-      const storedSessionId = typeof window !== 'undefined' ? sessionStorage.getItem('lwsrh_session_id') : this.sessionId
+      const storedSessionId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : this.sessionId
 
       // Safety check: If we don't have a session ID, we might be in a bad state
       if (!storedSessionId) return
@@ -232,7 +232,7 @@ export class SessionManager {
       this.generateDeviceId()
     }
     if (!this.sessionId && typeof window !== 'undefined') {
-      this.sessionId = sessionStorage.getItem('lwsrh_session_id') || ''
+      this.sessionId = localStorage.getItem('lwsrh_session_id') || ''
     }
 
     console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
