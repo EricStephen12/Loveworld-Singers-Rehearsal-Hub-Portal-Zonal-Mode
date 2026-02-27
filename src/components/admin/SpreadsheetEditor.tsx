@@ -41,7 +41,68 @@ export default function SpreadsheetEditor({
     const [editingHeader, setEditingHeader] = useState<{ type: 'col' | 'row'; index: number } | null>(null)
     const [history, setHistory] = useState<SpreadsheetData[]>([])
 
-    // Sync if initialData changes (e.g. switching dates)
+    // Column Resizing State
+    const [resizingCol, setResizingCol] = useState<{ index: number; startX: number; startWidth: number } | null>(null);
+
+    // Scroll Indicator State
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    // Handle Scroll Indicators
+    useEffect(() => {
+        const checkScroll = () => {
+            if (scrollContainerRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+                setCanScrollLeft(scrollLeft > 0);
+                setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+            }
+        };
+
+        const container = scrollContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', checkScroll);
+            // Check initially and on resize
+            checkScroll();
+            window.addEventListener('resize', checkScroll);
+        }
+
+        return () => {
+            if (container) container.removeEventListener('scroll', checkScroll);
+            window.removeEventListener('resize', checkScroll);
+        };
+    }, [spreadsheet.columns]);
+
+    // Handle Column Resize Dragging
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!resizingCol) return;
+            const deltaX = e.clientX - resizingCol.startX;
+            const newWidth = Math.max(50, resizingCol.startWidth + deltaX); // Min width 50px
+
+            const updatedColumns = [...spreadsheet.columns];
+            updatedColumns[resizingCol.index] = { ...updatedColumns[resizingCol.index], width: newWidth };
+
+            setSpreadsheet(prev => ({ ...prev, columns: updatedColumns }));
+        };
+
+        const handleMouseUp = () => {
+            if (resizingCol) {
+                setResizingCol(null);
+                onChange(spreadsheet); // Save changes when done dragging
+            }
+        };
+
+        if (resizingCol) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [resizingCol, spreadsheet, onChange]);
     useEffect(() => {
         if (initialData) {
             setSpreadsheet(initialData)
@@ -231,42 +292,68 @@ export default function SpreadsheetEditor({
                 )}
             </div>
 
-            {/* Grid Area */}
-            <div className="flex-1 overflow-auto relative">
-                <table className="border-collapse table-fixed bg-white min-w-full">
+            {/* Grid Area - Scrollable with fixed row/col headers */}
+            <div
+                ref={scrollContainerRef}
+                className="flex-1 w-full overflow-auto relative rounded-b-xl pb-4"
+            >
+                {/* Visual indicator that it's scrollable */}
+                {canScrollRight && (
+                    <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-slate-900/10 to-transparent pointer-events-none z-30" />
+                )}
+                {canScrollLeft && (
+                    <div className="absolute top-0 left-10 bottom-0 w-8 bg-gradient-to-r from-slate-900/10 to-transparent pointer-events-none z-30" />
+                )}
+
+                <table className={`border-collapse bg-white min-w-[600px] sm:min-w-full ${resizingCol ? 'select-none' : ''}`}>
                     <thead>
                         <tr>
                             <th className="w-10 bg-slate-100 border border-slate-200 sticky top-0 left-0 z-20"></th>
                             {spreadsheet.columns.map((col, cIdx) => (
                                 <th
                                     key={cIdx}
-                                    style={{ width: col.width }}
-                                    className={`bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest py-1.5 sticky top-0 z-10 group relative cursor-pointer hover:bg-slate-200 transition-colors ${editingHeader?.type === 'col' && editingHeader.index === cIdx ? 'ring-2 ring-indigo-500 z-30' : ''}`}
-                                    onClick={() => setEditingHeader({ type: 'col', index: cIdx })}
+                                    style={{ width: col.width, minWidth: Math.max(100, col.width) }}
+                                    className={`bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest py-2 px-1 sticky top-0 z-10 group relative transition-colors ${editingHeader?.type === 'col' && editingHeader.index === cIdx ? 'ring-2 ring-indigo-500 z-30' : ''}`}
                                 >
-                                    {editingHeader?.type === 'col' && editingHeader.index === cIdx ? (
-                                        <input
-                                            autoFocus
-                                            className="w-full bg-white px-2 py-1 text-xs font-bold text-slate-900 normal-case outline-none ring-1 ring-indigo-300 rounded"
-                                            value={col.label || ''}
-                                            onChange={(e) => updateHeaderLabel('col', cIdx, e.target.value)}
-                                            onBlur={() => setEditingHeader(null)}
-                                            onKeyDown={(e) => e.key === 'Enter' && setEditingHeader(null)}
-                                            placeholder={`Col ${getColumnName(cIdx)}`}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center gap-0.5">
-                                            <span className="opacity-60">{getColumnName(cIdx)}</span>
-                                            {col.label && <span className="normal-case font-bold text-slate-700 text-[9px] truncate max-w-full px-1">{col.label}</span>}
-                                        </div>
-                                    )}
+                                    <div
+                                        className="w-full h-full flex items-center justify-center cursor-pointer"
+                                        onClick={() => setEditingHeader({ type: 'col', index: cIdx })}
+                                    >
+                                        {editingHeader?.type === 'col' && editingHeader.index === cIdx ? (
+                                            <input
+                                                autoFocus
+                                                className="w-full bg-white px-2 py-1 text-xs font-bold text-slate-900 normal-case outline-none ring-1 ring-indigo-300 rounded"
+                                                value={col.label || ''}
+                                                onChange={(e) => updateHeaderLabel('col', cIdx, e.target.value)}
+                                                onBlur={() => setEditingHeader(null)}
+                                                onKeyDown={(e) => e.key === 'Enter' && setEditingHeader(null)}
+                                                placeholder={`Col ${getColumnName(cIdx)}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center gap-0.5">
+                                                <span className="opacity-60">{getColumnName(cIdx)}</span>
+                                                {col.label && <span className="normal-case font-bold text-slate-700 text-[9px] truncate max-w-full px-1">{col.label}</span>}
+                                            </div>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); deleteColumn(cIdx); }}
-                                        className="absolute right-0.5 top-0.5 p-1 rounded-md bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute right-3 top-0.5 p-1 rounded-md bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                        title="Delete Column"
                                     >
                                         <Trash2 className="w-2.5 h-2.5" />
                                     </button>
+
+                                    {/* Column Resizer Handle */}
+                                    <div
+                                        className={`absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-400 z-30 ${resizingCol?.index === cIdx ? 'bg-indigo-500' : ''}`}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setResizingCol({ index: cIdx, startX: e.clientX, startWidth: col.width });
+                                        }}
+                                    />
                                 </th>
                             ))}
                         </tr>
@@ -316,7 +403,7 @@ export default function SpreadsheetEditor({
                                             <input
                                                 value={cell.value}
                                                 onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
-                                                className={`w-full h-full px-2 py-1 text-sm bg-transparent outline-none border-none
+                                                className={`w-full h-full min-h-[40px] px-3 py-2 text-sm bg-transparent outline-none border-none
                                                     ${cell.bold ? 'font-bold' : ''}
                                                     ${cell.italic ? 'italic' : ''}
                                                     ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}

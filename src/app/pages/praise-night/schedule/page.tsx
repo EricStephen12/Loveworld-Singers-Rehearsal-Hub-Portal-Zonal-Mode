@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import {
@@ -260,65 +260,106 @@ function CardInfo({ label, value, accent }: { label: string; value: string; acce
             <p className={`text-sm font-semibold leading-tight ${accent ? 'text-emerald-800' : 'text-slate-800'}`}>{value || '—'}</p>
         </div>
     );
-}
+} function SpreadsheetViewer({ data }: { data: any }) {
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
-function SpreadsheetViewer({ data }: { data: any }) {
+    useEffect(() => {
+        const checkScroll = () => {
+            if (scrollContainerRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+                setCanScrollLeft(scrollLeft > 0);
+                setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+            }
+        };
+
+        const container = scrollContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', checkScroll);
+            checkScroll(); // Check initially
+            window.addEventListener('resize', checkScroll);
+        }
+
+        // Wait for fonts/layout to settle before checking scroll
+        const timeoutId = setTimeout(checkScroll, 100);
+
+        return () => {
+            if (container) container.removeEventListener('scroll', checkScroll);
+            window.removeEventListener('resize', checkScroll);
+            clearTimeout(timeoutId);
+        };
+    }, [data.columns]);
+
     if (!data || !data.columns) return null;
 
     const hasRowLabels = data.rows?.some((r: any) => r.label);
 
     return (
-        <div className="relative border border-slate-200 rounded-2xl overflow-auto max-h-[70vh] scrollbar-hide bg-white translate-z-0">
-            <table className="border-collapse table-fixed min-w-full">
-                <thead className="sticky top-0 z-20 bg-slate-50">
-                    <tr className="border-b border-slate-200">
-                        {hasRowLabels && (
-                            <th className="w-12 bg-slate-100 border-r border-slate-200 sticky left-0 top-0 z-30 shadow-[1px_1px_0_0_rgba(0,0,0,0.05)]">
-                                {/* Corner block */}
-                            </th>
-                        )}
-                        {data.columns.map((col: any, i: number) => (
-                            <th
-                                key={i}
-                                className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 last:border-0 bg-slate-50"
-                                style={{ width: col.width || 120 }}
-                            >
-                                {col.label || String.fromCharCode(65 + i)}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                    {data.rows.map((row: any, rIdx: number) => (
-                        <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
-                            {hasRowLabels && (
-                                <td className="px-2 py-3 bg-slate-50/80 backdrop-blur-sm border-r border-slate-200 text-[10px] font-black text-slate-400 text-center uppercase tracking-widest whitespace-nowrap sticky left-0 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">
-                                    {row.label}
-                                </td>
-                            )}
-                            {data.columns.map((_: any, cIdx: number) => {
-                                const key = `${rIdx}:${cIdx}`;
-                                const cell = data.data[key];
-                                if (!cell) return <td key={cIdx} className="px-4 py-3 border-r border-slate-100/50 last:border-0 bg-white"></td>;
+        <div className="relative border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+            {/* Visual indicators that it's scrollable */}
+            {canScrollRight && (
+                <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-slate-900/10 to-transparent pointer-events-none z-30 transition-opacity duration-200" />
+            )}
+            {canScrollLeft && (
+                <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-slate-900/10 to-transparent pointer-events-none z-30 transition-opacity duration-200" />
+            )}
 
-                                return (
-                                    <td
-                                        key={cIdx}
-                                        className={`px-4 py-3 text-sm border-r border-slate-100/50 last:border-0 bg-white
+            <div
+                ref={scrollContainerRef}
+                className="overflow-x-auto overflow-y-auto max-h-[70vh] scrollbar-hide translate-z-0 w-full"
+            >
+                <table className="border-collapse table-fixed min-w-[600px] sm:min-w-full">
+                    <thead className="sticky top-0 z-20 bg-slate-50 shadow-sm">
+                        <tr className="border-b border-slate-200">
+                            {hasRowLabels && (
+                                <th className="w-12 bg-slate-100 border-r border-slate-200 sticky left-0 top-0 z-30 shadow-[1px_1px_0_0_rgba(0,0,0,0.05)]">
+                                    {/* Corner block */}
+                                </th>
+                            )}
+                            {data.columns.map((col: any, i: number) => (
+                                <th
+                                    key={i}
+                                    className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 last:border-0 bg-slate-50 whitespace-nowrap"
+                                    style={{ width: col.width || 120, minWidth: Math.max(100, col.width || 120) }}
+                                >
+                                    {col.label || String.fromCharCode(65 + i)}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {data.rows.map((row: any, rIdx: number) => (
+                            <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
+                                {hasRowLabels && (
+                                    <td className="px-2 py-3 bg-slate-50/80 backdrop-blur-sm border-r border-slate-200 text-[10px] font-black text-slate-400 text-center uppercase tracking-widest whitespace-nowrap sticky left-0 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">
+                                        {row.label}
+                                    </td>
+                                )}
+                                {data.columns.map((_: any, cIdx: number) => {
+                                    const key = `${rIdx}:${cIdx}`;
+                                    const cell = data.data[key];
+                                    if (!cell) return <td key={cIdx} className="px-4 py-3 border-r border-slate-100/50 last:border-0 bg-white"></td>;
+
+                                    return (
+                                        <td
+                                            key={cIdx}
+                                            className={`px-4 py-3 text-sm border-r border-slate-100/50 last:border-0 bg-white
                                             ${cell.bold ? 'font-bold' : ''}
                                             ${cell.italic ? 'italic' : ''}
                                             ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}
                                         `}
-                                        style={{ color: cell.color }}
-                                    >
-                                        {cell.value}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                            style={{ color: cell.color }}
+                                        >
+                                            {cell.value}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
