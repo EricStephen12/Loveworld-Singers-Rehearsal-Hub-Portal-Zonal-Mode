@@ -120,6 +120,10 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
     const [showNewScheduleModal, setShowNewScheduleModal] = useState(false)
     const [newScheduleDate, setNewScheduleDate] = useState(new Date().toISOString().split('T')[0])
 
+    // Rename List Modal
+    const [showRenameListModal, setShowRenameListModal] = useState(false)
+    const [renameListValue, setRenameListValue] = useState('')
+
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type })
         setTimeout(() => setToast(null), 3000)
@@ -217,7 +221,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         }
 
         const oldDate = currentDate;
-        const newDate = programForm.date;
+        const newDate = currentForm.date;
 
         if (oldDate !== newDate && !isAutoSave) {
             // User changed the date. We need to move the program.
@@ -252,6 +256,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
             }
 
             setCurrentDate(newDate); // Update UI context to new date
+            if (expandedDate === oldDate) setExpandedDate(newDate); // Keep it expanded under new date
             if (!isAutoSave) showToast('Program moved to new date!');
         } else {
             // Normal update under current date
@@ -572,6 +577,20 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         loadEditorData(prog.date, prog.categoryId)
     }
 
+    const handleRenameList = async () => {
+        if (!renameListValue.trim() || renameListValue === program?.date) {
+            setShowRenameListModal(false)
+            return
+        }
+
+        const updatedForm = { ...programForm, date: renameListValue };
+        setProgramForm(updatedForm);
+        programFormRef.current = updatedForm;
+
+        await saveProgram(undefined, false);
+        setShowRenameListModal(false);
+    }
+
     // ── Views ──────────────────────────────────────────────────────────────────
 
     if (loading) {
@@ -703,8 +722,17 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                             <div>
                                 {expandedDate ? (
                                     <>
-                                        <h3 className="text-lg font-bold text-slate-800">
+                                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                             {selectedCategory.label === 'Daily Schedule' ? (program?.program || 'Schedule Editor') : (program?.date || 'Mini Category Editor')}
+                                            {selectedCategory.label !== 'Daily Schedule' && canEdit && (
+                                                <button
+                                                    onClick={() => { setRenameListValue(program?.date || ''); setShowRenameListModal(true); }}
+                                                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors"
+                                                    title="Rename List"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </h3>
                                         <p className="text-sm text-slate-500">Back to {selectedCategory.label}</p>
                                     </>
@@ -766,6 +794,39 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                         style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
                                     >
                                         Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Rename List Modal */}
+                    {showRenameListModal && (
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4">Rename List</h3>
+                                <p className="text-sm text-slate-500 mb-6">Enter a new name for this list.</p>
+
+                                <div className="space-y-4">
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. New Songs"
+                                        value={renameListValue}
+                                        onChange={e => setRenameListValue(e.target.value)}
+                                        className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all font-medium text-slate-700"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 mt-8">
+                                    <button onClick={() => setShowRenameListModal(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
+                                    <button
+                                        onClick={handleRenameList}
+                                        disabled={savingProgram || !renameListValue.trim() || renameListValue === program?.date}
+                                        className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                                        style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
+                                    >
+                                        {savingProgram ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Rename'}
                                     </button>
                                 </div>
                             </div>
