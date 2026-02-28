@@ -216,24 +216,65 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
             payload.spreadsheetData = currentGrid
         }
 
-        await ScheduleProgramService.updateProgram(payload, zoneId, currentDate)
-        if (!isAutoSave) showToast('Program info saved!')
+        const oldDate = currentDate;
+        const newDate = programForm.date;
+
+        if (oldDate !== newDate && !isAutoSave) {
+            // User changed the date. We need to move the program.
+
+            // 1. Check if a program already exists on newDate
+            const existing = await ScheduleProgramService.getProgram(zoneId, newDate, catId);
+            if (existing) {
+                if (!confirm(`A schedule already exists for ${newDate}. Overwrite it?`)) {
+                    setSavingProgram(false);
+                    return;
+                }
+            }
+
+            // 2. Save under new date
+            await ScheduleProgramService.updateProgram(payload, zoneId, newDate);
+
+            // 3. Delete old date
+            await ScheduleProgramService.deleteProgram(zoneId, oldDate, catId);
+
+            // 4. If Daily Schedule (or has songs on this date), move songs
+            if (!catId) {
+                // Find songs for the old date
+                const dailyCategory = categories.find(c => c.label === 'Daily Schedule');
+                if (dailyCategory) {
+                    const oldSongs = await ScheduleSongService.getSongs(dailyCategory.id, zoneId, oldDate);
+                    for (const s of oldSongs) {
+                        await ScheduleSongService.updateSong(s.id, { date: newDate });
+                    }
+                    // Update songs state to point to new date (simplest is to just reload songs next time)
+                    setSongs(prev => ({ ...prev, [dailyCategory.id]: prev[dailyCategory.id]?.map(song => ({ ...song, date: newDate })) || [] }));
+                }
+            }
+
+            setCurrentDate(newDate); // Update UI context to new date
+            if (!isAutoSave) showToast('Program moved to new date!');
+        } else {
+            // Normal update under current date
+            await ScheduleProgramService.updateProgram(payload, zoneId, oldDate);
+            if (!isAutoSave) showToast('Program info saved!');
+        }
 
         // Update local state
         setProgram(prev => ({
             ...(prev || {}),
             ...payload,
             updatedAt: new Date().toISOString(),
-            id: prev?.id || `temp_${currentDate}`,
+            id: prev?.id || `temp_${newDate}`,
             zoneId: zoneId
         } as ScheduleProgram))
 
         // Ensure history list updates
-        setAllPrograms(prev => prev.map(p => {
-            if (p.date === currentDate && p.categoryId === catId) {
+        setAllPrograms(prev => prev.filter(p => p.id !== `temp_${oldDate}`).map(p => {
+            if (p.date === oldDate && p.categoryId === catId) {
                 return {
                     ...p,
                     ...payload,
+                    date: newDate,
                     updatedAt: new Date().toISOString(),
                 }
             }
@@ -847,9 +888,25 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                                             placeholder="Goal for today..."
                                                         />
                                                     </div>
-                                                    <div>
-                                                        <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Time</label>
-                                                        <input type="time" value={programForm.time} onChange={e => setProgramForm(p => ({ ...p, time: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm" />
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Date</label>
+                                                            <input
+                                                                type="date"
+                                                                value={programForm.date}
+                                                                onChange={e => setProgramForm(p => ({ ...p, date: e.target.value }))}
+                                                                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Time</label>
+                                                            <input
+                                                                type="time"
+                                                                value={programForm.time}
+                                                                onChange={e => setProgramForm(p => ({ ...p, time: e.target.value }))}
+                                                                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm"
+                                                            />
+                                                        </div>
                                                     </div>
                                                     <div className="flex gap-2 pt-2">
                                                         <button
