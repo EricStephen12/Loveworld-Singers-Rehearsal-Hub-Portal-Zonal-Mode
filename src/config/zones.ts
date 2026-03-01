@@ -50,6 +50,7 @@ export const ZONES: Zone[] = [
   },
   { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
   { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
+  { id: 'zone-oftd', name: 'Office of the Director', slug: 'oftd-zone', region: 'Headquarters', invitationCode: 'ZONEOFTD', themeColor: '#9333EA' },
   { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug: 'national-zone', region: 'Headquarters', invitationCode: 'ZONENAT', themeColor: '#9333EA' },
   { id: 'zone-international', name: 'Loveworld International Zonal Choir Representatives', slug: 'international-zone', region: 'Headquarters', invitationCode: 'ZONEINT', themeColor: '#9333EA' },
 
@@ -214,7 +215,7 @@ export const BOSS_ZONE_ID = 'zone-boss'
 // HQ groups - these use unfiltered Firebase data
 export const HQ_GROUP_IDS = [
   'zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005',
-  'zone-orchestra', 'zone-president', 'zone-director', 'zone-oftp', 'zone-national', 'zone-international'
+  'zone-orchestra', 'zone-president', 'zone-director', 'zone-oftp', 'zone-oftd', 'zone-national', 'zone-international'
 ]
 
 export function isHQGroup(zoneId: string | undefined): boolean {
