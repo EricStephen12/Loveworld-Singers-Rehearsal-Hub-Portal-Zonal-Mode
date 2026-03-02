@@ -54,7 +54,6 @@ function Toast({ message, type }: { message: string; type: 'success' | 'error' }
         </div>
     )
 }
-
 interface ScheduleManagerSectionProps {
     allSongs: PraiseNightSong[]
 }
@@ -85,7 +84,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
     // Category form
     const [showCatForm, setShowCatForm] = useState(false)
     const [editingCat, setEditingCat] = useState<ScheduleCategory | null>(null)
-    const [catForm, setCatForm] = useState({ label: '', description: '', icon: 'Music', color: 'bg-purple-100', iconColor: 'text-purple-600' })
+    const [catForm, setCatForm] = useState({ label: '', description: '', icon: 'Music', color: 'bg-purple-100', iconColor: 'text-purple-600', parentId: null as string | null })
     const [savingCat, setSavingCat] = useState(false)
 
     // Song form
@@ -311,15 +310,15 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
     // ── Category CRUD ──────────────────────────────────────────────────────────
 
-    const openAddCat = () => {
+    const openAddCat = (parentId: string | null = null) => {
         setEditingCat(null)
-        setCatForm({ label: '', description: '', icon: 'Music', color: 'bg-purple-100', iconColor: 'text-purple-600' })
+        setCatForm({ label: '', description: '', icon: 'Folder', color: 'bg-indigo-100', iconColor: 'text-indigo-600', parentId })
         setShowCatForm(true)
     }
 
     const openEditCat = (cat: ScheduleCategory) => {
         setEditingCat(cat)
-        setCatForm({ label: cat.label, description: cat.description, icon: cat.icon, color: cat.color, iconColor: cat.iconColor })
+        setCatForm({ label: cat.label, description: cat.description, icon: cat.icon, color: cat.color, iconColor: cat.iconColor, parentId: cat.parentId || null })
         setShowCatForm(true)
     }
 
@@ -329,6 +328,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
         const payload: any = {
             ...catForm,
+            parentId: catForm.parentId || null,
         }
 
         const gridData = grid || (editingCat?.spreadsheetData || selectedCategory?.spreadsheetData)
@@ -615,7 +615,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                         </div>
                         {canEdit && (
                             <button
-                                onClick={openAddCat}
+                                onClick={() => openAddCat()}
                                 className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-full transition-colors shadow-sm"
                                 style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
                             >
@@ -625,7 +625,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categories.map(cat => {
+                        {categories.filter(c => !c.parentId).map(cat => {
                             const IconComp = ICON_OPTIONS.find(o => o.name === cat.icon)?.icon || Music
                             return (
                                 <div
@@ -654,56 +654,8 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                             )
                         })}
                     </div>
-
-                    {/* Category Form Modal */}
-                    {showCatForm && (
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4">{editingCat ? 'Edit Category' : 'New Category'}</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Label</label>
-                                        <input value={catForm.label} onChange={e => setCatForm(p => ({ ...p, label: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="e.g. Daily Schedule" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Description</label>
-                                        <input value={catForm.description} onChange={e => setCatForm(p => ({ ...p, description: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="Brief description..." />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Icon</label>
-                                            <select value={catForm.icon} onChange={e => setCatForm(p => ({ ...p, icon: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                                {ICON_OPTIONS.map(o => <option key={o.name} value={o.name}>{o.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Color</label>
-                                            <select value={catForm.color} onChange={e => {
-                                                const opt = COLOR_OPTIONS.find(o => o.color === e.target.value)
-                                                setCatForm(p => ({ ...p, color: e.target.value, iconColor: opt?.iconColor || p.iconColor }))
-                                            }} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                                {COLOR_OPTIONS.map(o => <option key={o.color} value={o.color}>{o.label}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 mt-6">
-                                    <button onClick={() => setShowCatForm(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
-                                    <button
-                                        onClick={() => saveCat()}
-                                        disabled={savingCat}
-                                        className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                                        style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                    >
-                                        {savingCat ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Category
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
-
 
             {/* ── View: Category Detail (Editor + Sub-Schedules) ─────────────── */}
             {viewMode === 'category-detail' && selectedCategory && (
@@ -715,7 +667,17 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                     <ChevronDown className="w-5 h-5 rotate-90" />
                                 </button>
                             ) : (
-                                <button onClick={() => { setViewMode('categories'); setSelectedCategory(null); }} className="p-2 rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all flex items-center justify-center text-slate-500 hover:text-indigo-600">
+                                <button onClick={() => {
+                                    if (selectedCategory.parentId) {
+                                        const parent = categories.find(c => c.id === selectedCategory.parentId);
+                                        if (parent) {
+                                            setSelectedCategory(parent);
+                                            return;
+                                        }
+                                    }
+                                    setViewMode('categories');
+                                    setSelectedCategory(null);
+                                }} className="p-2 rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all flex items-center justify-center text-slate-500 hover:text-indigo-600">
                                     <ChevronDown className="w-5 h-5 rotate-90" />
                                 </button>
                             )}
@@ -745,9 +707,16 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                             </div>
                         </div>
                         {!expandedDate && (
-                            <button onClick={handleCreateScheduleClick} className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-full transition-colors shadow-sm cursor-pointer" style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}>
-                                <Plus className="w-4 h-4" /> {selectedCategory.label === 'Daily Schedule' ? 'Create New Schedule' : 'Create New List'}
-                            </button>
+                            <div className="flex gap-2">
+                                {canEdit && (
+                                    <button onClick={() => openAddCat(selectedCategory.id)} className="flex items-center gap-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 px-4 py-2 rounded-full transition-colors shadow-sm cursor-pointer border border-slate-200">
+                                        <Plus className="w-4 h-4" /> New Folder
+                                    </button>
+                                )}
+                                <button onClick={handleCreateScheduleClick} className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-full transition-colors shadow-sm cursor-pointer" style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}>
+                                    <Plus className="w-4 h-4" /> {selectedCategory.label === 'Daily Schedule' ? 'Create New Schedule' : 'Create New List'}
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -834,70 +803,117 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                     )}
 
                     {!expandedDate ? (
-                        <div className="space-y-4">
-                            {allPrograms.filter(p => selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).length === 0 ? (
-                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm text-center py-16">
-                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Calendar className="w-8 h-8 text-slate-300" />
+                        <div className="space-y-8">
+                            {/* Sub-Folders */}
+                            {categories.filter(c => c.parentId === selectedCategory.id).length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Folders inside {selectedCategory.label}</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {categories.filter(c => c.parentId === selectedCategory.id).map(cat => {
+                                            const IconComp = ICON_OPTIONS.find(o => o.name === cat.icon)?.icon || Music
+                                            return (
+                                                <div
+                                                    key={cat.id}
+                                                    onClick={() => handleCategoryClick(cat)}
+                                                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-200 transition-all cursor-pointer group"
+                                                >
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className={`w-12 h-12 ${cat.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                                                            <IconComp className={`w-6 h-6 ${cat.iconColor}`} />
+                                                        </div>
+                                                        {canEdit && (
+                                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button onClick={(e) => { e.stopPropagation(); openEditCat(cat) }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600">
+                                                                    <Edit className="w-4 h-4" />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); deleteCat(cat.id) }} className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600">
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <h4 className="text-base font-bold text-slate-900 mb-1">{cat.label}</h4>
+                                                    <p className="text-xs text-slate-500 line-clamp-2">{cat.description}</p>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
-                                    <h4 className="text-slate-900 font-medium mb-1">No lists found</h4>
-                                    <p className="text-sm text-slate-500">
-                                        {selectedCategory.label === 'Daily Schedule' ? 'Create your first daily schedule to get started.' : 'Create a list using the button above.'}
-                                    </p>
                                 </div>
-                            ) : (
-                                allPrograms.filter(p => selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).map(prog => (
-                                    <div
-                                        key={prog.id}
-                                        onClick={() => handleEditSchedule(prog)}
-                                        className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group animate-in fade-in zoom-in-95"
-                                    >
-                                        <div className="flex items-center justify-between p-5">
-                                            <div className="flex items-center gap-4">
-                                                {selectedCategory.label === 'Daily Schedule' ? (
-                                                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider">{new Date(prog.date + "T12:00:00").toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                        <span className="text-lg font-bold leading-none">{new Date(prog.date + "T12:00:00").getDate()}</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
-                                                        <FileText className="w-6 h-6 text-indigo-500" />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <h4 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-lg">
-                                                        {selectedCategory.label === 'Daily Schedule' ? (prog.program || 'Untitled Program') : prog.date}
-                                                    </h4>
-                                                    {selectedCategory.label === 'Daily Schedule' && (
-                                                        <p className="text-sm text-slate-500 line-clamp-1 mt-0.5">{prog.dailyTarget || 'No target set'}</p>
-                                                    )}
+                            )}
+
+                            {/* Lists block - Only show if there are actual lists OR if there are no subfolders (so the page isn't totally blank) */}
+                            {(allPrograms.filter(p => selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).length > 0 || categories.filter(c => c.parentId === selectedCategory.id).length === 0) && (
+                                <div>
+                                    {categories.filter(c => c.parentId === selectedCategory.id).length > 0 && (
+                                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Lists in this folder</h4>
+                                    )}
+                                    <div className="space-y-4">
+                                        {allPrograms.filter(p => selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).length === 0 ? (
+                                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm text-center py-16">
+                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <Calendar className="w-8 h-8 text-slate-300" />
                                                 </div>
+                                                <h4 className="text-slate-900 font-medium mb-1">No lists found</h4>
+                                                <p className="text-sm text-slate-500">
+                                                    {selectedCategory.label === 'Daily Schedule' ? 'Create your first daily schedule to get started.' : 'Create a list or sub-folder using the buttons above.'}
+                                                </p>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                {selectedCategory.label === 'Daily Schedule' && (
-                                                    <div className="text-right hidden sm:block mr-2">
-                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Time</p>
-                                                        <p className="text-sm font-medium text-slate-700">{prog.time || '—'}</p>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-2">
-                                                    {canEdit && (
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); deleteProgramHandler(prog.date, prog.categoryId); }}
-                                                            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-rose-100 transition-colors"
-                                                            title="Delete Schedule"
-                                                        >
-                                                            <Trash2 className="w-4 h-4 text-slate-300 hover:text-rose-500 transition-colors" />
-                                                        </button>
-                                                    )}
-                                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors border border-transparent group-hover:border-indigo-100">
-                                                        <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:-rotate-90 transition-all font-bold" />
+                                        ) : (
+                                            allPrograms.filter(p => selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).map(prog => (
+                                                <div
+                                                    key={prog.id}
+                                                    onClick={() => handleEditSchedule(prog)}
+                                                    className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group animate-in fade-in zoom-in-95"
+                                                >
+                                                    <div className="flex items-center justify-between p-5">
+                                                        <div className="flex items-center gap-4">
+                                                            {selectedCategory.label === 'Daily Schedule' ? (
+                                                                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
+                                                                    <span className="text-[10px] font-bold uppercase tracking-wider">{new Date(prog.date + "T12:00:00").toLocaleDateString('en-US', { month: 'short' })}</span>
+                                                                    <span className="text-lg font-bold leading-none">{new Date(prog.date + "T12:00:00").getDate()}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
+                                                                    <FileText className="w-6 h-6 text-indigo-500" />
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <h4 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-lg">
+                                                                    {selectedCategory.label === 'Daily Schedule' ? (prog.program || 'Untitled Program') : prog.date}
+                                                                </h4>
+                                                                {selectedCategory.label === 'Daily Schedule' && (
+                                                                    <p className="text-sm text-slate-500 line-clamp-1 mt-0.5">{prog.dailyTarget || 'No target set'}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            {selectedCategory.label === 'Daily Schedule' && (
+                                                                <div className="text-right hidden sm:block mr-2">
+                                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Time</p>
+                                                                    <p className="text-sm font-medium text-slate-700">{prog.time || '—'}</p>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex items-center gap-2">
+                                                                {canEdit && (
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); deleteProgramHandler(prog.date, prog.categoryId); }}
+                                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-rose-100 transition-colors"
+                                                                        title="Delete Schedule"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4 text-slate-300 hover:text-rose-500 transition-colors" />
+                                                                    </button>
+                                                                )}
+                                                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors border border-transparent group-hover:border-indigo-100">
+                                                                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:-rotate-90 transition-all font-bold" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
+                                            ))
+                                        )}
                                     </div>
-                                ))
+                                </div>
                             )}
                         </div>
                     ) : (
@@ -1100,6 +1116,55 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                                     style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
                                 >
                                     {savingSong ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Category Form Modal (Global) */}
+            {
+                showCatForm && (
+                    <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
+                            <h3 className="text-lg font-bold text-slate-800 mb-4">{editingCat ? 'Edit Category' : 'New Category'}</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Label</label>
+                                    <input value={catForm.label} onChange={e => setCatForm(p => ({ ...p, label: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="e.g. Daily Schedule" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Description</label>
+                                    <input value={catForm.description} onChange={e => setCatForm(p => ({ ...p, description: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="Brief description..." />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Icon</label>
+                                        <select value={catForm.icon} onChange={e => setCatForm(p => ({ ...p, icon: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                            {ICON_OPTIONS.map(o => <option key={o.name} value={o.name}>{o.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Color</label>
+                                        <select value={catForm.color} onChange={e => {
+                                            const opt = COLOR_OPTIONS.find(o => o.color === e.target.value)
+                                            setCatForm(p => ({ ...p, color: e.target.value, iconColor: opt?.iconColor || p.iconColor }))
+                                        }} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                            {COLOR_OPTIONS.map(o => <option key={o.color} value={o.color}>{o.label}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button onClick={() => setShowCatForm(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
+                                <button
+                                    onClick={() => saveCat()}
+                                    disabled={savingCat}
+                                    className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                                    style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
+                                >
+                                    {savingCat ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Category
                                 </button>
                             </div>
                         </div>

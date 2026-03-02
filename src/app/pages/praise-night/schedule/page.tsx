@@ -53,8 +53,10 @@ export default function SongSchedulePage() {
     const handleBack = () => {
         if (selectedDate) {
             setSelectedDate(null); // Just close the program/sub-list view
+        } else if (activeCatData?.parentId) {
+            setActiveCategory(activeCatData.parentId); // Go up one folder
         } else {
-            setActiveCategory(null); // Go back to the main categories list
+            setActiveCategory(null); // Go back to the main root list
         }
     };
 
@@ -101,7 +103,7 @@ export default function SongSchedulePage() {
                                     <p className="text-slate-400 text-sm">No schedule categories found.</p>
                                 </div>
                             ) : (
-                                categories.map((cat) => {
+                                categories.filter(c => !c.parentId).map((cat) => {
                                     const Icon = ICON_MAP[cat.icon] || Music;
                                     return (
                                         <div
@@ -199,49 +201,94 @@ export default function SongSchedulePage() {
                                             </div>
                                         )}
 
-                                        <h3 className={`text-sm font-bold text-slate-500 uppercase tracking-wider px-2 ${!isDailySchedule && activeCatData?.spreadsheetData ? 'mt-8' : ''}`}>
-                                            {isDailySchedule ? 'Select a Date' : 'Additional Lists'}
-                                        </h3>
-
-                                        <div className="flex flex-col gap-3">
-                                            {allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).length === 0 ? (
-                                                <div className="py-12 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
-                                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                        {isDailySchedule ? <Calendar className="w-8 h-8 text-slate-300" /> : <FileText className="w-8 h-8 text-slate-300" />}
-                                                    </div>
-                                                    <p className="text-slate-400 text-sm">
-                                                        {isDailySchedule ? 'No scheduled dates found.' : 'No additional lists found.'}
-                                                    </p>
+                                        {/* Nested Sub-categories */}
+                                        {categories.filter(c => c.parentId === activeCategory).length > 0 && (
+                                            <div className="mb-6 animate-in fade-in slide-in-from-bottom-2">
+                                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider px-2 mb-3">Folders</h3>
+                                                <div className="flex flex-col gap-3">
+                                                    {categories.filter(c => c.parentId === activeCategory).map((cat) => {
+                                                        const Icon = ICON_MAP[cat.icon] || Music;
+                                                        return (
+                                                            <div
+                                                                key={cat.id}
+                                                                onClick={() => handleCategoryClick(cat.id)}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                className="bg-white rounded-2xl p-3 shadow-sm border border-gray-300 hover:shadow-lg transition-all duration-300 active:scale-[0.97] group w-full cursor-pointer"
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-3 text-left">
+                                                                        <div className={`w-10 h-10 ${cat.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm`}>
+                                                                            <Icon className={`w-4 h-4 ${cat.iconColor}`} />
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <h3 className="font-medium text-slate-900 text-sm group-hover:text-black leading-tight">
+                                                                                {cat.label}
+                                                                            </h3>
+                                                                            <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                                                                                {cat.description}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                                                                        <ChevronRight className="w-3 h-3 text-slate-500" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            ) : (
-                                                allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).map((p) => (
-                                                    <div
-                                                        key={p.id}
-                                                        onClick={() => handleDateSelect(p.date, isDailySchedule ? undefined : activeCategory!)}
-                                                        className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98] shadow-sm animate-in fade-in zoom-in-95"
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors shadow-inner">
-                                                                {isDailySchedule ? <Calendar className="w-6 h-6 text-purple-600" /> : <FileText className="w-6 h-6 text-purple-600" />}
+                                            </div>
+                                        )}
+
+                                        {/* Only show "Additional Lists" section if there are actually lists, OR if there are no subfolders (so they don't see a blank page) */}
+                                        {(allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).length > 0 || categories.filter(c => c.parentId === activeCategory).length === 0) && (
+                                            <>
+                                                <h3 className={`text-sm font-bold text-slate-500 uppercase tracking-wider px-2 ${(!isDailySchedule && activeCatData?.spreadsheetData) || categories.filter(c => c.parentId === activeCategory).length > 0 ? 'mt-8' : ''}`}>
+                                                    {isDailySchedule ? 'Select a Date' : 'Additional Lists'}
+                                                </h3>
+
+                                                <div className="flex flex-col gap-3">
+                                                    {allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).length === 0 ? (
+                                                        <div className="py-12 text-center bg-white/50 rounded-3xl border border-dashed border-slate-200">
+                                                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                                {isDailySchedule ? <Calendar className="w-8 h-8 text-slate-300" /> : <FileText className="w-8 h-8 text-slate-300" />}
                                                             </div>
-                                                            <div>
-                                                                <h4 className="font-bold text-slate-900 text-lg group-hover:text-purple-700 transition-colors">
-                                                                    {isDailySchedule ? (p.program || 'Song Schedule') : p.date}
-                                                                </h4>
-                                                                {isDailySchedule && (
-                                                                    <p className="text-xs text-slate-500 font-medium">
-                                                                        {new Date(p.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                                                                    </p>
-                                                                )}
+                                                            <p className="text-slate-400 text-sm">
+                                                                {isDailySchedule ? 'No scheduled dates found.' : 'No additional lists found.'}
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).map((p) => (
+                                                            <div
+                                                                key={p.id}
+                                                                onClick={() => handleDateSelect(p.date, isDailySchedule ? undefined : activeCategory!)}
+                                                                className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98] shadow-sm animate-in fade-in zoom-in-95"
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors shadow-inner">
+                                                                        {isDailySchedule ? <Calendar className="w-6 h-6 text-purple-600" /> : <FileText className="w-6 h-6 text-purple-600" />}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="font-bold text-slate-900 text-lg group-hover:text-purple-700 transition-colors">
+                                                                            {isDailySchedule ? (p.program || 'Song Schedule') : p.date}
+                                                                        </h4>
+                                                                        {isDailySchedule && (
+                                                                            <p className="text-xs text-slate-500 font-medium">
+                                                                                {new Date(p.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-purple-50 transition-colors">
+                                                                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-purple-50 transition-colors">
-                                                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -27,6 +27,7 @@ export interface ScheduleCategory {
     iconColor: string   // tailwind text class e.g. "text-purple-600"
     order: number
     isActive: boolean
+    parentId?: string   // For nested folders/categories
     createdAt: string
     updatedAt: string
     createdBy: string
