@@ -32,13 +32,17 @@ export function AudioLabSongDetailModal({
 
     if (!isOpen) return null;
 
-    const availableParts = song.availableParts || (song.audioUrls ? Object.keys(song.audioUrls) as VocalPart[] : ['full']);
+    const availableParts: VocalPart[] = (song.availableParts && song.availableParts.length > 0)
+        ? song.availableParts
+        : (song.audioUrls
+            ? Object.keys(song.audioUrls).filter(k => !!song.audioUrls![k]) as VocalPart[]
+            : ['full']);
 
     const handlePlayPart = (part: VocalPart) => {
-        // Full Mix = main audio file, other parts = vocal parts from audioUrls (S/A/T/B + custom)
+        // Full Mix = main audio file from song.audioUrl or audioUrls.full
         const audioUrl = part === 'full'
-            ? song.audioUrl // Main audio file
-            : song.audioUrls?.[part]; // Vocal part from audioUrls
+            ? (song.audioUrl || song.audioUrls?.full)
+            : song.audioUrls?.[part];
 
         if (!audioUrl) return;
 

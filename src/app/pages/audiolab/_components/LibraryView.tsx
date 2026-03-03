@@ -124,15 +124,22 @@ export function LibraryView() {
       }
     }
 
+    const mergedAudioUrls = {
+      full: pnSong.audioFile || '',
+      ...(pnSong.audioUrls || {})
+    };
+
+    const availableParts = Object.keys(mergedAudioUrls).filter(
+      key => !!(mergedAudioUrls as any)[key]
+    );
+
     return {
       id: pnSong.id || `pn-${Math.random()}`, // Ensure ID
       title: pnSong.title,
       artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
       duration: 300,
-      audioUrls: {
-        full: pnSong.audioFile || ''
-      },
-      availableParts: pnSong.audioFile ? ['full'] : [],
+      audioUrls: mergedAudioUrls,
+      availableParts: availableParts,
       genre: pnSong.category || 'Praise Night',
       key: pnSong.key || '',
       tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,

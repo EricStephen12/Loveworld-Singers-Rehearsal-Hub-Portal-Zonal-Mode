@@ -876,24 +876,35 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
           try {
             const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
             const pnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
-            return pnSongs.map((pnSong: any) => ({
-              id: pnSong.id as string,
-              title: pnSong.title || 'Untitled',
-              artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
-              duration: 300,
-              audioUrls: { full: pnSong.audioFile || '' },
-              availableParts: (pnSong.audioFile ? ['full'] : []) as any[],
-              genre: pnSong.category || 'Praise Night',
-              key: pnSong.key || '',
-              tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
-              albumArt: '',
-              lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as any[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
-              zoneId: zoneId,
-              isHQSong: false,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              createdBy: 'system'
-            }));
+            return pnSongs.map((pnSong: any) => {
+              const mergedAudioUrls = {
+                full: pnSong.audioFile || '',
+                ...(pnSong.audioUrls || {})
+              };
+
+              const availableParts = Object.keys(mergedAudioUrls).filter(
+                key => !!(mergedAudioUrls as any)[key]
+              );
+
+              return {
+                id: pnSong.id as string,
+                title: pnSong.title || 'Untitled',
+                artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
+                duration: 300,
+                audioUrls: mergedAudioUrls,
+                availableParts: availableParts as any[],
+                genre: pnSong.category || 'Praise Night',
+                key: pnSong.key || '',
+                tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
+                albumArt: '',
+                lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as any[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
+                zoneId: zoneId,
+                isHQSong: false,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                createdBy: 'system'
+              };
+            });
           } catch (e) {
             console.error('[AudioLabContext] Failed to fetch PN songs:', e);
             return [];

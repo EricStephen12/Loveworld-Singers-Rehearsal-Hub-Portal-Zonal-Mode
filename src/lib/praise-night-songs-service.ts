@@ -138,6 +138,9 @@ export class PraiseNightSongsService {
         isActive: songData.isActive || false,
         mediaId: songData.mediaId || null,
         zoneId: zoneId || '',
+        audioUrls: songData.audioUrls || {},
+        customParts: songData.customParts || [],
+        availableParts: songData.availableParts || [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       }
