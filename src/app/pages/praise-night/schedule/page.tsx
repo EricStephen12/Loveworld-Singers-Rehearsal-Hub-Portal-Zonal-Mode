@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import {
@@ -39,7 +39,17 @@ export default function SongSchedulePage() {
     }, [activeCategory, loadSongsForCategory]);
 
     const activeCatData = categories.find(c => c.id === activeCategory);
-    const isDailySchedule = activeCatData?.label.toLowerCase().includes('daily');
+
+    const isDailySchedule = useMemo(() => {
+        if (!activeCategory || !categories.length) return false;
+        let current = categories.find(c => c.id === activeCategory);
+        while (current) {
+            if (current.label.toLowerCase().includes('daily')) return true;
+            if (!current.parentId) break;
+            current = categories.find(c => c.id === current!.parentId);
+        }
+        return false;
+    }, [activeCategory, categories]);
 
     const handleCategoryClick = (id: string) => {
         setActiveCategory(id);
@@ -262,7 +272,7 @@ export default function SongSchedulePage() {
                                                         allPrograms.filter(p => isDailySchedule ? (!p.categoryId || p.categoryId === activeCatData?.id) : p.categoryId === activeCategory).map((p) => (
                                                             <div
                                                                 key={p.id}
-                                                                onClick={() => handleDateSelect(p.date, isDailySchedule ? undefined : activeCategory!)}
+                                                                onClick={() => handleDateSelect(p.date, isDailySchedule ? p.categoryId : activeCategory!)}
                                                                 className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all cursor-pointer group active:scale-[0.98] shadow-sm animate-in fade-in zoom-in-95"
                                                             >
                                                                 <div className="flex items-center gap-4">
