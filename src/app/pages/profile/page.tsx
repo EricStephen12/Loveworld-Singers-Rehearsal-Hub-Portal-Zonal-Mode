@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown } from 'lucide-react'
+import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown, Scan, Clock } from 'lucide-react'
 
 import { ScreenHeader } from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
@@ -23,6 +23,8 @@ import { isZoneLeader, isBoss } from '@/lib/user-role-utils'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { isHQGroup } from '@/config/zones'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import QRCode from 'qrcode'
+import { AttendanceService } from '@/lib/attendance-service'
 
 // Helper function to adjust color brightness for gradient
 const adjustColor = (color: string, amount: number) => {
@@ -73,6 +75,50 @@ function ProfilePage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{ progress: number; stage: string; message: string }>({ progress: 0, stage: '', message: '' })
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+
+  // QR Code State
+  const [qrCodeToken, setQrCodeToken] = useState<string>('')
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
+  const [qrTimeLeft, setQrTimeLeft] = useState<number>(300) // 5 minutes in seconds
+
+  // Generate and rotate QR code
+  useEffect(() => {
+    if (!user?.uid) return
+
+    const generateQR = async () => {
+      try {
+        const token = AttendanceService.generateAttendanceQR(user.uid)
+        setQrCodeToken(token)
+        const dataUrl = await QRCode.toDataURL(token, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#4c1d95', // purple-900
+            light: '#ffffff'
+          }
+        })
+        setQrCodeDataUrl(dataUrl)
+        setQrTimeLeft(300) // Reset timer to 5 mins
+      } catch (err) {
+        console.error('Failed to generate QR:', err)
+      }
+    }
+
+    generateQR()
+
+    // Update token every 5 minutes
+    const tokenInterval = setInterval(generateQR, 300000)
+
+    // Update countdown every second
+    const countdownInterval = setInterval(() => {
+      setQrTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => {
+      clearInterval(tokenInterval)
+      clearInterval(countdownInterval)
+    }
+  }, [user?.uid])
 
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
@@ -1422,7 +1468,44 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* QR Code Check-in - Collapsible */}
+          {/* QR Code Check-in */}
+          <div className="px-4 mt-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Attendance Scan</h3>
+                </div>
+                <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center">
+                  <Scan className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+
+              <div className="p-6 flex flex-col items-center justify-center">
+                {qrCodeDataUrl ? (
+                  <div className="relative">
+                    <div className="p-3 bg-white border-2 border-gray-100 rounded-2xl shadow-sm">
+                      <img src={qrCodeDataUrl} alt="Attendance QR Code" className="w-48 h-48 object-contain" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-48 h-48 bg-gray-50 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200">
+                    <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+                  </div>
+                )}
+
+                <div className="mt-5 text-center">
+                  <div className="inline-flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Code Refreshes In</span>
+                    <div className="flex items-center gap-1.5 text-sm font-mono font-bold text-gray-700 bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 shadow-inner">
+                      <Clock className="w-4 h-4 text-purple-600" />
+                      {Math.floor(qrTimeLeft / 60)}:{(qrTimeLeft % 60).toString().padStart(2, '0')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Recent Attendance - Collapsible */}
           <div className="px-4 mt-2">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">

@@ -241,16 +241,37 @@ export class SessionManager {
 
     // Real-time listener (Push Model - Industry Standard)
     // This is NOT polling. It waits for the server to say "Change happened".
-    const unsubscribe = onSnapshot(sessionRef, { includeMetadataChanges: true }, (doc) => {
+    const unsubscribe = onSnapshot(sessionRef, { includeMetadataChanges: true }, async (docSnap) => {
       // Ignore local writes (latency compensation)
-      if (doc.metadata.hasPendingWrites) return
+      if (docSnap.metadata.hasPendingWrites) return
 
-      if (doc.exists()) {
-        const data = doc.data() as UserSession
+      if (docSnap.exists()) {
+        const data = docSnap.data() as UserSession
 
         // The "Highlander" Check (UUID Version - stronger than DeviceID)
         // If the DB says "Session is X" and I am "Session Y", I am dead.
         if (data.sessionId && data.sessionId !== this.sessionId) {
+
+          // EXCEPTION CHECK: Allow OFTP and President zones to have multiple concurrent sessions
+          try {
+            // Dynamically import to avoid circular dependency
+            const { getDoc, doc } = await import('firebase/firestore')
+            const profileRef = doc(db, 'profiles', userId)
+            const profileSnap = await getDoc(profileRef)
+
+            if (profileSnap.exists()) {
+              const profile = profileSnap.data()
+              const exceptionZones = ['zone-president', 'zone-oftp']
+
+              if (profile.zone && exceptionZones.includes(profile.zone)) {
+                console.log(`[Session] 🛡️ Exception granted for ${profile.zone}. Allowing multiple sessions.`)
+                return // Bypass termination
+              }
+            }
+          } catch (e) {
+            console.error('[Session] ⚠️ Exception check failed:', e)
+          }
+
           console.warn(`[Session] ❌ Session ID Mismatch! Active=${data.sessionId} vs Me=${this.sessionId}`)
           this.handleSessionTermination()
         }

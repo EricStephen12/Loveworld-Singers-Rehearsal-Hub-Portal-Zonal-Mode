@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabase-client'
+﻿import { FirebaseDatabaseService } from './firebase-database'
 
 export interface AttendanceRecord {
   id?: string
@@ -22,43 +22,82 @@ export class AttendanceService {
         return { success: false, message: 'Invalid or expired QR code' }
       }
 
-            const today = new Date().toISOString().split('T')[0]
-      const { data: existingRecord, error: checkError } = await supabase
-        .from('attendance')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('event_name', eventName)
-        .gte('check_in_time', `${today}T00:00:00`)
-        .lte('check_in_time', `${today}T23:59:59`)
-        .single()
+      // Ensure the QR code was generated for THIS user (admin uses the scanner, but userId is extracted from the QR)
+      const scannedUserId = qrData.userId
+      if (!scannedUserId) {
+        return { success: false, message: 'Invalid QR code format' }
+      }
 
-      if (existingRecord) {
-        return { success: false, message: 'You have already checked in for this event today' }
+      const today = new Date().toISOString().split('T')[0]
+      // Get today's attendance records for the scanned user
+      const todayStart = new Date(`${today}T00:00:00`).getTime()
+
+      const existingRecords = await FirebaseDatabaseService.getCollectionWhere(
+        'attendance',
+        'user_id',
+        '==',
+        scannedUserId
+      )
+
+      // Filter for today AND same event
+      const alreadyCheckedIn = existingRecords.some((record: any) => {
+        if (record.event_name !== eventName) return false
+
+        let recordTime = 0
+        if (record.check_in_time) {
+          recordTime = new Date(record.check_in_time).getTime()
+        } else if (record.createdAt) {
+          // Fallback to Firestore createdAt if available
+          recordTime = new Date(record.createdAt).getTime()
+        }
+
+        return recordTime >= todayStart
+      })
+
+      if (alreadyCheckedIn) {
+        return { success: false, message: 'This user has already checked in for this event today' }
       }
 
       // Create attendance record
-      const attendanceRecord: Omit<AttendanceRecord, 'id' | 'created_at'> = {
-        user_id: userId,
+      const checkInTime = new Date().toISOString()
+      const status = this.determineStatus()
+      const attendanceData = {
+        user_id: scannedUserId,
         event_type: 'rehearsal',
         event_name: eventName,
-        check_in_time: new Date().toISOString(),
+        check_in_time: checkInTime,
         qr_code_used: qrCode,
-        status: this.determineStatus(),
-        notes: 'Checked in via QR code'
+        status: status,
+        notes: 'Checked in via QR code',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
 
-      const { data, error } = await supabase
-        .from('attendance')
-        .insert(attendanceRecord)
-        .select()
-        .single()
+      const result = await FirebaseDatabaseService.addDocument('attendance', attendanceData)
 
-      if (error) throw error
+      if (!result.success) {
+        throw new Error('Failed to save to database')
+      }
 
-      return { 
-        success: true, 
-        message: 'Successfully checked in!', 
-        record: data 
+      // Format response exactly as frontend expects
+      const newRecord: AttendanceRecord = {
+        id: result.id,
+        user_id: scannedUserId,
+        event_type: 'rehearsal',
+        event_name: eventName,
+        check_in_time: checkInTime,
+        qr_code_used: qrCode,
+        status: status,
+        notes: 'Checked in via QR code',
+        created_at: checkInTime
+      }
+
+      const fullName = await this.getUserFullName(scannedUserId)
+
+      return {
+        success: true,
+        message: `Successfully checked in ${fullName}`,
+        record: newRecord
       }
     } catch (error) {
       console.error('Check-in error:', error)
@@ -66,18 +105,42 @@ export class AttendanceService {
     }
   }
 
-  // Get user's attendance history
-  static async getUserAttendance(userId: string, limit: number = 10): Promise<AttendanceRecord[]> {
+  // Helper method to fetch and format user's full name
+  public static async getUserFullName(userId: string): Promise<string> {
     try {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('*')
-        .eq('user_id', userId)
-        .order('check_in_time', { ascending: false })
-        .limit(limit)
+      const profile = await FirebaseDatabaseService.getDocument('profiles', userId) as any
+      if (profile) {
+        const first = profile.first_name || profile.firstName || ''
+        const last = profile.last_name || profile.lastName || ''
+        if (first || last) {
+          return `${first} ${last}`.trim()
+        }
+      }
+      return 'Member'
+    } catch (error) {
+      console.error('Error fetching user profile for attendance:', error)
+      return 'Member'
+    }
+  }
 
-      if (error) throw error
-      return data || []
+  // Get user's attendance history
+  static async getUserAttendance(userId: string, limitCount: number = 10): Promise<AttendanceRecord[]> {
+    try {
+      const records = await FirebaseDatabaseService.getCollectionWhere(
+        'attendance',
+        'user_id',
+        '==',
+        userId
+      )
+
+      // Sort by check_in_time descending
+      const sorted = records.sort((a: any, b: any) => {
+        const timeA = new Date(a.check_in_time || a.created_at || 0).getTime()
+        const timeB = new Date(b.check_in_time || b.created_at || 0).getTime()
+        return timeB - timeA
+      })
+
+      return sorted.slice(0, limitCount) as AttendanceRecord[]
     } catch (error) {
       console.error('Get attendance error:', error)
       return []
@@ -86,31 +149,40 @@ export class AttendanceService {
 
   // Generate QR code for attendance
   static generateAttendanceQR(userId: string): string {
-    const timestamp = Math.floor(Date.now() / 300000) // Changes every 5 minutes instead of 1 minute
+    const timestamp = Math.floor(Date.now() / 300000) // Changes every 5 minutes (300,000 ms)
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-    return `LW-ATTEND-${userId.slice(0, 8).toUpperCase()}-${timestamp}-${randomCode}`
+    // Changed: Include the FULL userId so we don't corrupt the database reference
+    return `LW-ATTEND-${userId}-${timestamp}-${randomCode}`
   }
 
   // Parse and validate QR code
-  private static parseQRCode(qrCode: string): { isValid: boolean; userId?: string; timestamp?: number } {
+  static parseQRCode(qrCode: string): { isValid: boolean; userId?: string; timestamp?: number } {
     try {
       const parts = qrCode.split('-')
-      if (parts.length !== 4 || parts[0] !== 'LW' || parts[1] !== 'ATTEND') {
+      // Format: LW-ATTEND-{userId}-{timestamp}-{randomCode}
+      // Note: userId can contain hyphens! Reconstruct the userId from parts [2] up to parts.length - 2
+      if (parts.length < 5 || parts[0] !== 'LW' || parts[1] !== 'ATTEND') {
         return { isValid: false }
       }
 
-      const timestamp = parseInt(parts[2])
-      const currentTime = Math.floor(Date.now() / 300000)
-      
-      // QR code expires after 5 minutes
-      if (currentTime - timestamp > 1) {
+      const timestampPart = parts[parts.length - 2]
+      const timestamp = parseInt(timestampPart)
+
+      // Reconstruct user ID (everything between ATTEND and timestamp)
+      const userIdParts = parts.slice(2, parts.length - 2)
+      const userId = userIdParts.join('-')
+
+      const currentTimeWindow = Math.floor(Date.now() / 300000)
+
+      // QR code expires after 5 minutes (allow 1 window of wiggle room for cross-boundary scans)
+      if (Math.abs(currentTimeWindow - timestamp) > 1) {
         return { isValid: false }
       }
 
-      return { 
-        isValid: true, 
-        userId: parts[2], 
-        timestamp 
+      return {
+        isValid: true,
+        userId: userId,
+        timestamp
       }
     } catch {
       return { isValid: false }
@@ -121,27 +193,29 @@ export class AttendanceService {
   private static determineStatus(): 'present' | 'late' | 'absent' {
     const now = new Date()
     const hour = now.getHours()
-    
-    // Assuming rehearsals start at 9 AM
-    if (hour < 9) return 'present'
-    if (hour < 10) return 'late'
+
+    // Assuming rehearsals start at 9 PM (21) locally for testing?
+    // Let's standardise simple fallback logic for now, or adapt later.
+    // E.g. anything before 10 PM is Present, 10 PM is late, after is absent
+    if (hour < 21) return 'present'
+    if (hour === 21) return 'late'
     return 'absent'
   }
 
   // Get attendance statistics
   static async getAttendanceStats(userId: string): Promise<{ total: number; present: number; late: number; absent: number; rate: number }> {
     try {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('status')
-        .eq('user_id', userId)
+      const records = await FirebaseDatabaseService.getCollectionWhere(
+        'attendance',
+        'user_id',
+        '==',
+        userId
+      )
 
-      if (error) throw error
-
-      const total = data?.length || 0
-      const present = data?.filter(r => r.status === 'present').length || 0
-      const late = data?.filter(r => r.status === 'late').length || 0
-      const absent = data?.filter(r => r.status === 'absent').length || 0
+      const total = records.length || 0
+      const present = records.filter((r: any) => r.status === 'present').length || 0
+      const late = records.filter((r: any) => r.status === 'late').length || 0
+      const absent = records.filter((r: any) => r.status === 'absent').length || 0
       const rate = total > 0 ? Math.round((present / total) * 100) : 0
 
       return { total, present, late, absent, rate }
