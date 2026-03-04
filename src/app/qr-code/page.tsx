@@ -5,12 +5,14 @@ import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { AttendanceService } from '@/lib/attendance-service'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import jsQR from 'jsqr'
 
 type ScanStatus = 'idle' | 'processing' | 'success' | 'failed'
 
 export default function QRScannerPage() {
   const { user } = useAuth()
+  const { isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading } = useZone()
   const router = useRouter()
 
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
@@ -23,11 +25,15 @@ export default function QRScannerPage() {
   const lastScanTimeRef = useRef<number>(0)
   const statusRef = useRef<ScanStatus>('idle') // Ref for sync in anim frame
 
-  // Auto-start camera
+  // Auto-start camera when authorized
   useEffect(() => {
-    startCamera()
+    if (!zoneLoading) {
+      if (isSuperAdmin || isZoneCoordinator) {
+        startCamera()
+      }
+    }
     return () => stopCamera()
-  }, [])
+  }, [zoneLoading, isSuperAdmin, isZoneCoordinator])
 
   // Sync state to ref for the animation loop
   useEffect(() => {
@@ -160,6 +166,32 @@ export default function QRScannerPage() {
   const handleBack = () => {
     stopCamera()
     router.back()
+  }
+
+  // Handle loading state
+  if (zoneLoading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  // Handle unauthorized state
+  if (!isSuperAdmin && !isZoneCoordinator) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 p-6 text-center">
+        <XCircle className="w-16 h-16 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+        <p className="text-gray-400 mb-8">You must be an Admin or Zone Coordinator to access the attendance scanner.</p>
+        <button
+          onClick={handleBack}
+          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-white font-medium transition-colors border border-white/10"
+        >
+          Go Back
+        </button>
+      </div>
+    )
   }
 
   return (
