@@ -188,6 +188,10 @@ const initialState: AudioLabState = {
 function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLabState {
   switch (action.type) {
     case 'SET_VIEW':
+      // Prevent redundant view sets from destroying the previousView history
+      if (state.currentView === action.payload) {
+        return state;
+      }
       return {
         ...state,
         previousView: state.currentView,
@@ -197,7 +201,7 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
     case 'GO_BACK':
       return {
         ...state,
-        currentView: state.previousView || 'library',
+        currentView: state.previousView || 'home', // Default to AudioLab Home not Library
         previousView: null,
       };
 
@@ -531,14 +535,14 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       params.delete('project');
     }
 
-    if (roomId || state.session.currentSession?.id) {
-      params.set('roomId', roomId || state.session.currentSession!.id);
+    if (roomId || stateRef.current.session.currentSession?.id) {
+      params.set('roomId', roomId || stateRef.current.session.currentSession!.id);
     } else {
       params.delete('roomId');
     }
 
-    if (songTitle || state.player.currentSong?.title) {
-      params.set('song', songTitle || state.player.currentSong!.title);
+    if (songTitle || stateRef.current.player.currentSong?.title) {
+      params.set('song', songTitle || stateRef.current.player.currentSong!.title);
     } else {
       params.delete('song');
     }
@@ -550,7 +554,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     if (newUrl !== currentUrl) {
       router.replace(newUrl); // Use replace for sub-view changes to avoid cluttering history
     }
-  }, [router, searchParams, state.player.currentSong?.title, state.session.currentSession?.id]);
+  }, [router, searchParams]);
 
   // ============================================
   // AUDIO ENGINE SETUP
@@ -614,12 +618,17 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
   const setView = useCallback((view: ViewType) => {
     dispatch({ type: 'SET_VIEW', payload: view });
-    updateUrl(view, state.currentProjectId, state.session.currentSession?.id, state.player.currentSong?.title);
-  }, [updateUrl, state.currentProjectId, state.session.currentSession?.id, state.player.currentSong?.title]);
+    updateUrl(view, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, stateRef.current.player.currentSong?.title);
+  }, [updateUrl]);
 
   const goBack = useCallback(() => {
     dispatch({ type: 'GO_BACK' });
-  }, []);
+    // We must update the URL to reflect the new state, otherwise Next.js 
+    // router will be out of sync with our internal context State.
+    setTimeout(() => {
+      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, stateRef.current.player.currentSong?.title);
+    }, 0);
+  }, [updateUrl]);
 
   const playSong = useCallback(async (song: Song | AudioLabSong) => {
     try {
@@ -638,8 +647,8 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'PLAY_SONG', payload: legacySong });
       dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: true, target: 'full' } });
 
-      // Update URL with song info
-      updateUrl(state.currentView, state.currentProjectId, state.session.currentSession?.id, legacySong.title);
+      // Update URL with song info using completely fresh state ref
+      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, legacySong.title);
 
       // Load audio
 

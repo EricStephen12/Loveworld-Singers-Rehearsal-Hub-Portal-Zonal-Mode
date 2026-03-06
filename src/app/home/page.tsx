@@ -21,6 +21,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 import { useFeatureTracking } from '@/hooks/useAnalyticsTracking'
+import { isHQAdminEmail } from '@/config/roles'
 
 function HomePageContent() {
   const router = useRouter()
@@ -32,13 +33,7 @@ function HomePageContent() {
   const isBoss = profile?.role === 'boss' || profile?.email?.toLowerCase().startsWith('boss')
 
   // Simple HQ Admin check
-  const isHQAdmin = profile?.email && [
-    'ihenacho23@gmail.com',
-    'ephraimloveworld1@gmail.com',
-    'takeshopstores@gmail.com',
-    'nnennawealth@gmail.com',
-    'joykures@gmail.com'
-  ].includes(profile.email.toLowerCase())
+  const isHQAdmin = profile?.email && isHQAdminEmail(profile.email)
 
   const { currentZone, isLoading: zoneLoading, isZoneCoordinator, refreshZones } = useZone()
   const { hasFeature } = useSubscription()

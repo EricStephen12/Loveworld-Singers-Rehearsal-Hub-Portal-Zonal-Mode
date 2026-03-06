@@ -318,6 +318,7 @@ class AudioEngine {
   private stopSource(): void {
     if (this.sourceNode) {
       try {
+        this.sourceNode.onended = null;
         this.sourceNode.stop();
         this.sourceNode.disconnect();
       } catch (e) {

@@ -7,10 +7,12 @@ import dynamic from 'next/dynamic';
 import { FileText } from "lucide-react";
 import CustomLoader from '@/components/CustomLoader';
 
+// Types
 import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { useAdminData } from '../../hooks/useAdminData';
 import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
+import { isHQAdminEmail } from '@/config/roles';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 import { logAdminAction } from '@/lib/admin-activity-logger';
@@ -43,6 +45,7 @@ const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), 
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
 const ScheduleManagerSection = dynamic(() => import('../../components/admin/ScheduleManagerSection'), { ssr: false });
+const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -79,13 +82,7 @@ function AdminContent() {
     }
   }, [user, profile, currentZone]);
 
-  const isHQAdmin = Boolean(profile?.email && [
-    'ihenacho23@gmail.com',
-    'ephraimloveworld1@gmail.com',
-    'takeshopstores@gmail.com',
-    'nnennawealth@gmail.com',
-    'joykures@gmail.com'
-  ].includes(profile.email.toLowerCase()))
+  const isHQAdmin = Boolean(profile?.email && isHQAdminEmail(profile.email))
 
   const isRestrictedAdmin = profile?.email?.toLowerCase() === 'joykures@gmail.com'
 
@@ -381,13 +378,7 @@ function AdminContent() {
       return
     }
 
-    const isHQAdminCheck = Boolean(profile?.email && [
-      'ihenacho23@gmail.com',
-      'ephraimloveworld1@gmail.com',
-      'takeshopstores@gmail.com',
-      'nnennawealth@gmail.com',
-      'joykures@gmail.com'
-    ].includes(profile.email.toLowerCase()))
+    const isHQAdminCheck = Boolean(profile?.email && isHQAdminEmail(profile.email))
 
     // Give a small delay to ensure zone role is properly loaded from cache
     const checkAccess = () => {
@@ -1789,6 +1780,7 @@ function AdminContent() {
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
           {activeSection === 'Support Chat' && isHQAdmin && !isRestrictedAdmin && <SupportChatSection />}
           {activeSection === 'Schedule Manager' && !isRestrictedAdmin && <ScheduleManagerSection allSongs={allSongs} />}
+          {activeSection === 'Karaoke Config' && !isRestrictedAdmin && <KaraokeConfigSection />}
         </div>
 
         {/* Modals */}

@@ -100,6 +100,7 @@ export async function saveLyricsToSong(
 export async function getSongLyrics(songId: string): Promise<{
   lyrics: LyricLine[] | null;
   lyricsText: string | null;
+  karaokeLrcText: string | null;
   hasSyncedLyrics: boolean;
 }> {
   try {
@@ -112,6 +113,7 @@ export async function getSongLyrics(songId: string): Promise<{
       return {
         lyrics: data.syncedLyrics || data.lyrics || null,
         lyricsText: data.lyricsText || (typeof data.lyrics === 'string' ? data.lyrics : null),
+        karaokeLrcText: data.karaokeLrcText || null,
         hasSyncedLyrics: !!(data.syncedLyrics && data.syncedLyrics.length > 0),
       };
     }
@@ -147,14 +149,65 @@ export async function getSongLyrics(songId: string): Promise<{
       return {
         lyrics,
         lyricsText,
+        karaokeLrcText: data.karaokeLrcText || null,
         hasSyncedLyrics: !!(lyrics && lyrics.length > 0),
       };
     }
 
-    return { lyrics: null, lyricsText: null, hasSyncedLyrics: false };
+    return { lyrics: null, lyricsText: null, karaokeLrcText: null, hasSyncedLyrics: false };
   } catch (error) {
     console.error('[LyricsService] Error getting lyrics:', error);
-    return { lyrics: null, lyricsText: null, hasSyncedLyrics: false };
+    return { lyrics: null, lyricsText: null, karaokeLrcText: null, hasSyncedLyrics: false };
+  }
+}
+
+/**
+ * Save raw LRC text specifically for the dedicated Karaoke view
+ * Bypasses the standard lyrics processing to prevent format corruption
+ */
+export async function saveKaraokeLrcText(songId: string, lrcText: string): Promise<boolean> {
+  try {
+    // Try master first since that's where most official songs live
+    let songRef = doc(db, 'master_songs', songId);
+    let docSnap = await getDoc(songRef);
+
+    if (!docSnap.exists()) {
+      // Fallback to audiolab_songs if not in master
+      songRef = doc(db, 'audiolab_songs', songId);
+      docSnap = await getDoc(songRef);
+    }
+
+    if (!docSnap.exists()) {
+      throw new Error("Song not found in any library");
+    }
+
+    // Attempt to parse to see if it's valid, but save it regardless so users can fix it later
+    let hasSyncedLyrics = false;
+    let syncedLyrics: LyricLine[] | undefined;
+
+    if (lrcText && lrcText.trim().length > 0) {
+      const parsed = parseLRCLyrics(lrcText);
+      if (parsed.length > 0) {
+        hasSyncedLyrics = true;
+        syncedLyrics = parsed;
+      }
+    }
+
+    const payload: any = {
+      karaokeLrcText: lrcText,
+      lyricsUpdatedAt: new Date(),
+    };
+
+    if (hasSyncedLyrics && syncedLyrics) {
+      payload.hasSyncedLyrics = true;
+      payload.syncedLyrics = syncedLyrics;
+    }
+
+    await updateDoc(songRef, payload);
+    return true;
+  } catch (error) {
+    console.error('[LyricsService] Error saving karaoke LRC text:', error);
+    return false;
   }
 }
 

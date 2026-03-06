@@ -23,11 +23,11 @@ const practiceCards: (PracticeCard & { available: boolean; needsSong?: boolean }
   {
     id: 'karaoke',
     title: 'Karaoke Mode',
-    description: 'Coming soon',
+    description: 'Sing with synced lyrics',
     icon: Mic,
     iconColor: 'text-violet-500',
     hoverGradient: 'from-violet-500/20',
-    available: false,
+    available: true,
     needsSong: true,
   },
   {
@@ -83,10 +83,10 @@ export function PracticeView() {
 
   const handlePracticeStart = (mode: PracticeMode) => {
     if (mode === 'warmup') {
-      // Navigate to warm-up view
       setView('warmup');
+    } else if (mode === 'karaoke') {
+      setView('karaoke');
     } else {
-      // Show coming soon toast for other modes (karaoke, strength, pitch)
       setComingSoonMode(mode);
       setTimeout(() => setComingSoonMode(null), 2000);
     }

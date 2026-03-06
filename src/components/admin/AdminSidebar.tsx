@@ -23,6 +23,7 @@ import {
   Activity,
   DollarSign,
   List,
+  Mic,
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
@@ -73,6 +74,7 @@ const AdminSidebar = React.memo(({
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: User, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
+    { icon: Mic, label: 'Karaoke Config', active: activeSection === 'Karaoke Config' },
     { icon: Upload, label: 'Video Manager', active: activeSection === 'Video Manager', hqZoneOnly: true },
     { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar', hqZoneOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications', hqOnly: true },
