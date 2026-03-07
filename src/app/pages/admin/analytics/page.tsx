@@ -61,7 +61,7 @@ const AnalyticsPage = () => {
           setAnalyticsData(realData);
         }
       } catch (error) {
-        console.error('Failed to fetch analytics data:', error);
+ console.error('Failed to fetch analytics data:', error);
         setAnalyticsData(null);
       }
 

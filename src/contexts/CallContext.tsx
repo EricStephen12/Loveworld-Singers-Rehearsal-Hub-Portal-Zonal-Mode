@@ -102,7 +102,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
               await sendCallMessage(call.chatId, 'answered', call.callerName, duration)
             }
           } catch (error) {
-            console.error('[CallContext] Error sending call message:', error)
+ console.error('[CallContext] Error sending call message:', error)
           }
         }
         

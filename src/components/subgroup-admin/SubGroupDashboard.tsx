@@ -35,7 +35,7 @@ export default function SubGroupDashboard({ subGroup }: SubGroupDashboardProps) 
       const statsData = await SubGroupDatabaseService.getSubGroupStats(subGroup.id);
       setStats(statsData);
     } catch (error) {
-      console.error('Error loading stats:', error);
+ console.error('Error loading stats:', error);
     } finally {
       setIsLoading(false);
     }

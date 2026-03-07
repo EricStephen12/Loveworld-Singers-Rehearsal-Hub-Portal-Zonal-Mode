@@ -31,7 +31,7 @@ export default function MessageInput() {
       try {
         await editMessage(editingMessage.id, text.trim())
       } catch (error) {
-        console.error('Error editing message:', error)
+ console.error('Error editing message:', error)
       } finally {
         setIsLoading(false)
         setEditingMessage(null)
@@ -48,7 +48,7 @@ export default function MessageInput() {
       await sendMessage({ text: text.trim() })
       setText('')
     } catch (error) {
-      console.error('Error sending message:', error)
+ console.error('Error sending message:', error)
     } finally {
       setIsLoading(false)
     }
@@ -71,7 +71,7 @@ export default function MessageInput() {
       
       await sendMessage({ image: uploadResult.url })
     } catch (error) {
-      console.error('Error uploading image:', error)
+ console.error('Error uploading image:', error)
       alert('Failed to upload image. Please try again.')
     } finally {
       setIsLoading(false)
@@ -101,7 +101,7 @@ export default function MessageInput() {
         fileName: file.name 
       })
     } catch (error) {
-      console.error('Error uploading file:', error)
+ console.error('Error uploading file:', error)
       alert('Failed to upload file. Please try again.')
     } finally {
       setIsLoading(false)

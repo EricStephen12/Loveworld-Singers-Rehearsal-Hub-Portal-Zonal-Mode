@@ -27,7 +27,7 @@ export class FirebaseCommentService {
       await FirebaseDatabaseService.createDocument('comments', comment.id.toString(), comment)
       return comment as unknown as Comment
     } catch (error) {
-      console.error('Error creating comment:', error)
+ console.error('Error creating comment:', error)
       return null
     }
   }
@@ -44,7 +44,7 @@ export class FirebaseCommentService {
       return comments
         .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) as unknown as Comment[]
     } catch (error) {
-      console.error('Error fetching comments:', error)
+ console.error('Error fetching comments:', error)
       return []
     }
   }
@@ -58,7 +58,7 @@ export class FirebaseCommentService {
       })
       return true
     } catch (error) {
-      console.error('Error updating comment:', error)
+ console.error('Error updating comment:', error)
       return false
     }
   }
@@ -68,7 +68,7 @@ export class FirebaseCommentService {
       await FirebaseDatabaseService.deleteDocument('comments', commentId.toString())
       return true
     } catch (error) {
-      console.error('Error deleting comment:', error)
+ console.error('Error deleting comment:', error)
       return false
     }
   }
@@ -97,7 +97,7 @@ export class FirebaseCommentService {
       }
       return true
     } catch (error) {
-      console.error('Error liking comment:', error)
+ console.error('Error liking comment:', error)
       return false
     }
   }

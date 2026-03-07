@@ -35,7 +35,7 @@ export class FirebaseAuthService {
         // Track user location
         SimplifiedAnalyticsService.trackUserLocation() // Fire and forget
       } catch (analyticsError) {
-        console.error('Analytics tracking failed:', analyticsError)
+ console.error('Analytics tracking failed:', analyticsError)
       }
 
       if (rememberMe && typeof window !== 'undefined') {
@@ -70,7 +70,7 @@ export class FirebaseAuthService {
         // Track user location
         SimplifiedAnalyticsService.trackUserLocation() // Fire and forget
       } catch (analyticsError) {
-        console.error('Analytics tracking failed:', analyticsError)
+ console.error('Analytics tracking failed:', analyticsError)
       }
 
       return { user: result.user, error: null }
@@ -111,7 +111,7 @@ export class FirebaseAuthService {
         })
       })
     } catch (error) {
-      console.error('Failed to set auth persistence:', error)
+ console.error('Failed to set auth persistence:', error)
     }
   }
 
@@ -140,7 +140,7 @@ export class FirebaseAuthService {
       const docSnap = await getDoc(docRef)
       return docSnap.exists() ? docSnap.data() : null
     } catch (error) {
-      console.error('Error getting user profile:', error)
+ console.error('Error getting user profile:', error)
       return null
     }
   }
@@ -183,16 +183,16 @@ export class FirebaseAuthService {
         try {
           await SimplifiedAnalyticsService.incrementSignups(1)
         } catch (analyticsError) {
-          console.error('Analytics tracking failed:', analyticsError)
+ console.error('Analytics tracking failed:', analyticsError)
         }
 
         return { user: result.user, error: null }
       } catch (profileError: any) {
         try {
-          console.error('Failed to create profile, deleting auth user:', profileError)
+ console.error('Failed to create profile, deleting auth user:', profileError)
           await deleteUser(result.user)
         } catch (cleanupError) {
-          console.error('Failed to delete auth user after profile error:', cleanupError)
+ console.error('Failed to delete auth user after profile error:', cleanupError)
         }
         return { user: null, error: profileError?.message || 'Failed to complete signup. Please check your connection and try again.' }
       }
@@ -245,7 +245,7 @@ export class FirebaseAuthService {
 
       return { user: null, error: 'Session expired - please login again' }
     } catch (error: any) {
-      console.error('Auto-login failed:', error)
+ console.error('Auto-login failed:', error)
       return { user: null, error: error.message }
     }
   }

@@ -44,9 +44,7 @@ const TRACK_COLORS = [
   '#84cc16', // lime
 ];
 
-// ============================================
 // PROJECT CRUD
-// ============================================
 
 /**
  * Create a new project
@@ -93,7 +91,7 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
 
     return { success: true, id: docRef.id, project };
   } catch (error) {
-    console.error('[ProjectService] Error creating project:', error);
+ console.error('[ProjectService] Error creating project:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create project'
@@ -116,7 +114,7 @@ export async function getProject(projectId: string): Promise<AudioLabProject | n
 
     return docToProject(docSnap);
   } catch (error) {
-    console.error('[ProjectService] Error fetching project:', error);
+ console.error('[ProjectService] Error fetching project:', error);
     return null;
   }
 }
@@ -170,7 +168,7 @@ export async function getUserProjects(userId: string, limitCount: number = 50): 
 
     return allProjects;
   } catch (error) {
-    console.error('[ProjectService] Error fetching user projects:', error);
+ console.error('[ProjectService] Error fetching user projects:', error);
     return [];
   }
 }
@@ -243,19 +241,19 @@ export async function updateProject(
           body: JSON.stringify({
             type: 'audiolab',
             recipientIds: allParticipants,
-            title: '🎨 Project Updated',
+            title: ' Project Updated',
             body: `Project "${project.name}" has been updated.`,
             data: { projectId, type: 'project_update' }
           })
         });
       }
     } catch (fcmError) {
-      console.error('[ProjectService] FCM error (update):', fcmError);
+ console.error('[ProjectService] FCM error (update):', fcmError);
     }
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error updating project:', error);
+ console.error('[ProjectService] Error updating project:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update project'
@@ -275,7 +273,7 @@ export async function deleteProject(projectId: string): Promise<{ success: boole
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error deleting project:', error);
+ console.error('[ProjectService] Error deleting project:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete project'
@@ -283,9 +281,7 @@ export async function deleteProject(projectId: string): Promise<{ success: boole
   }
 }
 
-// ============================================
 // TRACK MANAGEMENT
-// ============================================
 
 /**
  * Add a track to a project
@@ -340,12 +336,12 @@ export async function addTrack(
         });
       }
     } catch (fcmError) {
-      console.error('[ProjectService] FCM error (track):', fcmError);
+ console.error('[ProjectService] FCM error (track):', fcmError);
     }
 
     return { success: true, track };
   } catch (error) {
-    console.error('[ProjectService] Error adding track:', error);
+ console.error('[ProjectService] Error adding track:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to add track'
@@ -394,7 +390,7 @@ export async function updateTrack(
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error updating track:', error);
+ console.error('[ProjectService] Error updating track:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update track'
@@ -437,7 +433,7 @@ export async function deleteTrack(
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error deleting track:', error);
+ console.error('[ProjectService] Error deleting track:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete track'
@@ -463,9 +459,7 @@ export async function updateTrackAudio(
   });
 }
 
-// ============================================
 // COLLABORATOR MANAGEMENT
-// ============================================
 
 /**
  * Add a collaborator to a project
@@ -515,7 +509,7 @@ export async function addCollaborator(
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error adding collaborator:', error);
+ console.error('[ProjectService] Error adding collaborator:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to add collaborator'
@@ -540,7 +534,7 @@ export async function removeCollaborator(
 
     return { success: true };
   } catch (error) {
-    console.error('[ProjectService] Error removing collaborator:', error);
+ console.error('[ProjectService] Error removing collaborator:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to remove collaborator'
@@ -548,9 +542,7 @@ export async function removeCollaborator(
   }
 }
 
-// ============================================
 // HELPER FUNCTIONS
-// ============================================
 
 /**
  * Convert Firestore document to AudioLabProject

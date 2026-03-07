@@ -48,7 +48,7 @@ class PersistentStorage {
                 request.onerror = () => reject(request.error);
             });
         } catch (error) {
-            console.warn(`[PersistentStorage] Failed to get item: ${key}`, error);
+ console.warn(`[PersistentStorage] Failed to get item: ${key}`, error);
             return null;
         }
     }
@@ -65,7 +65,7 @@ class PersistentStorage {
                 request.onerror = () => reject(request.error);
             });
         } catch (error) {
-            console.warn(`[PersistentStorage] Failed to set item: ${key}`, error);
+ console.warn(`[PersistentStorage] Failed to set item: ${key}`, error);
         }
     }
 
@@ -81,7 +81,7 @@ class PersistentStorage {
                 request.onerror = () => reject(request.error);
             });
         } catch (error) {
-            console.warn(`[PersistentStorage] Failed to remove item: ${key}`, error);
+ console.warn(`[PersistentStorage] Failed to remove item: ${key}`, error);
         }
     }
 
@@ -97,7 +97,7 @@ class PersistentStorage {
                 request.onerror = () => reject(request.error);
             });
         } catch (error) {
-            console.warn('[PersistentStorage] Failed to clear storage', error);
+ console.warn('[PersistentStorage] Failed to clear storage', error);
         }
     }
 }

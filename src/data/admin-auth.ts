@@ -57,7 +57,7 @@ export class AdminAuthManager {
         }));
       }
     } catch (error) {
-      console.error('Error loading admin users:', error);
+ console.error('Error loading admin users:', error);
     }
     
     return defaultAdminUsers;
@@ -70,7 +70,7 @@ export class AdminAuthManager {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
     } catch (error) {
-      console.error('Error saving admin users:', error);
+ console.error('Error saving admin users:', error);
     }
   }
 
@@ -185,7 +185,7 @@ export class AdminAuthManager {
         };
       }
     } catch (error) {
-      console.error('Error getting current admin user:', error);
+ console.error('Error getting current admin user:', error);
     }
     
     return null;

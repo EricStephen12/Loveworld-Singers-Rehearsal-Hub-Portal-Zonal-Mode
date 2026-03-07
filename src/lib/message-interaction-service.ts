@@ -63,7 +63,7 @@ export class MessageInteractionService {
       
       return true
     } catch (error) {
-      console.error('Error liking message:', error)
+ console.error('Error liking message:', error)
       return false
     }
   }
@@ -92,7 +92,7 @@ export class MessageInteractionService {
       
       return true
     } catch (error) {
-      console.error('Error replying to message:', error)
+ console.error('Error replying to message:', error)
       return false
     }
   }
@@ -120,7 +120,7 @@ export class MessageInteractionService {
           group_id: targetGroupId || `dm_${targetFriendId}`,
           sender_id: userId,
           sender_name: 'Shared Message',
-          content: `📤 Shared: ${originalMessage.content}`,
+          content: ` Shared: ${originalMessage.content}`,
           timestamp: new Date().toISOString(),
           read: false,
           is_shared: true,
@@ -133,7 +133,7 @@ export class MessageInteractionService {
       
       return true
     } catch (error) {
-      console.error('Error sharing message:', error)
+ console.error('Error sharing message:', error)
       return false
     }
   }
@@ -174,7 +174,7 @@ export class MessageInteractionService {
       
       return true
     } catch (error) {
-      console.error('Error forwarding message:', error)
+ console.error('Error forwarding message:', error)
       return false
     }
   }
@@ -192,7 +192,7 @@ export class MessageInteractionService {
         replies: []
       }
     } catch (error) {
-      console.error('Error getting message reactions:', error)
+ console.error('Error getting message reactions:', error)
       return {
         messageId,
         likes: [],
@@ -208,7 +208,7 @@ export class MessageInteractionService {
     try {
       // In a real app, this would save to Firebase
     } catch (error) {
-      console.error('Error saving message reactions:', error)
+ console.error('Error saving message reactions:', error)
     }
   }
 
@@ -222,7 +222,7 @@ export class MessageInteractionService {
         sender_name: 'Original Sender'
       }
     } catch (error) {
-      console.error('Error getting original message:', error)
+ console.error('Error getting original message:', error)
       return null
     }
   }
@@ -232,7 +232,7 @@ export class MessageInteractionService {
     try {
       // In a real app, this would save to Firebase
     } catch (error) {
-      console.error('Error saving shared message:', error)
+ console.error('Error saving shared message:', error)
     }
   }
 
@@ -241,7 +241,7 @@ export class MessageInteractionService {
     try {
       // In a real app, this would save to Firebase
     } catch (error) {
-      console.error('Error saving forwarded message:', error)
+ console.error('Error saving forwarded message:', error)
     }
   }
 

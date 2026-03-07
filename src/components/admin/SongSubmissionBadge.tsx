@@ -39,7 +39,7 @@ export default function SongSubmissionBadge() {
       const notifications = await getUnreadNotifications(zoneId, canSeeAll)
       setUnreadCount(notifications.length)
     } catch (error) {
-      console.error('Error loading unread count:', error)
+ console.error('Error loading unread count:', error)
     } finally {
       setLoading(false)
     }

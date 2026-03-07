@@ -100,7 +100,7 @@ export class AttendanceService {
         record: newRecord
       }
     } catch (error) {
-      console.error('Check-in error:', error)
+ console.error('Check-in error:', error)
       return { success: false, message: 'Failed to check in. Please try again.' }
     }
   }
@@ -118,7 +118,7 @@ export class AttendanceService {
       }
       return 'Member'
     } catch (error) {
-      console.error('Error fetching user profile for attendance:', error)
+ console.error('Error fetching user profile for attendance:', error)
       return 'Member'
     }
   }
@@ -142,7 +142,7 @@ export class AttendanceService {
 
       return sorted.slice(0, limitCount) as AttendanceRecord[]
     } catch (error) {
-      console.error('Get attendance error:', error)
+ console.error('Get attendance error:', error)
       return []
     }
   }
@@ -220,7 +220,7 @@ export class AttendanceService {
 
       return { total, present, late, absent, rate }
     } catch (error) {
-      console.error('Get stats error:', error)
+ console.error('Get stats error:', error)
       return { total: 0, present: 0, late: 0, absent: 0, rate: 0 }
     }
   }

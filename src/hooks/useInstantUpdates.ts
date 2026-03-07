@@ -22,7 +22,7 @@ export function useInstantUpdates<T>(config: InstantUpdateConfig) {
       setData(freshData)
       setLastUpdate(Date.now())
     } catch (err) {
-      console.error(`Fetch failed: ${config.key}`, err)
+ console.error(`Fetch failed: ${config.key}`, err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
     } finally {
       if (showLoading) setIsLoading(false)

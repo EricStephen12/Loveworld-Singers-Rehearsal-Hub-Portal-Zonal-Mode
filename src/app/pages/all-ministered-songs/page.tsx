@@ -57,7 +57,7 @@ export default function AllMinisteredSongsPage() {
         setTotalCount(masterSongs.length)
 
       } catch (error) {
-        console.error('Error loading master songs:', error)
+ console.error('Error loading master songs:', error)
       } finally {
         setLoading(false)
       }
@@ -84,7 +84,7 @@ export default function AllMinisteredSongsPage() {
       }
       setHasMore(MasterLibraryService.hasMoreMasterSongs())
     } catch (error) {
-      console.error('Error loading more songs:', error)
+ console.error('Error loading more songs:', error)
     } finally {
       setLoadingMore(false)
     }

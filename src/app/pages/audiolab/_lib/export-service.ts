@@ -53,7 +53,7 @@ export async function exportMix(
 
             audioBuffers.push({ buffer: audioBuffer, track });
         } catch (err) {
-            console.error(`[ExportService] Failed to load track ${track.name}:`, err);
+ console.error(`[ExportService] Failed to load track ${track.name}:`, err);
         }
     }
 

@@ -87,7 +87,7 @@ export default function EventDetailsModal({
       onDelete(event.id)
       setShowDeleteConfirm(false)
     } catch (error) {
-      console.error('Error deleting event:', error)
+ console.error('Error deleting event:', error)
       showToast('Failed to delete event. Please try again.', 'error')
     } finally {
       setDeleting(false)

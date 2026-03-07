@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
           ) {
             invalidTokens.push(allTokens[index]);
           }
-          console.error(`[Notification] Failed to send to ${allTokens[index].userId}:`, error?.message || error);
+ console.error(`[Notification] Failed to send to ${allTokens[index].userId}:`, error?.message || error);
         }
       });
     } catch (batchError) {
@@ -278,7 +278,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } catch (cleanupError) {
-          console.error('[Notification] Error cleaning up token:', cleanupError);
+ console.error('[Notification] Error cleaning up token:', cleanupError);
         }
       }
     }
@@ -293,7 +293,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Notification] Error:', error);
+ console.error('[Notification] Error:', error);
     return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 });
   }
 }
@@ -319,7 +319,7 @@ async function getUserFCMTokens(userId: string): Promise<string[]> {
 
     return tokens;
   } catch (error) {
-    console.error('[Notification] Error getting tokens for user', userId, ':', error);
+ console.error('[Notification] Error getting tokens for user', userId, ':', error);
     return [];
   }
 }

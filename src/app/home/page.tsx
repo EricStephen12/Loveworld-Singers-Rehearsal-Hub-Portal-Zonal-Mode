@@ -22,6 +22,10 @@ import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 import { useFeatureTracking } from '@/hooks/useAnalyticsTracking'
 import { isHQAdminEmail } from '@/config/roles'
+import HeroCarousel from './_components/HeroCarousel'
+import AboutSection from './_components/AboutSection'
+import FAQSection from './_components/FAQSection'
+import CelebrationOverlay from './_components/CelebrationOverlay'
 
 function HomePageContent() {
   const router = useRouter()
@@ -89,35 +93,13 @@ function HomePageContent() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-  const [openFAQ, setOpenFAQ] = useState<number | null>(null)
-  const [openAbout, setOpenAbout] = useState<number | null>(null)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isCoordinator, setIsCoordinator] = useState(false)
 
   // Use global search hook for comprehensive search - lazy load when search is open
   const { searchQuery: globalSearchQuery, setSearchQuery: setGlobalSearchQuery, searchResults, hasResults } = useHomeGlobalSearch(currentZone?.id, isSearchOpen)
   const typedSearchResults = searchResults as HomeSearchResult[]
 
-  // Carousel images array
-  const carouselImages = [
-    '/images/home.jpg',
-    '/images/DSC_6155_scaled.jpg',
-    '/images/DSC_6303_scaled.jpg',
-    '/images/DSC_6446_scaled.jpg',
-    '/images/DSC_6506_scaled.jpg',
-    '/images/DSC_6516_scaled.jpg',
-    '/images/DSC_6636_1_scaled.jpg',
-    '/images/DSC_6638_scaled.jpg',
-    '/images/DSC_6644_scaled.jpg',
-    '/images/DSC_6658_1_scaled.jpg',
-    '/images/DSC_6676_scaled.jpg'
-  ]
 
-  // ✅ Preload first carousel image for instant display
-  useEffect(() => {
-    const img = new Image();
-    img.src = carouselImages[0];
-  }, []);
 
   // Check coordinator status
   useEffect(() => {
@@ -131,46 +113,24 @@ function HomePageContent() {
     checkRole()
   }, [user?.uid])
 
-  // Auto-slide carousel every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
-      )
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }, [carouselImages.length])
-
-
-
-  const toggleDrawer = () => {
-    setIsDrawerOpen(!isDrawerOpen)
-  }
-
-  const toggleFAQ = (index: number) => {
-    setOpenFAQ(openFAQ === index ? null : index)
-  }
-
-  const toggleAbout = (index: number) => {
-    setOpenAbout(openAbout === index ? null : index)
-  }
-
   // Focus the input when search opens
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
-      // slight delay to allow element to mount before focusing
       const id = setTimeout(() => searchInputRef.current?.focus(), 50)
       return () => clearTimeout(id)
     }
   }, [isSearchOpen])
+
+  const toggleDrawer = () => {
+    setIsDrawerOpen(!isDrawerOpen)
+  }
 
   const handleLogout = async () => {
     try {
       await signOut()
       // Don't use router.push - signOut already handles redirect
     } catch (error) {
-      console.error('❌ Home: Logout error:', error)
+ console.error(' Home: Logout error:', error)
       // Fallback redirect if signOut fails
       router.push('/auth')
     }
@@ -591,27 +551,7 @@ function HomePageContent() {
           }}>
             <div className="w-full px-3 sm:px-4 py-4 sm:py-6">
               {/* Hero Banner - Carousel */}
-              <div className="py-6 pt-20">
-                <div className="relative h-[30vh] rounded-3xl overflow-hidden shadow-lg">
-                  {/* Carousel Images */}
-                  <div className="relative w-full h-full">
-                    {carouselImages.map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`LoveWorld Singers Rehearsal Hub ${index + 1}`}
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                          }`}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ))}
-                  </div>
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                </div>
-              </div>
+              <HeroCarousel />
 
               {/* Main Title */}
               <div className="text-center py-6">
@@ -715,84 +655,11 @@ function HomePageContent() {
               </div>
 
               {/* About Section */}
-              <div className="pb-6">
-                <h2 className="text-lg font-outfit-semibold text-gray-800 mb-4">ABOUT</h2>
-                <div className="space-y-2">
-                  <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl shadow-sm overflow-hidden ring-1 ring-black/5">
-                    <button
-                      onClick={() => toggleAbout(0)}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors active:bg-gray-100 focus:outline-none"
-                    >
-                      <h4 className="text-sm font-medium text-gray-800 pr-2">What is LoveWorld Singers Rehearsal Hub?</h4>
-                      <div className="flex-shrink-0">
-                        {openAbout === 0 ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                      </div>
-                    </button>
-                    {openAbout === 0 && (
-                      <div className="px-4 pb-4 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 leading-relaxed pt-3">A comprehensive platform for managing rehearsal schedules, song collections, and ministry activities. Connect with fellow singers, access audio resources, and stay updated with the latest rehearsal updates.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <AboutSection />
 
               {/* FAQ Section */}
-              <div className="pb-6">
-                <h2 className="text-lg font-outfit-semibold text-gray-800 mb-4">FAQ</h2>
-                <div className="space-y-2">
-                  <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl shadow-sm overflow-hidden ring-1 ring-black/5">
-                    <button
-                      onClick={() => toggleFAQ(0)}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors active:bg-gray-100 focus:outline-none"
-                    >
-                      <h4 className="text-sm font-medium text-gray-800 pr-2">How do I join a rehearsal?</h4>
-                      <div className="flex-shrink-0">
-                        {openFAQ === 0 ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                      </div>
-                    </button>
-                    {openFAQ === 0 && (
-                      <div className="px-4 pb-4 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 leading-relaxed pt-3">Check the Rehearsals section for upcoming sessions and register through the calendar.</p>
-                      </div>
-                    )}
-                  </div>
+              <FAQSection />
 
-                  <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl shadow-sm overflow-hidden ring-1 ring-black/5">
-                    <button
-                      onClick={() => toggleFAQ(1)}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors active:bg-gray-100 focus:outline-none"
-                    >
-                      <h4 className="text-sm font-medium text-gray-800 pr-2">Where can I find song lyrics?</h4>
-                      <div className="flex-shrink-0">
-                        {openFAQ === 1 ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                      </div>
-                    </button>
-                    {openFAQ === 1 && (
-                      <div className="px-4 pb-4 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 leading-relaxed pt-3">Access song lyrics and audio resources in the AudioLabs section.</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-white/70 backdrop-blur-sm border-0 rounded-2xl shadow-sm overflow-hidden ring-1 ring-black/5">
-                    <button
-                      onClick={() => toggleFAQ(2)}
-                      className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors active:bg-gray-100 focus:outline-none"
-                    >
-                      <h4 className="text-sm font-medium text-gray-800 pr-2">How do I get support?</h4>
-                      <div className="flex-shrink-0">
-                        {openFAQ === 2 ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                      </div>
-                    </button>
-                    {openFAQ === 2 && (
-                      <div className="px-4 pb-4 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 leading-relaxed pt-3">Use the Support section or contact your ministry coordinator for assistance.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -811,50 +678,7 @@ function HomePageContent() {
       />
 
       {/* Celebration Overlay */}
-      {showCelebration && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/40 animate-in fade-in duration-500">
-          <div className="relative w-full max-w-sm bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-950 rounded-[2.5rem] p-8 text-center shadow-2xl border border-white/10 animate-in zoom-in-95 duration-500">
-            {/* Animated Background Elements */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-purple-600/30 rounded-full blur-[50px]"></div>
-
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl rotate-12 animate-bounce">
-                <Crown className="w-12 h-12 text-white" />
-              </div>
-
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
-                <span className="text-[10px] font-black tracking-[0.3em] text-purple-400 uppercase">Premium Member</span>
-                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
-              </div>
-
-              <h2 className="text-4xl font-black text-white mb-4 tracking-tighter leading-none">
-                WELCOME <br /> TO THE ELITE!
-              </h2>
-
-              <p className="text-gray-400 text-sm mb-10 leading-relaxed px-2">
-                Your account is now fully upgraded. Explore the Media Lab, Audio Studio, and all exclusive rehearsals.
-              </p>
-
-              <button
-                onClick={() => setShowCelebration(false)}
-                className="w-full py-5 bg-white text-gray-950 rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3"
-              >
-                START EXPLORING
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Close button */}
-            <button
-              onClick={() => setShowCelebration(false)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
+      <CelebrationOverlay show={showCelebration} onClose={() => setShowCelebration(false)} />
     </div>
   )
 }

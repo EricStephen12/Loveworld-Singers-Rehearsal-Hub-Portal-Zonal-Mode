@@ -19,7 +19,7 @@ export async function isUserCoordinator(userId: string): Promise<boolean> {
     
     return hasCoordinatorRole
   } catch (error) {
-    console.error('Error checking coordinator status:', error)
+ console.error('Error checking coordinator status:', error)
     return false
   }
 }

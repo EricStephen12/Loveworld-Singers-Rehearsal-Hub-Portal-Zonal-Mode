@@ -40,7 +40,7 @@ function SuccessContent() {
           // Always redirect to home after signup/login - no profile completion required
           router.push('/home')
         } catch (error) {
-          console.error('Navigation error:', error)
+ console.error('Navigation error:', error)
           // Fallback to window.location if router fails
           window.location.href = '/home'
         }

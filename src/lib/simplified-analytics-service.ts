@@ -253,7 +253,7 @@ export class SimplifiedAnalyticsService {
         city: data.city || 'Unknown'
       };
     } catch (error) {
-      console.error('Error getting user location:', error);
+ console.error('Error getting user location:', error);
       return null;
     }
   }
@@ -266,7 +266,7 @@ export class SimplifiedAnalyticsService {
         await this.trackLocation(location.country, location.city);
       }
     } catch (error) {
-      console.error('Error tracking user location:', error);
+ console.error('Error tracking user location:', error);
     }
   }
 
@@ -329,7 +329,7 @@ export class SimplifiedAnalyticsService {
         return b.month - a.month;
       });
     } catch (error) {
-      console.error('Error fetching monthly summaries:', error);
+ console.error('Error fetching monthly summaries:', error);
       return [];
     }
   }

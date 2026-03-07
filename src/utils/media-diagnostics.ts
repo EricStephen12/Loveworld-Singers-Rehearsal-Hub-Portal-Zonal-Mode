@@ -185,7 +185,7 @@ export async function runMediaDiagnostics(): Promise<DiagnosticResult[]> {
 export function printDiagnostics(results: DiagnosticResult[]) {
   
   results.forEach((result, index) => {
-    const icon = result.status === 'pass' ? '✅' : result.status === 'fail' ? '❌' : '⚠️';
+    const icon = result.status === 'pass' ? '' : result.status === 'fail' ? '' : '️';
     if (result.details) {
     }
   });

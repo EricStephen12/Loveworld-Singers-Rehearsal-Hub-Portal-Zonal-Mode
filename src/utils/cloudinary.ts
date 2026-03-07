@@ -22,7 +22,7 @@ export function getCloudinaryThumbnailUrl(videoUrl: string | undefined): string 
             .replace(/\/upload\//, '/upload/so_0,c_limit,h_480,f_auto,q_auto/')
             .replace(/\.[^/.]+$/, '.jpg');
     } catch (error) {
-        console.warn('[CloudinaryUtils] Failed to transform URL:', videoUrl);
+ console.warn('[CloudinaryUtils] Failed to transform URL:', videoUrl);
         return '/movie/default-hero.jpeg';
     }
 }

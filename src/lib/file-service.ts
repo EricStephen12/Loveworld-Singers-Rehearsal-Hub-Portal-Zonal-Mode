@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ===== FILE UPLOAD OPERATIONS =====
+// File Upload Operations
 
 export async function uploadFile(file: File, bucket: string = 'loveworld-praise'): Promise<string | null> {
     try {
@@ -26,7 +26,7 @@ export async function uploadFile(file: File, bucket: string = 'loveworld-praise'
 
         return data.publicUrl;
     } catch (error) {
-        console.error('Error uploading file:', error);
+ console.error('Error uploading file:', error);
         return null;
     }
 }
@@ -40,7 +40,7 @@ export async function deleteFile(filePath: string, bucket: string = 'loveworld-p
         if (error) throw error;
         return true;
     } catch (error) {
-        console.error('Error deleting file:', error);
+ console.error('Error deleting file:', error);
         return false;
     }
 }

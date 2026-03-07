@@ -49,7 +49,7 @@ export default function ZoneSwitcher() {
         }
         keysToRemove.forEach(k => localStorage.removeItem(k))
       } catch (e) {
-        console.error('Error clearing caches:', e)
+ console.error('Error clearing caches:', e)
       }
 
       // Small delay for visual feedback before hard reload
@@ -107,7 +107,7 @@ export default function ZoneSwitcher() {
               {isSuperAdmin && (
                 <div className="px-4 py-2 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-yellow-200">
                   <p className="text-xs font-semibold text-yellow-800 flex items-center gap-1">
-                    👑 Super Admin - All Zones
+                     Super Admin - All Zones
                   </p>
                 </div>
               )}

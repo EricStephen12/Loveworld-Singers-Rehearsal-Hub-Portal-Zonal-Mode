@@ -241,7 +241,7 @@ export default function ChatSidebar() {
                                 {chat.lastMessage.senderId === user?.uid && (
                                   <CheckCircle2 className="w-3 h-3 inline mr-1 text-blue-500" />
                                 )}
-                                {chat.lastMessage.text || '📷 Image'}
+                                {chat.lastMessage.text || ' Image'}
                               </>
                             ) : (
                               <span className="text-gray-400 italic">No messages yet</span>

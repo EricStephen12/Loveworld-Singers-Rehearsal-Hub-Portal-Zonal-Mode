@@ -53,12 +53,12 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
-      case 'announcement': return '📢'
-      case 'event': return '🎉'
-      case 'reminder': return '⏰'
+      case 'announcement': return ''
+      case 'event': return ''
+      case 'reminder': return ''
       case 'meeting': return '👥'
-      case 'rehearsal': return '🎵'
-      default: return '📅'
+      case 'rehearsal': return ''
+      default: return ''
     }
   }
 
@@ -128,8 +128,8 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
                 </p>
                 <p className="text-xs sm:text-lg text-white/90 font-medium truncate">
                   {(currentItem.data as BirthdayUser).isToday
-                    ? '🎉 Amazing day!'
-                    : `🎂 ${moment((currentItem.data as BirthdayUser).birthday).format('MMM D')}`
+                    ? ' Amazing day!'
+                    : ` ${moment((currentItem.data as BirthdayUser).birthday).format('MMM D')}`
                   }
                 </p>
               </div>

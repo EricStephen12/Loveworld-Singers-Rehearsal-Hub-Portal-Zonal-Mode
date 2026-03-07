@@ -62,7 +62,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
           setOtherUserProfile(userData)
         }
       } catch (error) {
-        console.error('Error fetching user name:', error)
+ console.error('Error fetching user name:', error)
       }
     }
 
@@ -94,7 +94,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
             return `Last seen ${formatDistanceToNow(lastSeenDate, { addSuffix: true })}`
           }
         } catch (error) {
-          console.error('Error formatting last seen:', error)
+ console.error('Error formatting last seen:', error)
         }
       }
       return 'Offline'
@@ -109,7 +109,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
       const members = await FirebaseChatService.getChatParticipants(selectedChat.id)
       setGroupMembers(members)
     } catch (error) {
-      console.error('Error loading members:', error)
+ console.error('Error loading members:', error)
     } finally {
       setIsMembersLoading(false)
     }
@@ -122,7 +122,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         const data = await FirebaseChatService.getUser(otherParticipantId)
         if (data) setOtherUserProfile(data)
       } catch (error) {
-        console.error('Error loading profile:', error)
+ console.error('Error loading profile:', error)
       }
     }
     setIsProfileModalOpen(true)
@@ -148,7 +148,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
       const filteredUsers = users.filter(user => !existingParticipantIds.includes(user.id))
       setAvailableUsers(filteredUsers)
     } catch (error) {
-      console.error('Error searching users:', error)
+ console.error('Error searching users:', error)
     } finally {
       setIsSearchingUsers(false)
     }
@@ -165,7 +165,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         setAvailableUsers([])
       }
     } catch (error) {
-      console.error('Error adding user to group:', error)
+ console.error('Error adding user to group:', error)
     }
   }
 
@@ -187,7 +187,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         setIsGroupSettingsModalOpen(false)
       }
     } catch (error) {
-      console.error('Error updating group settings:', error)
+ console.error('Error updating group settings:', error)
     } finally {
       setIsSavingGroupSettings(false)
     }
@@ -204,7 +204,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
       await makeUserAdmin(selectedChat.id, userId)
       await handleViewMembers() // Refresh members list
     } catch (error) {
-      console.error('Error making user admin:', error)
+ console.error('Error making user admin:', error)
     }
   }
 
@@ -217,7 +217,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         await handleViewMembers() // Refresh members list
       }
     } catch (error) {
-      console.error('Error removing user from group:', error)
+ console.error('Error removing user from group:', error)
     }
   }
 
@@ -231,7 +231,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         setSelectedChat(null)
       }
     } catch (error) {
-      console.error('Error leaving group:', error)
+ console.error('Error leaving group:', error)
     } finally {
       setIsLeavingGroup(false)
     }

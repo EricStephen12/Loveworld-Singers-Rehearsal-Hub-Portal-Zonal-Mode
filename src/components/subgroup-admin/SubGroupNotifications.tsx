@@ -43,10 +43,10 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
         setSent(true);
         setTimeout(() => setSent(false), 3000);
       } else {
-        console.error('Failed to send notification:', result.error);
+ console.error('Failed to send notification:', result.error);
       }
     } catch (error) {
-      console.error('Error sending notification:', error);
+ console.error('Error sending notification:', error);
     } finally {
       setSending(false);
     }

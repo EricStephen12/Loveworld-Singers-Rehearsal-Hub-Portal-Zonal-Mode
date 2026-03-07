@@ -56,7 +56,7 @@ export default function SongMinistryTracker() {
       // In a real implementation, you'd want to fetch all records differently
       setMonthlySummaries(summaries);
     } catch (error) {
-      console.error('Error loading data:', error);
+ console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }

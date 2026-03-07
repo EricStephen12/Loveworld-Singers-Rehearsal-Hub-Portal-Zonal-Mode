@@ -95,7 +95,7 @@ export class PaymentRecordsService {
             })
             return true
         } catch (error) {
-            console.error('Error updating payment record:', error)
+ console.error('Error updating payment record:', error)
             return false
         }
     }
@@ -108,7 +108,7 @@ export class PaymentRecordsService {
             const record = await FirebaseDatabaseService.getDocument('payment_records', paymentId)
             return record as PaymentRecord | null
         } catch (error) {
-            console.error('Error getting payment record:', error)
+ console.error('Error getting payment record:', error)
             return null
         }
     }
@@ -126,7 +126,7 @@ export class PaymentRecordsService {
                 .map(r => r as PaymentRecord)
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         } catch (error) {
-            console.error('Error getting payment history:', error)
+ console.error('Error getting payment history:', error)
             return []
         }
     }
@@ -164,7 +164,7 @@ export class PaymentRecordsService {
 
             return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         } catch (error) {
-            console.error('Error getting all payment records:', error)
+ console.error('Error getting all payment records:', error)
             return []
         }
     }
@@ -186,7 +186,7 @@ export class PaymentRecordsService {
             })
             return true
         } catch (error) {
-            console.error('Error refunding payment:', error)
+ console.error('Error refunding payment:', error)
             return false
         }
     }
@@ -209,7 +209,7 @@ export class SubscriptionAuditService {
 
             await FirebaseDatabaseService.createDocument('subscription_audit_logs', logId, log)
         } catch (error) {
-            console.error('Error logging subscription action:', error)
+ console.error('Error logging subscription action:', error)
         }
     }
 
@@ -226,7 +226,7 @@ export class SubscriptionAuditService {
                 .map(l => l as SubscriptionAuditLog)
                 .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         } catch (error) {
-            console.error('Error getting audit history:', error)
+ console.error('Error getting audit history:', error)
             return []
         }
     }
@@ -243,7 +243,7 @@ export class SubscriptionAuditService {
                 .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
                 .slice(0, limit)
         } catch (error) {
-            console.error('Error getting all audit logs:', error)
+ console.error('Error getting all audit logs:', error)
             return []
         }
     }

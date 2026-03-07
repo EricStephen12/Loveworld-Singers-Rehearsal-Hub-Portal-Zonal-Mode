@@ -62,7 +62,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           updatedAt: new Date(parsed.updatedAt)
         }
       }
-    } catch (e) { console.error('Cache parse error', e) }
+ } catch (e) { console.error('Cache parse error', e) }
     return null
   })
 
@@ -132,7 +132,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
               userId: user.uid,
               updatedAt: new Date().toISOString()
             })
-          } catch (migErr) { console.error('❌ Migration failed:', migErr) }
+ } catch (migErr) { console.error(' Migration failed:', migErr) }
         }
 
       } else {
@@ -140,7 +140,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         localStorage.removeItem(SUBSCRIPTION_CACHE_KEY)
       }
     } catch (error) {
-      console.error('❌ Error loading individual subscription:', error)
+ console.error(' Error loading individual subscription:', error)
       // Don't clear subscription on error if we have cached data? 
       // For now, let's keep cached data if error occurs to prevent lockout during outage
       if (!subscription) setSubscription(null)

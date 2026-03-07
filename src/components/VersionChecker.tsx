@@ -14,7 +14,7 @@ export default function VersionChecker() {
       try {
         await initializeVersionCheck();
       } catch (error) {
-        console.error('Version check failed:', error);
+ console.error('Version check failed:', error);
       }
     };
 

@@ -71,7 +71,7 @@ export default function PlaylistsSection() {
       setPlaylists(playlistsData)
       setAllVideos(videosData)
     } catch (e) {
-      console.error('Error loading data:', e)
+ console.error('Error loading data:', e)
     }
     setIsLoading(false)
   }
@@ -361,7 +361,7 @@ export default function PlaylistsSection() {
 
             <div className="bg-white rounded-xl p-4 border border-gray-200">
               <p className="text-sm text-gray-500">
-                💡 Thumbnail will automatically use the first video's thumbnail
+                 Thumbnail will automatically use the first video's thumbnail
               </p>
             </div>
 

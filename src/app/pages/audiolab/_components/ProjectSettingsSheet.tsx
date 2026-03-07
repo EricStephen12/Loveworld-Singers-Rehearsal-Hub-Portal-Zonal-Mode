@@ -101,7 +101,7 @@ export function ProjectSettingsSheet({
           });
         }
       } catch (error) {
-        console.error('[ProjectSettings] Error loading collaborator:', error);
+ console.error('[ProjectSettings] Error loading collaborator:', error);
       }
     }
     setCollaboratorDetails(details);
@@ -129,7 +129,7 @@ export function ProjectSettingsSheet({
         }));
       setSearchResults(filtered);
     } catch (error) {
-      console.error('[ProjectSettings] Search error:', error);
+ console.error('[ProjectSettings] Search error:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -151,7 +151,7 @@ export function ProjectSettingsSheet({
         setSearchQuery('');
       }
     } catch (error) {
-      console.error('[ProjectSettings] Add collaborator error:', error);
+ console.error('[ProjectSettings] Add collaborator error:', error);
     } finally {
       setIsAddingCollaborator(null);
     }
@@ -170,7 +170,7 @@ export function ProjectSettingsSheet({
         setCollaboratorDetails(prev => prev.filter(c => c.id !== userId));
       }
     } catch (error) {
-      console.error('[ProjectSettings] Remove collaborator error:', error);
+ console.error('[ProjectSettings] Remove collaborator error:', error);
     } finally {
       setIsAddingCollaborator(null);
     }
@@ -192,7 +192,7 @@ export function ProjectSettingsSheet({
         setIsRenaming(false);
       }
     } catch (error) {
-      console.error('[ProjectSettings] Rename failed:', error);
+ console.error('[ProjectSettings] Rename failed:', error);
     } finally {
       setIsSaving(false);
     }
@@ -207,7 +207,7 @@ export function ProjectSettingsSheet({
         onClose();
       }
     } catch (error) {
-      console.error('[ProjectSettings] Delete failed:', error);
+ console.error('[ProjectSettings] Delete failed:', error);
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -244,7 +244,7 @@ export function ProjectSettingsSheet({
       setExportProgress(100);
 
     } catch (error) {
-      console.error('[Export] Error:', error);
+ console.error('[Export] Error:', error);
       setExportError(error instanceof Error ? error.message : 'Export failed');
       setExportStep('error');
     }

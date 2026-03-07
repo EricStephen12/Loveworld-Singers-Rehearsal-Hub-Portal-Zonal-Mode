@@ -47,7 +47,7 @@ class NavigationStateManager {
 
             }
         } catch (error) {
-            console.warn('Failed to init navigation state from IDB:', error);
+ console.warn('Failed to init navigation state from IDB:', error);
         }
     }
 
@@ -71,7 +71,7 @@ class NavigationStateManager {
             // Async mirror to IndexedDB
             persistentStorage.setItem(this.STATE_KEY, state);
         } catch (error) {
-            console.warn('Failed to save navigation state:', error);
+ console.warn('Failed to save navigation state:', error);
         }
     }
 
@@ -102,7 +102,7 @@ class NavigationStateManager {
 
             return state;
         } catch (error) {
-            console.warn('Failed to get navigation state:', error);
+ console.warn('Failed to get navigation state:', error);
             return null;
         }
     }
@@ -116,7 +116,7 @@ class NavigationStateManager {
             localStorage.removeItem(this.STATE_KEY);
             persistentStorage.removeItem(this.STATE_KEY);
         } catch (error) {
-            console.warn('Failed to clear navigation state:', error);
+ console.warn('Failed to clear navigation state:', error);
         }
     }
 
@@ -136,7 +136,7 @@ class NavigationStateManager {
             localStorage.setItem(key, JSON.stringify(data));
             persistentStorage.setItem(key, data);
         } catch (error) {
-            console.warn(`Failed to save page state for ${pageKey}:`, error);
+ console.warn(`Failed to save page state for ${pageKey}:`, error);
         }
     }
 
@@ -169,7 +169,7 @@ class NavigationStateManager {
 
             return data.state;
         } catch (error) {
-            console.warn(`Failed to get page state for ${pageKey}:`, error);
+ console.warn(`Failed to get page state for ${pageKey}:`, error);
             return null;
         }
     }
@@ -184,7 +184,7 @@ class NavigationStateManager {
             localStorage.removeItem(key);
             persistentStorage.removeItem(key);
         } catch (error) {
-            console.warn(`Failed to clear page state for ${pageKey}:`, error);
+ console.warn(`Failed to clear page state for ${pageKey}:`, error);
         }
     }
 
@@ -212,7 +212,7 @@ class NavigationStateManager {
                 persistentStorage.removeItem(key);
             });
         } catch (error) {
-            console.warn('Failed to clear all states:', error);
+ console.warn('Failed to clear all states:', error);
         }
     }
 

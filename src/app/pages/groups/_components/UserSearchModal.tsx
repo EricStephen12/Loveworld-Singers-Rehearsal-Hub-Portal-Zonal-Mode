@@ -36,7 +36,7 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
         const results = await searchUsers(searchTerm)
         setSearchResults(results)
       } catch (error) {
-        console.error('Error searching users:', error)
+ console.error('Error searching users:', error)
         setSearchResults([])
       } finally {
         setIsSearching(false)
@@ -76,7 +76,7 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
         onClose()
       }
     } catch (error) {
-      console.error('Error starting chat:', error)
+ console.error('Error starting chat:', error)
     } finally {
       setActionLoading(null)
     }

@@ -204,7 +204,7 @@ export function useZone() {
       })
       lastLoadedUserId.current = userId
     } catch (error) {
-      console.error('Error loading zones:', error)
+ console.error('Error loading zones:', error)
       setIsLoading(false)
     } finally {
       isFetching.current = false

@@ -44,11 +44,11 @@ export default function SupportMessageForm({ isOpen, onClose, onSuccess }: Suppo
 
   const categories = [
     { value: 'general', label: 'General Question', icon: '❓' },
-    { value: 'technical', label: 'Technical Issue', icon: '🔧' },
+    { value: 'technical', label: 'Technical Issue', icon: '' },
     { value: 'billing', label: 'Billing/Account', icon: '💳' },
-    { value: 'feature', label: 'Feature Request', icon: '💡' },
+    { value: 'feature', label: 'Feature Request', icon: '' },
     { value: 'bug', label: 'Bug Report', icon: '🐛' },
-    { value: 'other', label: 'Other', icon: '📝' }
+    { value: 'other', label: 'Other', icon: '' }
   ];
 
   const priorities = [
@@ -114,7 +114,7 @@ export default function SupportMessageForm({ isOpen, onClose, onSuccess }: Suppo
       }, 2000);
 
     } catch (error) {
-      console.error('Error submitting support message:', error);
+ console.error('Error submitting support message:', error);
       setError(error instanceof Error ? error.message : 'Failed to submit support message');
     } finally {
       setIsSubmitting(false);
@@ -275,7 +275,7 @@ export default function SupportMessageForm({ isOpen, onClose, onSuccess }: Suppo
                 onClick={() => debugSupportSystem()}
                 className="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors"
               >
-                🔍 Debug System
+                 Debug System
               </button>
             </div>
 

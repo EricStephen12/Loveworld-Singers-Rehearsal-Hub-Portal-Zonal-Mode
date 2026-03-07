@@ -294,7 +294,7 @@ export function MasterEditSongModal({
         }
       }
     } catch (err) {
-      console.error('Save error:', err);
+ console.error('Save error:', err);
       setError('Failed to save changes');
     } finally {
       setSaving(false);
@@ -579,7 +579,7 @@ export function MasterEditSongModal({
               placeholder="Enter song lyrics... Use **text** for bold formatting (e.g., **VERSE 1**)"
             />
             <p className="text-xs text-slate-500">
-              💡 Tip: Use <strong>**double asterisks**</strong> for bold. Click "AI Sync Timing" to match lyrics with audio for karaoke.
+               Tip: Use <strong>**double asterisks**</strong> for bold. Click "AI Sync Timing" to match lyrics with audio for karaoke.
             </p>
           </div>
         </div>

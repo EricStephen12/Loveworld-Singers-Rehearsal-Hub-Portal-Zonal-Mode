@@ -60,7 +60,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
         importedFrom: s.importedFrom
       })));
     } catch (error) {
-      console.error('Error loading songs:', error);
+ console.error('Error loading songs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +73,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
       const importedOriginalIds = songs.filter(s => s.importedFrom).map(s => s.id);
       setZoneSongs(allZoneSongs.filter((s: any) => !importedOriginalIds.includes(s.id || s.firebaseId)));
     } catch (error) {
-      console.error('Error loading zone songs:', error);
+ console.error('Error loading zone songs:', error);
     }
   };
 
@@ -102,7 +102,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
         loadSongs();
       }
     } catch (error) {
-      console.error('Error importing songs:', error);
+ console.error('Error importing songs:', error);
     } finally {
       setImporting(false);
     }
@@ -128,7 +128,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
         loadSongs();
       }
     } catch (error) {
-      console.error('Error creating song:', error);
+ console.error('Error creating song:', error);
     } finally {
       setCreating(false);
     }

@@ -67,7 +67,7 @@ export interface SubGroupRehearsal {
 
 export class SubGroupDatabaseService {
 
-  // ==================== SONGS ====================
+  // Songs
 
   /**
    * Get all songs for a sub-group
@@ -90,7 +90,7 @@ export class SubGroupDatabaseService {
         importedAt: doc.data().importedAt?.toDate()
       })) as SubGroupSong[];
     } catch (error) {
-      console.error('Error getting sub-group songs:', error);
+ console.error('Error getting sub-group songs:', error);
       return [];
     }
   }
@@ -130,17 +130,17 @@ export class SubGroupDatabaseService {
       // Trigger FCM push notification for subgroup members
       try {
         await this.sendSubGroupNotification(subGroupId, {
-          title: '🎵 New Song Added',
+          title: ' New Song Added',
           message: `"${newSong.title}" has been added to your subgroup library.`,
           type: 'zone'
         });
       } catch (fcmError) {
-        console.error('[SubGroupService] FCM error:', fcmError);
+ console.error('[SubGroupService] FCM error:', fcmError);
       }
 
       return { success: true, id: docRef.id };
     } catch (error) {
-      console.error('Error creating sub-group song:', error);
+ console.error('Error creating sub-group song:', error);
       return { success: false, error: 'Failed to create song' };
     }
   }
@@ -188,18 +188,18 @@ export class SubGroupDatabaseService {
       if (count > 0) {
         try {
           await this.sendSubGroupNotification(subGroupId, {
-            title: '🎵 New Songs Imported',
+            title: ' New Songs Imported',
             message: `${count} song(s) have been imported to your subgroup library.`,
             type: 'zone'
           });
         } catch (fcmError) {
-          console.error('[SubGroupService] FCM error (import):', fcmError);
+ console.error('[SubGroupService] FCM error (import):', fcmError);
         }
       }
 
       return { success: true, count };
     } catch (error) {
-      console.error('Error importing songs:', error);
+ console.error('Error importing songs:', error);
       return { success: false, count: 0, error: 'Failed to import songs' };
     }
   }
@@ -212,12 +212,12 @@ export class SubGroupDatabaseService {
       await deleteDoc(doc(db, 'subgroup_songs', songId));
       return { success: true };
     } catch (error) {
-      console.error('Error deleting song:', error);
+ console.error('Error deleting song:', error);
       return { success: false, error: 'Failed to delete song' };
     }
   }
 
-  // ==================== REHEARSALS ====================
+  // Rehearsals
 
   /**
    * Get all rehearsals for a sub-group
@@ -239,7 +239,7 @@ export class SubGroupDatabaseService {
         updatedAt: doc.data().updatedAt?.toDate() || new Date()
       })) as SubGroupRehearsal[];
     } catch (error) {
-      console.error('Error getting sub-group rehearsals:', error);
+ console.error('Error getting sub-group rehearsals:', error);
       return [];
     }
   }
@@ -264,7 +264,7 @@ export class SubGroupDatabaseService {
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as SubGroupRehearsal;
     } catch (error) {
-      console.error('Error getting rehearsal by ID:', error);
+ console.error('Error getting rehearsal by ID:', error);
       return null;
     }
   }
@@ -309,7 +309,7 @@ export class SubGroupDatabaseService {
         });
 
         await this.sendSubGroupNotification(subGroupId, {
-          title: '📅 New Rehearsal Scheduled',
+          title: ' New Rehearsal Scheduled',
           message: `${rehearsalData.name} on ${formattedDate}${rehearsalData.location ? ` at ${rehearsalData.location}` : ''}`,
           type: 'rehearsal',
           rehearsalId: docRef.id
@@ -318,7 +318,7 @@ export class SubGroupDatabaseService {
 
       return { success: true, id: docRef.id };
     } catch (error) {
-      console.error('Error creating rehearsal:', error);
+ console.error('Error creating rehearsal:', error);
       return { success: false, error: 'Failed to create rehearsal' };
     }
   }
@@ -339,7 +339,7 @@ export class SubGroupDatabaseService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error updating rehearsal:', error);
+ console.error('Error updating rehearsal:', error);
       return { success: false, error: 'Failed to update rehearsal' };
     }
   }
@@ -352,7 +352,7 @@ export class SubGroupDatabaseService {
       await deleteDoc(doc(db, 'subgroup_praise_nights', rehearsalId));
       return { success: true };
     } catch (error) {
-      console.error('Error deleting rehearsal:', error);
+ console.error('Error deleting rehearsal:', error);
       return { success: false, error: 'Failed to delete rehearsal' };
     }
   }
@@ -372,12 +372,12 @@ export class SubGroupDatabaseService {
       });
       return { success: true };
     } catch (error) {
-      console.error('Error adding song to rehearsal:', error);
+ console.error('Error adding song to rehearsal:', error);
       return { success: false, error: 'Failed to add song' };
     }
   }
 
-  // ==================== MEMBERS ====================
+  // Members
 
   /**
    * Add members to a sub-group
@@ -395,7 +395,7 @@ export class SubGroupDatabaseService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error adding members:', error);
+ console.error('Error adding members:', error);
       return { success: false, error: 'Failed to add members' };
     }
   }
@@ -416,7 +416,7 @@ export class SubGroupDatabaseService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error removing member:', error);
+ console.error('Error removing member:', error);
       return { success: false, error: 'Failed to remove member' };
     }
   }
@@ -453,12 +453,12 @@ export class SubGroupDatabaseService {
 
       return members;
     } catch (error) {
-      console.error('Error getting sub-group members:', error);
+ console.error('Error getting sub-group members:', error);
       return [];
     }
   }
 
-  // ==================== STATS ====================
+  // Stats
 
   /**
    * Get sub-group statistics
@@ -487,7 +487,7 @@ export class SubGroupDatabaseService {
         upcomingRehearsals
       };
     } catch (error) {
-      console.error('Error getting sub-group stats:', error);
+ console.error('Error getting sub-group stats:', error);
       return {
         totalMembers: 0,
         totalSongs: 0,
@@ -497,7 +497,7 @@ export class SubGroupDatabaseService {
     }
   }
 
-  // ==================== COMBINED REHEARSALS (PHASE 4) ====================
+  // Combined Rehearsals (phase 4)
 
   /**
    * Get all rehearsals for a member (zone + sub-group)
@@ -598,7 +598,7 @@ export class SubGroupDatabaseService {
         combined
       };
     } catch (error) {
-      console.error('Error getting member rehearsals:', error);
+ console.error('Error getting member rehearsals:', error);
       return {
         zoneRehearsals: [],
         subGroupRehearsals: [],
@@ -673,7 +673,7 @@ export class SubGroupDatabaseService {
             body: JSON.stringify({
               type: 'zone',
               recipientIds: batch,
-              title: `📢 ${notification.title}`,
+              title: ` ${notification.title}`,
               body: notification.message,
               data: {
                 subGroupId,
@@ -681,13 +681,13 @@ export class SubGroupDatabaseService {
                 rehearsalId: notification.rehearsalId || ''
               }
             })
-          }).catch(err => console.error('[SubGroupNotif] FCM error:', err));
+ }).catch(err => console.error('[SubGroupNotif] FCM error:', err));
         }
       }
 
       return { success: true, count };
     } catch (error) {
-      console.error('Error sending sub-group notification:', error);
+ console.error('Error sending sub-group notification:', error);
       return { success: false, count: 0, error: 'Failed to send notifications' };
     }
   }
@@ -737,7 +737,7 @@ export class SubGroupDatabaseService {
         return notifications.slice(0, limitCount);
       }
     } catch (error) {
-      console.error('Error getting user notifications:', error);
+ console.error('Error getting user notifications:', error);
       return [];
     }
   }
@@ -751,7 +751,7 @@ export class SubGroupDatabaseService {
       await updateDoc(notificationRef, { read: true });
       return { success: true };
     } catch (error) {
-      console.error('Error marking notification read:', error);
+ console.error('Error marking notification read:', error);
       return { success: false };
     }
   }

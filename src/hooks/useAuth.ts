@@ -91,7 +91,7 @@ export function useAuth() {
         }
       })
       .catch((err) => {
-        console.error('Failed to load profile:', err)
+ console.error('Failed to load profile:', err)
       })
       .finally(() => {
         setProfileLoading(false)

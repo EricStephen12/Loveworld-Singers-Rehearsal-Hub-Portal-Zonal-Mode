@@ -92,7 +92,7 @@ export class WebRTCService {
       });
       return true;
     } catch (error) {
-      console.error('Error initializing local stream:', error);
+ console.error('Error initializing local stream:', error);
       return false;
     }
   }
@@ -108,7 +108,7 @@ export class WebRTCService {
     const peer = this.peerConnections.get(from);
     const pc = peer?.connection;
     if (!pc || !peer) {
-      console.error('[WebRTC] No peer connection found for:', from);
+ console.error('[WebRTC] No peer connection found for:', from);
       return;
     }
 
@@ -140,7 +140,7 @@ export class WebRTCService {
               try {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
               } catch (e) {
-                console.warn('[WebRTC] Error adding queued ICE candidate:', e);
+ console.warn('[WebRTC] Error adding queued ICE candidate:', e);
               }
             }
             peer.pendingCandidates = [];
@@ -163,13 +163,13 @@ export class WebRTCService {
                 try {
                   await pc.addIceCandidate(new RTCIceCandidate(candidate));
                 } catch (e) {
-                  console.warn('[WebRTC] Error adding queued ICE candidate:', e);
+ console.warn('[WebRTC] Error adding queued ICE candidate:', e);
                 }
               }
               peer.pendingCandidates = [];
             }
           } else {
-            console.warn('[WebRTC] Received answer but not in have-local-offer state:', pc.signalingState);
+ console.warn('[WebRTC] Received answer but not in have-local-offer state:', pc.signalingState);
           }
           break;
 
@@ -184,13 +184,13 @@ export class WebRTCService {
             if (peer.pendingCandidates.length < 50) {
               peer.pendingCandidates.push(payload);
             } else {
-              console.warn('[WebRTC] ICE candidate queue full, dropping candidate');
+ console.warn('[WebRTC] ICE candidate queue full, dropping candidate');
             }
           } else {
             try {
               await pc.addIceCandidate(new RTCIceCandidate(payload));
             } catch (e) {
-              console.warn('[WebRTC] Error adding ICE candidate:', e);
+ console.warn('[WebRTC] Error adding ICE candidate:', e);
             }
           }
           break;
@@ -202,12 +202,12 @@ export class WebRTCService {
             await pc.setLocalDescription(offer);
             await this.signalingService?.sendSignal(from, 'offer', offer);
           } catch (e) {
-            console.error('[WebRTC] Error creating offer on request:', e);
+ console.error('[WebRTC] Error creating offer on request:', e);
           }
           break;
       }
     } catch (error) {
-      console.error('[WebRTC] Error handling signal message:', error);
+ console.error('[WebRTC] Error handling signal message:', error);
     }
   }
 
@@ -274,7 +274,7 @@ export class WebRTCService {
           this.onDataReceived(userId, data);
         }
       } catch (e) {
-        console.error('Error parsing data channel message:', e);
+ console.error('Error parsing data channel message:', e);
       }
     };
 
@@ -286,7 +286,7 @@ export class WebRTCService {
             this.onDataReceived(userId, data);
           }
         } catch (e) {
-          console.error('Error parsing data channel message:', e);
+ console.error('Error parsing data channel message:', e);
         }
       };
     };
@@ -327,7 +327,7 @@ export class WebRTCService {
           });
           return true;
         } catch (e) {
-          console.error('[WebRTC] Error enabling video:', e);
+ console.error('[WebRTC] Error enabling video:', e);
           return false;
         }
       } else {
@@ -379,7 +379,7 @@ export class WebRTCService {
 
       return true;
     } catch (e) {
-      console.error('[WebRTC] Error starting screen share:', e);
+ console.error('[WebRTC] Error starting screen share:', e);
       return false;
     }
   }
@@ -515,7 +515,7 @@ export class WebRTCService {
 
     const pc = this.getPeerConnection(userId);
     if (!pc) {
-      console.error('[WebRTC] No peer connection for:', userId);
+ console.error('[WebRTC] No peer connection for:', userId);
       return;
     }
 
@@ -524,7 +524,7 @@ export class WebRTCService {
       await pc.setLocalDescription(offer);
       await this.signalingService?.sendSignal(userId, 'offer', offer);
     } catch (error) {
-      console.error('[WebRTC] Error initiating connection:', error);
+ console.error('[WebRTC] Error initiating connection:', error);
     }
   }
 

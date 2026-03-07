@@ -75,7 +75,7 @@ export default function ChatSupportPage() {
         snapshot.forEach(doc => admins.push(doc.data() as UserProfile));
         setAdminProfiles(admins);
       } catch (err) {
-        console.error("Error fetching admin profiles:", err);
+ console.error("Error fetching admin profiles:", err);
       }
     };
     fetchAdmins();
@@ -131,7 +131,7 @@ export default function ChatSupportPage() {
       });
       scrollToBottom();
     } catch (error) {
-      console.error('Error sending message:', error);
+ console.error('Error sending message:', error);
     }
   };
 

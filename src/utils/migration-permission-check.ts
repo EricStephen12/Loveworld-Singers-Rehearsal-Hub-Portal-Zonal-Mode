@@ -53,7 +53,7 @@ export class MigrationPermissionCheck {
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Users: ${error.message}`)
-      console.error('❌ [Migration] WhatsApp Users collection - WRITE FAILED:', error.message)
+ console.error(' [Migration] WhatsApp Users collection - WRITE FAILED:', error.message)
     }
     
     // Test WhatsApp Chats collection
@@ -89,7 +89,7 @@ export class MigrationPermissionCheck {
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Chats: ${error.message}`)
-      console.error('❌ [Migration] WhatsApp Chats collection - WRITE FAILED:', error.message)
+ console.error(' [Migration] WhatsApp Chats collection - WRITE FAILED:', error.message)
     }
     
     // Test WhatsApp Messages collection
@@ -120,14 +120,14 @@ export class MigrationPermissionCheck {
       }
     } catch (error: any) {
       results.errors.push(`WhatsApp Messages: ${error.message}`)
-      console.error('❌ [Migration] WhatsApp Messages collection - WRITE FAILED:', error.message)
+ console.error(' [Migration] WhatsApp Messages collection - WRITE FAILED:', error.message)
     }
     
     const allPermissionsOk = results.canWriteUsers && results.canWriteChats && results.canWriteMessages
     
     if (allPermissionsOk) {
     } else {
-      console.error('❌ [Migration] Permission check failed:', results.errors)
+ console.error(' [Migration] Permission check failed:', results.errors)
     }
     
     return results
@@ -143,14 +143,14 @@ export class MigrationPermissionCheck {
       return true
     }
     
-    console.error('🚫 [Migration] Permission Issues Found:')
-    results.errors.forEach(error => console.error(`   • ${error}`))
-    console.error('')
-    console.error('💡 [Migration] To fix permissions:')
-    console.error('   1. Make sure you are logged in')
-    console.error('   2. Deploy the updated Firestore rules')
-    console.error('   3. Wait a few minutes for rules to propagate')
-    console.error('   4. Try the migration again')
+ console.error('🚫 [Migration] Permission Issues Found:')
+ results.errors.forEach(error => console.error(` • ${error}`))
+ console.error('')
+ console.error(' [Migration] To fix permissions:')
+ console.error(' 1. Make sure you are logged in')
+ console.error(' 2. Deploy the updated Firestore rules')
+ console.error(' 3. Wait a few minutes for rules to propagate')
+ console.error(' 4. Try the migration again')
     
     return false
   }
@@ -169,12 +169,12 @@ if (typeof window !== 'undefined') {
         userId = currentUser?.uid || userProfile?.id
         
         if (!userId) {
-          console.error('❌ No user ID found. Please log in to LWSRH first.')
+ console.error(' No user ID found. Please log in to LWSRH first.')
           return false
         }
         
       } catch (error) {
-        console.error('❌ Failed to get user from LWSRH auth store:', error)
+ console.error(' Failed to get user from LWSRH auth store:', error)
         return false
       }
     }

@@ -58,7 +58,7 @@ class EnhancedVoiceCallService {
     try {
       // 1. Create call in Realtime Database (your existing logic)
       if (!realtimeDb) {
-        console.error('[EnhancedVoiceCall] Realtime DB not available');
+ console.error('[EnhancedVoiceCall] Realtime DB not available');
         return;
       }
       const callRef = push(ref(realtimeDb, `voice_calls/${receiverId}`));
@@ -93,7 +93,7 @@ class EnhancedVoiceCallService {
       return callData;
 
     } catch (error) {
-      console.error('[EnhancedVoiceCall] Error starting call:', error);
+ console.error('[EnhancedVoiceCall] Error starting call:', error);
       throw error;
     }
   }
@@ -138,7 +138,7 @@ class EnhancedVoiceCallService {
 
 
     } catch (error) {
-      console.error('[EnhancedVoiceCall] Error sending call notification:', error);
+ console.error('[EnhancedVoiceCall] Error sending call notification:', error);
       // Don't fail the call if notification fails
     }
   }
@@ -183,12 +183,12 @@ class EnhancedVoiceCallService {
         setTimeout(async () => {
       try {
       if (!realtimeDb) {
-        console.error('[EnhancedVoiceCall] Realtime DB not available');
+ console.error('[EnhancedVoiceCall] Realtime DB not available');
         return;
       }
         await set(ref(realtimeDb, `voice_calls/${callId}/status`), 'missed');
       } catch (error) {
-        console.error('[EnhancedVoiceCall] Error timing out call:', error);
+ console.error('[EnhancedVoiceCall] Error timing out call:', error);
       }
     }, 30000); // 30 second timeout
   }

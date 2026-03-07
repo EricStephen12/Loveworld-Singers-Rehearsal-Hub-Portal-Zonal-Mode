@@ -19,7 +19,7 @@ export function useFeatureTracking(featureName: string, enabled: boolean = true)
         await SimplifiedAnalyticsService.incrementFeatureEngagements(featureName, 1);
         hasTracked.current = true;
       } catch (error) {
-        console.error('Feature tracking failed:', error);
+ console.error('Feature tracking failed:', error);
       }
     };
 
@@ -36,6 +36,6 @@ export async function trackFeatureEngagement(featureName: string) {
   try {
     await SimplifiedAnalyticsService.incrementFeatureEngagements(featureName, 1);
   } catch (error) {
-    console.error('Feature tracking failed:', error);
+ console.error('Feature tracking failed:', error);
   }
 }

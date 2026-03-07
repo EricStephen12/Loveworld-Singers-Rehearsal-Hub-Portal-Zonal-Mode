@@ -46,7 +46,7 @@ export function useLowDataOptimized<T>({
         lowDataOptimizer.set(key, freshData)
       }
     } catch (err) {
-      console.error(`Error fetching ${key}:`, err)
+ console.error(`Error fetching ${key}:`, err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
       
       if (enableCache) {

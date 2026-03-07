@@ -87,7 +87,7 @@ export default function NoChatSelected() {
 
         {/* Tips */}
         <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">💡 Quick Tips</h4>
+          <h4 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base"> Quick Tips</h4>
           <ul className="text-xs sm:text-sm text-blue-800 space-y-1 text-left">
             <li>• Use the search button to find and message any user</li>
             <li>• Create groups for team discussions and planning</li>

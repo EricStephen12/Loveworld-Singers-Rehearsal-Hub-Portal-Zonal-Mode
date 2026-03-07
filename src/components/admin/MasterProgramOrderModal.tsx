@@ -44,7 +44,7 @@ export default function MasterProgramOrderModal({
             await onUpdate(orderedPrograms);
             onClose();
         } catch (error) {
-            console.error("Failed to save order", error);
+ console.error("Failed to save order", error);
         } finally {
             setIsSaving(false);
         }

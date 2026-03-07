@@ -59,7 +59,7 @@ export function useMemberRehearsals(): UseMemberRehearsalsReturn {
       setSubGroupRehearsals(result.subGroupRehearsals as CombinedRehearsal[])
       setRehearsals(result.combined as CombinedRehearsal[])
     } catch (err) {
-      console.error('Error loading rehearsals:', err)
+ console.error('Error loading rehearsals:', err)
       setError('Failed to load rehearsals')
     } finally {
       setLoading(false)

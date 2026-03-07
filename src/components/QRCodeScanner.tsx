@@ -48,7 +48,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
         startQRDetection()
       }
     } catch (error) {
-      console.error('Camera access error:', error)
+ console.error('Camera access error:', error)
       onError('Unable to access camera. Please check permissions.')
     }
   }

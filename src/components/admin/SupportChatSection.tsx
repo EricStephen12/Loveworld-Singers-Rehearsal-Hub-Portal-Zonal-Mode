@@ -137,7 +137,7 @@ export default function SupportChatSection() {
                 status: 'sent'
             });
         } catch (error) {
-            console.error('Error sending reply:', error);
+ console.error('Error sending reply:', error);
         }
     };
 

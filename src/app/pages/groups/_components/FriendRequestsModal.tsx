@@ -22,7 +22,7 @@ export default function FriendRequestsModal({ isOpen, onClose }: FriendRequestsM
     try {
       await acceptFriendRequest(requestId)
     } catch (error) {
-      console.error('Error accepting friend request:', error)
+ console.error('Error accepting friend request:', error)
     } finally {
       setActionLoading(null)
     }
@@ -33,7 +33,7 @@ export default function FriendRequestsModal({ isOpen, onClose }: FriendRequestsM
     
     try {
     } catch (error) {
-      console.error('Error declining friend request:', error)
+ console.error('Error declining friend request:', error)
     } finally {
       setActionLoading(null)
     }
@@ -164,7 +164,7 @@ export default function FriendRequestsModal({ isOpen, onClose }: FriendRequestsM
         {friendRequests.length > 0 && (
           <div className="p-4 bg-gray-50 border-t border-gray-200">
             <p className="text-xs text-gray-600 text-center">
-              💡 Accepting a friend request allows you to easily start conversations
+               Accepting a friend request allows you to easily start conversations
             </p>
           </div>
         )}

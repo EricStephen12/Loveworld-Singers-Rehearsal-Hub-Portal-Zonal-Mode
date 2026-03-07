@@ -74,7 +74,7 @@ export class SongMinistryService {
       
       return { success: true, id: docRef.id };
     } catch (error) {
-      console.error('Error logging song ministry:', error);
+ console.error('Error logging song ministry:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
@@ -144,7 +144,7 @@ export class SongMinistryService {
         return b.month - a.month;
       });
     } catch (error) {
-      console.error('Error fetching monthly summaries:', error);
+ console.error('Error fetching monthly summaries:', error);
       return [];
     }
   }
@@ -182,7 +182,7 @@ export class SongMinistryService {
         };
       });
     } catch (error) {
-      console.error('Error fetching song ministries:', error);
+ console.error('Error fetching song ministries:', error);
       return [];
     }
   }
@@ -223,7 +223,7 @@ export class SongMinistryService {
         }))
         .sort((a, b) => b.count - a.count);
     } catch (error) {
-      console.error('Error fetching most ministered songs:', error);
+ console.error('Error fetching most ministered songs:', error);
       return [];
     }
   }
@@ -237,7 +237,7 @@ export class SongMinistryService {
         artist: song.artist
       }));
     } catch (error) {
-      console.error('Error fetching all songs:', error);
+ console.error('Error fetching all songs:', error);
       return [];
     }
   }

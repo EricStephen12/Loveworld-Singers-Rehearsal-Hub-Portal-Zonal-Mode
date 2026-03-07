@@ -89,7 +89,7 @@ export class CallNotificationHandler {
       oscillator.stop(audioContext.currentTime + 1);
       
     } catch (error) {
-      console.warn('[CallNotification] Could not play default ringtone:', error);
+ console.warn('[CallNotification] Could not play default ringtone:', error);
     }
   }
   
@@ -188,7 +188,7 @@ export class CallNotificationHandler {
       this.isActive = true;
       
     } catch (error) {
-      console.error('[CallNotification] Initialization failed:', error);
+ console.error('[CallNotification] Initialization failed:', error);
     }
   }
 }

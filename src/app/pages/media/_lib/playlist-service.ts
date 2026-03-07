@@ -101,7 +101,7 @@ export async function toggleLikeVideo(userId: string, videoId: string, thumbnail
       return true
     }
   } catch (error) {
-    console.error('👍 Error in toggleLikeVideo:', error)
+ console.error(' Error in toggleLikeVideo:', error)
     throw error
   }
 }
@@ -128,7 +128,7 @@ export async function toggleWatchLater(userId: string, videoId: string, thumbnai
       return true
     }
   } catch (error) {
-    console.error('⏰ Error in toggleWatchLater:', error)
+ console.error(' Error in toggleWatchLater:', error)
     throw error
   }
 }
@@ -167,7 +167,7 @@ export async function createPlaylist(
     })
     return docRef.id
   } catch (error) {
-    console.error('📝 Error creating playlist:', error)
+ console.error(' Error creating playlist:', error)
     throw error
   }
 }
@@ -188,7 +188,7 @@ export async function getUserPlaylists(userId: string): Promise<Playlist[]> {
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as Playlist[]
   } catch (error) {
-    console.error('📋 Error getting playlists:', error)
+ console.error(' Error getting playlists:', error)
     throw error
   }
 }
@@ -358,7 +358,7 @@ export async function getPublicPlaylists(limitCount: number = 20): Promise<Playl
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as Playlist[]
   } catch (error) {
-    console.error('🌐 Error getting public playlists:', error)
+ console.error('🌐 Error getting public playlists:', error)
     // Fallback: try without isSystem filter (for older playlists)
     try {
       const q = query(
@@ -377,7 +377,7 @@ export async function getPublicPlaylists(limitCount: number = 20): Promise<Playl
           updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
         })) as Playlist[]
     } catch (fallbackError) {
-      console.error('🌐 Fallback also failed:', fallbackError)
+ console.error('🌐 Fallback also failed:', fallbackError)
       return []
     }
   }

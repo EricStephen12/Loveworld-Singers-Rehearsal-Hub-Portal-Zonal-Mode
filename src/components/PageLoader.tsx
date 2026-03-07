@@ -110,7 +110,7 @@ export function PageLoader({ children }: PageLoaderProps) {
     const isPublicPath = checkIsPublicPath(pathname);
     const timeout = setTimeout(() => {
       if (!isReady) {
-        console.warn('⏱️ PageLoader timeout - resolving stuck state');
+ console.warn('⏱️ PageLoader timeout - resolving stuck state');
         if (!user && !isPublicPath) {
           router.replace('/auth');
         } else {
@@ -137,7 +137,7 @@ export function PageLoader({ children }: PageLoaderProps) {
   if (!isReady && !hasAuthCache) {
     // DIAGNOSTIC LOG (Silent in prod mostly, but helpful for this fix)
     if (typeof window !== 'undefined' && !window.location.host.includes('localhost')) {
-      console.log('⚡ PageLoader: Showing initial spinner (No cache found)');
+ console.log(' PageLoader: Showing initial spinner (No cache found)');
     }
 
     return (

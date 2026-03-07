@@ -43,7 +43,7 @@ export function NextActionPrompt({
         {/* Success message */}
         <div className="text-center mb-6">
           <div className="size-12 mx-auto mb-3 rounded-full bg-emerald-500/20 flex items-center justify-center">
-            <span className="text-2xl">✅</span>
+            <span className="text-2xl"></span>
           </div>
           <h3 className="text-lg font-bold text-white">
             You just created your first take!

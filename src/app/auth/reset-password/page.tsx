@@ -74,7 +74,7 @@ function ResetPasswordContent() {
       }, 3000)
       
     } catch (error: any) {
-      console.error('Password reset error:', error)
+ console.error('Password reset error:', error)
       setError(error.message || 'Failed to reset password')
     } finally {
       setIsLoading(false)

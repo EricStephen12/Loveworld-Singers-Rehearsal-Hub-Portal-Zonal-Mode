@@ -71,7 +71,7 @@ export default function CategoryOrderModal({
             await onUpdate(praiseNight.id, categories);
             onClose();
         } catch (error) {
-            console.error("Failed to save order", error);
+ console.error("Failed to save order", error);
         } finally {
             setIsSaving(false);
         }

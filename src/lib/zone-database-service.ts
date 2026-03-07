@@ -36,7 +36,7 @@ export class ZoneDatabaseService {
 
       return sorted.slice(0, limitCount)
     } catch (error) {
-      console.error('Error getting praise nights by zone:', error)
+ console.error('Error getting praise nights by zone:', error)
       return []
     }
   }
@@ -71,7 +71,7 @@ export class ZoneDatabaseService {
       )
       return songs.sort((a: any, b: any) => (a.orderIndex || 0) - (b.orderIndex || 0))
     } catch (error) {
-      console.error('Error getting zone songs:', error)
+ console.error('Error getting zone songs:', error)
       return []
     }
   }
@@ -85,7 +85,7 @@ export class ZoneDatabaseService {
         zoneId
       )
     } catch (error) {
-      console.error('Error getting zone songs by zone:', error)
+ console.error('Error getting zone songs by zone:', error)
       return []
     }
   }
@@ -125,7 +125,7 @@ export class ZoneDatabaseService {
 
       return { success: true, id: result.id, firebaseId: result.id }
     } catch (error) {
-      console.error('Error creating praise night:', error)
+ console.error('Error creating praise night:', error)
       return { success: false }
     }
   }
@@ -155,7 +155,7 @@ export class ZoneDatabaseService {
 
       return { success: true, id: result.id, song: { ...cleanData, id: result.id } }
     } catch (error) {
-      console.error('Error creating zone song:', error)
+ console.error('Error creating zone song:', error)
       return { success: false }
     }
   }
@@ -214,7 +214,7 @@ export class ZoneDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating praise night:', error)
+ console.error('Error updating praise night:', error)
       return { success: false }
     }
   }
@@ -252,7 +252,7 @@ export class ZoneDatabaseService {
             }
           }
         } catch (e) {
-          console.error('Error fetching song for metadata update:', e);
+ console.error('Error fetching song for metadata update:', e);
         }
       } else {
         // If we have praiseNightId and know zoneId? 
@@ -262,7 +262,7 @@ export class ZoneDatabaseService {
       }
       return { success: true }
     } catch (error) {
-      console.error('Error updating zone song:', error)
+ console.error('Error updating zone song:', error)
       return { success: false }
     }
   }
@@ -302,7 +302,7 @@ export class ZoneDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error deleting praise night:', error)
+ console.error('Error deleting praise night:', error)
       return { success: false }
     }
   }
@@ -319,7 +319,7 @@ export class ZoneDatabaseService {
           zId = (songDoc as any).zoneId;
         }
       } catch (e) {
-        console.error('Error getting song before delete:', e);
+ console.error('Error getting song before delete:', e);
       }
 
       await FirebaseDatabaseService.deleteDocument('zone_songs', songId)
@@ -331,7 +331,7 @@ export class ZoneDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error deleting zone song:', error)
+ console.error('Error deleting zone song:', error)
       return { success: false }
     }
   }
@@ -345,7 +345,7 @@ export class ZoneDatabaseService {
         zoneId
       )
     } catch (error) {
-      console.error('Error getting zone categories:', error)
+ console.error('Error getting zone categories:', error)
       return []
     }
   }
@@ -368,7 +368,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true, id: result.id, ...data }
     } catch (error) {
-      console.error('Error creating category:', error)
+ console.error('Error creating category:', error)
       return { success: false }
     }
   }
@@ -382,7 +382,7 @@ export class ZoneDatabaseService {
         zoneId
       )
     } catch (error) {
-      console.error('Error getting zone page categories:', error)
+ console.error('Error getting zone page categories:', error)
       return []
     }
   }
@@ -405,7 +405,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true, id: result.id }
     } catch (error) {
-      console.error('Error creating page category:', error)
+ console.error('Error creating page category:', error)
       return { success: false }
     }
   }
@@ -423,7 +423,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
-      console.error('Error updating page category:', error)
+ console.error('Error updating page category:', error)
       return { success: false }
     }
   }
@@ -439,7 +439,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
-      console.error('Error deleting page category:', error)
+ console.error('Error deleting page category:', error)
       return { success: false }
     }
   }
@@ -457,7 +457,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {
-      console.error('Error updating category:', error)
+ console.error('Error updating category:', error)
       return { success: false }
     }
   }
@@ -473,7 +473,7 @@ export class ZoneDatabaseService {
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {
-      console.error('Error deleting category:', error)
+ console.error('Error deleting category:', error)
       return { success: false }
     }
   }
@@ -493,7 +493,7 @@ export class ZoneDatabaseService {
         return dateB - dateA
       })
     } catch (error) {
-      console.error('Error getting zone song history:', error)
+ console.error('Error getting zone song history:', error)
       return []
     }
   }
@@ -504,7 +504,7 @@ export class ZoneDatabaseService {
       const result = await FirebaseDatabaseService.addDocument('zone_song_history', data)
       return { success: true, id: result.id }
     } catch (error) {
-      console.error('Error creating zone song history:', error)
+ console.error('Error creating zone song history:', error)
       return { success: false }
     }
   }
@@ -567,7 +567,7 @@ export class ZoneDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating page category order:', error)
+ console.error('Error updating page category order:', error)
       return { success: false }
     }
   }
@@ -585,7 +585,7 @@ export class ZoneDatabaseService {
       const { MasterLibraryService } = await import('./master-library-service')
       return await MasterLibraryService.getMasterSongs(limit)
     } catch (error) {
-      console.error('Error getting Master Library songs:', error)
+ console.error('Error getting Master Library songs:', error)
       return []
     }
   }
@@ -606,7 +606,7 @@ export class ZoneDatabaseService {
         song.tempo?.toLowerCase().includes(term)
       )
     } catch (error) {
-      console.error('Error searching Master Library:', error)
+ console.error('Error searching Master Library:', error)
       return []
     }
   }
@@ -671,7 +671,7 @@ export class ZoneDatabaseService {
       }
       return { success: false, error: 'Failed to import song' }
     } catch (error) {
-      console.error('Error importing from Master Library:', error)
+ console.error('Error importing from Master Library:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -690,7 +690,7 @@ export class ZoneDatabaseService {
         })
       }
     } catch (error) {
-      console.error('Error incrementing import count:', error)
+ console.error('Error incrementing import count:', error)
     }
   }
 
@@ -699,7 +699,7 @@ export class ZoneDatabaseService {
       const song = await FirebaseDatabaseService.getDocument('zone_songs', songId)
       return (song as any)?.importedFrom === 'master'
     } catch (error) {
-      console.error('Error checking import status:', error)
+ console.error('Error checking import status:', error)
       return false
     }
   }
@@ -709,7 +709,7 @@ export class ZoneDatabaseService {
       const allSongs = await this.getAllSongsByZone(zoneId)
       return allSongs.filter((song: any) => song.importedFrom === 'master')
     } catch (error) {
-      console.error('Error getting imported songs:', error)
+ console.error('Error getting imported songs:', error)
       return []
     }
   }

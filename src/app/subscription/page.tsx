@@ -45,7 +45,7 @@ export default function SubscriptionPage() {
         setPaymentHistory(data.payments || [])
       }
     } catch (error) {
-      console.error('Error loading payment history:', error)
+ console.error('Error loading payment history:', error)
     } finally {
       setLoadingHistory(false)
     }
@@ -103,7 +103,7 @@ export default function SubscriptionPage() {
       try {
         data = JSON.parse(responseText)
       } catch (parseErr) {
-        console.error('Failed to parse API response:', parseErr)
+ console.error('Failed to parse API response:', parseErr)
         setError('Server returned an invalid response. Please check your connection.')
         setIsProcessing(false)
         return
@@ -121,7 +121,7 @@ export default function SubscriptionPage() {
         setIsProcessing(false)
       }
     } catch (err) {
-      console.error('Payment error:', err)
+ console.error('Payment error:', err)
       setError('An error occurred. Please try again.')
       setIsProcessing(false)
     }
@@ -143,7 +143,7 @@ export default function SubscriptionPage() {
         setError(result.error || 'Failed to cancel subscription')
       }
     } catch (err) {
-      console.error('Cancellation error:', err)
+ console.error('Cancellation error:', err)
       setError('An error occurred while cancelling. Please contact support.')
     } finally {
       setIsCancelling(false)
@@ -419,7 +419,7 @@ export default function SubscriptionPage() {
                                         }
                                       }
                                     } catch (error) {
-                                      console.error('Error fetching receipt:', error)
+ console.error('Error fetching receipt:', error)
                                       alert('Failed to load receipt')
                                     }
                                   }}

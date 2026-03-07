@@ -54,7 +54,7 @@ export default function QRScannerPage() {
         requestAnimationFrame(detectQR)
       }
     } catch (error) {
-      console.error('Camera access error:', error)
+ console.error('Camera access error:', error)
       setStatusMessage('Camera access denied.')
       setScanStatus('failed')
     }

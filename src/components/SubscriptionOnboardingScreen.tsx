@@ -54,7 +54,7 @@ export default function SubscriptionOnboardingScreen({ onComplete, onBack }: Sub
       // Simulate successful payment
       onComplete()
     } catch (error) {
-      console.error('Payment failed:', error)
+ console.error('Payment failed:', error)
       setIsProcessing(false)
     }
   }

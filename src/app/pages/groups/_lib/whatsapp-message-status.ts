@@ -50,7 +50,7 @@ export class WhatsAppMessageStatus {
       
       await updateDoc(messageRef, updateData)
     } catch (error) {
-      console.error('❌ [WhatsApp Status] Failed to update status:', error)
+ console.error(' [WhatsApp Status] Failed to update status:', error)
     }
   }
   
@@ -103,7 +103,7 @@ export class WhatsAppMessageStatus {
       })
       
     } catch (error) {
-      console.error('❌ [WhatsApp Status] Failed to mark chat as read:', error)
+ console.error(' [WhatsApp Status] Failed to mark chat as read:', error)
     }
   }
   

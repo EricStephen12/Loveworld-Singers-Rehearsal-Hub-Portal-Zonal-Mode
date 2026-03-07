@@ -35,7 +35,7 @@ class WebFCMService {
       const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
       if (!vapidKey) {
-        console.warn('⚠️ VAPID key not found. Background notifications may not work.');
+ console.warn('️ VAPID key not found. Background notifications may not work.');
         return null;
       }
 
@@ -47,7 +47,7 @@ class WebFCMService {
             scope: '/'
           });
         } catch (swError) {
-          console.error('❌ SW registration failed:', swError);
+ console.error(' SW registration failed:', swError);
         }
       }
 
@@ -72,7 +72,7 @@ class WebFCMService {
         return null;
       }
     } catch (err) {
-      console.error('❌ An error occurred while retrieving token:', err);
+ console.error(' An error occurred while retrieving token:', err);
       return null;
     }
   }
@@ -92,7 +92,7 @@ class WebFCMService {
       }
       return false;
     } catch (error) {
-      console.error('❌ Error requesting notification permission:', error);
+ console.error(' Error requesting notification permission:', error);
       return false;
     }
   }
@@ -138,7 +138,7 @@ class WebFCMService {
       });
     } catch (error) {
       // Silent fail - don't disturb user
-      // console.error('❌ Error saving token:', error);
+ // console.error(' Error saving token:', error);
     }
   }
 
@@ -159,7 +159,7 @@ export function useWebFCM() {
       try {
         const result = await webFCMService.requestPermission();
       } catch (error) {
-        console.error('❌ [FCM] Init error:', error);
+ console.error(' [FCM] Init error:', error);
       }
     };
 
@@ -207,7 +207,7 @@ export function useWebFCM() {
         if (Notification.permission === 'granted') {
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then((registration) => {
-              registration.showNotification(`📞 ${data.callerName || 'Someone'} is calling`, {
+              registration.showNotification(` ${data.callerName || 'Someone'} is calling`, {
                 body: 'Tap to answer',
                 icon: data.callerAvatar || '/APP ICON/pwa_192_filled.png',
                 badge: '/APP ICON/pwa_192_filled.png',
@@ -221,8 +221,8 @@ export function useWebFCM() {
                   url: `/pages/groups?call=${data.callId}`
                 },
                 actions: [
-                  { action: 'answer', title: '✅ Answer' },
-                  { action: 'decline', title: '❌ Decline' }
+                  { action: 'answer', title: ' Answer' },
+                  { action: 'decline', title: ' Decline' }
                 ]
               } as NotificationOptions);
             });

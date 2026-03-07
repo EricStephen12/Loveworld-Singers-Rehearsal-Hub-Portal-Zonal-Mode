@@ -47,7 +47,7 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
           onboarding_completed_at: new Date().toISOString()
         })
       } catch (error) {
-        console.error('❌ Error updating tour status:', error)
+ console.error(' Error updating tour status:', error)
       }
     }
 
@@ -66,7 +66,7 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
       {/* Simple Welcome Message */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] max-w-sm mx-4">
         <div className="bg-white rounded-2xl shadow-2xl p-6 text-center">
-          <div className="text-4xl mb-3">👋</div>
+          <div className="text-4xl mb-3"></div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome to LWSRH!</h2>
           <p className="text-sm text-gray-600 mb-4">
             Your complete platform for managing praise and worship rehearsals. Explore the features and enjoy!

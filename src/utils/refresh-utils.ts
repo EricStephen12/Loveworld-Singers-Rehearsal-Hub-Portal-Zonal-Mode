@@ -112,7 +112,7 @@ export const handleAppRefresh = async () => {
       showRefreshSuccess();
       
     } catch (storeError) {
-      console.warn('Could not refresh stores, falling back to page reload:', storeError);
+ console.warn('Could not refresh stores, falling back to page reload:', storeError);
       // Fallback to page reload if store refresh fails
       setTimeout(() => {
         const loadingDiv = document.getElementById('refresh-loading-indicator');
@@ -124,7 +124,7 @@ export const handleAppRefresh = async () => {
     }
     
   } catch (error) {
-    console.error('❌ Refresh error:', error);
+ console.error(' Refresh error:', error);
     // Remove loading indicator
     const loadingDiv = document.getElementById('refresh-loading-indicator');
     if (loadingDiv) {
@@ -157,7 +157,7 @@ const showRefreshSuccess = () => {
       z-index: 9999;
       animation: slideUp 0.3s ease-out;
     ">
-      ✅ App refreshed successfully!
+       App refreshed successfully!
     </div>
     <style>
       @keyframes slideUp {

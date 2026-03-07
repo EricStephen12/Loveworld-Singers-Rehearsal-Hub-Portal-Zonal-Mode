@@ -193,11 +193,11 @@ export default function UpcomingEventForm({
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="announcement">📢 Announcement</option>
-              <option value="event">🎉 Event</option>
-              <option value="reminder">⏰ Reminder</option>
+              <option value="announcement"> Announcement</option>
+              <option value="event"> Event</option>
+              <option value="reminder"> Reminder</option>
               <option value="meeting">👥 Meeting</option>
-              <option value="rehearsal">🎵 Rehearsal</option>
+              <option value="rehearsal"> Rehearsal</option>
             </select>
           </div>
 

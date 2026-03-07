@@ -66,7 +66,7 @@ function SubscriptionCallbackContent() {
             setMessage('Unknown payment status')
         }
       } catch (error) {
-        console.error('Error verifying payment:', error)
+ console.error('Error verifying payment:', error)
         setStatus('failed')
         setMessage('Error verifying payment. Please contact support.')
       }
@@ -103,7 +103,7 @@ function SubscriptionCallbackContent() {
             <p className="text-gray-600 mb-6">{message}</p>
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
               <p className="text-green-800 text-sm">
-                🎉 Your account has been upgraded to Premium! Redirecting to home...
+                 Your account has been upgraded to Premium! Redirecting to home...
               </p>
             </div>
             <button

@@ -138,7 +138,7 @@ class SmartCacheManager {
       this.setCache(config, data);
       return data;
     } catch (error) {
-      console.error(`Failed to refresh cache ${key}:`, error);
+ console.error(`Failed to refresh cache ${key}:`, error);
       throw error;
     }
   }

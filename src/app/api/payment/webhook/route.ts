@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       : process.env.NEXT_PUBLIC_KINGSPAY_TEST_SECRET_KEY || '';
 
     if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
-      console.error('Invalid webhook signature');
+ console.error('Invalid webhook signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
           const expiresAt = new Date();
           expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year subscription
 
-          // ✅ INSTANT ACCESS: Update subscription status immediately
+          // INSTANT ACCESS: Update subscription status immediately
           await FirebaseDatabaseService.updateDocument('zone_subscriptions', zoneId, {
             status: 'active',
             plan: 'premium',
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           // Send KingsChat notification if user has KingsChat linked
           if (coordinatorProfile?.kingschatUserId) {
             try {
-              const message = `🎉 Payment Successful!\n\nYour zone subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nMembers: ${memberCount}\nExpires: ${expiresAt.toLocaleDateString()}\n\nThank you for subscribing! 🙏`;
+              const message = ` Payment Successful!\n\nYour zone subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nMembers: ${memberCount}\nExpires: ${expiresAt.toLocaleDateString()}\n\nThank you for subscribing! 🙏`;
 
               await KingsChatAuthService.sendMessage(
                 coordinatorProfile.kingschatUserId,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
               );
 
             } catch (error) {
-              console.error('Failed to send KingsChat notification:', error);
+ console.error('Failed to send KingsChat notification:', error);
             }
           }
 
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
           const subscriptionId = userId;
 
-          // ✅ INSTANT ACCESS: Update subscription status immediately
+          // INSTANT ACCESS: Update subscription status immediately
           await FirebaseDatabaseService.updateDocument('individual_subscriptions', subscriptionId, {
             status: 'active',
             paymentId: paymentData.payment_id,
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           // Send KingsChat notification if user has KingsChat linked
           if (userProfile?.kingschatUserId) {
             try {
-              const message = `🎉 Payment Successful!\n\nYour premium subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nExpires: ${expiresAt.toLocaleDateString()}\n\nEnjoy unlimited access to all features! 🚀`;
+              const message = ` Payment Successful!\n\nYour premium subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nExpires: ${expiresAt.toLocaleDateString()}\n\nEnjoy unlimited access to all features! `;
 
               await KingsChatAuthService.sendMessage(
                 userProfile.kingschatUserId,
@@ -194,20 +194,20 @@ export async function POST(request: NextRequest) {
               );
 
             } catch (error) {
-              console.error('Failed to send KingsChat notification:', error);
+ console.error('Failed to send KingsChat notification:', error);
             }
           }
         }
 
 
       } catch (error) {
-        console.error('Error processing payment webhook:', error);
+ console.error('Error processing payment webhook:', error);
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook processing error:', error);
+ console.error('Webhook processing error:', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }

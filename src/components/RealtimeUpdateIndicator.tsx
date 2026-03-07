@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUltraFastData } from '@/contexts/UltraFastDataContext';
+import { useUltraFastData } from '@/contexts/DataContext';
 
 export default function RealtimeUpdateIndicator() {
   const { songs, praiseNights, categories, media } = useUltraFastData();

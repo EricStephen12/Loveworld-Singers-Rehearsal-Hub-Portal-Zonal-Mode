@@ -30,7 +30,7 @@ export class EmergencyRecovery {
       
       return recoveredData;
     } catch (error) {
-      console.error('❌ Error checking local cache:', error);
+ console.error(' Error checking local cache:', error);
       return [];
     }
   }
@@ -43,7 +43,7 @@ export class EmergencyRecovery {
       
       return pages;
     } catch (error) {
-      console.error('❌ Error checking Firebase data:', error);
+ console.error(' Error checking Firebase data:', error);
       return [];
     }
   }
@@ -62,11 +62,11 @@ export class EmergencyRecovery {
     
     // Analyze what we have
     if (cacheData.length > 0) {
-      report.recommendations.push('✅ Found cached data - can potentially recover from cache');
+      report.recommendations.push(' Found cached data - can potentially recover from cache');
     }
     
     if (firebaseData.length > 0) {
-      report.recommendations.push('✅ Firebase still has data - check for recent changes');
+      report.recommendations.push(' Firebase still has data - check for recent changes');
     }
     
     return report;
@@ -86,7 +86,7 @@ export class EmergencyRecovery {
       // This is a template - you'd need to implement the actual restore logic
       return data;
     } catch (error) {
-      console.error('❌ Error restoring from cache:', error);
+ console.error(' Error restoring from cache:', error);
       throw error;
     }
   }

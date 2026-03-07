@@ -110,7 +110,7 @@ export default function NotificationsPage() {
         notificationCache.delete(`${currentZone.id}-${userId}`)
       }
     } catch (err) {
-      console.error('[Notifications] Error deleting:', err)
+ console.error('[Notifications] Error deleting:', err)
       setError('Failed to delete notification')
     } finally {
       setDeletingId(null)
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
                 }
               })
             } catch (e) {
-              console.error(`Error fetching from ${col}:`, e)
+ console.error(`Error fetching from ${col}:`, e)
             }
           }))
           return events
@@ -341,8 +341,8 @@ export default function NotificationsPage() {
       if (birthdays.status === 'fulfilled') {
         (birthdays.value as any[]).forEach(bday => {
           const title = bday.isToday
-            ? `🎂 ${bday.first_name}'s Birthday Today!`
-            : `🎂 Upcoming Birthday`
+            ? ` ${bday.first_name}'s Birthday Today!`
+            : ` Upcoming Birthday`
           const message = bday.isToday
             ? `${bday.first_name} ${bday.last_name} is celebrating their birthday today!`
             : `${bday.first_name} ${bday.last_name}'s birthday is coming up`
@@ -372,7 +372,7 @@ export default function NotificationsPage() {
 
       setNotifications(allNotifications)
     } catch (e) {
-      console.error('Load error:', e)
+ console.error('Load error:', e)
       setError('Failed to load notifications')
     } finally {
       setLoading(false)

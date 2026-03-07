@@ -72,7 +72,7 @@ export function KaraokeView() {
         setLyricsError('Manual sync required. No LRC lyrics configured.');
 
       } catch (error) {
-        console.error('[KaraokeView] Error loading lyrics:', error);
+ console.error('[KaraokeView] Error loading lyrics:', error);
         setSongLyrics(defaultLyrics);
         setLyricsError('Failed to load lyrics');
       }
@@ -218,7 +218,7 @@ export function KaraokeView() {
           setIsMicActive(true);
         }
       } catch (error) {
-        console.error('[KaraokeView] Failed to start mic:', error);
+ console.error('[KaraokeView] Failed to start mic:', error);
       }
     }
   };
@@ -262,7 +262,7 @@ export function KaraokeView() {
           });
         }
       } catch (err) {
-        console.error('[KaraokeView] Cleanup error:', err);
+ console.error('[KaraokeView] Cleanup error:', err);
       }
     })();
   };

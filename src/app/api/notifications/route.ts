@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
 
     } catch (pushError) {
-      console.error('⚠️ Error broadcasting push notification (non-critical):', pushError);
+ console.error('️ Error broadcasting push notification (non-critical):', pushError);
       // Don't fail the request if push notification fails
     }
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in notifications API:', error);
+ console.error('Error in notifications API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ notifications });
 
   } catch (error) {
-    console.error('Error in notifications GET API:', error);
+ console.error('Error in notifications GET API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

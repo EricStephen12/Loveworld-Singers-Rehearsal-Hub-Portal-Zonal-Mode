@@ -32,7 +32,7 @@ export default function AccountSupportPage() {
       await signOut();
       // Don't use router.push - signOut already handles redirect
     } catch (error) {
-      console.error('Logout error:', error);
+ console.error('Logout error:', error);
     }
   };
 

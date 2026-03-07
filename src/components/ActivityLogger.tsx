@@ -32,7 +32,7 @@ export function ActivityLogger({ children }: { children?: React.ReactNode }) {
           
         }
       } catch (error) {
-        console.error('Error logging activity:', error);
+ console.error('Error logging activity:', error);
       }
     };
 

@@ -44,7 +44,7 @@ export async function getCategories(): Promise<MediaCategory[]> {
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as MediaCategory[]
   } catch (error) {
-    console.error('Error fetching categories:', error)
+ console.error('Error fetching categories:', error)
     return []
   }
 }
@@ -59,7 +59,7 @@ export async function initializeDefaultCategories(): Promise<void> {
       })
     }
   } catch (error) {
-    console.error('Error initializing categories:', error)
+ console.error('Error initializing categories:', error)
   }
 }
 
@@ -80,7 +80,7 @@ export async function createCategory(name: string, description?: string): Promis
 
     return docRef.id
   } catch (error) {
-    console.error('Error creating category:', error)
+ console.error('Error creating category:', error)
     throw error
   }
 }
@@ -111,7 +111,7 @@ export async function updateCategory(
       await updateVideosCategory(currentSlug, newSlug)
     }
   } catch (error) {
-    console.error('Error updating category:', error)
+ console.error('Error updating category:', error)
     throw error
   }
 }
@@ -144,7 +144,7 @@ async function updateVideosCategory(oldSlug: string, newSlug: string): Promise<n
 
     return updatedCount
   } catch (error) {
-    console.error('Error updating videos category:', error)
+ console.error('Error updating videos category:', error)
     throw error
   }
 }
@@ -153,7 +153,7 @@ export async function deleteCategory(categoryId: string): Promise<void> {
   try {
     await deleteDoc(doc(db, COLLECTION, categoryId))
   } catch (error) {
-    console.error('Error deleting category:', error)
+ console.error('Error deleting category:', error)
     throw error
   }
 }

@@ -101,7 +101,7 @@ export default function MediaUploadSection() {
       setVideos(v)
       setPlaylists(p)
       setCategories(c)
-    } catch (e) { console.error(e) }
+ } catch (e) { console.error(e) }
     finally { setIsLoading(false) }
   }
 
@@ -264,7 +264,7 @@ export default function MediaUploadSection() {
       setView('playlists'); // Go back to playlists list
       loadData()
     } catch (e) {
-      console.error('❌ Failed to delete playlist:', e)
+ console.error(' Failed to delete playlist:', e)
       showToast('error', 'Failed to delete')
     }
   }
@@ -431,8 +431,8 @@ export default function MediaUploadSection() {
     )
   }
 
-  // ========== VIDEOS LIST ==========
-  // ========== RENDER HELPER: SIDEBAR ==========
+  // Videos List
+  // Render Helper: Sidebar
   const renderSidebar = () => {
     const items = [
       { id: 'videos', label: 'Content', icon: Film, count: videos.length },
@@ -530,7 +530,7 @@ export default function MediaUploadSection() {
     )
   }
 
-  // ========== RENDER HELPER: VIDEOS LIST ==========
+  // Render Helper: Videos List
   function renderVideosList() {
     const filtered = videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase()))
     return (
@@ -771,7 +771,7 @@ export default function MediaUploadSection() {
     )
   }
 
-  // ========== MAIN COMPONENT RENDER ==========
+  // Main Component Render
   return (
     <div className="h-full flex bg-[#f8fafc] overflow-hidden">
       {renderToast()}
@@ -1597,7 +1597,7 @@ export default function MediaUploadSection() {
       setView('videos')
       loadData()
     } catch (e: any) {
-      console.error(e)
+ console.error(e)
       showToast('error', 'Failed to publish batch')
     } finally {
       setIsSubmitting(false)

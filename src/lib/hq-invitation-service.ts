@@ -24,12 +24,12 @@ export class HQInvitationService {
       const zone = getZoneByInvitationCode(invitationCode)
       
       if (!zone) {
-        console.error('❌ Invalid invitation code')
+ console.error(' Invalid invitation code')
         return { success: false, error: 'Invalid invitation code' }
       }
       
             if (!isHQGroup(zone.id)) {
-        console.error('❌ Not an HQ group invitation code')
+ console.error(' Not an HQ group invitation code')
         return { success: false, error: 'Not an HQ group invitation code' }
       }
       
@@ -66,7 +66,7 @@ export class HQInvitationService {
         return result
       }
     } catch (error) {
-      console.error('❌ Error joining HQ group:', error)
+ console.error(' Error joining HQ group:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -93,7 +93,7 @@ export class HQInvitationService {
         members
       }
     } catch (error) {
-      console.error('❌ Error getting HQ group stats:', error)
+ console.error(' Error getting HQ group stats:', error)
       return null
     }
   }

@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ===== COMMENTS OPERATIONS =====
+// Comments Operations
 
 export async function getCommentsBySongId(songId: number): Promise<Comment[]> {
     try {
@@ -26,7 +26,7 @@ export async function getCommentsBySongId(songId: number): Promise<Comment[]> {
             author: comment.author
         }));
     } catch (error) {
-        console.error('Error fetching comments:', error);
+ console.error('Error fetching comments:', error);
         return [];
     }
 }
@@ -54,7 +54,7 @@ export async function createComment(commentData: Omit<Comment, 'id'> & { songId:
             author: data.author
         };
     } catch (error) {
-        console.error('Error creating comment:', error);
+ console.error('Error creating comment:', error);
         return null;
     }
 }

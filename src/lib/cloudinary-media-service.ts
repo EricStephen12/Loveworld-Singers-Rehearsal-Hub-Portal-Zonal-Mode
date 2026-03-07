@@ -65,7 +65,7 @@ export async function uploadToCloudinary(
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 
     if (!cloudName || !uploadPreset) {
-      console.error('[Cloudinary] Missing cloud name or upload preset')
+ console.error('[Cloudinary] Missing cloud name or upload preset')
       return { success: false, error: 'Cloudinary not configured' }
     }
 
@@ -83,14 +83,14 @@ export async function uploadToCloudinary(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('[Cloudinary] Upload failed:', errorText)
+ console.error('[Cloudinary] Upload failed:', errorText)
       return { success: false, error: `Upload failed: ${response.status}` }
     }
 
     const data = await response.json()
     return { success: true, url: data.secure_url, publicId: data.public_id }
   } catch (error) {
-    console.error('[Cloudinary] Upload error:', error)
+ console.error('[Cloudinary] Upload error:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Upload failed' }
   }
 }
@@ -134,7 +134,7 @@ export async function getAllCloudinaryMedia(
 
     return files
   } catch (error) {
-    console.error('Error getting media files:', error)
+ console.error('Error getting media files:', error)
     return []
   }
 }
@@ -165,7 +165,7 @@ export async function loadMoreCloudinaryMedia(
 
     return files
   } catch (error) {
-    console.error('Error loading more media files:', error)
+ console.error('Error loading more media files:', error)
     return []
   }
 }
@@ -217,7 +217,7 @@ export async function getCloudinaryMediaByType(
 
     return files
   } catch (error) {
-    console.error(`Error getting ${type} files:`, error)
+ console.error(`Error getting ${type} files:`, error)
     return []
   }
 }
@@ -248,7 +248,7 @@ export async function loadMoreCloudinaryMediaByType(
 
     return files
   } catch (error) {
-    console.error(`Error loading more ${type} files:`, error)
+ console.error(`Error loading more ${type} files:`, error)
     return []
   }
 }
@@ -277,7 +277,7 @@ export async function getCloudinaryMediaByFolder(
 
     return files
   } catch (error) {
-    console.error('Error getting files from folder:', error)
+ console.error('Error getting files from folder:', error)
     return []
   }
 }
@@ -294,7 +294,7 @@ export async function getCloudinaryMediaById(
     if (!mediaDoc.exists()) return null
     return mapDocToFile(mediaDoc)
   } catch (error) {
-    console.error('Error getting media file:', error)
+ console.error('Error getting media file:', error)
     return null
   }
 }
@@ -329,7 +329,7 @@ export async function createCloudinaryMedia(
 
     return { success: true, id: docRef.id }
   } catch (error) {
-    console.error('Error creating media file:', error)
+ console.error('Error creating media file:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to create media file' }
   }
 }
@@ -356,7 +356,7 @@ export async function updateCloudinaryMedia(
     await updateDoc(mediaRef, { ...cleanedData, updatedAt: serverTimestamp() })
     return { success: true }
   } catch (error) {
-    console.error('Error updating media file:', error)
+ console.error('Error updating media file:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to update media file' }
   }
 }
@@ -379,7 +379,7 @@ export async function deleteCloudinaryMedia(
 
     return { success: true }
   } catch (error) {
-    console.error('Error deleting media file:', error)
+ console.error('Error deleting media file:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete media file' }
   }
 }
@@ -439,7 +439,7 @@ export async function searchCloudinaryMedia(
     const allFiles = await getAllCloudinaryMedia(zoneId);
     return allFiles.filter(file => file.name.toLowerCase().includes(searchLower));
   } catch (error) {
-    console.error('Error searching media files:', error);
+ console.error('Error searching media files:', error);
     return [];
   }
 }
@@ -467,7 +467,7 @@ export async function getCloudinaryMediaStats(zoneId?: string): Promise<{
 
     return stats
   } catch (error) {
-    console.error('Error getting statistics:', error)
+ console.error('Error getting statistics:', error)
     return { totalFiles: 0, totalSize: 0, byType: {}, byFolder: {} }
   }
 }

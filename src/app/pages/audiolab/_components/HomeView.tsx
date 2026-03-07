@@ -7,7 +7,7 @@ import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { getUserProjects, createProject } from '../_lib/project-service';
-import { getSongs, toLeagcySong } from '../_lib/song-service';
+import { getSongs, toLegacySong } from '../_lib/song-service';
 import type { AudioLabProject, AudioLabSong, Song } from '../_types';
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes

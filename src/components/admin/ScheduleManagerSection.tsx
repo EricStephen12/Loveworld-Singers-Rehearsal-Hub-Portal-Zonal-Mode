@@ -27,7 +27,7 @@ import {
 import SpreadsheetEditor from './SpreadsheetEditor'
 import { SpreadsheetData } from '@/lib/schedule-service'
 
-// ─── Icon map ─────────────────────────────────────────────────────────────────
+// Icon map
 const ICON_OPTIONS = [
     { name: 'Music', icon: Music },
     { name: 'Sparkles', icon: Sparkles },
@@ -46,7 +46,7 @@ const COLOR_OPTIONS = [
     { label: 'Rose', color: 'bg-rose-100', iconColor: 'text-rose-600' },
 ]
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
+// Toast
 function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
     return (
         <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all ${type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
@@ -58,7 +58,7 @@ interface ScheduleManagerSectionProps {
     allSongs: PraiseNightSong[]
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// Main Component
 export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManagerSectionProps) {
     const { currentZone, userRole } = useZone()
     const zoneId = currentZone?.id ?? null
@@ -195,7 +195,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
     useEffect(() => { loadData() }, [loadData])
 
-    // ── Program CRUD ───────────────────────────────────────────────────────────
+    // Program CRUD
 
     const saveProgram = async (grid?: SpreadsheetData, isAutoSave = false) => {
         if (!isAutoSave) setSavingProgram(true)
@@ -308,7 +308,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         setSavingProgram(false);
     }
 
-    // ── Category CRUD ──────────────────────────────────────────────────────────
+    // Category CRUD
 
     const openAddCat = (parentId: string | null = null) => {
         setEditingCat(null)
@@ -370,7 +370,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 }
             }
         } catch (err) {
-            console.error(err)
+ console.error(err)
             showToast('Failed to save category', 'error')
         }
 
@@ -394,7 +394,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         }
     }
 
-    // ── Song CRUD ──────────────────────────────────────────────────────────────
+    // Song CRUD
 
     const openAddSong = (categoryId: string, type: 'song' | 'activity' | 'title' = 'song') => {
         setEditingSong(null)
@@ -477,7 +477,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 }
             }
         } catch (err) {
-            console.error(err)
+ console.error(err)
             showToast('Failed to save item', 'error')
         }
 
@@ -504,7 +504,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         }
     }
 
-    // ── Daily Schedule Logic ───────────────────────────────────────────────────
+    // Daily Schedule Logic
     const [dailyCategory, setDailyCategory] = useState<ScheduleCategory | null>(null)
 
     useEffect(() => {
@@ -512,7 +512,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         setDailyCategory(daily)
     }, [categories])
 
-    // ── Render Helpers ─────────────────────────────────────────────────────────
+    // Render Helpers
 
     const isDailyView = useMemo(() => {
         if (!selectedCategory || !dailyCategory) return false;
@@ -602,7 +602,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         setShowRenameListModal(false);
     }
 
-    // ── Views ──────────────────────────────────────────────────────────────────
+    // Views
 
     if (loading) {
         return (

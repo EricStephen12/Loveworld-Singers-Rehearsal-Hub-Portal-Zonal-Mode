@@ -52,7 +52,7 @@ export default function AppBootstrap() {
                 .then((registration) => {
                 })
                 .catch((error) => {
-                    console.warn('⚠️ Service Worker registration failed:', error);
+ console.warn('️ Service Worker registration failed:', error);
                 });
 
             // Register Firebase Messaging Service Worker
@@ -60,7 +60,7 @@ export default function AppBootstrap() {
                 .then((registration) => {
                 })
                 .catch((error) => {
-                    console.warn('⚠️ Firebase Messaging SW registration failed:', error);
+ console.warn('️ Firebase Messaging SW registration failed:', error);
                 });
         }
 

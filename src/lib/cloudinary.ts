@@ -18,7 +18,7 @@ export async function uploadAudioToCloudinary(file: File): Promise<string | null
     const data = await response.json();
     return data.url;
   } catch (error) {
-    console.error('Error uploading to Cloudinary:', error);
+ console.error('Error uploading to Cloudinary:', error);
     return null;
   }
 }
@@ -36,7 +36,7 @@ export async function deleteAudioFromCloudinary(publicId: string): Promise<boole
 
     return response.ok;
   } catch (error) {
-    console.error('Error deleting from Cloudinary:', error);
+ console.error('Error deleting from Cloudinary:', error);
     return false;
   }
 }

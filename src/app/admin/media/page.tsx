@@ -185,7 +185,7 @@ export default function AdminMediaUploadPage() {
 
       router.push('/pages/media')
     } catch (error) {
-      console.error('Upload error:', error)
+ console.error('Upload error:', error)
       alert('Failed to upload media')
     } finally {
       if (progressInterval) {

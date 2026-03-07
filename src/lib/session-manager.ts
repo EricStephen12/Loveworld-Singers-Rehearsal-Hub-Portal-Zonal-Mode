@@ -184,7 +184,7 @@ export class SessionManager {
       this.startActivityTracking(user.uid)
 
     } catch (error) {
-      console.error('Error creating session:', error)
+ console.error('Error creating session:', error)
     }
   }
 
@@ -213,10 +213,10 @@ export class SessionManager {
     } catch (error: any) {
       // TRAP: If write fails (Permission Denied implies our Session ID is old), we die.
       if (error.code === 'permission-denied') {
-        console.warn('[Session] 💀 Activity update blocked! Session invalid. Logging out.')
+ console.warn('[Session] 💀 Activity update blocked! Session invalid. Logging out.')
         this.handleSessionTermination()
       } else {
-        console.error('Error updating activity:', error)
+ console.error('Error updating activity:', error)
       }
     }
   }
@@ -235,7 +235,7 @@ export class SessionManager {
       this.sessionId = localStorage.getItem('lwsrh_session_id') || ''
     }
 
-    console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
+ console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
 
     const sessionRef = doc(db, 'user_sessions', userId)
 
@@ -264,23 +264,23 @@ export class SessionManager {
               const exceptionZones = ['zone-president', 'zone-oftp']
 
               if (profile.zone && exceptionZones.includes(profile.zone)) {
-                console.log(`[Session] 🛡️ Exception granted for ${profile.zone}. Allowing multiple sessions.`)
+ console.log(`[Session] ️ Exception granted for ${profile.zone}. Allowing multiple sessions.`)
                 return // Bypass termination
               }
             }
           } catch (e) {
-            console.error('[Session] ⚠️ Exception check failed:', e)
+ console.error('[Session] ️ Exception check failed:', e)
           }
 
-          console.warn(`[Session] ❌ Session ID Mismatch! Active=${data.sessionId} vs Me=${this.sessionId}`)
+ console.warn(`[Session] Session ID Mismatch! Active=${data.sessionId} vs Me=${this.sessionId}`)
           this.handleSessionTermination()
         }
       } else {
-        console.warn(`[Session] ❌ Session deleted.`)
+ console.warn(`[Session] Session deleted.`)
         this.handleSessionTermination()
       }
     }, (error: any) => {
-      console.error('[Session] ⚠️ Listener error:', error)
+ console.error('[Session] ️ Listener error:', error)
     })
 
     this.sessionListener = unsubscribe
@@ -294,7 +294,7 @@ export class SessionManager {
       this.sessionListener = null
     }
 
-    console.warn('⚡ SESSION TERMINATED ⚡')
+ console.warn(' SESSION TERMINATED ')
     const currentPath = window.location.pathname
 
     // Don't kick if already on auth page
@@ -313,7 +313,7 @@ export class SessionManager {
         window.location.href = '/auth?error=session_taken_over&message=You were logged out because this account was used on another device.'
       }
     } catch (e) {
-      console.error('Logout failed', e)
+ console.error('Logout failed', e)
       // Failsafe redirect
       window.location.href = '/auth'
     }
@@ -330,7 +330,7 @@ export class SessionManager {
         this.sessionListener = null
       }
     } catch (error) {
-      console.error('Error ending session:', error)
+ console.error('Error ending session:', error)
     }
   }
 
@@ -344,7 +344,7 @@ export class SessionManager {
         terminatedReason: 'admin_force_logout'
       }, { merge: true })
     } catch (error) {
-      console.error('Error force logging out user:', error)
+ console.error('Error force logging out user:', error)
     }
   }
 }

@@ -57,7 +57,7 @@ export function LiveWaveform({
         setIsConnected(true);
       }
     } catch (error) {
-      console.error('[LiveWaveform] Error connecting audio:', error);
+ console.error('[LiveWaveform] Error connecting audio:', error);
     }
 
     return () => {

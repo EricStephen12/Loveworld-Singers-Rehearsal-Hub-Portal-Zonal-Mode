@@ -32,7 +32,7 @@ export function useRealtimeComments({ songId, enabled = true }: UseRealtimeComme
       const freshComments = await FirebaseCommentService.getCommentsBySongId(parseInt(songId))
       setComments(freshComments as any)
     } catch (error) {
-      console.error('Error fetching comments:', error)
+ console.error('Error fetching comments:', error)
       setError(error instanceof Error ? error.message : 'Failed to fetch comments')
     } finally {
       setLoading(false)

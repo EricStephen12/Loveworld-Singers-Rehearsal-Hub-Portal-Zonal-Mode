@@ -56,7 +56,7 @@ export const clearServiceWorkerCache = async (): Promise<void> => {
         await registration.unregister();
       }
     } catch (error) {
-      console.error('Error clearing service worker cache:', error);
+ console.error('Error clearing service worker cache:', error);
     }
   }
 };
@@ -70,7 +70,7 @@ export const clearPWACache = async (): Promise<void> => {
         cacheNames.map(cacheName => caches.delete(cacheName))
       );
     } catch (error) {
-      console.error('Error clearing PWA cache:', error);
+ console.error('Error clearing PWA cache:', error);
     }
   }
 };

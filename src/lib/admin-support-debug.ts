@@ -7,12 +7,12 @@ export async function debugAdminSupport() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError) {
-      console.error('❌ Auth error:', authError);
+ console.error(' Auth error:', authError);
       return;
     }
     
     if (!user) {
-      console.error('❌ No authenticated user');
+ console.error(' No authenticated user');
       return;
     }
     
@@ -23,7 +23,7 @@ export async function debugAdminSupport() {
       .select('*', { count: 'exact', head: true });
     
     if (countError) {
-      console.error('❌ Count error:', countError);
+ console.error(' Count error:', countError);
     } else {
     }
     
@@ -35,7 +35,7 @@ export async function debugAdminSupport() {
       .select('*');
     
     if (allError) {
-      console.error('   ❌ Simple select error:', allError);
+ console.error(' Simple select error:', allError);
     } else {
     }
     
@@ -45,7 +45,7 @@ export async function debugAdminSupport() {
       .select('id, subject, user_name, user_email, status, created_at');
     
     if (specificError) {
-      console.error('   ❌ Specific select error:', specificError);
+ console.error(' Specific select error:', specificError);
     } else {
     }
     
@@ -63,7 +63,7 @@ export async function debugAdminSupport() {
       .eq('user_id', user.id);
     
     if (userError) {
-      console.error('❌ User messages error:', userError);
+ console.error(' User messages error:', userError);
     } else {
       if (userMessages && userMessages.length > 0) {
       }
@@ -88,7 +88,7 @@ export async function debugAdminSupport() {
       .single();
     
     if (createError) {
-      console.error('❌ Create test message error:', createError);
+ console.error(' Create test message error:', createError);
     } else {
       
       // Clean up test message
@@ -101,7 +101,7 @@ export async function debugAdminSupport() {
     
     
   } catch (error) {
-    console.error('❌ Unexpected error in admin debug:', error);
+ console.error(' Unexpected error in admin debug:', error);
   }
 }
 

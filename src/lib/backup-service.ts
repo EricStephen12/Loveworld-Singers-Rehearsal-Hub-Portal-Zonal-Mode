@@ -129,7 +129,7 @@ export class BackupService {
       
       return JSON.stringify(backupData, null, 2)
     } catch (error) {
-      console.error('❌ Export failed:', error)
+ console.error(' Export failed:', error)
       throw error
     }
   }
@@ -150,7 +150,7 @@ export class BackupService {
       URL.revokeObjectURL(url)
       
     } catch (error) {
-      console.error('❌ JSON backup download failed:', error)
+ console.error(' JSON backup download failed:', error)
       alert('Failed to download backup. Please try again.')
     }
   }
@@ -190,7 +190,7 @@ export class BackupService {
       
       return csvRows.join('\n')
     } catch (error) {
-      console.error(`❌ CSV export failed for ${collectionName}:`, error)
+ console.error(` CSV export failed for ${collectionName}:`, error)
       throw error
     }
   }
@@ -211,7 +211,7 @@ export class BackupService {
       URL.revokeObjectURL(url)
       
     } catch (error) {
-      console.error(`❌ CSV backup download failed for ${collectionName}:`, error)
+ console.error(` CSV backup download failed for ${collectionName}:`, error)
       alert(`Failed to download ${collectionName} backup. Please try again.`)
     }
   }
@@ -229,7 +229,7 @@ export class BackupService {
       
       alert('Multiple CSV files downloaded. You can open these in Excel.')
     } catch (error) {
-      console.error('❌ Excel export failed:', error)
+ console.error(' Excel export failed:', error)
       alert('Failed to export to Excel format. Please try again.')
     }
   }
@@ -260,7 +260,7 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
       await this.downloadJSONBackup()
       
     } catch (error) {
-      console.error('❌ Google Sheets backup failed:', error)
+ console.error(' Google Sheets backup failed:', error)
       alert('Google Sheets backup not yet configured. JSON backup downloaded instead.')
     }
   }
@@ -272,7 +272,7 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
       try {
         await this.downloadJSONBackup()
       } catch (error) {
-        console.error('❌ Scheduled backup failed:', error)
+ console.error(' Scheduled backup failed:', error)
       }
     }, 24 * 60 * 60 * 1000) // 24 hours
     
@@ -302,7 +302,7 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
       
       return stats
     } catch (error) {
-      console.error('❌ Failed to get backup stats:', error)
+ console.error(' Failed to get backup stats:', error)
       return null
     }
   }
@@ -315,7 +315,7 @@ For now, please download the JSON or CSV backup and manually import to Google Sh
       
       // This is a dangerous operation - should be admin only
       const confirmRestore = confirm(
-        `⚠️ WARNING: This will restore ${backupData.totalRecords} records from ${backupData.exportDate}. 
+        `️ WARNING: This will restore ${backupData.totalRecords} records from ${backupData.exportDate}. 
         
 This may overwrite existing data. Are you sure you want to continue?`
       )
@@ -329,7 +329,7 @@ This may overwrite existing data. Are you sure you want to continue?`
       alert('Restore feature requires additional implementation for safety.')
       
     } catch (error) {
-      console.error('❌ Restore failed:', error)
+ console.error(' Restore failed:', error)
       alert('Failed to restore data. Please check the backup file format.')
     }
   }

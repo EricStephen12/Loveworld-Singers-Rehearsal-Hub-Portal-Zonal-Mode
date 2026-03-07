@@ -50,7 +50,7 @@ export async function uploadProfileImage(
     };
     
   } catch (error) {
-    console.error('❌ Unexpected error during upload:', error);
+ console.error(' Unexpected error during upload:', error);
     return {
       success: false,
       error: 'An unexpected error occurred during upload.'
@@ -74,14 +74,14 @@ export async function deleteProfileImage(imageUrl: string): Promise<boolean> {
       .remove([filePath]);
     
     if (error) {
-      console.error('❌ Delete error:', error);
+ console.error(' Delete error:', error);
       return false;
     }
     
     return true;
     
   } catch (error) {
-    console.error('❌ Unexpected error during deletion:', error);
+ console.error(' Unexpected error during deletion:', error);
     return false;
   }
 }
@@ -153,7 +153,7 @@ export async function uploadBannerImage(
       });
 
     if (uploadError) {
-      console.error('❌ Supabase upload error:', uploadError);
+ console.error(' Supabase upload error:', uploadError);
       return {
         success: false,
         error: `Upload failed: ${uploadError.message}`
@@ -174,7 +174,7 @@ export async function uploadBannerImage(
     };
 
   } catch (error: any) {
-    console.error('❌ Unexpected error during banner upload:', error);
+ console.error(' Unexpected error during banner upload:', error);
     return {
       success: false,
       error: error.message || 'An unexpected error occurred during upload.'

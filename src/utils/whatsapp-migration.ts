@@ -98,7 +98,7 @@ export class WhatsAppMigration {
       await batch.commit()
       
     } catch (error) {
-      console.error('❌ Chat migration failed:', error)
+ console.error(' Chat migration failed:', error)
       throw error
     }
   }
@@ -171,7 +171,7 @@ export class WhatsAppMigration {
       await batch.commit()
       
     } catch (error) {
-      console.error('❌ Message migration failed:', error)
+ console.error(' Message migration failed:', error)
       throw error
     }
   }
@@ -223,7 +223,7 @@ export class WhatsAppMigration {
       await batch.commit()
       
     } catch (error) {
-      console.error('❌ User migration failed:', error)
+ console.error(' User migration failed:', error)
       throw error
     }
   }
@@ -245,17 +245,17 @@ export class WhatsAppMigration {
       
       
     } catch (error) {
-      console.error('❌ Failed to get auth state:', error)
+ console.error(' Failed to get auth state:', error)
     }
     
     if (!currentUser && !userProfile) {
-      throw new Error('❌ User not authenticated. Please log in to LWSRH first.')
+      throw new Error(' User not authenticated. Please log in to LWSRH first.')
     }
     
     // Use user ID from Firebase Auth or profile
     const userId = currentUser?.uid || userProfile?.id
     if (!userId) {
-      throw new Error('❌ No user ID found. Please log in again.')
+      throw new Error(' No user ID found. Please log in again.')
     }
     
     
@@ -263,7 +263,7 @@ export class WhatsAppMigration {
     const hasPermissions = await MigrationPermissionCheck.quickCheck(userId)
     
     if (!hasPermissions) {
-      throw new Error('❌ Insufficient permissions for migration. Please check Firestore rules.')
+      throw new Error(' Insufficient permissions for migration. Please check Firestore rules.')
     }
     
     
@@ -274,7 +274,7 @@ export class WhatsAppMigration {
       
       
     } catch (error) {
-      console.error('❌ Full migration failed:', error)
+ console.error(' Full migration failed:', error)
       throw error
     }
   }
@@ -302,19 +302,19 @@ export const startMigration = async () => {
     const userProfile = authState.profile
     
     if (!currentUser && !userProfile) {
-      console.error('❌ Please log in to LWSRH first!')
+ console.error(' Please log in to LWSRH first!')
       return
     }
     
   } catch (error) {
-    console.error('❌ Failed to check LWSRH auth:', error)
+ console.error(' Failed to check LWSRH auth:', error)
     return
   }
   
   try {
     await WhatsAppMigration.runFullMigration()
   } catch (error) {
-    console.error('❌ Migration failed:', error)
+ console.error(' Migration failed:', error)
   }
 }
 

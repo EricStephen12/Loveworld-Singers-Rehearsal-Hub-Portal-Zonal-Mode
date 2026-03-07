@@ -37,7 +37,7 @@ export async function checkProfileCompleteness(userId: string): Promise<{
       profile
     }
   } catch (error) {
-    console.error('Error checking profile completeness:', error)
+ console.error('Error checking profile completeness:', error)
     return { hasProfile: false, isComplete: false, profile: null }
   }
 }
@@ -122,7 +122,7 @@ export async function recoverUserProfile(user: User): Promise<RecoveryResult> {
     }
     
   } catch (error: any) {
-    console.error('❌ Profile recovery failed:', error)
+ console.error(' Profile recovery failed:', error)
     return {
       success: false,
       message: error.message || 'Profile recovery failed'
@@ -144,10 +144,10 @@ export async function autoRecoverProfile(user: User): Promise<void> {
       
       if (result.success) {
       } else {
-        console.error('❌ Auto-recovery failed:', result.message)
+ console.error(' Auto-recovery failed:', result.message)
       }
     }
   } catch (error) {
-    console.error('❌ Auto-recovery error:', error)
+ console.error(' Auto-recovery error:', error)
   }
 }

@@ -188,7 +188,7 @@ export default function EventModal({
         // Cache util might not exist, ignore
       }
     } catch (error) {
-      console.error('Error saving event:', error)
+ console.error('Error saving event:', error)
       showToast('Failed to save event. Please try again.', 'error')
     } finally {
       setLoading(false)

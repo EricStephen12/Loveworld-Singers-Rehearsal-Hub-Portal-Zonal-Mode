@@ -55,7 +55,7 @@ export class VoiceRecorder {
       
       return true;
     } catch (error) {
-      console.error('Error starting recording:', error);
+ console.error('Error starting recording:', error);
       return false;
     }
   }

@@ -35,7 +35,7 @@ export default function PlaylistCard({ playlist, categoryMap }: PlaylistCardProp
             setFirstVideoThumbnail(firstVideo.thumbnail)
           }
         } catch (error) {
-          console.error('Error fetching first video thumbnail:', error)
+ console.error('Error fetching first video thumbnail:', error)
         }
       }
     }

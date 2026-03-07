@@ -31,7 +31,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
       const allEvents = await UpcomingEventsService.getAllEvents(currentZone.id)
       setEvents(allEvents)
     } catch (error) {
-      console.error('Error loading events:', error)
+ console.error('Error loading events:', error)
     } finally {
       setLoading(false)
     }
@@ -52,7 +52,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
       setShowForm(false)
       setEditingEvent(null)
     } catch (error) {
-      console.error('Error saving event:', error)
+ console.error('Error saving event:', error)
       alert('Failed to save event. Please try again.')
     }
   }
@@ -65,7 +65,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
       await UpcomingEventsService.deleteEvent(eventId, currentZone.id)
       await loadEvents()
     } catch (error) {
-      console.error('Error deleting event:', error)
+ console.error('Error deleting event:', error)
       alert('Failed to delete event. Please try again.')
     }
   }
@@ -77,12 +77,12 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {
-      case 'announcement': return '📢'
-      case 'event': return '🎉'
-      case 'reminder': return '⏰'
+      case 'announcement': return ''
+      case 'event': return ''
+      case 'reminder': return ''
       case 'meeting': return '👥'
-      case 'rehearsal': return '🎵'
-      default: return '📅'
+      case 'rehearsal': return ''
+      default: return ''
     }
   }
 
@@ -191,7 +191,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
                 )}
                 {event.location && (
                   <div className="flex items-center gap-2 text-gray-700">
-                    <span className="w-4 h-4 flex items-center justify-center">📍</span>
+                    <span className="w-4 h-4 flex items-center justify-center"></span>
                     <span className="truncate">{event.location}</span>
                   </div>
                 )}

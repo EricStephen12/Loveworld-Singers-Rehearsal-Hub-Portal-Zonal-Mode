@@ -83,7 +83,7 @@ class TranslationService {
       }
       throw new Error('Lingva translation empty');
     } catch (error) {
-      console.warn('Lingva translation failed:', error);
+ console.warn('Lingva translation failed:', error);
       throw error;
     }
   }
@@ -119,7 +119,7 @@ class TranslationService {
       }
       throw new Error('LibreTranslate translation empty');
     } catch (error) {
-      console.warn('LibreTranslate failed:', error);
+ console.warn('LibreTranslate failed:', error);
       throw error;
     }
   }
@@ -426,7 +426,7 @@ class TranslationService {
         return result;
       }
     } catch (error) {
-      console.error('Lyrics translation error:', error);
+ console.error('Lyrics translation error:', error);
       return lyrics;
     }
   }
@@ -465,7 +465,7 @@ class TranslationService {
       
       return tempDiv.innerHTML;
     } catch (error) {
-      console.error('HTML translation error:', error);
+ console.error('HTML translation error:', error);
       // Fallback: strip HTML and translate as plain text
       const plainText = html.replace(/<[^>]*>/g, '');
       const translated = await this.translate(plainText, targetLang, sourceLang);

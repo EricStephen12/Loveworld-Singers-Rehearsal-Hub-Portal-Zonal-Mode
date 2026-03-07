@@ -43,7 +43,7 @@ class AdminActivityLogger {
       if (logs.length > this.MAX_LOGS) logs.splice(this.MAX_LOGS);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(logs));
     } catch (error) {
-      console.error('Error logging admin activity:', error);
+ console.error('Error logging admin activity:', error);
     }
   }
 
@@ -54,7 +54,7 @@ class AdminActivityLogger {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Error getting activity logs:', error);
+ console.error('Error getting activity logs:', error);
       return [];
     }
   }

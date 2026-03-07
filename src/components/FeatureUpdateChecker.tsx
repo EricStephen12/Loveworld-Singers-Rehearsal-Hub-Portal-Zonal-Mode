@@ -17,7 +17,7 @@ export default function FeatureUpdateChecker() {
         if (hasUpdate) {
         }
       } catch (error) {
-        console.error('Feature update check failed:', error);
+ console.error('Feature update check failed:', error);
       }
     };
 

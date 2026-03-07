@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       unix: Math.floor(serverTime.getTime() / 1000)
     });
   } catch (error) {
-    console.error('Error getting server time:', error);
+ console.error('Error getting server time:', error);
     return NextResponse.json(
       { error: 'Failed to get server time' },
       { status: 500 }

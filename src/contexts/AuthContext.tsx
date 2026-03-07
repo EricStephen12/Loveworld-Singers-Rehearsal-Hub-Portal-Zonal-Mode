@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const safetyTimeout = setTimeout(() => {
       setLoading((currentLoading) => {
         if (currentLoading) {
-          console.warn('⚠️ AuthContext: Firebase init timeout - forcing loading=false')
+ console.warn('️ AuthContext: Firebase init timeout - forcing loading=false')
           return false
         }
         return currentLoading
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       window.location.replace('/auth')
     } catch (error) {
-      console.error('Sign out error:', error)
+ console.error('Sign out error:', error)
       window.location.replace('/auth')
     }
   }

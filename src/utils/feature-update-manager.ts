@@ -109,7 +109,7 @@ class FeatureUpdateManager {
 
       return false;
     } catch (error) {
-      console.error('Feature update check failed:', error);
+ console.error('Feature update check failed:', error);
       return false;
     }
   }
@@ -161,7 +161,7 @@ class FeatureUpdateManager {
       this.showUpdateNotification();
 
     } catch (error) {
-      console.error('Feature update failed:', error);
+ console.error('Feature update failed:', error);
     }
   }
 
@@ -181,7 +181,7 @@ class FeatureUpdateManager {
 
       return userHash < rolloutThreshold;
     } catch (error) {
-      console.error('Feature check failed:', error);
+ console.error('Feature check failed:', error);
       return false;
     }
   }

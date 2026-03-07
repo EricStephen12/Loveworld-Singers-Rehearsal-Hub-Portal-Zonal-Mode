@@ -21,18 +21,18 @@ export async function POST(request: NextRequest) {
         // 2. Delete from Firestore profiles
         try {
             await db.collection('profiles').doc(userId).delete();
-            console.log(`[DeleteUser] Firestore profile deleted: ${userId}`);
+ console.log(`[DeleteUser] Firestore profile deleted: ${userId}`);
         } catch (firestoreError) {
-            console.error('[DeleteUser] Firestore deletion error:', firestoreError);
+ console.error('[DeleteUser] Firestore deletion error:', firestoreError);
             // Continue even if profile deletion fails (user might not have one)
         }
 
         // 3. Delete from Firebase Auth
         try {
             await auth.deleteUser(userId);
-            console.log(`[DeleteUser] Auth account deleted: ${userId}`);
+ console.log(`[DeleteUser] Auth account deleted: ${userId}`);
         } catch (authError: any) {
-            console.error('[DeleteUser] Auth deletion error:', authError);
+ console.error('[DeleteUser] Auth deletion error:', authError);
             // Check for various ways the error code might be presented
             const isUserNotFound =
                 authError.code === 'auth/user-not-found' ||
@@ -45,13 +45,13 @@ export async function POST(request: NextRequest) {
                     error: `Auth deletion failed: ${authError.message}`
                 }, { status: 500 });
             }
-            console.log('[DeleteUser] User already missing from Auth, proceeding.');
+ console.log('[DeleteUser] User already missing from Auth, proceeding.');
         }
 
         // 4. GLOBAL CLEANUP: Remove user from ALL zones and HQ groups
         // This ensures they don't remain as "orphan" members in other zones
         try {
-            console.log(`[DeleteUser] Starting global cleanup for user: ${userId}`);
+ console.log(`[DeleteUser] Starting global cleanup for user: ${userId}`);
 
             // A. Clean up zone_members
             const zoneMembersSnapshot = await db.collection('zone_members').where('userId', '==', userId).get();
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
                     batch.delete(doc.ref);
                 });
                 await batch.commit();
-                console.log(`[DeleteUser] Removed ${zoneMembersSnapshot.size} zone_members records.`);
+ console.log(`[DeleteUser] Removed ${zoneMembersSnapshot.size} zone_members records.`);
             }
 
             // B. Clean up hq_members
@@ -72,15 +72,15 @@ export async function POST(request: NextRequest) {
                     batch.delete(doc.ref);
                 });
                 await batch.commit();
-                console.log(`[DeleteUser] Removed ${hqMembersSnapshot.size} hq_members records.`);
+ console.log(`[DeleteUser] Removed ${hqMembersSnapshot.size} hq_members records.`);
             }
 
         } catch (cleanupError: any) {
-            console.error('[DeleteUser] Global cleanup error:', cleanupError);
+ console.error('[DeleteUser] Global cleanup error:', cleanupError);
 
             // Check for Quota Exceeded error (Code 8)
             if (cleanupError.code === 8 || cleanupError.message?.includes('Quota exceeded')) {
-                console.warn('[DeleteUser] Firebase Quota Exceeded. Skipping global cleanup.');
+ console.warn('[DeleteUser] Firebase Quota Exceeded. Skipping global cleanup.');
                 return NextResponse.json({
                     success: true,
                     message: 'User deleted, but cleanup of zone memberships was skipped due to server limits. Please try again later to remove residual records.',
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error('[DeleteUser] API Error:', error);
+ console.error('[DeleteUser] API Error:', error);
         return NextResponse.json({
             success: false,
             error: error.message || 'Internal server error'

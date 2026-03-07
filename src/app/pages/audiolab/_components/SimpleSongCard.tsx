@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Play, Pause, Music, ChevronDown, Mic, BookOpen } from 'lucide-react';
+import { Play, Pause, Music, ChevronDown, Mic, BookOpen, Plus, Trash2 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import type { Song, VocalPart } from '../_types';
 
@@ -13,6 +13,8 @@ export interface SimpleSongCardProps {
     currentTime: number;
     duration: number;
     onClick?: () => void;
+    onAdd?: () => void;
+    onRemove?: () => void;
     isHighlighted?: boolean;
 }
 
@@ -27,6 +29,8 @@ export function SimpleSongCard({
     currentTime,
     duration,
     onClick,
+    onAdd,
+    onRemove,
     isHighlighted = false,
 }: SimpleSongCardProps) {
 
@@ -123,6 +127,23 @@ export function SimpleSongCard({
                         {song.key && ` • ${song.key}`}
                     </p>
                 </div>
+
+                {/* Optional Action Button (e.g., Add/Remove) */}
+                {(onAdd || onRemove) && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onAdd) onAdd();
+                            if (onRemove) onRemove();
+                        }}
+                        className={`
+                            p-2 rounded-lg transition-all active:scale-90 flex-shrink-0
+                            ${onRemove ? 'text-red-400 hover:bg-red-400/10' : 'text-violet-400 hover:bg-violet-400/10'}
+                        `}
+                    >
+                        {onRemove ? <Trash2 size={18} /> : <Plus size={18} />}
+                    </button>
+                )}
             </div>
 
 

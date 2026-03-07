@@ -48,7 +48,7 @@ export class FirebaseMetadataService {
                 type
             }, { merge: true })
         } catch (error) {
-            console.error('Error updating metadata:', error)
+ console.error('Error updating metadata:', error)
         }
     }
 
@@ -70,7 +70,7 @@ export class FirebaseMetadataService {
                 type: 'song'
             }, { merge: true })
         } catch (error) {
-            console.error('Error updating song metadata:', error)
+ console.error('Error updating song metadata:', error)
         }
     }
 
@@ -91,7 +91,7 @@ export class FirebaseMetadataService {
                 type: 'praise_night_songs'
             }, { merge: true })
         } catch (error) {
-            console.error('Error updating page songs metadata:', error)
+ console.error('Error updating page songs metadata:', error)
         }
     }
 
@@ -108,7 +108,7 @@ export class FirebaseMetadataService {
                 await this.updateMetadata(zoneId, type)
             }
         } catch (e) {
-            console.warn('Metadata check failed', e)
+ console.warn('Metadata check failed', e)
         }
     }
 
@@ -125,7 +125,7 @@ export class FirebaseMetadataService {
                 await this.updateSongMetadata(zoneId, praiseNightId, songId)
             }
         } catch (e) {
-            console.warn('Song metadata check failed', e)
+ console.warn('Song metadata check failed', e)
         }
     }
 
@@ -182,7 +182,7 @@ export class FirebaseMetadataService {
             sharedState.lastValue = timestamp
             sharedState.callbacks.forEach(cb => cb(timestamp))
         }, (error) => {
-            console.error(`Error in shared metadata listener [${type}]:`, error)
+ console.error(`Error in shared metadata listener [${type}]:`, error)
         })
 
         sharedState.unsubscribe = unsub
@@ -244,7 +244,7 @@ export class FirebaseMetadataService {
             sharedState.lastValue = timestamp
             sharedState.callbacks.forEach(cb => cb(timestamp))
         }, (error) => {
-            console.error(`Error in shared song listener [${songId}]:`, error)
+ console.error(`Error in shared song listener [${songId}]:`, error)
         })
 
         sharedState.unsubscribe = unsub
@@ -304,7 +304,7 @@ export class FirebaseMetadataService {
             sharedState.lastValue = timestamp
             sharedState.callbacks.forEach(cb => cb(timestamp))
         }, (error) => {
-            console.error(`Error in shared pn-songs listener [${praiseNightId}]:`, error)
+ console.error(`Error in shared pn-songs listener [${praiseNightId}]:`, error)
         })
 
         sharedState.unsubscribe = unsub

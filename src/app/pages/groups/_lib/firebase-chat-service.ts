@@ -121,7 +121,7 @@ export const formatTimestamp = (timestamp: any): Date => {
 
 export class FirebaseChatService {
   
-  // ==================== WHATSAPP CACHE CLEARING ====================
+  // Whatsapp Cache Clearing
   
   /**
    * Clear all chat cache - WhatsApp approach
@@ -152,11 +152,11 @@ export class FirebaseChatService {
       }
       
     } catch (error) {
-      console.error('❌ [WhatsApp Mode] Cache clear failed:', error)
+ console.error(' [WhatsApp Mode] Cache clear failed:', error)
     }
   }
   
-  // ==================== USER MANAGEMENT ====================
+  // User Management
   
   /**
    * Update user online status
@@ -194,7 +194,7 @@ export class FirebaseChatService {
       const cleanData = this.removeUndefinedValues(userData);
       
       if (!cleanData || !cleanData.id) {
-        console.error('Cannot create/update user: missing id');
+ console.error('Cannot create/update user: missing id');
         return;
       }
       
@@ -211,7 +211,7 @@ export class FirebaseChatService {
         })
       })
     } catch (error) {
-      console.error('Error creating/updating user:', error)
+ console.error('Error creating/updating user:', error)
     }
   }
 
@@ -296,7 +296,7 @@ export class FirebaseChatService {
       
       return users
     } catch (error) {
-      console.error('Error getting zone members:', error)
+ console.error('Error getting zone members:', error)
       return []
     }
   }
@@ -420,7 +420,7 @@ export class FirebaseChatService {
             }
           }
         } catch (hqError) {
-          console.error(`Error fetching HQ members for ${hqZoneId}:`, hqError)
+ console.error(`Error fetching HQ members for ${hqZoneId}:`, hqError)
           // Continue with other HQ groups
         }
       }
@@ -446,7 +446,7 @@ export class FirebaseChatService {
       
       return filtered
     } catch (error) {
-      console.error('Error searching users:', error)
+ console.error('Error searching users:', error)
       return []
     }
   }
@@ -499,7 +499,7 @@ export class FirebaseChatService {
               zoneName = memberData.zoneName || zoneDetails?.name || null
             }
           } catch (error) {
-            console.error('Error fetching zone name from zone_members:', error)
+ console.error('Error fetching zone name from zone_members:', error)
           }
         }
         
@@ -517,12 +517,12 @@ export class FirebaseChatService {
       
       return null
     } catch (error) {
-      console.error('Error getting user:', error)
+ console.error('Error getting user:', error)
       return null
     }
   }
 
-  // ==================== FRIEND SYSTEM ====================
+  // Friend System
 
   /**
    * Send friend request
@@ -550,7 +550,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error sending friend request:', error)
+ console.error('Error sending friend request:', error)
       return false
     }
   }
@@ -594,7 +594,7 @@ export class FirebaseChatService {
 
       return { status: 'none' }
     } catch (error) {
-      console.error('Error checking friend status:', error)
+ console.error('Error checking friend status:', error)
       return { status: 'none' }
     }
   }
@@ -610,7 +610,7 @@ export class FirebaseChatService {
       })
       return true
     } catch (error) {
-      console.error('Error accepting friend request:', error)
+ console.error('Error accepting friend request:', error)
       return false
     }
   }
@@ -636,12 +636,12 @@ export class FirebaseChatService {
       
       return requests
     } catch (error) {
-      console.error('Error getting friend requests:', error)
+ console.error('Error getting friend requests:', error)
       return []
     }
   }
 
-  // ==================== CHAT MANAGEMENT ====================
+  // Chat Management
 
   /**
    * Create direct chat between two users
@@ -650,7 +650,7 @@ export class FirebaseChatService {
     try {
       // CRITICAL: Prevent self-chat creation
       if (user1Id === user2Id) {
-        console.error('❌ Cannot create self-chat:', user1Id)
+ console.error(' Cannot create self-chat:', user1Id)
         return null
       }
       
@@ -679,7 +679,7 @@ export class FirebaseChatService {
       const docRef = await addDoc(collection(db, 'chats'), chatData)
       return docRef.id
     } catch (error) {
-      console.error('Error creating direct chat:', error)
+ console.error('Error creating direct chat:', error)
       return null
     }
   }
@@ -713,7 +713,7 @@ export class FirebaseChatService {
       const docRef = await addDoc(collection(db, 'chats'), chatData)
       return docRef.id
     } catch (error) {
-      console.error('Error creating group chat:', error)
+ console.error('Error creating group chat:', error)
       return null
     }
   }
@@ -740,7 +740,7 @@ export class FirebaseChatService {
       
       return null
     } catch (error) {
-      console.error('Error finding direct chat:', error)
+ console.error('Error finding direct chat:', error)
       return null
     }
   }
@@ -775,7 +775,7 @@ export class FirebaseChatService {
                   participantNames[participantId] = userData.fullName
                 }
               } catch (error) {
-                console.error('Error getting participant name:', error)
+ console.error('Error getting participant name:', error)
                 participantNames[participantId] = 'Unknown User'
               }
             }
@@ -794,12 +794,12 @@ export class FirebaseChatService {
         return new Date(bTime).getTime() - new Date(aTime).getTime()
       })
     } catch (error) {
-      console.error('Error getting user chats:', error)
+ console.error('Error getting user chats:', error)
       return []
     }
   }
 
-  // ==================== MESSAGE MANAGEMENT ====================
+  // Message Management
 
   /**
    * Send message
@@ -855,7 +855,7 @@ export class FirebaseChatService {
             const chatRef = doc(db, 'chats', chatId)
       await updateDoc(chatRef, {
         lastMessage: {
-          text: messageData.text || (messageData.image ? '📷 Image' : '📎 File'),
+          text: messageData.text || (messageData.image ? ' Image' : ' File'),
           senderId,
           senderName: displayName,
           timestamp: serverTimestamp()
@@ -864,7 +864,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error sending message:', error)
+ console.error('Error sending message:', error)
       return false
     }
   }
@@ -889,7 +889,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error editing message:', error)
+ console.error('Error editing message:', error)
       return false
     }
   }
@@ -920,7 +920,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error deleting message:', error)
+ console.error('Error deleting message:', error)
       return false
     }
   }
@@ -955,7 +955,7 @@ export class FirebaseChatService {
         reactions
       })
     } catch (error) {
-      console.error('Error toggling reaction:', error)
+ console.error('Error toggling reaction:', error)
     }
   }
 
@@ -980,7 +980,7 @@ export class FirebaseChatService {
       
       return messages.reverse() // Reverse to show oldest first
     } catch (error) {
-      console.error('Error getting messages:', error)
+ console.error('Error getting messages:', error)
       return []
     }
   }
@@ -991,7 +991,7 @@ export class FirebaseChatService {
   static subscribeToMessages(chatId: string, callback: (messages: ChatMessage[]) => void): () => void {
     
     if (!chatId) {
-      console.error('❌ [Chat] No chatId provided for message subscription')
+ console.error(' [Chat] No chatId provided for message subscription')
       callback([])
       return () => {}
     }
@@ -1017,7 +1017,7 @@ export class FirebaseChatService {
         })
       }
     }).catch(err => {
-      console.error('🔍 [Chat] One-time fetch error:', err)
+ console.error(' [Chat] One-time fetch error:', err)
     })
     
     return onSnapshot(q, (snapshot) => {
@@ -1055,11 +1055,11 @@ export class FirebaseChatService {
         callback(messages)
       }, 
       (error) => {
-        console.error('❌ [Chat] Message subscription error:', error)
-        console.error('❌ [Chat] Error details:', error.message, error.code)
+ console.error(' [Chat] Message subscription error:', error)
+ console.error(' [Chat] Error details:', error.message, error.code)
                 if (error.message?.includes('index')) {
-          console.error('🔧 [Chat] This error requires creating a Firestore composite index. Check the Firebase console.')
-          console.error('🔧 [Chat] Create index: messages -> chatId (ASC) + timestamp (DESC)')
+ console.error(' [Chat] This error requires creating a Firestore composite index. Check the Firebase console.')
+ console.error(' [Chat] Create index: messages -> chatId (ASC) + timestamp (DESC)')
         }
         callback([])
       }
@@ -1119,7 +1119,7 @@ export class FirebaseChatService {
                     chatData.participantNames = { [otherUserId]: userData.fullName }
                   }
                 } catch (error) {
-                  console.error('Error getting participant name:', error)
+ console.error('Error getting participant name:', error)
                   chatData.participantNames = { [otherUserId]: 'Unknown User' }
                 }
               }
@@ -1136,7 +1136,7 @@ export class FirebaseChatService {
             try {
               await deleteDoc(doc(db, 'chats', chatId))
             } catch (error) {
-              console.error('❌ [Firebase] Failed to delete chat:', chatId, error)
+ console.error(' [Firebase] Failed to delete chat:', chatId, error)
             }
           })
         }
@@ -1153,13 +1153,13 @@ export class FirebaseChatService {
         callback(sortedChats)
       },
       (error) => {
-        console.error('❌ [Firebase] Chat subscription error:', error)
+ console.error(' [Firebase] Chat subscription error:', error)
         callback([]) // Return empty array on error
       }
     )
   }
 
-  // ==================== GROUP MANAGEMENT ====================
+  // Group Management
 
   /**
    * Add user to group
@@ -1183,7 +1183,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error adding user to group:', error)
+ console.error('Error adding user to group:', error)
       return false
     }
   }
@@ -1210,7 +1210,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error removing user from group:', error)
+ console.error('Error removing user from group:', error)
       return false
     }
   }
@@ -1236,7 +1236,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error making user admin:', error)
+ console.error('Error making user admin:', error)
       return false
     }
   }
@@ -1262,7 +1262,7 @@ export class FirebaseChatService {
       await updateDoc(chatRef, updates)
       return true
     } catch (error) {
-      console.error('Error updating group info:', error)
+ console.error('Error updating group info:', error)
       return false
     }
   }
@@ -1289,7 +1289,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error leaving group:', error)
+ console.error('Error leaving group:', error)
       return false
     }
   }
@@ -1315,7 +1315,7 @@ export class FirebaseChatService {
 
       return results
     } catch (error) {
-      console.error('Error getting chat participants:', error)
+ console.error('Error getting chat participants:', error)
       return []
     }
   }
@@ -1352,7 +1352,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error deleting chat:', error)
+ console.error('Error deleting chat:', error)
       return false
     }
   }
@@ -1380,7 +1380,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error pinning/unpinning chat:', error)
+ console.error('Error pinning/unpinning chat:', error)
       return false
     }
   }
@@ -1408,7 +1408,7 @@ export class FirebaseChatService {
 
       return true
     } catch (error) {
-      console.error('Error starring/unstarring chat:', error)
+ console.error('Error starring/unstarring chat:', error)
       return false
     }
   }
@@ -1442,7 +1442,7 @@ export class FirebaseChatService {
         return true
       }
     } catch (error) {
-      console.error('Error toggling star message:', error)
+ console.error('Error toggling star message:', error)
       return false
     }
   }
@@ -1461,7 +1461,7 @@ export class FirebaseChatService {
       const snapshot = await getDocs(starredQuery)
       return !snapshot.empty
     } catch (error) {
-      console.error('Error checking if message is starred:', error)
+ console.error('Error checking if message is starred:', error)
       return false
     }
   }
@@ -1533,7 +1533,7 @@ export class FirebaseChatService {
       
       return results
     } catch (error) {
-      console.error('Error searching messages:', error)
+ console.error('Error searching messages:', error)
       return []
     }
   }

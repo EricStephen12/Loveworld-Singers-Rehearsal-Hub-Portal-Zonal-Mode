@@ -38,7 +38,7 @@ class PushNotificationService {
       const permission = await Notification.requestPermission()
       return permission === 'granted'
     } catch (error) {
-      console.error('Error requesting notification permission:', error)
+ console.error('Error requesting notification permission:', error)
       return false
     }
   }
@@ -52,7 +52,7 @@ class PushNotificationService {
       this.registration = await navigator.serviceWorker.ready
       return true
     } catch (error) {
-      console.error('Error initializing push notifications:', error)
+ console.error('Error initializing push notifications:', error)
       return false
     }
   }
@@ -109,7 +109,7 @@ class PushNotificationService {
       })
       return true
     } catch (error) {
-      console.error('Error sending system notification:', error)
+ console.error('Error sending system notification:', error)
       return false
     }
   }
@@ -134,7 +134,7 @@ class PushNotificationService {
       })
       return true
     } catch (error) {
-      console.error('Error sending rehearsal reminder:', error)
+ console.error('Error sending rehearsal reminder:', error)
       return false
     }
   }
@@ -158,7 +158,7 @@ class PushNotificationService {
       })
       return true
     } catch (error) {
-      console.error('Error sending announcement:', error)
+ console.error('Error sending announcement:', error)
       return false
     }
   }
@@ -172,7 +172,7 @@ class PushNotificationService {
       const notifications = await this.registration.getNotifications()
       notifications.forEach(notification => notification.close())
     } catch (error) {
-      console.error('Error clearing notifications:', error)
+ console.error('Error clearing notifications:', error)
     }
   }
 

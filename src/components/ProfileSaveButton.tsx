@@ -96,7 +96,7 @@ export function ProfileSaveButton({
             {/* Save Message */}
             {saveMessage && (
                 <div className="max-w-2xl mx-auto mt-2">
-                    <p className={`text-sm text-center font-medium ${saveMessage.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-sm text-center font-medium ${saveMessage.startsWith('') ? 'text-green-600' : 'text-red-600'}`}>
                         {saveMessage}
                     </p>
                 </div>

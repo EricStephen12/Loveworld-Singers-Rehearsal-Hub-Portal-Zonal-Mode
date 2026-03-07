@@ -44,7 +44,7 @@ export function useUltraFastSongHistory(songId: string | null) {
         }
       }
     } catch (error) {
-      console.error('Error loading cached song history:', error);
+ console.error('Error loading cached song history:', error);
     }
     return [];
   }, [songId]);
@@ -60,7 +60,7 @@ export function useUltraFastSongHistory(songId: string | null) {
       };
       await offlineManager.cacheData(CACHE_KEY, cached);
     } catch (error) {
-      console.error('Error caching song history:', error);
+ console.error('Error caching song history:', error);
     }
   }, []);
 
@@ -87,7 +87,7 @@ export function useUltraFastSongHistory(songId: string | null) {
       const historyData = await FirebaseDatabaseService.getCollectionWhere('song_history', 'song_id', '==', firebaseSongId);
       
       if (!historyData) {
-        console.error('Error fetching song history from Firebase');
+ console.error('Error fetching song history from Firebase');
         setError('Failed to fetch song history');
         return;
       }
@@ -115,7 +115,7 @@ export function useUltraFastSongHistory(songId: string | null) {
       const endTime = performance.now();
 
     } catch (error) {
-      console.error('Error loading song history:', error);
+ console.error('Error loading song history:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -202,13 +202,13 @@ export function useUltraFastSongHistory(songId: string | null) {
           cacheHistory(firebaseSongId, historyEntries);
           
         } catch (error) {
-          console.error('Error processing real-time history update:', error);
+ console.error('Error processing real-time history update:', error);
           setError(error instanceof Error ? error.message : 'Unknown error');
           setLoading(false);
         }
       },
       (error) => {
-        console.error('Error in real-time history listener:', error);
+ console.error('Error in real-time history listener:', error);
         setError(error.message || 'Failed to listen for history updates');
         setLoading(false);
       }
@@ -233,7 +233,7 @@ export function useUltraFastSongHistory(songId: string | null) {
       // Reload fresh data
       await loadHistory();
     } catch (error) {
-      console.error('Error refreshing song history:', error);
+ console.error('Error refreshing song history:', error);
       setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);

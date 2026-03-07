@@ -22,7 +22,7 @@ export class AccountLinkingService {
       const users = await FirebaseDatabaseService.getAllUsers();
       return users.some((user: any) => user.odooId === odooId);
     } catch (error) {
-      console.error('Error checking account link:', error);
+ console.error('Error checking account link:', error);
       return false;
     }
   }
@@ -32,7 +32,7 @@ export class AccountLinkingService {
       const user = await FirebaseDatabaseService.getUserProfile(firebaseUid);
       return !!(user as any)?.kingsChatId;
     } catch (error) {
-      console.error('Error checking KingsChat link:', error);
+ console.error('Error checking KingsChat link:', error);
       return false;
     }
   }
@@ -53,7 +53,7 @@ export class AccountLinkingService {
       });
       return true;
     } catch (error) {
-      console.error('Error linking account:', error);
+ console.error('Error linking account:', error);
       return false;
     }
   }
@@ -86,7 +86,7 @@ export class AccountLinkingService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error linking KingsChat to Firebase:', error);
+ console.error('Error linking KingsChat to Firebase:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to link KingsChat account' 
@@ -106,7 +106,7 @@ export class AccountLinkingService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error unlinking KingsChat from Firebase:', error);
+ console.error('Error unlinking KingsChat from Firebase:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to unlink KingsChat account' 
@@ -129,7 +129,7 @@ export class AccountLinkingService {
       }
       return null;
     } catch (error) {
-      console.error('Error getting linked account:', error);
+ console.error('Error getting linked account:', error);
       return null;
     }
   }
@@ -145,7 +145,7 @@ export class AccountLinkingService {
       });
       return true;
     } catch (error) {
-      console.error('Error unlinking account:', error);
+ console.error('Error unlinking account:', error);
       return false;
     }
   }

@@ -54,7 +54,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
         joinedAt: m.createdAt || new Date()
       })));
     } catch (error) {
-      console.error('Error loading members:', error);
+ console.error('Error loading members:', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +67,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
       const memberIds = members.map(m => m.id);
       setZoneMembers(allZoneMembers.filter(m => !memberIds.includes(m.id)));
     } catch (error) {
-      console.error('Error loading zone members:', error);
+ console.error('Error loading zone members:', error);
     }
   };
 
@@ -90,7 +90,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
         loadMembers();
       }
     } catch (error) {
-      console.error('Error adding members:', error);
+ console.error('Error adding members:', error);
     } finally {
       setAdding(false);
     }
@@ -107,7 +107,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
         loadMembers();
       }
     } catch (error) {
-      console.error('Error removing member:', error);
+ console.error('Error removing member:', error);
     }
   };
 

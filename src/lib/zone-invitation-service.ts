@@ -109,7 +109,7 @@ export class ZoneInvitationService {
       }
 
     } catch (error) {
-      console.error('Error joining zone:', error)
+ console.error('Error joining zone:', error)
       return {
         success: false,
         error: 'Failed to join zone. Please try again.'
@@ -149,7 +149,7 @@ export class ZoneInvitationService {
 
       return zonesWithStats
     } catch (error) {
-      console.error('Error getting zones with stats:', error)
+ console.error('Error getting zones with stats:', error)
       return []
     }
   }
@@ -169,7 +169,7 @@ export class ZoneInvitationService {
 
       return membersWithProfiles
     } catch (error) {
-      console.error('Error getting zone members:', error)
+ console.error('Error getting zone members:', error)
       return []
     }
   }
@@ -194,7 +194,7 @@ export class ZoneInvitationService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error removing member:', error)
+ console.error('Error removing member:', error)
       return { success: false }
     }
   }
@@ -213,7 +213,7 @@ export class ZoneInvitationService {
         const members = await FirebaseDatabaseService.getCollectionWhere('zone_members', 'userId', '==', userId);
         const zoneMembers = members.filter((m: any) => m.zoneId === zoneId);
 
-        console.log(`[ZoneInvitation] Found ${zoneMembers.length} records for user ${userId} in zone ${zoneId}`);
+ console.log(`[ZoneInvitation] Found ${zoneMembers.length} records for user ${userId} in zone ${zoneId}`);
 
         // 2. Delete each one
         let deletedCount = 0;
@@ -237,7 +237,7 @@ export class ZoneInvitationService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error removing user from zone:', error)
+ console.error('Error removing user from zone:', error)
       return { success: false }
     }
   }

@@ -1,6 +1,5 @@
 ﻿// ============================================
 // LEGACY AUTH STORE - For backward compatibility
-// ============================================
 // The main auth flow now uses AuthContext (src/contexts/AuthContext.tsx)
 // This store is kept for backward compatibility with dynamic imports
 // in utility files. It will be deprecated in future versions.
@@ -50,7 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         window.location.replace('/auth')
       }
     } catch (error) {
-      console.error('Sign out error:', error)
+ console.error('Sign out error:', error)
       window.location.replace('/auth')
     }
   },
@@ -65,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ profile: profile as UserProfile })
       }
     } catch (error) {
-      console.error('Error refreshing profile:', error)
+ console.error('Error refreshing profile:', error)
     }
   },
 
@@ -76,7 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ profile: profile as UserProfile, _sessionUserId: userId })
       }
     } catch (error) {
-      console.error('Error loading user session:', error)
+ console.error('Error loading user session:', error)
     }
   },
 

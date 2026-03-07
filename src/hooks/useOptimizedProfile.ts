@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase-client'
 import { UserProfile } from '@/types/supabase'
 import { offlineManager } from '@/utils/offlineManager'
 
-export function useUltraFastProfile() {
+export function useOptimizedProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -14,7 +14,7 @@ export function useUltraFastProfile() {
     try {
       await offlineManager.cacheData('user-profile', profileData)
     } catch (error) {
-      console.error('Error caching profile:', error)
+ console.error('Error caching profile:', error)
     }
   }
 
@@ -22,7 +22,7 @@ export function useUltraFastProfile() {
     try {
       return await offlineManager.getCachedData('user-profile')
     } catch (error) {
-      console.error('Error getting cached profile:', error)
+ console.error('Error getting cached profile:', error)
       return null
     }
   }
@@ -82,7 +82,7 @@ export function useUltraFastProfile() {
         setError(null)
         setIsInitialLoad(false)
       } catch (err) {
-        console.error('Error loading profile:', err)
+ console.error('Error loading profile:', err)
         setError('Failed to load profile')
       } finally {
         setLoading(false)
@@ -116,7 +116,7 @@ export function useUltraFastProfile() {
               }
             }
           } catch (error) {
-            console.error('Error updating profile after change:', error)
+ console.error('Error updating profile after change:', error)
           }
         }
       )
@@ -170,7 +170,7 @@ export function useUltraFastProfile() {
       
       return false
     } catch (error) {
-      console.error('Error updating profile:', error)
+ console.error('Error updating profile:', error)
       return false
     }
   }
@@ -192,7 +192,7 @@ export function useUltraFastProfile() {
         await cacheProfile(profileData)
       }
     } catch (error) {
-      console.error('Error refreshing profile:', error)
+ console.error('Error refreshing profile:', error)
     } finally {
       setLoading(false)
     }

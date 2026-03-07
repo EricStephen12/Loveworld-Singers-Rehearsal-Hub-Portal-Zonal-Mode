@@ -94,7 +94,7 @@ export default function JoinZonePage() {
         setError(errorMsg)
       }
     } catch (err: any) {
-      console.error('Join zone error:', err)
+ console.error('Join zone error:', err)
       setError(err.message || 'Failed to join zone')
     } finally {
       setIsJoining(false)

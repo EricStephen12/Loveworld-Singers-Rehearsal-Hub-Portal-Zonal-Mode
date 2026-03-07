@@ -49,7 +49,7 @@ export async function getAdminPlaylists(): Promise<AdminPlaylist[]> {
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as AdminPlaylist[]
   } catch (error) {
-    console.error('Error fetching admin playlists:', error)
+ console.error('Error fetching admin playlists:', error)
     return []
   }
 }
@@ -100,7 +100,7 @@ export async function getPublicAdminPlaylists(isHQZone: boolean, currentZoneId?:
 
     return filtered
   } catch (error) {
-    console.error('Error fetching public playlists:', error)
+ console.error('Error fetching public playlists:', error)
     // Fallback: get all and filter
     try {
       const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'))
@@ -155,7 +155,7 @@ export async function getFeaturedPlaylists(isHQZone: boolean): Promise<AdminPlay
       updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date()
     })) as AdminPlaylist[]
   } catch (error) {
-    console.error('Error fetching featured playlists:', error)
+ console.error('Error fetching featured playlists:', error)
     return []
   }
 }
@@ -173,7 +173,7 @@ export async function getAdminPlaylist(id: string): Promise<AdminPlaylist | null
       updatedAt: (snapshot.data().updatedAt as Timestamp)?.toDate() || new Date()
     } as AdminPlaylist
   } catch (error) {
-    console.error('Error fetching playlist:', error)
+ console.error('Error fetching playlist:', error)
     return null
   }
 }
@@ -211,13 +211,13 @@ export async function createAdminPlaylist(data: {
     // Trigger FCM push notifications for public playlists
     if (data.isPublic !== false) {
       triggerPlaylistNotification(docRef.id, data.name, data.forHQ ?? true).catch(err => {
-        console.error('[PlaylistNotif] FCM error:', err)
+ console.error('[PlaylistNotif] FCM error:', err)
       })
     }
 
     return docRef.id
   } catch (error) {
-    console.error('Error creating playlist:', error)
+ console.error('Error creating playlist:', error)
     throw error
   }
 }
@@ -243,14 +243,14 @@ async function triggerPlaylistNotification(playlistId: string, name: string, for
         body: JSON.stringify({
           type: 'media',
           recipientIds: batch,
-          title: '🎵 New Playlist',
+          title: ' New Playlist',
           body: `Check out the new playlist: "${name}"`,
           data: { playlistId }
         })
       })
     }
   } catch (err) {
-    console.error('Error in triggerPlaylistNotification:', err)
+ console.error('Error in triggerPlaylistNotification:', err)
   }
 }
 
@@ -272,7 +272,7 @@ export async function updateAdminPlaylist(
       updatedAt: serverTimestamp()
     })
   } catch (error) {
-    console.error('Error updating playlist:', error)
+ console.error('Error updating playlist:', error)
     throw error
   }
 }
@@ -282,7 +282,7 @@ export async function deleteAdminPlaylist(id: string): Promise<void> {
   try {
     await deleteDoc(doc(db, COLLECTION, id))
   } catch (error) {
-    console.error('Error deleting playlist:', error)
+ console.error('Error deleting playlist:', error)
     throw error
   }
 }
@@ -299,7 +299,7 @@ export async function addVideoToPlaylist(playlistId: string, videoId: string): P
       })
     }
   } catch (error) {
-    console.error('Error adding video to playlist:', error)
+ console.error('Error adding video to playlist:', error)
     throw error
   }
 }
@@ -314,7 +314,7 @@ export async function removeVideoFromPlaylist(playlistId: string, videoId: strin
       videoIds: playlist.videoIds.filter(id => id !== videoId)
     })
   } catch (error) {
-    console.error('Error removing video from playlist:', error)
+ console.error('Error removing video from playlist:', error)
     throw error
   }
 }
@@ -324,7 +324,7 @@ export async function reorderPlaylistVideos(playlistId: string, videoIds: string
   try {
     await updateAdminPlaylist(playlistId, { videoIds })
   } catch (error) {
-    console.error('Error reordering playlist:', error)
+ console.error('Error reordering playlist:', error)
     throw error
   }
 }
@@ -352,7 +352,7 @@ export async function addChildPlaylist(parentId: string, childId: string): Promi
       })
     }
   } catch (error) {
-    console.error('Error adding child playlist:', error)
+ console.error('Error adding child playlist:', error)
     throw error
   }
 }
@@ -367,7 +367,7 @@ export async function removeChildPlaylist(parentId: string, childId: string): Pr
       childPlaylistIds: (parent.childPlaylistIds || []).filter(id => id !== childId)
     })
   } catch (error) {
-    console.error('Error removing child playlist:', error)
+ console.error('Error removing child playlist:', error)
     throw error
   }
 }
@@ -389,7 +389,7 @@ export async function getAddableChildPlaylists(parentId: string): Promise<AdminP
       return true
     })
   } catch (error) {
-    console.error('Error getting addable playlists:', error)
+ console.error('Error getting addable playlists:', error)
     return []
   }
 }

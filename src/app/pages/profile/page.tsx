@@ -13,7 +13,7 @@ import { getMenuItems } from '@/config/menuItems'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import { handleAppRefresh } from '@/utils/refresh-utils'
-import { ultraFastUploadProfileImage, ultraFastDeleteImage } from '@/utils/ultraFastImageUpload'
+import { ultraFastUploadProfileImage, ultraFastDeleteImage } from '@/utils/optimized-image-upload'
 import { validateImageFile } from '@/utils/imageUpload'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
@@ -100,7 +100,7 @@ function ProfilePage() {
         setQrCodeDataUrl(dataUrl)
         setQrTimeLeft(300) // Reset timer to 5 mins
       } catch (err) {
-        console.error('Failed to generate QR:', err)
+ console.error('Failed to generate QR:', err)
       }
     }
 
@@ -240,7 +240,7 @@ function ProfilePage() {
       const currentUser = firebaseUser || (currentProfile?.id ? { uid: currentProfile.id } : null)
 
       if (!currentUser) {
-        console.error('❌ No authenticated user found')
+ console.error(' No authenticated user found')
         throw new Error('No authenticated user')
       }
 
@@ -249,7 +249,7 @@ function ProfilePage() {
       const testData = await FirebaseDatabaseService.getDocument('profiles', currentUser.uid)
 
       if (!testData) {
-        console.error('❌ Profile access test failed: Profile not found')
+ console.error(' Profile access test failed: Profile not found')
         throw new Error('Cannot access profile: Profile not found')
       }
 
@@ -257,7 +257,7 @@ function ProfilePage() {
       const result = await FirebaseDatabaseService.updateDocument('profiles', currentUser.uid, updates)
 
       if (!result) {
-        console.error('❌ Database update error: Update failed')
+ console.error(' Database update error: Update failed')
         throw new Error('Database update failed: Update operation failed')
       }
 
@@ -266,7 +266,7 @@ function ProfilePage() {
       await refreshProfile()
       return true
     } catch (error) {
-      console.error('❌ Profile update error:', error)
+ console.error(' Profile update error:', error)
       return false
     }
   }
@@ -351,31 +351,31 @@ function ProfilePage() {
       setSaveStage('Validating form data...')
 
       if (!editForm.firstName.trim()) {
-        setSaveMessage('❌ First name is required')
+        setSaveMessage(' First name is required')
         setIsSaving(false)
         return
       }
 
       if (!editForm.lastName.trim()) {
-        setSaveMessage('❌ Last name is required')
+        setSaveMessage(' Last name is required')
         setIsSaving(false)
         return
       }
 
       if (!editForm.phoneNumber.trim()) {
-        setSaveMessage('❌ Phone number is required')
+        setSaveMessage(' Phone number is required')
         setIsSaving(false)
         return
       }
 
       if (!editForm.region.trim()) {
-        setSaveMessage('❌ Region is required')
+        setSaveMessage(' Region is required')
         setIsSaving(false)
         return
       }
 
       if (!editForm.church.trim()) {
-        setSaveMessage('❌ Church is required')
+        setSaveMessage(' Church is required')
         setIsSaving(false)
         return
       }
@@ -407,8 +407,8 @@ function ProfilePage() {
         }
         const testData = await FirebaseDatabaseService.getDocument('profiles', user.uid)
       } catch (testError) {
-        console.error('❌ Database connection failed:', testError)
-        setSaveMessage(`❌ Database connection failed: ${(testError as Error).message}`)
+ console.error(' Database connection failed:', testError)
+        setSaveMessage(` Database connection failed: ${(testError as Error).message}`)
         setIsSaving(false)
         return
       }
@@ -421,7 +421,7 @@ function ProfilePage() {
       if (profileSuccess) {
         setSaveProgress(100)
         setSaveStage('Complete!')
-        setSaveMessage('✅ Profile updated successfully!')
+        setSaveMessage(' Profile updated successfully!')
         setIsEditing(false)
         setTimeout(() => {
           setSaveMessage('')
@@ -433,7 +433,7 @@ function ProfilePage() {
       } else {
         setSaveProgress(80)
         setSaveStage('Profile save failed')
-        setSaveMessage('❌ Failed to update profile. Check console for details.')
+        setSaveMessage(' Failed to update profile. Check console for details.')
         setTimeout(() => {
           setSaveMessage('')
           setSaveProgress(0)
@@ -441,8 +441,8 @@ function ProfilePage() {
         }, 3000)
       }
     } catch (error) {
-      console.error('❌ Error saving profile:', error)
-      setSaveMessage(`❌ Error saving profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
+ console.error(' Error saving profile:', error)
+      setSaveMessage(` Error saving profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setTimeout(() => {
         setSaveMessage('')
         setSaveProgress(0)
@@ -486,14 +486,14 @@ function ProfilePage() {
 
       if (result.success) {
         setKingsChatLinked(true)
-        setLinkingMessage('✅ KingsChat account linked successfully!')
+        setLinkingMessage(' KingsChat account linked successfully!')
         await refreshProfile() // Refresh profile to show updated data
       } else {
-        setLinkingMessage(`❌ ${result.error}`)
+        setLinkingMessage(` ${result.error}`)
       }
     } catch (error: any) {
-      console.error('Failed to link KingsChat:', error)
-      setLinkingMessage(`❌ ${error.message || 'Failed to link KingsChat account'}`)
+ console.error('Failed to link KingsChat:', error)
+      setLinkingMessage(` ${error.message || 'Failed to link KingsChat account'}`)
     } finally {
       setIsLinkingKingsChat(false)
     }
@@ -514,14 +514,14 @@ function ProfilePage() {
 
       if (result.success) {
         setKingsChatLinked(false)
-        setLinkingMessage('✅ KingsChat account unlinked successfully')
+        setLinkingMessage(' KingsChat account unlinked successfully')
         await refreshProfile()
       } else {
-        setLinkingMessage(`❌ ${result.error}`)
+        setLinkingMessage(` ${result.error}`)
       }
     } catch (error: any) {
-      console.error('Failed to unlink KingsChat:', error)
-      setLinkingMessage(`❌ ${error.message || 'Failed to unlink KingsChat account'}`)
+ console.error('Failed to unlink KingsChat:', error)
+      setLinkingMessage(` ${error.message || 'Failed to unlink KingsChat account'}`)
     } finally {
       setIsLinkingKingsChat(false)
     }
@@ -591,13 +591,13 @@ function ProfilePage() {
         }
         keysToRemove.forEach(k => localStorage.removeItem(k))
       } catch (cacheError) {
-        console.error('Error clearing caches:', cacheError)
+ console.error('Error clearing caches:', cacheError)
       }
 
       // Force a hard reload with cache bypass to ensure fresh data
       window.location.href = '/pages/profile?refresh=' + Date.now()
     } catch (error) {
-      console.error('❌ Leave zone error:', error)
+ console.error(' Leave zone error:', error)
       alert(`Failed to leave zone: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsLeavingZone(false)
@@ -631,7 +631,7 @@ function ProfilePage() {
       router.push('/auth')
 
     } catch (error) {
-      console.error('❌ Account deletion error:', error)
+ console.error(' Account deletion error:', error)
       alert('Failed to delete account. Please try again.')
     } finally {
       setIsDeleting(false)
@@ -800,7 +800,7 @@ function ProfilePage() {
                                   alert('Failed to delete image. Please try again.')
                                 }
                               } catch (error) {
-                                console.error('Error deleting image:', error)
+ console.error('Error deleting image:', error)
                                 alert('Error deleting image. Please try again.')
                               }
                             }
@@ -1707,7 +1707,7 @@ function ProfilePage() {
                     try {
                       await signOut()
                     } catch (error) {
-                      console.error('❌ SignOut error:', error);
+ console.error(' SignOut error:', error);
                     }
                   }}
                   className="w-full py-4 bg-gray-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-gray-200"

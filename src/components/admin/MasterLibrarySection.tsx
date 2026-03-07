@@ -142,7 +142,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         setZonePraiseNights(praiseNights);
       }
     } catch (error) {
-      console.error('Error loading master library:', error);
+ console.error('Error loading master library:', error);
       showToast('error', 'Failed to load Master Library');
     } finally {
       setLoading(false);
@@ -166,7 +166,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
       }
       setHasMoreMasterSongs(MasterLibraryService.hasMoreMasterSongs());
     } catch (error) {
-      console.error('Error loading more songs:', error);
+ console.error('Error loading more songs:', error);
       showToast('error', 'Failed to load more songs');
     } finally {
       setIsLoadingMore(false);
@@ -185,7 +185,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
       }
       setHasMoreInternalSongs(MasterLibraryService.hasMoreHQInternalSongs());
     } catch (error) {
-      console.error('Error loading more internal songs:', error);
+ console.error('Error loading more internal songs:', error);
       showToast('error', 'Failed to load more songs');
     } finally {
       setIsLoadingMore(false);
@@ -275,7 +275,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         showToast('error', result.error || 'Failed to create program');
       }
     } catch (error) {
-      console.error('Error creating program:', error);
+ console.error('Error creating program:', error);
       showToast('error', 'An unexpected error occurred');
     }
   };
@@ -326,7 +326,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         showToast('error', 'Failed to add songs to program')
       }
     } catch (error) {
-      console.error('Error adding songs to program:', error)
+ console.error('Error adding songs to program:', error)
       showToast('error', 'An error occurred')
     }
   }
@@ -352,7 +352,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         showToast('error', result.error || 'Failed to update program');
       }
     } catch (error) {
-      console.error('Error toggling song in program:', error);
+ console.error('Error toggling song in program:', error);
       showToast('error', 'An unexpected error occurred');
     }
   };
@@ -367,7 +367,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         showToast('error', result.error || 'Failed to update order');
       }
     } catch (error) {
-      console.error('Error updating program order:', error);
+ console.error('Error updating program order:', error);
       showToast('error', 'An error occurred');
     }
   };
@@ -519,7 +519,7 @@ export default function MasterLibrarySection({ isHQAdmin = false }: MasterLibrar
         }));
       }
     } catch (error) {
-      console.error('Error importing song:', error);
+ console.error('Error importing song:', error);
       window.dispatchEvent(new CustomEvent('showToast', {
         detail: {
           message: 'Failed to import song',

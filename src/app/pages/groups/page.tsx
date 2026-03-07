@@ -20,7 +20,7 @@ import { togglePinChat as togglePinChatService } from './_lib/chat-service'
 import { useCall } from '@/contexts/CallContext'
 
 // Reaction options - more variety
-const REACTIONS: ReactionType[] = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '💯', '🎉']
+const REACTIONS: ReactionType[] = ['❤️', '', '😂', '😮', '😢', '🙏', '', '👏', '💯', '']
 
 // Helper component for voice messages
 const VoiceMessagePlayer = ({ url, duration, isOwn, primaryColor }: { url: string, duration?: number, isOwn: boolean, primaryColor: string }) => {
@@ -208,7 +208,7 @@ function GroupsContent() {
   const [showMyProfile, setShowMyProfile] = useState(false)
   const [viewingProfileData, setViewingProfileData] = useState<UserProfile | null>(null)
   const [isEditingMyProfile, setIsEditingMyProfile] = useState(false)
-  const EMOJI_LIST = ['😊', '😂', '❤️', '👍', '🔥', '🙌', '🙏', '😮', '😢', '👏', '💯', '✨', '🎉', '😎', '🤔', '😅', '😍', '👋', '👀', '💪']
+  const EMOJI_LIST = ['😊', '😂', '❤️', '', '', '🙌', '🙏', '😮', '😢', '👏', '💯', '', '', '😎', '', '😅', '😍', '', '👀', '']
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -244,7 +244,7 @@ function GroupsContent() {
         .then(data => {
           if (data) setViewingProfileData(data as UserProfile)
         })
-        .catch(err => console.error('Error fetching profile:', err))
+ .catch(err => console.error('Error fetching profile:', err))
     }
   }, [showUserProfile])
 
@@ -388,7 +388,7 @@ function GroupsContent() {
       // Start looking for the chat
       setTimeout(() => findAndSelectChat(0), 300)
     } else {
-      console.error('[Groups] Failed to create/get chat')
+ console.error('[Groups] Failed to create/get chat')
       alert('Failed to start chat. Please try again.')
     }
   }
@@ -496,7 +496,7 @@ function GroupsContent() {
         setRecordingDuration(prev => prev + 1)
       }, 1000)
     } catch (err) {
-      console.error('Failed to start recording:', err)
+ console.error('Failed to start recording:', err)
       alert('Could not access microphone. Please check permissions.')
     }
   }
@@ -841,7 +841,7 @@ function GroupsContent() {
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
                 >
-                  {chats.find(c => c.id === showChatActions)?.pinnedBy?.[currentUser?.id || ''] ? '📌 Unpin' : '📍 Pin Chat'}
+                  {chats.find(c => c.id === showChatActions)?.pinnedBy?.[currentUser?.id || ''] ? ' Unpin' : ' Pin Chat'}
                 </button>
                 <button
                   onClick={async () => {
@@ -2263,7 +2263,7 @@ function GroupsContent() {
                               await FirebaseDatabaseService.updateUserProfile(user!.uid, { profile_image_url: url })
                               await refreshProfile()
                             } catch (err) {
-                              console.error('Upload failed:', err)
+ console.error('Upload failed:', err)
                             } finally {
                               setIsUploading(false)
                             }
@@ -2341,9 +2341,7 @@ function GroupsContent() {
   )
 }
 
-// ============================================
 // HELPERS (Moved outside to prevent re-renders)
-// ============================================
 
 function adjustColor(color: string, amount: number): string {
   if (!color) return '#10b981'
@@ -2394,9 +2392,7 @@ function formatFileSize(bytes?: number): string {
   return (kb / 1024).toFixed(1) + ' MB'
 }
 
-// ---------------------------------------------------------
 // SyncAvatar: Ensures avatars are consistent with profiles
-// ---------------------------------------------------------
 function SyncAvatar({
   userId,
   initialAvatar,
@@ -2433,7 +2429,7 @@ function SyncAvatar({
         } else if (p?.avatar_url) {
           setAvatar(p.avatar_url)
         }
-      }).catch(err => console.error('[SyncAvatar] error:', err))
+ }).catch(err => console.error('[SyncAvatar] error:', err))
     }
   }, [userId, isGroup])
 

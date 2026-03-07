@@ -283,7 +283,7 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
                   try {
                     await signOut()
                   } catch (error) {
-                    console.error('❌ SignOut error:', error);
+ console.error(' SignOut error:', error);
                     // Fallback: try the stored callback
                     if (logoutCallbackRef.current) {
                       logoutCallbackRef.current()

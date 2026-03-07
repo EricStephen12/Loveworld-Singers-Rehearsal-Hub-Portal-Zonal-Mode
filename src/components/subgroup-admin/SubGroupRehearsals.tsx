@@ -55,7 +55,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
         songCount: r.songIds?.length || 0
       })));
     } catch (error) {
-      console.error('Error loading rehearsals:', error);
+ console.error('Error loading rehearsals:', error);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +81,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
         loadRehearsals();
       }
     } catch (error) {
-      console.error('Error creating rehearsal:', error);
+ console.error('Error creating rehearsal:', error);
     } finally {
       setCreating(false);
     }

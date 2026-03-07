@@ -19,10 +19,10 @@ if (!admin.apps.length) {
             });
 
         } else {
-            console.warn('⚠️ Firebase Admin credentials missing');
+ console.warn('️ Firebase Admin credentials missing');
         }
     } catch (error) {
-        console.error('❌ Firebase Admin init error:', error);
+ console.error(' Firebase Admin init error:', error);
     }
 } else {
     // If already initialized, use the existing app

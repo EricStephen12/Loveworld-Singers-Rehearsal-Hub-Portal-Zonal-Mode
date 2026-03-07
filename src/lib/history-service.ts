@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ===== HISTORY OPERATIONS =====
+// History Operations
 
 export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]> {
     try {
@@ -19,7 +19,7 @@ export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('🎯 Supabase error fetching history:', error);
+ console.error(' Supabase error fetching history:', error);
             throw error;
         }
 
@@ -38,7 +38,7 @@ export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]
 
         return historyEntries;
     } catch (error) {
-        console.error('Error fetching history:', error);
+ console.error('Error fetching history:', error);
         return [];
     }
 }
@@ -52,7 +52,7 @@ export async function createHistoryEntry(entry: any): Promise<boolean> {
         if (error) throw error;
         return true;
     } catch (error) {
-        console.error('Error creating history entry:', error);
+ console.error('Error creating history entry:', error);
         return false;
     }
 }

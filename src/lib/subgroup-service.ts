@@ -105,7 +105,7 @@ export class SubGroupService {
       
       return { success: false, error: 'Failed to create request' }
     } catch (error) {
-      console.error('❌ Error creating sub-group request:', error)
+ console.error(' Error creating sub-group request:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -137,7 +137,7 @@ export class SubGroupService {
       
       return subGroups
     } catch (error) {
-      console.error('❌ Error getting zone sub-groups:', error)
+ console.error(' Error getting zone sub-groups:', error)
       return []
     }
   }
@@ -150,7 +150,7 @@ export class SubGroupService {
       const allSubGroups = await this.getZoneSubGroups(zoneId)
       return allSubGroups.filter(sg => sg.status === 'pending')
     } catch (error) {
-      console.error('❌ Error getting pending requests:', error)
+ console.error(' Error getting pending requests:', error)
       return []
     }
   }
@@ -173,7 +173,7 @@ export class SubGroupService {
         createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
       })) as SubGroup[]
     } catch (error) {
-      console.error('❌ Error getting user sub-group requests:', error)
+ console.error(' Error getting user sub-group requests:', error)
       return []
     }
   }
@@ -199,7 +199,7 @@ export class SubGroupService {
       
       return subGroups
     } catch (error) {
-      console.error('❌ Error getting user sub-groups:', error)
+ console.error(' Error getting user sub-groups:', error)
       return []
     }
   }
@@ -222,7 +222,7 @@ export class SubGroupService {
       }
       return null
     } catch (error) {
-      console.error('❌ Error getting sub-group:', error)
+ console.error(' Error getting sub-group:', error)
       return null
     }
   }
@@ -263,7 +263,7 @@ export class SubGroupService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error approving sub-group:', error)
+ console.error(' Error approving sub-group:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -308,7 +308,7 @@ export class SubGroupService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error rejecting sub-group:', error)
+ console.error(' Error rejecting sub-group:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -338,7 +338,7 @@ export class SubGroupService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error activating sub-group:', error)
+ console.error(' Error activating sub-group:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -360,7 +360,7 @@ export class SubGroupService {
       const snapshot = await getDocs(q)
       return !snapshot.empty
     } catch (error) {
-      console.error('❌ Error checking sub-group coordinator status:', error)
+ console.error(' Error checking sub-group coordinator status:', error)
       return false
     }
   }
@@ -383,7 +383,7 @@ export class SubGroupService {
         createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
       })) as SubGroup[]
     } catch (error) {
-      console.error('❌ Error getting coordinated sub-groups:', error)
+ console.error(' Error getting coordinated sub-groups:', error)
       return []
     }
   }
@@ -413,7 +413,7 @@ export class SubGroupService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error adding member:', error)
+ console.error(' Error adding member:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -446,7 +446,7 @@ export class SubGroupService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error removing member:', error)
+ console.error(' Error removing member:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -468,7 +468,7 @@ export class SubGroupService {
       })
       return { success: true }
     } catch (error) {
-      console.error('❌ Error updating sub-group:', error)
+ console.error(' Error updating sub-group:', error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -476,9 +476,7 @@ export class SubGroupService {
     }
   }
   
-  // ============================================
   // NOTIFICATION HELPERS
-  // ============================================
   
   /**
    * Notify Zone Coordinator of new sub-group request
@@ -499,7 +497,7 @@ export class SubGroupService {
         createdAt: new Date()
       })
     } catch (error) {
-      console.error('❌ Error notifying zone coordinator:', error)
+ console.error(' Error notifying zone coordinator:', error)
     }
   }
   
@@ -523,7 +521,7 @@ export class SubGroupService {
         createdAt: new Date()
       })
     } catch (error) {
-      console.error('❌ Error notifying requester:', error)
+ console.error(' Error notifying requester:', error)
     }
   }
   
@@ -535,7 +533,7 @@ export class SubGroupService {
       const pending = await this.getPendingRequests(zoneId)
       return pending.length
     } catch (error) {
-      console.error('❌ Error getting pending count:', error)
+ console.error(' Error getting pending count:', error)
       return 0
     }
   }

@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     const secretKey = process.env.KINGSPAY_SECRET_KEY || process.env.NEXT_PUBLIC_KINGSPAY_SECRET_KEY
 
     if (!secretKey) {
-      console.error('❌ KingsPay secret key not configured')
+ console.error(' KingsPay secret key not configured')
       return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
     }
 
     if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
-      console.error('❌ Invalid webhook signature')
+ console.error(' Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         const { userId } = metadata
 
         if (!userId) {
-          console.error('❌ Webhook metadata missing userId')
+ console.error(' Webhook metadata missing userId')
           return NextResponse.json({ error: 'Invalid metadata' }, { status: 400 })
         }
 
@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date().toISOString()
           })
 
-          console.log(`✅ Individual subscription activated for user ${userId}`)
+ console.log(` Individual subscription activated for user ${userId}`)
           return NextResponse.json({ success: true, message: 'Global Individual subscription activated' })
         } catch (error) {
-          console.error('❌ Error updating individual subscription:', error)
+ console.error(' Error updating individual subscription:', error)
           return NextResponse.json({ error: 'Failed to activate individual subscription' }, { status: 500 })
         }
       }
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Webhook received' })
   } catch (error) {
-    console.error('❌ Error processing KingsPay webhook:', error)
+ console.error(' Error processing KingsPay webhook:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

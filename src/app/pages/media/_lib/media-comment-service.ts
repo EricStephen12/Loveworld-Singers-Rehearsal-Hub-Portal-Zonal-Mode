@@ -60,7 +60,7 @@ class MediaCommentService {
             })
             return docRef.id
         } catch (error) {
-            console.error('Error adding comment:', error)
+ console.error('Error adding comment:', error)
             throw error
         }
     }
@@ -79,7 +79,7 @@ class MediaCommentService {
                 createdAt: doc.data().createdAt?.toDate() || new Date()
             })) as MediaComment[]
         } catch (error) {
-            console.error('Error fetching comments:', error)
+ console.error('Error fetching comments:', error)
             return []
         }
     }
@@ -99,7 +99,7 @@ class MediaCommentService {
             })) as MediaComment[]
             callback(comments)
         }, (error) => {
-            console.error('Error in comment subscription:', error)
+ console.error('Error in comment subscription:', error)
         })
     }
 
@@ -135,7 +135,7 @@ class MediaCommentService {
                 }
             }
         } catch (error) {
-            console.error('Error toggling like:', error)
+ console.error('Error toggling like:', error)
             throw error
         }
     }
@@ -172,7 +172,7 @@ class MediaCommentService {
                 }
             }
         } catch (error) {
-            console.error('Error toggling dislike:', error)
+ console.error('Error toggling dislike:', error)
             throw error
         }
     }
@@ -182,7 +182,7 @@ class MediaCommentService {
             const commentRef = doc(db, this.commentsCollection, commentId)
             await deleteDoc(commentRef)
         } catch (error) {
-            console.error('Error deleting comment:', error)
+ console.error('Error deleting comment:', error)
             throw error
         }
     }

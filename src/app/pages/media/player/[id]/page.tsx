@@ -73,7 +73,7 @@ function PlayerContent() {
       const related = await firebaseMediaService.getRelatedMedia(mediaId, 10)
       setRelatedVideos(related)
     } catch (error) {
-      console.error('Error loading media:', error)
+ console.error('Error loading media:', error)
     }
     setIsLoading(false)
   }
@@ -85,7 +85,7 @@ function PlayerContent() {
       const liked = await isVideoLiked(userId, mediaId)
       setIsLiked(liked)
     } catch (error) {
-      console.error('Error checking status:', error)
+ console.error('Error checking status:', error)
     }
   }
 
@@ -99,7 +99,7 @@ function PlayerContent() {
       setIsLiked(newState)
       setLikeCount(prev => newState ? prev + 1 : prev - 1)
     } catch (error) {
-      console.error('Error toggling like:', error)
+ console.error('Error toggling like:', error)
     }
   }
 
@@ -144,7 +144,7 @@ function PlayerContent() {
         setNewComment('')
       }
     } catch (error) {
-      console.error('Error adding comment:', error)
+ console.error('Error adding comment:', error)
     }
   }
 
@@ -158,7 +158,7 @@ function PlayerContent() {
     try {
       await mediaCommentService.deleteComment(commentId)
     } catch (error) {
-      console.error('Error deleting comment:', error)
+ console.error('Error deleting comment:', error)
       setComments(originalComments) // Rollback
       alert('Failed to delete comment. Please try again.')
     }
@@ -172,7 +172,7 @@ function PlayerContent() {
     try {
       await mediaCommentService.toggleLike(commentId, userId)
     } catch (error) {
-      console.error('Error toggling comment like:', error)
+ console.error('Error toggling comment like:', error)
     }
   }
 
@@ -184,7 +184,7 @@ function PlayerContent() {
     try {
       await mediaCommentService.toggleDislike(commentId, userId)
     } catch (error) {
-      console.error('Error toggling comment dislike:', error)
+ console.error('Error toggling comment dislike:', error)
     }
   }
 

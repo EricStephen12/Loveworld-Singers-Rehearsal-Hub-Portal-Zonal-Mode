@@ -48,7 +48,7 @@ export default function NotificationsSection() {
           timestamp: Date.now()
         }));
       } catch (error) {
-        console.error('Error fetching groups:', error);
+ console.error('Error fetching groups:', error);
         // Fallback to predefined groups
         setAvailableGroups(['soprano', 'alto', 'tenor', 'bass']);
       }
@@ -91,13 +91,13 @@ export default function NotificationsSection() {
   const getCategoryStyle = (category: string) => {
     switch (category) {
       case 'rehearsal':
-        return { bg: theme.primaryLight, text: theme.text, icon: '📅' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '' };
       case 'song':
-        return { bg: theme.primaryLight, text: theme.text, icon: '🎵' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '' };
       case 'praise_night':
-        return { bg: theme.primaryLight, text: theme.text, icon: '✨' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '' };
       case 'announcement':
-        return { bg: theme.primaryLight, text: theme.text, icon: '📢' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '' };
       case 'admin':
         return { bg: theme.primaryLight, text: theme.text, icon: '👤' };
       default:
@@ -173,14 +173,14 @@ export default function NotificationsSection() {
       }
 
       if (result.success) {
-        showToast(modalType === 'all' ? '✅ Notification sent to all users!' : `✅ Notification sent to ${notifGroup} group!`, 'success');
+        showToast(modalType === 'all' ? ' Notification sent to all users!' : ` Notification sent to ${notifGroup} group!`, 'success');
         closeModal();
       } else {
-        showToast('❌ Failed to send notification: ' + result.error, 'error');
+        showToast(' Failed to send notification: ' + result.error, 'error');
       }
     } catch (error) {
-      showToast('❌ Error sending notification', 'error');
-      console.error(error);
+      showToast(' Error sending notification', 'error');
+ console.error(error);
     } finally {
       setSending(false);
     }
@@ -198,11 +198,11 @@ export default function NotificationsSection() {
         deleted++;
       }
 
-      showToast(`✅ ${deleted} notifications deleted!`, 'success');
+      showToast(` ${deleted} notifications deleted!`, 'success');
       setShowDeleteAllConfirm(false);
     } catch (error) {
-      console.error('Error deleting notifications:', error);
-      showToast('❌ Failed to delete notifications', 'error');
+ console.error('Error deleting notifications:', error);
+      showToast(' Failed to delete notifications', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -258,7 +258,7 @@ export default function NotificationsSection() {
               onClick={() => openModal('all')}
               className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
             >
-              <span className="text-lg">📢</span>
+              <span className="text-lg"></span>
               <span>All</span>
             </button>
             <button
@@ -395,7 +395,7 @@ export default function NotificationsSection() {
             {/* Modal Header */}
             <div className="border-b border-gray-200 px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                {modalType === 'all' ? '📢 Send to All Users' : '👥 Send to Group'}
+                {modalType === 'all' ? ' Send to All Users' : '👥 Send to Group'}
               </h3>
             </div>
 

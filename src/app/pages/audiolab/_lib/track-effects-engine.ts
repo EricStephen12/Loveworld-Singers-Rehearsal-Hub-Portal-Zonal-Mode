@@ -63,7 +63,7 @@ class TrackEffectsEngine {
       await this.createReverbImpulse();
       return true;
     } catch (error) {
-      console.error('[TrackEffectsEngine] Init failed:', error);
+ console.error('[TrackEffectsEngine] Init failed:', error);
       return false;
     }
   }

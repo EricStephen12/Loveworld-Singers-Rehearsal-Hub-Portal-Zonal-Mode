@@ -27,7 +27,7 @@ export default function SimpleAdminSupport() {
       const allMessages = await SupabaseSupport.getMessages();
       setMessages(allMessages);
     } catch (error) {
-      console.error('❌ Admin: Error loading messages:', error);
+ console.error(' Admin: Error loading messages:', error);
     }
   };
 
@@ -44,7 +44,7 @@ export default function SimpleAdminSupport() {
       setReplyText('');
       loadMessages();
     } catch (error) {
-      console.error('Error sending reply:', error);
+ console.error('Error sending reply:', error);
     } finally {
       setIsReplying(false);
     }
@@ -107,7 +107,7 @@ export default function SimpleAdminSupport() {
             }}
             className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
           >
-            🔄 Refresh
+             Refresh
           </button>
           <button
             onClick={() => {
@@ -115,7 +115,7 @@ export default function SimpleAdminSupport() {
             }}
             className="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"
           >
-            🔍 Debug
+             Debug
           </button>
         </div>
       </div>

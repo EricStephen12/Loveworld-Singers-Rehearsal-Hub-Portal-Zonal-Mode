@@ -77,11 +77,11 @@ export async function POST(request: NextRequest) {
             if (userProfile?.kingschatUserId) {
                 await KingsChatAuthService.sendMessage(
                     userProfile.kingschatUserId,
-                    `🎉 Subscription Extended!\n\nYour subscription has been extended by ${months} month(s).\n\nNew expiry date: ${newExpiry.toLocaleDateString()}\n\nThank you for being with us! 🙏`
+                    ` Subscription Extended!\n\nYour subscription has been extended by ${months} month(s).\n\nNew expiry date: ${newExpiry.toLocaleDateString()}\n\nThank you for being with us! 🙏`
                 );
             }
         } catch (error) {
-            console.error('Failed to send KingsChat notification:', error);
+ console.error('Failed to send KingsChat notification:', error);
         }
 
         return NextResponse.json({
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             newExpiry: newExpiry.toISOString()
         });
     } catch (error) {
-        console.error('Error extending subscription:', error);
+ console.error('Error extending subscription:', error);
         return NextResponse.json(
             { error: 'Failed to extend subscription' },
             { status: 500 }

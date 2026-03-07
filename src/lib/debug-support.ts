@@ -7,12 +7,12 @@ export async function debugSupportSystem() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError) {
-      console.error('❌ Auth error:', authError);
+ console.error(' Auth error:', authError);
       return;
     }
     
     if (!user) {
-      console.error('❌ No authenticated user found');
+ console.error(' No authenticated user found');
       return;
     }
     
@@ -24,7 +24,7 @@ export async function debugSupportSystem() {
       .limit(1);
     
     if (dbError) {
-      console.error('❌ Database error:', dbError);
+ console.error(' Database error:', dbError);
       return;
     }
     
@@ -37,7 +37,7 @@ export async function debugSupportSystem() {
       .limit(1);
     
     if (rlsError) {
-      console.error('❌ RLS error:', rlsError);
+ console.error(' RLS error:', rlsError);
       return;
     }
     
@@ -61,7 +61,7 @@ export async function debugSupportSystem() {
       .single();
     
     if (insertError) {
-      console.error('❌ Insert error:', {
+ console.error(' Insert error:', {
         message: insertError.message,
         details: insertError.details,
         hint: insertError.hint,
@@ -79,7 +79,7 @@ export async function debugSupportSystem() {
     
     
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
+ console.error(' Unexpected error:', error);
   }
 }
 

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen, Volume2 } from 'lucide-react';
+import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen, Volume2, ListMusic, Trash2 } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
+import { useAudioLab } from '../_context/AudioLabContext';
+import { AddToPlaylistModal } from './AddToPlaylistModal';
 import CustomLoader from '@/components/CustomLoader';
 import type { Song, VocalPart, LyricLine } from '../_types';
 
@@ -18,8 +20,12 @@ export function AudioLabSongDetailModal({
     onClose,
 }: AudioLabSongDetailModalProps) {
     const { currentSong, isPlaying, currentTime, duration, setCurrentSong, togglePlayPause, setCurrentTime: seekTo } = useAudio();
+    const { state } = useAudioLab();
     const [activePart, setActivePart] = useState<VocalPart>('full');
     const [showLyrics, setShowLyrics] = useState(true);
+
+    const isPlaylistView = state.currentView === 'playlist-detail';
+    const activePlaylist = state.activePlaylist;
     const hasAudio = !!(song.audioUrls && Object.values(song.audioUrls).some(url => url && url.length > 0)) || !!song.audioUrl;
 
     // Sync active part with current playing sub-id if applicable
@@ -79,6 +85,7 @@ export function AudioLabSongDetailModal({
         : typeof song.lyrics === 'string'
             ? [{ time: 0, text: song.lyrics }]
             : [];
+
 
     const getPartLabel = (part: VocalPart) => {
         const labels: Record<string, string> = {
@@ -337,6 +344,7 @@ export function AudioLabSongDetailModal({
                     </div>
                 </div>
             </div>
+
         </>
     );
 }

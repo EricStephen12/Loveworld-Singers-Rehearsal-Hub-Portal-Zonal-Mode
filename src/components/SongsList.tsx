@@ -1,9 +1,9 @@
 'use client';
 
-import { useUltraFastSupabase } from '@/hooks/useUltraFastSupabase';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { useState } from 'react';
 
-export default function UltraFastSongsList() {
+export default function SongsList() {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Ultra-fast Supabase hook with real-time updates
@@ -14,7 +14,7 @@ export default function UltraFastSongsList() {
     isRealtime,
     refresh,
     optimisticUpdate,
-  } = useUltraFastSupabase({
+  } = useSupabaseQuery({
     table: 'songs',
     select: '*, praise_nights(*), categories(*)',
     filters: searchTerm ? { title: `%${searchTerm}%` } : {},
@@ -33,7 +33,7 @@ export default function UltraFastSongsList() {
       // In a real implementation, you would call a delete API here
       refresh();
     } catch (error) {
-      console.error('Delete failed:', error);
+ console.error('Delete failed:', error);
       // Refresh to get correct data
       refresh();
     }

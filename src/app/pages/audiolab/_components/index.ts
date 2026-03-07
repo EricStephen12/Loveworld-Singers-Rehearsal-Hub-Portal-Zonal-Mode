@@ -13,3 +13,6 @@ export { WarmUpView } from './WarmUpView';
 export { ProjectSettingsSheet } from './ProjectSettingsSheet';
 export { TrackEffectsPanel } from './TrackEffectsPanel';
 export { CollapsibleSongCard } from './CollapsibleSongCard';
+export { AudioLabSongDetailModal } from './AudioLabSongDetailModal';
+export { AddToPlaylistModal } from './AddToPlaylistModal';
+export { SimpleSongCard } from './SimpleSongCard';

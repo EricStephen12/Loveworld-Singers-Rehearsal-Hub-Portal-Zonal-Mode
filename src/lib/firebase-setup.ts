@@ -59,7 +59,7 @@ export const realtimeDb: Database | null = (() => {
       }
       return _realtimeDb;
     } catch (error) {
-      console.warn('Failed to initialize Realtime Database:', error);
+ console.warn('Failed to initialize Realtime Database:', error);
       return null;
     }
   } else {

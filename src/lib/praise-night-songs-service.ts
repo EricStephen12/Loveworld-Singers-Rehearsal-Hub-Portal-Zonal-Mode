@@ -57,7 +57,7 @@ export class PraiseNightSongsService {
         }
       }) as unknown as PraiseNightSong[]
     } catch (error) {
-      console.error('Error getting songs:', error)
+ console.error('Error getting songs:', error)
       return []
     }
   }
@@ -84,7 +84,7 @@ export class PraiseNightSongsService {
         }
       }) as unknown as PraiseNightSong[]
     } catch (error) {
-      console.error('Error getting all songs:', error)
+ console.error('Error getting all songs:', error)
       return []
     }
   }
@@ -106,7 +106,7 @@ export class PraiseNightSongsService {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
       } as unknown as PraiseNightSong
     } catch (error) {
-      console.error('Error getting song:', error)
+ console.error('Error getting song:', error)
       return null
     }
   }
@@ -156,7 +156,7 @@ export class PraiseNightSongsService {
 
       return { success: true, id: docRef.id }
     } catch (error) {
-      console.error('Error creating song:', error)
+ console.error('Error creating song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to create song' }
     }
   }
@@ -192,12 +192,12 @@ export class PraiseNightSongsService {
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
 
       } else {
-        console.warn('⚠️ [UpdateSong] Skipping metadata update - missing zoneId or praiseNightId');
+ console.warn('️ [UpdateSong] Skipping metadata update - missing zoneId or praiseNightId');
       }
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating song:', error)
+ console.error('Error updating song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to update song' }
     }
   }
@@ -226,7 +226,7 @@ export class PraiseNightSongsService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error deleting song:', error)
+ console.error('Error deleting song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to delete song' }
     }
   }
@@ -253,7 +253,7 @@ export class PraiseNightSongsService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating status:', error)
+ console.error('Error updating status:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to update status' }
     }
   }

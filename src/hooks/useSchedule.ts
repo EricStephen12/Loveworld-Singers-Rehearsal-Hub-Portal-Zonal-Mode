@@ -39,7 +39,7 @@ export function useSchedule(): UseScheduleReturn {
             const cats = await ScheduleCategoryService.getCategories(zoneId)
             setCategories(cats)
         } catch (e) {
-            console.error('useSchedule: error fetching categories', e)
+ console.error('useSchedule: error fetching categories', e)
         } finally {
             setIsLoading(false)
         }
@@ -51,7 +51,7 @@ export function useSchedule(): UseScheduleReturn {
             const prog = await ScheduleProgramService.getProgram(zoneId, date, categoryId)
             setProgram(prog)
         } catch (e) {
-            console.error('useSchedule: error fetching program', e)
+ console.error('useSchedule: error fetching program', e)
         } finally {
             setIsLoading(false)
         }
@@ -62,7 +62,7 @@ export function useSchedule(): UseScheduleReturn {
             const list = await ScheduleProgramService.getAllPrograms(zoneId)
             setAllPrograms(list)
         } catch (e) {
-            console.error('useSchedule: error fetching all programs', e)
+ console.error('useSchedule: error fetching all programs', e)
         }
     }, [zoneId])
 
@@ -72,7 +72,7 @@ export function useSchedule(): UseScheduleReturn {
             const list = await ScheduleSongService.getSongs(categoryId, zoneId)
             setSongs(prev => ({ ...prev, [categoryId]: list }))
         } catch (e) {
-            console.error('useSchedule: error fetching songs', e)
+ console.error('useSchedule: error fetching songs', e)
         }
     }, [zoneId, songs])
 

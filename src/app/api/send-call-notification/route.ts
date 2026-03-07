@@ -112,14 +112,14 @@ export async function POST(req: NextRequest) {
         // Remove the entire token entry for this user if their token is invalid
         await rtdb.ref(`fcm_tokens/${receiverId}`).remove();
       } catch (cleanupError) {
-        console.error('[CallNotification] Error cleaning up tokens:', cleanupError);
+ console.error('[CallNotification] Error cleaning up tokens:', cleanupError);
       }
     }
 
     // Log results for debugging
     results.forEach((result, index) => {
       if (!result.success) {
-        console.error('[CallNotification] Failed to send to device', index, ':', (result as any).error?.message || (result as any).error);
+ console.error('[CallNotification] Failed to send to device', index, ':', (result as any).error?.message || (result as any).error);
       } else {
       }
     });
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[CallNotification] Error:', error);
+ console.error('[CallNotification] Error:', error);
     return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 });
   }
 }
@@ -162,7 +162,7 @@ async function getUserFCMTokens(userId: string): Promise<string[]> {
     return tokens;
 
   } catch (error) {
-    console.error('[CallNotification] Error getting tokens:', error);
+ console.error('[CallNotification] Error getting tokens:', error);
     return [];
   }
 }

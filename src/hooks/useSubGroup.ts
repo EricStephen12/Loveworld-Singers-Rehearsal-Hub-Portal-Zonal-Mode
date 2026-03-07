@@ -40,7 +40,7 @@ export function useSubGroup() {
           setUserRequests(requests)
         }
       } catch (error) {
-        console.error('Error loading sub-group data:', error)
+ console.error('Error loading sub-group data:', error)
       } finally {
         setIsLoading(false)
       }
@@ -129,7 +129,7 @@ export function useZoneSubGroups() {
         setSubGroups(groups)
         setPendingCount(count)
       } catch (error) {
-        console.error('Error loading zone sub-groups:', error)
+ console.error('Error loading zone sub-groups:', error)
       } finally {
         setIsLoading(false)
       }

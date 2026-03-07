@@ -63,7 +63,7 @@ export function useUnreadNotifications() {
           chatUnread += count
         })
         setUnreadCount(chatUnread)
-      }, (err) => console.error('Chat listener error:', err))
+ }, (err) => console.error('Chat listener error:', err))
 
       unsubscribers.push(chatUnsub)
     } catch (e) {
@@ -85,7 +85,7 @@ export function useUnreadNotifications() {
             }
           }
         })
-      }, (err) => console.error('Zone listener error:', err))
+ }, (err) => console.error('Zone listener error:', err))
 
       unsubscribers.push(zoneUnsub)
     } catch (e) {

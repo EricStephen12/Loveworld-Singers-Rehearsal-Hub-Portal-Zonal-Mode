@@ -106,7 +106,7 @@ export default function Members() {
           const { ZONES } = await import('@/config/zones');
           setAllZones(ZONES);
         } catch (error) {
-          console.error('Error loading zones:', error);
+ console.error('Error loading zones:', error);
         }
       }
     };
@@ -221,7 +221,7 @@ export default function Members() {
           });
         } catch (error) {
           // Fallback: fetch individually if batch fails
-          console.warn('Batch fetch failed, falling back to individual fetches');
+ console.warn('Batch fetch failed, falling back to individual fetches');
           for (const userId of batchIds) {
             try {
               const profile = await FirebaseDatabaseService.getDocument('profiles', userId);
@@ -278,7 +278,7 @@ export default function Members() {
       });
 
     } catch (error) {
-      console.error('❌ Error loading members:', error);
+ console.error(' Error loading members:', error);
     } finally {
       setLoading(false);
     }
@@ -377,7 +377,7 @@ export default function Members() {
         await ZoneInvitationService.removeUserFromZone(member.id, member.zoneId);
       }
 
-      showToast(`✅ ${member.first_name} ${member.last_name} deleted successfully`, 'success');
+      showToast(` ${member.first_name} ${member.last_name} deleted successfully`, 'success');
 
       // Invalidate cache and reload
       if (currentZone) {
@@ -386,8 +386,8 @@ export default function Members() {
       }
       loadMembers(true); // Force reload the list
     } catch (error: any) {
-      console.error('Error deleting member:', error);
-      showToast(`❌ ${error.message || 'Failed to delete member'}`, 'error');
+ console.error('Error deleting member:', error);
+      showToast(` ${error.message || 'Failed to delete member'}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -424,10 +424,10 @@ export default function Members() {
       }
 
       setIsEditing(false);
-      showToast('✅ Member profile updated successfully', 'success');
+      showToast(' Member profile updated successfully', 'success');
     } catch (error: any) {
-      console.error('Error updating member:', error);
-      showToast(`❌ Failed to update member: ${error.message}`, 'error');
+ console.error('Error updating member:', error);
+      showToast(` Failed to update member: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -1037,10 +1037,10 @@ export default function Members() {
                         // Update in list
                         setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
 
-                        showToast(`✅ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                        showToast(` Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
                       } catch (error) {
-                        console.error('Error updating access:', error);
-                        showToast('❌ Failed to update access', 'error');
+ console.error('Error updating access:', error);
+                        showToast(' Failed to update access', 'error');
                       }
                     }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedMember.can_access_pre_rehearsal ? 'bg-purple-600' : 'bg-gray-200'

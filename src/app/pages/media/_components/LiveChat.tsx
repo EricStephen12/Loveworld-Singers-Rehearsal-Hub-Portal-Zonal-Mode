@@ -43,7 +43,7 @@ export default function LiveChat() {
             )
             setNewMessage('')
         } catch (error) {
-            console.error('Failed to send message:', error)
+ console.error('Failed to send message:', error)
         } finally {
             setIsSending(false)
         }

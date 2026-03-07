@@ -36,7 +36,7 @@ export class WebRTCSignaling {
       };
 
       if (!isRealtimeDbAvailable() || !realtimeDb) {
-        console.warn('[WebRTCSignaling] Realtime Database not available');
+ console.warn('[WebRTCSignaling] Realtime Database not available');
         return;
       }
       // Send to specific user's signal queue
@@ -52,7 +52,7 @@ export class WebRTCSignaling {
     this.onMessage = onMessage;
 
     if (!isRealtimeDbAvailable() || !realtimeDb) {
-      console.warn('[WebRTCSignaling] Realtime Database not available');
+ console.warn('[WebRTCSignaling] Realtime Database not available');
       return () => { };
     }
     const mySignalPath = `audiolab_sessions/${this.sessionId}/signals/${this.userId}`;

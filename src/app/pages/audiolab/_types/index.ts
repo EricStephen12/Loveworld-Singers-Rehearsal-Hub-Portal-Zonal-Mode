@@ -2,9 +2,7 @@
 
 import { Timestamp } from 'firebase/firestore';
 
-// ============================================
 // VOCAL PARTS & AUDIO
-// ============================================
 
 // Standard vocal parts
 export type StandardVocalPart = 'full' | 'soprano' | 'alto' | 'tenor' | 'bass';
@@ -21,9 +19,7 @@ export interface AudioUrls {
   [key: string]: string | undefined; // Allow custom parts
 }
 
-// ============================================
 // SONG TYPES
-// ============================================
 
 export interface LyricLine {
   time: number;         // Start time in seconds
@@ -84,9 +80,7 @@ export interface Song {
   lyrics?: LyricLine[] | string;
 }
 
-// ============================================
 // PLAYLIST TYPES
-// ============================================
 
 export interface Playlist {
   id: string;
@@ -102,9 +96,7 @@ export interface Playlist {
   updatedAt: Date | Timestamp;
 }
 
-// ============================================
 // PROJECT & TRACK TYPES (Multi-track Studio)
-// ============================================
 
 export interface Track {
   id: string;
@@ -163,9 +155,7 @@ export interface AudioLabProject {
   updatedAt: Date | Timestamp;
 }
 
-// ============================================
 // LIVE SESSION TYPES (Real-time Collaboration)
-// ============================================
 
 export interface Participant {
   id: string;
@@ -233,9 +223,7 @@ export interface ChatMessage {
   status: 'sent' | 'delivered' | 'read';
 }
 
-// ============================================
 // PRACTICE & PROGRESS TYPES
-// ============================================
 
 export type PracticeMode = 'karaoke' | 'warmup' | 'pitch' | 'strength';
 
@@ -290,9 +278,7 @@ export interface PracticeStats {
   weeklyProgress: number;
 }
 
-// ============================================
 // PLAYER STATE TYPES
-// ============================================
 
 export type RepeatMode = 'off' | 'all' | 'one';
 
@@ -311,9 +297,7 @@ export interface PlayerState {
   loadingTarget?: string | null; // e.g., "full" or "alto"
 }
 
-// ============================================
 // VIEW & UI TYPES
-// ============================================
 
 export type ViewType =
   | 'home'           // Entry point - single CTA
@@ -328,9 +312,7 @@ export type ViewType =
   | 'warmup'         // Vocal warm-up exercises
   | 'playlist-detail';
 
-// ============================================
 // COLLABORATOR TYPE
-// ============================================
 
 export interface Collaborator {
   id: string;
@@ -340,9 +322,7 @@ export interface Collaborator {
   editingTrackId?: string;
 }
 
-// ============================================
 // SERVICE INPUT TYPES
-// ============================================
 
 export interface CreateSongInput {
   title: string;
@@ -375,9 +355,7 @@ export interface CreateTrackInput {
   color?: string;
 }
 
-// ============================================
 // AUDIO ENGINE TYPES
-// ============================================
 
 export interface AudioEngineState {
   isInitialized: boolean;

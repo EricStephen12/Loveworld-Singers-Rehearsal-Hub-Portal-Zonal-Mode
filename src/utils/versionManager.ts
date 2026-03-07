@@ -61,7 +61,7 @@ class VersionManager {
 
       return false;
     } catch (error) {
-      console.error('Error checking for updates:', error);
+ console.error('Error checking for updates:', error);
       return false;
     }
   }
@@ -75,7 +75,7 @@ class VersionManager {
             await this.clearBrowserCache();
 
     } catch (error) {
-      console.error('Error clearing caches:', error);
+ console.error('Error clearing caches:', error);
     }
   }
 
@@ -109,7 +109,7 @@ class VersionManager {
           await registration.unregister();
         }
       } catch (error) {
-        console.error('Error clearing service worker cache:', error);
+ console.error('Error clearing service worker cache:', error);
       }
     }
   }
@@ -122,7 +122,7 @@ class VersionManager {
           cacheNames.map(cacheName => caches.delete(cacheName))
         );
       } catch (error) {
-        console.error('Error clearing browser cache:', error);
+ console.error('Error clearing browser cache:', error);
       }
     }
   }

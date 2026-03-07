@@ -12,7 +12,7 @@ export default function ForceUpdateButton() {
     try {
       await versionManager.forceRefresh();
     } catch (error) {
-      console.error('❌ Force update failed:', error);
+ console.error(' Force update failed:', error);
       setIsUpdating(false);
     }
   };

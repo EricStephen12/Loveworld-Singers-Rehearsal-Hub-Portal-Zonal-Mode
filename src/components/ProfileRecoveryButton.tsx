@@ -25,7 +25,7 @@ export default function ProfileRecoveryButton() {
       alert(`Recovery complete!\n\nRecovered: ${recoveryResult.recovered}\nFailed: ${recoveryResult.failed}\nSkipped: ${recoveryResult.skipped}`)
     } catch (error: any) {
       alert(`Recovery failed: ${error.message}`)
-      console.error('Recovery error:', error)
+ console.error('Recovery error:', error)
     } finally {
       setIsRecovering(false)
     }

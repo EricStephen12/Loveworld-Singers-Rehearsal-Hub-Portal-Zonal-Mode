@@ -16,7 +16,7 @@ export function useUltraFastData() {
       setPages(data)
       setIsInitialLoad(false)
     } catch (err) {
-      console.error('Error loading pages:', err)
+ console.error('Error loading pages:', err)
       setError('Failed to load pages')
     } finally {
       setLoading(false)
@@ -27,7 +27,7 @@ export function useUltraFastData() {
     try {
       return await ultraFastLoader.getSongs(pageId)
     } catch (err) {
-      console.error('Error loading songs:', err)
+ console.error('Error loading songs:', err)
       return []
     }
   }, [])

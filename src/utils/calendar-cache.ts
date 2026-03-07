@@ -25,7 +25,7 @@ export class CalendarCache {
       }
       localStorage.setItem(this.getCacheKey(zoneId), JSON.stringify(cached))
     } catch (error) {
-      console.error('Failed to cache calendar events:', error)
+ console.error('Failed to cache calendar events:', error)
     }
   }
 
@@ -52,7 +52,7 @@ export class CalendarCache {
 
       return parsed.data
     } catch (error) {
-      console.error('Failed to load cached calendar events:', error)
+ console.error('Failed to load cached calendar events:', error)
       return null
     }
   }
@@ -61,7 +61,7 @@ export class CalendarCache {
     try {
       localStorage.removeItem(this.getCacheKey(zoneId))
     } catch (error) {
-      console.error('Failed to clear cached calendar events:', error)
+ console.error('Failed to clear cached calendar events:', error)
     }
   }
 
@@ -74,7 +74,7 @@ export class CalendarCache {
         }
       })
     } catch (error) {
-      console.error('Failed to clear all calendar caches:', error)
+ console.error('Failed to clear all calendar caches:', error)
     }
   }
 }

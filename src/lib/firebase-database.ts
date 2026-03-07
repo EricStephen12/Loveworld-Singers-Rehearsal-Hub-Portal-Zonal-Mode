@@ -22,7 +22,7 @@ export class FirebaseDatabaseService {
         ...doc.data()
       }))
     } catch (error) {
-      console.error('Error getting praise nights:', error)
+ console.error('Error getting praise nights:', error)
       return []
     }
   }
@@ -49,7 +49,7 @@ export class FirebaseDatabaseService {
         return indexA - indexB // Ascending order
       })
     } catch (error) {
-      console.error('Error getting songs:', error)
+ console.error('Error getting songs:', error)
       return []
     }
   }
@@ -72,11 +72,11 @@ export class FirebaseDatabaseService {
 
         return songData;
       } else {
-        console.warn('[getSongById] Song not found with ID:', songId);
+ console.warn('[getSongById] Song not found with ID:', songId);
         return null;
       }
     } catch (error) {
-      console.error('[getSongById] Error:', error);
+ console.error('[getSongById] Error:', error);
       return null;
     }
   }
@@ -93,7 +93,7 @@ export class FirebaseDatabaseService {
       }
       return null
     } catch (error) {
-      console.error('Error getting user profile:', error)
+ console.error('Error getting user profile:', error)
       return null
     }
   }
@@ -107,7 +107,7 @@ export class FirebaseDatabaseService {
       })
       return { success: true }
     } catch (error) {
-      console.error('Error updating user profile:', error)
+ console.error('Error updating user profile:', error)
       return { success: false }
     }
   }
@@ -121,7 +121,7 @@ export class FirebaseDatabaseService {
         ...doc.data()
       }))
     } catch (error) {
-      console.error('Error getting all users:', error)
+ console.error('Error getting all users:', error)
       return []
     }
   }
@@ -194,7 +194,7 @@ export class FirebaseDatabaseService {
 
       return { id: docRef.id, firebaseId: docRef.id, success: true }
     } catch (error) {
-      console.error('Error adding praise night:', error)
+ console.error('Error adding praise night:', error)
       return { id: null, firebaseId: null, success: false }
     }
   }
@@ -223,7 +223,7 @@ export class FirebaseDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error updating praise night:', error)
+ console.error('Error updating praise night:', error)
       return { success: false }
     }
   }
@@ -250,7 +250,7 @@ export class FirebaseDatabaseService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error deleting praise night:', error)
+ console.error('Error deleting praise night:', error)
       return { success: false }
     }
   }
@@ -293,7 +293,7 @@ export class FirebaseDatabaseService {
         return result;
       })
     } catch (error) {
-      console.error(`Error getting collection ${collectionName}:`, error)
+ console.error(`Error getting collection ${collectionName}:`, error)
       return []
     }
   }
@@ -311,7 +311,7 @@ export class FirebaseDatabaseService {
         }
       })
     } catch (error) {
-      console.error(`Error getting all from ${collectionName}:`, error)
+ console.error(`Error getting all from ${collectionName}:`, error)
       return []
     }
   }
@@ -377,7 +377,7 @@ export class FirebaseDatabaseService {
 
       return allResults
     } catch (error) {
-      console.error('[Batch] Error fetching', collectionName, ':', error)
+ console.error('[Batch] Error fetching', collectionName, ':', error)
       return []
     }
   }
@@ -411,7 +411,7 @@ export class FirebaseDatabaseService {
         return null
       }
     } catch (error) {
-      console.error(`Error getting document ${docId}:`, error)
+ console.error(`Error getting document ${docId}:`, error)
       return null
     }
   }
@@ -431,13 +431,13 @@ export class FirebaseDatabaseService {
             data.featureName
           );
         } catch (analyticsError) {
-          console.warn('Could not update analytics aggregation:', analyticsError);
+ console.warn('Could not update analytics aggregation:', analyticsError);
         }
       }
 
       return { id: docId, ...data }
     } catch (error) {
-      console.error(`Error creating document ${docId}:`, error)
+ console.error(`Error creating document ${docId}:`, error)
       throw error
     }
   }
@@ -457,13 +457,13 @@ export class FirebaseDatabaseService {
             data.featureName
           );
         } catch (analyticsError) {
-          console.warn('Could not update analytics aggregation:', analyticsError);
+ console.warn('Could not update analytics aggregation:', analyticsError);
         }
       }
 
       return { success: true, id: docRef.id, ...data }
     } catch (error) {
-      console.error(`Error adding document to ${collectionName}:`, error)
+ console.error(`Error adding document to ${collectionName}:`, error)
       throw error
     }
   }
@@ -474,7 +474,7 @@ export class FirebaseDatabaseService {
       await updateDoc(docRef, data)
       return { success: true }
     } catch (error) {
-      console.error(`Error updating document ${docId}:`, error)
+ console.error(`Error updating document ${docId}:`, error)
       throw error
     }
   }
@@ -485,7 +485,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(docRef)
       return { success: true }
     } catch (error) {
-      console.error(`Error deleting document ${docId}:`, error)
+ console.error(`Error deleting document ${docId}:`, error)
       throw error
     }
   }
@@ -499,7 +499,7 @@ export class FirebaseDatabaseService {
         ...doc.data()
       }))
     } catch (error) {
-      console.error(`Error getting collection ${collectionName} with where:`, error)
+ console.error(`Error getting collection ${collectionName} with where:`, error)
       return []
     }
   }
@@ -527,7 +527,7 @@ export class FirebaseDatabaseService {
 
       return results
     } catch (error) {
-      console.error(`Error batch fetching from ${collectionName}:`, error)
+ console.error(`Error batch fetching from ${collectionName}:`, error)
       return []
     }
   }
@@ -554,7 +554,7 @@ export class FirebaseDatabaseService {
 
       return results
     } catch (error) {
-      console.error(`Error batch fetching documents from ${collectionName}:`, error)
+ console.error(`Error batch fetching documents from ${collectionName}:`, error)
       return []
     }
   }
@@ -580,7 +580,7 @@ export class FirebaseDatabaseService {
 
       return results
     } catch (error) {
-      console.error('[getDocuments] Error getting documents from', collectionName, ':', error)
+ console.error('[getDocuments] Error getting documents from', collectionName, ':', error)
       return []
     }
   }
@@ -591,7 +591,7 @@ export class FirebaseDatabaseService {
       const docRef = await addDoc(collection(db, 'categories'), categoryData)
       return { success: true, id: docRef.id, ...categoryData }
     } catch (error) {
-      console.error('Error creating category:', error)
+ console.error('Error creating category:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -601,7 +601,7 @@ export class FirebaseDatabaseService {
       await updateDoc(doc(db, 'categories', categoryId.toString()), data)
       return { success: true }
     } catch (error) {
-      console.error('Error updating category:', error)
+ console.error('Error updating category:', error)
       return { success: false }
     }
   }
@@ -611,7 +611,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(doc(db, 'categories', categoryId.toString()))
       return { success: true }
     } catch (error) {
-      console.error('Error deleting category:', error)
+ console.error('Error deleting category:', error)
       return { success: false }
     }
   }
@@ -642,7 +642,7 @@ export class FirebaseDatabaseService {
         song: createdSong
       }
     } catch (error) {
-      console.error('Error creating song:', error)
+ console.error('Error creating song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -653,7 +653,7 @@ export class FirebaseDatabaseService {
       const firebaseDocId = String(songId).trim();
 
       if (!firebaseDocId || firebaseDocId === '' || firebaseDocId === 'null' || firebaseDocId === 'undefined') {
-        console.error('Invalid song ID for update:', songId);
+ console.error('Invalid song ID for update:', songId);
         return {
           success: false,
           error: `Invalid song ID: ${songId}`
@@ -675,7 +675,7 @@ export class FirebaseDatabaseService {
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
-        console.error('Song not found:', firebaseDocId);
+ console.error('Song not found:', firebaseDocId);
         return {
           success: false,
           error: `Song not found: ${firebaseDocId}`
@@ -706,7 +706,7 @@ export class FirebaseDatabaseService {
 
           if (savedEntry) {
           } else {
-            console.error('Failed to save history entry to Firebase:', historyEntry.type);
+ console.error('Failed to save history entry to Firebase:', historyEntry.type);
           }
         }
 
@@ -714,7 +714,7 @@ export class FirebaseDatabaseService {
 
       return { success: true };
     } catch (error) {
-      console.error('Firebase updateSong error:', error)
+ console.error('Firebase updateSong error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
@@ -729,7 +729,7 @@ export class FirebaseDatabaseService {
       const firebaseDocId = String(songId).trim();
 
       if (!firebaseDocId || firebaseDocId === '' || firebaseDocId === 'undefined' || firebaseDocId === 'null') {
-        console.error('Invalid song ID for deletion:', songId);
+ console.error('Invalid song ID for deletion:', songId);
         return {
           success: false,
           error: `Invalid song ID: ${songId}`
@@ -741,7 +741,7 @@ export class FirebaseDatabaseService {
 
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
-        console.error('Song not found:', firebaseDocId);
+ console.error('Song not found:', firebaseDocId);
         return {
           success: false,
           error: 'Song not found in database'
@@ -752,7 +752,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(docRef);
       return { success: true };
     } catch (error) {
-      console.error('Delete error:', error);
+ console.error('Delete error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -766,7 +766,7 @@ export class FirebaseDatabaseService {
       const docRef = await addDoc(collection(db, 'praise_nights'), pageData)
       return { id: docRef.id, ...pageData }
     } catch (error) {
-      console.error('Error creating page:', error)
+ console.error('Error creating page:', error)
       return null
     }
   }
@@ -779,7 +779,7 @@ export class FirebaseDatabaseService {
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
-        console.error('Document does not exist:', docId);
+ console.error('Document does not exist:', docId);
         return false;
       }
 
@@ -787,7 +787,7 @@ export class FirebaseDatabaseService {
       await updateDoc(docRef, data);
       return true
     } catch (error) {
-      console.error('Firebase updatePage error:', error)
+ console.error('Firebase updatePage error:', error)
       return false
     }
   }
@@ -798,7 +798,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(doc(db, 'praise_nights', docId))
       return true
     } catch (error) {
-      console.error('Error deleting page:', error)
+ console.error('Error deleting page:', error)
       return false
     }
   }
@@ -817,7 +817,7 @@ export class FirebaseDatabaseService {
       await Promise.all(updatePromises)
       return true
     } catch (error) {
-      console.error('Error updating songs category:', error)
+ console.error('Error updating songs category:', error)
       return false
     }
   }
@@ -827,7 +827,7 @@ export class FirebaseDatabaseService {
       // Move songs from deleted category to new category
       return await this.updateSongsCategory(categoryName, newCategory)
     } catch (error) {
-      console.error('Error handling category deletion:', error)
+ console.error('Error handling category deletion:', error)
       return false
     }
   }
@@ -860,12 +860,12 @@ export class FirebaseDatabaseService {
 
       return sortedResults;
     } catch (error) {
-      console.error('❌ Error getting song history:', error)
+ console.error(' Error getting song history:', error)
       return []
     }
   }
 
-  // ===== GROUP POSTS OPERATIONS =====
+  // Group Posts Operations
 
   static async getGroupPosts(groupId: string) {
     try {
@@ -880,7 +880,7 @@ export class FirebaseDatabaseService {
         ...doc.data()
       }))
     } catch (error) {
-      console.error('Error getting group posts:', error)
+ console.error('Error getting group posts:', error)
       return []
     }
   }
@@ -890,7 +890,7 @@ export class FirebaseDatabaseService {
       const docRef = await addDoc(collection(db, 'group_posts'), postData)
       return { id: docRef.id, ...postData }
     } catch (error) {
-      console.error('Error creating group post:', error)
+ console.error('Error creating group post:', error)
       return null
     }
   }
@@ -900,7 +900,7 @@ export class FirebaseDatabaseService {
       await updateDoc(doc(db, 'group_posts', postId), data)
       return true
     } catch (error) {
-      console.error('Error updating group post:', error)
+ console.error('Error updating group post:', error)
       return false
     }
   }
@@ -910,7 +910,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(doc(db, 'group_posts', postId))
       return true
     } catch (error) {
-      console.error('Error deleting group post:', error)
+ console.error('Error deleting group post:', error)
       return false
     }
   }
@@ -921,7 +921,7 @@ export class FirebaseDatabaseService {
       const docRef = await addDoc(collection(db, 'song_history'), data)
       return true // Return boolean for success
     } catch (error) {
-      console.error(' Error creating history entry:', error)
+ console.error(' Error creating history entry:', error)
       return false // Return boolean for failure
     }
   }
@@ -944,13 +944,13 @@ export class FirebaseDatabaseService {
             await offlineManager.cacheData(CACHE_KEY, cached);
           }
         } catch (cacheError) {
-          console.warn('Could not clear history cache:', cacheError);
+ console.warn('Could not clear history cache:', cacheError);
         }
       }
 
       return true
     } catch (error) {
-      console.error('Error updating history entry:', error)
+ console.error('Error updating history entry:', error)
       return false
     }
   }
@@ -961,7 +961,7 @@ export class FirebaseDatabaseService {
       await deleteDoc(doc(db, 'song_history', entryId))
       return true
     } catch (error) {
-      console.error('Error deleting history entry:', error)
+ console.error('Error deleting history entry:', error)
       return false
     }
   }
@@ -980,7 +980,7 @@ export class FirebaseDatabaseService {
         ...doc.data()
       }))
     } catch (error) {
-      console.error('Error getting page categories:', error)
+ console.error('Error getting page categories:', error)
       return []
     }
   }
@@ -996,7 +996,7 @@ export class FirebaseDatabaseService {
       const docRef = await addDoc(collection(db, 'page_categories'), categoryData)
       return { success: true, id: docRef.id }
     } catch (error) {
-      console.error('Error creating page category:', error)
+ console.error('Error creating page category:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to create page category' }
     }
   }
@@ -1010,7 +1010,7 @@ export class FirebaseDatabaseService {
       })
       return { success: true }
     } catch (error) {
-      console.error('Error updating page category:', error)
+ console.error('Error updating page category:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to update page category' }
     }
   }
@@ -1021,12 +1021,12 @@ export class FirebaseDatabaseService {
       await deleteDoc(docRef)
       return { success: true }
     } catch (error) {
-      console.error('Error deleting page category:', error)
+ console.error('Error deleting page category:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Failed to delete page category' }
     }
   }
 
-  // ===== UNIFIED NOTIFICATION OPERATIONS =====
+  // Unified Notification Operations
 
   /**
    * Fetches unified notifications for the user across different collections.
@@ -1052,7 +1052,7 @@ export class FirebaseDatabaseService {
         read_at: readMap.get(notif.id) || undefined
       }))
     } catch (error) {
-      console.error('Error fetching unified notifications:', error)
+ console.error('Error fetching unified notifications:', error)
       return []
     }
   }
@@ -1068,7 +1068,7 @@ export class FirebaseDatabaseService {
       })
       return true
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+ console.error('Error marking notification as read:', error)
       return false
     }
   }
@@ -1092,7 +1092,7 @@ export class FirebaseDatabaseService {
       await batch.commit()
       return true
     } catch (error) {
-      console.error('Error marking all as read:', error)
+ console.error('Error marking all as read:', error)
       return false
     }
   }

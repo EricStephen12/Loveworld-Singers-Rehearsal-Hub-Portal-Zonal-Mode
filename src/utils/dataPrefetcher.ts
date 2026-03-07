@@ -32,7 +32,7 @@ class DataPrefetcher {
       await offlineManager.cacheData('pages', pages);
       
     } catch (error) {
-      console.error('Error during prefetch:', error);
+ console.error('Error during prefetch:', error);
       throw error;
     }
   }

@@ -34,14 +34,12 @@ export class KingsChatAuthService {
     try {
       
       if (!KINGSCHAT_CLIENT_ID || KINGSCHAT_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-        console.error('❌ KingsChat Client ID is not configured!')
+ console.error(' KingsChat Client ID is not configured!')
         alert('KingsChat Client ID is missing. Please configure NEXT_PUBLIC_KINGSCHAT_CLIENT_ID in your .env.local file')
         return null
       }
 
-      // ============================================
       // BROWSER/PWA FLOW
-      // ============================================
       const loginOptions = {
         scopes: ['profile', 'email', 'send_chat_message'], // Request all available scopes
         clientId: KINGSCHAT_CLIENT_ID
@@ -66,8 +64,8 @@ export class KingsChatAuthService {
       
       return authResponse
     } catch (error: any) {
-      console.error('❌ KingsChat login failed:', error)
-      console.error('❌ Error details:', {
+ console.error(' KingsChat login failed:', error)
+ console.error(' Error details:', {
         message: error.message,
         code: error.code,
         name: error.name,
@@ -106,7 +104,7 @@ export class KingsChatAuthService {
       
       return authResponse
     } catch (error) {
-      console.error('❌ KingsChat token refresh failed:', error)
+ console.error(' KingsChat token refresh failed:', error)
       return null
     }
   }
@@ -168,7 +166,7 @@ export class KingsChatAuthService {
     try {
       const accessToken = await this.getValidAccessToken()
       if (!accessToken) {
-        console.error('❌ No valid access token')
+ console.error(' No valid access token')
         return false
       }
 
@@ -181,7 +179,7 @@ export class KingsChatAuthService {
       await kingsChatWebSdk.sendMessage(sendMessageOptions)
       return true
     } catch (error) {
-      console.error('❌ Failed to send message:', error)
+ console.error(' Failed to send message:', error)
       return false
     }
   }
@@ -240,13 +238,13 @@ export class KingsChatAuthService {
           }
         }
       } catch (decodeError) {
-        console.warn('⚠️ Could not decode token:', decodeError)
+ console.warn('️ Could not decode token:', decodeError)
       }
       
       throw new Error('Could not extract user profile from token or storage')
     } catch (error: any) {
-      console.error('❌ Failed to get user profile:', error)
-      console.error('❌ Error details:', {
+ console.error(' Failed to get user profile:', error)
+ console.error(' Error details:', {
         message: error.message,
         stack: error.stack
       })

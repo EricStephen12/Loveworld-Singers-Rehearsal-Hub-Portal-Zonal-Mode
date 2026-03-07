@@ -31,7 +31,7 @@ export class MediaCache {
       const key = getCacheKey(zoneType)
       localStorage.setItem(key, JSON.stringify(cached))
     } catch (error) {
-      console.error('Failed to cache media:', error)
+ console.error('Failed to cache media:', error)
     }
   }
 
@@ -54,7 +54,7 @@ export class MediaCache {
 
       return parsed.data
     } catch (error) {
-      console.error('Failed to load cached media:', error)
+ console.error('Failed to load cached media:', error)
       return null
     }
   }
@@ -64,7 +64,7 @@ export class MediaCache {
       const key = getCacheKey(zoneType)
       localStorage.removeItem(key)
     } catch (error) {
-      console.error('Failed to clear cached media:', error)
+ console.error('Failed to clear cached media:', error)
     }
   }
   
@@ -74,7 +74,7 @@ export class MediaCache {
       localStorage.removeItem(getCacheKey('hq'))
       localStorage.removeItem(getCacheKey('regular'))
     } catch (error) {
-      console.error('Failed to clear all cached media:', error)
+ console.error('Failed to clear all cached media:', error)
     }
   }
 }

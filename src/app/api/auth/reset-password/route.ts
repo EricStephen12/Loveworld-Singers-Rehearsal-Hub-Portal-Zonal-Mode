@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         })
 
       } catch (adminError: any) {
-        console.error('Firebase Admin error:', adminError)
+ console.error('Firebase Admin error:', adminError)
 
         if (adminError.code === 'auth/user-not-found') {
           return NextResponse.json({
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }, { status: 400 })
 
   } catch (error: any) {
-    console.error('Password reset error:', error)
+ console.error('Password reset error:', error)
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to reset password'

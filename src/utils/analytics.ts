@@ -63,7 +63,7 @@ class AnalyticsTracker {
         city: data.city
       };
     } catch (error) {
-      console.warn('Could not fetch location data:', error);
+ console.warn('Could not fetch location data:', error);
       return {};
     }
   }
@@ -113,7 +113,7 @@ class AnalyticsTracker {
       // Store event in Firebase
       await this.storeEventInFirebase(event);
     } catch (error) {
-      console.warn('Failed to send analytics event:', error);
+ console.warn('Failed to send analytics event:', error);
     }
   }
 
@@ -121,7 +121,7 @@ class AnalyticsTracker {
     try {
       await FirebaseDatabaseService.createDocument('analytics_events', event.id, event as any);
     } catch (error) {
-      console.warn('Failed to store analytics event in Firebase:', error);
+ console.warn('Failed to store analytics event in Firebase:', error);
     }
   }
 
@@ -132,7 +132,7 @@ class AnalyticsTracker {
       const events = await FirebaseDatabaseService.getCollection('analytics_events');
       return (events as any) || [];
     } catch (error) {
-      console.warn('Failed to get stored events from Firebase:', error);
+ console.warn('Failed to get stored events from Firebase:', error);
       return [];
     }
   }
@@ -141,9 +141,9 @@ class AnalyticsTracker {
 
   public async clearStoredData(): Promise<void> {
     try {
-            console.warn('Clear data functionality needs to be implemented in FirebaseDatabaseService');
+ console.warn('Clear data functionality needs to be implemented in FirebaseDatabaseService');
     } catch (error) {
-      console.warn('Failed to clear stored data:', error);
+ console.warn('Failed to clear stored data:', error);
     }
   }
 

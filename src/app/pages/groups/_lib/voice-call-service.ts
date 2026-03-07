@@ -170,7 +170,7 @@ export class VoiceCallService {
       }, 500)
 
     } catch (error) {
-      console.error('[VoiceCall] Error playing call end sound:', error)
+ console.error('[VoiceCall] Error playing call end sound:', error)
     }
   }
 
@@ -209,15 +209,15 @@ export class VoiceCallService {
 
       // Gentle two-tone pattern (like a soft doorbell)
       const ringPattern = () => {
-        playTone(523, 0.3, 0)      // C5 - first note
-        playTone(659, 0.3, 0.35)   // E5 - second note (pleasant interval)
+        playTone(523, 0.3, 0) // C5 - first note
+        playTone(659, 0.3, 0.35) // E5 - second note (pleasant interval)
       }
 
       // Play immediately and repeat every 2.5 seconds
       ringPattern()
       this.ringtoneInterval = setInterval(ringPattern, 2500)
     } catch (error) {
-      console.error('[VoiceCall] Error playing ringtone:', error)
+ console.error('[VoiceCall] Error playing ringtone:', error)
     }
   }
 
@@ -279,7 +279,7 @@ export class VoiceCallService {
       playBeep()
       this.outgoingToneInterval = setInterval(playBeep, 3000)
     } catch (error) {
-      console.error('[VoiceCall] Error playing outgoing tone:', error)
+ console.error('[VoiceCall] Error playing outgoing tone:', error)
     }
   }
 
@@ -324,7 +324,7 @@ export class VoiceCallService {
       // onCallEnded with 'timeout' reason handles everything
       this.callbacks.onCallEnded?.(call, 'timeout')
     } catch (error) {
-      console.error('[VoiceCall] Error handling timeout:', error)
+ console.error('[VoiceCall] Error handling timeout:', error)
     }
 
     this.cleanup()
@@ -339,7 +339,7 @@ export class VoiceCallService {
   // Returns true if a ringing call was found
   async checkForPendingCalls(): Promise<boolean> {
     if (!isRealtimeDbAvailable() || !realtimeDb) {
-      console.warn('[VoiceCall] Realtime Database not available')
+ console.warn('[VoiceCall] Realtime Database not available')
       return false
     }
 
@@ -370,7 +370,7 @@ export class VoiceCallService {
         return false
       }
     } catch (error) {
-      console.error('[VoiceCall] Error checking for pending calls:', error)
+ console.error('[VoiceCall] Error checking for pending calls:', error)
       return false
     }
   }
@@ -378,7 +378,7 @@ export class VoiceCallService {
   // Start listening for incoming calls
   startListening(): () => void {
     if (!isRealtimeDbAvailable() || !realtimeDb) {
-      console.warn('[VoiceCall] Realtime Database not available')
+ console.warn('[VoiceCall] Realtime Database not available')
       return () => { }
     }
 
@@ -458,7 +458,7 @@ export class VoiceCallService {
       })
       return true
     } catch (error) {
-      console.error('[VoiceCall] Failed to get local stream:', error)
+ console.error('[VoiceCall] Failed to get local stream:', error)
       return false
     }
   }
@@ -521,7 +521,7 @@ export class VoiceCallService {
   ): Promise<CallData | null> {
     try {
       if (!isRealtimeDbAvailable() || !realtimeDb) {
-        console.error('[VoiceCall] Realtime Database not available')
+ console.error('[VoiceCall] Realtime Database not available')
         return null
       }
 
@@ -534,7 +534,7 @@ export class VoiceCallService {
       ])
 
       if (!hasStream) {
-        console.error('[VoiceCall] Failed to initialize local stream')
+ console.error('[VoiceCall] Failed to initialize local stream')
         this.stopOutgoingTone()
         return null
       }
@@ -586,7 +586,7 @@ export class VoiceCallService {
       // Start call timeout
       this.startCallTimeout(callData)
 
-      // ✅ ENTERPRISE FEATURE - Send push notification to offline users
+      // ENTERPRISE FEATURE - Send push notification to offline users
       // NON-BLOCKING: Fire and forget to reduce call start latency
       fetch('/api/send-call-notification', {
         method: 'POST',
@@ -603,12 +603,12 @@ export class VoiceCallService {
           }
         })
       }).catch(notifyError => {
-        console.error('[VoiceCall] Failed to send notification:', notifyError);
+ console.error('[VoiceCall] Failed to send notification:', notifyError);
       });
 
       return callData
     } catch (error) {
-      console.error('[VoiceCall] Error starting call:', error)
+ console.error('[VoiceCall] Error starting call:', error)
       return null
     }
   }
@@ -632,7 +632,7 @@ export class VoiceCallService {
           }
           this.pendingCandidates = []
         } catch (error) {
-          console.error('[VoiceCall] Error setting remote description:', error)
+ console.error('[VoiceCall] Error setting remote description:', error)
         }
       }
     })
@@ -665,7 +665,7 @@ export class VoiceCallService {
           try {
             await pc.addIceCandidate(new RTCIceCandidate(candidate))
           } catch (e) {
-            console.warn('[VoiceCall] Error adding pending ICE candidate:', e)
+ console.warn('[VoiceCall] Error adding pending ICE candidate:', e)
           }
         }
         this.pendingCandidates = []
@@ -695,7 +695,7 @@ export class VoiceCallService {
 
       return true
     } catch (error) {
-      console.error('[VoiceCall] Error answering call:', error)
+ console.error('[VoiceCall] Error answering call:', error)
       return false
     }
   }
@@ -748,7 +748,7 @@ export class VoiceCallService {
         endedCall = { ...call, id: this.currentCallId, status: 'ended', endedAt, duration }
       }
     } catch (error) {
-      console.error('[VoiceCall] Error ending call:', error)
+ console.error('[VoiceCall] Error ending call:', error)
     }
 
     this.cleanup()
@@ -771,7 +771,7 @@ export class VoiceCallService {
         await set(candidateRef, candidate.toJSON())
       }
     } catch (error) {
-      console.error('[VoiceCall] Error sending ICE candidate:', error)
+ console.error('[VoiceCall] Error sending ICE candidate:', error)
     }
   }
 

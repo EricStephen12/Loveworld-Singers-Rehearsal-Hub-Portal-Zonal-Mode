@@ -42,7 +42,7 @@ export default function QRCodeGenerator({ value, size = 200, className = '' }: Q
         })
         
       } catch (error) {
-        console.error('QR Code generation error:', error)
+ console.error('QR Code generation error:', error)
         setError('Failed to generate QR code')
       } finally {
         setIsGenerating(false)

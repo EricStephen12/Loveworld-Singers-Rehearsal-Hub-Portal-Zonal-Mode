@@ -49,7 +49,7 @@ export default function AddToPlaylistModal({
       setPlaylists(userPlaylists)
       setSelectedIds(containingIds)
     } catch (error) {
-      console.error('Error loading playlists:', error)
+ console.error('Error loading playlists:', error)
     }
     setLoading(false)
   }
@@ -65,7 +65,7 @@ export default function AddToPlaylistModal({
         setSelectedIds(prev => [...prev, playlistId])
       }
     } catch (error) {
-      console.error('Error toggling playlist:', error)
+ console.error('Error toggling playlist:', error)
     }
   }
 
@@ -81,7 +81,7 @@ export default function AddToPlaylistModal({
       setShowCreate(false)
       await loadPlaylists()
     } catch (error) {
-      console.error('❌ Error creating playlist:', error)
+ console.error(' Error creating playlist:', error)
     }
     setCreating(false)
   }

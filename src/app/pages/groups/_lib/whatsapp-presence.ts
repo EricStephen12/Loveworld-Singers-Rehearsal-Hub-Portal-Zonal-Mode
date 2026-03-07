@@ -13,8 +13,8 @@ let rtdb: Database | null = null
 try {
   rtdb = getDatabase(app as FirebaseApp)
 } catch (error) {
-  console.warn('⚠️ Firebase Realtime Database not configured. Presence features will be disabled.')
-  console.warn('To enable presence, add a Realtime Database to your Firebase project.')
+ console.warn('️ Firebase Realtime Database not configured. Presence features will be disabled.')
+ console.warn('To enable presence, add a Realtime Database to your Firebase project.')
 }
 
 export interface PresenceData {
@@ -31,7 +31,7 @@ export class WhatsAppPresence {
    */
   static async initializePresence(userId: string): Promise<void> {
     if (!rtdb) {
-      console.warn('⚠️ [WhatsApp Presence] Realtime Database not available, skipping presence initialization')
+ console.warn('️ [WhatsApp Presence] Realtime Database not available, skipping presence initialization')
       return
     }
     
@@ -54,7 +54,7 @@ export class WhatsAppPresence {
       
       this.presenceRefs.set(userId, presenceRef)
     } catch (error) {
-      console.error('❌ [WhatsApp Presence] Failed to initialize:', error)
+ console.error(' [WhatsApp Presence] Failed to initialize:', error)
     }
   }
   
@@ -72,7 +72,7 @@ export class WhatsAppPresence {
         userId
       })
     } catch (error) {
-      console.error('❌ [WhatsApp Presence] Failed to update status:', error)
+ console.error(' [WhatsApp Presence] Failed to update status:', error)
     }
   }
   
@@ -155,7 +155,7 @@ export class WhatsAppPresence {
         }, { onlyOnce: true })
       })
     } catch (error) {
-      console.error('❌ [WhatsApp Presence] Failed to get presence:', error)
+ console.error(' [WhatsApp Presence] Failed to get presence:', error)
       return {
         status: 'offline',
         lastSeen: Date.now(),
@@ -174,7 +174,7 @@ export class WhatsAppPresence {
       await this.updateStatus(userId, 'offline')
       this.presenceRefs.delete(userId)
     } catch (error) {
-      console.error('❌ [WhatsApp Presence] Cleanup failed:', error)
+ console.error(' [WhatsApp Presence] Cleanup failed:', error)
     }
   }
 }

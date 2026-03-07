@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
         }
       } catch (collectionError) {
-        console.error(`[CalendarReminders] Collection error:`, collectionError);
+ console.error(`[CalendarReminders] Collection error:`, collectionError);
       }
     }
 
@@ -71,13 +71,13 @@ export async function GET(req: NextRequest) {
       const birthdayCount = await processBirthdays(db);
       remindersSent += birthdayCount;
     } catch (birthdayError) {
-      console.error('[CalendarReminders] Birthday Error:', birthdayError);
+ console.error('[CalendarReminders] Birthday Error:', birthdayError);
     }
 
     return NextResponse.json({ success: true, remindersSent });
 
   } catch (error) {
-    console.error('[CalendarReminders] Error:', error);
+ console.error('[CalendarReminders] Error:', error);
     return NextResponse.json({ error: 'Failed to process reminders' }, { status: 500 });
   }
 }
@@ -114,7 +114,7 @@ async function markReminderSent(db: admin.firestore.Firestore, eventId: string, 
       sentAt: admin.firestore.FieldValue.serverTimestamp()
     });
   } catch (error) {
-    console.error('[CalendarReminders] Error marking reminder sent:', error);
+ console.error('[CalendarReminders] Error marking reminder sent:', error);
   }
 }
 
@@ -151,7 +151,7 @@ async function sendEventReminder(
     }
 
     const timeStr = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const title = reminderType === '24h' ? '📅 Event Tomorrow' : '⏰ Event Starting Soon';
+    const title = reminderType === '24h' ? ' Event Tomorrow' : ' Event Starting Soon';
     const body = reminderType === '24h'
       ? `"${eventTitle}" is tomorrow at ${timeStr}`
       : `"${eventTitle}" starts in 1 hour at ${timeStr}`;
@@ -178,7 +178,7 @@ async function sendEventReminder(
     }
 
   } catch (error) {
-    console.error('[CalendarReminders] Error sending reminder:', error);
+ console.error('[CalendarReminders] Error sending reminder:', error);
   }
 }
 async function processBirthdays(db: admin.firestore.Firestore): Promise<number> {
@@ -223,7 +223,7 @@ async function processBirthdays(db: admin.firestore.Firestore): Promise<number> 
       }
     }
   } catch (error) {
-    console.error('[CalendarReminders] processBirthdays Error:', error);
+ console.error('[CalendarReminders] processBirthdays Error:', error);
   }
 
   return sentCount;
@@ -262,13 +262,13 @@ async function sendBirthdayGreeting(userId: string, name: string, zoneId: string
         body: JSON.stringify({
           type: 'zone',
           recipientIds: batch,
-          title: '🎂 Birthday Celebration!',
-          body: `It's ${name}'s birthday today! Let's celebrate! ✨`,
+          title: ' Birthday Celebration!',
+          body: `It's ${name}'s birthday today! Let's celebrate! `,
           data: { userId, type: 'birthday' }
         })
       });
     }
   } catch (error) {
-    console.error('[CalendarReminders] sendBirthdayGreeting Error:', error);
+ console.error('[CalendarReminders] sendBirthdayGreeting Error:', error);
   }
 }

@@ -13,18 +13,18 @@ const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 export async function POST(request: NextRequest) {
   const allEnvKeys = Object.keys(process.env);
 
-  console.log('💎 [LyricsSync] Exhaustive Env Check:');
-  console.log('   - Total system keys:', allEnvKeys.length);
+ console.log('💎 [LyricsSync] Exhaustive Env Check:');
+ console.log(' - Total system keys:', allEnvKeys.length);
 
   // Resilient search
   const groqKeyName = allEnvKeys.find(k => k.trim().toUpperCase().includes('GROQ'));
   const GROQ_API_KEY = groqKeyName ? process.env[groqKeyName] : null;
 
-  console.log('   - Groq key found under name:', groqKeyName || 'NONE');
+ console.log(' - Groq key found under name:', groqKeyName || 'NONE');
   if (GROQ_API_KEY) {
-    console.log('   - Key Value Preview:', GROQ_API_KEY.slice(0, 6) + '...');
+ console.log(' - Key Value Preview:', GROQ_API_KEY.slice(0, 6) + '...');
   } else {
-    console.log('   - API Keys that exist:', allEnvKeys.filter(k => k.toUpperCase().includes('API_KEY')));
+ console.log(' - API Keys that exist:', allEnvKeys.filter(k => k.toUpperCase().includes('API_KEY')));
   }
 
   if (!GROQ_API_KEY) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`💎 [LyricsSync] Starting sync for song ${songId} using Groq`);
+ console.log(`💎 [LyricsSync] Starting sync for song ${songId} using Groq`);
 
     // 1. Fetch the audio file from URL
     const audioResponse = await fetch(audioUrl);
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     if (!groqResponse.ok) {
       const errorData = await groqResponse.json();
-      console.error('[LyricsSync] Groq error:', errorData);
+ console.error('[LyricsSync] Groq error:', errorData);
       return NextResponse.json(
         { error: errorData.error?.message || 'Failed to transcribe audio with Groq' },
         { status: 500 }
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     if (existingLyrics && existingLyrics.trim()) {
       // Align existing lyrics with detected timestamps
       lyrics = alignLyricsWithSegments(existingLyrics, segments);
-      console.log(`💎 [LyricsSync] Aligned ${lyrics.length} lines for ${songId}`);
+ console.log(`💎 [LyricsSync] Aligned ${lyrics.length} lines for ${songId}`);
     } else {
       // No existing lyrics - just convert segments to lines
       lyrics = segments.map((seg: any) => ({
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         text: seg.text.trim(),
         duration: seg.end - seg.start
       }));
-      console.log(`💎 [LyricsSync] Generated ${lyrics.length} lines from scratch for ${songId}`);
+ console.log(`💎 [LyricsSync] Generated ${lyrics.length} lines from scratch for ${songId}`);
     }
 
     return NextResponse.json({
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[LyricsSync] Error:', error);
+ console.error('[LyricsSync] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

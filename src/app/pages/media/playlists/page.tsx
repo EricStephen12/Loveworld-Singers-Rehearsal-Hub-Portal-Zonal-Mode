@@ -56,7 +56,7 @@ export default function PlaylistsPage() {
       })
       setPlaylists(sorted)
     } catch (error) {
-      console.error('Error loading playlists:', error)
+ console.error('Error loading playlists:', error)
     }
     setLoading(false)
   }
@@ -67,7 +67,7 @@ export default function PlaylistsPage() {
       await deletePlaylist(playlistId)
       setPlaylists(prev => prev.filter(p => p.id !== playlistId))
     } catch (error) {
-      console.error('Error deleting playlist:', error)
+ console.error('Error deleting playlist:', error)
     }
     setMenuOpen(null)
   }
@@ -82,7 +82,7 @@ export default function PlaylistsPage() {
       await initAndLoad(user.uid)
       router.push(`/pages/media/playlists/${id}`)
     } catch (error) {
-      console.error('Error creating playlist:', error)
+ console.error('Error creating playlist:', error)
     }
     setCreating(false)
   }

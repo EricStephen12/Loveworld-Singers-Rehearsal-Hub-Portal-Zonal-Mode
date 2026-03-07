@@ -140,7 +140,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         loadSongs()
       }
     }, (error) => {
-      console.error('[SubmittedSongs] Real-time listener error:', error)
+ console.error('[SubmittedSongs] Real-time listener error:', error)
     })
 
     return () => unsubscribe()
@@ -174,7 +174,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
         return new Date(bTime).getTime() - new Date(aTime).getTime()
       }))
     } catch (error) {
-      console.error('Error loading songs:', error)
+ console.error('Error loading songs:', error)
     } finally {
       setLoading(false)
     }

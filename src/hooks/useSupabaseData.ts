@@ -16,7 +16,7 @@ export function useSupabaseData() {
         setPages(supabasePages)
         setError(null)
       } catch (err) {
-        console.error('Error loading Supabase data:', err)
+ console.error('Error loading Supabase data:', err)
         setError('Failed to load data from Supabase')
       } finally {
         setLoading(false)
@@ -44,7 +44,7 @@ export function useSupabaseData() {
         )
       )
     } catch (err) {
-      console.error('Error loading songs for page:', err)
+ console.error('Error loading songs for page:', err)
     }
   }
 
@@ -63,7 +63,7 @@ export function useSupabaseData() {
         setPages(supabasePages)
         setError(null)
       } catch (err) {
-        console.error('Error refreshing data:', err)
+ console.error('Error refreshing data:', err)
         setError('Failed to refresh data')
       } finally {
         setLoading(false)

@@ -58,7 +58,7 @@ export function useServerCountdown({
       serverTimeOffsetRef.current = offset
       return serverTime
     } catch (err) {
-      console.error('Error fetching server time:', err)
+ console.error('Error fetching server time:', err)
       setError('Failed to sync with server time')
       setServerTimeOffset(0)
       serverTimeOffsetRef.current = 0
@@ -138,7 +138,7 @@ export function useServerCountdown({
                     praiseNightId: praiseNightId
                   })
                 } catch (error) {
-                  console.error('Failed to update target date:', error)
+ console.error('Failed to update target date:', error)
                 }
               }
             }
@@ -159,7 +159,7 @@ export function useServerCountdown({
                   praiseNightId: praiseNightId
                 })
               } catch (error) {
-                console.error('Failed to store target date:', error)
+ console.error('Failed to store target date:', error)
               }
             }
           }
@@ -177,7 +177,7 @@ export function useServerCountdown({
         
         intervalRef.current = setInterval(calculateTimeLeft, 1000)
       } catch (err) {
-        console.error('Error initializing countdown:', err)
+ console.error('Error initializing countdown:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setIsLoading(false)

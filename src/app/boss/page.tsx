@@ -78,7 +78,7 @@ export default function BossPage() {
       ])
       setIndividualPremiumCount(subs.length)
     } catch (error) {
-      console.error('Error loading premium count:', error)
+ console.error('Error loading premium count:', error)
     }
   }
 
@@ -87,7 +87,7 @@ export default function BossPage() {
       const payments = await EspeesPaymentService.getPendingPayments()
       setPendingPayments(payments)
     } catch (error) {
-      console.error('❌ Error loading pending payments:', error)
+ console.error(' Error loading pending payments:', error)
     }
   }
 
@@ -157,7 +157,7 @@ export default function BossPage() {
 
       setZones(zonesWithMembers)
     } catch (error) {
-      console.error('Error loading zones:', error)
+ console.error('Error loading zones:', error)
     } finally {
       setIsLoading(false)
     }

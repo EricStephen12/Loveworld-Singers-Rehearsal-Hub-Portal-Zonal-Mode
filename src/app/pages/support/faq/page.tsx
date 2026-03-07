@@ -131,7 +131,7 @@ export default function FAQPage() {
     try {
       await signOut();
     } catch (error) {
-      console.error('Logout error:', error);
+ console.error('Logout error:', error);
     }
   };
 

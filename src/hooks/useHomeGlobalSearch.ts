@@ -64,7 +64,7 @@ export function useHomeGlobalSearch(zoneId?: string, enabled: boolean = false) {
         setAllSongs(songs as any[])
         setSongsLoaded(true)
       } catch (error) {
-        console.error('Error loading songs for search:', error)
+ console.error('Error loading songs for search:', error)
         setSongsLoaded(true)
       }
     }

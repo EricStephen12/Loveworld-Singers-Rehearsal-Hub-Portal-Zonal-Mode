@@ -23,9 +23,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
-// ============================================
 // TYPES
-// ============================================
 
 export interface ChatUser {
   id: string
@@ -36,7 +34,7 @@ export interface ChatUser {
 }
 
 // Reaction types
-export type ReactionType = '❤️' | '👍' | '😂' | '😮' | '😢' | '🙏' | '🔥' | '👏' | '💯' | '🎉'
+export type ReactionType = '❤️' | '' | '😂' | '😮' | '😢' | '🙏' | '' | '👏' | '💯' | ''
 
 // Message types
 export type MessageType = 'text' | 'image' | 'document' | 'voice' | 'system'
@@ -93,16 +91,12 @@ export interface Chat {
   clearedAt?: { [userId: string]: any }
 }
 
-// ============================================
 // COLLECTIONS (v2 - fresh start)
-// ============================================
 
 const CHATS_COLLECTION = 'chats_v2'
 const MESSAGES_COLLECTION = 'messages_v2'
 
-// ============================================
 // USER HELPERS
-// ============================================
 
 /**
  * Get user info from zone_members or profiles
@@ -138,7 +132,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
 
     return null
   } catch (error) {
-    console.error('[ChatService] getUserInfo error:', error)
+ console.error('[ChatService] getUserInfo error:', error)
     return null
   }
 }
@@ -300,14 +294,12 @@ export async function searchZoneUsers(
 
     return users.slice(0, 100) // Limit to 100 results
   } catch (error) {
-    console.error('[ChatService] searchZoneUsers error:', error)
+ console.error('[ChatService] searchZoneUsers error:', error)
     return []
   }
 }
 
-// ============================================
 // CHAT OPERATIONS
-// ============================================
 
 /**
  * Find existing direct chat between two users
@@ -332,7 +324,7 @@ export async function findDirectChat(user1Id: string, user2Id: string): Promise<
 
     return null
   } catch (error) {
-    console.error('[ChatService] findDirectChat error:', error)
+ console.error('[ChatService] findDirectChat error:', error)
     return null
   }
 }
@@ -348,7 +340,7 @@ export async function getOrCreateDirectChat(
 
     // Prevent self-chat
     if (currentUser.id === otherUser.id) {
-      console.error('[ChatService] Cannot create self-chat')
+ console.error('[ChatService] Cannot create self-chat')
       return null
     }
 
@@ -386,7 +378,7 @@ export async function getOrCreateDirectChat(
     const docRef = await addDoc(collection(db, CHATS_COLLECTION), chatData)
     return docRef.id
   } catch (error) {
-    console.error('[ChatService] getOrCreateDirectChat error:', error)
+ console.error('[ChatService] getOrCreateDirectChat error:', error)
     return null
   }
 }
@@ -437,7 +429,7 @@ export async function createGroupChat(
 
     return docRef.id
   } catch (error) {
-    console.error('[ChatService] createGroupChat error:', error)
+ console.error('[ChatService] createGroupChat error:', error)
     return null
   }
 }
@@ -479,7 +471,7 @@ export function subscribeToChats(
 
     callback(chats)
   }, (error) => {
-    console.error('[ChatService] subscribeToChats error:', error)
+ console.error('[ChatService] subscribeToChats error:', error)
     callback([])
   })
 }
@@ -505,14 +497,12 @@ export async function deleteChat(chatId: string, userId: string): Promise<boolea
     await deleteDoc(doc(db, CHATS_COLLECTION, chatId))
     return true
   } catch (error) {
-    console.error('[ChatService] deleteChat error:', error)
+ console.error('[ChatService] deleteChat error:', error)
     return false
   }
 }
 
-// ============================================
 // MESSAGE OPERATIONS
-// ============================================
 
 /**
  * Send a call system message to chat
@@ -582,7 +572,7 @@ export async function sendCallMessage(
 
     return true
   } catch (error) {
-    console.error('[ChatService] sendCallMessage error:', error)
+ console.error('[ChatService] sendCallMessage error:', error)
     return false
   }
 }
@@ -619,7 +609,7 @@ export async function markChatAsRead(chatId: string, userId: string): Promise<bo
 
     return true
   } catch (error) {
-    console.error('[ChatService] markChatAsRead error:', error)
+ console.error('[ChatService] markChatAsRead error:', error)
     return false
   }
 }
@@ -642,7 +632,7 @@ export async function renameGroup(
     // Check if user is creator or admin
     const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
     if (!isAdmin) {
-      console.error('[ChatService] Only creator or admins can rename group')
+ console.error('[ChatService] Only creator or admins can rename group')
       return false
     }
 
@@ -663,7 +653,7 @@ export async function renameGroup(
 
     return true
   } catch (error) {
-    console.error('[ChatService] renameGroup error:', error)
+ console.error('[ChatService] renameGroup error:', error)
     return false
   }
 }
@@ -690,7 +680,7 @@ export async function updateGroupDescription(
 
     return true
   } catch (error) {
-    console.error('[ChatService] updateGroupDescription error:', error)
+ console.error('[ChatService] updateGroupDescription error:', error)
     return false
   }
 }
@@ -717,7 +707,7 @@ export async function updateChatAvatar(
 
     return true
   } catch (error) {
-    console.error('[ChatService] updateChatAvatar error:', error)
+ console.error('[ChatService] updateChatAvatar error:', error)
     return false
   }
 }
@@ -750,7 +740,7 @@ export async function toggleGroupAdmin(
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), { admins })
     return true
   } catch (error) {
-    console.error('[ChatService] toggleGroupAdmin error:', error)
+ console.error('[ChatService] toggleGroupAdmin error:', error)
     return false
   }
 }
@@ -769,7 +759,7 @@ export async function togglePinChat(
     })
     return true
   } catch (error) {
-    console.error('[ChatService] togglePinChat error:', error)
+ console.error('[ChatService] togglePinChat error:', error)
     return false
   }
 }
@@ -787,7 +777,7 @@ export async function clearChat(
     })
     return true
   } catch (error) {
-    console.error('[ChatService] clearChat error:', error)
+ console.error('[ChatService] clearChat error:', error)
     return false
   }
 }
@@ -814,7 +804,7 @@ export async function editMessage(
 
     return true
   } catch (error) {
-    console.error('[ChatService] editMessage error:', error)
+ console.error('[ChatService] editMessage error:', error)
     return false
   }
 }
@@ -836,7 +826,7 @@ export async function forwardMessage(
 
     return sendMessage(targetChatId, sender, text || '', undefined, media as any)
   } catch (error) {
-    console.error('[ChatService] forwardMessage error:', error)
+ console.error('[ChatService] forwardMessage error:', error)
     return false
   }
 }
@@ -1011,7 +1001,7 @@ export async function sendMessage(
 
     return true
   } catch (error) {
-    console.error('[ChatService] sendMessage error:', error)
+ console.error('[ChatService] sendMessage error:', error)
     return false
   }
 }
@@ -1044,7 +1034,7 @@ async function sendChatNotification(
       })
     })
   } catch (error) {
-    console.error('[ChatService] sendChatNotification error:', error)
+ console.error('[ChatService] sendChatNotification error:', error)
   }
 }
 
@@ -1072,7 +1062,7 @@ export function subscribeToMessages(
 
     callback(messages)
   }, (error) => {
-    console.error('[ChatService] subscribeToMessages error:', error)
+ console.error('[ChatService] subscribeToMessages error:', error)
     // If index error, try without orderBy
     if (error.message?.includes('index')) {
       const fallbackQ = query(
@@ -1140,7 +1130,7 @@ export async function deleteMessage(messageId: string, userId: string, forEveryo
 
     return true
   } catch (error) {
-    console.error('[ChatService] deleteMessage error:', error)
+ console.error('[ChatService] deleteMessage error:', error)
     return false
   }
 }
@@ -1175,7 +1165,7 @@ export async function toggleReaction(
 
     return true
   } catch (error) {
-    console.error('[ChatService] toggleReaction error:', error)
+ console.error('[ChatService] toggleReaction error:', error)
     return false
   }
 }
@@ -1197,7 +1187,7 @@ export async function addGroupMembers(
 
     const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
     if (!isAdmin) {
-      console.error('[ChatService] Only creator or admins can add members')
+ console.error('[ChatService] Only creator or admins can add members')
       return false
     }
 
@@ -1234,7 +1224,7 @@ export async function addGroupMembers(
 
     return true
   } catch (error) {
-    console.error('[ChatService] addGroupMembers error:', error)
+ console.error('[ChatService] addGroupMembers error:', error)
     return false
   }
 }
@@ -1256,12 +1246,12 @@ export async function removeGroupMember(
 
     const isAdmin = chat.createdBy === userId || (chat.admins || []).includes(userId)
     if (!isAdmin) {
-      console.error('[ChatService] Only creator or admins can remove members')
+ console.error('[ChatService] Only creator or admins can remove members')
       return false
     }
 
     if (memberIdToRemove === chat.createdBy) {
-      console.error('[ChatService] Cannot remove the creator')
+ console.error('[ChatService] Cannot remove the creator')
       return false
     }
 
@@ -1298,7 +1288,7 @@ export async function removeGroupMember(
 
     return true
   } catch (error) {
-    console.error('[ChatService] removeGroupMember error:', error)
+ console.error('[ChatService] removeGroupMember error:', error)
     return false
   }
 }
@@ -1317,7 +1307,7 @@ export async function leaveGroup(
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy === userId) {
-      console.error('[ChatService] Creator cannot leave, must delete group instead')
+ console.error('[ChatService] Creator cannot leave, must delete group instead')
       return false
     }
 
@@ -1347,7 +1337,7 @@ export async function leaveGroup(
 
     return true
   } catch (error) {
-    console.error('[ChatService] leaveGroup error:', error)
+ console.error('[ChatService] leaveGroup error:', error)
     return false
   }
 }
@@ -1366,7 +1356,7 @@ export async function deleteGroup(
     const chat = chatDoc.data()
     if (chat.type !== 'group') return false
     if (chat.createdBy !== userId) {
-      console.error('[ChatService] Only creator can delete the group')
+ console.error('[ChatService] Only creator can delete the group')
       return false
     }
 
@@ -1387,14 +1377,12 @@ export async function deleteGroup(
 
     return true
   } catch (error) {
-    console.error('[ChatService] deleteGroup error:', error)
+ console.error('[ChatService] deleteGroup error:', error)
     return false
   }
 }
 
-// ============================================
 // HELPERS
-// ============================================
 
 function docToChat(docSnap: any): Chat {
   const data = docSnap.data()

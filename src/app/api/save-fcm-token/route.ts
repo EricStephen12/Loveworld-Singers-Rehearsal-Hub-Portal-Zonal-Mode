@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!admin.apps.length) {
-      console.warn('⚠️ Firebase Admin not configured');
+ console.warn('️ Firebase Admin not configured');
       return NextResponse.json({
         success: true,
         message: 'FCM token received (server storage disabled)'
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('❌ Error saving FCM token:', error)
+ console.error(' Error saving FCM token:', error)
     return NextResponse.json({
       error: 'Failed to save FCM token',
       details: error instanceof Error ? error.message : 'Unknown error'

@@ -110,7 +110,7 @@ export class UpcomingEventsService {
         return moment(a.date).diff(moment(b.date))
       })
     } catch (error) {
-      console.error(`Error fetching upcoming events for zone ${zoneId}:`, error)
+ console.error(`Error fetching upcoming events for zone ${zoneId}:`, error)
       return []
     }
   }
@@ -154,7 +154,7 @@ export class UpcomingEventsService {
 
       return cleanedData as UpcomingEvent
     } catch (error) {
-      console.error('Error creating upcoming event:', error)
+ console.error('Error creating upcoming event:', error)
       throw error
     }
   }
@@ -172,7 +172,7 @@ export class UpcomingEventsService {
       await FirebaseDatabaseService.updateDocument(this.COLLECTION, eventId, updateData)
       localStorage.removeItem(`${EVENTS_CACHE_KEY}_${zoneId}`)
     } catch (error) {
-      console.error('Error updating upcoming event:', error)
+ console.error('Error updating upcoming event:', error)
       throw error
     }
   }
@@ -185,7 +185,7 @@ export class UpcomingEventsService {
       await FirebaseDatabaseService.deleteDocument(this.COLLECTION, eventId)
       localStorage.removeItem(`${EVENTS_CACHE_KEY}_${zoneId}`)
     } catch (error) {
-      console.error('Error deleting upcoming event:', error)
+ console.error('Error deleting upcoming event:', error)
       throw error
     }
   }
@@ -210,7 +210,7 @@ export class UpcomingEventsService {
         return moment(b.date).diff(moment(a.date))
       })
     } catch (error) {
-      console.error(`Error fetching all events for zone ${zoneId}:`, error)
+ console.error(`Error fetching all events for zone ${zoneId}:`, error)
       return []
     }
   }

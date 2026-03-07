@@ -1,4 +1,5 @@
 ﻿// User Roles Configuration
+import { isHQGroup } from '@/config/zones'
 
 export type UserRole = 'super_admin' | 'boss' | 'zone_coordinator' | 'zone_member' | 'hq_admin' | 'hq_member';
 
@@ -9,13 +10,13 @@ export interface RolePermissions {
   canUpgradeSubscription: boolean;
   canCancelSubscription: boolean;
   canViewPaymentHistory: boolean;
-  
+
   // Member Management
   canAddMembers: boolean;
   canRemoveMembers: boolean;
   canViewMembers: boolean;
   canShareInviteLink: boolean;
-  
+
   // Content Management
   canCreatePraiseNight: boolean;
   canEditPraiseNight: boolean;
@@ -26,7 +27,7 @@ export interface RolePermissions {
   canCreateCategory: boolean;
   canEditCategory: boolean;
   canDeleteCategory: boolean;
-  
+
   // Super Admin Only
   canViewAllZones: boolean;
   canAccessSuperAdmin: boolean;
@@ -43,13 +44,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: true,
     canCancelSubscription: true,
     canViewPaymentHistory: true,
-    
+
     // Member Management - FULL ACCESS (can assign coordinators)
     canAddMembers: true,
     canRemoveMembers: true,
     canViewMembers: true,
     canShareInviteLink: true,
-    
+
     // Content Management - FULL ACCESS (for all zones)
     canCreatePraiseNight: true,
     canEditPraiseNight: true,
@@ -60,13 +61,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: true,
     canEditCategory: true,
     canDeleteCategory: true,
-    
+
     // Super Admin Only
     canViewAllZones: true,
     canAccessSuperAdmin: true,
     canAccessBoss: false
   },
-  
+
   // Boss - Can view everything across all zones but cannot edit super admin content
   // Has full visibility but limited editing rights
   boss: {
@@ -76,13 +77,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: false,
     canCancelSubscription: false,
     canViewPaymentHistory: true,
-    
+
     // Member Management - VIEW ONLY
     canAddMembers: false,
     canRemoveMembers: false,
     canViewMembers: true,
     canShareInviteLink: false,
-    
+
     // Content Management - VIEW ONLY
     canCreatePraiseNight: false,
     canEditPraiseNight: false,
@@ -93,13 +94,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: false,
     canEditCategory: false,
     canDeleteCategory: false,
-    
+
     // Boss Access
     canViewAllZones: true,
     canAccessSuperAdmin: false,
     canAccessBoss: true
   },
-  
+
   // Zone Coordinator - The person who pays for the zone
   // Has FULL ADMIN rights for THEIR zone only
   zone_coordinator: {
@@ -109,13 +110,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: true,
     canCancelSubscription: true,
     canViewPaymentHistory: true,
-    
+
     // Member Management - FULL ACCESS
     canAddMembers: true,
     canRemoveMembers: true,
     canViewMembers: true,
     canShareInviteLink: true,
-    
+
     // Content Management - FULL ACCESS
     canCreatePraiseNight: true,
     canEditPraiseNight: true,
@@ -126,13 +127,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: true,
     canEditCategory: true,
     canDeleteCategory: true,
-    
+
     // Super Admin Only
     canViewAllZones: false,
     canAccessSuperAdmin: false,
     canAccessBoss: false
   },
-  
+
   // Zone Member - Regular user
   // Can only VIEW content, no admin rights
   zone_member: {
@@ -142,13 +143,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: false,
     canCancelSubscription: false,
     canViewPaymentHistory: false,
-    
+
     // Member Management - NO ACCESS
     canAddMembers: false,
     canRemoveMembers: false,
     canViewMembers: true, // Can see other members
     canShareInviteLink: false,
-    
+
     // Content Management - NO ACCESS
     canCreatePraiseNight: false,
     canEditPraiseNight: false,
@@ -159,13 +160,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: false,
     canEditCategory: false,
     canDeleteCategory: false,
-    
+
     // Super Admin Only
     canViewAllZones: false,
     canAccessSuperAdmin: false,
     canAccessBoss: false
   },
-  
+
   // HQ Admin - Headquarters administrator
   // Can manage ALL HQ groups and their members (like super admin but for HQ only)
   hq_admin: {
@@ -175,13 +176,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: false, // HQ doesn't need subscriptions
     canCancelSubscription: false,
     canViewPaymentHistory: false,
-    
+
     // Member Management - FULL ACCESS (can manage HQ group members)
     canAddMembers: true,
     canRemoveMembers: true,
     canViewMembers: true,
     canShareInviteLink: true,
-    
+
     // Content Management - FULL ACCESS for HQ groups
     canCreatePraiseNight: true,
     canEditPraiseNight: true,
@@ -192,13 +193,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: true,
     canEditCategory: true,
     canDeleteCategory: true,
-    
+
     // HQ Admin Access - Can view all HQ groups and access admin features
     canViewAllZones: true, // Can view all HQ groups
     canAccessSuperAdmin: true, // Can access HQ admin panel
     canAccessBoss: false
   },
-  
+
   // HQ Member - Headquarters group member
   // Full access like coordinator but for HQ groups (no subscription needed)
   hq_member: {
@@ -208,13 +209,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canUpgradeSubscription: false, // HQ doesn't need subscriptions
     canCancelSubscription: false,
     canViewPaymentHistory: false,
-    
+
     // Member Management - FULL ACCESS
     canAddMembers: true,
     canRemoveMembers: true,
     canViewMembers: true,
     canShareInviteLink: true,
-    
+
     // Content Management - FULL ACCESS
     canCreatePraiseNight: true,
     canEditPraiseNight: true,
@@ -225,7 +226,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canCreateCategory: true,
     canEditCategory: true,
     canDeleteCategory: true,
-    
+
     // Super Admin Only
     canViewAllZones: false,
     canAccessSuperAdmin: false,
@@ -248,30 +249,30 @@ export function getUserRoleInZone(
   zoneMembership: any,
   userEmail?: string
 ): UserRole {
-    if (zoneMembership?.isSuperAdmin) {
+  if (zoneMembership?.isSuperAdmin) {
     return 'super_admin';
   }
-  
-    if (zoneMembership?.role === 'boss' || zoneId === 'zone-boss') {
+
+  if (zoneMembership?.role === 'boss' || zoneId === 'zone-boss') {
     return 'boss';
   }
-  
-    if (isHQGroup(zoneId) && userEmail && isHQAdminEmail(userEmail)) {
+
+  if (isHQGroup(zoneId) && userEmail && isHQAdminEmail(userEmail)) {
     return 'hq_admin';
   }
-  
-    if (isHQGroup(zoneId) && zoneMembership?.role === 'hq_admin') {
+
+  if (isHQGroup(zoneId) && zoneMembership?.role === 'hq_admin') {
     return 'hq_admin';
   }
-  
-    if (isHQGroup(zoneId)) {
+
+  if (isHQGroup(zoneId)) {
     return 'hq_member';
   }
-  
-    if (zoneMembership?.role === 'coordinator') {
+
+  if (zoneMembership?.role === 'coordinator') {
     return 'zone_coordinator';
   }
-  
+
   // Default to member
   return 'zone_member';
 }
@@ -279,20 +280,15 @@ export function getUserRoleInZone(
 // Helper function to get user's global role based on email (for detecting HQ admins)
 export function getUserGlobalRole(userEmail: string | null | undefined): UserRole | null {
   if (!userEmail) return null;
-  
-    if (isHQAdminEmail(userEmail)) {
+
+  if (isHQAdminEmail(userEmail)) {
     return 'hq_admin';
   }
-  
+
   return null;
 }
 
-// Helper to check if zone is HQ group
-function isHQGroup(zoneId: string | undefined): boolean {
-  if (!zoneId) return false;
-  const HQ_GROUP_IDS = ['zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005'];
-  return HQ_GROUP_IDS.includes(zoneId);
-}
+// isHQGroup is now imported from '@/config/zones' (single source of truth)
 
 // Helper to check if user can access all HQ groups
 export function canAccessAllHQGroups(role: UserRole): boolean {
@@ -310,6 +306,7 @@ export const HQ_ADMIN_EMAILS = [
   'ephraimloveworld1@gmail.com', // Ephraim Udoji - HQ Admin
   'takeshopstores@gmail.com',   // Eric Stephen - HQ Admin
   'nnennawealth@gmail.com',     // Nnenna Wealth - HQ Admin
+  'joykures@gmail.com',         // Joy Kures - HQ Admin (Restricted)
 ];
 
 // Helper to check if email should be HQ admin
@@ -324,21 +321,21 @@ export function shouldShowAdminButton(
   currentRole?: UserRole
 ): boolean {
   if (!userEmail) return false;
-  
+
   // Show admin button for HQ admins
   if (isHQAdminEmail(userEmail)) {
     return true;
   }
-  
+
   // Show admin button for other admin roles
   if (currentRole && (
-    currentRole === 'super_admin' || 
-    currentRole === 'boss' || 
+    currentRole === 'super_admin' ||
+    currentRole === 'boss' ||
     currentRole === 'zone_coordinator' ||
     currentRole === 'hq_admin'
   )) {
     return true;
   }
-  
+
   return false;
 }

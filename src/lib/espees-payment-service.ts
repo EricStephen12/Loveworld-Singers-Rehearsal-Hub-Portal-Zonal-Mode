@@ -40,7 +40,7 @@ export class EspeesPaymentService {
       
       return { success: true, paymentId }
     } catch (error) {
-      console.error('Error submitting payment proof:', error)
+ console.error('Error submitting payment proof:', error)
       return { success: false, error: 'Failed to submit payment proof. Please try again.' }
     }
   }
@@ -50,7 +50,7 @@ export class EspeesPaymentService {
       const payment = await FirebaseDatabaseService.getDocument('payment_requests', paymentId)
       return payment as PaymentRequest || null
     } catch (error) {
-      console.error('Error getting payment request:', error)
+ console.error('Error getting payment request:', error)
       return null
     }
   }
@@ -67,7 +67,7 @@ export class EspeesPaymentService {
           new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         )
     } catch (error) {
-      console.error('Error getting pending payments:', error)
+ console.error('Error getting pending payments:', error)
       return []
     }
   }
@@ -107,7 +107,7 @@ export class EspeesPaymentService {
       
       return { success: true }
     } catch (error) {
-      console.error('Error approving payment:', error)
+ console.error('Error approving payment:', error)
       return { success: false, error: 'Failed to approve payment. Please try again.' }
     }
   }
@@ -136,7 +136,7 @@ export class EspeesPaymentService {
       
       return { success: true }
     } catch (error) {
-      console.error('Error rejecting payment:', error)
+ console.error('Error rejecting payment:', error)
       return { success: false, error: 'Failed to reject payment. Please try again.' }
     }
   }
@@ -149,7 +149,7 @@ export class EspeesPaymentService {
       ])
       return payments.length > 0
     } catch (error) {
-      console.error('Error checking pending payment:', error)
+ console.error('Error checking pending payment:', error)
       return false
     }
   }
@@ -166,7 +166,7 @@ export class EspeesPaymentService {
           new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
         )
     } catch (error) {
-      console.error('Error getting payment history:', error)
+ console.error('Error getting payment history:', error)
       return []
     }
   }

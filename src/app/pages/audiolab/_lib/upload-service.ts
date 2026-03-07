@@ -36,12 +36,12 @@ export async function uploadRecording(
 ): Promise<UploadResult> {
   try {
     if (!CLOUD_NAME) {
-      console.error('[UploadService] Cloudinary not configured - missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME');
+ console.error('[UploadService] Cloudinary not configured - missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME');
       return { success: false, error: 'Cloudinary not configured. Please check environment variables.' };
     }
 
     if (!UPLOAD_PRESET) {
-      console.error('[UploadService] Upload preset not configured');
+ console.error('[UploadService] Upload preset not configured');
       return { success: false, error: 'Upload preset not configured' };
     }
 
@@ -65,7 +65,7 @@ export async function uploadRecording(
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[UploadService] Upload failed:', {
+ console.error('[UploadService] Upload failed:', {
         status: response.status,
         statusText: response.statusText,
         error: errorText
@@ -162,7 +162,7 @@ export async function uploadRecordingWithProgress(
           try {
             data = JSON.parse(xhr.responseText);
           } catch (parseError) {
-            console.error('[UploadService] Failed to parse response:', xhr.responseText);
+ console.error('[UploadService] Failed to parse response:', xhr.responseText);
             resolve({ success: false, error: 'Invalid response from server' });
             return;
           }

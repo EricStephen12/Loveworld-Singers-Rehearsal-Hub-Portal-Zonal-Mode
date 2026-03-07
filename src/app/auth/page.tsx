@@ -318,7 +318,7 @@ function AuthPageContent() {
         }, 500)
       }
     } catch (error: any) {
-      console.error('Auth error:', error)
+ console.error('Auth error:', error)
       setError(sanitizeError(error.message || 'An error occurred during authentication'))
       setIsLoading(false)
       setIsCheckingAccount(false)
@@ -376,7 +376,7 @@ function AuthPageContent() {
 
       router.push('/home')
     } catch (error: any) {
-      console.error('Account selection error:', error)
+ console.error('Account selection error:', error)
       setError(sanitizeError('Failed to sign in with selected account. Please use email/password login.'))
       setIsLoading(false)
       setIsCheckingAccount(false)
@@ -423,7 +423,7 @@ function AuthPageContent() {
       setTimeout(() => setSuccess(''), 2000)
 
     } catch (error: any) {
-      console.error('KingsChat fetch error:', error)
+ console.error('KingsChat fetch error:', error)
       setError(sanitizeError(error.message || 'Failed to fetch KingsChat ID'))
     } finally {
       setIsFetchingKingsChat(false)
@@ -529,7 +529,7 @@ function AuthPageContent() {
         return
       }
     } catch (error: any) {
-      console.error('Social login error:', error)
+ console.error('Social login error:', error)
       setError(sanitizeError(error.message || 'An error occurred during social login'))
       setIsLoading(false)
       setIsCheckingAccount(false)
@@ -664,7 +664,7 @@ function AuthPageContent() {
         setForgotPasswordSuccess(true)
       }
     } catch (error: any) {
-      console.error('Forgot password error:', error)
+ console.error('Forgot password error:', error)
       setError(sanitizeError(error.message || 'Failed to reset password'))
     } finally {
       setIsLoading(false)
@@ -702,7 +702,7 @@ function AuthPageContent() {
       setForgotPasswordStep('newPassword')
 
     } catch (error: any) {
-      console.error('KingsChat verification error:', error)
+ console.error('KingsChat verification error:', error)
       setError(sanitizeError(error.message || 'KingsChat verification failed'))
     } finally {
       setIsVerifyingKingschat(false)

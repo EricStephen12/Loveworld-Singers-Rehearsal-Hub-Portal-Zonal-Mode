@@ -40,10 +40,10 @@ export function WhatsAppMigrationPanel() {
     try {
       await WhatsAppMigration.migrateUsers()
       setMigrationStatus(prev => ({ ...prev, users: 'completed' }))
-      addLog('✅ User migration completed successfully!')
+      addLog(' User migration completed successfully!')
     } catch (error) {
       setMigrationStatus(prev => ({ ...prev, users: 'error' }))
-      addLog(`❌ User migration failed: ${error}`)
+      addLog(` User migration failed: ${error}`)
     }
   }
 
@@ -54,10 +54,10 @@ export function WhatsAppMigrationPanel() {
     try {
       await WhatsAppMigration.migrateChats()
       setMigrationStatus(prev => ({ ...prev, chats: 'completed' }))
-      addLog('✅ Chat migration completed successfully!')
+      addLog(' Chat migration completed successfully!')
     } catch (error) {
       setMigrationStatus(prev => ({ ...prev, chats: 'error' }))
-      addLog(`❌ Chat migration failed: ${error}`)
+      addLog(` Chat migration failed: ${error}`)
     }
   }
 
@@ -68,10 +68,10 @@ export function WhatsAppMigrationPanel() {
     try {
       await WhatsAppMigration.migrateMessages()
       setMigrationStatus(prev => ({ ...prev, messages: 'completed' }))
-      addLog('✅ Message migration completed successfully!')
+      addLog(' Message migration completed successfully!')
     } catch (error) {
       setMigrationStatus(prev => ({ ...prev, messages: 'error' }))
-      addLog(`❌ Message migration failed: ${error}`)
+      addLog(` Message migration failed: ${error}`)
     }
   }
 
@@ -86,32 +86,32 @@ export function WhatsAppMigrationPanel() {
       full: 'running'
     })
     
-    addLog('🚀 Starting full WhatsApp migration for LWSRH...')
+    addLog(' Starting full WhatsApp migration for LWSRH...')
     
     try {
             addLog('Step 1/3: Migrating users...')
       await WhatsAppMigration.migrateUsers()
       setMigrationStatus(prev => ({ ...prev, users: 'completed' }))
-      addLog('✅ Users migrated successfully!')
+      addLog(' Users migrated successfully!')
       
             setMigrationStatus(prev => ({ ...prev, chats: 'running' }))
       addLog('Step 2/3: Migrating chats...')
       await WhatsAppMigration.migrateChats()
       setMigrationStatus(prev => ({ ...prev, chats: 'completed' }))
-      addLog('✅ Chats migrated successfully!')
+      addLog(' Chats migrated successfully!')
       
             setMigrationStatus(prev => ({ ...prev, messages: 'running' }))
       addLog('Step 3/3: Migrating messages...')
       await WhatsAppMigration.migrateMessages()
       setMigrationStatus(prev => ({ ...prev, messages: 'completed' }))
-      addLog('✅ Messages migrated successfully!')
+      addLog(' Messages migrated successfully!')
       
       setMigrationStatus(prev => ({ ...prev, full: 'completed' }))
-      addLog('🎉 Full WhatsApp migration completed! Your LWSRH chat system is now WhatsApp-ready!')
+      addLog(' Full WhatsApp migration completed! Your LWSRH chat system is now WhatsApp-ready!')
       
     } catch (error) {
       setMigrationStatus(prev => ({ ...prev, full: 'error' }))
-      addLog(`❌ Migration failed: ${error}`)
+      addLog(` Migration failed: ${error}`)
     } finally {
       setIsRunning(false)
     }

@@ -69,7 +69,7 @@ export async function saveRecordingToIndexedDB(
     db.close();
     return true;
   } catch (error) {
-    console.error('[IndexedDB] Failed to save recording:', error);
+ console.error('[IndexedDB] Failed to save recording:', error);
     return false;
   }
 }
@@ -97,7 +97,7 @@ export async function getRecordingFromIndexedDB(trackId: string): Promise<Blob |
     
     return null;
   } catch (error) {
-    console.error('[IndexedDB] Failed to get recording:', error);
+ console.error('[IndexedDB] Failed to get recording:', error);
     return null;
   }
 }
@@ -127,7 +127,7 @@ export async function getProjectRecordings(projectId: string): Promise<Map<strin
     
     return map;
   } catch (error) {
-    console.error('[IndexedDB] Failed to get project recordings:', error);
+ console.error('[IndexedDB] Failed to get project recordings:', error);
     return new Map();
   }
 }
@@ -160,7 +160,7 @@ export async function getAllRecordings(): Promise<Map<string, { blob: Blob; proj
     
     return map;
   } catch (error) {
-    console.error('[IndexedDB] Failed to get all recordings:', error);
+ console.error('[IndexedDB] Failed to get all recordings:', error);
     return new Map();
   }
 }
@@ -183,7 +183,7 @@ export async function deleteRecordingFromIndexedDB(trackId: string): Promise<boo
     db.close();
     return true;
   } catch (error) {
-    console.error('[IndexedDB] Failed to delete recording:', error);
+ console.error('[IndexedDB] Failed to delete recording:', error);
     return false;
   }
 }
@@ -202,7 +202,7 @@ export async function getStorageUsage(): Promise<{ used: number; available: numb
     }
     return { used: 0, available: 0 };
   } catch (error) {
-    console.error('[IndexedDB] Failed to get storage estimate:', error);
+ console.error('[IndexedDB] Failed to get storage estimate:', error);
     return { used: 0, available: 0 };
   }
 }

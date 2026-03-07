@@ -57,7 +57,7 @@ export default function PlaylistDetailPage() {
         setNestedPlaylists(nested)
       }
     } catch (error) {
-      console.error('Error loading playlist:', error)
+ console.error('Error loading playlist:', error)
     }
     setLoading(false)
   }
@@ -70,7 +70,7 @@ export default function PlaylistDetailPage() {
       const existingIds = nestedPlaylists.map(p => p.id)
       setAddablePlaylists(data.filter(p => !existingIds.includes(p.id)))
     } catch (error) {
-      console.error('Error loading addable playlists:', error)
+ console.error('Error loading addable playlists:', error)
     }
     setLoadingAddable(false)
   }
@@ -82,7 +82,7 @@ export default function PlaylistDetailPage() {
       setVideos(prev => prev.filter(v => v.id !== videoId))
       setPlaylist(prev => prev ? { ...prev, videoIds: prev.videoIds.filter(id => id !== videoId) } : null)
     } catch (error) {
-      console.error('Error removing video:', error)
+ console.error('Error removing video:', error)
     }
     setMenuOpen(null)
   }
@@ -93,7 +93,7 @@ export default function PlaylistDetailPage() {
       await removePlaylistFromPlaylist(playlist.id, childId)
       setNestedPlaylists(prev => prev.filter(p => p.id !== childId))
     } catch (error) {
-      console.error('Error removing nested playlist:', error)
+ console.error('Error removing nested playlist:', error)
     }
     setMenuOpen(null)
   }

@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
         const errorDescription = urlParams.get('error_description')
 
         if (error) {
-          console.error('Auth callback error:', { error, errorCode, errorDescription })
+ console.error('Auth callback error:', { error, errorCode, errorDescription })
           
           // Handle specific error cases
           if (errorCode === 'otp_expired') {
@@ -48,7 +48,7 @@ export default function AuthCallbackPage() {
           router.push('/auth?error=no_session&message=No active session found')
         }
       } catch (error) {
-        console.error('Auth callback error:', error)
+ console.error('Auth callback error:', error)
         router.push('/auth?error=callback_error&message=An unexpected error occurred')
       }
     }

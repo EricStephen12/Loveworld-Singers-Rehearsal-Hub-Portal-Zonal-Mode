@@ -81,7 +81,7 @@ export class BirthdayService {
             memberUserIds = new Set(zoneMembers.map(m => m.userId || m.id))
           }
         } catch (error) {
-          console.error('Error fetching zone members for birthdays:', error)
+ console.error('Error fetching zone members for birthdays:', error)
         }
       }
 
@@ -158,7 +158,7 @@ export class BirthdayService {
 
       return sortedBirthdays
     } catch (error) {
-      console.error('Error fetching birthdays:', error)
+ console.error('Error fetching birthdays:', error)
       return []
     }
   }

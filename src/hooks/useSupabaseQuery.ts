@@ -39,7 +39,7 @@ interface CacheEntry {
 // Global cache for ultra-fast data access
 const globalCache = new Map<string, CacheEntry>();
 
-export const useUltraFastSupabase = <T = any>({
+export const useSupabaseQuery = <T = any>({
   table,
   select = '*',
   filters = {},
@@ -139,7 +139,7 @@ export const useUltraFastSupabase = <T = any>({
 
       return result;
     } catch (err) {
-      console.error('Supabase fetch error:', err);
+ console.error('Supabase fetch error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setLoading(false);
       
@@ -276,12 +276,12 @@ export const useUltraFastSupabase = <T = any>({
 };
 
 // Ultra-fast single record hook
-export const useUltraFastSupabaseRecord = <T = any>(
+export const useSupabaseQueryRecord = <T = any>(
   table: string,
   id: string | number,
   options: Omit<UseUltraFastSupabaseOptions, 'table' | 'filters'> = {}
 ) => {
-  return useUltraFastSupabase<T>({
+  return useSupabaseQuery<T>({
     ...options,
     table,
     filters: { id },

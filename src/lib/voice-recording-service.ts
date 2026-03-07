@@ -100,7 +100,7 @@ export class VoiceRecordingService {
       
       // Handle errors
       this.mediaRecorder.onerror = (event) => {
-        console.error('Recording error:', event)
+ console.error('Recording error:', event)
         this.callbacks.onRecordingError?.(new Error('Recording failed'))
         this.stopRecording()
       }
@@ -125,7 +125,7 @@ export class VoiceRecordingService {
       this.updateRecordingState()
       return true
     } catch (error) {
-      console.error('Error starting recording:', error)
+ console.error('Error starting recording:', error)
       this.callbacks.onRecordingError?.(error as Error)
       return false
     }
@@ -213,7 +213,7 @@ export class VoiceRecordingService {
     }
     
     audio.play().catch(error => {
-      console.error('Error playing voice message:', error)
+ console.error('Error playing voice message:', error)
       URL.revokeObjectURL(audioUrl)
     })
     

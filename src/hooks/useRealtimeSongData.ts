@@ -26,7 +26,7 @@ export function useRealtimeSongData({ songId, enabled = true, zoneId }: UseRealt
       const freshSongData = await PraiseNightSongsService.getSongById(songId, zoneId || undefined)
       setSongData(freshSongData || null)
     } catch (error) {
-      console.error('Error fetching song data:', error)
+ console.error('Error fetching song data:', error)
       setError(error instanceof Error ? error.message : 'Failed to fetch song data')
     } finally {
       setLoading(false)

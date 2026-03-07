@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
                 );
             }
         } catch (error) {
-            console.error('Failed to send KingsChat notification:', error);
+ console.error('Failed to send KingsChat notification:', error);
         }
 
         return NextResponse.json({
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             message: 'Refund processed successfully'
         });
     } catch (error) {
-        console.error('Error processing refund:', error);
+ console.error('Error processing refund:', error);
         return NextResponse.json(
             { error: 'Failed to process refund' },
             { status: 500 }

@@ -15,7 +15,7 @@ import {
 import { db } from './firebase-setup'
 import { isHQGroup } from '@/config/zones'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Types
 
 export interface ScheduleCategory {
     id: string
@@ -80,7 +80,7 @@ export interface ScheduleProgram {
     updatedBy: string
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 function isHQ(zoneId?: string | null): boolean {
     if (!zoneId) return true
@@ -93,7 +93,7 @@ function toDate(val: any): string {
     return String(val)
 }
 
-// ─── Category Service ─────────────────────────────────────────────────────────
+// Category Service
 
 export class ScheduleCategoryService {
 
@@ -117,7 +117,7 @@ export class ScheduleCategoryService {
                 })
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
         } catch (error) {
-            console.error('Error getting schedule categories:', error)
+ console.error('Error getting schedule categories:', error)
             return []
         }
     }
@@ -137,7 +137,7 @@ export class ScheduleCategoryService {
             })
             return docRef.id
         } catch (error) {
-            console.error('Error adding schedule category:', error)
+ console.error('Error adding schedule category:', error)
             alert(`Error adding category: ${error}`)
             return null
         }
@@ -152,7 +152,7 @@ export class ScheduleCategoryService {
             await updateDoc(ref, { ...data, updatedAt: serverTimestamp() })
             return true
         } catch (error) {
-            console.error('Error updating schedule category:', error)
+ console.error('Error updating schedule category:', error)
             return false
         }
     }
@@ -163,13 +163,13 @@ export class ScheduleCategoryService {
             await updateDoc(ref, { isActive: false, updatedAt: serverTimestamp() })
             return true
         } catch (error) {
-            console.error('Error deleting schedule category:', error)
+ console.error('Error deleting schedule category:', error)
             return false
         }
     }
 }
 
-// ─── Song Service ─────────────────────────────────────────────────────────────
+// Song Service
 
 export class ScheduleSongService {
 
@@ -209,7 +209,7 @@ export class ScheduleSongService {
                 })
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
         } catch (error) {
-            console.error('Error getting schedule songs:', error)
+ console.error('Error getting schedule songs:', error)
             return []
         }
     }
@@ -229,7 +229,7 @@ export class ScheduleSongService {
             })
             return docRef.id
         } catch (error) {
-            console.error('Error adding schedule song:', error)
+ console.error('Error adding schedule song:', error)
             alert(`Error adding song: ${error}`)
             return null
         }
@@ -244,7 +244,7 @@ export class ScheduleSongService {
             await updateDoc(ref, { ...data, updatedAt: serverTimestamp() })
             return true
         } catch (error) {
-            console.error('Error updating schedule song:', error)
+ console.error('Error updating schedule song:', error)
             return false
         }
     }
@@ -255,13 +255,13 @@ export class ScheduleSongService {
             await deleteDoc(ref)
             return true
         } catch (error) {
-            console.error('Error deleting schedule song:', error)
+ console.error('Error deleting schedule song:', error)
             return false
         }
     }
 }
 
-// ─── Program Service ──────────────────────────────────────────────────────────
+// Program Service
 
 export class ScheduleProgramService {
 
@@ -284,7 +284,7 @@ export class ScheduleProgramService {
                 updatedAt: toDate(data.updatedAt),
             } as ScheduleProgram
         } catch (error) {
-            console.error('Error getting schedule program:', error)
+ console.error('Error getting schedule program:', error)
             return null
         }
     }
@@ -315,7 +315,7 @@ export class ScheduleProgramService {
                 return (b.date || "").localeCompare(a.date || "");
             })
         } catch (error) {
-            console.error('Error getting all programs:', error)
+ console.error('Error getting all programs:', error)
             return []
         }
     }
@@ -352,7 +352,7 @@ export class ScheduleProgramService {
             }, { merge: true })
             return true
         } catch (error) {
-            console.error('Error updating schedule program:', error)
+ console.error('Error updating schedule program:', error)
             return false
         }
     }
@@ -364,7 +364,7 @@ export class ScheduleProgramService {
             await deleteDoc(ref)
             return true
         } catch (error) {
-            console.error('Error deleting schedule program:', error)
+ console.error('Error deleting schedule program:', error)
             return false
         }
     }

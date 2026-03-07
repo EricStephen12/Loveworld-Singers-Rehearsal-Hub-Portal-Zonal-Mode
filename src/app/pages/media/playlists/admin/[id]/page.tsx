@@ -66,7 +66,7 @@ export default function AdminPlaylistDetailPage() {
         }
       }
     } catch (error) {
-      console.error('Error loading playlist:', error)
+ console.error('Error loading playlist:', error)
     } finally {
       setLoading(false)
     }

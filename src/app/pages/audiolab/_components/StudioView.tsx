@@ -314,7 +314,7 @@ export function StudioView() {
         }
       }
     } catch (error) {
-      console.error('Failed to load project:', error);
+ console.error('Failed to load project:', error);
     } finally {
       setIsLoading(false);
     }
@@ -575,7 +575,7 @@ export function StudioView() {
       }
 
     } catch (error) {
-      console.error('Failed to import audio:', error);
+ console.error('Failed to import audio:', error);
       alert('Failed to import audio file. Please try again.');
     } finally {
       setIsImporting(false);
@@ -611,7 +611,7 @@ export function StudioView() {
       await ctx.close();
       return peaks;
     } catch (error) {
-      console.error('[analyzeAudioWaveform] Failed:', error);
+ console.error('[analyzeAudioWaveform] Failed:', error);
       return Array.from({ length: 50 }, () => Math.floor(Math.random() * 20) + 10);
     }
   };
@@ -710,7 +710,7 @@ export function StudioView() {
         }, 100);
       }
     } catch (error) {
-      console.error('Failed to start recording:', error);
+ console.error('Failed to start recording:', error);
     }
   };
 
@@ -821,7 +821,7 @@ export function StudioView() {
         }
       }
     } catch (error) {
-      console.error('Failed to stop recording:', error);
+ console.error('Failed to stop recording:', error);
       setIsRecording(false);
       setTracks(prev => prev.map(t => ({ ...t, isRecording: false })));
     }
@@ -838,7 +838,7 @@ export function StudioView() {
         ));
       }
     } catch (error) {
-      console.error('Failed to save recording locally:', error);
+ console.error('Failed to save recording locally:', error);
     }
   };
 
@@ -846,7 +846,7 @@ export function StudioView() {
     try {
       return await getRecordingFromIndexedDB(trackId);
     } catch (error) {
-      console.error('Failed to retrieve recording:', error);
+ console.error('Failed to retrieve recording:', error);
       return null;
     }
   };
@@ -855,7 +855,7 @@ export function StudioView() {
     try {
       await deleteRecordingFromIndexedDB(trackId);
     } catch (error) {
-      console.error('Failed to remove recording:', error);
+ console.error('Failed to remove recording:', error);
     }
   };
 
@@ -904,7 +904,7 @@ export function StudioView() {
         throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
-      console.error('Upload failed:', error);
+ console.error('Upload failed:', error);
 
       // Retry logic
       if (retryCount < MAX_RETRIES) {
@@ -961,7 +961,7 @@ export function StudioView() {
         await uploadRecordingToCloud(track.audioBlob!, track.id);
       }
     } catch (error) {
-      console.error('Upload failed:', error);
+ console.error('Upload failed:', error);
     } finally {
       setIsUploading(false);
     }
@@ -1059,7 +1059,7 @@ export function StudioView() {
             }));
           }
         } catch (error) {
-          console.error('Error retrieving local recording:', error);
+ console.error('Error retrieving local recording:', error);
         }
       } else if (track.audioUrl) {
         const isCloudUrl = track.audioUrl.includes('cloudinary') ||
@@ -1157,7 +1157,7 @@ export function StudioView() {
               }, 3000);
             });
           } catch (e) {
-            console.error('Error loading metadata:', e);
+ console.error('Error loading metadata:', e);
           }
         }
 
@@ -1209,7 +1209,7 @@ export function StudioView() {
       const audio = trackAudioRefs.current.get(track.id);
       if (audio && audio.src) {
         anyPlaying = true;
-        return audio.play().catch(e => console.error(`Playback error on track ${track.id}:`, e));
+ return audio.play().catch(e => console.error(`Playback error on track ${track.id}:`, e));
       }
       return Promise.resolve();
     });
@@ -1334,7 +1334,7 @@ export function StudioView() {
             await saveProject();
           }
         } catch (error) {
-          console.error('Failed to create project:', error);
+ console.error('Failed to create project:', error);
         }
       } else {
         await saveProject();
@@ -1342,7 +1342,7 @@ export function StudioView() {
 
       await uploadAllRecordingsToCloud();
     } catch (error) {
-      console.error('Save failed:', error);
+ console.error('Save failed:', error);
     } finally {
       setIsSaving(false);
     }
@@ -1392,7 +1392,7 @@ export function StudioView() {
       });
 
     } catch (error) {
-      console.error('Auto-Mix failed:', error);
+ console.error('Auto-Mix failed:', error);
     } finally {
       setTimeout(() => setIsLoading(false), 800);
     }
@@ -1450,7 +1450,7 @@ export function StudioView() {
       }
     } catch (error) {
       setSaveError('Failed to save');
-      console.error('Save error:', error);
+ console.error('Save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -1516,7 +1516,7 @@ export function StudioView() {
             setTimeout(resolve, 5000);
           });
         } catch (e) {
-          console.error('Failed to load track duration:', e);
+ console.error('Failed to load track duration:', e);
         }
       }
 
@@ -1623,7 +1623,7 @@ export function StudioView() {
       URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error('[HeaderExport] Failed:', error);
+ console.error('[HeaderExport] Failed:', error);
       alert('Export failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsExportingHeader(false);
@@ -1977,7 +1977,7 @@ export function StudioView() {
                                     }`}
                                   title={track.audioUrl ? 'Saved to cloud' : 'Saved locally'}
                                 >
-                                  {track.audioUrl ? '☁️' : '💾'}
+                                  {track.audioUrl ? '☁️' : ''}
                                 </span>
                               )}
                             </div>

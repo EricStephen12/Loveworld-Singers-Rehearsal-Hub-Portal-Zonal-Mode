@@ -100,7 +100,7 @@ export async function submitSong(songData: Omit<SongSubmission, 'id' | 'status' 
 
     return { success: true, id: docRef.id }
   } catch (error) {
-    console.error('Error submitting song:', error)
+ console.error('Error submitting song:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to submit song' }
   }
 }
@@ -147,17 +147,17 @@ async function createSubmissionNotification(
           body: JSON.stringify({
             type: 'song',
             recipientIds: adminIds,
-            title: '🎵 New Song Submission',
+            title: ' New Song Submission',
             body: `New song "${songTitle}" submitted by ${submittedBy.userName}${zoneName ? ` from ${zoneName}` : ''}`,
             data: { songId, songTitle, type: 'new_submission' }
           })
         })
       }
     } catch (fcmError) {
-      console.error('Error sending admin song notification:', fcmError)
+ console.error('Error sending admin song notification:', fcmError)
     }
   } catch (error) {
-    console.error('Error creating notification:', error)
+ console.error('Error creating notification:', error)
   }
 }
 
@@ -199,7 +199,7 @@ export async function getAllSubmittedSongs(zoneId?: string, isHQGroup?: boolean)
     return allSubmissions.filter(sub => sub.zoneId === zoneId)
 
   } catch (error) {
-    console.error('Error getting submitted songs:', error)
+ console.error('Error getting submitted songs:', error)
     return []
   }
 }
@@ -209,7 +209,7 @@ export async function getPendingSongs(zoneId?: string, isHQGroup?: boolean): Pro
     const allSubmitted = await getAllSubmittedSongs(zoneId, isHQGroup)
     return allSubmitted.filter(s => s.status === 'pending')
   } catch (error) {
-    console.error('Error getting pending songs:', error)
+ console.error('Error getting pending songs:', error)
     return []
   }
 }
@@ -269,7 +269,7 @@ export async function approveSong(
 
     return { success: true }
   } catch (error) {
-    console.error('Error approving song:', error)
+ console.error('Error approving song:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to approve song' }
   }
 }
@@ -301,7 +301,7 @@ export async function rejectSong(
 
     return { success: true }
   } catch (error) {
-    console.error('Error rejecting song:', error)
+ console.error('Error rejecting song:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to reject song' }
   }
 }
@@ -332,10 +332,10 @@ async function createStatusNotification(
     // Send push notification for approval/rejection/reply (not for 'seen')
     if (status !== 'seen' && submittedBy.userId) {
       const title = status === 'approved'
-        ? '🎵 Song Approved!'
+        ? ' Song Approved!'
         : status === 'rejected'
-          ? '🎵 Song Feedback'
-          : '🎵 Song Reply'
+          ? ' Song Feedback'
+          : ' Song Reply'
 
       const body = customMessage || `Your song "${songTitle}" has been ${status}`
 
@@ -355,7 +355,7 @@ async function createStatusNotification(
       }
     }
   } catch (error) {
-    console.error('Error creating status notification:', error)
+ console.error('Error creating status notification:', error)
   }
 }
 
@@ -386,7 +386,7 @@ export async function getUnreadNotifications(zoneId?: string, isHQGroup?: boolea
 
     return notifications
   } catch (error) {
-    console.error('Error getting notifications:', error)
+ console.error('Error getting notifications:', error)
     return []
   }
 }
@@ -396,7 +396,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
     const notificationRef = doc(db, SONG_NOTIFICATIONS_COLLECTION, notificationId)
     await updateDoc(notificationRef, { read: true })
   } catch (error) {
-    console.error('Error marking notification as read:', error)
+ console.error('Error marking notification as read:', error)
   }
 }
 
@@ -413,7 +413,7 @@ export async function markSubmissionSeen(submissionId: string, adminName: string
 
     return { success: true }
   } catch (error) {
-    console.error('Error marking seen:', error)
+ console.error('Error marking seen:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to mark seen' }
   }
 }
@@ -451,7 +451,7 @@ export async function replyToSubmission(submissionId: string, adminName: string,
 
     return { success: true }
   } catch (error) {
-    console.error('Error replying to submission:', error)
+ console.error('Error replying to submission:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to reply' }
   }
 }
@@ -473,7 +473,7 @@ export async function getUserSubmissions(userId: string): Promise<SongSubmission
       } as SongSubmission
     })
   } catch (error) {
-    console.error('Error getting user submissions:', error)
+ console.error('Error getting user submissions:', error)
     return []
   }
 }
@@ -487,7 +487,7 @@ export async function getUserSubmissionsByEmail(userEmail: string): Promise<Song
     const lower = userEmail.toLowerCase()
     return allSubmissions.filter((sub) => (sub.submittedBy?.email || '').toLowerCase() === lower)
   } catch (error) {
-    console.error('Error getting user submissions by email:', error)
+ console.error('Error getting user submissions by email:', error)
     return []
   }
 }
@@ -537,7 +537,7 @@ export async function getUserSongNotifications(userEmail: string): Promise<SongN
       return notifications
     }
   } catch (error) {
-    console.error('Error getting user notifications:', error)
+ console.error('Error getting user notifications:', error)
     return []
   }
 }
@@ -562,7 +562,7 @@ export async function deleteUserSubmission(submissionId: string, userId: string)
     await deleteDoc(submissionRef)
     return { success: true }
   } catch (error) {
-    console.error('Error deleting submission:', error)
+ console.error('Error deleting submission:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' }
   }
 }
@@ -577,7 +577,7 @@ export async function deleteSubmissionAsAdmin(submissionId: string): Promise<{ s
     await deleteDoc(submissionRef)
     return { success: true }
   } catch (error) {
-    console.error('Error deleting submission:', error)
+ console.error('Error deleting submission:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete submission' }
   }
 }
@@ -610,13 +610,13 @@ export async function updateUserSubmission(
     await updateDoc(submissionRef, {
       ...updates,
       updatedAt: serverTimestamp(),
-      isUpdated: true,  // Flag to show admin that user has updated
+      isUpdated: true, // Flag to show admin that user has updated
       lastUpdatedBy: 'user'
     })
 
     return { success: true }
   } catch (error) {
-    console.error('Error updating submission:', error)
+ console.error('Error updating submission:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to update submission' }
   }
 }
@@ -681,7 +681,7 @@ export async function userReplyToSubmission(
 
     return { success: true }
   } catch (error) {
-    console.error('Error sending user reply:', error)
+ console.error('Error sending user reply:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to send reply' }
   }
 }
@@ -699,7 +699,7 @@ export async function markSubmissionAsSeen(submissionId: string): Promise<{ succ
 
     return { success: true }
   } catch (error) {
-    console.error('Error marking submission as seen:', error)
+ console.error('Error marking submission as seen:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to mark as seen' }
   }
 }

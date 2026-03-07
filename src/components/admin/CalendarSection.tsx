@@ -57,7 +57,7 @@ export default function CalendarSection() {
       const allEvents = await UpcomingEventsService.getAllEvents(currentZone.id)
       setEvents(allEvents)
     } catch (error) {
-      console.error('Error loading events:', error)
+ console.error('Error loading events:', error)
     } finally {
       setLoading(false)
     }
@@ -151,14 +151,14 @@ export default function CalendarSection() {
               body: JSON.stringify({
                 type: 'calendar',
                 recipientIds,
-                title: `📅 New ${eventData.type || 'Event'}`,
+                title: ` New ${eventData.type || 'Event'}`,
                 body: `"${eventData.title}" has been scheduled for ${moment(eventData.date).format('MMM Do, YYYY')}`,
                 data: { eventId: (result as any)?.id || '', type: eventData.type }
               })
             })
           }
         } catch (fcmError) {
-          console.error('[CalendarUI] FCM error:', fcmError)
+ console.error('[CalendarUI] FCM error:', fcmError)
         }
 
         showToast('Event created successfully!', 'success')
@@ -168,7 +168,7 @@ export default function CalendarSection() {
       setEditingEvent(null)
       await loadEvents()
     } catch (error) {
-      console.error('Error saving event:', error)
+ console.error('Error saving event:', error)
       showToast('Failed to save event. Please try again.', 'error')
     } finally {
       setSaving(false)
@@ -202,7 +202,7 @@ export default function CalendarSection() {
       setEventToDelete(null)
       loadEvents()
     } catch (error) {
-      console.error('Error deleting event:', error)
+ console.error('Error deleting event:', error)
       showToast('Failed to delete event', 'error')
     }
   }
@@ -215,7 +215,7 @@ export default function CalendarSection() {
       showToast(event.showInCarousel ? 'Hidden from carousel' : 'Added to carousel', 'success')
       loadEvents()
     } catch (error) {
-      console.error('Error toggling visibility:', error)
+ console.error('Error toggling visibility:', error)
       showToast('Failed to update visibility', 'error')
     }
   }

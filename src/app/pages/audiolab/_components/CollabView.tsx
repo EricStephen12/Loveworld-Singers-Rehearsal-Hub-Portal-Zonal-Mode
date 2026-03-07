@@ -42,10 +42,10 @@ export function CollabView() {
     if (!user?.uid) return;
     try {
       const rooms = await getUserClassrooms(user.uid);
-      console.log('[CollabView] Loaded classrooms:', rooms.length);
+ console.log('[CollabView] Loaded classrooms:', rooms.length);
       setActiveClassrooms(rooms);
     } catch (error) {
-      console.error('[CollabView] Error loading data:', error);
+ console.error('[CollabView] Error loading data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +89,7 @@ export function CollabView() {
         setCreateError(result.error || 'Could not create classroom');
       }
     } catch (error) {
-      console.error('[CollabView] Create Error:', error);
+ console.error('[CollabView] Create Error:', error);
       setCreateError('Database error. Please check your connection.');
     } finally {
       setIsCreating(false);
@@ -113,7 +113,7 @@ export function CollabView() {
         setCreateError(result.error || 'Invalid session code');
       }
     } catch (e) {
-      console.error(e);
+ console.error(e);
       setCreateError('Error joining session');
     } finally {
       setIsJoining(false);
@@ -144,7 +144,7 @@ export function CollabView() {
         setView('live-session');
       }
     } catch (e) {
-      console.error(e);
+ console.error(e);
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +165,7 @@ export function CollabView() {
         });
         return;
       } catch (e) {
-        if ((e as Error).name !== 'AbortError') console.error('Error sharing:', e);
+ if ((e as Error).name !== 'AbortError') console.error('Error sharing:', e);
       }
     }
 
@@ -188,7 +188,7 @@ export function CollabView() {
         alert(result.error || 'Failed to delete classroom');
       }
     } catch (error) {
-      console.error('[CollabView] Delete error:', error);
+ console.error('[CollabView] Delete error:', error);
       alert('Error deleting classroom');
     }
   };

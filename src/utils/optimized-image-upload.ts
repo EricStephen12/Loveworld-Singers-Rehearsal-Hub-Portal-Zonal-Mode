@@ -133,7 +133,7 @@ export async function ultraFastUploadProfileImage(
     });
 
     if (!uploadResult) {
-      console.error('❌ [Cloudinary] Upload failed');
+ console.error(' [Cloudinary] Upload failed');
       return {
         success: false,
         error: 'Upload failed'
@@ -157,7 +157,7 @@ export async function ultraFastUploadProfileImage(
     };
     
   } catch (error) {
-    console.error('❌ Unexpected error during ultra-fast upload:', error);
+ console.error(' Unexpected error during ultra-fast upload:', error);
     return {
       success: false,
       error: 'An unexpected error occurred during upload.'
@@ -206,14 +206,14 @@ export async function ultraFastDeleteImage(imageUrl: string): Promise<boolean> {
       .remove([filePath]);
     
     if (error) {
-      console.error('❌ Delete error:', error);
+ console.error(' Delete error:', error);
       return false;
     }
     
     return true;
     
   } catch (error) {
-    console.error('❌ Unexpected error during deletion:', error);
+ console.error(' Unexpected error during deletion:', error);
     return false;
   }
 }

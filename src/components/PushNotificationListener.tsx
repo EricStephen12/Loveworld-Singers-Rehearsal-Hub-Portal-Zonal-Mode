@@ -51,7 +51,7 @@ export default function PushNotificationListener() {
           }
         }
       } catch (e) {
-        console.error('[Push] Init error:', e)
+ console.error('[Push] Init error:', e)
       }
     }
 
@@ -201,7 +201,7 @@ export default function PushNotificationListener() {
         }
       })
     }, (error) => {
-      console.error('[Push] Error listening to admin_messages:', error)
+ console.error('[Push] Error listening to admin_messages:', error)
     })
     return () => unsubscribe()
   }, [currentZone?.id])
@@ -235,7 +235,7 @@ export default function PushNotificationListener() {
         }
       })
     }, (error) => {
-      console.error('[Push] Error listening to calendar_events:', error)
+ console.error('[Push] Error listening to calendar_events:', error)
     })
     return () => unsubscribe()
   }, [currentZone?.id])
@@ -278,7 +278,7 @@ export default function PushNotificationListener() {
             // This will trigger the permission change in the other effect
             setPermissionStatus(Notification.permission)
           } catch (e) {
-            console.error('Error requesting permission:', e)
+ console.error('Error requesting permission:', e)
           }
         }
 

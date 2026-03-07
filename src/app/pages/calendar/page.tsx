@@ -87,7 +87,7 @@ export default function CalendarPage() {
         momentLocalizer = localizerFn(moment)
         setCalendarReady(true)
       } catch (error) {
-        console.error('Error initializing calendar:', error)
+ console.error('Error initializing calendar:', error)
       }
     }
 
@@ -120,7 +120,7 @@ export default function CalendarPage() {
         // Cache the events for next time
         CalendarCache.saveEvents(currentZone.id, zoneEvents)
       } catch (error) {
-        console.error('Error loading events:', error)
+ console.error('Error loading events:', error)
       } finally {
         setLoading(false)
       }
@@ -139,7 +139,7 @@ export default function CalendarPage() {
         const allBirthdays = await BirthdayService.getTodayAndUpcomingBirthdays(currentZone.id)
         setTodaysBirthdays(allBirthdays)
       } catch (error) {
-        console.error('Error loading birthdays:', error)
+ console.error('Error loading birthdays:', error)
       }
     }
 
@@ -175,7 +175,7 @@ export default function CalendarPage() {
 
         setUpcomingEventsList(calendarEvents)
       } catch (error) {
-        console.error('Error loading upcoming events:', error)
+ console.error('Error loading upcoming events:', error)
       }
     }
 

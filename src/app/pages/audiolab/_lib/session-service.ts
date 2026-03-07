@@ -30,9 +30,7 @@ import type {
   ChatMessage
 } from '../_types';
 
-// ============================================
 // CLASSROOM MANAGEMENT (PERMANENT)
-// ============================================
 
 /**
  * Generate a unique 6-character alphanumeric meeting code
@@ -85,7 +83,7 @@ export async function createClassroom(
     await set(sessionRef, classroom);
     return { success: true, classroom };
   } catch (e) {
-    console.error('[SessionService] createClassroom error:', e);
+ console.error('[SessionService] createClassroom error:', e);
     return { success: false, error: 'Failed to create classroom' };
   }
 }
@@ -140,7 +138,7 @@ export async function getLiveSessionForClassroom(classroomId: string): Promise<L
 
     return activeSession;
   } catch (e) {
-    console.error('[SessionService] getLiveSessionForClassroom error:', e);
+ console.error('[SessionService] getLiveSessionForClassroom error:', e);
     return null;
   }
 }
@@ -171,14 +169,12 @@ export async function deleteClassroom(
     await remove(ref(realtimeDb, `audiolab_sessions/${classroomId}`));
     return { success: true };
   } catch (e) {
-    console.error('[SessionService] deleteClassroom error:', e);
+ console.error('[SessionService] deleteClassroom error:', e);
     return { success: false, error: 'Failed to delete classroom' };
   }
 }
 
-// ============================================
 // SESSION MANAGEMENT (DYNAMIC)
-// ============================================
 
 /**
  * Create a new live session linked to a classroom
@@ -235,7 +231,7 @@ export async function createSession(
     await set(sessionRef, session);
     return { success: true, session };
   } catch (error) {
-    console.error('[SessionService] Error creating session:', error);
+ console.error('[SessionService] Error creating session:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create session'
@@ -305,7 +301,7 @@ export async function joinSession(
     // Setup Presence: Auto-remove participant on disconnect
     if (realtimeDb) {
       onDisconnect(participantRef).remove().catch(err => {
-        console.warn('[SessionService] onDisconnect setup failed:', err);
+ console.warn('[SessionService] onDisconnect setup failed:', err);
       });
     }
 
@@ -376,9 +372,7 @@ export async function getSession(sessionId: string): Promise<LiveSession | null>
   } catch (e) { return null; }
 }
 
-// ============================================
 // REAL-TIME SUBSCRIPTIONS
-// ============================================
 
 interface SessionCallbacks {
   onParticipantJoined?: (participant: Participant) => void;
@@ -407,9 +401,7 @@ export function subscribeToSession(sessionId: string, callbacks: SessionCallback
   };
 }
 
-// ============================================
 // CHAT
-// ============================================
 
 export async function sendMessage(
   sessionId: string,
@@ -463,9 +455,7 @@ export async function deleteMessage(sessionId: string, messageId: string, userId
   } catch (e) { return { success: false }; }
 }
 
-// ============================================
 // PLAYBACK & PARTICIPANTS (EXISTING)
-// ============================================
 
 export async function toggleMute(sessionId: string, userId: string, isMuted: boolean): Promise<void> {
   if (!realtimeDb) return;
@@ -482,9 +472,7 @@ export async function updatePlaybackState(sessionId: string, state: Partial<Play
   await update(ref(realtimeDb, `audiolab_sessions/${sessionId}/playback`), { ...state, updatedAt: Date.now(), updatedBy: userId });
 }
 
-// ============================================
 // DATA DISCOVERY
-// ============================================
 
 export async function getActiveSessions(limitCount: number = 10): Promise<LiveSession[]> {
   try {
@@ -526,7 +514,7 @@ export async function getUserClassrooms(userId: string): Promise<any[]> {
 
     return rooms.sort((a, b) => b.createdAt - a.createdAt);
   } catch (e) {
-    console.error('[SessionService] getUserClassrooms error:', e);
+ console.error('[SessionService] getUserClassrooms error:', e);
     return [];
   }
 }

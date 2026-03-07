@@ -33,7 +33,7 @@ class ActivityLogsService {
       await addDoc(collection(db, this.COLLECTION_NAME), logData);
       return { success: true };
     } catch (error) {
-      console.error('Error logging activity:', error);
+ console.error('Error logging activity:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Failed to log activity' };
     }
   }
@@ -83,7 +83,7 @@ class ActivityLogsService {
 
       return { success: true, logs };
     } catch (error) {
-      console.error('Error getting logs:', error);
+ console.error('Error getting logs:', error);
       return { success: false, logs: [], error: error instanceof Error ? error.message : 'Failed to get logs' };
     }
   }
@@ -144,7 +144,7 @@ class ActivityLogsService {
 
       return { success: true, summary };
     } catch (error) {
-      console.error('Error getting summary:', error);
+ console.error('Error getting summary:', error);
       return { success: false, summary: null, error: error instanceof Error ? error.message : 'Failed to get summary' };
     }
   }
@@ -185,7 +185,7 @@ class ActivityLogsService {
       const jsonString = JSON.stringify(exportData, null, 2);
       return { success: true, data: jsonString };
     } catch (error) {
-      console.error('Error exporting logs:', error);
+ console.error('Error exporting logs:', error);
       return { success: false, data: '', error: error instanceof Error ? error.message : 'Failed to export logs' };
     }
   }

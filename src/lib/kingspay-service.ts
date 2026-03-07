@@ -39,7 +39,7 @@ export async function initializeKingsPayPayment(
     const secretKey = process.env.KINGSPAY_SECRET_KEY || process.env.NEXT_PUBLIC_KINGSPAY_SECRET_KEY
 
     if (!secretKey) {
-      console.error('❌ KingsPay secret key not configured')
+ console.error(' KingsPay secret key not configured')
       return { success: false, error: 'Payment system not configured' }
     }
 
@@ -87,7 +87,7 @@ export async function initializeKingsPayPayment(
     try {
       data = JSON.parse(responseText)
     } catch (e) {
-      console.error('Failed to parse KingsPay response as JSON')
+ console.error('Failed to parse KingsPay response as JSON')
       return { success: false, error: `Invalid API response: ${responseText.substring(0, 100)}` }
     }
 
@@ -97,10 +97,10 @@ export async function initializeKingsPayPayment(
     return { success: false, error: data.message || 'Failed to initialize payment', statusCode: response.status }
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      console.error('❌ KingsPay Request Timeout: The API didn\'t respond within 15 seconds.')
+ console.error(' KingsPay Request Timeout: The API didn\'t respond within 15 seconds.')
       return { success: false, error: 'Payment initialization timed out. KingsPay API may be down.', statusCode: 504 }
     }
-    console.error('❌ Error initializing KingsPay payment:', error)
+ console.error(' Error initializing KingsPay payment:', error)
     return { success: false, error: `Network error: ${error.message || 'Unknown error'}`, statusCode: 500 }
   }
 }
@@ -113,7 +113,7 @@ export async function getKingsPayPaymentStatus(
     if (response.ok) return await response.json()
     return null
   } catch (error) {
-    console.error('Error getting payment status:', error)
+ console.error('Error getting payment status:', error)
     return null
   }
 }
@@ -130,7 +130,7 @@ export async function cancelKingsPayPayment(
     }
     return { success: false, message: 'Failed to cancel payment' }
   } catch (error) {
-    console.error('Error canceling payment:', error)
+ console.error('Error canceling payment:', error)
     return { success: false, message: 'Network error' }
   }
 }
@@ -151,7 +151,7 @@ export function verifyKingsPayWebhookSignature(
     const expectedSignature = hmac.digest('hex')
     return signature === expectedSignature
   } catch (error) {
-    console.error('Error verifying webhook signature:', error)
+ console.error('Error verifying webhook signature:', error)
     return false
   }
 }

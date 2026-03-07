@@ -47,9 +47,7 @@ const LEVEL_THRESHOLDS = [
   17000, 23000, 30000, 40000, 52000, 67000, 85000, 107000, 135000, 170000
 ];
 
-// ============================================
 // SESSION TRACKING
-// ============================================
 
 /**
  * Start a new practice session
@@ -77,7 +75,7 @@ export async function startSession(
     
     return { success: true, sessionId: docRef.id };
   } catch (error) {
-    console.error('[PracticeService] Error starting session:', error);
+ console.error('[PracticeService] Error starting session:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to start session' 
@@ -120,7 +118,7 @@ export async function endSession(
     
     return { success: true, xpEarned };
   } catch (error) {
-    console.error('[PracticeService] Error ending session:', error);
+ console.error('[PracticeService] Error ending session:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to end session' 
@@ -128,9 +126,7 @@ export async function endSession(
   }
 }
 
-// ============================================
 // PROGRESS TRACKING
-// ============================================
 
 /**
  * Get user's practice progress
@@ -150,7 +146,7 @@ export async function getUserProgress(userId: string): Promise<PracticeProgress 
     
     return docToProgress(docSnap);
   } catch (error) {
-    console.error('[PracticeService] Error getting progress:', error);
+ console.error('[PracticeService] Error getting progress:', error);
     return null;
   }
 }
@@ -216,7 +212,7 @@ export async function getWeeklyStats(userId: string): Promise<{
       dailyBreakdown
     };
   } catch (error) {
-    console.error('[PracticeService] Error getting weekly stats:', error);
+ console.error('[PracticeService] Error getting weekly stats:', error);
     return {
       minutesPracticed: 0,
       sessionsCompleted: 0,
@@ -311,7 +307,7 @@ async function updateUserProgress(
     
     return xpEarned;
   } catch (error) {
-    console.error('[PracticeService] Error updating progress:', error);
+ console.error('[PracticeService] Error updating progress:', error);
     return 0;
   }
 }
@@ -341,7 +337,7 @@ export async function updateStreak(userId: string): Promise<number> {
     
     return progress.currentStreak;
   } catch (error) {
-    console.error('[PracticeService] Error updating streak:', error);
+ console.error('[PracticeService] Error updating streak:', error);
     return 0;
   }
 }
@@ -357,13 +353,11 @@ export async function resetWeeklyProgress(userId: string): Promise<void> {
       updatedAt: serverTimestamp()
     });
   } catch (error) {
-    console.error('[PracticeService] Error resetting weekly progress:', error);
+ console.error('[PracticeService] Error resetting weekly progress:', error);
   }
 }
 
-// ============================================
 // LEADERBOARD
-// ============================================
 
 /**
  * Get top users by XP
@@ -392,14 +386,12 @@ export async function getLeaderboard(limitCount: number = 10): Promise<{
       };
     });
   } catch (error) {
-    console.error('[PracticeService] Error getting leaderboard:', error);
+ console.error('[PracticeService] Error getting leaderboard:', error);
     return [];
   }
 }
 
-// ============================================
 // HELPER FUNCTIONS
-// ============================================
 
 /**
  * Create initial progress for a new user

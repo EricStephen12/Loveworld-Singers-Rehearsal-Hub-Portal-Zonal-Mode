@@ -19,7 +19,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
     } else {
       // If no zoneId is provided, do NOT fall back to fetching all praise nights (data leak prevention)
       // This happens when app is restoring state and zoneId is temporarily undefined
-      console.warn('⚠️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
+ console.warn('️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
       return []
     }
 
@@ -32,7 +32,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: (page as any).bannerImage || (page as any).bannerimage || '',
-      categoryOrder: (page as any).categoryOrder || [], // ✅ CRITICAL: Added for category reordering
+      categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
       countdown: {
         days: (page as any).countdownDays || (page as any).countdown?.days || (page as any).countdowndays || 0,
         hours: (page as any).countdownHours || (page as any).countdown?.hours || (page as any).countdownhours || 0,
@@ -42,7 +42,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
       songs: []
     }))
   } catch (error) {
-    console.error('Error fetching Firebase data:', error)
+ console.error('Error fetching Firebase data:', error)
     return []
   }
 }
@@ -85,7 +85,7 @@ export function useRealtimeData(zoneId?: string) {
           }
         }
       } catch (e) {
-        console.error('Error in fetchAndCache:', e)
+ console.error('Error in fetchAndCache:', e)
       }
     }
 
@@ -112,7 +112,7 @@ export function useRealtimeData(zoneId?: string) {
           await fetchAndCache()
         }
       } catch (err) {
-        console.error('Failed to load initial data:', err)
+ console.error('Failed to load initial data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load data')
       } finally {
         if (isMounted) setLoading(false)
@@ -163,7 +163,7 @@ export function useRealtimeData(zoneId?: string) {
       // Currently not used as PraiseNightSongsService.getSongsByPraiseNight always fetches fresh data
       return await PraiseNightSongsService.getSongsByPraiseNight(String(pageId), zoneId)
     } catch (error) {
-      console.error(`Error fetching songs for page ${pageId}:`, error)
+ console.error(`Error fetching songs for page ${pageId}:`, error)
       return []
     }
   }, [zoneId])
@@ -196,7 +196,7 @@ export function useRealtimeData(zoneId?: string) {
           await FirebaseMetadataService.ensureMetadataExists(zoneId, 'praise_nights')
         }
       } catch (err) {
-        console.error('Error refreshing data:', err)
+ console.error('Error refreshing data:', err)
         setError('Failed to refresh data')
       } finally {
         setLoading(false)

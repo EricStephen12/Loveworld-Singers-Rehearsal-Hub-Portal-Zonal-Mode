@@ -54,7 +54,7 @@ export default function PWAInstall() {
       } else {
       }
     } catch (error) {
-      console.error('Error installing PWA:', error)
+ console.error('Error installing PWA:', error)
     } finally {
       setDeferredPrompt(null)
       setShowInstallDialog(false)

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('Google Translate error:', data)
+ console.error('Google Translate error:', data)
         return NextResponse.json(
           { error: 'Translation service error' },
           { status: 500 }
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('OpenAI error:', data)
+ console.error('OpenAI error:', data)
         return NextResponse.json(
           { error: 'Translation service error' },
           { status: 500 }
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Translation API error:', error)
+ console.error('Translation API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

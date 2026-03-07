@@ -56,7 +56,7 @@ export default function HistoryPage() {
 
             setHistoryItems(items)
         } catch (error) {
-            console.error('Error loading history:', error)
+ console.error('Error loading history:', error)
         } finally {
             setLoading(false)
         }

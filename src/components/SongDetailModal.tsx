@@ -183,7 +183,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         if (audioRef.current) {
           audioRef.current.currentTime = 0;
           audioRef.current.play().catch((error) => {
-            console.error('Error repeating song:', error);
+ console.error('Error repeating song:', error);
           });
         }
       } else if (!isRepeating && isCurrentSong) {
@@ -444,7 +444,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
     try {
       if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        console.warn('⚠️ Firebase not configured - history features will not work');
+ console.warn('️ Firebase not configured - history features will not work');
         setHistoryEntries([]);
         setIsLoadingHistory(false);
         return;
@@ -470,7 +470,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
       setHistoryEntries(transformedData);
     } catch (error) {
-      console.error('Error loading history entries:', error);
+ console.error('Error loading history entries:', error);
       setHistoryError('Failed to load history');
       setHistoryEntries([]);
     } finally {
@@ -662,7 +662,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
       // Resume playing if it was playing before drag
       if (wasPlayingBeforeDrag && audioRef.current) {
         audioRef.current.play().catch(error => {
-          console.error('Error resuming after drag:', error);
+ console.error('Error resuming after drag:', error);
         });
       }
 
@@ -692,7 +692,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         // Resume playing if it was playing before drag
         if (wasPlayingBeforeDrag && audioRef.current) {
           audioRef.current.play().catch(error => {
-            console.error('Error resuming after drag:', error);
+ console.error('Error resuming after drag:', error);
           });
         }
       }
@@ -1694,13 +1694,13 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         if (audioRef.current.paused) {
                           audioRef.current.play().then(() => {
                           }).catch(error => {
-                            console.error('❌ Direct play failed:', error);
+ console.error(' Direct play failed:', error);
                           });
                         } else {
                           audioRef.current.pause();
                         }
                       } else {
-                        console.error('❌ No audioRef.current available');
+ console.error(' No audioRef.current available');
                       }
 
                       // Also call the context method

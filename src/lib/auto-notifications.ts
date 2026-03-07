@@ -32,14 +32,12 @@ class AutoNotificationService {
 
       return { success: true, notificationId };
     } catch (error) {
-      console.error('❌ Error creating auto-notification:', error);
+ console.error(' Error creating auto-notification:', error);
       return { success: false, error };
     }
   }
 
-  // ========================================
   // PRAISE NIGHT NOTIFICATIONS
-  // ========================================
 
   /**
    * Send notification when new praise night is created
@@ -55,7 +53,7 @@ class AutoNotificationService {
     });
 
     return this.createNotification({
-      title: `🎉 New Praise Night: ${praiseNightName}`,
+      title: ` New Praise Night: ${praiseNightName}`,
       message: `A new praise night has been created for ${formattedDate}. Check it out!`,
       type: 'success',
       category: 'praise_night',
@@ -70,7 +68,7 @@ class AutoNotificationService {
    */
   async notifyPraiseNightUpdated(praiseNightName: string, praiseNightId: string, changes: string, senderId?: string) {
     return this.createNotification({
-      title: `📝 Praise Night Updated: ${praiseNightName}`,
+      title: ` Praise Night Updated: ${praiseNightName}`,
       message: `Changes: ${changes}`,
       type: 'info',
       category: 'praise_night',
@@ -80,9 +78,7 @@ class AutoNotificationService {
     }, senderId, 'Admin');
   }
 
-  // ========================================
   // SONG NOTIFICATIONS
-  // ========================================
 
   /**
    * Send notification when new song is added
@@ -92,7 +88,7 @@ class AutoNotificationService {
    */
   async notifyNewSongAdded(songTitle: string, praiseNightName: string, songId: string, senderId?: string) {
     return this.createNotification({
-      title: `🎵 New Song Added: ${songTitle}`,
+      title: ` New Song Added: ${songTitle}`,
       message: `A new song has been added to ${praiseNightName}. Start practicing!`,
       type: 'success',
       category: 'song',
@@ -107,7 +103,7 @@ class AutoNotificationService {
    */
   async notifyLyricsUpdated(songTitle: string, songId: string, senderId?: string) {
     return this.createNotification({
-      title: `📝 Lyrics Updated: ${songTitle}`,
+      title: ` Lyrics Updated: ${songTitle}`,
       message: `The lyrics for "${songTitle}" have been updated. Check the latest version!`,
       type: 'info',
       category: 'song',
@@ -137,7 +133,7 @@ class AutoNotificationService {
    */
   async notifySongDetailsChanged(songTitle: string, changes: string, songId: string, senderId?: string) {
     return this.createNotification({
-      title: `⚙️ Song Updated: ${songTitle}`,
+      title: `️ Song Updated: ${songTitle}`,
       message: `Changes: ${changes}`,
       type: 'warning',
       category: 'song',
@@ -152,7 +148,7 @@ class AutoNotificationService {
    */
   async notifySongDeleted(songTitle: string, praiseNightName: string, senderId?: string) {
     return this.createNotification({
-      title: `🗑️ Song Removed: ${songTitle}`,
+      title: `️ Song Removed: ${songTitle}`,
       message: `"${songTitle}" has been removed from ${praiseNightName}.`,
       type: 'warning',
       category: 'song',
@@ -161,16 +157,14 @@ class AutoNotificationService {
     }, senderId, 'Admin');
   }
 
-  // ========================================
   // REHEARSAL NOTIFICATIONS
-  // ========================================
 
   /**
    * Send rehearsal reminder (call this 24 hours before)
    */
   async notifyRehearsalReminder(rehearsalTime: string, songCount: number, senderId?: string) {
     return this.createNotification({
-      title: `⏰ Rehearsal Tomorrow at ${rehearsalTime}`,
+      title: ` Rehearsal Tomorrow at ${rehearsalTime}`,
       message: `Don't forget! ${songCount} song${songCount > 1 ? 's' : ''} to practice. See you there!`,
       type: 'info',
       category: 'rehearsal',
@@ -184,7 +178,7 @@ class AutoNotificationService {
    */
   async notifyRehearsalCancelled(rehearsalDate: string, reason?: string, senderId?: string) {
     return this.createNotification({
-      title: `❌ Rehearsal Cancelled`,
+      title: ` Rehearsal Cancelled`,
       message: `The rehearsal scheduled for ${rehearsalDate} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
       type: 'warning',
       category: 'rehearsal',
@@ -198,7 +192,7 @@ class AutoNotificationService {
    */
   async notifyRehearsalChanged(oldTime: string, newTime: string, location?: string, senderId?: string) {
     return this.createNotification({
-      title: `📍 Rehearsal Time Changed`,
+      title: ` Rehearsal Time Changed`,
       message: `Rehearsal moved from ${oldTime} to ${newTime}.${location ? ` Location: ${location}` : ''}`,
       type: 'warning',
       category: 'rehearsal',
@@ -207,9 +201,7 @@ class AutoNotificationService {
     }, senderId, 'Admin');
   }
 
-  // ========================================
   // GROUP-SPECIFIC NOTIFICATIONS
-  // ========================================
 
   /**
    * Send notification to specific group
@@ -226,16 +218,14 @@ class AutoNotificationService {
     }, senderId, 'Admin');
   }
 
-  // ========================================
   // ADMIN ANNOUNCEMENTS
-  // ========================================
 
   /**
    * Send general announcement to all users
    */
   async notifyAnnouncement(title: string, message: string, priority: 'low' | 'medium' | 'high' = 'medium', senderId?: string) {
     return this.createNotification({
-      title: `📢 ${title}`,
+      title: ` ${title}`,
       message,
       type: 'info',
       category: 'announcement',
@@ -244,16 +234,14 @@ class AutoNotificationService {
     }, senderId, 'Admin');
   }
 
-  // ========================================
   // SYSTEM NOTIFICATIONS
-  // ========================================
 
   /**
    * Send notification when user profile is incomplete
    */
   async notifyProfileIncomplete(userId: string) {
     return this.createNotification({
-      title: `⚠️ Complete Your Profile`,
+      title: `️ Complete Your Profile`,
       message: `Your profile is incomplete. Please update your information to access all features.`,
       type: 'warning',
       category: 'system',
@@ -269,7 +257,7 @@ class AutoNotificationService {
    */
   async notifyAppUpdate(version: string, features: string) {
     return this.createNotification({
-      title: `🎉 New App Version ${version} Available!`,
+      title: ` New App Version ${version} Available!`,
       message: `What's new: ${features}`,
       type: 'success',
       category: 'system',

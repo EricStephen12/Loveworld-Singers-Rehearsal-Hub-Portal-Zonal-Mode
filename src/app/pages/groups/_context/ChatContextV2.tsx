@@ -224,7 +224,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('[ChatContext] Cloudinary upload failed:', errorText)
+ console.error('[ChatContext] Cloudinary upload failed:', errorText)
         throw new Error('Upload failed')
       }
 
@@ -245,7 +245,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
         }
       )
     } catch (error) {
-      console.error('[ChatContext] sendMediaMessage error:', error)
+ console.error('[ChatContext] sendMediaMessage error:', error)
       return false
     }
   }, [selectedChat, currentUser])
@@ -287,14 +287,14 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
         } as any
       )
     } catch (error) {
-      console.error('[ChatContext] sendVoiceMessage error:', error)
+ console.error('[ChatContext] sendVoiceMessage error:', error)
       return false
     }
   }, [selectedChat, currentUser])
 
   const startDirectChat = useCallback(async (otherUser: ChatUser) => {
     if (!currentUser) {
-      console.error('[ChatContext] No current user - cannot start chat')
+ console.error('[ChatContext] No current user - cannot start chat')
       return null
     }
     const result = await getOrCreateDirectChat(currentUser, otherUser)

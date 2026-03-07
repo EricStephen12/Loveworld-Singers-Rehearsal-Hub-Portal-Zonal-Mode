@@ -77,7 +77,7 @@ export async function sendMessageToAllUsers(
 
     return { success: true, id: docRef.id }
   } catch (error) {
-    console.error('Error sending message:', error)
+ console.error('Error sending message:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to send message' }
   }
 }
@@ -120,7 +120,7 @@ async function sendZoneAnnouncementNotification(
         body: JSON.stringify({
           type: 'zone',
           recipientIds: batch,
-          title: `📢 ${title}`,
+          title: ` ${title}`,
           body: message.length > 100 ? message.substring(0, 100) + '...' : message,
           data: { messageId, zoneId: zoneId || '' }
         })
@@ -128,7 +128,7 @@ async function sendZoneAnnouncementNotification(
     }
 
   } catch (error) {
-    console.error('[Notifications] Error sending zone announcement:', error)
+ console.error('[Notifications] Error sending zone announcement:', error)
   }
 }
 
@@ -164,7 +164,7 @@ export async function getAllMessages(zoneId?: string, forceRefresh = false): Pro
 
     return messages
   } catch (error) {
-    console.error('Error getting messages:', error)
+ console.error('Error getting messages:', error)
     return []
   }
 }
@@ -181,7 +181,7 @@ export async function deleteMessage(
 
     return { success: true }
   } catch (error) {
-    console.error('Error deleting message:', error)
+ console.error('Error deleting message:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Failed to delete message' }
   }
 }

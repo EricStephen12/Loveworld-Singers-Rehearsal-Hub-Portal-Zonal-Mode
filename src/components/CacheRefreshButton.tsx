@@ -33,7 +33,7 @@ export default function CacheRefreshButton({
       await versionManager.forceRefresh();
       
     } catch (error) {
-      console.error('❌ Cache refresh failed:', error);
+ console.error(' Cache refresh failed:', error);
     } finally {
       setIsRefreshing(false);
     }

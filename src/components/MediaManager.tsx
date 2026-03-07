@@ -168,7 +168,7 @@ export default function MediaManager({
         });
       }
     } catch (error) {
-      console.error('❌ [Cloudinary] Error loading media files:', error);
+ console.error(' [Cloudinary] Error loading media files:', error);
       addToast({
         type: 'error',
         message: `Failed to load media: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -205,7 +205,7 @@ export default function MediaManager({
         setFiles(prev => [...prev, ...convertedFiles]);
       }
     } catch (error) {
-      console.error('❌ Error loading more media:', error);
+ console.error(' Error loading more media:', error);
       addToast({
         type: 'error',
         message: 'Failed to load more files'
@@ -315,30 +315,30 @@ export default function MediaManager({
 
               addToast({
                 type: 'success',
-                message: `✅ "${file.name}" uploaded successfully!`
+                message: ` "${file.name}" uploaded successfully!`
               });
             } else {
-              console.error(`❌ [Cloudinary] Failed to save "${file.name}" to Firebase:`, result.error);
+ console.error(` [Cloudinary] Failed to save "${file.name}" to Firebase:`, result.error);
               failCount++;
               addToast({
                 type: 'error',
-                message: `❌ Failed to save "${file.name}" to database`
+                message: ` Failed to save "${file.name}" to database`
               });
             }
           } else {
-            console.error(`❌ Failed to upload "${file.name}" to storage`);
+ console.error(` Failed to upload "${file.name}" to storage`);
             failCount++;
             addToast({
               type: 'error',
-              message: `❌ Failed to upload "${file.name}" to storage`
+              message: ` Failed to upload "${file.name}" to storage`
             });
           }
         } catch (fileError) {
-          console.error(`❌ Error uploading "${file.name}":`, fileError);
+ console.error(` Error uploading "${file.name}":`, fileError);
           failCount++;
           addToast({
             type: 'error',
-            message: `❌ Error uploading "${file.name}": ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
+            message: ` Error uploading "${file.name}": ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
           });
         }
       }
@@ -352,21 +352,21 @@ export default function MediaManager({
       if (successCount > 0 && failCount === 0) {
         addToast({
           type: 'success',
-          message: `🎉 All ${successCount} file(s) uploaded successfully!`
+          message: ` All ${successCount} file(s) uploaded successfully!`
         });
       } else if (successCount > 0 && failCount > 0) {
         addToast({
           type: 'warning',
-          message: `⚠️ ${successCount} succeeded, ${failCount} failed`
+          message: `️ ${successCount} succeeded, ${failCount} failed`
         });
       } else if (failCount > 0) {
         addToast({
           type: 'error',
-          message: `❌ All ${failCount} file(s) failed to upload`
+          message: ` All ${failCount} file(s) failed to upload`
         });
       }
     } catch (error) {
-      console.error('❌ Upload error:', error);
+ console.error(' Upload error:', error);
       addToast({
         type: 'error',
         message: `Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -445,7 +445,7 @@ export default function MediaManager({
           });
         }
       } catch (error) {
-        console.error('Delete error:', error);
+ console.error('Delete error:', error);
         addToast({
           type: 'error',
           message: 'Delete failed. Please try again.'
@@ -489,11 +489,11 @@ export default function MediaManager({
       } else {
         addToast({
           type: 'success',
-          message: 'All diagnostics passed! ✅'
+          message: 'All diagnostics passed! '
         });
       }
     } catch (error) {
-      console.error('Diagnostics error:', error);
+ console.error('Diagnostics error:', error);
       addToast({
         type: 'error',
         message: 'Failed to run diagnostics'
@@ -536,7 +536,7 @@ export default function MediaManager({
             message: `Playing: ${file.name}`
           });
         } catch (error) {
-          console.error('❌ Error playing audio:', error);
+ console.error(' Error playing audio:', error);
           addToast({
             type: 'error',
             message: `Failed to play audio: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -585,7 +585,7 @@ export default function MediaManager({
         });
       }
     } catch (error) {
-      console.error('Deep search error:', error);
+ console.error('Deep search error:', error);
       addToast({
         type: 'error',
         message: 'Deep search failed'
@@ -1050,7 +1050,7 @@ export default function MediaManager({
         preload="metadata"
         crossOrigin="anonymous"
         onError={(e) => {
-          console.error('❌ Audio element error:', e);
+ console.error(' Audio element error:', e);
           setPlayingAudioId(null);
           addToast({
             type: 'error',

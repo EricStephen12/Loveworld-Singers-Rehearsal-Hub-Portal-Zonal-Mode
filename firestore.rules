@@ -569,6 +569,12 @@ service cloud.firestore {
     // ===== AUDIOLAB COLLECTIONS =====
     
     // AudioLab Songs (Zone-specific songs - future use)
+    match /audiolab_playlists/{playlistId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.token.email in ['ihenacho23@gmail.com', 'ephraimloveworld1@gmail.com', 'takeshopstores@gmail.com', 'nnennawealth@gmail.com']);
+    }
+
     match /audiolab_songs/{songId} {
       allow read: if request.auth != null;
       allow write: if true;  // Open for admin panel

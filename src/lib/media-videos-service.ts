@@ -119,7 +119,7 @@ class MediaVideosService {
           body: JSON.stringify({
             type: 'media',
             recipientIds: batch,
-            title: '🎬 New Video',
+            title: ' New Video',
             body: `New video uploaded: "${title}"`,
             data: { videoId }
           })
@@ -127,7 +127,7 @@ class MediaVideosService {
       }
 
     } catch (error) {
-      console.error('[MediaVideos] Error sending notification:', error)
+ console.error('[MediaVideos] Error sending notification:', error)
     }
   }
 
@@ -243,7 +243,7 @@ class MediaVideosService {
 
       await Promise.all(updatePromises)
     } catch (err) {
-      console.error('[MediaVideos] Error cleaning up playlists after video delete:', err)
+ console.error('[MediaVideos] Error cleaning up playlists after video delete:', err)
     }
   }
 

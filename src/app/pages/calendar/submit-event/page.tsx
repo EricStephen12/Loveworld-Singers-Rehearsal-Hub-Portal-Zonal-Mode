@@ -72,7 +72,7 @@ export default function SubmitEventPage() {
         setSubmitted(false)
       }, 3000)
     } catch (error) {
-      console.error('Error submitting event:', error)
+ console.error('Error submitting event:', error)
       alert('Failed to submit event. Please try again.')
     } finally {
       setSubmitting(false)
@@ -235,11 +235,11 @@ export default function SubmitEventPage() {
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <option value="announcement">📢 Announcement</option>
-                <option value="event">🎉 Event</option>
-                <option value="reminder">⏰ Reminder</option>
+                <option value="announcement"> Announcement</option>
+                <option value="event"> Event</option>
+                <option value="reminder"> Reminder</option>
                 <option value="meeting">👥 Meeting</option>
-                <option value="rehearsal">🎵 Rehearsal</option>
+                <option value="rehearsal"> Rehearsal</option>
               </select>
             </div>
 

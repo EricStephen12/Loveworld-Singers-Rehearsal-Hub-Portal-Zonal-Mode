@@ -61,7 +61,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: (page as any).bannerImage || '',
-      categoryOrder: (page as any).categoryOrder || [], // ✅ CRITICAL: Added for category reordering
+      categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
       songCount: allZoneSongs.filter((s: any) => {
         const songPageId = s.praiseNightId || s.praisenightid || s.praisenight_id || s.pageId
         if (!songPageId) return false
@@ -76,7 +76,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       songs: []
     }))
   } catch (error) {
-    console.error('Admin: Error fetching data:', error)
+ console.error('Admin: Error fetching data:', error)
     throw error
   }
 }
@@ -85,7 +85,7 @@ async function fetchPageSongs(pageId: string, zoneId?: string): Promise<PraiseNi
   try {
     return await PraiseNightSongsService.getSongsByPraiseNight(pageId, zoneId)
   } catch (error) {
-    console.error(`Error fetching songs for page ${pageId}:`, error)
+ console.error(`Error fetching songs for page ${pageId}:`, error)
     return []
   }
 }
@@ -123,7 +123,7 @@ export function useAdminData(): AdminData {
 
       setPages(freshPages)
     } catch (err) {
-      console.error('Admin: Failed to load data:', err)
+ console.error('Admin: Failed to load data:', err)
       setError(err instanceof Error ? err.message : 'Failed to load data')
     } finally {
       setLoading(false)

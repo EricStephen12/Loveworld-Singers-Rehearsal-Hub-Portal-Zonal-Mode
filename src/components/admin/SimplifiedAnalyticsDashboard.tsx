@@ -90,7 +90,7 @@ export default function SimplifiedAnalyticsDashboard() {
       const songs = await SongMinistryService.getAllSongs();
       setAllSongs(songs);
     } catch (error) {
-      console.error('Error loading songs:', error);
+ console.error('Error loading songs:', error);
     } finally {
       setSongsLoading(false);
     }
@@ -102,7 +102,7 @@ export default function SimplifiedAnalyticsDashboard() {
       const data = await SimplifiedAnalyticsService.getAllMonthlySummaries();
       setRecords(data);
     } catch (error) {
-      console.error('Error loading analytics:', error);
+ console.error('Error loading analytics:', error);
     } finally {
       setLoading(false);
     }

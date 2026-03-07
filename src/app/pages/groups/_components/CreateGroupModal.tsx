@@ -36,7 +36,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
         const results = await searchUsers('')
         setSearchResults(results)
       } catch (error) {
-        console.error('Error loading zone members:', error)
+ console.error('Error loading zone members:', error)
       } finally {
         setIsSearching(false)
       }
@@ -53,7 +53,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
       const results = await searchUsers(term)
       setSearchResults(results)
     } catch (error) {
-      console.error('Error searching users:', error)
+ console.error('Error searching users:', error)
     } finally {
       setIsSearching(false)
     }
@@ -90,7 +90,7 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
         handleClose()
       }
     } catch (error) {
-      console.error('Error creating group:', error)
+ console.error('Error creating group:', error)
     } finally {
       setIsCreating(false)
     }

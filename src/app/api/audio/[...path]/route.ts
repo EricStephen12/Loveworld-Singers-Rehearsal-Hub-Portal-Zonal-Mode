@@ -11,7 +11,7 @@ export async function GET(
     // Reconstruct the original Cloudinary URL
     const cloudinaryUrl = `https://res.cloudinary.com/${resolvedParams.path.join('/')}`;
     
-    console.log('🎵 Proxying audio request:', cloudinaryUrl);
+ console.log(' Proxying audio request:', cloudinaryUrl);
     
     // Fetch the audio file from Cloudinary
     const response = await fetch(cloudinaryUrl);
@@ -36,7 +36,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error proxying audio:', error);
+ console.error('Error proxying audio:', error);
     return NextResponse.json({ error: 'Failed to load audio' }, { status: 500 });
   }
 }

@@ -70,7 +70,7 @@ class FirebaseMediaService {
   private watchHistoryCollection = 'watch_history'
   private favoritesCollection = 'user_favorites'
 
-  // ==================== MEDIA ITEMS ====================
+  // Media Items
 
   async createMedia(mediaData: Omit<MediaItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
@@ -81,7 +81,7 @@ class FirebaseMediaService {
       })
       return docRef.id
     } catch (error) {
-      console.error('Error creating media:', error)
+ console.error('Error creating media:', error)
       throw error
     }
   }
@@ -127,7 +127,7 @@ class FirebaseMediaService {
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => this.mapDoc(doc))
     } catch (error) {
-      console.error('Error fetching media:', error)
+ console.error('Error fetching media:', error)
       // Fallback
       return []
     }
@@ -147,7 +147,7 @@ class FirebaseMediaService {
         .filter(item => !item.hidden)
         .slice(0, limitCount)
     } catch (error) {
-      console.error('Error fetching zone media:', error)
+ console.error('Error fetching zone media:', error)
       return []
     }
   }
@@ -170,7 +170,7 @@ class FirebaseMediaService {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as MediaItem[]
     } catch (error) {
-      console.error('Error loading more media:', error)
+ console.error('Error loading more media:', error)
       return []
     }
   }
@@ -190,7 +190,7 @@ class FirebaseMediaService {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as MediaItem[]
     } catch (error) {
-      console.error('Error fetching media by type:', error)
+ console.error('Error fetching media by type:', error)
       return []
     }
   }
@@ -210,7 +210,7 @@ class FirebaseMediaService {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as MediaItem[]
     } catch (error) {
-      console.error('Error fetching media by genre:', error)
+ console.error('Error fetching media by genre:', error)
       return []
     }
   }
@@ -231,7 +231,7 @@ class FirebaseMediaService {
         updatedAt: doc.data().updatedAt?.toDate()
       })) as MediaItem[]
     } catch (error) {
-      console.error('Error fetching featured media:', error)
+ console.error('Error fetching featured media:', error)
       return []
     }
   }
@@ -249,7 +249,7 @@ class FirebaseMediaService {
       }
       return null
     } catch (error) {
-      console.error('Error fetching media by ID:', error)
+ console.error('Error fetching media by ID:', error)
       return null
     }
   }
@@ -288,7 +288,7 @@ class FirebaseMediaService {
         .map(id => mediaMap.get(id))
         .filter(m => m !== undefined) as MediaItem[]
     } catch (error) {
-      console.error('Error batch fetching media:', error)
+ console.error('Error batch fetching media:', error)
       return []
     }
   }
@@ -313,7 +313,7 @@ class FirebaseMediaService {
         .filter(item => item.id !== mediaId) // Exclude current media
         .slice(0, limitCount)
     } catch (error) {
-      console.error('Error fetching related media:', error)
+ console.error('Error fetching related media:', error)
       return []
     }
   }
@@ -333,7 +333,7 @@ class FirebaseMediaService {
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
     } catch (error) {
-      console.error('Error searching media:', error)
+ console.error('Error searching media:', error)
       return []
     }
   }
@@ -351,7 +351,7 @@ class FirebaseMediaService {
         })
       }
     } catch (error) {
-      console.error('Error incrementing views:', error)
+ console.error('Error incrementing views:', error)
     }
   }
 
@@ -368,11 +368,11 @@ class FirebaseMediaService {
         })
       }
     } catch (error) {
-      console.error('Error incrementing likes:', error)
+ console.error('Error incrementing likes:', error)
     }
   }
 
-  // ==================== GENRES ====================
+  // Genres
 
   async getAllGenres(): Promise<Genre[]> {
     try {
@@ -382,12 +382,12 @@ class FirebaseMediaService {
         ...doc.data()
       })) as Genre[]
     } catch (error) {
-      console.error('Error fetching genres:', error)
+ console.error('Error fetching genres:', error)
       return []
     }
   }
 
-  // ==================== WATCH HISTORY ====================
+  // Watch History
 
   async saveWatchProgress(userId: string, mediaId: string, progress: number): Promise<void> {
     try {
@@ -414,7 +414,7 @@ class FirebaseMediaService {
         })
       }
     } catch (error) {
-      console.error('Error saving watch progress:', error)
+ console.error('Error saving watch progress:', error)
     }
   }
 
@@ -432,7 +432,7 @@ class FirebaseMediaService {
         lastWatched: doc.data().lastWatched?.toDate()
       })) as UserWatchHistory[]
     } catch (error) {
-      console.error('Error fetching watch history:', error)
+ console.error('Error fetching watch history:', error)
       return []
     }
   }
@@ -451,12 +451,12 @@ class FirebaseMediaService {
       const media = await Promise.all(mediaPromises)
       return media.filter(m => m !== null) as MediaItem[]
     } catch (error) {
-      console.error('Error fetching continue watching:', error)
+ console.error('Error fetching continue watching:', error)
       return []
     }
   }
 
-  // ==================== FAVORITES ====================
+  // Favorites
 
   async addToFavorites(userId: string, mediaId: string): Promise<void> {
     try {
@@ -475,7 +475,7 @@ class FirebaseMediaService {
         })
       }
     } catch (error) {
-      console.error('Error adding to favorites:', error)
+ console.error('Error adding to favorites:', error)
     }
   }
 
@@ -492,7 +492,7 @@ class FirebaseMediaService {
         await deleteDoc(doc(db, this.favoritesCollection, snapshot.docs[0].id))
       }
     } catch (error) {
-      console.error('Error removing from favorites:', error)
+ console.error('Error removing from favorites:', error)
     }
   }
 
@@ -512,7 +512,7 @@ class FirebaseMediaService {
       const media = await Promise.all(mediaPromises)
       return media.filter(m => m !== null) as MediaItem[]
     } catch (error) {
-      console.error('Error fetching favorites:', error)
+ console.error('Error fetching favorites:', error)
       return []
     }
   }
@@ -527,7 +527,7 @@ class FirebaseMediaService {
       const snapshot = await getDocs(q)
       return !snapshot.empty
     } catch (error) {
-      console.error('Error checking favorite status:', error)
+ console.error('Error checking favorite status:', error)
       return false
     }
   }

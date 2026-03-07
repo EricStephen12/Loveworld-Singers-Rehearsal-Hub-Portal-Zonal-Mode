@@ -119,7 +119,7 @@ export default function SubmitSongPage() {
       setMySubmissions(submissions)
       setLoadingSubmissions(false)
     }, (error) => {
-      console.error('[SubmitSong] Real-time listener error:', error)
+ console.error('[SubmitSong] Real-time listener error:', error)
       setLoadingSubmissions(false)
       setMySubmissions([])
     })
@@ -324,7 +324,7 @@ export default function SubmitSongPage() {
         setFormData(prev => ({ ...prev, audioFile: null }))
       }
     } catch (error) {
-      console.error('Error uploading audio:', error)
+ console.error('Error uploading audio:', error)
       alert('Failed to upload audio. Please try again.')
       setFormData(prev => ({ ...prev, audioFile: null }))
     } finally {
@@ -423,7 +423,7 @@ export default function SubmitSongPage() {
       }, 3000)
 
     } catch (error) {
-      console.error('Error submitting song:', error)
+ console.error('Error submitting song:', error)
       setSubmitStatus('error')
       alert('Failed to submit song. Please try again.')
     } finally {

@@ -44,9 +44,7 @@ const paginatedCache: Map<string, { data: { songs: AudioLabSong[]; lastDoc: any 
 const countCache: { value: number; timestamp: number } | null = { value: 0, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000;
 
-// ============================================
 // TYPES
-// ============================================
 
 export interface MasterProgram {
   id: string;
@@ -56,9 +54,7 @@ export interface MasterProgram {
   sortOrder?: number;
 }
 
-// ============================================
 // FETCH OPERATIONS
-// ============================================
 
 /**
  * Get all programs (categories)
@@ -86,7 +82,7 @@ export async function getPrograms(): Promise<MasterProgram[]> {
       return a.name.localeCompare(b.name)
     })
   } catch (error) {
-    console.error('[SongService] Error fetching programs:', error);
+ console.error('[SongService] Error fetching programs:', error);
     return [];
   }
 }
@@ -118,7 +114,7 @@ export async function getSongsByProgram(programId: string): Promise<AudioLabSong
     return allSongs.filter(song => songIds.includes(song.id));
 
   } catch (error) {
-    console.error('[SongService] Error fetching program songs:', error);
+ console.error('[SongService] Error fetching program songs:', error);
     return [];
   }
 }
@@ -175,7 +171,7 @@ export async function getSongsPaginated(
 
     return result;
   } catch (error) {
-    console.error('[SongService] Error fetching songs paginated:', error);
+ console.error('[SongService] Error fetching songs paginated:', error);
     return { songs: [], lastDoc: null };
   }
 }
@@ -230,7 +226,7 @@ export async function searchSongsDeep(searchTerm: string, zoneId?: string): Prom
           createdBy: 'system'
         })) as AudioLabSong[];
       } catch (e) {
-        console.error('[SongService] Error fetching PN songs for search:', e);
+ console.error('[SongService] Error fetching PN songs for search:', e);
       }
     }
 
@@ -248,7 +244,7 @@ export async function searchSongsDeep(searchTerm: string, zoneId?: string): Prom
       }))
     );
   } catch (error) {
-    console.error('[SongService] Error performing deep search:', error);
+ console.error('[SongService] Error performing deep search:', error);
     return [];
   }
 }
@@ -276,7 +272,7 @@ export async function getTotalSongCount(): Promise<number> {
 
     return count;
   } catch (error) {
-    console.error('[SongService] Error fetching total count:', error);
+ console.error('[SongService] Error fetching total count:', error);
     return 0;
   }
 }
@@ -306,7 +302,7 @@ export async function getSongs(zoneId?: string, limitCount: number = 500): Promi
 
     return songs;
   } catch (error) {
-    console.error('[SongService] Error fetching songs from Master Library:', error);
+ console.error('[SongService] Error fetching songs from Master Library:', error);
     return [];
   }
 }
@@ -337,7 +333,7 @@ export async function getAllMasterSongs(limitCount: number = 200): Promise<Audio
     songCache.set(cacheKey, { data: songs, timestamp: Date.now() });
     return songs;
   } catch (error) {
-    console.error('[SongService] Error fetching all Master Library songs:', error);
+ console.error('[SongService] Error fetching all Master Library songs:', error);
     return [];
   }
 }
@@ -366,7 +362,7 @@ export async function getSongById(songId: string): Promise<AudioLabSong | null> 
 
     return null;
   } catch (error) {
-    console.error('[SongService] Error fetching song:', error);
+ console.error('[SongService] Error fetching song:', error);
     return null;
   }
 }
@@ -387,7 +383,7 @@ export async function searchSongs(queryStr: string, zoneId?: string): Promise<Au
       (song.key?.toLowerCase().includes(searchLower))
     );
   } catch (error) {
-    console.error('[SongService] Error searching songs:', error);
+ console.error('[SongService] Error searching songs:', error);
     return [];
   }
 }
@@ -409,14 +405,12 @@ export async function getSongsByVocalPart(part: VocalPart, zoneId?: string): Pro
 
     return filteredSongs;
   } catch (error) {
-    console.error('[SongService] Error fetching songs by part:', error);
+ console.error('[SongService] Error fetching songs by part:', error);
     return [];
   }
 }
 
-// ============================================
 // CRUD OPERATIONS (Admin)
-// ============================================
 
 /**
  * Create a new song
@@ -458,7 +452,7 @@ export async function createSong(input: CreateSongInput): Promise<{ success: boo
 
     return { success: true, id: docRef.id };
   } catch (error) {
-    console.error('[SongService] Error creating song:', error);
+ console.error('[SongService] Error creating song:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create song'
@@ -501,7 +495,7 @@ export async function updateSong(
 
     return { success: true };
   } catch (error) {
-    console.error('[SongService] Error updating song:', error);
+ console.error('[SongService] Error updating song:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update song'
@@ -528,7 +522,7 @@ export async function deleteSong(songId: string): Promise<{ success: boolean; er
 
     return { success: true };
   } catch (error) {
-    console.error('[SongService] Error deleting song:', error);
+ console.error('[SongService] Error deleting song:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete song'
@@ -536,9 +530,7 @@ export async function deleteSong(songId: string): Promise<{ success: boolean; er
   }
 }
 
-// ============================================
 // AUDIO PART MANAGEMENT
-// ============================================
 
 /**
  * Upload/update a specific vocal part for a song
@@ -571,7 +563,7 @@ export async function updateSongAudioPart(
 
     return { success: true };
   } catch (error) {
-    console.error('[SongService] Error updating audio part:', error);
+ console.error('[SongService] Error updating audio part:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update audio part'
@@ -616,7 +608,7 @@ export async function removeSongAudioPart(
 
     return { success: true };
   } catch (error) {
-    console.error('[SongService] Error removing audio part:', error);
+ console.error('[SongService] Error removing audio part:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to remove audio part'
@@ -624,9 +616,7 @@ export async function removeSongAudioPart(
   }
 }
 
-// ============================================
 // LYRICS MANAGEMENT
-// ============================================
 
 /**
  * Update lyrics for a song
@@ -648,7 +638,7 @@ export async function updateSongLyrics(
 
     return { success: true };
   } catch (error) {
-    console.error('[SongService] Error updating lyrics:', error);
+ console.error('[SongService] Error updating lyrics:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update lyrics'
@@ -656,9 +646,7 @@ export async function updateSongLyrics(
   }
 }
 
-// ============================================
 // HELPER FUNCTIONS
-// ============================================
 
 /**
  * Convert Firestore document to AudioLabSong
@@ -787,14 +775,12 @@ export function clearSongCache(): void {
   songCache.clear();
 }
 
-// ============================================
 // CONVERSION UTILITIES
-// ============================================
 
 /**
  * Convert AudioLabSong to legacy Song format (for backward compatibility)
  */
-export function toLeagcySong(song: AudioLabSong) {
+export function toLegacySong(song: AudioLabSong) {
   return {
     id: song.id,
     title: song.title,

@@ -74,7 +74,7 @@ export class CalendarService {
 
       return docRef.id
     } catch (error) {
-      console.error('Error creating event:', error)
+ console.error('Error creating event:', error)
       throw error
     }
   }
@@ -103,7 +103,7 @@ export class CalendarService {
 
       await updateDoc(eventRef, updateData)
     } catch (error) {
-      console.error('Error updating event:', error)
+ console.error('Error updating event:', error)
       throw error
     }
   }
@@ -124,7 +124,7 @@ export class CalendarService {
       const deletePromises = attendeesSnapshot.docs.map(doc => deleteDoc(doc.ref))
       await Promise.all(deletePromises)
     } catch (error) {
-      console.error('Error deleting event:', error)
+ console.error('Error deleting event:', error)
       throw error
     }
   }
@@ -151,7 +151,7 @@ export class CalendarService {
         (userId && event.createdBy === userId)
       ).sort((a, b) => a.start.getTime() - b.start.getTime())
     } catch (error) {
-      console.error('Error fetching zone events:', error)
+ console.error('Error fetching zone events:', error)
       throw error
     }
   }
@@ -170,7 +170,7 @@ export class CalendarService {
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
     } catch (error) {
-      console.error('Error fetching events in range:', error)
+ console.error('Error fetching events in range:', error)
       throw error
     }
   }
@@ -188,7 +188,7 @@ export class CalendarService {
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => this.convertFirestoreEvent(doc.id, doc.data()))
     } catch (error) {
-      console.error('Error fetching user events:', error)
+ console.error('Error fetching user events:', error)
       throw error
     }
   }
@@ -219,7 +219,7 @@ export class CalendarService {
       })
       callback(filtered)
     }, (error) => {
-      console.error('Error in events subscription:', error)
+ console.error('Error in events subscription:', error)
     })
   }
 
@@ -232,7 +232,7 @@ export class CalendarService {
         createdAt: serverTimestamp()
       })
     } catch (error) {
-      console.error('Error adding attendee:', error)
+ console.error('Error adding attendee:', error)
       throw error
     }
   }
@@ -254,7 +254,7 @@ export class CalendarService {
         })
       }
     } catch (error) {
-      console.error('Error updating attendee status:', error)
+ console.error('Error updating attendee status:', error)
       throw error
     }
   }
@@ -276,7 +276,7 @@ export class CalendarService {
         } as EventAttendee
       })
     } catch (error) {
-      console.error('Error fetching event attendees:', error)
+ console.error('Error fetching event attendees:', error)
       throw error
     }
   }

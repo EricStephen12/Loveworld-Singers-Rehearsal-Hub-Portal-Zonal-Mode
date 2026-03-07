@@ -121,7 +121,7 @@ class VideoUploadService {
       }
       return null
     } catch (error) {
-      console.error('Error getting upload by ID:', error)
+ console.error('Error getting upload by ID:', error)
       return null
     }
   }
@@ -134,7 +134,7 @@ class VideoUploadService {
         updatedAt: Timestamp.now()
       })
     } catch (error) {
-      console.error('Error updating upload:', error)
+ console.error('Error updating upload:', error)
       throw error
     }
   }
@@ -144,7 +144,7 @@ class VideoUploadService {
       const docRef = doc(db, this.collectionName, id)
       await deleteDoc(docRef)
     } catch (error) {
-      console.error('Error deleting upload:', error)
+ console.error('Error deleting upload:', error)
       throw error
     }
   }

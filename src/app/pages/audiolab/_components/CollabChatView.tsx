@@ -33,7 +33,7 @@ interface Message {
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 }
 
-const EMOJIS = ['😀', '😂', '🥰', '😍', '🤩', '😎', '🤗', '🤔', '🥳', '😜', '😇', '🥺', '❤️', '💯', '🔥', '✨', '🎉', '👏', '👍', '🙌', '🙏', '💪', '🎧', '🎤', '🎶', '🎵'];
+const EMOJIS = ['😀', '😂', '🥰', '😍', '🤩', '😎', '🤗', '', '🥳', '😜', '😇', '🥺', '❤️', '💯', '', '', '', '👏', '', '🙌', '🙏', '', '🎧', '', '', ''];
 
 export interface CollabChatViewProps {
   onClose?: () => void;
@@ -126,7 +126,7 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
     setIsSending(true);
     try {
       await sendChatMessage(sessionId, { type: 'text', content: text, senderId: user.uid, senderName: fullName, ...(userAvatar && { senderAvatar: userAvatar }) });
-    } catch (e) { console.error('Failed to send message:', e); }
+ } catch (e) { console.error('Failed to send message:', e); }
     setIsSending(false);
   };
 
@@ -174,7 +174,7 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
         throw new Error('Upload failed');
       }
     } catch (e) {
-      console.error('[CollabChatView] Voice upload failed:', e);
+ console.error('[CollabChatView] Voice upload failed:', e);
       alert('Failed to send voice message. Please check your connection.');
     }
     setIsSending(false);

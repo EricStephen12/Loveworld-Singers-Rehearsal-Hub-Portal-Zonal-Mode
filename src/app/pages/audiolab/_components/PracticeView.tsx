@@ -7,7 +7,7 @@ import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserProgress, getWeeklyStats, getXpForNextLevel, progressToStats, startSession } from '../_lib/practice-service';
-import { getSongs, toLeagcySong } from '../_lib/song-service';
+import { getSongs, toLegacySong } from '../_lib/song-service';
 import type { PracticeMode, PracticeProgress, Song, AudioLabSong } from '../_types';
 
 interface PracticeCard {
@@ -96,11 +96,11 @@ export function PracticeView() {
   const handleStartKaraokeWithSong = async (song: AudioLabSong) => {
     try {
       // Load the song first
-      await playSong(toLeagcySong(song));
+      await playSong(toLegacySong(song));
       // Then navigate to karaoke
       setView('karaoke');
     } catch (error) {
-      console.error('[PracticeView] Error starting karaoke:', error);
+ console.error('[PracticeView] Error starting karaoke:', error);
     }
   };
 
@@ -115,7 +115,7 @@ export function PracticeView() {
       // Navigate to a practice mode (vocal strength for sustain challenge)
       setView('karaoke'); // For now, use karaoke as the practice interface
     } catch (error) {
-      console.error('[PracticeView] Error starting challenge:', error);
+ console.error('[PracticeView] Error starting challenge:', error);
       setChallengeAccepted(false);
     }
   };

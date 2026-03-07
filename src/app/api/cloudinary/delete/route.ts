@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
     if (!cloudName || !apiKey || !apiSecret) {
-      console.error('❌ Cloudinary credentials missing');
+ console.error(' Cloudinary credentials missing');
       return NextResponse.json(
         { error: 'Cloudinary not configured' },
         { status: 500 }
@@ -59,14 +59,14 @@ export async function POST(request: NextRequest) {
     if (data.result === 'ok' || data.result === 'not found') {
       return NextResponse.json({ success: true });
     } else {
-      console.error('❌ [Cloudinary API] Delete failed:', data);
+ console.error(' [Cloudinary API] Delete failed:', data);
       return NextResponse.json(
         { error: 'Delete failed', details: data },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('❌ [Cloudinary API] Error:', error);
+ console.error(' [Cloudinary API] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

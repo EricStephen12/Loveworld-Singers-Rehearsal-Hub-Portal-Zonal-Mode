@@ -140,7 +140,7 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
         WhatsAppOptimisticUI.markOptimisticMessageFailed(optimisticMessage.id, 'Failed to send')
       }
     } catch (error) {
-      console.error('Send message error:', error)
+ console.error('Send message error:', error)
       WhatsAppOptimisticUI.markOptimisticMessageFailed(optimisticMessage.id, 'Network error')
     }
 

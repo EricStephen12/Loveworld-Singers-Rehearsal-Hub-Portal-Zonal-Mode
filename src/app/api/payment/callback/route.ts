@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Payment callback error:', error);
+ console.error('Payment callback error:', error);
     return NextResponse.redirect(new URL('/subscription?error=callback_error', request.url));
   }
 }

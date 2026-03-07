@@ -82,7 +82,7 @@ export function LiveSessionView() {
     try {
       const room = await getClassroom(roomId);
       if (!room) {
-        console.error('[LiveSession] Room not found:', roomId);
+ console.error('[LiveSession] Room not found:', roomId);
         setView('collab');
         return;
       }
@@ -103,7 +103,7 @@ export function LiveSessionView() {
         }
       }
     } catch (e) {
-      console.error('[LiveSession] Error joining:', e);
+ console.error('[LiveSession] Error joining:', e);
       setView('collab');
     } finally {
       setIsInitializing(false);
@@ -301,7 +301,7 @@ export function LiveSessionView() {
       setIsRecording(true);
       addToast('Recording started', 'success');
     } catch (e) {
-      console.error('Recording error:', e);
+ console.error('Recording error:', e);
       addToast('Recording failed', 'error');
     }
   };
@@ -334,7 +334,7 @@ export function LiveSessionView() {
         addToast('Invite shared!', 'success');
         return;
       } catch (e) {
-        if ((e as Error).name !== 'AbortError') console.error('Error sharing:', e);
+ if ((e as Error).name !== 'AbortError') console.error('Error sharing:', e);
       }
     }
 
@@ -697,7 +697,7 @@ function RemoteAudioPlayer({ stream, muted }: { stream: MediaStream; muted: bool
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
-          console.warn('[RemoteAudio] Auto-play prevented:', error);
+ console.warn('[RemoteAudio] Auto-play prevented:', error);
         });
       }
     }

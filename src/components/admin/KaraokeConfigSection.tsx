@@ -40,7 +40,7 @@ export default function KaraokeConfigSection() {
             const songs = await MasterLibraryService.getMasterSongs(5000, true);
             setMasterSongs(songs);
         } catch (error) {
-            console.error('Error loading master library:', error);
+ console.error('Error loading master library:', error);
             showToast('error', 'Failed to load Master Library');
         } finally {
             setLoading(false);
@@ -103,7 +103,7 @@ export default function KaraokeConfigSection() {
                 setLrcText(data.karaokeLrcText);
             }
         } catch (err) {
-            console.error("Failed to load existing LRC:", err);
+ console.error("Failed to load existing LRC:", err);
         } finally {
             setIsLoadingLyrics(false);
         }

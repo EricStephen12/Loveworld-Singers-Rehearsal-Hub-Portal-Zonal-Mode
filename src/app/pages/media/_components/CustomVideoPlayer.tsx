@@ -184,7 +184,7 @@ export default function CustomVideoPlayer({
         setIsFullscreen(false)
       }
     } catch (err) {
-      console.error('Fullscreen error:', err)
+ console.error('Fullscreen error:', err)
     }
   }
 

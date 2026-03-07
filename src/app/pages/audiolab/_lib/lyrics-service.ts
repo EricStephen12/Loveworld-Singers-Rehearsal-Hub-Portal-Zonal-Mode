@@ -44,7 +44,7 @@ export async function generateSyncedLyrics(
       rawText: data.rawText,
     };
   } catch (error) {
-    console.error('[LyricsService] Error generating synced lyrics:', error);
+ console.error('[LyricsService] Error generating synced lyrics:', error);
     return { success: false, error: 'Network error' };
   }
 }
@@ -72,7 +72,7 @@ export async function saveLyricsToSong(
 
     return true;
   } catch (error) {
-    console.error('[LyricsService] Error saving lyrics:', error);
+ console.error('[LyricsService] Error saving lyrics:', error);
     // If saving to master failed (maybe permissions), try regional as fallback
     if (isHQSong) {
       try {
@@ -85,7 +85,7 @@ export async function saveLyricsToSong(
         });
         return true;
       } catch (err) {
-        console.error('[LyricsService] Fallback saving failed:', err);
+ console.error('[LyricsService] Fallback saving failed:', err);
       }
     }
     return false;
@@ -156,7 +156,7 @@ export async function getSongLyrics(songId: string): Promise<{
 
     return { lyrics: null, lyricsText: null, karaokeLrcText: null, hasSyncedLyrics: false };
   } catch (error) {
-    console.error('[LyricsService] Error getting lyrics:', error);
+ console.error('[LyricsService] Error getting lyrics:', error);
     return { lyrics: null, lyricsText: null, karaokeLrcText: null, hasSyncedLyrics: false };
   }
 }
@@ -206,7 +206,7 @@ export async function saveKaraokeLrcText(songId: string, lrcText: string): Promi
     await updateDoc(songRef, payload);
     return true;
   } catch (error) {
-    console.error('[LyricsService] Error saving karaoke LRC text:', error);
+ console.error('[LyricsService] Error saving karaoke LRC text:', error);
     return false;
   }
 }

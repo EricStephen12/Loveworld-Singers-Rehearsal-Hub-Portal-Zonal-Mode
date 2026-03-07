@@ -24,7 +24,7 @@ export class IDManager {
       return id.trim();
     }
 
-    console.error('🚨 No valid Firebase ID found for song:', {
+ console.error(' No valid Firebase ID found for song:', {
       title: song.title,
       firebaseId: song.firebaseId,
       id: song.id,

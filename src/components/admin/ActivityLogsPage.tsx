@@ -71,7 +71,7 @@ export default function ActivityLogsPage() {
       }
       setLogs(logsData);
     } catch (error) {
-      console.error('Error loading activity logs:', error);
+ console.error('Error loading activity logs:', error);
     } finally {
       setLoading(false);
     }

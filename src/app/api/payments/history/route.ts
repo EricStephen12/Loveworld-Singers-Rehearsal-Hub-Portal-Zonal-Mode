@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
             count: paymentHistory.length
         });
     } catch (error) {
-        console.error('Error fetching payment history:', error);
+ console.error('Error fetching payment history:', error);
         return NextResponse.json(
             { error: 'Failed to fetch payment history' },
             { status: 500 }

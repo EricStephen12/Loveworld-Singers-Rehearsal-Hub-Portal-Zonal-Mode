@@ -29,7 +29,7 @@ export async function getAudioFromMedia(mediaId: number): Promise<string | null>
       .single();
 
     if (error) {
-      console.error('Error fetching media file:', error);
+ console.error('Error fetching media file:', error);
       return null;
     }
 
@@ -39,7 +39,7 @@ export async function getAudioFromMedia(mediaId: number): Promise<string | null>
 
     return url;
   } catch (error) {
-    console.error('Error in getAudioFromMedia:', error);
+ console.error('Error in getAudioFromMedia:', error);
     return null;
   }
 }
@@ -101,7 +101,7 @@ export interface DatabaseHistoryEntry {
   createdAt: string;
 }
 
-// ===== PAGES OPERATIONS =====
+// Pages Operations
 
 export async function getAllPages(): Promise<PraiseNight[]> {
   try {
@@ -217,7 +217,7 @@ export async function getAllPages(): Promise<PraiseNight[]> {
 
     return praiseNights;
   } catch (error) {
-    console.error('Error fetching pages:', error);
+ console.error('Error fetching pages:', error);
 
     // Try to get cached data as fallback
     const cachedData = await offlineManager.getCachedData('pages');
@@ -259,7 +259,7 @@ export async function getPageById(id: number): Promise<PraiseNight | null> {
       songs: songs
     };
   } catch (error) {
-    console.error('Error fetching page:', error);
+ console.error('Error fetching page:', error);
     return null;
   }
 }
@@ -305,7 +305,7 @@ export async function createPage(pageData: Omit<PraiseNight, 'songs'>): Promise<
       songs: []
     };
   } catch (error) {
-    console.error('Error creating page:', error);
+ console.error('Error creating page:', error);
     return null;
   }
 }
@@ -360,7 +360,7 @@ export async function updatePage(id: number, pageData: Partial<Omit<PraiseNight,
     }
     return true;
   } catch (error) {
-    console.error('Error updating page:', error);
+ console.error('Error updating page:', error);
     return false;
   }
 }
@@ -380,12 +380,12 @@ export async function deletePage(id: number): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error deleting page:', error);
+ console.error('Error deleting page:', error);
     return false;
   }
 }
 
-// ===== SONGS OPERATIONS =====
+// Songs Operations
 
 export async function getSongsByPageId(pageId: string | number): Promise<PraiseNightSong[]> {
   try {
@@ -442,7 +442,7 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
 
     return praiseNightSongs;
   } catch (error) {
-    console.error('Error fetching songs:', error);
+ console.error('Error fetching songs:', error);
     return [];
   }
 }
@@ -480,7 +480,7 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
       .single();
 
     if (error) {
-      console.error('❌ Database error creating song:', error);
+ console.error(' Database error creating song:', error);
       throw error;
     }
 
@@ -505,7 +505,7 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
       history: []
     };
   } catch (error) {
-    console.error('Error creating song:', error);
+ console.error('Error creating song:', error);
     return null;
   }
 }
@@ -558,9 +558,9 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
       .eq('id', songId);
 
     if (error) {
-      console.error('❌ Database error updating song:', error);
-      console.error('❌ Full error details:', JSON.stringify(error, null, 2));
-      console.error('❌ Update data that failed:', JSON.stringify(updateData, null, 2));
+ console.error(' Database error updating song:', error);
+ console.error(' Full error details:', JSON.stringify(error, null, 2));
+ console.error(' Update data that failed:', JSON.stringify(updateData, null, 2));
 
       // If it's the comments field error, try again without comments
       if (error.code === 'PGRST204' && error.message.includes('comments')) {
@@ -572,7 +572,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
           .eq('id', songId);
 
         if (retryError) {
-          console.error('❌ Retry also failed:', retryError);
+ console.error(' Retry also failed:', retryError);
           throw retryError;
         }
 
@@ -609,7 +609,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
           .eq('id', songId);
 
         if (retryError) {
-          console.error('❌ Retry also failed:', retryError);
+ console.error(' Retry also failed:', retryError);
           throw retryError;
         } else {
         }
@@ -637,7 +637,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
 
         if (savedEntry) {
         } else {
-          console.error('❌ Failed to save history entry:', historyEntry.type);
+ console.error(' Failed to save history entry:', historyEntry.type);
         }
       }
 
@@ -645,7 +645,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
 
     return true;
   } catch (error) {
-    console.error('Error updating song:', error);
+ console.error('Error updating song:', error);
     return false;
   }
 }
@@ -660,27 +660,27 @@ export async function deleteSong(songId: number): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error deleting song:', error);
+ console.error('Error deleting song:', error);
     return false;
   }
 }
 
-// ===== COMMENTS OPERATIONS =====
+// Comments Operations
 
 export { getCommentsBySongId, createComment } from './comment-service';
 
-// ===== HISTORY OPERATIONS =====
+// History Operations
 
 export { getHistoryBySongId, createHistoryEntry } from './history-service';
 
 
-// ===== FILE UPLOAD OPERATIONS =====
+// File Upload Operations
 
-// ===== FILE UPLOAD OPERATIONS =====
+// File Upload Operations
 
 export { uploadFile, deleteFile } from './file-service';
 
-// ===== CATEGORY MANAGEMENT FUNCTIONS =====
+// Category Management Functions
 
 export async function getAllCategories(): Promise<Category[]> {
   try {
@@ -703,7 +703,7 @@ export async function getAllCategories(): Promise<Category[]> {
       updatedAt: cat.updatedat
     }));
   } catch (error) {
-    console.error('Error fetching categories:', error);
+ console.error('Error fetching categories:', error);
     return [];
   }
 }
@@ -723,7 +723,7 @@ export async function createCategory(categoryData: Omit<Category, 'id' | 'create
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error creating category:', error);
+ console.error('Error creating category:', error);
     return false;
   }
 }
@@ -746,7 +746,7 @@ export async function updateCategory(categoryId: number, categoryData: Partial<C
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error updating category:', error);
+ console.error('Error updating category:', error);
     return false;
   }
 }
@@ -761,12 +761,12 @@ export async function deleteCategory(categoryId: number): Promise<boolean> {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Error deleting category:', error);
+ console.error('Error deleting category:', error);
     return false;
   }
 }
 
-// ===== CATEGORY OPERATIONS =====
+// Category Operations
 
 export async function updateSongsCategory(oldCategoryName: string, newCategoryName: string): Promise<boolean> {
   try {
@@ -779,7 +779,7 @@ export async function updateSongsCategory(oldCategoryName: string, newCategoryNa
 
     return true;
   } catch (error) {
-    console.error('Error updating songs category:', error);
+ console.error('Error updating songs category:', error);
     return false;
   }
 }
@@ -828,7 +828,7 @@ export async function getSongsByCategory(categoryName: string): Promise<PraiseNi
 
     return praiseNightSongs;
   } catch (error) {
-    console.error('Error fetching songs by category:', error);
+ console.error('Error fetching songs by category:', error);
     return [];
   }
 }
@@ -857,12 +857,12 @@ export async function handleCategoryDeletion(categoryName: string, fallbackCateg
 
     return true;
   } catch (error) {
-    console.error('Error handling category deletion:', error);
+ console.error('Error handling category deletion:', error);
     return false;
   }
 }
 
-// ===== MEDIA OPERATIONS =====
+// Media Operations
 
 export interface MediaFile {
   id: number;
@@ -913,7 +913,7 @@ export async function getAllMedia(): Promise<MediaFile[]> {
       .limit(500); // Reduced limit for faster initial load
 
     if (error) {
-      console.error('❌ Database error:', error);
+ console.error(' Database error:', error);
       throw error;
     }
 
@@ -944,13 +944,13 @@ export async function getAllMedia(): Promise<MediaFile[]> {
         localStorage.setItem('media_cache', JSON.stringify(mediaFiles));
         localStorage.setItem('media_cache_timestamp', Date.now().toString());
       } catch (error) {
-        console.warn('Failed to cache media data to localStorage:', error);
+ console.warn('Failed to cache media data to localStorage:', error);
       }
     }
 
     return mediaFiles;
   } catch (error) {
-    console.error('Error fetching media files:', error);
+ console.error('Error fetching media files:', error);
 
     // Return cached data if available, even if expired
     if (mediaCache) {
@@ -966,7 +966,7 @@ export function clearMediaCache(): void {
   mediaCache = null;
 }
 
-// ===== USER MANAGEMENT OPERATIONS =====
+// User Management Operations
 
 export async function getAllUsers(): Promise<any[]> {
   try {
@@ -979,7 +979,7 @@ export async function getAllUsers(): Promise<any[]> {
 
     return data || [];
   } catch (error) {
-    console.error('Error fetching users:', error);
+ console.error('Error fetching users:', error);
     return [];
   }
 }
@@ -1004,7 +1004,7 @@ export async function getUserStats(): Promise<{ total: number, recent: number, a
 
     return { total, recent, active };
   } catch (error) {
-    console.error('Error fetching user stats:', error);
+ console.error('Error fetching user stats:', error);
     return { total: 0, recent: 0, active: 0 };
   }
 }
@@ -1014,7 +1014,7 @@ export async function preloadMediaData(): Promise<void> {
   try {
     await getAllMedia(); // This will cache the data
   } catch (error) {
-    console.error('❌ Error preloading media data:', error);
+ console.error(' Error preloading media data:', error);
   }
 }
 
@@ -1051,7 +1051,7 @@ export async function createMediaFile(mediaData: Omit<MediaFile, 'id' | 'created
       updatedAt: data.updatedat
     };
   } catch (error) {
-    console.error('Error creating media file:', error);
+ console.error('Error creating media file:', error);
     return null;
   }
 }
@@ -1069,7 +1069,7 @@ export async function deleteMediaFile(mediaId: number): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error deleting media file:', error);
+ console.error('Error deleting media file:', error);
     return false;
   }
 }
@@ -1087,13 +1087,13 @@ export async function deleteHistoryEntry(historyId: string): Promise<boolean> {
       .eq('id', historyId);
 
     if (error) {
-      console.error('🎯 Supabase error:', error);
+ console.error(' Supabase error:', error);
       throw error;
     }
 
     return true;
   } catch (error) {
-    console.error('Error deleting history entry:', error);
+ console.error('Error deleting history entry:', error);
     return false;
   }
 }

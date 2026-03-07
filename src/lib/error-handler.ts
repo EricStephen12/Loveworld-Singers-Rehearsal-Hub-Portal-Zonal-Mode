@@ -135,7 +135,7 @@ export class ErrorHandler {
     
     // Log the actual error for debugging (only in development)
     if (process.env.NODE_ENV === 'development') {
-      console.error('Detailed error:', error)
+ console.error('Detailed error:', error)
     }
   }
   

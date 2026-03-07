@@ -59,7 +59,7 @@ export default function NotificationUrlHandler() {
           window.location.href = notificationData.data.url
         }
       } catch (error) {
-        console.error('Error navigating to notification URL:', error)
+ console.error('Error navigating to notification URL:', error)
       }
     }
 

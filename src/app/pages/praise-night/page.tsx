@@ -48,7 +48,7 @@ function PraiseNightPageContent() {
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false);
   const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(null);
 
-  // 🔄 Navigation State Restoration: Restore last category if missing from URL
+  // Navigation State Restoration: Restore last category if missing from URL
   useEffect(() => {
     // Only restore if:
     // 1. Zone is initialized (prevents wrong zone data)
@@ -71,7 +71,7 @@ function PraiseNightPageContent() {
     }
   }, [isInitialized, categoryFilter, currentZone?.id, router]);
 
-  // 💾 Save navigation state whenever category changes
+  // Save navigation state whenever category changes
   useEffect(() => {
     if (categoryFilter && currentZone?.id) {
       const query: Record<string, string> = { category: categoryFilter };
@@ -193,7 +193,7 @@ function PraiseNightPageContent() {
         // Cache for 5 minutes
         lowDataOptimizer.set(cacheKey, categories);
       } catch (error) {
-        console.error('❌ Error loading page categories:', error);
+ console.error(' Error loading page categories:', error);
         setPageCategories([]);
       } finally {
         setLoadingPageCategories(false);
@@ -240,14 +240,14 @@ function PraiseNightPageContent() {
   // Refresh data when page becomes visible (after admin updates)
   // Refresh data when page becomes visible (after admin updates)
   useEffect(() => {
-    // 🛑 OPTIMIZATION: Disabled aggressive visibility refresh to save costs.
+    // OPTIMIZATION: Disabled aggressive visibility refresh to save costs.
     // The useRealtimeData hook now handles TTL caching internally.
     // Manual pull-to-refresh is available if user needs instant update.
 
     /* 
     const handleVisibilityChange = async () => {
       if (!document.hidden) {
-        console.log('🔄 Page became visible, refreshing data...');
+ console.log(' Page became visible, refreshing data...');
         refreshData();
 
         // Also re-initialize safe area when page becomes visible
@@ -258,7 +258,7 @@ function PraiseNightPageContent() {
     };
 
     const handleFocus = async () => {
-      console.log('🔄 Page focused, refreshing data...');
+ console.log(' Page focused, refreshing data...');
       refreshData();
 
       // Re-initialize safe area when page gains focus
@@ -277,7 +277,7 @@ function PraiseNightPageContent() {
     */
   }, []); // Removed refreshData dependency naturally
 
-  // ✅ SECURITY: Enforce Pre-Rehearsal Access Control
+  // SECURITY: Enforce Pre-Rehearsal Access Control
   const { isZoneCoordinator } = useZone();
   const { profile } = useAuth();
 
@@ -289,7 +289,7 @@ function PraiseNightPageContent() {
       // 1. HQ is always hidden/redirected
       // 2. Others must have permission
       if (isHQ || !hasAccess) {
-        console.warn('🚫 Access Denied to Pre-Rehearsal category');
+ console.warn('🚫 Access Denied to Pre-Rehearsal category');
         router.replace('/pages/rehearsals');
       }
     }
@@ -402,7 +402,7 @@ function PraiseNightPageContent() {
 
 
 
-  // ✅ Reset filter to 'heard' only when switching to a different page (not when just loading)
+  // Reset filter to 'heard' only when switching to a different page (not when just loading)
   const [previousPageId, setPreviousPageId] = useState<string | null>(null);
   useEffect(() => {
     if (currentPraiseNight && currentPraiseNight.id !== previousPageId) {
@@ -462,11 +462,11 @@ function PraiseNightPageContent() {
       await signOut()
       // Don't use router.push - signOut already handles redirect
     } catch (error) {
-      console.error('Logout error:', error)
+ console.error('Logout error:', error)
     }
   }
 
-  // ✅ Refresh functionality (clears cache but preserves auth)
+  // Refresh functionality (clears cache but preserves auth)
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -679,7 +679,7 @@ function PraiseNightPageContent() {
         setAllSongsFromFirebase(songs);
         setSongsLoading(false);
       }).catch(error => {
-        console.error('Error loading songs:', error);
+ console.error('Error loading songs:', error);
         setAllSongsFromFirebase([]);
         setSongsLoading(false);
       });
@@ -688,7 +688,7 @@ function PraiseNightPageContent() {
     }
   }, [currentPraiseNight?.id, songMetadataTimestamp, getCurrentSongs]);
 
-  // 🔥 REALTIME SONG UPDATES: Subscribe to individual song changes
+  // REALTIME SONG UPDATES: Subscribe to individual song changes
   // This enables instant lyrics updates when admins edit songs
   const {
     song: realtimeSongData,
@@ -736,9 +736,9 @@ function PraiseNightPageContent() {
     const uniqueCategories = [...new Set(allCategories)];
 
     // Debug logging
-    console.log('🎵 Available categories from songs:', uniqueCategories);
-    console.log('🎵 Songs used for categories:', songsToUse.length);
-    console.log('🎵 All songs data:', songsToUse.map(song => ({
+ console.log(' Available categories from songs:', uniqueCategories);
+ console.log(' Songs used for categories:', songsToUse.length);
+ console.log(' All songs data:', songsToUse.map(song => ({
       title: song.title,
       category: song.category,
       categories: song.categories,
@@ -796,7 +796,7 @@ function PraiseNightPageContent() {
   const otherCategories: string[] = [];
 
   // Debug logging for categories
-  console.log(' Category bar data:', {
+ console.log(' Category bar data:', {
     songCategories: songCategories,
     mainCategories: mainCategories,
     otherCategories: otherCategories,
@@ -804,7 +804,7 @@ function PraiseNightPageContent() {
   });
 
 
-  // ✅ Prefer auto-selecting a category that has active songs; otherwise fall back to first
+  // Prefer auto-selecting a category that has active songs; otherwise fall back to first
   useEffect(() => {
     if (!activeCategory) {
       const preferred = mainCategories.find((cat) => categoriesWithActiveSongs.includes(cat));
@@ -1041,7 +1041,7 @@ function PraiseNightPageContent() {
     );
   }
 
-  // ✅ Show loading screen while data is being fetched OR restoration is pending
+  // Show loading screen while data is being fetched OR restoration is pending
   // This prevents the "default" content from flashing before the URL matches the state
   const isRestoring = isInitialized && !categoryFilter && currentZone?.id;
 
@@ -1190,7 +1190,7 @@ function PraiseNightPageContent() {
       `}</style>
 
 
-        {/* ✅ Fixed Header - Full Width */}
+        {/* Fixed Header - Full Width */}
         <div className="flex-shrink-0 w-full relative z-[60]">
           <div className="relative bg-white/80 backdrop-blur-xl border-b border-gray-100/50 min-h-[60px] sm:min-h-[70px]">
             {/* Normal Header Content */}
@@ -1463,7 +1463,7 @@ function PraiseNightPageContent() {
 
 
 
-        {/* ✅ Scrollable Content Container */}
+        {/* Scrollable Content Container */}
         <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch">
           <div className="w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-4 relative mobile-content-with-bottom-nav">
             {/* Archive Cards Grid - Special layout for archive category */}
@@ -1589,12 +1589,12 @@ function PraiseNightPageContent() {
                               alt={praiseNight.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                console.error('❌ Banner image failed to load:', praiseNight.bannerImage);
+ console.error(' Banner image failed to load:', praiseNight.bannerImage);
                                 // Fallback to gradient if image fails to load
                                 e.currentTarget.style.display = 'none';
                               }}
                               onLoad={() => {
-                                console.log('✅ Banner image loaded successfully:', praiseNight.bannerImage);
+ console.log(' Banner image loaded successfully:', praiseNight.bannerImage);
                               }}
                             />
                           ) : (
@@ -1650,7 +1650,7 @@ function PraiseNightPageContent() {
                     className="object-cover object-center"
                     priority={false}
                     onError={(e) => {
-                      console.error('Image failed to load:', ecardSrc);
+ console.error('Image failed to load:', ecardSrc);
                       // Fallback to default image
                       e.currentTarget.src = "/Ecards/1000876785.png";
                     }}
@@ -1798,7 +1798,7 @@ function PraiseNightPageContent() {
             {/* Song Title Cards - Scrollable - Show for archive individual pages */}
             {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
               <div className="px-1 py-4 max-h-96 lg:max-h-none overflow-y-auto">
-                {/* ✅ CRITICAL FIX: Show loading skeleton while fetching, not empty state */}
+                {/* CRITICAL FIX: Show loading skeleton while fetching, not empty state */}
                 {songsLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map((i) => (
@@ -1923,7 +1923,7 @@ function PraiseNightPageContent() {
             <div className="h-20"></div> {/* Spacer for fixed bottom elements */}
           </div>
         </div>
-        {/* ✅ End of Scrollable Content */}
+        {/* End of Scrollable Content */}
       </div > {/* End Apple-style animated container */}
 
       < SharedDrawer
@@ -1935,7 +1935,7 @@ function PraiseNightPageContent() {
         } // Force re-render when category changes
       />
 
-      {/* ✅ Category Bar for Individual Archive Pages with Horizontal Scroll */}
+      {/* Category Bar for Individual Archive Pages with Horizontal Scroll */}
       {
         categoryFilter === 'archive' && pageParam && (
           <div
@@ -1978,7 +1978,7 @@ function PraiseNightPageContent() {
         )
       }
 
-      {/* ✅ Fixed Bottom Bar with Horizontal Scrolling Categories */}
+      {/* Fixed Bottom Bar with Horizontal Scrolling Categories */}
       {
         filteredPraiseNights.length > 0 && categoryFilter !== 'archive' && (
           <div

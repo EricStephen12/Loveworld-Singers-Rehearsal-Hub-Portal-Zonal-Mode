@@ -22,12 +22,12 @@ export class SupabaseSupport {
             const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError) {
-        console.error('❌ Admin auth error:', authError);
+ console.error(' Admin auth error:', authError);
         return [];
       }
 
       if (!user) {
-        console.error('❌ Admin: No authenticated user');
+ console.error(' Admin: No authenticated user');
         return [];
       }
 
@@ -39,7 +39,7 @@ export class SupabaseSupport {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Approach 1 error:', error);
+ console.error('Approach 1 error:', error);
 
         // Fallback: Get user's own messages (this should work with RLS)
         const result = await supabase
@@ -52,7 +52,7 @@ export class SupabaseSupport {
         error = result.error;
 
         if (error) {
-          console.error('❌ Admin: Both approaches failed:', error);
+ console.error(' Admin: Both approaches failed:', error);
           return [];
         } else {
         }
@@ -76,7 +76,7 @@ export class SupabaseSupport {
 
       return mappedMessages;
     } catch (error) {
-      console.error('❌ Admin: Unexpected error in getMessages:', error);
+ console.error(' Admin: Unexpected error in getMessages:', error);
       return [];
     }
   }
@@ -88,12 +88,12 @@ export class SupabaseSupport {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError) {
-        console.error('❌ Auth error in getUserMessages:', authError);
+ console.error(' Auth error in getUserMessages:', authError);
         return [];
       }
 
       if (!user) {
-        console.error('❌ No authenticated user found in getUserMessages');
+ console.error(' No authenticated user found in getUserMessages');
         return [];
       }
 
@@ -105,7 +105,7 @@ export class SupabaseSupport {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching user messages:', {
+ console.error(' Error fetching user messages:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -131,7 +131,7 @@ export class SupabaseSupport {
 
       return mappedMessages;
     } catch (error) {
-      console.error('❌ Unexpected error in getUserMessages:', error);
+ console.error(' Unexpected error in getUserMessages:', error);
       return [];
     }
   }
@@ -150,12 +150,12 @@ export class SupabaseSupport {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError) {
-        console.error('Auth error:', authError);
+ console.error('Auth error:', authError);
         return null;
       }
 
       if (!user) {
-        console.error('No authenticated user found');
+ console.error('No authenticated user found');
         return null;
       }
 
@@ -178,7 +178,7 @@ export class SupabaseSupport {
         .single();
 
       if (error) {
-        console.error('Error adding message:', {
+ console.error('Error adding message:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -209,7 +209,7 @@ export class SupabaseSupport {
 
       return newMessage;
     } catch (error) {
-      console.error('Error in addMessage:', error);
+ console.error('Error in addMessage:', error);
       return null;
     }
   }
@@ -235,7 +235,7 @@ export class SupabaseSupport {
         }));
       }
     } catch (error) {
-      console.error('Error adding auto-response:', error);
+ console.error('Error adding auto-response:', error);
     }
   }
 
@@ -250,7 +250,7 @@ export class SupabaseSupport {
         .single();
 
       if (fetchError || !originalMessage) {
-        console.error('Error fetching original message:', fetchError);
+ console.error('Error fetching original message:', fetchError);
         return null;
       }
 
@@ -275,7 +275,7 @@ export class SupabaseSupport {
         .single();
 
       if (error) {
-        console.error('Error adding reply:', error);
+ console.error('Error adding reply:', error);
         return null;
       }
 
@@ -305,7 +305,7 @@ export class SupabaseSupport {
         adminRespondedAt: data.admin_responded_at
       };
     } catch (error) {
-      console.error('Error in addReply:', error);
+ console.error('Error in addReply:', error);
       return null;
     }
   }
@@ -326,7 +326,7 @@ export class SupabaseSupport {
         .eq('id', messageId);
 
       if (error) {
-        console.error('Error updating message:', error);
+ console.error('Error updating message:', error);
         return;
       }
 
@@ -337,7 +337,7 @@ export class SupabaseSupport {
         }));
       }
     } catch (error) {
-      console.error('Error in updateMessage:', error);
+ console.error('Error in updateMessage:', error);
     }
   }
 
@@ -411,7 +411,7 @@ export class SupabaseSupport {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.error('No authenticated user found for subscription');
+ console.error('No authenticated user found for subscription');
         return () => {};
       }
 
@@ -435,7 +435,7 @@ export class SupabaseSupport {
         supabase.removeChannel(channel);
       };
     } catch (error) {
-      console.error('Error setting up user subscription:', error);
+ console.error('Error setting up user subscription:', error);
       return () => {};
     }
   }

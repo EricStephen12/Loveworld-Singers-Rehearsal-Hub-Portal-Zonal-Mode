@@ -114,7 +114,7 @@ export class MasterLibraryService {
 
       return songs
     } catch (error) {
-      console.error('Error getting Master Library songs:', error)
+ console.error('Error getting Master Library songs:', error)
       return []
     }
   }
@@ -163,7 +163,7 @@ export class MasterLibraryService {
 
       return songs
     } catch (error) {
-      console.error('Error loading more Master Library songs:', error)
+ console.error('Error loading more Master Library songs:', error)
       return []
     }
   }
@@ -187,7 +187,7 @@ export class MasterLibraryService {
       }
       return null
     } catch (error) {
-      console.error('Error getting Master song:', error)
+ console.error('Error getting Master song:', error)
       return null
     }
   }
@@ -237,7 +237,7 @@ export class MasterLibraryService {
       }
       return { success: false, error: 'Failed to publish song' }
     } catch (error) {
-      console.error('Error publishing to Master Library:', error)
+ console.error('Error publishing to Master Library:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -281,7 +281,7 @@ export class MasterLibraryService {
       }
       return { success: false, error: 'Failed to create song' }
     } catch (error) {
-      console.error('Error creating Master song:', error)
+ console.error('Error creating Master song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -300,7 +300,7 @@ export class MasterLibraryService {
       }
       return null
     } catch (error) {
-      console.error('Error checking Master Library:', error)
+ console.error('Error checking Master Library:', error)
       return null
     }
   }
@@ -322,7 +322,7 @@ export class MasterLibraryService {
       await FirebaseDatabaseService.updateDocument('master_songs', songId, updateData)
       return { success: true }
     } catch (error) {
-      console.error('Error updating Master song:', error)
+ console.error('Error updating Master song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -333,7 +333,7 @@ export class MasterLibraryService {
       this.clearMasterSongsCache()
       return { success: true }
     } catch (error) {
-      console.error('Error deleting Master song:', error)
+ console.error('Error deleting Master song:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -380,7 +380,7 @@ export class MasterLibraryService {
       }
       return { success: false, error: 'Failed to import song' }
     } catch (error) {
-      console.error('Error importing to zone:', error)
+ console.error('Error importing to zone:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -390,7 +390,7 @@ export class MasterLibraryService {
       const docRef = doc(db, 'master_songs', masterSongId)
       await updateDoc(docRef, { importCount: increment(1) })
     } catch (error) {
-      console.error('Error incrementing import count:', error)
+ console.error('Error incrementing import count:', error)
     }
   }
 
@@ -419,7 +419,7 @@ export class MasterLibraryService {
 
       return songs
     } catch (error) {
-      console.error('Error getting HQ Internal songs:', error)
+ console.error('Error getting HQ Internal songs:', error)
       return []
     }
   }
@@ -455,7 +455,7 @@ export class MasterLibraryService {
 
       return songs
     } catch (error) {
-      console.error('Error loading more HQ Internal songs:', error)
+ console.error('Error loading more HQ Internal songs:', error)
       return []
     }
   }
@@ -485,7 +485,7 @@ export class MasterLibraryService {
         song.tempo?.toLowerCase().includes(term)
       )
     } catch (error) {
-      console.error('Error searching Master Library:', error)
+ console.error('Error searching Master Library:', error)
       return []
     }
   }
@@ -505,7 +505,7 @@ export class MasterLibraryService {
 
       return { totalSongs: songs.length, totalImports, mostImported }
     } catch (error) {
-      console.error('Error getting Master Library stats:', error)
+ console.error('Error getting Master Library stats:', error)
       return { totalSongs: 0, totalImports: 0, mostImported: [] }
     }
   }
@@ -533,7 +533,7 @@ export class MasterLibraryService {
         return a.name.localeCompare(b.name)
       })
     } catch (error) {
-      console.error('Error getting Master programs:', error)
+ console.error('Error getting Master programs:', error)
       return []
     }
   }
@@ -557,7 +557,7 @@ export class MasterLibraryService {
       const result = await FirebaseDatabaseService.addDocument('master_programs', programData)
       return { success: result.success, id: result.id, error: result.error }
     } catch (error) {
-      console.error('Error creating Master program:', error)
+ console.error('Error creating Master program:', error)
       return { success: false, error: 'Failed to create program' }
     }
   }
@@ -572,7 +572,7 @@ export class MasterLibraryService {
       await FirebaseDatabaseService.updateDocument('master_programs', programId, updateData)
       return { success: true }
     } catch (error) {
-      console.error('Error updating Master program:', error)
+ console.error('Error updating Master program:', error)
       return { success: false, error: 'Failed to update program' }
     }
   }
@@ -582,7 +582,7 @@ export class MasterLibraryService {
       await FirebaseDatabaseService.deleteDocument('master_programs', programId)
       return { success: true }
     } catch (error) {
-      console.error('Error deleting Master program:', error)
+ console.error('Error deleting Master program:', error)
       return { success: false, error: 'Failed to delete program' }
     }
   }
@@ -596,7 +596,7 @@ export class MasterLibraryService {
       })
       return { success: true }
     } catch (error) {
-      console.error('Error adding song to program:', error)
+ console.error('Error adding song to program:', error)
       return { success: false, error: 'Failed to add song' }
     }
   }
@@ -610,7 +610,7 @@ export class MasterLibraryService {
       })
       return { success: true }
     } catch (error) {
-      console.error('Error adding songs to program:', error)
+ console.error('Error adding songs to program:', error)
       return { success: false, error: 'Failed to add songs' }
     }
   }
@@ -624,7 +624,7 @@ export class MasterLibraryService {
       })
       return { success: true }
     } catch (error) {
-      console.error('Error removing song from program:', error)
+ console.error('Error removing song from program:', error)
       return { success: false, error: 'Failed to remove song' }
     }
   }
@@ -641,7 +641,7 @@ export class MasterLibraryService {
       await Promise.all(promises)
       return { success: true }
     } catch (error) {
-      console.error('Error updating Master programs order:', error)
+ console.error('Error updating Master programs order:', error)
       return { success: false, error: 'Failed to update program order' }
     }
   }

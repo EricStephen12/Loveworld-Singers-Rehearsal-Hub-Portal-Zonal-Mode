@@ -108,7 +108,7 @@ class LowDataOptimizer {
         ttl
       }));
     } catch (error) {
-      console.warn('Failed to store in localStorage:', error);
+ console.warn('Failed to store in localStorage:', error);
     }
 
   }
@@ -135,7 +135,7 @@ class LowDataOptimizer {
         }
       }
     } catch (error) {
-      console.warn('Failed to read from localStorage:', error);
+ console.warn('Failed to read from localStorage:', error);
     }
 
     return null;
@@ -150,7 +150,7 @@ class LowDataOptimizer {
     try {
       localStorage.removeItem(`lowdata_${key}`);
     } catch (e) {
-      console.warn('Failed to remove from localStorage:', e);
+ console.warn('Failed to remove from localStorage:', e);
     }
   }
 

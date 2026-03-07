@@ -1,6 +1,5 @@
 ﻿// ============================================
 // LEGACY ZONE STORE - For backward compatibility
-// ============================================
 // The main zone flow now uses useZone hook (src/hooks/useZone.ts)
 // This store is kept for backward compatibility with dynamic imports
 // in utility files. It will be deprecated in future versions.

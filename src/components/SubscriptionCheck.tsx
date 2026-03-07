@@ -25,7 +25,7 @@ export default function SubscriptionCheck({ children }: SubscriptionCheckProps) 
           setShowSubscription(true)
         }
       } catch (error) {
-        console.error('Error checking subscription:', error)
+ console.error('Error checking subscription:', error)
         setHasSubscription(false)
         setShowSubscription(true)
       }

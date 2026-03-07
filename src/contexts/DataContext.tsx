@@ -1,9 +1,9 @@
 ﻿'use client';
 
 import React, { createContext, useContext, useCallback, useRef } from 'react';
-import { useUltraFastSupabase } from '@/hooks/useUltraFastSupabase';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 
-interface UltraFastDataContextType {
+interface DataContextType {
   // Songs data
   songs: any[];
   songsLoading: boolean;
@@ -38,10 +38,10 @@ interface UltraFastDataContextType {
   optimisticUpdateMedia: (updates: any[], operation: 'insert' | 'update' | 'delete') => void;
 }
 
-const UltraFastDataContext = createContext<UltraFastDataContextType | undefined>(undefined);
+const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const useUltraFastData = () => {
-  const context = useContext(UltraFastDataContext);
+  const context = useContext(DataContext);
   if (!context) {
     throw new Error('useUltraFastData must be used within UltraFastDataProvider');
   }
@@ -62,7 +62,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
     error: songsError,
     refresh: refreshSongs,
     optimisticUpdate: optimisticUpdateSong,
-  } = useUltraFastSupabase({
+  } = useSupabaseQuery({
     table: 'songs',
     select: '*, praise_nights(*), categories(*)',
     orderBy: { column: 'created_at', ascending: false },
@@ -77,7 +77,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
     error: praiseNightsError,
     refresh: refreshPraiseNights,
     optimisticUpdate: optimisticUpdatePraiseNight,
-  } = useUltraFastSupabase({
+  } = useSupabaseQuery({
     table: 'praise_nights',
     select: '*, songs(count)',
     orderBy: { column: 'created_at', ascending: false },
@@ -92,7 +92,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
     error: categoriesError,
     refresh: refreshCategories,
     optimisticUpdate: optimisticUpdateCategory,
-  } = useUltraFastSupabase({
+  } = useSupabaseQuery({
     table: 'categories',
     select: '*',
     orderBy: { column: 'name', ascending: true },
@@ -107,7 +107,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
     error: mediaError,
     refresh: refreshMedia,
     optimisticUpdate: optimisticUpdateMedia,
-  } = useUltraFastSupabase({
+  } = useSupabaseQuery({
     table: 'media',
     select: '*',
     orderBy: { column: 'uploadedat', ascending: false },
@@ -129,7 +129,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
       refreshMedia(),
     ]).then(() => {
     }).catch((error) => {
-      console.error('Error refreshing data:', error);
+ console.error('Error refreshing data:', error);
     });
   }, [refreshSongs, refreshPraiseNights, refreshCategories, refreshMedia]);
 
@@ -142,7 +142,7 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
     return () => clearInterval(interval);
   }, [refreshAll]);
 
-  const contextValue: UltraFastDataContextType = {
+  const contextValue: DataContextType = {
     // Songs
     songs: songs || [],
     songsLoading,
@@ -178,8 +178,8 @@ export const UltraFastDataProvider: React.FC<UltraFastDataProviderProps> = ({ ch
   };
 
   return (
-    <UltraFastDataContext.Provider value={contextValue}>
+    <DataContext.Provider value={contextValue}>
       {children}
-    </UltraFastDataContext.Provider>
+    </DataContext.Provider>
   );
 };

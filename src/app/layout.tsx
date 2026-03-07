@@ -45,7 +45,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 // Use system fonts for faster loading
 
 // Static version for PWA stability (only change when manifest actually changes)
-const APP_VERSION = '3.0.0'; // ✅ Updated for instant loading optimizations
+const APP_VERSION = '3.0.0'; // Updated for instant loading optimizations
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -97,7 +97,7 @@ export const viewport: Viewport = {
   userScalable: false,
   themeColor: '#ffffff',
   viewportFit: 'cover', // Enable safe area support for notched devices
-  // ✅ Enhanced touch responsiveness
+  // Enhanced touch responsiveness
 }
 
 export default function RootLayout({
@@ -114,7 +114,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
         <link rel="apple-touch-icon" sizes="167x167" href="/logo.png" />
 
-        {/* ✅ INSTANT LOADING - Resource Hints */}
+        {/* INSTANT LOADING - Resource Hints */}
         <link rel="preconnect" href="https://firebase.googleapis.com" />
         <link rel="dns-prefetch" href="https://firebase.googleapis.com" />
         <link rel="preload" href="/logo.png" as="image" />

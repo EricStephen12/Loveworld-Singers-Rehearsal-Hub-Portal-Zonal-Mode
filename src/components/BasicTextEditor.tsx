@@ -89,11 +89,11 @@ export default function BasicTextEditor({
         // Show success message
         const langName = translationService.LANGUAGES.find(l => l.code === langCode)?.name || langCode;
       } else if (translated === currentContent) {
-        console.warn('Translation returned the same content - translation may have failed');
+ console.warn('Translation returned the same content - translation may have failed');
         alert('Translation service returned the same content. This might indicate a translation error or the text is already in the target language.');
       }
     } catch (error) {
-      console.error('Translation failed:', error);
+ console.error('Translation failed:', error);
       alert('Translation failed. Please check your internet connection and try again. If the problem persists, the translation service might be temporarily unavailable.');
       
       // Reset language selection on error

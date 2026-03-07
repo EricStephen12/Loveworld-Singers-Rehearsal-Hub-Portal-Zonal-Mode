@@ -16,7 +16,7 @@ export function useWebsiteStyleData<T>(
       const freshData = await fetchFn()
       setData(freshData)
     } catch (err) {
-      console.error(`Fetch failed: ${key}`, err)
+ console.error(`Fetch failed: ${key}`, err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
     } finally {
       setIsLoading(false)

@@ -94,7 +94,7 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
           message: error.message || 'Recovery failed'
         })
         
-        console.error(`❌ Failed to recover profile for ${email}:`, error)
+ console.error(` Failed to recover profile for ${email}:`, error)
       }
     }
     
@@ -102,7 +102,7 @@ export async function bulkRecoverProfiles(): Promise<BulkRecoveryResult> {
     return result
     
   } catch (error: any) {
-    console.error('❌ Bulk recovery error:', error)
+ console.error(' Bulk recovery error:', error)
     throw error
   }
 }
@@ -115,9 +115,9 @@ export function generateRecoveryReport(result: BulkRecoveryResult): string {
     '=== Profile Recovery Report ===',
     '',
     `Total Profiles Checked: ${result.total}`,
-    `✅ Recovered: ${result.recovered}`,
-    `❌ Failed: ${result.failed}`,
-    `⏭️  Skipped (Already Complete): ${result.skipped}`,
+    ` Recovered: ${result.recovered}`,
+    ` Failed: ${result.failed}`,
+    `⏭️ Skipped (Already Complete): ${result.skipped}`,
     '',
     '=== Details ===',
     ''
@@ -130,7 +130,7 @@ export function generateRecoveryReport(result: BulkRecoveryResult): string {
   if (recovered.length > 0) {
     lines.push('Recovered Profiles:')
     recovered.forEach(d => {
-      lines.push(`  - ${d.email} (${d.userId})`)
+      lines.push(` - ${d.email} (${d.userId})`)
     })
     lines.push('')
   }
@@ -138,7 +138,7 @@ export function generateRecoveryReport(result: BulkRecoveryResult): string {
   if (failed.length > 0) {
     lines.push('Failed Recoveries:')
     failed.forEach(d => {
-      lines.push(`  - ${d.email} (${d.userId}): ${d.message}`)
+      lines.push(` - ${d.email} (${d.userId}): ${d.message}`)
     })
     lines.push('')
   }

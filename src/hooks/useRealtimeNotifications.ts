@@ -73,7 +73,7 @@ export function useRealtimeNotifications() {
         loadReadStatus(userNotifications)
       },
       (err) => {
-        console.error('Error in notifications listener:', err)
+ console.error('Error in notifications listener:', err)
         setError('Failed to load notifications')
         setLoading(false)
       }
@@ -88,7 +88,7 @@ export function useRealtimeNotifications() {
       const userGroups = await FirebaseDatabaseService.getCollectionWhere('user_groups', 'user_id', '==', user.uid)
       return userGroups.some((ug: any) => ug.group_name === groupName)
     } catch (error) {
-      console.error('Error checking user group:', error)
+ console.error('Error checking user group:', error)
       return false
     }
   }
@@ -117,7 +117,7 @@ export function useRealtimeNotifications() {
       setNotifications(updatedNotifications)
       setLoading(false)
     } catch (err) {
-      console.error('Error loading read status:', err)
+ console.error('Error loading read status:', err)
       setNotifications(notifs)
       setLoading(false)
     }
@@ -143,7 +143,7 @@ export function useRealtimeNotifications() {
 
       return true
     } catch (err) {
-      console.error('Error marking notification as read:', err)
+ console.error('Error marking notification as read:', err)
       return false
     }
   }
@@ -158,7 +158,7 @@ export function useRealtimeNotifications() {
       }
       return true
     } catch (err) {
-      console.error('Error marking all notifications as read:', err)
+ console.error('Error marking all notifications as read:', err)
       return false
     }
   }
@@ -171,7 +171,7 @@ export function useRealtimeNotifications() {
       setNotifications(prev => prev.filter(n => n.id !== notificationId))
       return true
     } catch (err) {
-      console.error('Error deleting notification:', err)
+ console.error('Error deleting notification:', err)
       return false
     }
   }
@@ -238,19 +238,19 @@ export function useNotificationActions() {
             body: JSON.stringify({
               type: 'zone',
               recipientIds,
-              title: `📢 ${data.title}`,
+              title: ` ${data.title}`,
               body: data.message,
               data: { notificationId, zoneId: currentZone?.id || '' }
             })
           });
         }
       } catch (fcmError) {
-        console.error('FCM Error (All):', fcmError);
+ console.error('FCM Error (All):', fcmError);
       }
 
       return { success: true, notificationId }
     } catch (err) {
-      console.error('Error creating notification:', err)
+ console.error('Error creating notification:', err)
       return { success: false, error: 'Failed to create notification' }
     }
   }
@@ -300,19 +300,19 @@ export function useNotificationActions() {
             body: JSON.stringify({
               type: 'zone',
               recipientIds,
-              title: `📢 ${data.title}`,
+              title: ` ${data.title}`,
               body: data.message,
               data: { notificationId, groupName: data.groupName }
             })
           });
         }
       } catch (fcmError) {
-        console.error('FCM Error (Group):', fcmError);
+ console.error('FCM Error (Group):', fcmError);
       }
 
       return { success: true, notificationId }
     } catch (err) {
-      console.error('Error creating group notification:', err)
+ console.error('Error creating group notification:', err)
       return { success: false, error: 'Failed to create group notification' }
     }
   }
@@ -356,18 +356,18 @@ export function useNotificationActions() {
           body: JSON.stringify({
             type: 'zone',
             recipientIds: [data.targetUserId],
-            title: `📢 ${data.title}`,
+            title: ` ${data.title}`,
             body: data.message,
             data: { notificationId }
           })
         });
       } catch (fcmError) {
-        console.error('FCM Error (User):', fcmError);
+ console.error('FCM Error (User):', fcmError);
       }
 
       return { success: true, notificationId }
     } catch (err) {
-      console.error('Error creating user notification:', err)
+ console.error('Error creating user notification:', err)
       return { success: false, error: 'Failed to create user notification' }
     }
   }

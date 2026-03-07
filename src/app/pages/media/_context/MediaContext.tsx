@@ -127,7 +127,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       // Cache the media for next time (with zone-specific key)
       MediaCache.saveMedia(media, cacheKey)
     } catch (error) {
-      console.error('Error loading initial data:', error)
+ console.error('Error loading initial data:', error)
     } finally {
       setIsLoading(false)
       setIsLoadingPlaylists(false)
@@ -148,7 +148,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       setPlaylists(pubPlaylists)
       setAdminPlaylists(admPlaylists)
     } catch (error) {
-      console.error('Error refreshing playlists:', error)
+ console.error('Error refreshing playlists:', error)
     } finally {
       setIsLoadingPlaylists(false)
     }
@@ -172,7 +172,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
         setHasMore(moreMedia.length >= 12)
       }
     } catch (error) {
-      console.error('Error loading more media:', error)
+ console.error('Error loading more media:', error)
     } finally {
       setIsLoadingMore(false)
     }
@@ -190,7 +190,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       setContinueWatching(continueWatch)
       setFavorites(userFavorites)
     } catch (error) {
-      console.error('Error loading user data:', error)
+ console.error('Error loading user data:', error)
     }
   }
 
@@ -213,7 +213,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       await firebaseMediaService.addToFavorites(user.uid, mediaId)
       await loadUserData() // Refresh favorites
     } catch (error) {
-      console.error('Error adding to favorites:', error)
+ console.error('Error adding to favorites:', error)
     }
   }
 
@@ -224,7 +224,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       await firebaseMediaService.removeFromFavorites(user.uid, mediaId)
       await loadUserData() // Refresh favorites
     } catch (error) {
-      console.error('Error removing from favorites:', error)
+ console.error('Error removing from favorites:', error)
     }
   }
 
@@ -235,7 +235,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
       await firebaseMediaService.saveWatchProgress(user.uid, mediaId, progress)
       await loadUserData() // Refresh continue watching
     } catch (error) {
-      console.error('Error saving watch progress:', error)
+ console.error('Error saving watch progress:', error)
     }
   }
 
@@ -243,7 +243,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     try {
       await firebaseMediaService.incrementViews(mediaId)
     } catch (error) {
-      console.error('Error incrementing views:', error)
+ console.error('Error incrementing views:', error)
     }
   }
 

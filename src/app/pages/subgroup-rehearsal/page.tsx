@@ -57,7 +57,7 @@ function SubGroupRehearsalContent() {
         setSongs(rehearsalSongs);
       }
     } catch (err) {
-      console.error('Error loading rehearsal:', err);
+ console.error('Error loading rehearsal:', err);
       setError('Failed to load rehearsal');
     } finally {
       setLoading(false);

@@ -57,7 +57,7 @@ export async function startCallWithNotification(callParams: CallParams) {
     return callData;
 
   } catch (error) {
-    console.error('[VoiceCall] Error starting call:', error);
+ console.error('[VoiceCall] Error starting call:', error);
     throw error;
   }
 }
@@ -123,7 +123,7 @@ async function sendCallPushNotification(notificationData: CallNotificationData) 
     const result = await response.json();
     
   } catch (error) {
-    console.error('[VoiceCall] Failed to send notification:', error);
+ console.error('[VoiceCall] Failed to send notification:', error);
     // Don't fail the call if notification fails
   }
 }

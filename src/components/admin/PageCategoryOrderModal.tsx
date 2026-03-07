@@ -58,7 +58,7 @@ export default function PageCategoryOrderModal({
             await onUpdate(updatedCategories);
             onClose();
         } catch (error) {
-            console.error("Failed to save order", error);
+ console.error("Failed to save order", error);
         } finally {
             setIsSaving(false);
         }

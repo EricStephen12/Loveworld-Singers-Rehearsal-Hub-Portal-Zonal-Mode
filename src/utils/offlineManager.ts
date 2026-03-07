@@ -54,7 +54,7 @@ export class OfflineManager {
         this.dataCache = new Map(Object.entries(parsed));
       }
     } catch (error) {
-      console.error('Failed to load cached data:', error);
+ console.error('Failed to load cached data:', error);
     }
   }
 
@@ -65,7 +65,7 @@ export class OfflineManager {
       const dataObject = Object.fromEntries(this.dataCache);
       localStorage.setItem('lwsrh-cached-data', JSON.stringify(dataObject));
     } catch (error) {
-      console.error('Failed to save cached data:', error);
+ console.error('Failed to save cached data:', error);
     }
   }
 
@@ -132,7 +132,7 @@ export class OfflineManager {
         return false; // Indicates update is pending
       }
     } catch (error) {
-      console.error(`Failed to update data for ${key}:`, error);
+ console.error(`Failed to update data for ${key}:`, error);
       // Still cache locally for offline use
       await this.cacheData(key, data);
       return false;
@@ -155,7 +155,7 @@ export class OfflineManager {
           this.pendingUpdates.splice(index, 1);
         }
       } catch (error) {
-        console.error(`Failed to sync update for ${update.key}:`, error);
+ console.error(`Failed to sync update for ${update.key}:`, error);
       }
     }
   }

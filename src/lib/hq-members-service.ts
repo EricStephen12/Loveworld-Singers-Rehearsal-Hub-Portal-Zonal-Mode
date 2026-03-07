@@ -33,7 +33,7 @@ export class HQMembersService {
     try {
       // Validate it's an HQ group
       if (!isHQGroup(data.hqGroupId)) {
-        console.error('❌ Not an HQ group:', data.hqGroupId)
+ console.error(' Not an HQ group:', data.hqGroupId)
         return { success: false, error: 'Not an HQ group' }
       }
       
@@ -63,7 +63,7 @@ export class HQMembersService {
       
       return { success: true, member: result }
     } catch (error) {
-      console.error('❌ Error adding HQ member:', error)
+ console.error(' Error adding HQ member:', error)
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
@@ -82,7 +82,7 @@ export class HQMembersService {
       
       return members.find((m: any) => m.hqGroupId === hqGroupId) || null
     } catch (error) {
-      console.error('❌ Error getting HQ member:', error)
+ console.error(' Error getting HQ member:', error)
       return null
     }
   }
@@ -102,7 +102,7 @@ export class HQMembersService {
       
       return members
     } catch (error) {
-      console.error('❌ Error getting user HQ groups:', error)
+ console.error(' Error getting user HQ groups:', error)
       return []
     }
   }
@@ -113,7 +113,7 @@ export class HQMembersService {
   static async getHQGroupMembers(hqGroupId: string) {
     try {
       if (!isHQGroup(hqGroupId)) {
-        console.error('❌ Not an HQ group:', hqGroupId)
+ console.error(' Not an HQ group:', hqGroupId)
         return []
       }
       
@@ -127,7 +127,7 @@ export class HQMembersService {
       
       return members
     } catch (error) {
-      console.error('❌ Error getting HQ group members:', error)
+ console.error(' Error getting HQ group members:', error)
       return []
     }
   }
@@ -146,7 +146,7 @@ export class HQMembersService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error updating HQ member role:', error)
+ console.error(' Error updating HQ member role:', error)
       return { success: false }
     }
   }
@@ -162,7 +162,7 @@ export class HQMembersService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error removing HQ member:', error)
+ console.error(' Error removing HQ member:', error)
       return { success: false }
     }
   }
@@ -175,7 +175,7 @@ export class HQMembersService {
       const hqGroups = await this.getUserHQGroups(userId)
       return hqGroups.length > 0
     } catch (error) {
-      console.error('❌ Error checking HQ membership:', error)
+ console.error(' Error checking HQ membership:', error)
       return false
     }
   }
@@ -188,7 +188,7 @@ export class HQMembersService {
       const member = await this.getMemberByUserId(userId, hqGroupId) as any
       return member?.role === 'coordinator'
     } catch (error) {
-      console.error('❌ Error checking HQ coordinator:', error)
+ console.error(' Error checking HQ coordinator:', error)
       return false
     }
   }
@@ -201,7 +201,7 @@ export class HQMembersService {
       const members = await this.getHQGroupMembers(hqGroupId)
       return members.length
     } catch (error) {
-      console.error('❌ Error getting HQ member count:', error)
+ console.error(' Error getting HQ member count:', error)
       return 0
     }
   }
@@ -220,7 +220,7 @@ export class HQMembersService {
       
       return { success: true }
     } catch (error) {
-      console.error('❌ Error updating HQ member status:', error)
+ console.error(' Error updating HQ member status:', error)
       return { success: false }
     }
   }

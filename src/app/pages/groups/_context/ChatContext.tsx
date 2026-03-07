@@ -223,7 +223,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const userFromZone = await FirebaseChatService.getUser(user.uid)
         senderName = userFromZone?.fullName || profile.email?.split('@')[0] || 'User'
       } catch (error) {
-        console.error('Error getting user name:', error)
+ console.error('Error getting user name:', error)
         senderName = profile.email?.split('@')[0] || 'User'
       }
     }
@@ -236,9 +236,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       snippet: replyToMessage.text 
         ? replyToMessage.text.slice(0, 120)
         : replyToMessage.image 
-          ? '📷 Image'
+          ? ' Image'
           : replyToMessage.fileName 
-            ? `📎 ${replyToMessage.fileName}`
+            ? ` ${replyToMessage.fileName}`
             : 'Message'
     } : undefined
 

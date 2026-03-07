@@ -7,9 +7,7 @@
 
 import type { AudioUrls, VocalPart, PitchData, AudioEngineState } from '../_types';
 
-// ============================================
 // AUDIO ENGINE CLASS
-// ============================================
 
 class AudioEngine {
   private context: AudioContext | null = null;
@@ -50,9 +48,7 @@ class AudioEngine {
   // Concurrency control
   private playRequestId: number = 0;
 
-  // ============================================
   // INITIALIZATION
-  // ============================================
 
   async initialize(): Promise<boolean> {
     try {
@@ -85,7 +81,7 @@ class AudioEngine {
       this.notifyStateChange({ isInitialized: !!this.context });
       return !!this.context;
     } catch (error) {
-      console.warn('[AudioEngine] Web Audio init failed, continuing in Fallback mode.');
+ console.warn('[AudioEngine] Web Audio init failed, continuing in Fallback mode.');
       return false;
     }
   }
@@ -97,9 +93,7 @@ class AudioEngine {
     return this.context;
   }
 
-  // ============================================
   // AUDIO LOADING
-  // ============================================
 
   async loadAudio(url: string): Promise<AudioBuffer | null> {
     try {
@@ -153,7 +147,7 @@ class AudioEngine {
       this.useFallback = false;
       return success;
     } catch (error) {
-      console.error('[AudioEngine] Critical error in loadSongParts:', error);
+ console.error('[AudioEngine] Critical error in loadSongParts:', error);
       if (urls.full) return await this.loadFallback(urls.full);
       return false;
     }
@@ -193,7 +187,7 @@ class AudioEngine {
       };
 
       const onError = (e: any) => {
-        console.error('[AudioEngine] Fallback Player Error:', audio.error || e);
+ console.error('[AudioEngine] Fallback Player Error:', audio.error || e);
         resolve(false);
       };
 
@@ -208,9 +202,7 @@ class AudioEngine {
     });
   }
 
-  // ============================================
   // PLAYBACK CONTROLS
-  // ============================================
 
   async play(part?: VocalPart): Promise<boolean> {
     if (this.useFallback && this.fallbackAudio) {
@@ -284,7 +276,7 @@ class AudioEngine {
 
       return true;
     } catch (error) {
-      console.error('[AudioEngine] Play error:', error);
+ console.error('[AudioEngine] Play error:', error);
       if (requestId === this.playRequestId) {
         this.isPlaying = false;
       }
@@ -351,9 +343,7 @@ class AudioEngine {
     this.onTimeUpdate?.(this.pauseTime);
   }
 
-  // ============================================
   // VOLUME CONTROL
-  // ============================================
 
   setVolume(volume: number): void {
     if (this.masterGain) {
@@ -367,18 +357,16 @@ class AudioEngine {
     return this.masterGain?.gain.value || 0;
   }
 
-  // ============================================
   // PART SWITCHING
-  // ============================================
 
   async switchPart(part: VocalPart): Promise<boolean> {
     if (this.useFallback) {
-      console.warn('[AudioEngine] Part switching is disabled in Fallback (CORS) mode.');
+ console.warn('[AudioEngine] Part switching is disabled in Fallback (CORS) mode.');
       return false;
     }
 
     if (!this.audioBuffers.has(part)) {
-      console.error('[AudioEngine] Part not available:', part);
+ console.error('[AudioEngine] Part not available:', part);
       return false;
     }
 
@@ -405,9 +393,7 @@ class AudioEngine {
     return this.currentPart;
   }
 
-  // ============================================
   // TIME & DURATION
-  // ============================================
 
   getCurrentTime(): number {
     if (this.useFallback && this.fallbackAudio) {
@@ -435,9 +421,7 @@ class AudioEngine {
     requestAnimationFrame(update);
   }
 
-  // ============================================
   // RECORDING
-  // ============================================
 
   async startRecording(): Promise<boolean> {
     try {
@@ -538,9 +522,7 @@ class AudioEngine {
     return 'audio/webm';
   }
 
-  // ============================================
   // INPUT LEVEL MONITORING
-  // ============================================
 
   private startInputLevelMonitoring(): void {
     if (!this.inputAnalyser) return;
@@ -585,9 +567,7 @@ class AudioEngine {
     return Math.sqrt(sum / dataArray.length) / 255;
   }
 
-  // ============================================
   // PITCH DETECTION
-  // ============================================
 
   startPitchDetection(): void {
     if (this.pitchDetectionActive || !this.inputAnalyser) return;
@@ -723,9 +703,7 @@ class AudioEngine {
     return Math.min(1, rms * 10);
   }
 
-  // ============================================
   // WAVEFORM DATA
-  // ============================================
 
   getWaveformData(samples: number = 100): number[] {
     const buffer = this.audioBuffers.get(this.currentPart);
@@ -748,9 +726,7 @@ class AudioEngine {
     return waveform.map(v => v / max);
   }
 
-  // ============================================
   // STATE & CLEANUP
-  // ============================================
 
   getState(): AudioEngineState {
     return {
@@ -786,9 +762,7 @@ class AudioEngine {
   }
 }
 
-// ============================================
 // SINGLETON EXPORT
-// ============================================
 
 export const audioEngine = new AudioEngine();
 export default audioEngine;

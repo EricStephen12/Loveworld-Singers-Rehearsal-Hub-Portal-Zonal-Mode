@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
             if (userProfile?.kingschatUserId) {
                 await KingsChatAuthService.sendMessage(
                     userProfile.kingschatUserId,
-                    `⚠️ Subscription Cancelled\n\nYour subscription has been cancelled by an administrator.\n\nReason: ${reason || 'Administrative action'}\n\nPlease contact support if you have questions.`
+                    `️ Subscription Cancelled\n\nYour subscription has been cancelled by an administrator.\n\nReason: ${reason || 'Administrative action'}\n\nPlease contact support if you have questions.`
                 );
             }
         } catch (error) {
-            console.error('Failed to send KingsChat notification:', error);
+ console.error('Failed to send KingsChat notification:', error);
         }
 
         return NextResponse.json({
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
             message: 'Subscription revoked successfully'
         });
     } catch (error) {
-        console.error('Error revoking subscription:', error);
+ console.error('Error revoking subscription:', error);
         return NextResponse.json(
             { error: 'Failed to revoke subscription' },
             { status: 500 }

@@ -84,7 +84,7 @@ export async function deleteFromCloudinary(publicId: string, resourceType: strin
     if (!response.ok) throw new Error(`Delete failed: ${response.statusText}`);
     return true;
   } catch (error) {
-    console.error('Cloudinary delete error:', error);
+ console.error('Cloudinary delete error:', error);
     return false;
   }
 }

@@ -75,7 +75,7 @@ export async function initializeZoneSubscription(
     }
     return { success: false, error: result.error || 'Failed to initialize payment' }
   } catch (error) {
-    console.error('Error initializing zone subscription:', error)
+ console.error('Error initializing zone subscription:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
@@ -113,7 +113,7 @@ export async function initializeIndividualSubscription(
     }
     return { success: false, error: result.error || 'Failed to initialize payment' }
   } catch (error) {
-    console.error('Error initializing individual subscription:', error)
+ console.error('Error initializing individual subscription:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
@@ -123,7 +123,7 @@ export async function getZoneSubscription(zoneId: string): Promise<ZoneSubscript
     const doc = await FirebaseDatabaseService.getDocument('zone_subscriptions', zoneId)
     return doc as ZoneSubscription | null
   } catch (error) {
-    console.error('Error getting zone subscription:', error)
+ console.error('Error getting zone subscription:', error)
     return null
   }
 }
@@ -136,7 +136,7 @@ export async function getIndividualSubscription(
     const doc = await FirebaseDatabaseService.getDocument('individual_subscriptions', subscriptionId)
     return doc as IndividualSubscription | null
   } catch (error) {
-    console.error('Error getting individual subscription:', error)
+ console.error('Error getting individual subscription:', error)
     return null
   }
 }
@@ -155,7 +155,7 @@ export async function hasPremiumAccess(userId: string, zoneId?: string): Promise
 
     return false
   } catch (error) {
-    console.error('Error checking premium access:', error)
+ console.error('Error checking premium access:', error)
     return false
   }
 }
@@ -169,7 +169,7 @@ export async function cancelSubscription(userId: string): Promise<{ success: boo
     });
     return { success: true };
   } catch (error) {
-    console.error('Error cancelling subscription:', error);
+ console.error('Error cancelling subscription:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

@@ -64,7 +64,7 @@ export default function PaymentDashboardSection() {
                 setSubscriptions(data.subscriptions || []);
             }
         } catch (error) {
-            console.error('Error loading subscriptions:', error);
+ console.error('Error loading subscriptions:', error);
         } finally {
             setLoading(false);
         }
@@ -136,7 +136,7 @@ export default function PaymentDashboardSection() {
                 alert('Failed to revoke subscription');
             }
         } catch (error) {
-            console.error('Error revoking subscription:', error);
+ console.error('Error revoking subscription:', error);
             alert('Error revoking subscription');
         } finally {
             setActionLoading(false);
@@ -175,7 +175,7 @@ export default function PaymentDashboardSection() {
                 alert('Failed to extend subscription');
             }
         } catch (error) {
-            console.error('Error extending subscription:', error);
+ console.error('Error extending subscription:', error);
             alert('Error extending subscription');
         } finally {
             setActionLoading(false);
@@ -213,7 +213,7 @@ export default function PaymentDashboardSection() {
                 alert('Failed to process refund');
             }
         } catch (error) {
-            console.error('Error processing refund:', error);
+ console.error('Error processing refund:', error);
             alert('Error processing refund');
         } finally {
             setActionLoading(false);

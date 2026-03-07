@@ -37,7 +37,7 @@ export function useRealtimeSong(
             const songData = await PraiseNightSongsService.getSongById(songId, zoneId)
             setSong(songData)
         } catch (err) {
-            console.error('Error fetching song:', err)
+ console.error('Error fetching song:', err)
             setError(err instanceof Error ? err.message : 'Failed to fetch song')
         } finally {
             setLoading(false)

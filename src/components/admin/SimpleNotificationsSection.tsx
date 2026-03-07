@@ -102,7 +102,7 @@ export default function SimpleNotificationsSection() {
       }
     } catch (error) {
       showToast('error', 'Error sending message');
-      console.error(error);
+ console.error(error);
     } finally {
       setSending(false);
     }

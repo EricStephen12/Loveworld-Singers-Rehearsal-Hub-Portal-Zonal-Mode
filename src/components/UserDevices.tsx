@@ -21,7 +21,7 @@ export default function UserDevices() {
       const userDevices = await DeviceRegistration.getUserDevices(user!.uid);
       setDevices(userDevices);
     } catch (error) {
-      console.error('Error loading devices:', error);
+ console.error('Error loading devices:', error);
     } finally {
       setLoading(false);
     }

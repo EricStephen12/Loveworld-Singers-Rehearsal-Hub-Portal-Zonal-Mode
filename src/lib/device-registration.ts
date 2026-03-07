@@ -124,7 +124,7 @@ export class DeviceRegistration {
       
       return { success: true }
     } catch (error: any) {
-      console.error('Error registering device:', error)
+ console.error('Error registering device:', error)
       const message = (error && (error.message || error.code)) ? `${error.code || ''} ${error.message || ''}`.trim() : 'Failed to register device'
       return { success: false, error: message }
     }
@@ -145,7 +145,7 @@ export class DeviceRegistration {
       
       return { isRegistered: false }
     } catch (error) {
-      console.error('Error checking device registration:', error)
+ console.error('Error checking device registration:', error)
       return { isRegistered: false }
     }
   }
@@ -162,7 +162,7 @@ export class DeviceRegistration {
         ...doc.data()
       } as DeviceInfo))
     } catch (error) {
-      console.error('Error getting user devices:', error)
+ console.error('Error getting user devices:', error)
       return []
     }
   }
@@ -173,7 +173,7 @@ export class DeviceRegistration {
       const deviceRef = doc(db, 'devices', deviceId)
       await deleteDoc(deviceRef)
     } catch (error) {
-      console.error('Error removing device:', error)
+ console.error('Error removing device:', error)
     }
   }
 
@@ -210,7 +210,7 @@ export class DeviceRegistration {
         await deleteDoc(doc.ref)
       }
     } catch (error) {
-      console.error('Error cleaning up old devices:', error)
+ console.error('Error cleaning up old devices:', error)
     }
   }
   
