@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../_context/ChatContext'
@@ -110,7 +110,7 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
   if (!selectedChat) return null
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50">
+    <div className="flex-1 flex flex-col h-full bg-white relative">
       {/* Header */}
       <ChatHeader onOpenFriendRequests={onOpenFriendRequests} onOpenSearch={() => setShowSearch(true)} />
 
@@ -188,7 +188,19 @@ export default function ChatContainer({ onOpenFriendRequests }: ChatContainerPro
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
+      <div 
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 relative"
+        style={{
+          backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px',
+          backgroundPosition: 'center',
+          backgroundColor: '#e5ddd5', // WhatsApp default chat background color
+        }}
+      >
+        {/* Semi-transparent overlay to make messages pop out more against the pattern */}
+        <div className="absolute inset-0 bg-white/40 pointer-events-none z-[-1]" />
+        
         {isMessagesLoading && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

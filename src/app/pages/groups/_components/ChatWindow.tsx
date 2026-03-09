@@ -201,6 +201,8 @@ export function ChatWindow({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             className="flex-shrink-0 overflow-hidden border-b border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 px-4 py-2">
               <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -231,15 +233,26 @@ export function ChatWindow({
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200"
+        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200 relative"
+        style={{
+          backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px',
+          backgroundPosition: 'center',
+          backgroundColor: '#e5ddd5', // WhatsApp default chat background color
+        }}
       >
+        {/* Semi-transparent overlay to make messages pop out more against the pattern */}
+        <div className="absolute inset-0 bg-white/40 pointer-events-none z-0" />
+        
+        <div className="relative z-10 min-h-full flex flex-col justify-end">
         {isMessagesLoading ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 opacity-50">
+          <div className="flex flex-col items-center justify-center h-full gap-4 opacity-50 flex-1">
              <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
              <p className="font-bold text-sm tracking-widest uppercase">Fetching Messages</p>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col justify-end flex-1">
             {Object.entries(groupedMessages).map(([date, msgs], groupIdx) => (
               <React.Fragment key={date}>
                 {/* Date Separator */}
@@ -250,36 +263,40 @@ export function ChatWindow({
                 </div>
 
                 {/* Messages in Group */}
-                {(searchQuery ? filteredMessages : msgs).map((msg, i) => {
-                  const isFirstInBatch = i === 0 || msgs[i-1].senderId !== msg.senderId
-                  const isHighlighted = searchQuery ? msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) : true
-                  if (!isHighlighted) return null
-                  return (
-                    <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                      isOwn={msg.senderId === user?.uid}
-                      showAvatar={isFirstInBatch && selectedChat.type === 'group'}
-                      primaryColor={primaryColor}
-                      onReply={(reply) => setReplyingTo({ id: reply.id, text: reply.text, senderName: reply.senderName })}
-                      onReaction={(id, reaction) => {
-                        if (reaction === '') {
-                          setReactingToMessageId(id)
-                        } else {
-                          toggleReaction(id, reaction)
-                          setReactingToMessageId(null)
-                        }
-                      }}
-                      onDelete={(id) => deleteMessage(id)}
-                      onEdit={(id, text) => setEditingMessage({ id, text })}
-                    />
-                  )
-                })}
+                {(() => {
+                  const activeMsgs = searchQuery ? filteredMessages : msgs;
+                  return activeMsgs.map((msg, i) => {
+                    const isFirstInBatch = i === 0 || activeMsgs[i-1].senderId !== msg.senderId
+                    const isHighlighted = searchQuery ? msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                    if (!isHighlighted) return null
+                    return (
+                      <MessageBubble
+                        key={msg.id}
+                        message={msg}
+                        isOwn={msg.senderId === user?.uid}
+                        showAvatar={isFirstInBatch && selectedChat.type === 'group'}
+                        primaryColor={primaryColor}
+                        onReply={(reply) => setReplyingTo({ id: reply.id, text: reply.text, senderName: reply.senderName })}
+                        onReaction={(id, reaction) => {
+                          if (reaction === '') {
+                            setReactingToMessageId(id)
+                          } else {
+                            toggleReaction(id, reaction)
+                            setReactingToMessageId(null)
+                          }
+                        }}
+                        onDelete={(id) => deleteMessage(id)}
+                        onEdit={(id, text) => setEditingMessage({ id, text })}
+                      />
+                    )
+                  })
+                })()}
               </React.Fragment>
             ))}
             <div ref={messagesEndRef} className="h-4" />
-          </>
+          </div>
         )}
+        </div>
       </div>
 
       {/* "New Messages" or "Scroll to Bottom" button */}

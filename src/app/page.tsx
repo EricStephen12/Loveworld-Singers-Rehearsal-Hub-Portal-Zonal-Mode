@@ -93,10 +93,10 @@ export default function SplashPage() {
         {/* Fail-safe button for stuck users */}
         {showFailsafe && (
           <button
-            onClick={() => router.replace('/home')}
+            onClick={() => window.location.reload()}
             className="animate-in fade-in zoom-in duration-500 mt-8 px-8 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-semibold shadow-xl hover:bg-white/20 active:scale-95 transition-all outline-none"
           >
-            Enter Now
+            Refresh
           </button>
         )}
       </div>

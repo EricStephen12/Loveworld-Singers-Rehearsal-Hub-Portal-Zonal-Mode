@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -261,9 +261,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
       // We add a small delay to ensure the user sees the spinner 
       // and to let any pending state updates settle
       setTimeout(() => {
-        // Use encodeURIComponent to handle special characters in song titles
+        // Use encodeURIComponent to handle song title
         // Add program=ongoing so LibraryView knows to switch tabs
-        router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(currentSongData.title)}`);
+        const targetId = currentSongData.title;
+        router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(targetId)}`);
 
         // Push depth since we are navigating deeper
         NavigationManager.push();

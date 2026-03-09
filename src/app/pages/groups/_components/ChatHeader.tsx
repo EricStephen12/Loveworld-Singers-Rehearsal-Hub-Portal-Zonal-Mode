@@ -395,7 +395,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-900">Group Members</h3>
@@ -528,7 +528,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-white">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
@@ -712,7 +712,7 @@ export default function ChatHeader({ onOpenFriendRequests, onOpenSearch }: ChatH
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">

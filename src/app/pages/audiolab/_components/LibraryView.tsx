@@ -709,7 +709,16 @@ export function LibraryView() {
         <AudioLabSongDetailModal
           song={selectedDetailSong}
           isOpen={isDetailModalOpen}
-          onClose={() => setIsDetailModalOpen(false)}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            // Clear the song parameter from the URL to prevent reopening
+            if (searchParams?.has('song')) {
+              handledSongParamRef.current = null; // Reset the ref so it can trigger again later if needed
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete('song');
+              router.replace(`/pages/audiolab?${params.toString()}`);
+            }
+          }}
         />
       )}
 

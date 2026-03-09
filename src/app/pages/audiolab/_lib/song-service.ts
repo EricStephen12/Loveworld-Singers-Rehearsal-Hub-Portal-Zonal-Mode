@@ -205,26 +205,31 @@ export async function searchSongsDeep(searchTerm: string, zoneId?: string): Prom
         const rawPnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
 
         // Map Praise Night songs to AudioLab format
-        pnSongs = rawPnSongs.map(pnSong => ({
-          id: pnSong.id as string,
-          title: pnSong.title || 'Untitled',
-          artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
-          duration: 300,
-          audioUrls: {
-            full: pnSong.audioFile || ''
-          },
-          availableParts: (pnSong.audioFile ? ['full'] : []) as VocalPart[],
-          genre: pnSong.category || 'Praise Night',
-          key: pnSong.key || '',
-          tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
-          albumArt: '',
-          lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as LyricLine[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
-          zoneId: zoneId,
-          isHQSong: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: 'system'
-        })) as AudioLabSong[];
+        pnSongs = rawPnSongs.map(pnSong => {
+          const mergedAudioUrls = {
+            full: pnSong.audioFile || '',
+            ...(pnSong.audioUrls || {})
+          };
+          
+          return {
+            id: pnSong.id as string,
+            title: pnSong.title || 'Untitled',
+            artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
+            duration: 300,
+            audioUrls: mergedAudioUrls,
+            availableParts: Object.keys(mergedAudioUrls).filter(k => !!(mergedAudioUrls as any)[k]) as VocalPart[],
+            genre: pnSong.category || 'Praise Night',
+            key: pnSong.key || '',
+            tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
+            albumArt: '',
+            lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as LyricLine[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
+            zoneId: zoneId,
+            isHQSong: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: 'system'
+          };
+        }) as AudioLabSong[];
       } catch (e) {
  console.error('[SongService] Error fetching PN songs for search:', e);
       }
