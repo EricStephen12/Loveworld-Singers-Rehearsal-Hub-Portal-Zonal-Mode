@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CLEAN CHAT SERVICE
  * Fresh Firebase real-time chat implementation
  * Collections: chats_v2, messages_v2
@@ -34,7 +34,7 @@ export interface ChatUser {
 }
 
 // Reaction types
-export type ReactionType = '❤️' | '' | '😂' | '😮' | '😢' | '🙏' | '' | '👏' | '💯' | ''
+export type ReactionType = '❤️' | '👍' | '😂' | '😮' | '😢' | '🙏' | '🔥' | '👏' | '💯' | '✨' | ''
 
 // Message types
 export type MessageType = 'text' | 'image' | 'document' | 'voice' | 'system'
@@ -85,6 +85,7 @@ export interface Chat {
     text: string
     senderId: string
     timestamp: Date
+    status?: 'sent' | 'delivered' | 'read'
   }
   unreadCount: { [userId: string]: number }
   pinnedBy?: { [userId: string]: boolean }

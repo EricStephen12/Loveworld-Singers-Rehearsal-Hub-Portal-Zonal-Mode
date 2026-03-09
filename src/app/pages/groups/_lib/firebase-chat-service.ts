@@ -1,4 +1,4 @@
-﻿// Firebase Chat Service - Complete chat system with Firebase
+// Firebase Chat Service - Complete chat system with Firebase
 import { 
   collection, 
   doc, 
@@ -310,144 +310,101 @@ export class FirebaseChatService {
    * Anyone can search and chat with anyone from any zone
    * OPTIMIZED: Uses caching to prevent repeated fetches
    */
+  /**
+   * Search users by name or email - optimized with Firestore queries
+   */
   static async searchUsers(searchTerm: string, currentUserId: string, zoneId?: string, isBoss: boolean = false): Promise<ChatUser[]> {
     try {
-      // SECURITY: Senior zones that should only be visible to their own zone members
-      const SENIOR_ZONES = ['zone-president', 'zone-director', 'zone-oftp']
-      
-            const isSearcherInSeniorZone = zoneId ? SENIOR_ZONES.includes(zoneId) : false
-      
-      let allMembers: ChatUser[] = []
-      
-      // Use a Map to deduplicate by userId (in case user is in multiple zones)
-      const userMap = new Map<string, ChatUser>()
-      
-      // OPTIMIZED: Use cached zone members if available and not expired
-      let zoneMembersDocs: any[]
-      const now = Date.now()
-      
-      if (this.zoneMembersCache && (now - this.zoneMembersCache.timestamp) < this.CACHE_TTL) {
-        zoneMembersDocs = this.zoneMembersCache.data
-      } else {
-        // Fetch with limit to prevent massive reads
-        const zoneMembersRef = collection(db, 'zone_members')
-        const zoneMembersQuery = query(zoneMembersRef, limit(1000)) // OPTIMIZED: Limit to 1000
-        const zoneMembersSnapshot = await getDocs(zoneMembersQuery)
-        zoneMembersDocs = zoneMembersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        
-        // Cache the results
-        this.zoneMembersCache = { data: zoneMembersDocs, timestamp: now }
-      }
-      
-      zoneMembersDocs.forEach(memberDoc => {
-        const data = memberDoc
-        // Skip current user
-        if (data.userId === currentUserId) return
-        
-        // SECURITY: Hide senior zone members from users outside their zone
-        // BUT: If searcher is in a senior zone or is a boss, they can see everyone
-        const memberZoneId = data.zoneId
-        if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
-          // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
-          return
-        }
-        
-        // Only add if not already in map (keep first occurrence)
-        if (!userMap.has(data.userId)) {
-          userMap.set(data.userId, {
-            id: data.userId,
-            email: data.userEmail || '',
-            fullName: data.userName || 'Unknown User',
-            profilePic: undefined,
-            zoneId: data.zoneId,
-            zoneName: data.zoneName || 'Unknown Zone',
-            isOnline: false,
-            lastSeen: new Date()
-          })
-        }
-      })
-      
-      // Also get all HQ members from all HQ groups
-      const { HQ_GROUP_IDS } = await import('@/config/zones')
-      for (const hqZoneId of HQ_GROUP_IDS) {
-        try {
-          const hqMembers = await HQMembersService.getHQGroupMembers(hqZoneId)
-          const zoneDetails = getZoneById(hqZoneId)
-          
-          for (const rawMember of hqMembers as any[]) {
-            const member = rawMember as any
-            if (member.userId && member.userId !== currentUserId && !userMap.has(member.userId)) {
-              // SECURITY: Hide senior zone members from users outside their zone
-              // BUT: If searcher is in a senior zone or is a boss, they can see everyone
-              const memberZoneId = member.hqGroupId || hqZoneId
-              if (!isSearcherInSeniorZone && !isBoss && SENIOR_ZONES.includes(memberZoneId)) {
-                // This is a senior zone member, and searcher is NOT in a senior zone and NOT a boss - hide them
-                continue
-              }
-              
-              // Get user profile for additional info
-              try {
-                const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
-                const profile: any = await FirebaseDatabaseService.getDocument('profiles', member.userId)
-                const fullName =
-                  profile
-                    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || member.userName
-                    : member.userName
-                
-                userMap.set(member.userId, {
-                  id: member.userId,
-                  email: member.userEmail || '',
-                  fullName: fullName || 'Unknown User',
-                  profilePic: profile?.profile_image || undefined,
-                  zoneId: member.hqGroupId || hqZoneId,
-                  zoneName: zoneDetails?.name || 'Unknown Zone',
-                  isOnline: false,
-                  lastSeen: new Date()
-                })
-              } catch (profileError) {
-                // Fallback if profile fetch fails
-                userMap.set(member.userId, {
-                  id: member.userId,
-                  email: member.userEmail || '',
-                  fullName: member.userName || 'Unknown User',
-                  profilePic: undefined,
-                  zoneId: member.hqGroupId || hqZoneId,
-                  zoneName: zoneDetails?.name || 'Unknown Zone',
-                  isOnline: false,
-                  lastSeen: new Date()
-                })
-              }
-            }
-          }
-        } catch (hqError) {
- console.error(`Error fetching HQ members for ${hqZoneId}:`, hqError)
-          // Continue with other HQ groups
-        }
-      }
-      
-      allMembers = Array.from(userMap.values())
-      
-      // Sort by name
-      allMembers.sort((a, b) => a.fullName.localeCompare(b.fullName))
-      
-      // If no search term, return all members
       if (!searchTerm || searchTerm.trim().length === 0) {
-        return allMembers
+        if (zoneId) {
+          return this.getZoneMembers(zoneId, currentUserId);
+        }
+        return [];
       }
+
+      const searchLower = searchTerm.toLowerCase();
+      const searchTitle = searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase();
+      const userMap = new Map<string, ChatUser>();
+
+      const zoneMembersRef = collection(db, 'zone_members');
       
-      // Filter by search term
-      const searchLower = searchTerm.toLowerCase()
-      const filtered = allMembers.filter(user => {
-        const nameMatch = user.fullName?.toLowerCase().includes(searchLower)
-        const emailMatch = user.email?.toLowerCase().includes(searchLower)
-        const zoneMatch = user.zoneName?.toLowerCase().includes(searchLower)
-        return nameMatch || emailMatch || zoneMatch
-      })
+      // Try multiple casing for better matching in Firestore
+      const searchVariations = Array.from(new Set([searchTerm, searchLower, searchTitle]));
       
-      return filtered
+      const memberQueries = [];
+      for (const term of searchVariations) {
+        memberQueries.push(
+          query(zoneMembersRef, where('userName', '>=', term), where('userName', '<=', term + '\uf8ff'), limit(15))
+        );
+        // Only search email if it looks like one or contains @
+        if (term.includes('@') || term === searchLower) {
+          memberQueries.push(
+            query(zoneMembersRef, where('userEmail', '>=', term), where('userEmail', '<=', term + '\uf8ff'), limit(15))
+          );
+        }
+      }
+
+      const snapshots = await Promise.all(memberQueries.map(q => getDocs(q)));
+      
+      snapshots.forEach(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.userId === currentUserId || !data.userId) return;
+          
+          if (!userMap.has(data.userId)) {
+            userMap.set(data.userId, {
+              id: data.userId,
+              email: data.userEmail || '',
+              fullName: data.userName || 'Unknown User',
+              profilePic: undefined,
+              zoneId: data.zoneId,
+              zoneName: data.zoneName || 'Unknown Zone',
+              isOnline: false,
+              lastSeen: new Date()
+            });
+          }
+        });
+      });
+
+      // If we need more results, try profiles collection
+      if (userMap.size < 15) {
+        const profilesRef = collection(db, 'profiles');
+        const profileQueries = [];
+        
+        for (const term of searchVariations) {
+          profileQueries.push(query(profilesRef, where('first_name', '>=', term), where('first_name', '<=', term + '\uf8ff'), limit(10)));
+          if (term === searchLower) {
+            profileQueries.push(query(profilesRef, where('email', '>=', term), where('email', '<=', term + '\uf8ff'), limit(10)));
+          }
+        }
+        
+        const profileSnaps = await Promise.all(profileQueries.map(q => getDocs(q)));
+        profileSnaps.forEach(snapshot => {
+          snapshot.forEach(doc => {
+            const profile = doc.data();
+            const userId = doc.id;
+            if (userId === currentUserId || userMap.has(userId)) return;
+
+            userMap.set(userId, {
+              id: userId,
+              email: profile.email || '',
+              fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown User',
+              profilePic: profile.profile_image_url || undefined,
+              zoneId: profile.zone_id || profile.zone,
+              zoneName: profile.zone_name || 'Assigned Zone',
+              isOnline: false,
+              lastSeen: new Date()
+            });
+          });
+        });
+      }
+
+      let results = Array.from(userMap.values());
+      results.sort((a, b) => a.fullName.localeCompare(b.fullName));
+      return results;
     } catch (error) {
- console.error('Error searching users:', error)
-      return []
+ console.error('Error searching users:', error);
+      return [];
     }
   }
 

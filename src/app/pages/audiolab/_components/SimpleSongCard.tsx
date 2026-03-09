@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { Play, Pause, Music, ChevronDown, Mic, BookOpen, Plus, Trash2 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
+import { prefetchService } from '@/utils/prefetch-service';
 import type { Song, VocalPart } from '../_types';
 
 export interface SimpleSongCardProps {
@@ -57,7 +58,9 @@ export function SimpleSongCard({
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
-        <div className={`
+        <div 
+            onMouseEnter={() => prefetchService.prefetchSong(song as any)}
+            className={`
             rounded-xl border transition-all hover:shadow-lg hover:shadow-violet-500/10 overflow-hidden
             ${isHighlighted ? 'bg-violet-900/40 border-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.3)] ring-2 ring-violet-500/20' : 'bg-[#261933] border-white/10'}
             ${isHighlighted ? 'animate-pulse-subtle' : ''}
@@ -122,7 +125,7 @@ export function SimpleSongCard({
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-slate-400 truncate">
+                    <p className="text-xs text-slate-200 truncate font-medium">
                         {song.artist || 'Unknown artist'}
                         {song.key && ` • ${song.key}`}
                     </p>

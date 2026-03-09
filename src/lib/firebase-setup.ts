@@ -35,7 +35,6 @@ export const auth = getAuth(app)
 export const db: Firestore = (() => {
   try {
     return initializeFirestore(app, {
-      experimentalForceLongPolling: false,
       experimentalAutoDetectLongPolling: true,
       localCache: { kind: 'persistent' }
     })

@@ -2,6 +2,7 @@
 
 import { Music, Play, Pause, ChevronDown, Mic, RefreshCw } from 'lucide-react';
 import type { Song, VocalPart } from '../_types';
+import { prefetchService } from '@/utils/prefetch-service';
 
 export interface CollapsibleSongCardProps {
   song: Song;
@@ -86,6 +87,7 @@ export function CollapsibleSongCard({
       {/* Card Header - Always visible */}
       <button
         onClick={onToggleExpand}
+        onMouseEnter={() => prefetchService.prefetchSong(song as any)}
         className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors"
       >
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg shadow-sm">
@@ -105,8 +107,8 @@ export function CollapsibleSongCard({
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-white truncate">{song.title}</p>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span className="truncate">{song.artist}</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-200">
+            <span className="truncate font-medium">{song.artist}</span>
           </div>
           {availableParts.length > 1 && (
             <div className="flex gap-1 mt-1">
@@ -127,7 +129,7 @@ export function CollapsibleSongCard({
 
         <ChevronDown
           size={20}
-          className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+          className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -184,7 +186,7 @@ export function CollapsibleSongCard({
 
                     <div className="relative z-10 flex-1 min-w-0 text-left">
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className={`font-bold text-base ${isActive ? 'text-white' : 'text-slate-300'}`}>
+                        <span className={`font-bold text-base ${isActive ? 'text-white' : 'text-slate-200'}`}>
                           {getPartLabel(part)}
                         </span>
                         {isActive && (
@@ -197,7 +199,7 @@ export function CollapsibleSongCard({
                       </div>
 
                       {/* Subtitle/Status */}
-                      <p className={`text-xs truncate transition-colors ${isActive ? 'text-violet-200/80' : 'text-slate-500'}`}>
+                      <p className={`text-xs truncate transition-colors ${isActive ? 'text-violet-100/90' : 'text-slate-300'}`}>
                         {isPartLoading ? 'Buffering...' : isActive ? (isPlaying ? 'Now Playing' : 'Paused') : 'Tap to play'}
                       </p>
                     </div>

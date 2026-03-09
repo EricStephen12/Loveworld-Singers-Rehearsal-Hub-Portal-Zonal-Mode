@@ -2003,7 +2003,7 @@ function PraiseNightPageContent() {
                           ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
                           : activeCategory === category
                             ? 'text-white shadow-md'
-                            : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200'
+                            : 'bg-white/90 backdrop-blur-sm text-slate-900 font-bold hover:bg-white border border-gray-200'
                           }`}
                         style={activeCategory === category && !hasActiveSong ? {
                           backgroundColor: zoneColor,

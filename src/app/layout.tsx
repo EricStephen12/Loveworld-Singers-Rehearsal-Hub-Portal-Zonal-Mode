@@ -116,14 +116,15 @@ export default function RootLayout({
 
         {/* INSTANT LOADING - Resource Hints */}
         <link rel="preconnect" href="https://firebase.googleapis.com" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="preconnect" href="https://firestore.googleapis.com" />
         <link rel="dns-prefetch" href="https://firebase.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
         <link rel="preload" href="/logo.png" as="image" />
         <link rel="preload" href="/lmm.png" as="image" />
         <link rel="preload" href="/APP ICON/pwa_192_filled.png" as="image" />
 
-        {/* Critical CSS and JS preloading */}
-        <link rel="preload" href="/_next/static/css/app/layout.css" as="style" />
-        <link rel="preload" href="/_next/static/chunks/webpack.js" as="script" />
+        {/* Critical Resource Hints */}
 
         {/* Fonts removed for faster loading */}
 

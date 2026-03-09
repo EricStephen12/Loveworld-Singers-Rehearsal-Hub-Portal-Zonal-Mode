@@ -155,36 +155,36 @@ export function AudioLabSongDetailModal({
                                         <h3 className="text-xl font-bold text-white line-clamp-1">
                                             {song.title}
                                         </h3>
-                                        <p className="text-sm font-medium text-slate-300 mt-0.5">
+                                        <p className="text-sm font-semibold text-white mt-0.5 opacity-90">
                                             {song.artist}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Metadata rows */}
-                                <div className="mt-5 space-y-2.5 text-xs text-slate-400">
+                                <div className="mt-5 space-y-2.5 text-xs">
                                     <div className="flex justify-between border-b border-white/5 pb-1.5">
-                                        <span className="font-bold uppercase tracking-wider text-[10px] text-slate-500">Artist / Lead</span>
-                                        <span className="font-semibold text-slate-200">{song.artist}</span>
+                                        <span className="font-bold uppercase tracking-wider text-[10px] text-slate-300">Artist / Lead</span>
+                                        <span className="font-bold text-white">{song.artist}</span>
                                     </div>
                                     {song.genre && (
                                         <div className="flex justify-between border-b border-white/5 pb-1.5">
-                                            <span className="font-bold uppercase tracking-wider text-[10px] text-slate-500">Category</span>
-                                            <span className="font-semibold text-slate-200">{song.genre}</span>
+                                            <span className="font-bold uppercase tracking-wider text-[10px] text-slate-300">Category</span>
+                                            <span className="font-bold text-white">{song.genre}</span>
                                         </div>
                                     )}
                                     {(song.key || song.tempo) && (
                                         <div className="flex justify-between border-b border-white/5 pb-1.5">
-                                            <span className="font-bold uppercase tracking-wider text-[10px] text-slate-500">Key / Tempo</span>
+                                            <span className="font-bold uppercase tracking-wider text-[10px] text-slate-300">Key / Tempo</span>
                                             <div className="flex items-center gap-3">
                                                 {song.key && (
-                                                    <span className="flex items-center gap-1 font-semibold text-slate-200">
+                                                    <span className="flex items-center gap-1 font-bold text-white">
                                                         <Key size={12} className="text-violet-400" />
                                                         {song.key}
                                                     </span>
                                                 )}
                                                 {song.tempo && (
-                                                    <span className="flex items-center gap-1 font-semibold text-slate-200">
+                                                    <span className="flex items-center gap-1 font-bold text-white">
                                                         <Clock size={12} className="text-violet-400" />
                                                         {song.tempo} BPM
                                                     </span>
@@ -274,7 +274,7 @@ export function AudioLabSongDetailModal({
                                     </div>
                                     <span className="font-bold text-white text-sm">Lyrics Guide</span>
                                 </div>
-                                <ChevronDown size={18} className={`text-slate-500 transition-transform duration-300 ${showLyrics ? 'rotate-180' : ''}`} />
+                                <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${showLyrics ? 'rotate-180' : ''}`} />
                             </button>
 
                             {showLyrics && (
@@ -282,27 +282,33 @@ export function AudioLabSongDetailModal({
                                     <style>{`
                                         .lyrics-content {
                                           font-family: 'Poppins', sans-serif;
-                                          font-size: 14px;
-                                          line-height: 1.8;
+                                          font-size: 16px;
+                                          line-height: 2;
                                           text-align: left;
-                                          color: #ffffff !important; /* Force white text */
+                                          color: #FFFFFF !important;
                                           background-color: transparent !important;
                                         }
-                                        /* Override ANY inline styles from rich text editors */
-                                        .lyrics-content * {
+                                        /* Force EVERYTHING to white by default */
+                                        .lyrics-content, 
+                                        .lyrics-content *,
+                                        .lyrics-content p, 
+                                        .lyrics-content span,
+                                        .lyrics-content div {
+                                          color: #FFFFFF !important;
                                           background-color: transparent !important;
-                                          color: inherit; /* Inherit white unless overridden below */
                                           font-family: inherit !important;
-                                          font-size: inherit !important;
+                                        }
+                                        /* Exception for BOLD tags - make them Purple */
+                                        .lyrics-content b,
+                                        .lyrics-content strong,
+                                        .lyrics-content b *,
+                                        .lyrics-content strong * {
+                                          font-weight: 800;
+                                          color: #a78bfa !important; /* Vibrant Purple/Violet */
                                         }
                                         .lyrics-content p, 
                                         .lyrics-content div {
-                                          margin-bottom: 0.5rem;
-                                        }
-                                        .lyrics-content b,
-                                        .lyrics-content strong {
-                                          font-weight: 700;
-                                          color: #a78bfa !important; /* Force Violet-400 */
+                                          margin-bottom: 0.75rem;
                                         }
                                     `}</style>
 
@@ -313,9 +319,9 @@ export function AudioLabSongDetailModal({
                                                 return (
                                                     <p
                                                         key={i}
-                                                        className={`text-[15px] leading-relaxed font-medium transition-all duration-300 ${isActive
+                                                        className={`text-[16px] leading-relaxed font-bold transition-all duration-300 ${isActive
                                                             ? 'text-violet-400 scale-[1.02] transform origin-left'
-                                                            : 'text-white'
+                                                            : 'text-[#FFFFFF]'
                                                             }`}
                                                     >
                                                         {line.text}
@@ -325,7 +331,7 @@ export function AudioLabSongDetailModal({
                                         </div>
                                     ) : song.lyrics ? (
                                         <div
-                                            className={`lyrics-content text-white ${!containsHtml ? 'whitespace-pre-wrap' : ''}`}
+                                            className={`lyrics-content text-[#FFFFFF] ${!containsHtml ? 'whitespace-pre-wrap' : ''}`}
                                             dangerouslySetInnerHTML={{
                                                 __html: Array.isArray(song.lyrics)
                                                     ? song.lyrics.map(l => l.text).join('\n')

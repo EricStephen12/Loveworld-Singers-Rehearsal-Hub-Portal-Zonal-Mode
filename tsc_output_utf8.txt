@@ -1,0 +1,251 @@
+﻿node_modules/next/dist/build/templates/app-page.d.ts(11,25): error TS2307: Cannot find module 'VAR_MODULE_GLOBAL_ERROR' or its corresponding type declarations.
+node_modules/next/dist/build/webpack-config.d.ts(10,104): error TS2694: Namespace '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/next/dist/compiled/webpack/webpack".webpack' has no exported member 'RuleSetUseItem'.
+node_modules/next/dist/build/webpack/loaders/next-app-loader/index.d.ts(1,13): error TS2613: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/next/dist/compiled/webpack/webpack"' has no default export. Did you mean to use 'import { webpack } from "C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/next/dist/compiled/webpack/webpack"' instead?
+node_modules/next/dist/client/components/error-boundary.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/client/components/http-access-fallback/error-boundary.d.ts(11,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/client/components/layout-router.d.ts(2,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/client/with-router.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/lib/metadata/metadata.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/server/app-render/entry-base.d.ts(1,114): error TS2307: Cannot find module 'react-server-dom-webpack/server' or its corresponding type declarations.
+node_modules/next/dist/server/app-render/entry-base.d.ts(2,49): error TS2307: Cannot find module 'react-server-dom-webpack/static' or its corresponding type declarations.
+node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(39,16): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(40,13): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(41,15): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/next/dist/server/web/spec-extension/adapters/headers.d.ts(42,26): error TS2304: Cannot find name 'HeadersIterator'.
+node_modules/next/dist/shared/lib/amp-context.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/app-router-context.shared-runtime.d.ts(4,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/image-config-context.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/loadable-context.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/loadable.shared-runtime.d.ts(21,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/router-context.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.d.ts(1,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/next/dist/shared/lib/utils.d.ts(10,13): error TS1192: Module '"fs"' has no default export.
+node_modules/next/dist/types.d.ts(8,13): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+src/app/pages/groups/_components/ChatWindow.tsx(3,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+src/app/pages/groups/_components/ChatWindow.tsx(9,27): error TS6142: Module '../_context/ChatContextV2' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_context/ChatContextV2.tsx', but '--jsx' is not set.
+src/app/pages/groups/_components/ChatWindow.tsx(10,31): error TS6142: Module './MessageBubble' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_components/MessageBubble.tsx', but '--jsx' is not set.
+src/app/pages/groups/_components/ChatWindow.tsx(11,27): error TS6142: Module './ChatInput' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_components/ChatInput.tsx', but '--jsx' is not set.
+src/app/pages/groups/_components/ChatWindow.tsx(12,25): error TS2307: Cannot find module '@/hooks/useAuth' or its corresponding type declarations.
+src/app/pages/groups/_components/ChatWindow.tsx(13,28): error TS2307: Cannot find module '@/app/pages/groups/_components/SyncAvatar' or its corresponding type declarations.
+src/app/pages/groups/_components/ChatWindow.tsx(87,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(88,10): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(89,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(90,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(92,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(93,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(96,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(97,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(109,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(111,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(114,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(115,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(116,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(117,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(120,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(121,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(130,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(133,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(134,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(135,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(137,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(141,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(142,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(150,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(151,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(152,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(154,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(155,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(157,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(161,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(167,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(173,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(174,14): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(175,14): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(178,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(180,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(182,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(183,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(192,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(205,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(211,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(213,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(220,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_components/ChatWindow.tsx(226,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/_lib/chat-service.ts(24,20): error TS2307: Cannot find module '@/lib/firebase-setup' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(3,8): error TS1259: Module '"C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+src/app/pages/groups/page.tsx(5,25): error TS2307: Cannot find module '@/hooks/useAuth' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(6,25): error TS2307: Cannot find module '@/hooks/useZone' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(7,36): error TS2307: Cannot find module '@/hooks/useAnalyticsTracking' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(8,43): error TS6142: Module './_context/ChatContextV2' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_context/ChatContextV2.tsx', but '--jsx' is not set.
+src/app/pages/groups/page.tsx(16,34): error TS2307: Cannot find module '@/types/supabase' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(17,41): error TS2307: Cannot find module '@/lib/firebase-database' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(20,25): error TS2307: Cannot find module '@/contexts/CallContext' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(23,26): error TS6142: Module './_components/ChatList' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_components/ChatList.tsx', but '--jsx' is not set.
+src/app/pages/groups/page.tsx(24,28): error TS6142: Module './_components/ChatWindow' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_components/ChatWindow.tsx', but '--jsx' is not set.
+src/app/pages/groups/page.tsx(25,28): error TS6142: Module './_components/SyncAvatar' was resolved to 'C:/Users/LWRSH/Documents/Loveworld-Singers-Rehearsal-Hub-Portal-Zonal-Mode/src/app/pages/groups/_components/SyncAvatar.tsx', but '--jsx' is not set.
+src/app/pages/groups/page.tsx(29,72): error TS2322: Type '"≡ƒöÑ"' is not assignable to type 'ReactionType'.
+src/app/pages/groups/page.tsx(29,90): error TS2322: Type '"Γ£¿"' is not assignable to type 'ReactionType'.
+src/app/pages/groups/page.tsx(35,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(36,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(279,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(280,7): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(282,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(283,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(295,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(306,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(307,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(308,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(309,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(311,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(312,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(313,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(316,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(317,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(318,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(319,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(330,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(332,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(332,50): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(334,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(336,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(338,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(339,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(340,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(340,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(340,124): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(341,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(352,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(353,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(355,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(356,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(357,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(358,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(358,66): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(360,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(361,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(362,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(364,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(366,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(366,47): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(366,262): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(369,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(370,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(371,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(371,59): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(372,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(372,43): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(372,97): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(373,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(373,66): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(377,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(379,23): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(380,34): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(380,118): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(385,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(385,38): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(385,64): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(385,149): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(386,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(388,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(389,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(390,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(391,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(395,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(395,47): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(395,263): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(404,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(405,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(406,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(406,117): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(407,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(420,74): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(422,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(423,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(430,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(431,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(432,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(433,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(433,101): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(434,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(436,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(445,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(446,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(447,43): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(447,142): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(450,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(452,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(452,68): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(454,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(455,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(456,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(458,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(459,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(460,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(460,46): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(460,176): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(461,64): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(461,136): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(466,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(467,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(468,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(468,51): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(468,136): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(469,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(471,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(471,196): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(477,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(479,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(481,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(490,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(491,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(493,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(493,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(495,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(496,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(497,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(498,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(499,61): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(499,160): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(501,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(502,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(503,19): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(504,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(504,70): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(505,58): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(505,97): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(506,22): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(506,61): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(517,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(518,11): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(519,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(520,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(520,139): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(522,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(523,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(524,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(525,51): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(525,139): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(527,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(528,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(529,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(533,74): error TS2307: Cannot find module '@/lib/cloudinary-storage' or its corresponding type declarations.
+src/app/pages/groups/page.tsx(542,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(543,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(544,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(545,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(551,18): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(552,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(553,20): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(556,16): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(564,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(565,12): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(566,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(567,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(568,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(570,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(570,270): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(571,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(571,264): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+src/app/pages/groups/page.tsx(572,15): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.

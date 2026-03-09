@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ import {
 import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
-import { createProject, getProject, updateProject } from '../_lib/project-service';
+import { createProject, getProject, updateProject, onProjectUpdate } from '../_lib/project-service';
 import { audioEngine } from '../_lib/audio-engine';
 import { uploadRecording, generateRecordingFileName } from '../_lib/upload-service';
 import { saveRecordingToIndexedDB, getRecordingFromIndexedDB, deleteRecordingFromIndexedDB, getProjectRecordings } from '../_lib/indexeddb-storage';
@@ -146,7 +146,12 @@ export function StudioView() {
 
   useEffect(() => {
     if (user?.uid && state.currentProjectId) {
-      loadSpecificProject(state.currentProjectId);
+      const unsubscribe = onProjectUpdate(state.currentProjectId, (project) => {
+        if (project) {
+          handleProjectSync(project);
+        }
+      });
+      return () => unsubscribe();
     }
   }, [user?.uid, state.currentProjectId]);
 
@@ -236,89 +241,101 @@ export function StudioView() {
     setRecoveredTracks([]);
   };
 
-  const loadSpecificProject = async (projectId: string) => {
-    setIsLoading(true);
-    try {
-      const project = await getProject(projectId);
-      if (project) {
-        setCurrentProject(project);
-        setIsExistingProject(true);
+  const handleProjectSync = useCallback(async (project: AudioLabProject) => {
+    // If it's the first load or project info changed
+    if (!currentProject || currentProject.id !== project.id) {
+      setIsLoading(true);
+    }
 
-        if (project.duration && project.duration > 0) {
-          setDuration(project.duration);
-        }
+    setCurrentProject(project);
+    setIsExistingProject(true);
+    setContextProject(project.id);
 
-        if (project.tracks && project.tracks.length > 0) {
-          const loadedTracks = project.tracks.map((t, i) => ({
+    if (project.duration && project.duration > 0) {
+      setDuration(prev => Math.max(prev, project.duration || 0));
+    }
+
+    if (project.tracks) {
+      setTracks(prevTracks => {
+        // Map new tracks from project
+        const newTracks = project.tracks.map((t, i) => {
+          const existing = prevTracks.find(pt => pt.id === t.id);
+          
+          // Define a default effects object if not present
+          const DEFAULT_EFFECTS = {
+            volume: 80,
+            pan: 0,
+            reverb: 20,
+            bass: 0,
+            treble: 0,
+            compression: 30
+          };
+
+          return {
             id: t.id,
             name: t.name,
             icon: Mic,
             volume: t.volume || 80,
             muted: t.muted || false,
             solo: t.solo || false,
-            isActive: i === 0,
-            isRecording: false,
+            isActive: existing ? existing.isActive : i === 0,
+            isRecording: existing ? existing.isRecording : false,
             waveformHeights: t.waveform || [],
             audioUrl: t.audioUrl,
-            localStored: !!t.audioUrl,
-            // Load effects if they exist, otherwise use defaults
+            // Keep local blob if URL hasn't been set yet or if it's the same track
+            audioBlob: existing?.audioBlob,
+            localStored: !!t.audioUrl || (existing?.localStored || false),
             effects: t.effects ? {
-              volume: t.effects.volume ?? 80,
-              pan: t.effects.pan ?? 0,
-              reverb: t.effects.reverb ?? 20,
-              bass: t.effects.bass ?? 0,
-              treble: t.effects.treble ?? 0,
-              compression: t.effects.compression ?? 30
-            } : {
-              volume: 80,
-              pan: 0,
-              reverb: 20,
-              bass: 0,
-              treble: 0,
-              compression: 30
-            }
-          }));
+              volume: t.effects.volume ?? DEFAULT_EFFECTS.volume,
+              pan: t.effects.pan ?? DEFAULT_EFFECTS.pan,
+              reverb: t.effects.reverb ?? DEFAULT_EFFECTS.reverb,
+              bass: t.effects.bass ?? DEFAULT_EFFECTS.bass,
+              treble: t.effects.treble ?? DEFAULT_EFFECTS.treble,
+              compression: t.effects.compression ?? DEFAULT_EFFECTS.compression
+            } : DEFAULT_EFFECTS
+          };
+        });
 
-          setTracks(loadedTracks);
+        // Initialize audio for new tracks or changed URLs
+        newTracks.forEach(track => {
+          if (track.audioUrl && !track.audioUrl.startsWith('blob:')) {
+            const existingAudio = trackAudioRefs.current.get(track.id);
+            
+            // Only reload if URL changed or no audio exists
+            if (!existingAudio || existingAudio.src !== track.audioUrl) {
+              if (existingAudio && existingAudio.src.startsWith('blob:')) {
+                URL.revokeObjectURL(existingAudio.src);
+              }
 
-          let maxDuration = project.duration || 0;
-          for (const track of loadedTracks) {
-            if (track.audioUrl && !track.audioUrl.startsWith('blob:')) {
               const audio = new Audio();
               audio.crossOrigin = 'anonymous';
               audio.preload = 'auto';
               audio.src = track.audioUrl;
               trackAudioRefs.current.set(track.id, audio);
-
+              
               audio.onloadedmetadata = () => {
-                if (audio.duration && isFinite(audio.duration) && audio.duration > maxDuration) {
-                  maxDuration = audio.duration;
-                  setDuration(maxDuration);
+                if (audio.duration && isFinite(audio.duration)) {
+                  setDuration(prev => Math.max(prev, audio.duration));
                 }
               };
-
               audio.load();
+            } else {
+              // Just update volume/mute status if audio already exists
+              existingAudio.volume = track.muted ? 0 : track.volume / 100;
             }
           }
+        });
 
-          if (project.tracks.some(t => t.audioUrl)) {
-            setHasFirstRecording(true);
-          }
-
-          if (!project.duration || project.duration === 0) {
-            const trackWithDuration = project.tracks.find(t => t.duration && t.duration > 0);
-            if (trackWithDuration?.duration) {
-              setDuration(trackWithDuration.duration);
-            }
-          }
+        if (project.tracks.some(t => t.audioUrl)) {
+          setHasFirstRecording(true);
         }
-      }
-    } catch (error) {
- console.error('Failed to load project:', error);
-    } finally {
-      setIsLoading(false);
+
+        return newTracks;
+      });
     }
-  };
+
+    setIsLoading(false);
+  }, [currentProject, setContextProject, setDuration, setTracks, setIsLoading, setHasFirstRecording]); // Added all necessary dependencies
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

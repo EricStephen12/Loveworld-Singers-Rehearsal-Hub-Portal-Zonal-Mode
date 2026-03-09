@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AUDIOLAB SONG SERVICE
  * 
  * Firebase integration for AudioLab songs
@@ -358,6 +358,46 @@ export async function getSongById(songId: string): Promise<AudioLabSong | null> 
 
     if (docSnap.exists()) {
       return docToSong(docSnap);
+    }
+
+    // Fallback to Praise Night songs
+    try {
+      const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
+      // We pass null for zoneId here just to try fetching the specific song, 
+      // however PraiseNightSongsService doesn't have a direct getById. 
+      // Instead, we will search Firestore directly for the ID in praise_night_songs.
+      const pnDocRef = doc(db, 'praise_night_songs', songId);
+      const pnDocSnap = await getDoc(pnDocRef);
+      if (pnDocSnap.exists()) {
+         const pnData = pnDocSnap.data();
+         pnData.id = pnDocSnap.id;
+         
+         const mergedAudioUrls = {
+           full: pnData.audioFile || '',
+           ...(pnData.audioUrls || {})
+         };
+
+         return {
+            id: pnData.id,
+            title: pnData.title || 'Untitled',
+            artist: pnData.leadSinger || pnData.writer || 'Praise Night',
+            duration: 300,
+            audioUrls: mergedAudioUrls,
+            availableParts: Object.keys(mergedAudioUrls).filter(k => !!(mergedAudioUrls as any)[k]) as VocalPart[],
+            genre: pnData.category || 'Praise Night',
+            key: pnData.key || '',
+            tempo: pnData.tempo ? parseInt(pnData.tempo) : 0,
+            albumArt: '',
+            lyrics: parseLyrics(pnData.lyrics),
+            zoneId: '',
+            isHQSong: false,
+            createdAt: pnData.createdAt?.toDate?.() || new Date(),
+            updatedAt: pnData.updatedAt?.toDate?.() || new Date(),
+            createdBy: 'system'
+         };
+      }
+    } catch (e) {
+      console.error('[SongService] Error fetching fallback PN song:', e);
     }
 
     return null;

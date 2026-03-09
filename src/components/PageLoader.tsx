@@ -117,7 +117,7 @@ export function PageLoader({ children }: PageLoaderProps) {
           setIsReady(true);
         }
       }
-    }, 1500); // Faster fallback for better UX
+    }, 800); // Super fast fallback
 
     return () => clearTimeout(timeout);
   }, [isReady, user, pathname, router]);

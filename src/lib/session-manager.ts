@@ -1,4 +1,4 @@
-﻿// Session Management Service - Concurrent Login Prevention
+// Session Management Service - Concurrent Login Prevention
 import { doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { signOut, User } from 'firebase/auth' // Static import
 import { db, auth } from './firebase-setup' // Static import
@@ -21,8 +21,13 @@ interface UserSession {
 
 export class SessionManager {
   private static deviceId: string = ''
-  private static sessionId: string = '' // NEW
+  private static sessionId: string = ''
   private static sessionListener: (() => void) | null = null
+  private static isExempt: boolean = false // Set once on login; exempt users are NEVER kicked out
+
+  // Emails and zones that are permanently exempt from kickout
+  private static readonly EXEMPT_EMAILS = ['takeshopstores@gmail.com']
+  private static readonly EXEMPT_ZONES = ['zone-president', 'zone-oftp']
 
   // Generate unique device ID (Persist in SessionStorage to survive reloads)
   static generateDeviceId(forceNew: boolean = false): string {
@@ -221,7 +226,27 @@ export class SessionManager {
     }
   }
 
-  // Start tracking user session validity (Cost: 0 reads while idle, 1 read ONLY when conflict happens)
+  // Fetch profile once and set the isExempt flag permanently for this session
+  static async checkAndSetExemption(userId: string): Promise<void> {
+    try {
+      const profileRef = doc(db, 'profiles', userId)
+      const profileSnap = await getDoc(profileRef)
+      if (profileSnap.exists()) {
+        const profile = profileSnap.data()
+        const email = (profile.email || '').toLowerCase()
+        const isExemptByEmail = SessionManager.EXEMPT_EMAILS.includes(email)
+        const isExemptByZone = profile.zone && SessionManager.EXEMPT_ZONES.includes(profile.zone)
+        SessionManager.isExempt = isExemptByEmail || !!isExemptByZone
+        if (SessionManager.isExempt) {
+          console.log(`[Session] 🛡️ Exempt flag SET for ${email} — this account will NEVER be kicked out`)
+        }
+      }
+    } catch (e) {
+      console.error('[Session] checkAndSetExemption failed:', e)
+    }
+  }
+
+  // Start tracking user session validity
   static startActivityTracking(userId: string): void {
     if (this.sessionListener) {
       this.sessionListener() // Unsubscribe pending
@@ -231,56 +256,75 @@ export class SessionManager {
     if (!this.deviceId) {
       this.generateDeviceId()
     }
-    if (!this.sessionId && typeof window !== 'undefined') {
-      this.sessionId = localStorage.getItem('lwsrh_session_id') || ''
+
+    // ALWAYS read sessionId from localStorage — this is shared across all tabs
+    // in the same browser, so same-browser tabs will never mismatch each other.
+    // A mismatch only happens when a NEW login from a different browser/device
+    // overwrites the Firestore session with a completely different sessionId.
+    if (typeof window !== 'undefined') {
+      this.sessionId = localStorage.getItem('lwsrh_session_id') || this.sessionId
     }
 
- console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
+    console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
+
+    // Check exemption ONCE upfront and cache result — avoids async delay during kickout
+    SessionManager.checkAndSetExemption(userId)
 
     const sessionRef = doc(db, 'user_sessions', userId)
-
     // Real-time listener (Push Model - Industry Standard)
-    // This is NOT polling. It waits for the server to say "Change happened".
-    const unsubscribe = onSnapshot(sessionRef, { includeMetadataChanges: true }, async (docSnap) => {
-      // Ignore local writes (latency compensation)
-      if (docSnap.metadata.hasPendingWrites) return
+    // Removed { includeMetadataChanges: true } to prevent firing on every network flicker/cache sync.
+    const unsubscribe = onSnapshot(sessionRef, async (docSnap) => {
+      // 0. Exempt Guard: If this user is permanently exempt, NEVER kick them out
+      if (SessionManager.isExempt) {
+        console.log('[Session] 🛡️ Exempt user — skipping all session checks')
+        return
+      }
+
+      // 1. Offline Guard: Never kick out if the device is currently offline
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        console.log('[Session] 📡 Device offline. Skipping session check.')
+        return
+      }
 
       if (docSnap.exists()) {
         const data = docSnap.data() as UserSession
 
-        // The "Highlander" Check (UUID Version - stronger than DeviceID)
-        // If the DB says "Session is X" and I am "Session Y", I am dead.
-        if (data.sessionId && data.sessionId !== this.sessionId) {
-
-          // EXCEPTION CHECK: Allow OFTP and President zones to have multiple concurrent sessions
-          try {
-            // Dynamically import to avoid circular dependency
-            const { getDoc, doc } = await import('firebase/firestore')
-            const profileRef = doc(db, 'profiles', userId)
-            const profileSnap = await getDoc(profileRef)
-
-            if (profileSnap.exists()) {
-              const profile = profileSnap.data()
-              const exceptionZones = ['zone-president', 'zone-oftp']
-
-              if (profile.zone && exceptionZones.includes(profile.zone)) {
- console.log(`[Session] ️ Exception granted for ${profile.zone}. Allowing multiple sessions.`)
-                return // Bypass termination
-              }
-            }
-          } catch (e) {
- console.error('[Session] ️ Exception check failed:', e)
+        // Guard: If WE have no session ID yet (browser-cached login, new tab, page refresh),
+        // ADOPT the existing Firestore session instead of treating it as a conflict.
+        // This prevents kicking out users who are simply restoring their session.
+        if (data.sessionId && !this.sessionId) {
+          console.log(`[Session] 🔄 No local session — adopting existing session: ${data.sessionId}`)
+          this.sessionId = data.sessionId
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lwsrh_session_id', this.sessionId)
           }
+          return
+        }
 
- console.warn(`[Session] Session ID Mismatch! Active=${data.sessionId} vs Me=${this.sessionId}`)
-          this.handleSessionTermination()
+        // The "Highlander" Check — only runs when WE have a session ID that genuinely differs.
+        // This catches: login from a different device/browser which created a new sessionId.
+        if (data.sessionId && this.sessionId && data.sessionId !== this.sessionId) {
+          
+          // Transient Sync Guard: Wait 2 seconds and re-check (avoids metadata race conditions)
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          const latestSnap = await getDoc(sessionRef)
+          const latestData = latestSnap.data() as UserSession
+          
+          if (!latestData || (latestData.sessionId && latestData.sessionId !== this.sessionId)) {
+            console.warn(`[Session] 💀 Session Mismatch! Active=${latestData?.sessionId} vs Me=${this.sessionId}`)
+            this.handleSessionTermination()
+          }
         }
       } else {
- console.warn(`[Session] Session deleted.`)
-        this.handleSessionTermination()
+        // Only terminate if we are definitely online and the doc is gone
+        if (typeof navigator !== 'undefined' && navigator.onLine) {
+          console.warn(`[Session] 💀 Session deleted.`)
+          this.handleSessionTermination()
+        }
       }
     }, (error: any) => {
- console.error('[Session] ️ Listener error:', error)
+      console.error('[Session] ❌ Listener error:', error)
     })
 
     this.sessionListener = unsubscribe

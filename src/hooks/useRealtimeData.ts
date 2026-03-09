@@ -98,19 +98,21 @@ export function useRealtimeData(zoneId?: string) {
         const cachedData = lowDataOptimizer.get(cacheKey)
         const lastFetchTime = lowDataOptimizer.get(lastFetchKey)
         const now = Date.now()
-        const CACHE_TTL = 5 * 60 * 1000 // 5 Minutes
+        const CACHE_TTL = 30 * 1000 // Keep it strict for revalidation
 
-        const isCacheValid = cachedData && lastFetchTime && (now - lastFetchTime < CACHE_TTL)
-
-        if (isCacheValid) {
-
-          if (isMounted) setPages(cachedData)
-          setLoading(false)
-        } else {
-
-          if (cachedData && isMounted) setPages(cachedData)
-          await fetchAndCache()
+        // INSTANT RENDER FROM CACHE
+        if (cachedData && isMounted) {
+          setPages(cachedData)
+          setLoading(false) // Show cache immediately, hide spinner
+          
+          // If cache is "Hot" (under 30s), we can skip the background fetch
+          if (now - (lastFetchTime || 0) < CACHE_TTL) {
+            return;
+          }
         }
+
+        // BACKGROUND REVALIDATION (silently updates UI if data changed)
+        await fetchAndCache()
       } catch (err) {
  console.error('Failed to load initial data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load data')

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { PraiseNightSong } from '@/types/supabase'
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service'
+import { lowDataOptimizer } from '@/utils/low-data-optimizer'
 
 /**
  * Hook to fetch and subscribe to realtime updates for a specific song.
@@ -24,7 +25,7 @@ export function useRealtimeSong(
     const [error, setError] = useState<string | null>(null)
 
     // Fetch song data
-    const fetchSong = useCallback(async () => {
+    const fetchSong = useCallback(async (isInitial = false) => {
         if (!songId || !zoneId) {
             setSong(null)
             setLoading(false)
@@ -33,11 +34,23 @@ export function useRealtimeSong(
 
         try {
             setError(null)
+            
+            const cacheKey = `song-detail-${songId}`
+            if (isInitial) {
+                const cached = lowDataOptimizer.get(cacheKey)
+                if (cached) {
+                    setSong(cached)
+                    setLoading(false) // Show cached lyrics instantly
+                }
+            }
 
             const songData = await PraiseNightSongsService.getSongById(songId, zoneId)
-            setSong(songData)
+            if (songData) {
+                setSong(songData)
+                lowDataOptimizer.set(cacheKey, songData)
+            }
         } catch (err) {
- console.error('Error fetching song:', err)
+            console.error('Error fetching song:', err)
             setError(err instanceof Error ? err.message : 'Failed to fetch song')
         } finally {
             setLoading(false)
@@ -58,7 +71,7 @@ export function useRealtimeSong(
         }
 
         // 1. Initial fetch
-        fetchSong()
+        fetchSong(true)
 
         // 2. Subscribe to metadata changes
 

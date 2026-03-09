@@ -518,19 +518,19 @@ export function LibraryView() {
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
             <button
               onClick={() => setSelectedProgramId('all')}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === 'all' ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/10' : 'bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedProgramId === 'all' ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/10' : 'bg-white/5 text-slate-200 border border-white/5 hover:bg-white/10'}`}
             >
               All Songs
             </button>
             <button
               onClick={() => setSelectedProgramId('ongoing')}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${selectedProgramId === 'ongoing' ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-white/5 text-slate-500 border border-white/5 hover:bg-white/10'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${selectedProgramId === 'ongoing' ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-white/5 text-slate-300 border border-white/5 hover:bg-white/10'}`}
             >
               Ongoing
             </button>
             <button
               onClick={() => setSelectedProgramId('playlists')}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${selectedProgramId === 'playlists' ? 'bg-violet-600/20 text-violet-400 border border-violet-500/20 shadow-lg shadow-violet-500/10' : 'bg-white/5 text-slate-500 border border-white/5 hover:bg-white/10'}`}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${selectedProgramId === 'playlists' ? 'bg-violet-600/20 text-violet-400 border border-violet-500/20 shadow-lg shadow-violet-500/10' : 'bg-white/5 text-slate-300 border border-white/5 hover:bg-white/10'}`}
             >
               <ListMusic size={14} />
               My Playlists
@@ -617,18 +617,18 @@ export function LibraryView() {
                       <p className="text-white text-[15px] font-semibold truncate group-hover:text-violet-300 transition-colors">
                         {playlist.title}
                       </p>
-                      <p className="text-slate-500 text-xs font-medium mt-0.5">
+                      <p className="text-slate-200 text-xs font-semibold mt-0.5">
                         {playlist.songIds.length} {playlist.songIds.length === 1 ? 'Song' : 'Songs'}
                       </p>
                     </div>
-                    <ChevronDown size={16} className="text-slate-600 -rotate-90 group-hover:text-violet-400 transition-colors" />
+                    <ChevronDown size={16} className="text-slate-300 -rotate-90 group-hover:text-violet-400 transition-colors" />
                   </button>
                 ))}
               </div>
             ) : (
               <div className="py-20 flex flex-col items-center justify-center gap-3 text-center opacity-40">
-                <ListMusic size={48} className="text-slate-600" />
-                <p className="text-sm font-bold uppercase tracking-widest text-slate-500">
+                <ListMusic size={48} className="text-slate-400" />
+                <p className="text-sm font-bold uppercase tracking-widest text-slate-300">
                   {searchQuery ? 'No playlists match your search' : 'Your playlists will appear here'}
                 </p>
               </div>
@@ -641,7 +641,7 @@ export function LibraryView() {
             {isLoading && songs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <CustomLoader message="" />
-                <p className="text-slate-500 font-medium">Brewing Master Library...</p>
+                <p className="text-slate-300 font-bold">Brewing Master Library...</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">

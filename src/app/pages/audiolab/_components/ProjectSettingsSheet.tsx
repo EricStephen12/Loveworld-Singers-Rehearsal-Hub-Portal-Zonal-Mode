@@ -107,23 +107,28 @@ export function ProjectSettingsSheet({
     setCollaboratorDetails(details);
   };
 
-  // Search for zone members
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim() || !user?.uid || !currentZone?.id) {
-      setSearchResults([]);
-      return;
-    }
+  // Search for zone members (Debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim() && user?.uid && currentZone?.id) {
+        performSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
 
+    return () => clearTimeout(timer);
+  }, [searchQuery, user?.uid, currentZone?.id]);
+
+  const performSearch = async (query: string) => {
     setIsSearching(true);
     try {
-      const results = await FirebaseChatService.searchUsers(query, user.uid, currentZone.id);
+      const results = await FirebaseChatService.searchUsers(query, user!.uid, currentZone!.id);
       // Filter out existing collaborators and owner
       const filtered = results
         .filter(r => r.id !== project?.ownerId && !project?.collaborators?.includes(r.id))
         .map(r => ({
           id: r.id,
-          // fullName from searchUsers is already the best available name
           name: r.fullName || 'Unknown',
           avatar: r.profilePic || undefined
         }));
@@ -134,6 +139,10 @@ export function ProjectSettingsSheet({
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
 
   // Add collaborator
@@ -368,7 +377,7 @@ export function ProjectSettingsSheet({
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search zone members..."
                     className="flex-1 bg-transparent text-white text-sm focus:outline-none placeholder-slate-500"
                   />

@@ -3,13 +3,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthContext } from '@/contexts/AuthContext'
-// import { useWebFCM } from '@/lib/fcm-web'
 import { NavigationManager } from '@/utils/navigation'
-
 import { AUTH_CACHE_KEY } from '@/config/routes'
 
 /**
- * SplashPage - ONLY handles initial app load routing
+ * SplashPage - ONLY handles initial app load routing (Reverted to former UI)
  */
 export default function SplashPage() {
   const router = useRouter()
@@ -17,9 +15,9 @@ export default function SplashPage() {
   const { user, loading } = useAuthContext()
   const [showFailsafe, setShowFailsafe] = useState(false)
 
-  // Fail-safe: If stuck for 800ms (standard for fast apps), show manual entry
+  // Fail-safe: If stuck for 400ms, show manual entry
   useEffect(() => {
-    const timer = setTimeout(() => setShowFailsafe(true), 800)
+    const timer = setTimeout(() => setShowFailsafe(true), 400)
     return () => clearTimeout(timer)
   }, [])
 
@@ -58,7 +56,7 @@ export default function SplashPage() {
       const timer = setTimeout(() => {
         const lastPath = NavigationManager.getLastPath()
         router.replace((lastPath && lastPath !== '/') ? lastPath : '/home')
-      }, 500)
+      }, 100)
       return () => clearTimeout(timer)
     }
   }, [pathname, router])
@@ -88,10 +86,11 @@ export default function SplashPage() {
           style={{
             animationDuration: '2s',
             animationIterationCount: 'infinite',
+            animationTimingFunction: 'ease-in-out'
           }}
         />
 
-        {/* Fail-safe button for stuck users - Appears much faster now (800ms) */}
+        {/* Fail-safe button for stuck users */}
         {showFailsafe && (
           <button
             onClick={() => router.replace('/home')}

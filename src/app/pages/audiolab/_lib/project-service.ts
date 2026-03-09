@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AUDIOLAB PROJECT SERVICE
  * 
  * Firebase integration for multi-track recording projects
@@ -19,7 +19,8 @@ import {
   limit,
   serverTimestamp,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 import type {
@@ -100,12 +101,45 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
 }
 
 /**
+ * Listen for project updates in real-time
+ */
+export function onProjectUpdate(projectId: string, callback: (project: AudioLabProject | null) => void) {
+  const docRef = doc(db, COLLECTION_NAME, projectId);
+  
+  return onSnapshot(docRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      const project: AudioLabProject = {
+        id: snapshot.id,
+        name: data.name,
+        tempo: data.tempo,
+        timeSignature: data.timeSignature,
+        duration: data.duration,
+        tracks: data.tracks || [],
+        referenceSongId: data.referenceSongId,
+        ownerId: data.ownerId,
+        collaborators: data.collaborators || [],
+        zoneId: data.zoneId,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date()
+      };
+      callback(project);
+    } else {
+      callback(null);
+    }
+  }, (error) => {
+    console.error('[ProjectService] Error listening for project updates:', error);
+    callback(null);
+  });
+}
+
+/**
  * Get a project by ID
  */
-export async function getProject(projectId: string): Promise<AudioLabProject | null> {
+export async function getProject(id: string): Promise<AudioLabProject | null> {
   try {
 
-    const docRef = doc(db, COLLECTION_NAME, projectId);
+    const docRef = doc(db, COLLECTION_NAME, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -489,23 +523,20 @@ export async function addCollaborator(
     });
 
 
-    // Send push notification to the invited user
-    try {
-      await fetch('/api/send-notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'audiolab',
-          recipientIds: [userId],
-          title: 'Studio Collaboration Invite',
-          body: inviterName
-            ? `${inviterName} invited you to collaborate on "${finalProjectName}"`
-            : `You've been invited to collaborate on "${finalProjectName}"`,
-          data: { projectId, projectName: finalProjectName }
-        })
-      });
-    } catch (notifError) {
-    }
+    // Send push notification to the invited user (non-blocking)
+    fetch('/api/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'audiolab',
+        recipientIds: [userId],
+        title: 'Studio Collaboration Invite',
+        body: inviterName
+          ? `${inviterName} invited you to collaborate on "${finalProjectName}"`
+          : `You've been invited to collaborate on "${finalProjectName}"`,
+        data: { projectId, projectName: finalProjectName }
+      })
+    }).catch(err => console.error('[ProjectService] Failed to send notification (background):', err));
 
     return { success: true };
   } catch (error) {
