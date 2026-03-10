@@ -5,7 +5,7 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Phone, PhoneOff, ArrowLeft, MoreVertical, Search, Check, 
-  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3
+  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download
 } from 'lucide-react'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { MessageBubble } from './MessageBubble'
@@ -46,6 +46,7 @@ export function ChatWindow({
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showScrollBottom, setShowScrollBottom] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -239,11 +240,11 @@ export function ChatWindow({
           backgroundRepeat: 'repeat',
           backgroundSize: '400px',
           backgroundPosition: 'center',
-          backgroundColor: '#e5ddd5', // WhatsApp default chat background color
+          backgroundColor: '#efeae2', // Authentic WhatsApp background color
         }}
       >
-        {/* Semi-transparent overlay to make messages pop out more against the pattern */}
-        <div className="absolute inset-0 bg-white/40 pointer-events-none z-0" />
+        {/* Very subtle overlay to ensure text readability if needed, but authentic WA has no overlay */}
+        <div className="absolute inset-0 bg-[#efeae2]/10 pointer-events-none z-0" />
         
         <div className="relative z-10 min-h-full flex flex-col justify-end">
         {isMessagesLoading ? (
@@ -256,8 +257,8 @@ export function ChatWindow({
             {Object.entries(groupedMessages).map(([date, msgs], groupIdx) => (
               <React.Fragment key={date}>
                 {/* Date Separator */}
-                <div className="flex justify-center my-8 first:mt-2">
-                  <div className="px-5 py-1.5 bg-white/60 backdrop-blur-sm rounded-full text-[10px] font-bold text-gray-500 shadow-sm border border-white/50 uppercase tracking-widest">
+                <div className="flex justify-center my-6 first:mt-2">
+                  <div className="px-3 py-1 bg-white rounded-lg text-[12px] font-medium text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)]">
                     {formatGroupDate(date)}
                   </div>
                 </div>
@@ -285,8 +286,11 @@ export function ChatWindow({
                             setReactingToMessageId(null)
                           }
                         }}
-                        onDelete={(id) => deleteMessage(id)}
-                        onEdit={(id, text) => setEditingMessage({ id, text })}
+                        onDelete={deleteMessage}
+                        onEdit={(id, text) => {
+                          setEditingMessage({ id, text })
+                        }}
+                        onImageClick={setSelectedImage}
                       />
                     )
                   })
@@ -386,6 +390,50 @@ export function ChatWindow({
           onCancelEdit={() => setEditingMessage(null)}
         />
       </div>
+      
+      {/* Image Viewer Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+            onClick={() => setSelectedImage(null)}
+          >
+            {/* Action Bar */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex justify-end gap-3 bg-gradient-to-b from-black/50 to-transparent">
+              <a 
+                href={selectedImage} 
+                download
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur text-white flex items-center justify-center"
+              >
+                <Download className="w-5 h-5" />
+              </a>
+              <button 
+                onClick={() => setSelectedImage(null)}
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur text-white flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <motion.img 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              src={selectedImage}
+              alt="Viewed attachment"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

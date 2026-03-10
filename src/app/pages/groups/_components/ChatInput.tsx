@@ -167,7 +167,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-white border-t border-gray-100 p-3 md:p-4">
+    <div className="bg-[#f0f2f5] px-4 py-2 flex-shrink-0">
       {/* Reply Preview */}
       <AnimatePresence>
         {replyingTo && (
@@ -175,15 +175,15 @@ export function ChatInput({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="mb-2 bg-gray-50 rounded-xl border-l-4 border-emerald-500 overflow-hidden"
+            className="mb-2 bg-[#f0f2f5] rounded-xl overflow-hidden shadow-sm"
           >
-            <div className="p-2 flex justify-between items-start">
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-emerald-600 mb-0.5">{replyingTo.senderName}</div>
-                <div className="text-xs text-gray-500 truncate">{replyingTo.text}</div>
+            <div className="p-2 flex justify-between items-start bg-white/80 backdrop-blur">
+              <div className="min-w-0 flex-1 border-l-4 border-emerald-500 pl-3">
+                <div className="text-[13px] font-semibold text-emerald-600 mb-0.5 leading-tight">{replyingTo.senderName}</div>
+                <div className="text-[13px] text-gray-500 truncate leading-tight">{replyingTo.text}</div>
               </div>
-              <button onClick={onCancelReply} className="p-1 text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
+              <button onClick={onCancelReply} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100/50">
+                <X className="w-[18px] h-[18px]" />
               </button>
             </div>
           </motion.div>
@@ -191,50 +191,53 @@ export function ChatInput({
       </AnimatePresence>
 
       <div className="flex items-end gap-2 max-w-5xl mx-auto relative">
-        {/* Attachment Menu */}
-        <div className="relative">
+        {/* Text Input Area (Pill) */}
+        <div className="flex-1 relative flex items-center bg-white rounded-[24px] border border-transparent shadow-sm px-1 py-1 transition-all min-h-[48px]">
           <button 
-            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`p-2.5 rounded-2xl transition-all ${showAttachmentMenu ? 'bg-emerald-50 text-emerald-600 scale-95' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="p-[10px] text-[#54656f] hover:text-emerald-600 transition-colors ml-1"
           >
-            <Paperclip className="w-5 h-5" />
+            <Smile className="w-[26px] h-[26px]" />
           </button>
           
+          <button 
+            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+            className={`p-[10px] transition-colors ${showAttachmentMenu ? 'text-emerald-600' : 'text-[#54656f] hover:text-emerald-600'}`}
+          >
+            <Paperclip className="w-[24px] h-[24px]" />
+          </button>
+
           <AnimatePresence>
             {showAttachmentMenu && (
               <motion.div 
-                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                className="absolute bottom-full left-0 mb-4 bg-white rounded-2xl shadow-xl shadow-black/10 border border-gray-100 p-2 min-w-[160px] z-50 overflow-hidden"
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute bottom-full left-12 mb-3 bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] p-2 min-w-[160px] z-50 overflow-hidden"
               >
-                <button 
-                  onClick={() => imageInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl transition-colors text-gray-700 hover:text-emerald-700 font-medium text-sm"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600"><ImageIcon className="w-4 h-4" /></div>
-                   Photo / Video
-                </button>
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-sky-50 rounded-xl transition-colors text-gray-700 hover:text-sky-700 font-medium text-sm"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600"><FileText className="w-4 h-4" /></div>
-                  Document
-                </button>
+                <div className="grid grid-cols-3 gap-4 p-4">
+                  <button 
+                    onClick={() => { imageInputRef.current?.click(); setShowAttachmentMenu(false); }}
+                    className="flex flex-col items-center gap-2 group"
+                  >
+                    <div className="w-[50px] h-[50px] rounded-full bg-gradient-to-b from-[#bf59cf] to-[#922ea1] flex items-center justify-center text-white shadow-sm group-hover:-translate-y-1 transition-transform">
+                      <ImageIcon className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs text-gray-700 font-medium tracking-tight">Photos</span>
+                  </button>
+                  <button 
+                    onClick={() => { fileInputRef.current?.click(); setShowAttachmentMenu(false); }}
+                    className="flex flex-col items-center gap-2 group"
+                  >
+                    <div className="w-[50px] h-[50px] rounded-full bg-gradient-to-b from-[#5157ae] to-[#5c6ce6] flex items-center justify-center text-white shadow-sm group-hover:-translate-y-1 transition-transform">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs text-gray-700 font-medium tracking-tight">Document</span>
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Text Input Area */}
-        <div className="flex-1 relative flex items-center bg-gray-100 rounded-2xl border border-transparent focus-within:border-emerald-500/30 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all">
-          <button 
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2.5 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <Smile className="w-5 h-5" />
-          </button>
 
           <textarea
             ref={textareaRef}
@@ -242,48 +245,47 @@ export function ChatInput({
             value={messageText}
             onChange={(e) => { setMessageText(e.target.value); handleTyping(); }}
             onKeyDown={handleKeyDown}
-            placeholder={isRecording ? "Recording..." : "Type a message..."}
-            className="flex-1 bg-transparent py-3 pr-3 text-sm focus:outline-none resize-none max-h-[120px] scrollbar-none font-medium"
+            placeholder={isRecording ? "Recording..." : "Type a message"}
+            className="flex-1 bg-transparent py-[10px] px-2 text-[15px] focus:outline-none resize-none max-h-[120px] scrollbar-none font-normal text-[#111b21] placeholder-[#8696a0]"
             disabled={isRecording || isSending || isUploading}
           />
 
           {isUploading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+            <div className="pr-3">
+              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
             </div>
           )}
         </div>
 
         {/* Send / Mic Button */}
-        {messageText.trim() ? (
-          <motion.button
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={handleSend}
-            disabled={isSending || isUploading}
-            className="p-3.5 rounded-2xl text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <Send className="w-5 h-5" />
-          </motion.button>
-        ) : (
-          <div className="flex items-center gap-1">
+        <div 
+          className="flex-shrink-0 rounded-full w-[48px] h-[48px] flex items-center justify-center shadow-sm"
+          style={{ backgroundColor: primaryColor }}
+        >
+          {messageText.trim() ? (
+            <motion.button
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onClick={handleSend}
+              disabled={isSending || isUploading}
+              className="w-full h-full text-white flex items-center justify-center hover:bg-black/10 transition-colors rounded-full"
+            >
+              <Send className="w-[20px] h-[20px] ml-1" />
+            </motion.button>
+          ) : (
             <motion.button
               whileTap={{ scale: 0.9 }}
               onMouseDown={startRecording}
               onMouseUp={stopRecording}
               onMouseLeave={cancelRecording}
-              className={`p-3.5 rounded-2xl transition-all flex-shrink-0 ${
-                isRecording 
-                  ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' 
-                  : 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+              className={`w-full h-full text-white flex items-center justify-center transition-colors rounded-full ${
+                isRecording ? 'bg-red-500 animate-pulse' : 'hover:bg-black/10'
               }`}
-              style={!isRecording ? { backgroundColor: primaryColor } : {}}
             >
-              <Mic className="w-5 h-5" />
+              <Mic className="w-[22px] h-[22px]" />
             </motion.button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Hidden Inputs */}

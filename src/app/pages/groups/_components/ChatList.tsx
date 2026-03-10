@@ -72,10 +72,10 @@ export function ChatList({
   }
 
   return (
-    <div className={`w-full md:w-80 lg:w-[400px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+    <div className={`w-full md:w-80 lg:w-[380px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
       {/* List Header (Purple Gradient) */}
       <div 
-        className="flex-shrink-0 p-4 text-white flex flex-col gap-4 shadow-lg z-10"
+        className="flex-shrink-0 p-4 text-white flex flex-col gap-4 z-10"
         style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)` }}
       >
         <div className="flex items-center justify-between">
@@ -102,7 +102,7 @@ export function ChatList({
                 className="border-2 border-white/20 shadow-sm"
               />
             </button>
-            <h2 className="text-xl font-bold tracking-tight">Groups</h2>
+            <h2 className="text-xl font-bold tracking-tight">Chats</h2>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -128,14 +128,14 @@ export function ChatList({
           <input
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search messages or people"
+            placeholder="Search or start new chat"
             className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-xl text-sm placeholder:text-white/50 focus:outline-none focus:bg-white/20 transition-all border border-white/10 focus:border-white/20 text-white"
           />
         </div>
       </div>
 
       {/* Chat List Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scroll-smooth">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scroll-smooth bg-white">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 opacity-60">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
@@ -174,91 +174,75 @@ export function ChatList({
                 const typingUsersInChat = (allTypingUsers && allTypingUsers[chat.id]) || []
 
                 return (
-                  <motion.button
+                  <button
                     key={chat.id}
-                    layoutId={`chat-${chat.id}`}
                     onClick={() => selectChat(chat)}
-                    className={`group w-full flex items-center gap-3 px-4 py-3.5 transition-all relative border-b border-gray-50/50 ${
-                      isSelected ? 'bg-emerald-50/50' : 'hover:bg-gray-50 active:bg-gray-100'
+                    className={`group w-full flex items-center gap-3 px-3 py-3 transition-all relative ${
+                      isSelected ? 'bg-gray-100' : 'hover:bg-gray-50 bg-white'
                     }`}
                   >
-                    {/* Active Indicator */}
-                    {isSelected && (
-                      <motion.div
-                        layoutId="active-chat-pill"
-                        className="absolute left-0 top-2 bottom-2 w-1.5 rounded-r-full shadow-sm"
-                        style={{ backgroundColor: primaryColor }}
-                      />
-                    )}
-
-                    <div className="relative flex-shrink-0">
+                    <div className="relative flex-shrink-0 ml-1">
                       <SyncAvatar 
                         userId={chat.type === 'direct' ? chat.participants.find(id => id !== currentUser?.id) : undefined}
                         initialAvatar={avatar}
                         fallbackName={displayName}
                         isGroup={chat.type === 'group'}
                         bgColor={chat.type === 'group' ? adjustColor(primaryColor, -20) : primaryColor}
-                        size="w-12 h-12"
-                        className="rounded-2xl ring-2 ring-white ring-offset-1 ring-offset-gray-50"
+                        size="w-[48px] h-[48px]"
+                        className="rounded-full overflow-hidden"
                       />
-                      {/* Presence/Type Indicator */}
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center ${
-                        chat.type === 'group' ? 'bg-gray-500' : 'bg-emerald-500'
-                      }`}>
-                        {chat.type === 'group' ? (
-                          <Plus className="w-2 h-2 text-white" />
-                        ) : (
-                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                        )}
-                      </div>
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0 flex flex-col items-start text-left">
-                      <div className="w-full flex items-center justify-between gap-2 overflow-hidden">
-                        <h3 className={`font-bold truncate text-[15px] ${unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'}`}>
+                    <div className="flex-1 min-w-0 flex flex-col items-start text-left border-b border-gray-100 pb-3 -mb-3 h-[48px] justify-center mr-1">
+                      <div className="w-full flex items-center justify-between gap-2 overflow-hidden mb-0.5">
+                        <h3 className={`font-[500] truncate text-[16px] ${unreadCount > 0 ? 'text-gray-900 font-semibold' : 'text-gray-900'}`}>
                           {displayName}
                         </h3>
                         {chat.lastMessage && (
-                          <span className={`text-[10px] whitespace-nowrap ${unreadCount > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>
+                          <span className={`text-xs whitespace-nowrap ${unreadCount > 0 ? 'text-emerald-500 font-medium' : 'text-gray-500'}`}>
                             {formatChatTime(chat.lastMessage.timestamp)}
                           </span>
                         )}
                       </div>
                       
-                      <div className="w-full h-5 flex items-center justify-between mt-0.5">
-                        <div className="flex-1 min-w-0 pr-2">
+                      <div className="w-full h-[20px] flex items-center justify-between">
+                        <div className="flex-1 min-w-0 flex items-center pr-2">
                           {typingUsersInChat.length > 0 ? (
-                            <div className="flex items-center gap-1 text-emerald-600 font-bold animate-pulse truncate text-xs italic">
+                            <div className="flex items-center gap-1 text-emerald-500 font-medium text-sm truncate">
                               {typingUsersInChat[0].status === 'recording_voice' ? (
                                 <>
-                                  <Mic className="w-3 h-3" />
-                                  <span>Recording voice...</span>
+                                  <Mic className="w-3.5 h-3.5" />
+                                  <span>recording audio...</span>
                                 </>
                               ) : (
                                 <>
-                                  <Edit3 className="w-3 h-3" />
-                                  <span>{typingUsersInChat[0].userName.split(' ')[0]} typing...</span>
+                                  <span className="flex items-center h-4 pt-1">
+                                    <span className="typing-dot animate-[typing_1s_infinite_0s] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
+                                    <span className="typing-dot animate-[typing_1s_infinite_150ms] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
+                                    <span className="typing-dot animate-[typing_1s_infinite_300ms] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
+                                  </span>
+                                  <span className="ml-1">typing...</span>
                                 </>
                               )}
                             </div>
                           ) : (
-                            <div className={`text-xs truncate flex items-center gap-1.5 ${unreadCount > 0 ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>
+                            <div className={`text-sm truncate flex items-center ${unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
                               {chat.lastMessage?.senderId === currentUser?.id && (
-                                <span className={`flex-shrink-0 flex items-center gap-[1px] ${chat.lastMessage?.status === 'read' ? 'text-blue-400' : 'text-gray-300'}`}>
-                                  <Check className="w-3 h-3" />
-                                  {chat.lastMessage?.status === 'read' && <Check className="w-3 h-3 -ml-2" />}
+                                <span className={`flex-shrink-0 flex items-center mr-1 ${chat.lastMessage?.status === 'read' ? 'text-[#53bdeb]' : 'text-gray-400'}`}>
+                                  <Check className="w-[14px] h-[14px]" />
+                                  {chat.lastMessage?.status === 'read' && <Check className="w-[14px] h-[14px] -ml-2" />}
                                 </span>
                               )}
-                              <span className="truncate">
+                              <span className="truncate max-w-[200px]">
                                 {chat.lastMessage?.text?.includes('Missed') ? (
                                   <span className="text-red-500 flex items-center gap-1">
-                                    <PhoneMissed className="w-3 h-3" />
+                                    <PhoneMissed className="w-[14px] h-[14px]" />
                                     Missed call
                                   </span>
                                 ) : chat.lastMessage?.text?.includes('Image') ? (
-                                  <span className="text-emerald-500 flex items-center gap-1">
-                                    <ImageIcon className="w-3 h-3" />
+                                  <span className="flex items-center gap-1">
+                                    <ImageIcon className="w-[14px] h-[14px]" />
                                     Photo
                                   </span>
                                 ) : chat.lastMessage?.text || 'New conversation'}
@@ -268,18 +252,16 @@ export function ChatList({
                         </div>
                         
                         {unreadCount > 0 && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="h-5 min-w-[20px] px-1.5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm shadow-emerald-500/20"
+                          <div 
+                            className="h-5 min-w-[20px] px-[6px] rounded-full flex items-center justify-center text-[11px] text-white font-bold ml-1 flex-shrink-0"
                             style={{ backgroundColor: primaryColor }}
                           >
                             {unreadCount}
-                          </motion.div>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </motion.button>
+                  </button>
                 )
               })}
           </div>

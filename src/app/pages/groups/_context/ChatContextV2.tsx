@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -229,6 +229,14 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json()
+      
+      let finalUrl = data.secure_url
+      
+      // For documents, we want to force the browser to download the file instead of opening it inline.
+      // Cloudinary allows appending `fl_attachment` to the delivery URL to force the content-disposition header.
+      if (!isImage && finalUrl.includes('/upload/')) {
+         finalUrl = finalUrl.replace('/upload/', '/upload/fl_attachment/')
+      }
 
       // Send message with media
       return sendChatMessage(
@@ -238,7 +246,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
         undefined,
         {
           type: mediaType,
-          url: data.secure_url,
+          url: finalUrl,
           name: file.name,
           size: file.size,
           mimeType: file.type

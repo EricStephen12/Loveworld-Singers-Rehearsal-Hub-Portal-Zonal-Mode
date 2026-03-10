@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3 } from 'lucide-react'
+import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3, Loader2 } from 'lucide-react'
 import { Message, ReactionType } from '../_lib/chat-service'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { useAuth } from '@/hooks/useAuth'
@@ -17,6 +17,73 @@ interface MessageBubbleProps {
   onReaction?: (messageId: string, reaction: ReactionType) => void
   onDelete?: (messageId: string) => void
   onEdit?: (messageId: string, currentText: string) => void
+  onImageClick?: (url: string) => void
+}
+
+// Document Download Button component
+const DocumentDownloadButton = ({ attachment, primaryColor }: { attachment: NonNullable<Message['attachment']>, primaryColor: string }) => {
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (isDownloading) return
+
+    try {
+      setIsDownloading(true)
+      const response = await fetch(attachment.url)
+      if (!response.ok) throw new Error('Network response was not ok')
+      
+      const blob = await response.blob()
+      const downloadUrl = window.URL.createObjectURL(blob)
+      
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = downloadUrl
+      a.download = attachment.name || 'document'
+      document.body.appendChild(a)
+      a.click()
+      
+      window.URL.revokeObjectURL(downloadUrl)
+      document.body.removeChild(a)
+    } catch (error) {
+       console.error('Error downloading document:', error)
+       // Fallback to opening in new tab if blob download fails due to excessive CORS restrictions
+       window.open(attachment.url, '_blank')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  return (
+    <button 
+      onClick={handleDownload}
+      className="w-full flex justify-between items-center bg-black/5 p-2 rounded mb-1 mt-0.5 hover:bg-black/10 transition-colors group text-left"
+    >
+      <div className="flex items-center gap-3">
+        <div className="bg-[#f06159] p-2 rounded-lg text-white">
+          <FileText className="w-5 h-5" />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm line-clamp-1 max-w-[160px] font-medium text-[#111b21] group-hover:underline decoration-1">
+            {attachment.name}
+          </span>
+          <span className="text-[11px] text-[#667781] font-medium">
+            {attachment.size ? `${(attachment.size / 1024).toFixed(1)} KB` : 'Document'}
+          </span>
+        </div>
+      </div>
+      
+      <div className="p-2 text-[#667781] opacity-60 group-hover:opacity-100 transition-opacity">
+        {isDownloading ? (
+          <Loader2 className="w-5 h-5 animate-spin" style={{ color: primaryColor }} />
+        ) : (
+          <Download className="w-5 h-5" />
+        )}
+      </div>
+    </button>
+  )
 }
 
 // Voice Message Player component (Internal to Bubble)
@@ -82,7 +149,8 @@ export function MessageBubble({
   onReply,
   onReaction,
   onDelete,
-  onEdit
+  onEdit,
+  onImageClick
 }: MessageBubbleProps) {
   const { user } = useAuth()
   const { toggleReaction } = useChatV2()
@@ -203,125 +271,126 @@ export function MessageBubble({
             </div>
           </div>
 
-          {/* Actual Bubble */}
-          <div 
-            className={`relative p-3 rounded-2xl shadow-sm ${
-              isOwn 
-                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
-            }`}
-            style={isOwn ? { backgroundColor: primaryColor } : {}}
-          >
-            {/* Reply Preview */}
-            {message.replyTo && (
-              <div className={`mb-2 p-2 rounded-lg text-xs border-l-4 overflow-hidden max-h-16 ${
-                isOwn ? 'bg-white/10 border-white/50' : 'bg-gray-50 border-emerald-500'
-              }`}>
-                <div className={`font-bold mb-0.5 ${isOwn ? 'text-white' : 'text-emerald-600'}`}>
-                  {message.replyTo.senderName}
-                </div>
-                <div className={`truncate opacity-80 ${isOwn ? 'text-white' : 'text-gray-500'}`}>
-                  {message.replyTo.text}
-                </div>
-              </div>
+          {/* Actual Bubble Wrapper */}
+          <div className="flex items-end">
+            {/* Left Tail (Received) */}
+            {!isOwn && showAvatar && (
+              <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current -mr-[1px] mb-[1px]">
+                <path opacity="0.13" d="M1.533 3.118L8 12.114V1H2.812C1.042 1 .474 2.156 1.533 3.118z"></path>
+                <path d="M1.533 2.118L8 11.114V0H2.812C1.042 0 .474 1.156 1.533 2.118z"></path>
+              </svg>
             )}
 
-            {/* Media Rendering */}
-            {message.type === 'image' && message.imageUrl && (
-              <div className="mb-2 rounded-xl overflow-hidden shadow-inner bg-black/5">
-                <img 
-                  src={message.imageUrl} 
-                  alt="Attachment" 
-                  className="max-h-60 w-full object-cover hover:scale-105 transition-transform duration-500" 
-                  onClick={() => window.open(message.imageUrl, '_blank')}
-                />
-              </div>
-            )}
+            {/* Bubble Body */}
+            <div 
+              className={`relative shadow-[0_1px_0.5px_rgba(11,20,26,.13)] ${
+                isOwn 
+                  ? 'text-white rounded-lg' 
+                  : 'bg-white text-[#111b21] rounded-lg'
+              } ${isOwn && showAvatar ? 'rounded-tr-none' : ''} ${!isOwn && showAvatar ? 'rounded-tl-none' : ''}`}
+              style={isOwn ? { backgroundColor: primaryColor } : {}}
+            >
+              <div className="px-2 pt-1.5 min-w-[100px] flex flex-col">
+                {/* Reply Preview */}
+                {message.replyTo && (
+                  <div className="mb-1 p-1 bg-black/5 rounded cursor-pointer relative overflow-hidden flex flex-col">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#02a698] rounded-l" />
+                    <div className="pl-2 pr-1">
+                      <div className="font-semibold text-xs text-[#02a698] leading-tight mb-0.5">
+                        {message.replyTo.senderName}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate leading-tight">
+                        {message.replyTo.text}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            {message.type === 'voice' && message.voiceUrl && (
-              <div className="mb-1">
-                <VoiceMessagePlayer 
-                  url={message.voiceUrl} 
-                  duration={message.voiceDuration} 
-                  isOwn={isOwn} 
-                  primaryColor={primaryColor} 
-                />
-              </div>
-            )}
+                {/* Media Rendering */}
+                {message.type === 'image' && message.imageUrl && (
+                  <div className="mb-1 mt-0.5 -mx-1 rounded overflow-hidden">
+                    <img 
+                      src={message.imageUrl} 
+                      alt="Attached Image" 
+                      className="max-h-72 w-full object-cover cursor-pointer" 
+                      onClick={() => onImageClick ? onImageClick(message.imageUrl!) : window.open(message.imageUrl, '_blank')}
+                    />
+                  </div>
+                )}
 
-            {message.type === 'document' && message.attachment && (
-              <a 
-                href={message.attachment.url} 
-                target="_blank" 
-                rel="noreferrer"
-                className={`flex items-center gap-3 p-2 rounded-xl mb-1 ${isOwn ? 'bg-white/10' : 'bg-gray-100'}`}
-              >
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isOwn ? 'bg-white text-emerald-600' : 'bg-emerald-500 text-white shadow-sm'}`}>
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-bold truncate ${isOwn ? 'text-white' : 'text-gray-800'}`}>{message.attachment.name}</div>
-                  <div className={`text-[10px] opacity-60 ${isOwn ? 'text-white' : 'text-gray-500'}`}>
-                    {message.attachment.size ? `${(message.attachment.size / 1024).toFixed(1)} KB` : 'Document'}
+                {message.type === 'voice' && message.voiceUrl && (
+                  <div className="mb-1 mt-0.5">
+                    <VoiceMessagePlayer 
+                      url={message.voiceUrl} 
+                      duration={message.voiceDuration} 
+                      isOwn={isOwn} 
+                      primaryColor={primaryColor} 
+                    />
+                  </div>
+                )}
+
+                {message.type === 'document' && message.attachment && (
+                  <DocumentDownloadButton 
+                    attachment={message.attachment} 
+                    primaryColor={primaryColor} 
+                  />
+                )}
+
+                {/* Message Text with Inline Timestamp */}
+                <div className="relative flex flex-wrap items-end gap-2 pb-1.5">
+                  <span className="text-[14.2px] leading-[19px] whitespace-pre-wrap break-words pl-1 flex-1">
+                    {message.text}
+                  </span>
+                  
+                  {/* Floating timestamp container filling bottom-right */}
+                  <div className="flex justify-end min-w-16 h-[15px] -mb-[2px]">
+                    <div className={`flex items-center gap-[3px] ${isOwn ? 'text-white/80' : 'text-[#667781]'}`}>
+                      <span className="text-[11px] font-medium mt-0.5 uppercase tracking-wide">
+                        {formatTime(message.timestamp)}
+                      </span>
+                      {isOwn && (
+                        <div className="flex items-center -mb-0.5 ml-0.5">
+                          {message.status === 'read' ? (
+                            <CheckCheck className="w-[15px] h-[15px] text-[#53bdeb]" />
+                          ) : message.status === 'delivered' ? (
+                             <CheckCheck className="w-[15px] h-[15px] opacity-70" />
+                          ) : (
+                            <Check className="w-[14px] h-[14px] opacity-70" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <Download className={`w-4 h-4 ${isOwn ? 'text-white/60' : 'text-gray-400'}`} />
-              </a>
-            )}
 
-            {/* Message Text */}
-            {message.text && (
-              <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words font-medium">
-                {message.text}
-              </p>
-            )}
-
-            {/* Timestamp & Status */}
-            <div className={`flex items-center justify-end gap-1.5 mt-1 -mb-1 opacity-70`}>
-              <span className="text-[9px] font-bold grayscale">
-                {formatTime(message.timestamp)}
-              </span>
-              {isOwn && (
-                <div className="flex items-center">
-                  {message.status === 'read' ? (
-                    <div className="flex -space-x-1.5">
-                      <CheckCheck className="w-3.5 h-3.5 text-sky-400" />
-                    </div>
-                  ) : (
-                    <Check className="w-3.5 h-3.5 opacity-60" />
-                  )}
-                </div>
-              )}
+                {/* Reactions Overlay */}
+                {message.reactions && Object.keys(message.reactions).length > 0 && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className={`absolute -bottom-3 flex items-center gap-0.5 px-1.5 py-[2px] bg-white border border-[#e9edef] rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)] z-20 ${
+                      isOwn ? 'right-0' : 'left-0'
+                    }`}
+                  >
+                    {Object.values(message.reactions).slice(0, 3).map((reaction, i) => (
+                      <span key={i} className="text-[11px] leading-none">{reaction}</span>
+                    ))}
+                    {Object.keys(message.reactions).length > 3 && (
+                      <span className="text-[10px] font-medium text-gray-500 ml-0.5 leading-none">{Object.keys(message.reactions).length}</span>
+                    )}
+                  </motion.div>
+                )}
+              </div>
             </div>
 
-            {/* Reactions Overlay */}
-            {message.reactions && Object.keys(message.reactions).length > 0 && (
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`absolute -bottom-3 flex items-center gap-0.5 px-1.5 py-0.5 bg-white border border-gray-100 rounded-full shadow-sm z-20 ${
-                  isOwn ? 'right-0' : 'left-0'
-                }`}
-              >
-                {Object.values(message.reactions).slice(0, 3).map((reaction, i) => (
-                  <span key={i} className="text-[10px]">{reaction}</span>
-                ))}
-                {Object.keys(message.reactions).length > 3 && (
-                  <span className="text-[8px] font-bold text-gray-400 ml-0.5">{Object.keys(message.reactions).length}</span>
-                )}
-              </motion.div>
+            {/* Right Tail (Sent) */}
+            {isOwn && showAvatar && (
+              <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current -ml-[1px] mb-[1px]" style={{ color: primaryColor }}>
+                <path opacity="0.13" d="M5.188 1H8v11.114l-6.467-8.996C.474 2.156 1.042 1 2.812 1h2.376z"></path>
+                <path d="M5.188 0H8v11.114l-6.467-8.996C.474 1.156 1.042 0 2.812 0h2.376z"></path>
+              </svg>
             )}
           </div>
-
-          {/* Tail */}
-          <div 
-            className={`absolute top-0 w-3 h-3 ${
-              isOwn 
-                ? '-right-1.5 bg-emerald-600 rounded-bl-[10px] rounded-br-[2px]' 
-                : '-left-1.5 bg-white border-l border-t border-gray-100 rounded-br-[10px] rounded-bl-[2px]'
-            }`}
-            style={isOwn ? { backgroundColor: primaryColor } : {}}
-          />
         </div>
       </div>
     </div>
