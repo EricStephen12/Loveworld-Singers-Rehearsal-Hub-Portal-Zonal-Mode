@@ -1,8 +1,9 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { AttendanceService, AttendanceRecord } from '@/lib/attendance-service'
 
 import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown, Scan, Clock } from 'lucide-react'
 
@@ -24,7 +25,6 @@ import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { isHQGroup } from '@/config/zones'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import QRCode from 'qrcode'
-import { AttendanceService } from '@/lib/attendance-service'
 
 // Helper function to adjust color brightness for gradient
 const adjustColor = (color: string, amount: number) => {
@@ -62,6 +62,12 @@ function ProfilePage() {
   const [saveProgress, setSaveProgress] = useState(0)
   const [saveStage, setSaveStage] = useState('')
   const [isClient, setIsClient] = useState(false)
+  
+  // Attendance state
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
+  const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0, late: 0, absent: 0, rate: 0 })
+  const [loadingAttendance, setLoadingAttendance] = useState(true)
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -79,7 +85,7 @@ function ProfilePage() {
   // QR Code State
   const [qrCodeToken, setQrCodeToken] = useState<string>('')
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
-  const [qrTimeLeft, setQrTimeLeft] = useState<number>(300) // 5 minutes in seconds
+  const [qrTimeLeft, setQrTimeLeft] = useState<number>(5) // 5 seconds
 
   // Generate and rotate QR code
   useEffect(() => {
@@ -98,7 +104,7 @@ function ProfilePage() {
           }
         })
         setQrCodeDataUrl(dataUrl)
-        setQrTimeLeft(300) // Reset timer to 5 mins
+        setQrTimeLeft(5) // Reset timer to 5 secs
       } catch (err) {
  console.error('Failed to generate QR:', err)
       }
@@ -107,7 +113,7 @@ function ProfilePage() {
     generateQR()
 
     // Update token every 5 minutes
-    const tokenInterval = setInterval(generateQR, 300000)
+    const tokenInterval = setInterval(generateQR, 5000)
 
     // Update countdown every second
     const countdownInterval = setInterval(() => {
@@ -142,6 +148,28 @@ function ProfilePage() {
       refreshProfile()
     }
   }, [user?.uid, currentProfile, refreshProfile])
+  
+  // Fetch Attendance Data
+  useEffect(() => {
+    async function loadAttendance() {
+      if (user?.uid) {
+        setLoadingAttendance(true)
+        try {
+          const records = await AttendanceService.getUserAttendance(user.uid)
+          const stats = await AttendanceService.getAttendanceStats(user.uid)
+          
+          setAttendanceHistory(records)
+          setAttendanceStats(stats)
+        } catch (error) {
+          console.error("Failed to load attendance", error)
+        } finally {
+          setLoadingAttendance(false)
+        }
+      }
+    }
+    
+    loadAttendance()
+  }, [user?.uid])
 
   useEffect(() => {
     const checkKingsChatLink = async () => {
@@ -692,8 +720,6 @@ function ProfilePage() {
   // QR code functionality removed
 
   // Mock attendance data for now
-  const attendanceHistory: any[] = []
-  const attendanceStats = { total: 0, present: 0, late: 0, absent: 0, rate: 0 }
 
 
 

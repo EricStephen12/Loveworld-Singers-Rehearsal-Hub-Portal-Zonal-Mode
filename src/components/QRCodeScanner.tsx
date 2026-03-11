@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Camera, X, CheckCircle, AlertCircle } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Camera, X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 import { AttendanceService } from '@/lib/attendance-service'
+import { useAuth } from '@/hooks/useAuth'
 
 interface QRCodeScannerProps {
   isOpen: boolean
@@ -13,11 +14,38 @@ interface QRCodeScannerProps {
 
 export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: QRCodeScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
+  const [feedbackType, setFeedbackType] = useState<'success' | 'error' | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const scanningRef = useRef(false)
+  const lastScannedRef = useRef<string | null>(null)
+  const cooldownRef = useRef(false)
+  const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+  const { user } = useAuth()
+
+  // Auto-clear feedback after 3 seconds and resume scanning
+  const showFeedback = useCallback((message: string, type: 'success' | 'error') => {
+    setFeedbackMessage(message)
+    setFeedbackType(type)
+    setIsProcessing(false)
+
+    // Clear any existing timer
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current)
+    }
+
+    // Auto-clear feedback and allow next scan after 3 seconds
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedbackMessage(null)
+      setFeedbackType(null)
+      cooldownRef.current = false
+      lastScannedRef.current = null // Allow same code to be scanned again
+    }, 3000)
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +56,9 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
 
     return () => {
       stopCamera()
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current)
+      }
     }
   }, [isOpen])
 
@@ -35,7 +66,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: 'environment', // Use back camera
+          facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         } 
@@ -45,6 +76,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
         videoRef.current.srcObject = stream
         streamRef.current = stream
         setIsScanning(true)
+        scanningRef.current = true
         startQRDetection()
       }
     } catch (error) {
@@ -54,6 +86,11 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
   }
 
   const stopCamera = () => {
+    scanningRef.current = false
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
@@ -71,55 +108,55 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
     if (!ctx) return
 
     const detectQR = () => {
+      if (!scanningRef.current) return
+
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.width = video.videoWidth
         canvas.height = video.videoHeight
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-        // Simple QR detection (in production, use a proper QR library)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const qrCode = detectQRCodePattern(imageData)
-        
-        if (qrCode && qrCode !== scanResult) {
-          setScanResult(qrCode)
-          handleQRCodeDetected(qrCode)
+        // Use BarcodeDetector API if available (modern browsers)
+        if ('BarcodeDetector' in window) {
+          const barcodeDetector = new (window as any).BarcodeDetector({ formats: ['qr_code'] })
+          barcodeDetector.detect(canvas).then((barcodes: any[]) => {
+            if (barcodes.length > 0 && !cooldownRef.current) {
+              const code = barcodes[0].rawValue
+              if (code && code !== lastScannedRef.current) {
+                lastScannedRef.current = code
+                cooldownRef.current = true
+                handleQRCodeDetected(code)
+              }
+            }
+          }).catch(() => {
+            // BarcodeDetector failed, continue scanning
+          })
         }
       }
 
-      if (isScanning) {
-        requestAnimationFrame(detectQR)
-      }
+      animationFrameRef.current = requestAnimationFrame(detectQR)
     }
 
     detectQR()
   }
 
-  // Simplified QR code detection (in production, use a proper library)
-  const detectQRCodePattern = (imageData: ImageData): string | null => {
-    // This is a placeholder - in production you'd use a proper QR detection library
-    // For now, we'll simulate detection with a manual input
-    return null
-  }
-
   const handleQRCodeDetected = async (qrCode: string) => {
     setIsProcessing(true)
-    stopCamera()
+    // DON'T stop camera — keep scanning continuously
 
     try {
-      // Get current user ID (you'll need to implement this)
-      const userId = 'current-user-id' // Replace with actual user ID
-      
+      const userId = user?.uid || 'unknown'
       const result = await AttendanceService.checkIn(userId, qrCode)
       
       if (result.success) {
+        showFeedback(result.message, 'success')
         onSuccess(result.message)
       } else {
+        showFeedback(result.message, 'error')
         onError(result.message)
       }
     } catch (error) {
+      showFeedback('Failed to process QR code', 'error')
       onError('Failed to process QR code')
-    } finally {
-      setIsProcessing(false)
     }
   }
 
@@ -160,18 +197,65 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
                 ref={canvasRef}
                 className="hidden"
               />
+              {/* Scan Frame Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 border-2 border-white rounded-lg bg-transparent">
+                <div className="w-48 h-48 border-2 border-white rounded-lg bg-transparent relative">
                   <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white"></div>
                   <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white"></div>
                   <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white"></div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white"></div>
                 </div>
               </div>
+
+              {/* Live scanning indicator */}
+              {!feedbackMessage && !isProcessing && (
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  Scanning...
+                </div>
+              )}
             </div>
           ) : (
-            <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center gap-3">
               <Camera className="w-16 h-16 text-gray-400" />
+              <button
+                onClick={startCamera}
+                className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Start Camera
+              </button>
+            </div>
+          )}
+
+          {/* Feedback Toast — shows over camera feed */}
+          {feedbackMessage && (
+            <div className={`mt-3 p-4 rounded-lg flex items-center gap-3 animate-fade-in ${
+              feedbackType === 'success' 
+                ? 'bg-green-50 border border-green-200' 
+                : 'bg-red-50 border border-red-200'
+            }`}>
+              {feedbackType === 'success' ? (
+                <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+              )}
+              <div className="flex-1">
+                <span className={`text-sm font-medium ${
+                  feedbackType === 'success' ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  {feedbackMessage}
+                </span>
+                <p className="text-xs text-gray-500 mt-1">Scanner will resume automatically...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Processing State */}
+          {isProcessing && !feedbackMessage && (
+            <div className="mt-3 p-4 bg-blue-50 rounded-lg flex items-center gap-3 border border-blue-200">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="text-blue-700 text-sm">Processing check-in...</span>
             </div>
           )}
 
@@ -183,19 +267,11 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
             Enter QR Code Manually
           </button>
 
-          {/* Processing State */}
-          {isProcessing && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <span className="text-blue-700">Processing QR code...</span>
-            </div>
-          )}
-
           {/* Instructions */}
           <div className="mt-4 text-sm text-gray-600">
             <p>• Point your camera at the QR code</p>
-            <p>• Make sure the code is clearly visible</p>
-            <p>• Or use the manual input option</p>
+            <p>• Scanner runs continuously — no need to refresh</p>
+            <p>• Success/error feedback clears automatically</p>
           </div>
         </div>
       </div>

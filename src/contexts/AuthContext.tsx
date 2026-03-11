@@ -1,10 +1,13 @@
-﻿'use client'
+'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase-setup'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { SessionManager } from '@/lib/session-manager'
+
+
+import { updateUserPresence } from '@/lib/presence-service'
 
 
 interface AuthContextType {
@@ -15,33 +18,54 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-/**
- * AuthProvider - Big Tech Approach
- * 
- * How Instagram, WhatsApp, Twitter handle Firebase Auth:
- * 1. Use Firebase's currentUser (synchronous) for INSTANT initial state
- * 2. Show content immediately from cache
- * 3. Let onAuthStateChanged update asynchronously in background
- * 4. Firebase persistence (IndexedDB) survives page reloads
- * 
- * This prevents:
- * - Slow "loading..." screens
- * - Auth loss on reload
- * - Aggressive redirects while Firebase initializes
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // INSTANT: Use Firebase's currentUser (synchronous, from IndexedDB cache)
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window === 'undefined') return null
-    // This is INSTANT - no async wait
     return auth.currentUser
   })
 
-  // Start as false if we have cached user, true if we don't
   const [loading, setLoading] = useState(() => !auth.currentUser)
 
+  // GLOBAL PRESENCE TRACKING
   useEffect(() => {
-    // Listen for auth state changes (async, happens in background)
+    if (!user?.uid) return
+
+    // Mark as online immediately on boot/login
+    updateUserPresence(user.uid, 'online')
+
+    // Heartbeat: update lastSeen every 60 seconds
+    const heartbeat = setInterval(() => {
+      if (document.visibilityState !== 'hidden') {
+        updateUserPresence(user.uid, 'online')
+      }
+    }, 60000)
+
+    // Visibility Listener: handles tab switching
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        updateUserPresence(user.uid, 'offline')
+      } else {
+        updateUserPresence(user.uid, 'online')
+      }
+    }
+
+    // Unload Listener: handles closing tab/browser
+    const handleUnload = () => {
+      updateUserPresence(user.uid, 'offline')
+    }
+
+    window.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleUnload)
+
+    return () => {
+      clearInterval(heartbeat)
+      updateUserPresence(user.uid, 'offline')
+      window.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleUnload)
+    }
+  }, [user?.uid])
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)

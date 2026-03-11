@@ -1,11 +1,11 @@
-﻿'use client'
+'use client'
 
 import { useZone } from '@/hooks/useZone'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import {
   Users, Crown, Music, Calendar, TrendingUp,
   Link as LinkIcon, Copy, CheckCircle, CreditCard,
-  Shield, BarChart3, Upload
+  Shield, BarChart3, Upload, QrCode
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
@@ -358,6 +358,17 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
                 <h3 className="text-sm lg:text-lg font-semibold text-gray-900 mb-1">Analytics</h3>
                 <p className="text-xs text-gray-500 hidden lg:block">Track performance</p>
               </button>
+
+              <Link
+                href="/qr-code"
+                className="flex-shrink-0 w-[140px] lg:w-auto bg-white rounded-2xl lg:rounded-xl shadow-sm lg:shadow-lg p-4 lg:p-6 border border-gray-100 lg:border-2 lg:border-transparent lg:hover:border-purple-200 active:scale-95 lg:active:scale-100 transition-all text-left"
+              >
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
+                  <QrCode className="w-5 h-5 lg:w-6 lg:h-6 text-orange-600" />
+                </div>
+                <h3 className="text-sm lg:text-lg font-semibold text-gray-900 mb-1">QR Scanner</h3>
+                <p className="text-xs text-gray-500 hidden lg:block">Check-in members</p>
+              </Link>
             </div>
           </div>
 

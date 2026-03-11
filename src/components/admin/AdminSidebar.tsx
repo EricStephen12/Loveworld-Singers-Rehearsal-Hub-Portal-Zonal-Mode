@@ -24,6 +24,7 @@ import {
   DollarSign,
   List,
   Mic,
+  CalendarCheck,
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
@@ -72,6 +73,7 @@ const AdminSidebar = React.memo(({
 
   const managementItems = [
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
+    { icon: CalendarCheck, label: 'Attendance', active: activeSection === 'Attendance' },
     { icon: User, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', zoneOnly: true, badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
     { icon: Mic, label: 'Karaoke Config', active: activeSection === 'Karaoke Config' },

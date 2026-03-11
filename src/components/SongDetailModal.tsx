@@ -21,15 +21,20 @@ interface SongDetailModalProps {
   onSongChange?: (song: PraiseNightSong) => void;
   currentFilter?: 'heard' | 'unheard'; // Add current filter prop
   songs?: PraiseNightSong[]; // Add songs prop
+  activeCategory?: string; // Add active category prop
 }
 
-export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [] }: SongDetailModalProps) {
+export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [], activeCategory = '' }: SongDetailModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'comments' | 'history'>('lyrics');
   const [activeHistoryTab, setActiveHistoryTab] = useState<'lyrics' | 'audio' | 'solfas' | 'comments' | 'metadata'>('lyrics');
   const [isRepeating, setIsRepeating] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [categorySongs, setCategorySongs] = useState<PraiseNightSong[]>([]);
+  
+  // Guard ref: blocks the "sync song on prop change" effect from overriding
+  // an intentional navigation (handleNext / handlePrevious / autoAdvance)
+  const isNavigatingRef = useRef(false);
 
   // Fullscreen state for lyrics, comments, and solfas
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
@@ -140,36 +145,66 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [historyError, setHistoryError] = useState<string | null>(null);
 
   // Use global audio context
-  const { currentSong, isPlaying, currentTime, duration, isLoading, hasError, togglePlayPause, audioRef, setCurrentSong } = useAudio();
+  const { currentSong, isPlaying, currentTime, duration, isLoading, hasError, togglePlayPause, audioRef, setCurrentSong, setCurrentTime: setCurrentTimeManual } = useAudio();
 
   // Use the selected song as the base; realtime hook will layer live data on top
   const currentSongData = selectedSong;
 
   // Set the current song when modal opens (only if it's a different song)
+  // BUT skip if we're in the middle of an intentional navigation (skip/autoAdvance)
   useEffect(() => {
     if (selectedSong && isOpen) {
+      // If we're navigating internally, don't override the song
+      if (isNavigatingRef.current) {
+        isNavigatingRef.current = false;
+        return;
+      }
 
       // Only set the song if it's different from the current one
       // This prevents restarting the same song when opening the modal
       if (currentSong?.id !== selectedSong.id) {
         setCurrentSong(selectedSong, false);
-      } else {
       }
     }
-  }, [selectedSong?.title, isOpen, currentSong?.id]); // Add currentSong?.id to dependencies
+  }, [selectedSong?.title, isOpen, currentSong?.id]);
 
   // Load songs from the same category AND current filter, find current song index
   useEffect(() => {
     if (selectedSong) {
-      const songsInCategory = songs.filter(song =>
-        song.category === selectedSong.category && song.status === currentFilter
-      );
+      const songsInCategory = songs.filter(song => {
+        const matchesStatus = song.status === currentFilter;
+        
+        // Match category using the same logic as page.tsx
+        let matchesCategory = false;
+        if (activeCategory) {
+          if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
+            matchesCategory = song.categories.some((cat: string) => cat.trim() === activeCategory.trim());
+          } else {
+            matchesCategory = (song.category || '').trim() === activeCategory.trim();
+          }
+        } else {
+          // If no activeCategory provided, fall back to matching selectedSong's own category
+          const targetCat = selectedSong.category || (selectedSong.categories && selectedSong.categories[0]);
+          if (targetCat) {
+            if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
+              matchesCategory = song.categories.some((cat: string) => cat.trim() === targetCat.trim());
+            } else {
+              matchesCategory = (song.category || '').trim() === targetCat.trim();
+            }
+          } else {
+            matchesCategory = true; // Fallback to all songs if category is totally missing
+          }
+        }
+        
+        return matchesStatus && matchesCategory;
+      });
+      
       setCategorySongs(songsInCategory);
 
-      const index = songsInCategory.findIndex(song => song.title === selectedSong.title);
+      const index = songsInCategory.findIndex(song => song.id === selectedSong.id || song.title === selectedSong.title);
       setCurrentSongIndex(index >= 0 ? index : 0);
     }
-  }, [selectedSong, currentFilter, songs]);
+  }, [selectedSong, currentFilter, songs, activeCategory]);
 
   // Handle audio ended event for repeat functionality and auto-skip
   useEffect(() => {
@@ -192,6 +227,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           // Go to next song
           const nextSong = categorySongs[currentSongIndex + 1];
           if (nextSong && onSongChange) {
+            isNavigatingRef.current = true;
             setCurrentSongIndex(currentSongIndex + 1);
             onSongChange(nextSong);
             // Set the new song in audio context and auto-play
@@ -218,6 +254,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
       // Go to previous song
       const prevSong = categorySongs[currentSongIndex - 1];
       if (prevSong && onSongChange) {
+        isNavigatingRef.current = true;
         setCurrentSongIndex(currentSongIndex - 1);
         onSongChange(prevSong);
         // Set the new song in audio context and auto-play
@@ -226,7 +263,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     } else if (audioRef.current && duration > 0) {
       // If at first song or no songs, skip back 10 seconds
       const newTime = Math.max(0, audioRef.current.currentTime - 10);
-      audioRef.current.currentTime = newTime;
+      setCurrentTimeManual(newTime);
     }
   };
 
@@ -236,6 +273,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
       // Go to next song
       const nextSong = categorySongs[currentSongIndex + 1];
       if (nextSong && onSongChange) {
+        isNavigatingRef.current = true;
         setCurrentSongIndex(currentSongIndex + 1);
         onSongChange(nextSong);
         // Set the new song in audio context and auto-play
@@ -244,7 +282,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     } else if (audioRef.current && duration > 0) {
       // If at last song or no songs, skip forward 10 seconds
       const newTime = Math.min(duration, audioRef.current.currentTime + 10);
-      audioRef.current.currentTime = newTime;
+      setCurrentTimeManual(newTime);
     }
   };
 
@@ -592,12 +630,12 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
       // Ensure the audio is loaded before seeking
       if (audioRef.current.readyState >= 2) {
-        audioRef.current.currentTime = clampedTime;
+        setCurrentTimeManual(clampedTime);
       } else {
         // Wait for audio to be ready then seek
         const handleCanPlay = () => {
           if (audioRef.current) {
-            audioRef.current.currentTime = clampedTime;
+            setCurrentTimeManual(clampedTime);
             audioRef.current.removeEventListener('canplay', handleCanPlay);
           }
         };
@@ -629,34 +667,44 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging && audioRef.current && duration > 0) {
+    if (audioRef.current && duration > 0) {
       const newTime = getTimeFromMouseEvent(e);
       seekToTime(newTime);
     }
   };
+
+  const dragStartPos = useRef<{ x: number; time: number } | null>(null);
 
   const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    setIsDragging(true);
+    // Record where the drag started — we'll only enter "dragging" mode
+    // once the mouse actually moves, so simple clicks still work.
+    dragStartPos.current = { x: e.clientX, time: Date.now() };
     setWasPlayingBeforeDrag(isPlaying);
-
-    // Pause during drag for smoother seeking
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-    }
-
-    const newTime = getTimeFromMouseEvent(e);
-    seekToTime(newTime);
   };
 
   const handleProgressMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isDragging && audioRef.current && duration > 0) {
-      const newTime = getTimeFromMouseEvent(e);
-      seekToTime(newTime);
+    if (dragStartPos.current && audioRef.current && duration > 0) {
+      const dx = Math.abs(e.clientX - dragStartPos.current.x);
+      
+      // Only start dragging after 3px of movement (prevents accidental drags)
+      if (!isDragging && dx > 3) {
+        setIsDragging(true);
+        // Pause during drag for smoother seeking
+        if (isPlaying && audioRef.current) {
+          audioRef.current.pause();
+        }
+      }
+
+      if (isDragging) {
+        const newTime = getTimeFromMouseEvent(e);
+        seekToTime(newTime);
+      }
     }
   };
 
   const handleProgressMouseUp = () => {
+    dragStartPos.current = null;
     if (isDragging) {
       setIsDragging(false);
 
@@ -673,20 +721,32 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   // Add global mouse events for dragging
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging && audioRef.current && duration > 0) {
-        // Find the progress bar element
-        const progressBar = document.querySelector('.progress-bar') as HTMLElement;
-        if (progressBar) {
-          const rect = progressBar.getBoundingClientRect();
-          const clickX = e.clientX - rect.left;
-          const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-          const newTime = percentage * duration;
-          seekToTime(newTime);
+      if (dragStartPos.current && audioRef.current && duration > 0) {
+        const dx = Math.abs(e.clientX - dragStartPos.current.x);
+        
+        // Only start dragging after 3px of movement
+        if (!isDragging && dx > 3) {
+          setIsDragging(true);
+          if (wasPlayingBeforeDrag && audioRef.current) {
+            audioRef.current.pause();
+          }
+        }
+
+        if (isDragging) {
+          const progressBar = document.querySelector('.progress-bar') as HTMLElement;
+          if (progressBar) {
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+            const newTime = percentage * duration;
+            seekToTime(newTime);
+          }
         }
       }
     };
 
     const handleGlobalMouseUp = () => {
+      dragStartPos.current = null;
       if (isDragging) {
         setIsDragging(false);
 
@@ -699,7 +759,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
       }
     };
 
-    if (isDragging) {
+    if (dragStartPos.current || isDragging) {
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
       return () => {

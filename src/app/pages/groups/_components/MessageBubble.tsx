@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3, Loader2 } from 'lucide-react'
+import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3, Loader2, Forward, Pin } from 'lucide-react'
 import { Message, ReactionType } from '../_lib/chat-service'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { useAuth } from '@/hooks/useAuth'
@@ -12,12 +12,16 @@ interface MessageBubbleProps {
   message: Message
   isOwn: boolean
   showAvatar?: boolean
+  hasTail?: boolean
   primaryColor: string
   onReply?: (message: Message) => void
   onReaction?: (messageId: string, reaction: ReactionType) => void
   onDelete?: (messageId: string) => void
   onEdit?: (messageId: string, currentText: string) => void
   onImageClick?: (url: string) => void
+  onForward?: (message: Message) => void
+
+  onPin?: (messageId: string | null) => void
 }
 
 // Document Download Button component
@@ -145,12 +149,15 @@ export function MessageBubble({
   message,
   isOwn,
   showAvatar,
+  hasTail,
   primaryColor,
   onReply,
   onReaction,
   onDelete,
   onEdit,
-  onImageClick
+  onImageClick,
+  onForward,
+  onPin
 }: MessageBubbleProps) {
   const { user } = useAuth()
   const { toggleReaction } = useChatV2()
@@ -191,7 +198,7 @@ export function MessageBubble({
       {!isOwn && !showAvatar && <div className="w-8" />}
 
       {/* Message Content Wrapper */}
-      <div className={`flex flex-col max-w-[75%] md:max-w-[60%] ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col max-w-[85%] md:max-w-[70%] lg:max-w-[60%] min-w-0 ${isOwn ? 'items-end' : 'items-start'}`}>
         {!isOwn && showAvatar && (
           <span className="text-[10px] font-bold text-gray-400 ml-1 mb-0.5 uppercase tracking-wider">{message.senderName}</span>
         )}
@@ -204,7 +211,7 @@ export function MessageBubble({
             <div className="relative">
               <button 
                 onClick={() => setShowActions(!showActions)}
-                className={`p-1.5 rounded-full transition-colors ${showActions ? 'bg-gray-100 text-gray-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${showActions ? 'bg-gray-100 text-gray-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -239,6 +246,29 @@ export function MessageBubble({
                     >
                       <Reply className="w-4 h-4" /> Reply
                     </button>
+                    {/* Forward */}
+                    <button
+                      onClick={() => {
+                        onForward?.(message)
+                        setShowActions(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-emerald-600"
+                    >
+                      <Forward className="w-4 h-4" /> Forward
+                    </button>
+
+
+                    {/* Pin / Unpin */}
+                    <button
+                      onClick={() => {
+                        onPin?.(message.pinnedInChat ? null : message.id)
+                        setShowActions(false)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-emerald-600"
+                    >
+                      <Pin className={`w-4 h-4 ${message.pinnedInChat ? 'fill-emerald-400 text-emerald-400' : ''}`} /> 
+                      {message.pinnedInChat ? 'Unpin' : 'Pin'}
+                    </button>
                     {isOwn && (
                       <>
                         {/* Edit (only for text messages) */}
@@ -272,14 +302,17 @@ export function MessageBubble({
           </div>
 
           {/* Actual Bubble Wrapper */}
-          <div className="flex items-end">
-            {/* Left Tail (Received) */}
-            {!isOwn && showAvatar && (
-              <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current -mr-[1px] mb-[1px]">
-                <path opacity="0.13" d="M1.533 3.118L8 12.114V1H2.812C1.042 1 .474 2.156 1.533 3.118z"></path>
-                <path d="M1.533 2.118L8 11.114V0H2.812C1.042 0 .474 1.156 1.533 2.118z"></path>
-              </svg>
+          <div className="flex items-start">
+            {/* Left Tail (Received) - SVG path for WhatsApp style */}
+            {!isOwn && hasTail && (
+              <div className="flex-shrink-0 -mr-[1px] mt-0">
+                <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current">
+                  <path opacity="0.13" d="M1.533 3.118L8 12.114V1H2.812C1.042 1 .474 2.156 1.533 3.118z"></path>
+                  <path d="M1.533 2.118L8 11.114V0H2.812C1.042 0 .474 1.156 1.533 2.118z"></path>
+                </svg>
+              </div>
             )}
+            {!isOwn && !hasTail && <div className={showAvatar ? "w-0" : "w-0"} />}
 
             {/* Bubble Body */}
             <div 
@@ -287,10 +320,10 @@ export function MessageBubble({
                 isOwn 
                   ? 'text-white rounded-lg' 
                   : 'bg-white text-[#111b21] rounded-lg'
-              } ${isOwn && showAvatar ? 'rounded-tr-none' : ''} ${!isOwn && showAvatar ? 'rounded-tl-none' : ''}`}
+              } ${isOwn && hasTail ? 'rounded-tr-none' : ''} ${!isOwn && hasTail ? 'rounded-tl-none' : ''}`}
               style={isOwn ? { backgroundColor: primaryColor } : {}}
             >
-              <div className="px-2 pt-1.5 min-w-[100px] flex flex-col">
+              <div className="px-2 pt-1.5 min-w-[80px] flex flex-col min-w-0">
                 {/* Reply Preview */}
                 {message.replyTo && (
                   <div className="mb-1 p-1 bg-black/5 rounded cursor-pointer relative overflow-hidden flex flex-col">
@@ -299,7 +332,7 @@ export function MessageBubble({
                       <div className="font-semibold text-xs text-[#02a698] leading-tight mb-0.5">
                         {message.replyTo.senderName}
                       </div>
-                      <div className="text-xs text-gray-500 truncate leading-tight">
+                      <div className="text-xs text-gray-500 truncate leading-tight pr-1">
                         {message.replyTo.text}
                       </div>
                     </div>
@@ -337,14 +370,16 @@ export function MessageBubble({
                 )}
 
                 {/* Message Text with Inline Timestamp */}
-                <div className="relative flex flex-wrap items-end gap-2 pb-1.5">
-                  <span className="text-[14.2px] leading-[19px] whitespace-pre-wrap break-words pl-1 flex-1">
+                <div className="relative flex flex-wrap items-end gap-x-2 gap-y-1 pb-1.5 min-w-0">
+                  <span className="text-[14.2px] leading-[19px] whitespace-pre-wrap break-words pl-1 flex-1 min-w-0">
                     {message.text}
                   </span>
                   
                   {/* Floating timestamp container filling bottom-right */}
-                  <div className="flex justify-end min-w-16 h-[15px] -mb-[2px]">
-                    <div className={`flex items-center gap-[3px] ${isOwn ? 'text-white/80' : 'text-[#667781]'}`}>
+                  <div className="flex justify-end min-w-[50px] h-[15px] -mb-[2px] self-end">
+                    <div className={`flex items-center gap-[4px] ${isOwn ? 'text-white/80' : 'text-[#667781]'}`}>
+                      {message.pinnedInChat && <Pin className={`w-3 h-3 ${isOwn ? 'fill-white/40 text-transparent' : 'fill-gray-300 text-transparent'}`} />}
+                      
                       <span className="text-[11px] font-medium mt-0.5 uppercase tracking-wide">
                         {formatTime(message.timestamp)}
                       </span>
@@ -383,12 +418,14 @@ export function MessageBubble({
               </div>
             </div>
 
-            {/* Right Tail (Sent) */}
-            {isOwn && showAvatar && (
-              <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current -ml-[1px] mb-[1px]" style={{ color: primaryColor }}>
-                <path opacity="0.13" d="M5.188 1H8v11.114l-6.467-8.996C.474 2.156 1.042 1 2.812 1h2.376z"></path>
-                <path d="M5.188 0H8v11.114l-6.467-8.996C.474 1.156 1.042 0 2.812 0h2.376z"></path>
-              </svg>
+            {/* Right Tail (Sent) - SVG path for WhatsApp style */}
+            {isOwn && hasTail && (
+              <div className="flex-shrink-0 -ml-[1px] mt-0">
+                <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current" style={{ color: primaryColor }}>
+                  <path opacity="0.13" d="M5.188 1H8v11.114l-6.467-8.996C.474 2.156 1.042 1 2.812 1h2.376z"></path>
+                  <path d="M5.188 0H8v11.114l-6.467-8.996C.474 1.156 1.042 0 2.812 0h2.376z"></path>
+                </svg>
+              </div>
             )}
           </div>
         </div>

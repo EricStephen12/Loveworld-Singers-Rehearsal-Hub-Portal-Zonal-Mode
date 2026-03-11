@@ -12,7 +12,7 @@ type ScanStatus = 'idle' | 'processing' | 'success' | 'failed'
 
 export default function QRScannerPage() {
   const { user } = useAuth()
-  const { isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading } = useZone()
+  const { isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading, currentZone } = useZone()
   const router = useRouter()
 
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
@@ -138,7 +138,8 @@ export default function QRScannerPage() {
 
     try {
       const adminId = user?.uid || 'anonymous-admin'
-      const result = await AttendanceService.checkIn(adminId, qrCode)
+      // Pass the current zone ID so the record is linked to this zone
+      const result = await AttendanceService.checkIn(adminId, qrCode, 'Rehearsal', currentZone?.id)
 
       if (result.success) {
         setScanStatus('success')
@@ -157,6 +158,8 @@ export default function QRScannerPage() {
 
     // Reset back to idle after 2.5 seconds to scan again
     setTimeout(() => {
+      // Set the ref FIRST (synchronous) so detectQR sees 'idle' immediately
+      statusRef.current = 'idle'
       setScanStatus('idle')
       setStatusMessage('')
       animationFrameRef.current = requestAnimationFrame(detectQR)

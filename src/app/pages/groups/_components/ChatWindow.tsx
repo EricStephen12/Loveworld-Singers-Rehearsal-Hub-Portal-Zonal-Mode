@@ -5,7 +5,7 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Phone, PhoneOff, ArrowLeft, MoreVertical, Search, Check, 
-  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download
+  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download, Pin
 } from 'lucide-react'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { MessageBubble } from './MessageBubble'
@@ -19,13 +19,22 @@ interface ChatWindowProps {
   onShowGroupSettings: () => void
   onShowDirectChatSettings: () => void
   onBackToList: () => void
+  onForward?: (message: any) => void
+  onPin?: (messageId: string | null) => void
 }
+
+const HEARTBEAT_THRESHOLD_MS = 120000 // 2 minutes (heartbeat window)
+const MINUTE_MS = 60000
+const HOUR_MS = 3600000
+const DAY_MS = 86400000
 
 export function ChatWindow({
   primaryColor,
   onShowGroupSettings,
   onShowDirectChatSettings,
-  onBackToList
+  onBackToList,
+  onForward,
+  onPin
 }: ChatWindowProps) {
   const { user } = useAuth()
   const { 
@@ -38,6 +47,7 @@ export function ChatWindow({
     deleteMessage,
     toggleReaction,
     editMessage,
+    userPresence
   } = useChatV2()
 
   const [replyingTo, setReplyingTo] = useState<{ id: string; text: string; senderName: string } | null>(null)
@@ -133,13 +143,13 @@ export function ChatWindow({
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative overflow-hidden">
+    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden">
       {/* Dynamic Header */}
-      <div className="flex-shrink-0 flex items-center justify-between p-3 md:p-4 border-b border-gray-100 bg-white/80 backdrop-blur-md z-20">
-        <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+      <div className="flex-shrink-0 flex items-center justify-between p-3 md:p-4 border-b border-gray-100 bg-white/80 backdrop-blur-md z-20 min-w-0">
+        <div className="flex items-center gap-3 md:gap-4 overflow-hidden min-w-0">
           <button 
             onClick={onBackToList}
-            className="md:hidden p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+            className="md:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -154,40 +164,71 @@ export function ChatWindow({
                 size="w-10 h-10 md:w-12 md:h-12"
                 className="rounded-2xl shadow-sm ring-2 ring-white"
               />
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+              {/* Online dot — only show for direct chats when user is actually online */}
+              {selectedChat.type === 'direct' && (() => {
+                const otherId = selectedChat.participants.find(id => id !== user?.uid)
+                const presence = otherId ? userPresence[otherId] : null
+                const isOnline = presence?.status === 'online' && presence?.lastSeen && 
+                  (Date.now() - (presence.lastSeen.seconds * 1000)) < HEARTBEAT_THRESHOLD_MS // Only if seen within threshold
+                return isOnline ? (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+                ) : null
+              })()}
             </div>
-            <div className="flex flex-col min-w-0">
+            <div className="flex flex-col min-w-0 flex-1">
                <h2 className="font-bold text-[15px] md:text-[17px] text-gray-900 truncate">
                  {getChatDisplayName(selectedChat)}
                </h2>
-               <div className="flex items-center gap-1.5 min-h-[16px]">
+               <div className="flex items-center gap-1.5 min-h-[16px] overflow-hidden">
                   {typingUsers && typingUsers.length > 0 ? (
-                    <span className="text-[11px] text-emerald-600 font-bold animate-pulse">
+                    <span className="text-[11px] text-emerald-600 font-bold animate-pulse truncate">
                       {typingUsers[0].userName.split(' ')[0]} is typing...
                     </span>
                   ) : (
-                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80">
-                      {selectedChat.type === 'group' ? `${selectedChat.participants.length} members` : 'Online'}
-                    </span>
+                    <div className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80 truncate">
+                      {selectedChat.type === 'group' ? (
+                        `${selectedChat.participants.length} members`
+                      ) : (() => {
+                        const otherId = selectedChat.participants.find(id => id !== user?.uid)
+                        const presence = otherId ? userPresence[otherId] : null
+                        if (presence?.status === 'online' && presence?.lastSeen) {
+                          // Only show "online" if lastSeen is within threshold (heartbeat window)
+                          const lastSeenMs = presence.lastSeen.seconds * 1000
+                          if (Date.now() - lastSeenMs < HEARTBEAT_THRESHOLD_MS) {
+                            return <span className="text-emerald-500 lowercase font-bold tracking-normal">online</span>
+                          }
+                        }
+                        if (presence?.lastSeen) {
+                          const date = new Date(presence.lastSeen.seconds * 1000)
+                          const now = new Date()
+                          const diff = now.getTime() - date.getTime()
+                          if (diff < MINUTE_MS) return 'last seen just now'
+                          if (diff < HOUR_MS) return `last seen ${Math.floor(diff / MINUTE_MS)}m ago`
+                          if (diff < DAY_MS) return `last seen ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                          return `last seen ${date.toLocaleDateString()}`
+                        }
+                        return 'Offline'
+                      })()}
+                    </div>
                   )}
                </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 md:gap-3">
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
           <button 
-            onClick={handleSearchToggle}
-            className={`p-2.5 rounded-2xl transition-all ${showSearch ? 'bg-emerald-50 text-emerald-600' : 'text-gray-400 hover:text-emerald-500 hover:bg-emerald-50'}`}
+            onClick={() => setShowSearch(!showSearch)}
+            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${showSearch ? 'bg-emerald-50 text-emerald-600' : 'text-[#54656f] hover:bg-gray-100'}`}
           >
             <Search className="w-5 h-5" />
           </button>
-          <button className="p-2.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-2xl transition-all">
+          <button className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all">
             <Phone className="w-5 h-5" />
           </button>
           <button 
             onClick={selectedChat.type === 'group' ? onShowGroupSettings : onShowDirectChatSettings}
-            className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-2xl transition-all"
+            className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
@@ -230,11 +271,53 @@ export function ChatWindow({
         )}
       </AnimatePresence>
 
+      {/* Pinned Message Banner */}
+      <AnimatePresence>
+        {selectedChat?.pinnedMessageId && messages.find(m => m.id === selectedChat.pinnedMessageId) && (
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -50, opacity: 0 }}
+            className="absolute top-[108px] left-0 right-0 z-20 px-4 py-2 pointer-events-none"
+          >
+            <div className="bg-white/95 backdrop-blur-sm border border-emerald-100 rounded-xl shadow-lg p-2.5 flex items-center gap-3 pointer-events-auto">
+              <div className="bg-emerald-50 p-2 rounded-lg">
+                <Pin className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+              </div>
+              <div 
+                className="flex-1 min-w-0 cursor-pointer"
+                onClick={() => {
+                   const msg = messages.find(m => m.id === selectedChat.pinnedMessageId)
+                   if (msg) {
+                     // Find the element and scroll to it
+                     const element = document.getElementById(`msg-${msg.id}`)
+                     element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                   }
+                }}
+              >
+                <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Pinned Message</p>
+                <p className="text-[13px] text-gray-700 truncate font-medium">
+                  {messages.find(m => m.id === selectedChat.pinnedMessageId)?.text || 'Pinned attachment'}
+                </p>
+              </div>
+              <button 
+                onClick={() => onPin?.(null)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
+                title="Unpin message"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages Scroll Area */}
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200 relative"
+        id="chat-messages-container"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200 relative"
         style={{
           backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")',
           backgroundRepeat: 'repeat',
@@ -266,32 +349,36 @@ export function ChatWindow({
                 {/* Messages in Group */}
                 {(() => {
                   const activeMsgs = searchQuery ? filteredMessages : msgs;
-                  return activeMsgs.map((msg, i) => {
-                    const isFirstInBatch = i === 0 || activeMsgs[i-1].senderId !== msg.senderId
-                    const isHighlighted = searchQuery ? msg.text?.toLowerCase().includes(searchQuery.toLowerCase()) : true
+                  return activeMsgs.map((message, i) => {
+                    const isFirstInBatch = i === 0 || activeMsgs[i-1].senderId !== message.senderId
+                    const isHighlighted = searchQuery ? message.text?.toLowerCase().includes(searchQuery.toLowerCase()) : true
                     if (!isHighlighted) return null
                     return (
-                      <MessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isOwn={msg.senderId === user?.uid}
-                        showAvatar={isFirstInBatch && selectedChat.type === 'group'}
-                        primaryColor={primaryColor}
-                        onReply={(reply) => setReplyingTo({ id: reply.id, text: reply.text, senderName: reply.senderName })}
-                        onReaction={(id, reaction) => {
-                          if (reaction === '') {
-                            setReactingToMessageId(id)
-                          } else {
-                            toggleReaction(id, reaction)
-                            setReactingToMessageId(null)
-                          }
-                        }}
-                        onDelete={deleteMessage}
-                        onEdit={(id, text) => {
-                          setEditingMessage({ id, text })
-                        }}
-                        onImageClick={setSelectedImage}
-                      />
+                      <div key={message.id} id={`msg-${message.id}`}>
+                        <MessageBubble 
+                          message={message}
+                          isOwn={message.senderId === user?.uid}
+                          showAvatar={isFirstInBatch && selectedChat.type === 'group'}
+                          hasTail={isFirstInBatch}
+                          primaryColor={primaryColor}
+                          onReply={(reply) => setReplyingTo({ id: reply.id, text: reply.text, senderName: reply.senderName })}
+                          onReaction={(id, reaction) => {
+                            if (reaction === '') {
+                              setReactingToMessageId(id)
+                            } else {
+                              toggleReaction(id, reaction)
+                              setReactingToMessageId(null)
+                            }
+                          }}
+                          onDelete={deleteMessage}
+                          onEdit={(id, text) => {
+                            setEditingMessage({ id, text })
+                          }}
+                          onImageClick={setSelectedImage}
+                          onForward={onForward}
+                          onPin={onPin}
+                        />
+                      </div>
                     )
                   })
                 })()}

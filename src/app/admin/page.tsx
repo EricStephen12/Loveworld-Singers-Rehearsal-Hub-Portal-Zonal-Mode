@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -46,6 +46,7 @@ const CategoryOrderModal = dynamic(() => import('../../components/admin/Category
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
 const ScheduleManagerSection = dynamic(() => import('../../components/admin/ScheduleManagerSection'), { ssr: false });
 const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
+const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -1610,6 +1611,7 @@ function AdminContent() {
           {activeSection === 'Dashboard' && !isRestrictedAdmin && <DashboardSection onSectionChange={setActiveSection} />}
           {activeSection === 'Analytics' && isHQAdmin && !isRestrictedAdmin && <AnalyticsSection />}
           {activeSection === 'Payments' && isHQAdmin && !isRestrictedAdmin && <PaymentDashboardSection />}
+          {activeSection === 'Attendance' && !isRestrictedAdmin && <AttendanceSection />}
 
           {activeSection === 'Pages' && (
             <PagesSection

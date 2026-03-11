@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Search, Plus, MessageCircle, Check, ImageIcon, FileText, Mic, PhoneMissed, Loader2, Edit3, ChevronLeft } from 'lucide-react'
+import { Search, Plus, MessageCircle, Check, CheckCheck, ImageIcon, FileText, Mic, PhoneMissed, Loader2, Edit3, ChevronLeft } from 'lucide-react'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { useAuth } from '@/hooks/useAuth'
 import { SyncAvatar } from './SyncAvatar'
@@ -13,6 +13,7 @@ interface ChatListProps {
   onNewChat: () => void
   onNewGroup: () => void
   onShowMyProfile: () => void
+
   onBack?: () => void
   primaryColor: string
 }
@@ -23,6 +24,7 @@ export function ChatList({
   onNewChat,
   onNewGroup,
   onShowMyProfile,
+
   onBack,
   primaryColor
 }: ChatListProps) {
@@ -83,7 +85,7 @@ export function ChatList({
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-1 -ml-1 hover:bg-white/20 rounded-lg transition-colors"
+                className="w-10 h-10 flex items-center justify-center -ml-2 hover:bg-white/20 rounded-full transition-colors"
                 title="Back"
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -107,29 +109,32 @@ export function ChatList({
           <div className="flex items-center gap-1">
             <button
               onClick={onNewChat}
-              className="p-2.5 hover:bg-white/10 rounded-xl transition-all active:scale-95"
+              className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all active:scale-95"
               title="Search users"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-5 h-5 text-white" />
             </button>
             <button
               onClick={onNewGroup}
-              className="p-2.5 hover:bg-white/10 rounded-xl transition-all active:scale-95"
+              className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all active:scale-95"
               title="Create group"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
 
-        {/* Integrated Search Bar */}
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 group-focus-within:text-white transition-colors" />
+        {/* Search Bar */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-white/70" />
+          </div>
           <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 bg-white/20 border border-transparent rounded-xl text-white placeholder-white/70 focus:outline-none focus:bg-white/30 transition-all text-sm"
+            placeholder="Search or start new chat"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search or start new chat"
-            className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-xl text-sm placeholder:text-white/50 focus:outline-none focus:bg-white/20 transition-all border border-white/10 focus:border-white/20 text-white"
           />
         </div>
       </div>
@@ -217,21 +222,24 @@ export function ChatList({
                                 </>
                               ) : (
                                 <>
-                                  <span className="flex items-center h-4 pt-1">
-                                    <span className="typing-dot animate-[typing_1s_infinite_0s] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
-                                    <span className="typing-dot animate-[typing_1s_infinite_150ms] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
-                                    <span className="typing-dot animate-[typing_1s_infinite_300ms] bg-emerald-500 w-1.5 h-1.5 rounded-full mx-[1px]" />
+                                  <span className="flex items-center h-4 pt-[3px]">
+                                    <span className="typing-dot animate-[typing_1s_infinite_0s] bg-emerald-500 w-[5px] h-[5px] rounded-full mx-[1.5px]" />
+                                    <span className="typing-dot animate-[typing_1s_infinite_150ms] bg-emerald-500 w-[5px] h-[5px] rounded-full mx-[1.5px]" />
+                                    <span className="typing-dot animate-[typing_1s_infinite_300ms] bg-emerald-500 w-[5px] h-[5px] rounded-full mx-[1.5px]" />
                                   </span>
-                                  <span className="ml-1">typing...</span>
+                                  <span className="ml-[6px]">typing...</span>
                                 </>
                               )}
                             </div>
                           ) : (
                             <div className={`text-sm truncate flex items-center ${unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
                               {chat.lastMessage?.senderId === currentUser?.id && (
-                                <span className={`flex-shrink-0 flex items-center mr-1 ${chat.lastMessage?.status === 'read' ? 'text-[#53bdeb]' : 'text-gray-400'}`}>
-                                  <Check className="w-[14px] h-[14px]" />
-                                  {chat.lastMessage?.status === 'read' && <Check className="w-[14px] h-[14px] -ml-2" />}
+                                <span className={`flex-shrink-0 flex items-center mr-[6px] ${chat.lastMessage?.status === 'read' ? 'text-[#53bdeb]' : 'text-gray-400'}`}>
+                                  {chat.lastMessage?.status === 'read' ? (
+                                    <CheckCheck className="w-[16px] h-[16px]" />
+                                  ) : (
+                                    <Check className="w-[16px] h-[16px]" />
+                                  )}
                                 </span>
                               )}
                               <span className="truncate max-w-[200px]">

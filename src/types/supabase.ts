@@ -214,6 +214,8 @@ export interface PraiseNightSong {
   availableParts?: string[]; // List of available parts (computed from audioUrls keys)
   comments: Comment[];
   history: HistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Comment {

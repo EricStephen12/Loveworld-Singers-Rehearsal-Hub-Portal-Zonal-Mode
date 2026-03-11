@@ -167,7 +167,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-[#f0f2f5] px-4 py-2 flex-shrink-0">
+    <div className="bg-[#f0f2f5] px-2 md:px-4 py-2 flex-shrink-0 min-w-0">
       {/* Reply Preview */}
       <AnimatePresence>
         {replyingTo && (
@@ -190,19 +190,19 @@ export function ChatInput({
         )}
       </AnimatePresence>
 
-      <div className="flex items-end gap-2 max-w-5xl mx-auto relative">
+      <div className="flex items-end gap-2 max-w-5xl mx-auto relative min-w-0">
         {/* Text Input Area (Pill) */}
-        <div className="flex-1 relative flex items-center bg-white rounded-[24px] border border-transparent shadow-sm px-1 py-1 transition-all min-h-[48px]">
+        <div className="flex-1 relative flex items-center bg-white rounded-[24px] border border-transparent shadow-sm px-1 py-1 transition-all min-h-[48px] min-w-0">
           <button 
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-[10px] text-[#54656f] hover:text-emerald-600 transition-colors ml-1"
+            className="w-12 h-12 flex items-center justify-center text-[#54656f] hover:text-emerald-600 transition-colors ml-1"
           >
             <Smile className="w-[26px] h-[26px]" />
           </button>
           
           <button 
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`p-[10px] transition-colors ${showAttachmentMenu ? 'text-emerald-600' : 'text-[#54656f] hover:text-emerald-600'}`}
+            className={`w-12 h-12 flex items-center justify-center transition-colors ${showAttachmentMenu ? 'text-emerald-600' : 'text-[#54656f] hover:text-emerald-600'}`}
           >
             <Paperclip className="w-[24px] h-[24px]" />
           </button>
@@ -246,7 +246,7 @@ export function ChatInput({
             onChange={(e) => { setMessageText(e.target.value); handleTyping(); }}
             onKeyDown={handleKeyDown}
             placeholder={isRecording ? "Recording..." : "Type a message"}
-            className="flex-1 bg-transparent py-[10px] px-2 text-[15px] focus:outline-none resize-none max-h-[120px] scrollbar-none font-normal text-[#111b21] placeholder-[#8696a0]"
+            className="flex-1 bg-transparent py-[10px] px-2 text-[15px] focus:outline-none resize-none max-h-[120px] scrollbar-none font-normal text-[#111b21] placeholder-[#8696a0] min-w-0"
             disabled={isRecording || isSending || isUploading}
           />
 
@@ -270,7 +270,7 @@ export function ChatInput({
               disabled={isSending || isUploading}
               className="w-full h-full text-white flex items-center justify-center hover:bg-black/10 transition-colors rounded-full"
             >
-              <Send className="w-[20px] h-[20px] ml-1" />
+              <Send className="w-[20px] h-[20px]" />
             </motion.button>
           ) : (
             <motion.button
@@ -321,7 +321,7 @@ export function ChatInput({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 px-6 py-3 bg-red-500 text-white rounded-full shadow-xl flex items-center gap-4 z-50"
+            className="absolute bottom-20 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-fit px-4 md:px-6 py-3 bg-red-500 text-white rounded-full shadow-xl flex items-center gap-3 md:gap-4 z-50"
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-white rounded-full animate-ping" />

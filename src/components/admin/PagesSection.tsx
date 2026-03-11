@@ -17,6 +17,7 @@ import { Toast } from '../Toast';
 import { useAdminTheme } from './AdminThemeProvider';
 import CustomLoader from '@/components/CustomLoader';
 import { normalizeSearchString } from '@/utils/string-utils';
+import CloneFromMasterModal from './CloneFromMasterModal';
 
 interface PagesSectionProps {
   allPraiseNights: PraiseNight[] | null;
@@ -94,6 +95,7 @@ export default function PagesSection(props: PagesSectionProps) {
 
   // Pagination state for pages list
   const [pagesDisplayLimit, setPagesDisplayLimit] = useState(10);
+  const [showCloneModal, setShowCloneModal] = useState(false);
 
   const {
     allPraiseNights,
@@ -496,6 +498,14 @@ export default function PagesSection(props: PagesSectionProps) {
                 >
                   <Plus className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setShowCloneModal(true)}
+                  className={`p-2.5 bg-white border border-slate-300 text-purple-700 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm`}
+                  title="Clone from Master Library"
+                  aria-label="Clone song"
+                >
+                  <Music className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -549,6 +559,13 @@ export default function PagesSection(props: PagesSectionProps) {
                   >
                     <Plus className="w-4 h-4" />
                     Add Song
+                  </button>
+                  <button
+                    onClick={() => setShowCloneModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-purple-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                  >
+                    <Music className="w-4 h-4" />
+                    Clone Master
                   </button>
                   <button
                     onClick={() => setShowCategoryOrderModal(true)}
@@ -881,6 +898,17 @@ export default function PagesSection(props: PagesSectionProps) {
           </div>
         )}
       </div>
+
+      {/* Clone From Master Modal */}
+      {selectedPage && (
+        <CloneFromMasterModal
+          isOpen={showCloneModal}
+          onClose={() => setShowCloneModal(false)}
+          onClone={handleEditSong}
+          praiseNightId={selectedPage.id}
+          defaultCategory={availableCategories.length > 0 ? availableCategories[0] : ''}
+        />
+      )}
     </div>
   );
 }

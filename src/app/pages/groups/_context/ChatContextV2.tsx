@@ -31,9 +31,11 @@ import {
   clearChat as clearChatService,
   editMessage as editMessageService,
   forwardMessage as forwardMessageService,
+  pinMessage as pinMessageService,
   setTypingStatus as setTypingStatusService,
   subscribeToTyping
 } from '../_lib/chat-service'
+import { subscribeToUserPresence } from '@/lib/presence-service'
 
 interface ChatContextType {
   // State
@@ -70,6 +72,7 @@ interface ChatContextType {
   clearChat: () => Promise<boolean>
   editMessage: (messageId: string, newText: string) => Promise<boolean>
   forwardMessage: (targetChatId: string, originalMessage: Message) => Promise<boolean>
+  pinMessage: (messageId: string | null) => Promise<boolean>
   setTypingStatus: (status: 'typing' | 'recording_voice' | null) => Promise<void>
   isGroupCreator: () => boolean
   isGroupAdmin: (userId?: string) => boolean
@@ -77,6 +80,7 @@ interface ChatContextType {
   getChatAvatar: (chat: Chat) => string | undefined
   typingUsers: { userName: string, status: string }[]
   allTypingUsers: { [chatId: string]: { userName: string, status: string }[] }
+  userPresence: { [userId: string]: { status: 'online' | 'offline'; lastSeen: any } }
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -92,6 +96,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   const [allTypingUsers, setAllTypingUsers] = useState<{ [chatId: string]: { userName: string, status: string }[] }>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isMessagesLoading, setIsMessagesLoading] = useState(false)
+  const [userPresence, setUserPresence] = useState<{ [userId: string]: { status: 'online' | 'offline'; lastSeen: any } }>({})
 
   // Build current user object
   const currentUser: ChatUser | null = user && profile ? {
@@ -101,6 +106,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     zoneId: currentZone?.id,
     zoneName: currentZone?.name
   } : null
+
 
   // Subscribe to chats
   useEffect(() => {
@@ -151,7 +157,12 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     }
 
     const unsubscribe = subscribeToMessages(selectedChat.id, (newMessages) => {
-      setMessages(newMessages)
+      // Inject pinning info
+      const enriched = newMessages.map(m => ({
+        ...m,
+        pinnedInChat: selectedChat.pinnedMessageId === m.id
+      }))
+      setMessages(enriched)
       setIsMessagesLoading(false)
     })
 
@@ -163,6 +174,23 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       unsubscribe()
       unsubscribeTyping()
     }
+  }, [selectedChat?.id, user?.uid, selectedChat?.pinnedMessageId])
+
+  // Subscribe to presence of other user in direct chat
+  useEffect(() => {
+    if (!selectedChat || selectedChat.type !== 'direct' || !user?.uid) return
+
+    const otherId = selectedChat.participants.find(id => id !== user.uid)
+    if (!otherId) return
+
+    const unsubscribe = subscribeToUserPresence(otherId, (presence) => {
+      setUserPresence(prev => ({
+        ...prev,
+        [otherId]: presence
+      }))
+    })
+
+    return () => unsubscribe()
   }, [selectedChat?.id, user?.uid])
 
   // Global typing subscription for sidebar
@@ -224,7 +252,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         const errorText = await response.text()
- console.error('[ChatContext] Cloudinary upload failed:', errorText)
+        console.error('[ChatContext] Cloudinary upload failed:', errorText)
         throw new Error('Upload failed')
       }
 
@@ -253,7 +281,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
         }
       )
     } catch (error) {
- console.error('[ChatContext] sendMediaMessage error:', error)
+      console.error('[ChatContext] sendMediaMessage error:', error)
       return false
     }
   }, [selectedChat, currentUser])
@@ -295,14 +323,14 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
         } as any
       )
     } catch (error) {
- console.error('[ChatContext] sendVoiceMessage error:', error)
+      console.error('[ChatContext] sendVoiceMessage error:', error)
       return false
     }
   }, [selectedChat, currentUser])
 
   const startDirectChat = useCallback(async (otherUser: ChatUser) => {
     if (!currentUser) {
- console.error('[ChatContext] No current user - cannot start chat')
+      console.error('[ChatContext] No current user - cannot start chat')
       return null
     }
     const result = await getOrCreateDirectChat(currentUser, otherUser)
@@ -435,6 +463,12 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return await forwardMessageService(targetChatId, currentUser, originalMessage)
   }, [user, currentUser])
 
+
+  const pinMessage = useCallback(async (messageId: string | null) => {
+    if (!selectedChat) return false
+    return await pinMessageService(selectedChat.id, messageId)
+  }, [selectedChat])
+
   const getChatDisplayName = useCallback((chat: Chat) => {
     if (chat.type === 'group') {
       return chat.name || 'Group'
@@ -493,12 +527,14 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       clearChat,
       editMessage,
       forwardMessage,
+      pinMessage,
       setTypingStatus,
       isGroupCreator,
       isGroupAdmin,
       getChatDisplayName,
       getChatAvatar,
-      allTypingUsers
+      allTypingUsers,
+      userPresence
     }}>
       {children}
     </ChatContext.Provider>

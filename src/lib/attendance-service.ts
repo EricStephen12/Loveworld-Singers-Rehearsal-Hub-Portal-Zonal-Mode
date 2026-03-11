@@ -1,4 +1,4 @@
-﻿import { FirebaseDatabaseService } from './firebase-database'
+import { FirebaseDatabaseService } from './firebase-database'
 
 export interface AttendanceRecord {
   id?: string
@@ -9,12 +9,13 @@ export interface AttendanceRecord {
   qr_code_used?: string
   status: 'present' | 'late' | 'absent'
   notes?: string
+  zone_id?: string // Added to support zone-filtering for admins
   created_at?: string
 }
 
 export class AttendanceService {
   // Check in user for attendance
-  static async checkIn(userId: string, qrCode: string, eventName: string = 'Rehearsal'): Promise<{ success: boolean; message: string; record?: AttendanceRecord }> {
+  static async checkIn(userId: string, qrCode: string, eventName: string = 'Rehearsal', zoneId?: string): Promise<{ success: boolean; message: string; record?: AttendanceRecord }> {
     try {
       // Verify QR code is valid (not expired)
       const qrData = this.parseQRCode(qrCode)
@@ -69,6 +70,7 @@ export class AttendanceService {
         qr_code_used: qrCode,
         status: status,
         notes: 'Checked in via QR code',
+        zone_id: zoneId || null, // Connect record to the zone that scanned it
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -89,6 +91,7 @@ export class AttendanceService {
         qr_code_used: qrCode,
         status: status,
         notes: 'Checked in via QR code',
+        zone_id: zoneId || undefined,
         created_at: checkInTime
       }
 
@@ -143,6 +146,46 @@ export class AttendanceService {
       return sorted.slice(0, limitCount) as AttendanceRecord[]
     } catch (error) {
  console.error('Get attendance error:', error)
+      return []
+    }
+  }
+
+  // Get attendance for an entire zone (or all for HQ)
+  static async getZoneAttendance(zoneId: string, isHQ: boolean = false, limitCount: number = 100): Promise<(AttendanceRecord & { user_name: string })[]> {
+    try {
+      let records: any[] = []
+
+      if (isHQ) {
+        // HQ can see all global attendance
+        records = await FirebaseDatabaseService.getCollection('attendance', limitCount)
+      } else {
+        // Regular zone sees ONLY their zone's check-ins
+        records = await FirebaseDatabaseService.getCollectionWhere(
+          'attendance',
+          'zone_id',
+          '==',
+          zoneId
+        )
+      }
+
+      // Sort by check_in_time descending
+      const sorted = records.sort((a: any, b: any) => {
+        const timeA = new Date(a.check_in_time || a.created_at || 0).getTime()
+        const timeB = new Date(b.check_in_time || b.created_at || 0).getTime()
+        return timeB - timeA
+      })
+
+      // Fetch user names for the records
+      const enrichedRecords = await Promise.all(
+        sorted.slice(0, limitCount).map(async (record) => {
+          const userName = await this.getUserFullName(record.user_id)
+          return { ...record, user_name: userName } as AttendanceRecord & { user_name: string }
+        })
+      )
+
+      return enrichedRecords
+    } catch (error) {
+ console.error('Get zone attendance error:', error)
       return []
     }
   }
