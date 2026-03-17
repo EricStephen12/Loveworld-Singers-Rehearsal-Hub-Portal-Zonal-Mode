@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { X, Plus, Check, ListVideo } from 'lucide-react'
@@ -90,25 +90,25 @@ export default function AddToPlaylistModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
-      <div className="relative bg-[#161616] w-full sm:w-[380px] sm:rounded-3xl rounded-t-3xl max-h-[75vh] flex flex-col border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-in slide-in-from-bottom-6 duration-500">
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+      <div className="relative bg-slate-900 w-full sm:w-[420px] sm:rounded-[32px] rounded-t-[32px] max-h-[85vh] flex flex-col border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.6)] animate-in slide-in-from-bottom-8 duration-500 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/5">
+        <div className="flex items-center justify-between px-8 py-7 border-b border-slate-800/60 bg-slate-900/50 backdrop-blur-sm">
           <div className="flex flex-col">
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Curate Library</h3>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Save to your collections</p>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-indigo-400">Curate Library</h3>
+            <p className="text-xl font-bold text-slate-100 tracking-tight mt-0.5">Save to playlists</p>
           </div>
-          <button onClick={onClose} className="p-2.5 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="p-2.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-100 transition-all flex items-center justify-center border border-white/5">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar bg-slate-950/30">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="w-10 h-10 border-2 border-white/5 border-t-indigo-500 rounded-full animate-spin" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Syncing Collections...</p>
+            <div className="flex flex-col items-center justify-center py-20 gap-5">
+              <div className="w-12 h-12 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin shadow-lg shadow-indigo-500/10" />
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 animate-pulse">Syncing Hub...</p>
             </div>
           ) : (
             <>
@@ -118,28 +118,34 @@ export default function AddToPlaylistModal({
                   <button
                     key={playlist.id}
                     onClick={() => handleTogglePlaylist(playlist.id)}
-                    className={`flex items-center gap-4 w-full p-4 rounded-2xl transition-all duration-300 group ${isSelected ? 'bg-indigo-600/10' : 'hover:bg-white/5'
+                    className={`flex items-center gap-4 w-full p-4 rounded-2xl transition-all duration-300 group ${isSelected ? 'bg-indigo-600/10 border border-indigo-500/20' : 'hover:bg-slate-800 border border-transparent'
                       }`}
                   >
-                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isSelected
-                        ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.4)]'
-                        : 'border-white/10 group-hover:border-white/30'
+                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isSelected
+                        ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                        : 'border-slate-700 bg-slate-900 group-hover:border-slate-500'
                       }`}>
-                      {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={4} />}
                     </div>
-                    <ListVideo className={`w-5 h-5 transition-colors ${isSelected ? 'text-indigo-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
-                    <span className={`flex-1 text-left text-sm font-bold uppercase tracking-tight truncate ${isSelected ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
-                      {playlist.name}
-                    </span>
-                    <span className={`text-[10px] font-black tracking-widest ${isSelected ? 'text-indigo-400' : 'text-gray-600'}`}>{playlist.videoIds.length}</span>
+                    <div className="flex flex-col flex-1 text-left min-w-0">
+                        <span className={`text-[15px] font-bold truncate tracking-tight ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
+                          {playlist.name}
+                        </span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <ListVideo className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`} />
+                            <span className={`text-[10px] font-bold tracking-widest ${isSelected ? 'text-indigo-400' : 'text-slate-600'}`}>{playlist.videoIds.length} VIDEOS</span>
+                        </div>
+                    </div>
                   </button>
                 );
               })}
 
               {playlists.length === 0 && !showCreate && (
-                <div className="flex flex-col items-center justify-center py-12 opacity-40">
-                  <ListVideo className="w-12 h-12 mb-4 text-gray-500" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Your Hub is Empty</p>
+                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                  <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-white/5">
+                    <ListVideo className="w-10 h-10 text-slate-500" />
+                  </div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Your Hub is Empty</p>
                 </div>
               )}
             </>
@@ -147,29 +153,29 @@ export default function AddToPlaylistModal({
         </div>
 
         {/* Create New Navigation */}
-        <div className="p-4 border-t border-white/5 bg-white/1">
+        <div className="p-6 border-t border-slate-800/60 bg-slate-900/50 backdrop-blur-sm">
           {showCreate ? (
-            <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+            <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
               <input
                 type="text"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
-                placeholder="ENTER COLLECTION NAME..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all"
+                placeholder="ENTER PLAYLIST NAME..."
+                className="w-full bg-slate-950/50 border border-slate-700 rounded-2xl px-6 py-4 text-xs font-bold tracking-widest text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleCreatePlaylist()}
               />
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowCreate(false); setNewPlaylistName('') }}
-                  className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 px-4 py-4 bg-slate-800 hover:bg-slate-750 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-all border border-white/5"
                 >
                   ABORT
                 </button>
                 <button
                   onClick={handleCreatePlaylist}
                   disabled={!newPlaylistName.trim() || creating}
-                  className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all"
+                  className="flex-1 px-4 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(79,70,229,0.3)] transition-all border border-indigo-400/20"
                 >
                   {creating ? 'SYNCING...' : 'INITIATE'}
                 </button>
@@ -178,10 +184,10 @@ export default function AddToPlaylistModal({
           ) : (
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center justify-center gap-3 w-full p-4 hover:bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-400 border border-indigo-500/20 transition-all group"
+              className="flex items-center justify-center gap-3 w-full p-5 bg-slate-950/50 hover:bg-slate-800 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-indigo-400 border border-indigo-500/20 transition-all group group-hover:shadow-lg group-hover:shadow-indigo-500/5 shadow-inner"
             >
               <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-              Create New Collection
+              Create New Playlist
             </button>
           )}
         </div>

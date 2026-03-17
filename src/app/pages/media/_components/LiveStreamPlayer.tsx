@@ -29,17 +29,17 @@ export default function LiveStreamPlayer({ isPreview = false, zoneId }: LiveStre
         `https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=${defaultPublicId}&profile=cld-live-streaming`;
 
     return (
-        <div className="w-full mb-8 group relative">
+        <div className="w-full mb-12 group relative">
             {/* Stream Switcher - Only if multiple streams and not in preview */}
             {!isPreview && streams.length > 1 && (
-                <div className="flex gap-2 mb-4 bg-white/5 p-1 rounded-xl border border-white/10 w-fit">
+                <div className="flex gap-2 mb-4 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm">
                     {streams.map((s) => (
                         <button
                             key={s.id}
                             onClick={() => setActiveStreamId(s.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeStreamId === s.id
-                                    ? 'bg-red-600 text-white shadow-lg'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeStreamId === s.id
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                                 }`}
                         >
                             <MonitorPlay className="w-4 h-4" />
@@ -50,7 +50,7 @@ export default function LiveStreamPlayer({ isPreview = false, zoneId }: LiveStre
             )}
 
             {/* Video Container - Pure 16:9 */}
-            <div className="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-2xl relative border border-white/5">
+            <div className="aspect-video w-full bg-slate-950 rounded-lg overflow-hidden shadow-2xl relative border border-white/10 transition-all">
                 <iframe
                     key={activeStream?.id || 'default'}
                     src={playerUrl}
@@ -61,13 +61,13 @@ export default function LiveStreamPlayer({ isPreview = false, zoneId }: LiveStre
                 ></iframe>
 
                 {/* Live Overlay Badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white z-10 pointer-events-none border border-white/10">
-                    <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                    <span className="text-xs font-bold uppercase tracking-wide">LIVE</span>
+                <div className="absolute top-4 left-4 flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg text-white z-10 pointer-events-none border border-white/10 ring-1 ring-black/20">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span>
+                    <span className="text-xs font-bold uppercase tracking-wider">LIVE</span>
                     {activeStream && streams.length > 1 && (
                         <>
                             <span className="w-px h-3 bg-white/20 mx-1"></span>
-                            <span className="text-[10px] opacity-70">{activeStream.name}</span>
+                            <span className="text-[10px] opacity-70 font-medium">{activeStream.name}</span>
                         </>
                     )}
                 </div>
@@ -76,11 +76,11 @@ export default function LiveStreamPlayer({ isPreview = false, zoneId }: LiveStre
                 {isPreview && (
                     <Link
                         href="/pages/media/live"
-                        className="absolute inset-0 bg-transparent hover:bg-black/20 transition-colors flex items-center justify-center group"
+                        className="absolute inset-0 bg-transparent hover:bg-slate-950/20 transition-colors flex items-center justify-center group/overlay"
                     >
-                        <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
-                            <MessageSquare className="w-4 h-4" />
-                            <span>Join Chat & Watch</span>
+                        <div className="bg-indigo-600 text-white px-8 py-3.5 rounded-full font-bold flex items-center gap-3 opacity-0 group-hover/overlay:opacity-100 transform translate-y-4 group-hover/overlay:translate-y-0 transition-all duration-300 shadow-2xl shadow-indigo-500/40 border border-indigo-400/20">
+                            <MessageSquare className="w-5 h-5" />
+                            <span className="text-base">Join Chat & Watch</span>
                             <Maximize2 className="w-4 h-4 ml-1 opacity-70" />
                         </div>
                     </Link>
@@ -89,15 +89,18 @@ export default function LiveStreamPlayer({ isPreview = false, zoneId }: LiveStre
 
             {/* Simple Label if Preview */}
             {isPreview && (
-                <div className="mt-3 flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        <span className="text-sm font-medium text-white">
-                            {streams.length > 1 ? 'Multiple Live Broadcasts' : 'Live Broadcast Started'}
+                <div className="mt-4 flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <div className="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
+                            <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping opacity-75"></div>
+                        </div>
+                        <span className="text-[15px] font-semibold text-slate-100 tracking-tight">
+                            {streams.length > 1 ? 'Multiple Live Streams' : 'Live Stream Active'}
                         </span>
                     </div>
-                    <Link href="/pages/media/live" className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
-                        Click to chat <Maximize2 className="w-3 h-3" />
+                    <Link href="/pages/media/live" className="text-sm font-medium text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors group/link">
+                        Click to chat <Maximize2 className="w-3.5 h-3.5 group-hover/link:scale-110 transition-transform" />
                     </Link>
                 </div>
             )}

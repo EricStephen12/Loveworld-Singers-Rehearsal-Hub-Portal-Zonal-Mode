@@ -20,11 +20,11 @@ function SidebarItem({ icon: Icon, label, active = false, onClick, compact = fal
         return (
             <button
                 onClick={onClick}
-                className={`flex flex-col items-center gap-1.5 py-[16px] w-[64px] mx-auto rounded-xl transition-colors hover:bg-[#272727] ${active ? 'bg-transparent' : ''}`}
+                className={`flex flex-col items-center gap-1.5 py-[16px] w-[64px] mx-auto rounded-xl transition-all duration-300 hover:bg-slate-800 ${active ? 'bg-indigo-500/10' : ''}`}
                 title={label}
             >
-                <Icon className={`w-6 h-6 ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`} strokeWidth={active ? 2 : 1.5} />
-                <span className="text-[10px] text-[#f1f1f1] w-full px-1 truncate leading-tight">{label}</span>
+                <Icon className={`w-6 h-6 transition-colors ${active ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-300'}`} strokeWidth={active ? 2 : 1.5} />
+                <span className={`text-[10px] w-full px-1 truncate leading-tight font-medium ${active ? 'text-indigo-400' : 'text-slate-400'}`}>{label}</span>
             </button>
         )
     }
@@ -32,10 +32,10 @@ function SidebarItem({ icon: Icon, label, active = false, onClick, compact = fal
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-5 px-3 h-10 w-full rounded-lg transition-colors hover:bg-[#272727] ${active ? 'bg-[#272727] font-medium' : 'font-normal'}`}
+            className={`flex items-center gap-5 px-3 h-12 w-full rounded-xl transition-all duration-300 hover:bg-slate-800/80 active:bg-slate-800 ${active ? 'bg-indigo-500/10 font-bold' : 'font-medium'}`}
         >
-            <Icon className={`w-6 h-6 ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`} strokeWidth={active ? 2 : 1.5} />
-            <span className={`text-[14px] truncate ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`}>{label}</span>
+            <Icon className={`w-6 h-6 transition-colors ${active ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-200'}`} strokeWidth={active ? 2.5 : 1.5} />
+            <span className={`text-[14px] truncate transition-colors ${active ? 'text-indigo-400' : 'text-slate-300'}`}>{label}</span>
         </button>
     )
 }
@@ -60,23 +60,29 @@ export default function YouTubeSidebar({
     onClose
 }: YouTubeSidebarProps) {
     const router = useRouter()
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
 
     const { user } = useAuth()
     const userId = user?.uid
 
+    const isMediaHome = pathname === '/pages/media' || pathname.includes('/player/')
+    const isPlaylists = pathname.includes('/playlists') && !pathname.includes('_liked')
+    const isHistory = pathname.includes('/history')
+    const isLiked = pathname.includes('_liked')
+
     return (
-        <aside className={`${sidebarOpen ? 'w-[240px] px-3' : 'w-[72px] px-1'} flex flex-col gap-0.5 py-3 overflow-y-auto scrollbar-hide transition-all duration-300 h-screen lg:h-[calc(100vh-56px)] fixed lg:sticky top-0 lg:top-14 bg-[#0f0f0f] z-[120]`}>
+        <aside className={`${sidebarOpen ? 'w-[240px] px-3' : 'w-[72px] px-1'} flex flex-col gap-1 py-4 overflow-y-auto scrollbar-hide transition-all duration-300 h-screen lg:h-[calc(100vh-64px)] fixed lg:sticky top-0 lg:top-16 bg-slate-950 border-r border-slate-800 z-[120]`}>
             {/* Mobile Sidebar Header */}
             {sidebarOpen && (
-                <div className="flex lg:hidden items-center gap-4 px-2 mb-4 h-14 shrink-0">
+                <div className="flex lg:hidden items-center gap-4 px-2 mb-6 h-14 shrink-0 border-b border-slate-800 pb-2">
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white flex items-center justify-center"
                     >
-                        <X className="w-6 h-6 text-white" />
+                        <X className="w-6 h-6" />
                     </button>
                     <div className="flex items-center gap-1">
-                        <span className="text-white font-bold tracking-tight text-lg pl-1">MEDIA</span>
+                        <span className="text-slate-100 font-bold tracking-tight text-lg pl-1">MEDIA HUB</span>
                     </div>
                 </div>
             )}
@@ -88,12 +94,13 @@ export default function YouTubeSidebar({
                 onClick={() => router.push('/home')}
                 compact={!sidebarOpen}
             />
+            
             <SidebarItem
                 icon={Play}
-                label="Explore"
-                active={viewMode === 'all' && selectedCategory === 'all'}
+                label="Media Home"
+                active={isMediaHome}
                 onClick={() => {
-                    if (window.location.pathname !== '/pages/media') {
+                    if (pathname !== '/pages/media') {
                         router.push('/pages/media')
                     }
                     setViewMode('all');
@@ -101,66 +108,31 @@ export default function YouTubeSidebar({
                 }}
                 compact={!sidebarOpen}
             />
-            <SidebarItem
-                icon={Play}
-                label="Shorts"
-                active={viewMode === 'shorts'}
-                onClick={() => {
-                    if (window.location.pathname !== '/pages/media') {
-                        router.push('/pages/media')
-                        // Add a slight delay to let the state update if needed, but since it's client side, next/navigation should handle it
-                    }
-                    setViewMode('shorts')
-                }}
-                compact={!sidebarOpen}
-            />
+
             <SidebarItem
                 icon={ListVideo}
                 label="Playlists"
-                active={window.location.pathname === '/pages/media/playlists'}
+                active={isPlaylists}
                 onClick={() => router.push('/pages/media/playlists')}
                 compact={!sidebarOpen}
             />
 
-            {sidebarOpen && <hr className="my-3 border-white/10 mx-3" />}
-            {sidebarOpen && <div className="px-6 py-2 text-base font-semibold text-white mb-1">Explore</div>}
+            {sidebarOpen && <hr className="my-4 border-slate-800 mx-3" />}
+            
             <SidebarItem
                 icon={History}
                 label="History"
+                active={isHistory}
                 compact={!sidebarOpen}
                 onClick={() => router.push('/pages/media/history')}
             />
             <SidebarItem
-                icon={Clock}
-                label="Watch later"
-                compact={!sidebarOpen}
-                onClick={() => userId && router.push(`/pages/media/playlists/${userId}_watch_later`)}
-            />
-            <SidebarItem
                 icon={ThumbsUp}
                 label="Liked videos"
+                active={isLiked}
                 compact={!sidebarOpen}
                 onClick={() => userId && router.push(`/pages/media/playlists/${userId}_liked`)}
             />
-
-            {sidebarOpen && <hr className="my-3 border-white/10 mx-3" />}
-            {sidebarOpen && <div className="px-6 py-2 text-base font-semibold text-white mb-1">Categories</div>}
-            {sidebarOpen && categories.slice(0, 6).map((cat: any) => (
-                <SidebarItem
-                    key={cat.id}
-                    icon={FolderOpen}
-                    label={cat.name}
-                    active={viewMode === 'all' && selectedCategory === cat.slug}
-                    onClick={() => {
-                        if (window.location.pathname !== '/pages/media') {
-                            router.push('/pages/media')
-                        }
-                        setViewMode('all');
-                        setSelectedCategory(cat.slug);
-                    }}
-                    compact={false}
-                />
-            ))}
         </aside>
     )
 }

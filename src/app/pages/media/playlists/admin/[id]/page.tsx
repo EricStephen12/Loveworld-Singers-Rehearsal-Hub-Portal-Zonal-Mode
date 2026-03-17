@@ -109,19 +109,17 @@ export default function AdminPlaylistDetailPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#0f0f0f] text-white flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#0f0f0f]">
-        <YouTubeHeader
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          showMobileSearch={showMobileSearch}
-          setShowMobileSearch={setShowMobileSearch}
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          userName={profile?.first_name || profile?.display_name || profile?.email || undefined}
-        />
-      </div>
+    <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30">
+      <YouTubeHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        showMobileSearch={showMobileSearch}
+        setShowMobileSearch={setShowMobileSearch}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        userName={profile?.first_name || profile?.display_name || profile?.email || undefined}
+      />
 
-      <div className="flex flex-1 pt-14 lg:pt-0 overflow-hidden">
+      <div className="flex flex-1 pt-16 overflow-hidden relative">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
@@ -144,16 +142,16 @@ export default function AdminPlaylistDetailPage() {
         </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide bg-[#0f0f0f] relative">
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950 relative pt-6 pb-24">
           {loading ? (
             <div className="max-w-[1700px] mx-auto p-4 lg:p-8 flex flex-col lg:flex-row gap-8">
               <div className="lg:w-[360px] flex-shrink-0 space-y-4">
-                <div className="aspect-video bg-[#272727] rounded-xl animate-pulse" />
-                <div className="h-6 bg-[#272727] rounded w-3/4 animate-pulse" />
+                <div className="aspect-video bg-slate-900 rounded-xl animate-pulse" />
+                <div className="h-6 bg-slate-900 rounded w-3/4 animate-pulse" />
               </div>
               <div className="flex-1 space-y-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-20 bg-[#272727] rounded-xl animate-pulse" />
+                  <div key={i} className="h-20 bg-slate-900 rounded-xl animate-pulse" />
                 ))}
               </div>
             </div>
@@ -174,7 +172,7 @@ export default function AdminPlaylistDetailPage() {
                 <div className="w-full lg:w-[450px] xl:w-[500px] 2xl:w-[600px] lg:flex-shrink-0 lg:sticky lg:top-8 lg:h-fit">
                   <div className="relative flex flex-col gap-6 p-4 lg:p-0 text-center lg:text-left">
                     {/* Thumbnail */}
-                    <div className="relative aspect-video lg:aspect-square rounded-xl overflow-hidden bg-[#272727] group shadow-2xl mx-auto w-full max-w-[400px] lg:max-w-none">
+                    <div className="relative aspect-video lg:aspect-square rounded-xl overflow-hidden bg-slate-900 group shadow-2xl mx-auto w-full max-w-[400px] lg:max-w-none">
                       <img
                         src={playlist.thumbnail || videos[0]?.thumbnail || ''}
                         alt=""
@@ -192,9 +190,9 @@ export default function AdminPlaylistDetailPage() {
                       <h1 className="text-2xl lg:text-3xl font-bold leading-tight line-clamp-2">{playlist.name}</h1>
                       <div className="space-y-1">
                         <p className="text-sm font-semibold flex items-center justify-center lg:justify-start gap-1">
-                          Official <CheckCircle className="w-3.5 h-3.5 text-[#aaa] fill-[#aaa] text-[#0f0f0f]" />
+                          Official <CheckCircle className="w-3.5 h-3.5 text-slate-400 fill-[#aaa] text-[#0f0f0f]" />
                         </p>
-                        <p className="text-xs text-[#aaa]">
+                        <p className="text-xs text-slate-400">
                           {totalItems} items • Updated {videos.length > 0 ? 'recently' : 'now'}
                         </p>
                       </div>
@@ -217,7 +215,7 @@ export default function AdminPlaylistDetailPage() {
                       </div>
 
                       {playlist.description && (
-                        <p className="text-sm text-[#aaa] whitespace-pre-wrap leading-relaxed line-clamp-3 lg:line-clamp-none">
+                        <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed line-clamp-3 lg:line-clamp-none">
                           {playlist.description}
                         </p>
                       )}
@@ -229,7 +227,7 @@ export default function AdminPlaylistDetailPage() {
                 <div className="flex-1 px-4 lg:px-0">
                   {nestedPlaylists.length > 0 && (
                     <div className="mb-10">
-                      <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 px-2">Sub-Collections</h3>
+                      <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider mb-4 px-2">Nested Playlists</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {nestedPlaylists.map((nested) => (
                           <div
@@ -237,7 +235,7 @@ export default function AdminPlaylistDetailPage() {
                             onClick={() => router.push(`/pages/media/playlists/admin/${nested.id}`)}
                             className="flex items-center gap-4 p-2 bg-transparent hover:bg-white/5 rounded-xl cursor-pointer transition-colors group"
                           >
-                            <div className="w-32 aspect-video bg-[#272727] rounded-lg overflow-hidden flex-shrink-0 relative shadow-lg">
+                            <div className="w-32 aspect-video bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 relative shadow-lg">
                               <img src={nested.thumbnail || ''} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                               <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 rounded text-[10px] font-bold">
@@ -249,7 +247,7 @@ export default function AdminPlaylistDetailPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-[15px] line-clamp-1 group-hover:text-white transition-colors">{nested.name}</h4>
-                              <p className="text-xs text-[#aaa] mt-0.5">Playlist</p>
+                              <p className="text-xs text-slate-400 mt-0.5">Playlist</p>
                             </div>
                           </div>
                         ))}
@@ -269,12 +267,12 @@ export default function AdminPlaylistDetailPage() {
                           onClick={() => router.push(`/pages/media/player/${video.id}?adminPlaylist=${playlistId}`)}
                           className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-colors group"
                         >
-                          <div className="w-6 text-sm text-[#aaa] font-medium flex items-center justify-center flex-shrink-0">
+                          <div className="w-6 text-sm text-slate-400 font-medium flex items-center justify-center flex-shrink-0">
                             <span className="group-hover:hidden">{index + 1}</span>
                             <Play className="hidden group-hover:block w-3.5 h-3.5 text-white fill-white" />
                           </div>
 
-                          <div className="w-28 sm:w-40 xl:w-52 aspect-video bg-[#272727] rounded-lg overflow-hidden flex-shrink-0 relative shadow-md">
+                          <div className="w-28 sm:w-40 xl:w-52 aspect-video bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 relative shadow-md">
                             <img src={video.thumbnail} className="w-full h-full object-cover" />
                             <span className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
                               {formatDuration(video.duration)}
@@ -283,7 +281,7 @@ export default function AdminPlaylistDetailPage() {
 
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-[15px] sm:text-[16px] xl:text-[17px] line-clamp-2 leading-tight mb-1">{video.title}</h4>
-                            <div className="flex items-center gap-1 text-[13px] text-[#aaa]">
+                            <div className="flex items-center gap-1 text-[13px] text-slate-400">
                               <span className="flex items-center gap-1 text-[12px] sm:text-[13px]">Official <CheckCircle className="w-3.5 h-3.5 fill-[#aaa] text-[#0f0f0f]" /></span>
                               <span className="text-[10px]">•</span>
                               <span>{(video.views || 0).toLocaleString()} views</span>
@@ -291,7 +289,7 @@ export default function AdminPlaylistDetailPage() {
                           </div>
 
                           <button className="p-2 opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-full transition-opacity">
-                            <MoreVertical className="w-5 h-5 text-[#aaa]" />
+                            <MoreVertical className="w-5 h-5 text-slate-400" />
                           </button>
                         </div>
                       ))}
@@ -299,11 +297,11 @@ export default function AdminPlaylistDetailPage() {
 
                   {totalItems === 0 && (
                     <div className="flex flex-col items-center justify-center py-40 text-center px-6">
-                      <div className="w-20 h-20 bg-[#272727] rounded-full flex items-center justify-center mb-6">
-                        <ListVideo className="w-10 h-10 text-[#aaa]" />
+                      <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mb-6">
+                        <ListVideo className="w-10 h-10 text-slate-400" />
                       </div>
                       <h2 className="text-xl font-bold mb-2">This playlist is empty</h2>
-                      <p className="text-[#aaa] text-sm">Videos added by admin will appear here.</p>
+                      <p className="text-slate-400 text-sm">Videos added by admin will appear here.</p>
                     </div>
                   )}
                 </div>
@@ -311,7 +309,7 @@ export default function AdminPlaylistDetailPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-40">
-              <p className="text-[#aaa]">Playlist not found</p>
+              <p className="text-slate-400">Playlist not found</p>
               <button onClick={handleBack} className="mt-4 text-blue-500 hover:underline">
                 Go back
               </button>

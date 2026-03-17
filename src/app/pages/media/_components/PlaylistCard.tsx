@@ -56,45 +56,52 @@ export default function PlaylistCard({ playlist, categoryMap }: PlaylistCardProp
   const displayThumbnail = playlist.thumbnail || firstVideoThumbnail
 
   return (
-    <div onClick={handleClick} className="cursor-pointer group flex flex-col gap-3">
+    <div onClick={handleClick} className="cursor-pointer group flex flex-col gap-3.5">
       {/* Thumbnail Container */}
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#0a0a0a]">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-white/5 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
         {displayThumbnail ? (
           <img
             src={displayThumbnail}
             alt={playlist.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 ease-out"
+            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[#272727]">
-            <ListVideo className="w-12 h-12 text-white opacity-20" />
+          <div className="w-full h-full flex items-center justify-center bg-slate-800">
+            <ListVideo className="w-12 h-12 text-slate-500 opacity-40" />
           </div>
         )}
 
         {/* Playlist identity overlay - Bottom Right like YT */}
-        <div className="absolute bottom-1.5 right-1.5 bg-black/90 text-white px-2 py-1 rounded text-[11px] font-medium flex items-center gap-1.5">
-          <ListVideo className="w-4 h-4" />
-          <span>{playlist.videoIds.length} VIDEOS</span>
+        <div className="absolute bottom-2 right-2 bg-slate-950/90 backdrop-blur-md text-slate-100 px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border border-white/10 shadow-lg">
+          <ListVideo className="w-4 h-4 text-indigo-400" strokeWidth={2.5} />
+          <span className="tracking-tight">{playlist.videoIds.length} VIDEOS</span>
         </div>
 
         {/* Play Overlay on Hover */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Play className="w-10 h-10 text-white fill-white opacity-80" />
+        <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 scale-90 group-hover:scale-100 transition-transform duration-300">
+            <Play className="w-6 h-6 text-white fill-white" />
+          </div>
         </div>
       </div>
 
       {/* Info */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 px-1">
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-base text-white line-clamp-2 leading-tight mb-1">
+          <h3 className="font-semibold text-[15px] sm:text-[16px] text-slate-100 line-clamp-2 leading-snug mb-1 group-hover:text-indigo-300 transition-colors">
             {playlist.name}
           </h3>
-          <div className="flex flex-col text-[#aaa] text-sm">
-            <span className="font-medium hover:text-white transition-colors">
-              {playlist.isAdmin ? 'LWS Official' : 'View full playlist'}
+          <div className="flex flex-col text-slate-400 text-[13px] font-medium">
+            <span className="hover:text-slate-200 transition-colors inline-flex items-center gap-1.5">
+              {playlist.isAdmin ? (
+                <>
+                  LWS Official
+                  <CheckCircle className="w-3.5 h-3.5 text-indigo-400" />
+                </>
+              ) : 'View full playlist'}
             </span>
             {categoryName && (
-              <span className="text-xs opacity-60 mt-0.5 uppercase tracking-wider">{categoryName}</span>
+              <span className="text-[11px] opacity-60 mt-0.5 uppercase tracking-wider font-bold text-indigo-400/80">{categoryName}</span>
             )}
           </div>
         </div>
@@ -102,3 +109,6 @@ export default function PlaylistCard({ playlist, categoryMap }: PlaylistCardProp
     </div>
   )
 }
+
+// Add CheckCircle import
+import { CheckCircle } from 'lucide-react'

@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  X, Settings, Star, Play, Pause,
+  X, Settings, Star, Play, Pause, Search,
   RotateCcw, RotateCw, Maximize, Mic, MicOff, AlertCircle, Music
 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
@@ -98,6 +98,8 @@ export function KaraokeView() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [showSongPicker, setShowSongPicker] = useState(false);
   const [isPickerLoading, setIsPickerLoading] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState('');
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Refs
   const ratingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -267,6 +269,24 @@ export function KaraokeView() {
     })();
   };
 
+  // Debounced search for the picker
+  useEffect(() => {
+    if (!showSongPicker) return;
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(() => {
+        setIsPickerLoading(true);
+        loadLibraryData(profile?.zone || 'global', 100, false, pickerSearch).finally(() => {
+          setIsPickerLoading(false);
+        });
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    }
+  }, [pickerSearch, showSongPicker]);
+
   const progress = songDuration > 0 ? (player.currentTime / songDuration) * 100 : 0;
 
   const getCurrentLyric = () => songLyrics[currentLine]?.text || '♪ ♪ ♪';
@@ -316,7 +336,7 @@ export function KaraokeView() {
             setShowSongPicker(true);
             if (state.libraryData.songs.length === 0) {
               setIsPickerLoading(true);
-              loadLibraryData(profile?.zone || 'global', 50).finally(() => {
+              loadLibraryData(profile?.zone || 'global', 100).finally(() => {
                 setIsPickerLoading(false);
               });
             }
@@ -347,7 +367,7 @@ export function KaraokeView() {
                   setShowSongPicker(true);
                   if (state.libraryData.songs.length === 0) {
                     setIsPickerLoading(true);
-                    loadLibraryData(profile?.zone || 'global', 50).finally(() => {
+                    loadLibraryData(profile?.zone || 'global', 100).finally(() => {
                       setIsPickerLoading(false);
                     });
                   }
@@ -563,11 +583,35 @@ export function KaraokeView() {
               <div className="w-16 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
             </div>
 
-            <div className="flex items-center justify-between mb-8 shrink-0 px-2">
+            <div className="flex items-center justify-between mb-4 shrink-0 px-2">
               <div>
                 <h2 className="text-2xl font-black text-white tracking-tight">AudioLab Library</h2>
                 <p className="text-xs text-white/40 uppercase tracking-widest font-bold mt-1">Select a track to practice</p>
               </div>
+            </div>
+
+            {/* Search Input for Song Picker */}
+            <div className="px-2 mb-6 shrink-0">
+               <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <Search size={18} className="text-white/20 group-focus-within:text-pink-500 transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search songs, artists, or lyrics..."
+                    value={pickerSearch}
+                    onChange={(e) => setPickerSearch(e.target.value)}
+                    className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white text-sm font-bold placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all"
+                  />
+                  {pickerSearch && (
+                    <button 
+                      onClick={() => setPickerSearch('')}
+                      className="absolute inset-y-0 right-4 flex items-center text-white/20 hover:text-white transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+               </div>
             </div>
 
             <div className="overflow-y-auto flex-1 pb-10 space-y-4 relative rounded-xl pr-2 custom-scrollbar">

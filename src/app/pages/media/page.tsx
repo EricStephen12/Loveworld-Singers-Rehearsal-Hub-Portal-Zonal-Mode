@@ -31,7 +31,7 @@ export default function MediaPage() {
   const { markMediaSeen } = useUnreadNotifications()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [viewMode, setViewMode] = useState<'all' | 'shorts' | 'playlists'>('all')
+  const [viewMode, setViewMode] = useState<'all' | 'playlists'>('all')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
@@ -81,7 +81,7 @@ export default function MediaPage() {
 
   // Filter media
   const filteredMedia = useMemo(() => {
-    let filtered = allMedia.filter(m => m.type !== 'shorts' && !m.genre?.includes('Shorts'))
+    let filtered = allMedia.filter(m => !m.genre?.includes('Shorts'))
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(v => v.type === selectedCategory)
@@ -142,15 +142,15 @@ export default function MediaPage() {
 
   if (isLoading && allMedia.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#0f0f0f] text-white flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#0f0f0f]">
+    <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950">
         <YouTubeHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -161,17 +161,17 @@ export default function MediaPage() {
         />
 
         {/* Category Chips - Offset by sidebar width */}
-        <div className={`px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-white/10 transition-all duration-300 bg-[#0f0f0f] ${sidebarOpen ? 'ml-0 lg:ml-[240px]' : 'ml-0 lg:ml-[72px]'}`}>
+        <div className={`px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-slate-800/60 transition-all duration-300 bg-slate-950 ${sidebarOpen ? 'ml-0 lg:ml-[240px]' : 'ml-0 lg:ml-[72px]'}`}>
           <button
             onClick={() => { setViewMode('all'); setSelectedCategory('all'); }}
-            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
+            className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
               }`}
           >
             All
           </button>
           <button
             onClick={() => setViewMode('playlists')}
-            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'playlists' ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
+            className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'playlists' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
               }`}
           >
             Playlists
@@ -180,7 +180,7 @@ export default function MediaPage() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
+              className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
                 }`}
             >
               {cat.name}
@@ -202,7 +202,7 @@ export default function MediaPage() {
         <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
           <YouTubeSidebar
             sidebarOpen={sidebarOpen}
-            viewMode={viewMode === 'shorts' ? 'shorts' : 'all'}
+            viewMode="all"
             selectedCategory={selectedCategory}
             setViewMode={(mode) => setViewMode(mode as any)}
             setSelectedCategory={setSelectedCategory}
@@ -212,8 +212,8 @@ export default function MediaPage() {
         </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#0f0f0f]">
-          <div className="pt-6 pb-24 px-4 sm:px-6 lg:px-6 max-w-[2400px] mx-auto transition-all duration-300">
+        <main className="flex-1 overflow-y-auto bg-slate-950">
+          <div className="pt-6 pb-24 px-4 sm:px-6 lg:px-8 max-w-[2400px] mx-auto transition-all duration-300">
             {/* Live Stream Section - HQ ONLY */}
             {isHQGroup(currentZone?.id) && viewMode === 'all' && selectedCategory === 'all' && !searchQuery && (
               <div className="w-full max-w-[1280px] mx-auto mb-8">
@@ -228,26 +228,26 @@ export default function MediaPage() {
                     onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
                     className="cursor-pointer group flex flex-col"
                   >
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727] mb-3">
+                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-md border border-white/5 mb-3">
                       <img
                         src={playlist.thumbnail || '/movie/default-hero.jpeg'}
                         alt={playlist.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       {/* Playlist Overlay */}
-                      <div className="absolute inset-0 bg-black/40 flex flex-col items-end justify-center px-4 transition-colors group-hover:bg-black/20">
-                        <div className="bg-black/80 backdrop-blur-md px-3 py-2 rounded-lg flex flex-col items-center min-w-[60px]">
-                          <span className="text-[14px] font-bold text-white">{playlist.videoIds?.length || 0}</span>
-                          <ListVideo className="w-4 h-4 text-white mt-0.5" strokeWidth={2} />
+                      <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-end justify-center px-4 transition-colors group-hover:bg-slate-900/40">
+                        <div className="bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-xl flex flex-col items-center min-w-[60px] border border-white/10 shadow-lg">
+                          <span className="text-[14px] font-bold text-slate-100">{playlist.videoIds?.length || 0}</span>
+                          <ListVideo className="w-4 h-4 text-slate-300 mt-1" strokeWidth={2} />
                         </div>
                       </div>
                     </div>
                     <div className="px-1 pr-6 relative">
-                      <h3 className="text-[#f1f1f1] text-[16px] font-medium line-clamp-2 leading-snug mb-0.5">
+                      <h3 className="text-slate-100 text-[16px] font-semibold line-clamp-2 leading-snug mb-1 group-hover:text-indigo-300 transition-colors">
                         {playlist.name}
                       </h3>
-                      <p className="text-[14px] text-[#aaaaaa] font-normal">
-                        Playlist • Official Collection
+                      <p className="text-[14px] text-slate-400 font-medium">
+                        Playlist • Official Hub
                       </p>
                       
                        <div className="absolute top-0 right-[-24px] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -255,9 +255,9 @@ export default function MediaPage() {
                           onClick={(e) => {
                             e.stopPropagation()
                           }}
-                          className="p-1 hover:bg-[#272727] rounded-full text-[#f1f1f1] transition-colors"
+                          className="p-1 hover:bg-slate-800 rounded-full text-slate-300 transition-colors"
                         >
-                          <MoreVertical className="w-5 h-5 text-white" />
+                          <MoreVertical className="w-5 h-5 text-slate-300" />
                         </button>
                       </div>
                     </div>
@@ -267,42 +267,72 @@ export default function MediaPage() {
                 {isLoadingPlaylists && adminPlaylists.length === 0 && (
                   <div className="col-span-full py-40 flex flex-col items-center justify-center">
                     <div className="w-10 h-10 border-3 border-white/20 border-t-white rounded-full animate-spin mb-4" />
-                    <p className="text-[#aaa] text-base font-medium">Loading collections...</p>
+                    <p className="text-[#aaa] text-base font-medium">Loading playlists...</p>
                   </div>
                 )}
 
                 {!isLoadingPlaylists && adminPlaylists.length === 0 && (
                   <div className="col-span-full py-40 text-center">
-                    <p className="text-[#aaa] text-xl font-bold">No collections found</p>
-                    <p className="text-[#888] text-sm mt-2">Check back later for curated music collections.</p>
+                    <p className="text-[#aaa] text-xl font-bold">No playlists found</p>
+                    <p className="text-[#888] text-sm mt-2">Check back later for curated music playlists.</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-10">
-                {filteredMedia.map((video) => (
-                  <MediaCard
-                    key={video.id}
-                    media={video}
-                    categoryMap={categoryMap}
-                  />
-                ))}
-
-                {/* Loading Skeleton */}
-                {/* Loading Skeleton */}
-                {isLoading && (
-                  <>
-                    {[...Array(10)].map((_, i) => (
-                      <MediaCardSkeleton key={`skeleton-${i}`} />
-                    ))}
-                  </>
+              <div className="flex flex-col gap-16">
+                {/* Section 1: Recently Added */}
+                {filteredMedia.length > 0 && (
+                  <section>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">Recently Added</h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-12">
+                      {filteredMedia.slice(0, 14).map((video) => (
+                        <MediaCard
+                          key={video.id}
+                          media={video}
+                          categoryMap={categoryMap}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 )}
 
-                {/* Load More Sentinel */}
-                {hasMore && (
-                  <div id="load-more-sentinel" className="col-span-full h-24 flex items-center justify-center">
-                    {isLoadingMore && (
-                      <div className="w-10 h-10 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+                {/* Section 2: More to Explore */}
+                {filteredMedia.length > 14 && (
+                  <section>
+                    <div className="flex items-center justify-between mb-6 pt-4 border-t border-slate-800/60">
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight">More to Explore</h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-12">
+                      {filteredMedia.slice(14).map((video) => (
+                        <MediaCard
+                          key={video.id}
+                          media={video}
+                          categoryMap={categoryMap}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Loading State & Load More */}
+                {(isLoading || hasMore) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-12">
+                    {isLoading && (
+                      <>
+                        {[...Array(10)].map((_, i) => (
+                          <MediaCardSkeleton key={`skeleton-${i}`} />
+                        ))}
+                      </>
+                    )}
+                    
+                    {hasMore && (
+                      <div id="load-more-sentinel" className="col-span-full h-32 flex items-center justify-center">
+                        {isLoadingMore && (
+                          <div className="w-12 h-12 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin shadow-lg shadow-indigo-500/10" />
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

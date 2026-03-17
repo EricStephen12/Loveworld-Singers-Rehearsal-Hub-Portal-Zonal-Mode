@@ -22,7 +22,7 @@ export default function LiveCard() {
                     </div>
 
                     <h2 className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-xl tracking-tight">
-                        Main Stage Broadcast
+                        Main Stage Live
                     </h2>
                     <p className="text-blue-100 font-medium text-lg drop-shadow-md">
                         Click to watch and chat with the team

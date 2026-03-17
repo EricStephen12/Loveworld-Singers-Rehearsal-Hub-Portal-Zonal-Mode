@@ -448,7 +448,7 @@ interface AudioLabContextValue {
   initializeAudio: () => Promise<boolean>;
   loadHomeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
   loadPracticeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
-  loadLibraryData: (zoneId: string, limitCount: number, forceRefresh?: boolean) => Promise<void>;
+  loadLibraryData: (zoneId: string, limitCount: number, forceRefresh?: boolean, searchQuery?: string) => Promise<void>;
   loadPlaylists: (userId: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => void;
   createUserPlaylist: (title: string, description?: string, userId?: string, zoneId?: string) => Promise<string | null>;
@@ -658,20 +658,35 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     } catch (error) { console.error('Error loading practice data:', error); }
   }, []);
 
-  const loadLibraryData = useCallback(async (zoneId: string, limitCount: number, forceRefresh: boolean = false) => {
+  const loadLibraryData = useCallback(async (zoneId: string, limitCount: number, forceRefresh: boolean = false, searchQuery: string = '') => {
     const now = Date.now();
     const { lastFetched, songs } = stateRef.current.libraryData;
-    if (!forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) return;
+    
+    // If no search query, use cache unless forced
+    if (!searchQuery && !forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) return;
+    
     try {
-      const [paginatedResult, totalCountObj] = await Promise.all([
-        getSongsPaginated(null, limitCount),
-        getTotalSongCount()
-      ]);
+      let masterSongs: any[] = [];
+      let masterTotal = 0;
 
-      let masterSongs = paginatedResult.songs;
-      let masterTotal = totalCountObj || 0; // getTotalSongCount sometimes returns an object or number, assuming number here based on usage
+      if (searchQuery) {
+        // Use deep search for queries
+        const { searchSongsDeep } = await import('../_lib/song-service');
+        masterSongs = await searchSongsDeep(searchQuery, zoneId);
+        masterTotal = masterSongs.length;
+      } else {
+        // Regular paginated fetch
+        const [paginatedResult, totalCountObj] = await Promise.all([
+          getSongsPaginated(null, limitCount || 100), // Increased default limit
+          getTotalSongCount()
+        ]);
+        masterSongs = paginatedResult.songs;
+        masterTotal = totalCountObj || 0;
+      }
 
-      if (zoneId) {
+      // Handle Praise Night integration if not already included in searchSongsDeep or for regular lists
+      // (searchSongsDeep actually includes PN songs already, so we only do this for non-search)
+      if (zoneId && !searchQuery) {
         try {
             const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
             const pnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
@@ -682,12 +697,25 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
               genre: pnSong.category || 'Praise Night', key: pnSong.key || '', tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
               albumArt: '', lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics : [], zoneId, isHQSong: false, createdAt: new Date(), updatedAt: new Date(), createdBy: 'system'
             }));
-            masterSongs = [...masterSongs, ...mappedPNSongs];
-            masterTotal += mappedPNSongs.length;
+
+            // Filter out duplicates if any
+            const existingIds = new Set(masterSongs.map(s => s.id));
+            const newSongs = mappedPNSongs.filter(s => !existingIds.has(s.id));
+            
+            masterSongs = [...masterSongs, ...newSongs];
+            masterTotal += newSongs.length;
         } catch(e) {}
       }
       
-      dispatch({ type: 'SET_LIBRARY_DATA', payload: { songs: masterSongs, totalCount: masterTotal as number, lastDoc: paginatedResult.lastDoc, hasMore: masterSongs.length >= limitCount } });
+      dispatch({ 
+        type: 'SET_LIBRARY_DATA', 
+        payload: { 
+          songs: masterSongs, 
+          totalCount: masterTotal, 
+          lastDoc: searchQuery ? null : (masterSongs[masterSongs.length-1] || null), 
+          hasMore: !searchQuery && masterSongs.length >= (limitCount || 100) 
+        } 
+      });
     } catch (error) { console.error('Error loading library data:', error); }
   }, []);
 

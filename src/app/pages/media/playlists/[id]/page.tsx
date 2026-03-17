@@ -126,17 +126,19 @@ export default function PlaylistDetailPage() {
   const isOwner = user?.uid === playlist?.userId
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <YouTubeHeader
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        showMobileSearch={showMobileSearch}
-        setShowMobileSearch={setShowMobileSearch}
-        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        userEmail={user?.email || undefined}
-      />
+    <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950">
+        <YouTubeHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          showMobileSearch={showMobileSearch}
+          setShowMobileSearch={setShowMobileSearch}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          userEmail={user?.email || undefined}
+        />
+      </div>
 
-      <div className="flex flex-1 pt-14 lg:pt-0">
+      <div className="flex flex-1 pt-16 overflow-hidden relative">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
@@ -158,15 +160,15 @@ export default function PlaylistDetailPage() {
           />
         </div>
 
-        <main className="flex-1 overflow-x-hidden pt-6">
+        <main className="flex-1 overflow-y-auto px-4 lg:px-8 pt-6 pb-24 custom-scrollbar bg-slate-950">
           {loading ? (
             <div className="max-w-[1700px] mx-auto p-4 lg:p-8 flex flex-col lg:flex-row gap-8">
               <div className="lg:w-[360px] flex-shrink-0 space-y-4">
-                <div className="aspect-video lg:aspect-square bg-[#272727] rounded-xl animate-pulse" />
-                <div className="h-6 bg-[#272727] rounded w-3/4 animate-pulse" />
+                <div className="aspect-video lg:aspect-square bg-slate-900 rounded-xl animate-pulse" />
+                <div className="h-6 bg-slate-900 rounded w-3/4 animate-pulse" />
               </div>
               <div className="flex-1 space-y-4">
-                {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-[#272727] rounded-xl animate-pulse" />)}
+                {[...Array(6)].map((_, i) => <div key={i} className="h-20 bg-slate-900 rounded-xl animate-pulse" />)}
               </div>
             </div>
           ) : playlist ? (
@@ -175,7 +177,7 @@ export default function PlaylistDetailPage() {
               <div className="w-full lg:w-[360px] lg:flex-shrink-0 lg:sticky lg:top-24 lg:h-fit">
                 <div className="relative flex flex-col gap-6 p-4 lg:p-0">
                   {/* Thumbnail */}
-                  <div className="aspect-video w-full relative rounded-xl overflow-hidden bg-[#272727] group shadow-2xl">
+                  <div className="aspect-video w-full relative rounded-xl overflow-hidden bg-slate-900 group shadow-2xl">
                     <img src={playlist.thumbnail || videos[0]?.thumbnail || ''} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -191,10 +193,10 @@ export default function PlaylistDetailPage() {
                       <h1 className="text-2xl font-bold leading-tight mb-2">{playlist.name}</h1>
                       <div className="space-y-1">
                         <p className="text-sm font-bold text-white hover:text-white/80 cursor-pointer">{playlist.isAdmin ? 'LWS Official' : profile?.display_name || 'User'}</p>
-                        <p className="text-[13px] text-[#aaa] font-medium">
+                        <p className="text-[13px] text-slate-400 font-medium">
                           {totalItems} items • Updated {new Date(playlist.updatedAt).toLocaleDateString()}
                         </p>
-                        <div className="flex items-center gap-1.5 text-[12px] text-[#aaa] mt-1 font-bold">
+                        <div className="flex items-center gap-1.5 text-[12px] text-slate-400 mt-1 font-bold">
                           {playlist.isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                           <span className="uppercase tracking-wider">{playlist.isPublic ? 'Public' : 'Private'}</span>
                         </div>
@@ -208,13 +210,13 @@ export default function PlaylistDetailPage() {
                         <Play className="w-4 h-4 fill-black" /> Play all
                       </button>
                       <button onClick={shufflePlay} disabled={videos.length === 0}
-                        className="flex-1 flex items-center justify-center gap-2 h-10 bg-[#272727] text-white rounded-full text-sm font-bold hover:bg-[#3f3f3f] disabled:opacity-50 transition-colors">
+                        className="flex-1 flex items-center justify-center gap-2 h-10 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-[#3f3f3f] disabled:opacity-50 transition-colors">
                         <Shuffle className="w-4 h-4" /> Shuffle
                       </button>
                     </div>
 
                     {playlist.description && (
-                      <p className="text-sm text-[#aaa] whitespace-pre-wrap leading-relaxed font-medium bg-[#1a1a1a] p-3 rounded-xl">{playlist.description}</p>
+                      <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed font-medium bg-slate-900/50 p-3 rounded-xl">{playlist.description}</p>
                     )}
 
                     {isOwner && (
@@ -232,12 +234,12 @@ export default function PlaylistDetailPage() {
                 {/* Sub-Playlists List */}
                 {nestedPlaylists.length > 0 && (
                   <div className="mb-10">
-                    <h3 className="text-[13px] font-bold text-[#aaa] uppercase tracking-widest mb-4 px-2">Sub-Playlists</h3>
+                    <h3 className="text-[13px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-2">Sub-Playlists</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {nestedPlaylists.map(nested => (
-                        <div key={nested.id} className="group flex items-center gap-4 p-3 bg-[#1a1a1a] hover:bg-[#272727] rounded-xl cursor-pointer transition-all border border-white/5">
+                        <div key={nested.id} className="group flex items-center gap-4 p-3 bg-slate-900/50 hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-white/5">
                           <div onClick={() => router.push(`/pages/media/playlists/${nested.id}`)}
-                            className="w-28 aspect-video bg-[#272727] rounded-lg overflow-hidden flex-shrink-0 relative group">
+                            className="w-28 aspect-video bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 relative group">
                             <img src={nested.thumbnail || ''} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Play className="w-6 h-6 fill-white" />
@@ -248,10 +250,10 @@ export default function PlaylistDetailPage() {
                           </div>
                           <div className="flex-1 min-w-0" onClick={() => router.push(`/pages/media/playlists/${nested.id}`)}>
                             <h4 className="font-bold text-sm line-clamp-1">{nested.name}</h4>
-                            <p className="text-xs text-[#aaa] font-medium">Playlist</p>
+                            <p className="text-xs text-slate-400 font-medium">Playlist</p>
                           </div>
                           {isOwner && (
-                            <button onClick={() => handleRemoveNestedPlaylist(nested.id)} className="p-2.5 hover:bg-red-500/10 text-[#aaa] hover:text-red-500 rounded-full transition-colors">
+                            <button onClick={() => handleRemoveNestedPlaylist(nested.id)} className="p-2.5 hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded-full transition-colors">
                               <Trash2 className="w-4.5 h-4.5" />
                             </button>
                           )}
@@ -264,14 +266,14 @@ export default function PlaylistDetailPage() {
                 {/* Video Feed */}
                 <div className="space-y-2">
                   {videos.map((video, index) => (
-                    <div key={video.id} className="group flex items-center gap-4 p-2.5 rounded-xl hover:bg-[#272727] transition-all relative">
-                      <div className="w-6 text-[13px] text-[#aaa] font-bold flex items-center justify-center">
+                    <div key={video.id} className="group flex items-center gap-4 p-2.5 rounded-xl hover:bg-slate-900 transition-all relative">
+                      <div className="w-6 text-[13px] text-slate-400 font-bold flex items-center justify-center">
                         <span className="group-hover:hidden">{index + 1}</span>
                         <Play className="hidden group-hover:block w-3.5 h-3.5 text-white fill-white" />
                       </div>
 
                       <div onClick={() => router.push(`/pages/media/player/${video.id}?playlist=${playlistId}`)}
-                        className="w-36 sm:w-44 aspect-video bg-[#272727] rounded-xl overflow-hidden flex-shrink-0 relative cursor-pointer">
+                        className="w-36 sm:w-44 aspect-video bg-slate-900 rounded-xl overflow-hidden flex-shrink-0 relative cursor-pointer">
                         <img src={video.thumbnail} className="w-full h-full object-cover" />
                         <span className="absolute bottom-1.5 right-1.5 bg-black/80 px-1.5 rounded text-[11px] font-bold tabular-nums">
                           {video.duration || "HQ"}
@@ -280,12 +282,12 @@ export default function PlaylistDetailPage() {
 
                       <div className="flex-1 min-w-0" onClick={() => router.push(`/pages/media/player/${video.id}?playlist=${playlistId}`)}>
                         <h4 className="font-bold text-[15px] sm:text-base line-clamp-2 leading-tight mb-1 text-white">{video.title}</h4>
-                        <p className="text-[13px] text-[#aaa] font-medium">LWS Official • {(video.views || 0).toLocaleString()} views</p>
+                        <p className="text-[13px] text-slate-400 font-medium">LWS Official • {(video.views || 0).toLocaleString()} views</p>
                       </div>
 
                       {isOwner && (
                         <div className="relative">
-                          <button onClick={() => setMenuOpen(menuOpen === video.id ? null : video.id)} className="p-2.5 hover:bg-white/10 text-[#aaa] hover:text-white rounded-full transition-colors">
+                          <button onClick={() => setMenuOpen(menuOpen === video.id ? null : video.id)} className="p-2.5 hover:bg-white/10 text-slate-400 hover:text-white rounded-full transition-colors">
                             <MoreVertical className="w-5 h-5" />
                           </button>
                           {menuOpen === video.id && (
@@ -307,14 +309,14 @@ export default function PlaylistDetailPage() {
                 {totalItems === 0 && (
                   <div className="flex flex-col items-center justify-center py-40">
                     <ListVideo className="w-20 h-20 text-[#272727] mb-6" />
-                    <p className="text-sm text-[#aaa] font-bold uppercase tracking-widest">Empty playlist</p>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Empty playlist</p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-40">
-              <p className="text-[#aaa] font-bold">Playlist not found</p>
+              <p className="text-slate-400 font-bold">Playlist not found</p>
             </div>
           )}
         </main>
@@ -334,14 +336,14 @@ export default function PlaylistDetailPage() {
             <div className="flex-1 overflow-auto p-3">
               {loadingAddable ? (
                 <div className="p-4 space-y-4">
-                  {[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-[#272727] rounded-xl animate-pulse" />)}
+                  {[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-slate-900 rounded-xl animate-pulse" />)}
                 </div>
               ) : addablePlaylists.length > 0 ? (
                 <div className="flex flex-col gap-1">
                   {addablePlaylists.map(p => (
                     <button key={p.id} onClick={() => handleAddPlaylist(p.id)}
-                      className="flex items-center gap-4 w-full p-2.5 rounded-xl hover:bg-[#272727] text-left group transition-all">
-                      <div className="w-24 aspect-video bg-[#272727] rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
+                      className="flex items-center gap-4 w-full p-2.5 rounded-xl hover:bg-slate-900 text-left group transition-all">
+                      <div className="w-24 aspect-video bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
                         {p.thumbnail ? (
                           <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -352,14 +354,14 @@ export default function PlaylistDetailPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-[15px] font-bold line-clamp-1">{p.name}</h4>
-                        <p className="text-xs text-[#aaa] font-medium">{p.videoIds.length} videos</p>
+                        <p className="text-xs text-slate-400 font-medium">{p.videoIds.length} videos</p>
                       </div>
                       <Plus className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="p-10 text-center text-[#aaa]">
+                <div className="p-10 text-center text-slate-400">
                   <p className="text-sm font-bold uppercase tracking-widest">No playlists available</p>
                 </div>
               )}

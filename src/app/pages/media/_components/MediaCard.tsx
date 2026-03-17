@@ -1,29 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Play, Plus, CheckCircle, MoreVertical } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { MediaItem } from '../_lib'
 import { useAuth } from '@/hooks/useAuth'
 import AddToPlaylistModal from './AddToPlaylistModal'
 import { isYouTubeUrl } from '@/utils/youtube'
-import { getCategories, MediaCategory } from '@/lib/media-category-service'
 import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary'
-
-// Cache categories to avoid repeated fetches
-let categoriesCache: MediaCategory[] | null = null
-let categoriesCachePromise: Promise<MediaCategory[]> | null = null
-
-async function getCachedCategories(): Promise<MediaCategory[]> {
-  if (categoriesCache) return categoriesCache
-  if (categoriesCachePromise) return categoriesCachePromise
-
-  categoriesCachePromise = getCategories().then(cats => {
-    categoriesCache = cats
-    return cats
-  })
-  return categoriesCachePromise
-}
 
 interface MediaCardProps {
   media: MediaItem
@@ -35,20 +19,6 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const { user } = useAuth()
-  // Derive category name directly from map or type
-  const getCategoryName = () => {
-    if (categoryMap && media.type) {
-      const name = categoryMap.get(media.type)
-      if (name) return name
-    }
-    // Fallback to formatted slug if not in map
-    if (media.type) {
-      return media.type.charAt(0).toUpperCase() + media.type.slice(1)
-    }
-    return ''
-  }
-
-  const categoryName = getCategoryName()
 
   const isYouTubeVideo = media.isYouTube || isYouTubeUrl(media.youtubeUrl || '')
 
@@ -120,14 +90,14 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
       onClick={handleClick}
     >
       {/* Thumbnail Container */}
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727]">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-md border border-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-[#3f3f3f] animate-pulse" />
+          <div className="absolute inset-0 bg-slate-800 animate-pulse" />
         )}
         <img
           src={thumbnailUrl}
           alt={media.title}
-          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105 transition-transform duration-300 ease-out`}
+          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105 transition-transform duration-500 ease-out`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
@@ -146,51 +116,33 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
 
         {/* Duration Badge */}
         {media.duration && (
-          <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[12px] font-medium px-1 rounded shadow-sm tabular-nums tracking-tight">
+          <div className="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-sm text-slate-200 text-[11px] font-semibold px-1.5 py-0.5 rounded-md shadow-sm tabular-nums tracking-tight border border-white/10">
             {formatDuration(media.duration)}
           </div>
         )}
       </div>
 
       {/* Video Info */}
-      <div className="flex gap-3 pt-3 pr-6 relative">
-        <div className="flex-shrink-0 w-[36px] h-[36px] rounded-full bg-[#3f3f3f] flex items-center justify-center text-[#f1f1f1] font-bold text-sm mt-0.5">
+      <div className="flex gap-3 pt-3.5 pr-2 relative">
+        <div className="flex-shrink-0 w-[40px] h-[40px] flex items-center justify-center rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 text-slate-200 font-bold text-sm shadow-inner mt-0.5">
           {media.title.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex flex-col min-w-0 pb-6 relative">
-          <h3 className="text-[#f1f1f1] font-medium text-[16px] line-clamp-2 leading-snug mb-1 pr-4">
+          <h3 className="text-slate-100 font-semibold text-[15px] sm:text-[16px] line-clamp-2 leading-snug mb-1 group-hover:text-indigo-300 transition-colors">
             {media.title}
           </h3>
 
-          <div className="flex flex-col text-[#aaaaaa] text-[14px] font-normal">
-            <span className="flex items-center gap-1 hover:text-[#f1f1f1] transition-colors cursor-pointer">
-              Official Rehearsal
-              <CheckCircle className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
+          <div className="flex flex-col text-slate-400 text-[13px] font-medium">
+            <span className="flex items-center gap-1.5 hover:text-slate-200 transition-colors cursor-pointer group/official">
+              Official Session
+              <CheckCircle className="w-4 h-4 text-indigo-400 group-hover/official:text-indigo-300" strokeWidth={2} />
             </span>
-            <div className="flex items-center gap-1 max-w-full truncate">
+            <div className="flex items-center gap-1.5 mt-0.5 max-w-full truncate">
               <span>{formatViews(media.views || 0)}</span>
-              <span className="text-[10px]">•</span>
+              <span className="text-[10px] opacity-60">•</span>
               <span>{getTimeAgo(media.createdAt)}</span>
             </div>
-          </div>
-          
-           {/* Action Menu (Three dots) */}
-          <div className="absolute top-0 right-[-24px] opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                if (user?.uid) {
-                  setShowAddModal(true)
-                } else {
-                  router.push('/login')
-                }
-              }}
-              className="p-1 hover:bg-[#272727] rounded-full text-[#f1f1f1] transition-colors"
-              title="More actions"
-            >
-              <MoreVertical className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>

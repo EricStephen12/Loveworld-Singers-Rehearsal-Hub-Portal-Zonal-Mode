@@ -330,19 +330,26 @@ export default function CustomVideoPlayer({
 
         {/* Bottom Controls */}
         <div className="absolute bottom-0 left-0 right-0 px-3 pb-2 sm:px-4 sm:pb-3">
-          {/* Progress Bar - YouTube Style */}
-          <div
-            ref={progressRef}
-            className="group/progress w-full h-[3px] bg-white/20 cursor-pointer mb-2 sm:mb-3 relative hover:h-[5px] transition-all"
+          {/* Progress Bar - Improved Touch Sensitivity */}
+          <div 
+            className="group/progress w-full h-8 flex items-center cursor-pointer mb-2 sm:mb-3 relative z-50"
             onClick={handleProgressClick}
           >
-            {/* Played progress */}
-            <div className="absolute inset-y-0 left-0 bg-red-600 rounded-full transition-all" style={{ width: `${played * 100}%` }} />
-            {/* Scrubber dot */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-[13px] h-[13px] bg-red-600 rounded-full opacity-0 group-hover/progress:opacity-100 transition-opacity shadow-lg"
-              style={{ left: `calc(${played * 100}% - 6.5px)` }}
-            />
+              ref={progressRef}
+              className="w-full h-[3px] bg-white/20 relative group-hover/progress:h-1.5 transition-all duration-200"
+            >
+              {/* Played progress */}
+              <div 
+                className="absolute inset-y-0 left-0 bg-red-600 rounded-full transition-all" 
+                style={{ width: `${played * 100}%` }} 
+              />
+              {/* Scrubber dot - Enlarged for touch */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-3.5 sm:h-3.5 bg-red-600 rounded-full scale-100 sm:scale-0 group-hover/progress:scale-100 transition-transform shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+                style={{ left: `calc(${played * 100}% - 8px)` }}
+              />
+            </div>
           </div>
 
           {/* Control Buttons - YouTube Style */}

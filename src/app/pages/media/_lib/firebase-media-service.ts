@@ -1,4 +1,4 @@
-﻿// Firebase Media Service - Netflix-style media management
+// Firebase Media Service - Netflix-style media management
 import {
   collection,
   doc,
@@ -391,30 +391,19 @@ class FirebaseMediaService {
 
   async saveWatchProgress(userId: string, mediaId: string, progress: number): Promise<void> {
     try {
-      const q = query(
-        collection(db, this.watchHistoryCollection),
-        where('userId', '==', userId),
-        where('mediaId', '==', mediaId)
-      )
-      const snapshot = await getDocs(q)
-
-      if (snapshot.empty) {
-        // Create new history
-        await addDoc(collection(db, this.watchHistoryCollection), {
-          userId,
-          mediaId,
-          progress,
-          lastWatched: Timestamp.now()
-        })
-      } else {
-        const docRef = doc(db, this.watchHistoryCollection, snapshot.docs[0].id)
-        await updateDoc(docRef, {
-          progress,
-          lastWatched: Timestamp.now()
-        })
-      }
+      const { setDoc } = await import('firebase/firestore')
+      // Use a deterministic ID to prevent duplicates (one entry per user/video)
+      const historyId = `${userId}_${mediaId}`
+      const docRef = doc(db, this.watchHistoryCollection, historyId)
+      
+      await setDoc(docRef, {
+        userId,
+        mediaId,
+        progress,
+        lastWatched: Timestamp.now()
+      }, { merge: true })
     } catch (error) {
- console.error('Error saving watch progress:', error)
+      console.error('Error saving watch progress:', error)
     }
   }
 
@@ -432,8 +421,39 @@ class FirebaseMediaService {
         lastWatched: doc.data().lastWatched?.toDate()
       })) as UserWatchHistory[]
     } catch (error) {
- console.error('Error fetching watch history:', error)
+      console.error('Error fetching watch history:', error)
       return []
+    }
+  }
+
+  async removeFromWatchHistory(historyId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, this.watchHistoryCollection, historyId))
+    } catch (error) {
+      console.error('Error removing from watch history:', error)
+      throw error
+    }
+  }
+
+  async clearUserWatchHistory(userId: string): Promise<void> {
+    try {
+      const q = query(
+        collection(db, this.watchHistoryCollection),
+        where('userId', '==', userId)
+      )
+      const snapshot = await getDocs(q)
+      
+      const { writeBatch } = await import('firebase/firestore')
+      const batch = writeBatch(db)
+      
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref)
+      })
+      
+      await batch.commit()
+    } catch (error) {
+      console.error('Error clearing user watch history:', error)
+      throw error
     }
   }
 
