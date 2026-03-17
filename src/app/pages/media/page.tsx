@@ -161,17 +161,17 @@ export default function MediaPage() {
         />
 
         {/* Category Chips - Offset by sidebar width */}
-        <div className={`px-3 py-2.5 flex gap-2 overflow-x-auto scrollbar-hide border-b border-white/5 transition-all duration-300 ${sidebarOpen ? 'ml-0 lg:ml-[240px]' : 'ml-0 lg:ml-[72px]'}`}>
+        <div className={`px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-white/10 transition-all duration-300 bg-[#0f0f0f] ${sidebarOpen ? 'ml-0 lg:ml-[240px]' : 'ml-0 lg:ml-[72px]'}`}>
           <button
             onClick={() => { setViewMode('all'); setSelectedCategory('all'); }}
-            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-white text-black' : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
               }`}
           >
             All
           </button>
           <button
             onClick={() => setViewMode('playlists')}
-            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'playlists' ? 'bg-white text-black' : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+            className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'playlists' ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
               }`}
           >
             Playlists
@@ -180,7 +180,7 @@ export default function MediaPage() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-white text-black' : 'bg-[#272727] text-white hover:bg-[#3f3f3f]'
+              className={`px-3 h-8 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-[#f1f1f1] text-[#0f0f0f]' : 'bg-[#272727] text-[#f1f1f1] hover:bg-[#3f3f3f]'
                 }`}
             >
               {cat.name}
@@ -213,42 +213,53 @@ export default function MediaPage() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto bg-[#0f0f0f]">
-          <div className="pt-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-[2100px] mx-auto transition-all duration-300">
+          <div className="pt-6 pb-24 px-4 sm:px-6 lg:px-6 max-w-[2400px] mx-auto transition-all duration-300">
             {/* Live Stream Section - HQ ONLY */}
             {isHQGroup(currentZone?.id) && viewMode === 'all' && selectedCategory === 'all' && !searchQuery && (
-              <div className="w-full max-w-[1280px] mx-auto mb-6">
+              <div className="w-full max-w-[1280px] mx-auto mb-8">
                 <LiveStreamPlayer isPreview={true} zoneId={currentZone?.id} />
               </div>
             )}
             {viewMode === 'playlists' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-10">
                 {adminPlaylists.map((playlist) => (
                   <div
                     key={playlist.id}
-                    onClick={() => router.push(`/pages/media/playlists/admin/${playlist.id}`)}
-                    className="cursor-pointer group"
+                    onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
+                    className="cursor-pointer group flex flex-col"
                   >
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-[#272727] mb-3 shadow-lg">
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727] mb-3">
                       <img
                         src={playlist.thumbnail || '/movie/default-hero.jpeg'}
                         alt={playlist.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       {/* Playlist Overlay */}
-                      <div className="absolute inset-0 bg-black/30 flex flex-col items-end justify-center px-4">
-                        <div className="bg-black/70 backdrop-blur-md p-3 rounded-xl flex flex-col items-center min-w-[70px]">
-                          <span className="text-base font-bold text-white">{playlist.videoIds?.length || 0}</span>
-                          <ListVideo className="w-5 h-5 text-white/90 mt-1" strokeWidth={2.5} />
+                      <div className="absolute inset-0 bg-black/40 flex flex-col items-end justify-center px-4 transition-colors group-hover:bg-black/20">
+                        <div className="bg-black/80 backdrop-blur-md px-3 py-2 rounded-lg flex flex-col items-center min-w-[60px]">
+                          <span className="text-[14px] font-bold text-white">{playlist.videoIds?.length || 0}</span>
+                          <ListVideo className="w-4 h-4 text-white mt-0.5" strokeWidth={2} />
                         </div>
                       </div>
                     </div>
-                    <div className="px-1">
-                      <h3 className="text-white text-[15px] sm:text-[16px] font-bold line-clamp-2 leading-snug mb-1 group-hover:text-blue-400 transition-colors">
+                    <div className="px-1 pr-6 relative">
+                      <h3 className="text-[#f1f1f1] text-[16px] font-medium line-clamp-2 leading-snug mb-0.5">
                         {playlist.name}
                       </h3>
-                      <p className="text-sm text-[#aaa] font-medium">
-                        Playlist • Official
+                      <p className="text-[14px] text-[#aaaaaa] font-normal">
+                        Playlist • Official Collection
                       </p>
+                      
+                       <div className="absolute top-0 right-[-24px] opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                          }}
+                          className="p-1 hover:bg-[#272727] rounded-full text-[#f1f1f1] transition-colors"
+                        >
+                          <MoreVertical className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -268,7 +279,7 @@ export default function MediaPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-x-6 gap-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-10">
                 {filteredMedia.map((video) => (
                   <MediaCard
                     key={video.id}

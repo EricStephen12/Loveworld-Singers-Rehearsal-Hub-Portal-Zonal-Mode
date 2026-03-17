@@ -160,6 +160,7 @@ export const ZONES: Zone[] = [
   { id: 'zone-085', name: 'Loveworld Singers Chad Zone', slug: 'lws-chad', region: 'Chad', invitationCode: 'ZONE085', themeColor: '#059669' },
   { id: 'zone-086', name: 'Loveworld Singers CELVZ', slug: 'lws-celvz', region: 'Special', invitationCode: 'ZONE086', themeColor: '#7C3AED' },
   { id: 'zone-087', name: 'Loveworld Singers LGN', slug: 'lws-lgn', region: 'Special', invitationCode: 'ZONE087', themeColor: '#7C3AED' },
+  { id: 'zone-088', name: 'Special Duty Zone', slug: 'special-duty-zone', region: 'Special', invitationCode: 'ZONE088', themeColor: '#7C3AED' },
 
   // Admin zone
   { id: 'zone-boss', name: 'Central Admin', slug: 'central-admin', region: 'Admin', invitationCode: 'BOSS101', themeColor: '#DC2626' },

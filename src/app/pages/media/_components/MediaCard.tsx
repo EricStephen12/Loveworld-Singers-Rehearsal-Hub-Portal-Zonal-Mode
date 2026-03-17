@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -116,25 +116,24 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
 
   return (
     <div
-      className="flex flex-col cursor-pointer group"
+      className="flex flex-col cursor-pointer group w-full"
       onClick={handleClick}
     >
       {/* Thumbnail Container */}
-      <div className="relative w-full aspect-video sm:rounded-xl overflow-hidden bg-[#0f0f0f]">
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#272727]">
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-[#272727] animate-pulse" />
+          <div className="absolute inset-0 bg-[#3f3f3f] animate-pulse" />
         )}
         <img
           src={thumbnailUrl}
           alt={media.title}
-          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-[1.02] transition-all duration-500 ease-out`}
+          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105 transition-transform duration-300 ease-out`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             setImageLoaded(true)
             const fallback = '/movie/default-hero.jpeg'
             if (e.currentTarget.src !== fallback) {
-              // Try repairing with the video URL if not already done
               const repaired = getCloudinaryThumbnailUrl(media.videoUrl)
               if (repaired && e.currentTarget.src !== repaired) {
                 e.currentTarget.src = repaired
@@ -147,56 +146,53 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
 
         {/* Duration Badge */}
         {media.duration && (
-          <div className="absolute bottom-2 right-2 bg-black/90 text-white text-[10px] sm:text-[12px] font-bold px-1.5 py-0.5 rounded shadow-sm tabular-nums border border-white/5">
+          <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[12px] font-medium px-1 rounded shadow-sm tabular-nums tracking-tight">
             {formatDuration(media.duration)}
           </div>
         )}
       </div>
 
       {/* Video Info */}
-      <div className="flex gap-3 pt-3 px-3 sm:px-0">
-        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-orange-600 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md mt-0.5">
+      <div className="flex gap-3 pt-3 pr-6 relative">
+        <div className="flex-shrink-0 w-[36px] h-[36px] rounded-full bg-[#3f3f3f] flex items-center justify-center text-[#f1f1f1] font-bold text-sm mt-0.5">
           {media.title.charAt(0).toUpperCase()}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white font-bold text-[14px] sm:text-[16px] xl:text-[18px] line-clamp-2 leading-tight mb-1 group-hover:text-white/90">
+        <div className="flex flex-col min-w-0 pb-6 relative">
+          <h3 className="text-[#f1f1f1] font-medium text-[16px] line-clamp-2 leading-snug mb-1 pr-4">
             {media.title}
           </h3>
 
-          <div className="flex flex-col text-[#aaa] text-[13px] sm:text-[14px] font-medium leading-tight">
-            <span className="flex items-center gap-1 hover:text-white transition-colors">
-              Official
-              <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-[#aaa] text-[#0f0f0f]" />
+          <div className="flex flex-col text-[#aaaaaa] text-[14px] font-normal">
+            <span className="flex items-center gap-1 hover:text-[#f1f1f1] transition-colors cursor-pointer">
+              Official Rehearsal
+              <CheckCircle className="w-3.5 h-3.5 fill-[#aaaaaa] text-[#0f0f0f]" />
             </span>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center gap-1 max-w-full truncate">
               <span>{formatViews(media.views || 0)}</span>
-              <span className="text-[10px] scale-150 relative top-[0.5px]">•</span>
+              <span className="text-[10px]">•</span>
               <span>{getTimeAgo(media.createdAt)}</span>
             </div>
           </div>
-
+          
+           {/* Action Menu (Three dots) */}
+          <div className="absolute top-0 right-[-24px] opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (user?.uid) {
+                  setShowAddModal(true)
+                } else {
+                  router.push('/login')
+                }
+              }}
+              className="p-1 hover:bg-[#272727] rounded-full text-[#f1f1f1] transition-colors"
+              title="More actions"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-
-      </div>
-
-      {/* Action Menu (Three dots) */}
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            // Menu logic would go here, for now just a visual placeholder or direct action
-            if (user?.uid) {
-              setShowAddModal(true)
-            } else {
-              router.push('/login')
-            }
-          }}
-          className="p-1 hover:bg-white/10 rounded-full text-white transition-colors"
-          title="More actions"
-        >
-          <MoreVertical className="w-5 h-5 text-white" />
-        </button>
       </div>
 
       {user?.uid && (

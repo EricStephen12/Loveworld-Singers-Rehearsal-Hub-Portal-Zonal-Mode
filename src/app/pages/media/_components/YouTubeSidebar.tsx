@@ -20,11 +20,11 @@ function SidebarItem({ icon: Icon, label, active = false, onClick, compact = fal
         return (
             <button
                 onClick={onClick}
-                className={`flex flex-col items-center justify-center py-4 w-full rounded-xl transition-colors hover:bg-[#272727] ${active ? 'bg-[#121212]' : ''}`}
+                className={`flex flex-col items-center gap-1.5 py-[16px] w-[64px] mx-auto rounded-xl transition-colors hover:bg-[#272727] ${active ? 'bg-transparent' : ''}`}
                 title={label}
             >
-                <Icon className={`w-6 h-6 mb-1.5 ${active ? 'text-white' : 'text-white/90'}`} strokeWidth={active ? 2.5 : 1.5} />
-                <span className="text-[10px] text-white/90">{label}</span>
+                <Icon className={`w-6 h-6 ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`} strokeWidth={active ? 2 : 1.5} />
+                <span className="text-[10px] text-[#f1f1f1] w-full px-1 truncate leading-tight">{label}</span>
             </button>
         )
     }
@@ -32,10 +32,10 @@ function SidebarItem({ icon: Icon, label, active = false, onClick, compact = fal
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-6 px-3 h-10 w-full rounded-lg transition-colors hover:bg-[#272727] ${active ? 'bg-[#272727] font-semibold' : ''}`}
+            className={`flex items-center gap-5 px-3 h-10 w-full rounded-lg transition-colors hover:bg-[#272727] ${active ? 'bg-[#272727] font-medium' : 'font-normal'}`}
         >
-            <Icon className={`w-6 h-6 ${active ? 'text-white' : 'text-white/90'}`} strokeWidth={active ? 2.5 : 1.5} />
-            <span className={`text-sm tracking-tight ${active ? 'text-white' : 'text-white/90'}`}>{label}</span>
+            <Icon className={`w-6 h-6 ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`} strokeWidth={active ? 2 : 1.5} />
+            <span className={`text-[14px] truncate ${active ? 'text-[#f1f1f1]' : 'text-[#f1f1f1]'}`}>{label}</span>
         </button>
     )
 }

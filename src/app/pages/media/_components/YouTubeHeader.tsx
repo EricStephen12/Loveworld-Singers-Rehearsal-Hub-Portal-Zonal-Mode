@@ -37,28 +37,35 @@ export default function YouTubeHeader({
                     {/* Branding removed as requested */}
                 </div>
 
-                <div className="hidden md:flex flex-1 items-center max-w-[640px] mx-6 gap-3">
-                    <div className="flex flex-1 items-center">
-                        <div className="flex flex-1 items-center bg-[#121212] border border-[#303030] rounded-l-full px-4 h-10 focus-within:border-blue-500 focus-within:ml-[-1px] transition-all shadow-inner">
-                            <Search className="hidden focus-within:block w-4 h-4 text-gray-400 mr-3" />
+                <div className="hidden md:flex flex-1 items-center max-w-[720px] mx-10 gap-4">
+                    <div className="flex flex-1 items-center group/search relative">
+                        {/* Search Input Container */}
+                        <div className="flex flex-1 items-center bg-[#121212] border border-[#303030] rounded-l-full px-5 h-10 group-focus-within/search:ml-[-1px] group-focus-within/search:border-[#1c62b9] group-focus-within/search:pl-[44px] transition-all relative z-10 overflow-hidden shadow-inner">
+                            {/* Blue search icon that appears on focus */}
+                            <div className="absolute left-4 hidden group-focus-within/search:flex items-center justify-center">
+                                <Search className="w-5 h-5 text-[#f1f1f1]" strokeWidth={1.5} />
+                            </div>
                             <input
                                 type="text"
                                 placeholder="Search"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-transparent text-base text-white placeholder-gray-500 focus:outline-none w-full font-sans"
+                                className="bg-transparent text-[16px] text-[#f1f1f1] placeholder-[#888888] focus:outline-none w-full font-sans -mt-[2px]"
                             />
                         </div>
-                        <button className="h-10 px-5 bg-[#222222] border border-[#303030] border-l-0 rounded-r-full hover:bg-[#333333] transition-colors group relative" title="Search">
-                            <Search className="w-5 h-5 text-white opacity-90" />
-                            <div className="absolute top-12 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#444] text-white text-[11px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                        {/* Search Button */}
+                        <button className="h-10 px-[22px] bg-[#222222] border border-[#303030] border-l-0 rounded-r-full hover:bg-[#303030] transition-colors group relative flex flex-shrink-0 items-center justify-center z-10" title="Search">
+                            <Search className="w-5 h-5 text-[#f1f1f1] font-light" strokeWidth={1.5} />
+                            <div className="absolute top-[52px] left-1/2 -translate-x-1/2 px-2 py-1.5 bg-[#616161]/90 rounded-sm text-white text-[12px] font-medium opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity delay-300 z-50">
                                 Search
                             </div>
                         </button>
                     </div>
-                    <button className="w-10 h-10 flex items-center justify-center bg-[#181818] hover:bg-[#303030] rounded-full transition-colors group relative" title="Search with your voice">
-                        <Mic className="w-5 h-5 text-white" />
-                        <div className="absolute top-12 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#444] text-white text-[11px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                    
+                    {/* Voice Search Button */}
+                    <button className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-[#181818] hover:bg-[#303030] rounded-full transition-colors group relative border border-transparent shadow-[0_0_8px_rgba(0,0,0,0.1)]" title="Search with your voice">
+                        <Mic className="w-5 h-5 text-[#f1f1f1]" strokeWidth={1.5} />
+                        <div className="absolute top-[52px] left-1/2 -translate-x-1/2 px-2 py-1.5 bg-[#616161]/90 rounded-sm text-white text-[12px] font-medium opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity delay-300 z-50">
                             Search with your voice
                         </div>
                     </button>
