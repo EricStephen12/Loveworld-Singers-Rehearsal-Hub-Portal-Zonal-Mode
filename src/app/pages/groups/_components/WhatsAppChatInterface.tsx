@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
@@ -16,6 +16,7 @@ import {
   Phone,
   Video
 } from 'lucide-react'
+import { useCall } from '@/contexts/CallContext'
 import { useChat } from '../_context/ChatContext'
 import { WhatsAppOptimisticUI, OptimisticMessage } from '../_lib/whatsapp-optimistic-ui'
 import { WhatsAppMessageStatus, MessageStatus } from '../_lib/whatsapp-message-status'
@@ -42,6 +43,8 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
     replyToMessage,
     isMessagesLoading
   } = useChat()
+
+  const { startCall, callState } = useCall()
 
   const [newMessage, setNewMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -245,11 +248,23 @@ export function WhatsAppChatInterface({ onBack, className = '' }: WhatsAppChatIn
           </div>
 
           <div className="flex items-center space-x-2">
-            <button className="p-2 hover:bg-emerald-700 rounded-lg transition-colors">
+            <button 
+              onClick={() => {
+                if (selectedChat && user) {
+                  startCall(
+                    selectedChat.id,
+                    otherParticipant || '',
+                    user.displayName || 'User',
+                    otherParticipantName,
+                    user.photoURL || undefined,
+                    undefined // avatar handled by CallOverlay if missing
+                  )
+                }
+              }}
+              disabled={callState !== 'idle'}
+              className="p-2 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+            >
               <Phone className="w-5 h-5" />
-            </button>
-            <button className="p-2 hover:bg-emerald-700 rounded-lg transition-colors">
-              <Video className="w-5 h-5" />
             </button>
             <button className="p-2 hover:bg-emerald-700 rounded-lg transition-colors">
               <MoreVertical className="w-5 h-5" />

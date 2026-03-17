@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VOICE CALL SERVICE
  * WebRTC-based voice calling for groups chat
  * Optimized for low latency and reliable connections
@@ -12,7 +12,8 @@ import {
   push,
   onValue,
   onChildAdded,
-  off
+  off,
+  update
 } from 'firebase/database'
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup'
 
@@ -458,7 +459,7 @@ export class VoiceCallService {
       })
       return true
     } catch (error) {
- console.error('[VoiceCall] Failed to get local stream:', error)
+  console.error('[VoiceCall] Failed to get local stream:', error)
       return false
     }
   }
@@ -467,9 +468,9 @@ export class VoiceCallService {
   private createPeerConnection(): RTCPeerConnection {
     const pc = new RTCPeerConnection({
       iceServers: ICE_SERVERS,
-      iceCandidatePoolSize: 10, // Pre-gather candidates for faster connection
-      bundlePolicy: 'max-bundle', // Bundle all media for efficiency
-      rtcpMuxPolicy: 'require' // Multiplex RTP and RTCP
+      iceCandidatePoolSize: 20, // Increased for even faster candidate pre-gathering
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require'
     })
 
     // Add local tracks
@@ -510,7 +511,6 @@ export class VoiceCallService {
   }
 
 
-  // Start a call to another user - optimized for speed
   async startCall(
     chatId: string,
     receiverId: string,
@@ -572,15 +572,15 @@ export class VoiceCallService {
 
       this.currentCall = callData
 
-      await set(callRef, callData)
+      // Atomic update for both paths to reduce round-trips
+      const updates: any = {}
+      updates[`voice_calls/${receiverId}/${callId}`] = callData
+      updates[`voice_calls/${this.userId}/${callId}`] = callData
+      
+      await update(ref(realtimeDb), updates)
 
-      // Also store in caller's calls for tracking
-      await set(ref(realtimeDb, `voice_calls/${this.userId}/${callId}`), callData)
-
-      // Listen for answer
+      // Listen for answer and candidates in parallel
       this.listenForAnswer(callId, receiverId)
-
-      // Listen for ICE candidates from receiver
       this.listenForIceCandidates(callId, receiverId)
 
       // Start call timeout
@@ -677,18 +677,22 @@ export class VoiceCallService {
 
       const answeredAt = Date.now()
 
-      const callRef = ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}`)
-      await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/answer`), answer)
-      await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/status`), 'answered')
-      await set(ref(realtimeDb, `voice_calls/${this.userId}/${callData.id}/answeredAt`), answeredAt)
-
-      // Also update caller's copy
-      await set(ref(realtimeDb, `voice_calls/${callData.callerId}/${callData.id}/answer`), answer)
-      await set(ref(realtimeDb, `voice_calls/${callData.callerId}/${callData.id}/status`), 'answered')
-      await set(ref(realtimeDb, `voice_calls/${callData.callerId}/${callData.id}/answeredAt`), answeredAt)
-
       this.currentCallId = callData.id
       this.currentCall = { ...callData, status: 'answered', answeredAt }
+
+      // Atomic update for answer paths
+      const updates: any = {}
+      const callerPath = `voice_calls/${callData.callerId}/${callData.id}`
+      const receiverPath = `voice_calls/${this.userId}/${callData.id}`
+
+      updates[`${receiverPath}/answer`] = answer
+      updates[`${receiverPath}/status`] = 'answered'
+      updates[`${receiverPath}/answeredAt`] = answeredAt
+      updates[`${callerPath}/answer`] = answer
+      updates[`${callerPath}/status`] = 'answered'
+      updates[`${callerPath}/answeredAt`] = answeredAt
+
+      await update(ref(realtimeDb), updates)
 
       // Listen for ICE candidates from caller
       this.listenForIceCandidates(callData.id, callData.callerId)

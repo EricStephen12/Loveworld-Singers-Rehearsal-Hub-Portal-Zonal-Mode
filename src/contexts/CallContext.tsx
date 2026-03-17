@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -184,7 +184,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     callStartTimeRef.current = null
   }, [])
   
-  // Actions - simplified, no permission modal
   const startCall = useCallback(async (
     chatId: string,
     receiverId: string,

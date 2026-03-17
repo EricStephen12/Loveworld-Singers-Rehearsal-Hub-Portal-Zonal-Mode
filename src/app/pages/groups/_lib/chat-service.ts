@@ -473,7 +473,8 @@ export async function sendMessage(
       senderName: sender.name,
       text: text || (media?.type === 'image' ? 'Image' : (media?.type === 'document' ? 'Document' : (media?.type === 'voice' ? 'Voice message' : ''))),
       type: media?.type || 'text',
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
+      status: 'sent'
     }
 
     if (sender.avatar) messageData.senderAvatar = sender.avatar
@@ -507,7 +508,12 @@ export async function sendMessage(
 
       const lastMessageText = media?.type === 'image' ? 'Image' : media?.type === 'document' ? 'Document' : media?.type === 'voice' ? 'Voice message' : text.slice(0, 100)
       await updateDoc(doc(db, CHATS_COLLECTION, chatId), {
-        lastMessage: { text: lastMessageText, senderId: sender.id, timestamp: serverTimestamp() },
+        lastMessage: { 
+          text: lastMessageText, 
+          senderId: sender.id, 
+          timestamp: serverTimestamp(),
+          status: 'sent'
+        },
         ...unreadUpdates
       })
 
@@ -554,9 +560,26 @@ export async function forwardMessage(
 export async function markChatAsRead(chatId: string, userId: string): Promise<boolean> {
   try {
     await updateDoc(doc(db, CHATS_COLLECTION, chatId), { [`unreadCount.${userId}`]: 0 })
-    const q = query(collection(db, MESSAGES_COLLECTION), where('chatId', '==', chatId), where('status', '!=', 'read'))
+    
+    // Also update the last message status to read if it was sent to us
+    const chatDoc = await getDoc(doc(db, CHATS_COLLECTION, chatId))
+    if (chatDoc.exists()) {
+      const chatData = chatDoc.data()
+      if (chatData.lastMessage && chatData.lastMessage.senderId !== userId && chatData.lastMessage.status !== 'read') {
+        await updateDoc(doc(db, CHATS_COLLECTION, chatId), { 'lastMessage.status': 'read' })
+      }
+    }
+
+    const q = query(
+      collection(db, MESSAGES_COLLECTION), 
+      where('chatId', '==', chatId), 
+      where('status', '!=', 'read')
+    )
     const snap = await getDocs(q)
-    const updates = snap.docs.filter(d => d.data().senderId !== userId).map(d => updateDoc(doc(db, MESSAGES_COLLECTION, d.id), { status: 'read' }))
+    const updates = snap.docs
+      .filter(d => d.data().senderId !== userId)
+      .map(d => updateDoc(doc(db, MESSAGES_COLLECTION, d.id), { status: 'read' }))
+    
     await Promise.all(updates)
     return true
   } catch (error) {
@@ -592,7 +615,14 @@ export async function setTypingStatus(chatId: string, userId: string, userName: 
   try {
     const ref = doc(db, TYPING_COLLECTION, `${chatId}_${userId}`)
     if (status) {
-      await setDoc(ref, { id: `${chatId}_${userId}`, chatId, userId, userName, status, timestamp: serverTimestamp() }, { merge: true })
+      await setDoc(ref, { 
+        id: `${chatId}_${userId}`, 
+        chatId, 
+        userId, 
+        userName, 
+        status, 
+        timestamp: serverTimestamp() 
+      }, { merge: true })
     } else {
       await deleteDoc(ref).catch(() => {})
     }
@@ -605,10 +635,16 @@ export async function setTypingStatus(chatId: string, userId: string, userName: 
 export function subscribeToTyping(chatId: string, currentUserId: string, callback: (typingUsers: { userName: string, status: string }[]) => void): () => void {
   const q = query(collection(db, TYPING_COLLECTION), where('chatId', '==', chatId))
   return onSnapshot(q, (snap) => {
-    const users = snap.docs.map(d => d.data()).filter(d => d.userId !== currentUserId).filter(d => {
-      const ts = d.timestamp?.toMillis() || Date.now()
-      return Date.now() - ts < 10000
-    }).map(d => ({ userName: d.userName, status: d.status }))
+    const now = Date.now()
+    const users = snap.docs
+      .map(d => d.data())
+      .filter(d => d.userId !== currentUserId)
+      .filter(d => {
+        // Handle potential serverTimestamp lag: if timestamp is null, it's very recent (locally sent)
+        const ts = d.timestamp?.toMillis() || now
+        return now - ts < 15000 // 15 second window for safety
+      })
+      .map(d => ({ userName: d.userName, status: d.status }))
     callback(users)
   })
 }
@@ -822,12 +858,22 @@ function toDate(timestamp: any): Date {
 
 async function sendChatNotification(recipientIds: string[], title: string, body: string, chatId: string, senderId: string, senderName?: string): Promise<void> {
   try {
-    await fetch('/api/send-notification', {
+    const response = await fetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'chat', recipientIds, title, body, data: { chatId, senderName: senderName || 'Someone' }, excludeUserId: senderId })
     })
-  } catch (err) {}
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log(`[ChatService] Notification sent successfully to ${data.sentCount} tokens for ${recipientIds.length} recipients.`)
+    } else {
+      const errorText = await response.text()
+      console.error('[ChatService] Notification API error:', errorText)
+    }
+  } catch (err) {
+    console.error('[ChatService] Failed to call notification API:', err)
+  }
 }
 
 export async function deleteMessage(messageId: string, userId: string, forEveryone: boolean = false): Promise<boolean> {

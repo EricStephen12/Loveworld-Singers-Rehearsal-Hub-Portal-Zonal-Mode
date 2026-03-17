@@ -1,4 +1,4 @@
-﻿// app/api/send-call-notification/route.ts
+// app/api/send-call-notification/route.ts
 // Server-side endpoint for sending voice call notifications
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -86,48 +86,89 @@ export async function POST(req: NextRequest) {
       }
     }));
 
-    // Send notifications individually and track which tokens failed
-    const sendPromises = messages.map((message, index) =>
-      admin.messaging().send(message).then(
-        (messageId) => ({ success: true as const, messageId, token: userTokens[index] }),
-        (error) => ({ success: false as const, error, token: userTokens[index] })
-      )
-    );
+    // Send notifications using sendEach for better efficiency and simultaneous delivery
+    let successCount = 0;
+    let failedCount = 0;
+    const invalidTokens: string[] = [];
 
-    const results = await Promise.all(sendPromises);
-    const successCount = results.filter(r => r.success).length;
+    try {
+      const response = await admin.messaging().sendEach(messages);
 
-    // Clean up invalid tokens (they cause "Requested entity was not found" errors)
-    const invalidTokens = results
-      .filter((r): r is { success: false; error: any; token: string } => !r.success && (
-        r.error?.code === 'messaging/registration-token-not-registered' ||
-        r.error?.message?.includes('not found') ||
-        r.error?.message?.includes('not registered')
-      ))
-      .map(r => r.token);
+      response.responses.forEach((result, index) => {
+        if (result.success) {
+          successCount++;
+        } else {
+          failedCount++;
+          const error = result.error;
+          if (
+            error?.code === 'messaging/registration-token-not-registered' ||
+            error?.code === 'messaging/invalid-registration-token' ||
+            error?.message?.includes('not found') ||
+            error?.message?.includes('not registered')
+          ) {
+            invalidTokens.push(userTokens[index]);
+          }
+          console.error(`[CallNotification] Failed to send to device ${index}:`, error?.message || error);
+        }
+      });
+    } catch (batchError) {
+      console.error('[CallNotification] Batch send failed, falling back to individual sends:', batchError);
+      
+      const results = await Promise.all(messages.map((message, index) =>
+        admin.messaging().send(message).then(
+          (mId) => ({ success: true as const, messageId: mId }),
+          (err) => ({ success: false as const, error: err })
+        )
+      ));
 
-    // Remove invalid tokens from database
+      results.forEach((result, index) => {
+        if (result.success) {
+          successCount++;
+        } else {
+          failedCount++;
+          const error = result.error;
+          if (
+            error?.code === 'messaging/registration-token-not-registered' ||
+            error?.code === 'messaging/invalid-registration-token' ||
+            error?.message?.includes('not found') ||
+            error?.message?.includes('not registered')
+          ) {
+            invalidTokens.push(userTokens[index]);
+          }
+        }
+      });
+    }
+
+    // Surgical cleanup of only invalid tokens
     if (invalidTokens.length > 0) {
-      try {
-        // Remove the entire token entry for this user if their token is invalid
-        await rtdb.ref(`fcm_tokens/${receiverId}`).remove();
-      } catch (cleanupError) {
- console.error('[CallNotification] Error cleaning up tokens:', cleanupError);
+      for (const token of invalidTokens) {
+        try {
+          const tokenRef = rtdb.ref(`fcm_tokens/${receiverId}`);
+          const snapshot = await tokenRef.once('value');
+          const data = snapshot.val();
+
+          if (data) {
+            if (data.token === token) {
+              await tokenRef.remove();
+            } else if (typeof data === 'object') {
+              for (const [key, value] of Object.entries(data)) {
+                if ((value as any)?.token === token) {
+                  await rtdb.ref(`fcm_tokens/${receiverId}/${key}`).remove();
+                  break;
+                }
+              }
+            }
+          }
+        } catch (cleanupError) {
+          console.error('[CallNotification] Error cleaning up token:', cleanupError);
+        }
       }
     }
 
-    // Log results for debugging
-    results.forEach((result, index) => {
-      if (!result.success) {
- console.error('[CallNotification] Failed to send to device', index, ':', (result as any).error?.message || (result as any).error);
-      } else {
-      }
-    });
-
-
     return NextResponse.json({
       success: true,
-      sentToDeviceCount: successCount,
+      sentCount: successCount,
+      failedCount,
       totalTokens: userTokens.length
     });
 

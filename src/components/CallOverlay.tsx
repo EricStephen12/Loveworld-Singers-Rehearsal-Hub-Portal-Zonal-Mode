@@ -6,29 +6,29 @@ import { useCall } from '@/contexts/CallContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 
-// Helper to darken color
-function darkenColor(hex: string, percent: number): string {
+// Helper to darken colors for gradients
+function darkenColor(hex: string, percent: number) {
   const num = parseInt(hex.replace('#', ''), 16)
   const amt = Math.round(2.55 * percent)
   const R = Math.max((num >> 16) - amt, 0)
   const G = Math.max((num >> 8 & 0x00FF) - amt, 0)
   const B = Math.max((num & 0x0000FF) - amt, 0)
-  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`
+  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)
 }
 
 export function CallOverlay() {
   const { user } = useAuth()
   const { currentZone } = useZone()
-  const {
-    callState,
-    currentCall,
-    isMuted,
-    callDuration,
-    remoteStream,
-    answerCall,
-    declineCall,
-    endCall,
-    toggleMute
+  const { 
+    callState, 
+    currentCall, 
+    isMuted, 
+    callDuration, 
+    remoteStream, 
+    answerCall, 
+    declineCall, 
+    endCall, 
+    toggleMute 
   } = useCall()
   
   const remoteAudioRef = useRef<HTMLAudioElement>(null)
@@ -50,35 +50,25 @@ export function CallOverlay() {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
   
-  // Get the other person's info
-  const getOtherPerson = () => {
-    if (!currentCall) return { name: 'Unknown', avatar: undefined }
-    
-    if (currentCall.callerId === user?.uid) {
-      return {
-        name: currentCall.receiverName || 'Unknown',
-        avatar: currentCall.receiverAvatar
-      }
-    }
-    return {
-      name: currentCall.callerName,
-      avatar: currentCall.callerAvatar
-    }
+  // Transition state helpers
+  const isIncoming = callState === 'incoming'
+  const isOutgoing = callState === 'outgoing'
+  const isConnecting = callState === 'connecting'
+  const isActive = callState === 'connected' || callState === 'ending' || callState === 'connecting'
+  
+  // Get person info
+  const otherPerson = {
+    name: currentCall?.callerId === user?.uid ? (currentCall?.receiverName || 'User') : (currentCall?.callerName || 'User'),
+    avatar: currentCall?.callerId === user?.uid ? currentCall?.receiverAvatar : currentCall?.callerAvatar
   }
-  
-  const otherPerson = getOtherPerson()
-  
+
   // Don't render if idle
   if (callState === 'idle') {
     return <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
   }
-  
-  const isIncoming = callState === 'incoming'
-  const isActive = callState === 'connected' || callState === 'connecting'
-  const isOutgoing = callState === 'outgoing'
   
   return (
     <>
@@ -86,27 +76,19 @@ export function CallOverlay() {
       
       {/* Incoming Call UI */}
       {isIncoming && (
-        <div 
-          className="fixed inset-0 z-[9999] flex flex-col"
-          style={{ background: `linear-gradient(180deg, ${primaryColor} 0%, ${darkColor} 50%, ${darkerColor} 100%)` }}
-        >
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            {/* Avatar with pulsing rings */}
-            <div className="relative w-44 h-44 flex items-center justify-center mb-10">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+          <div 
+            className="w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl flex flex-col items-center p-8 animate-in fade-in zoom-in duration-300"
+            style={{ 
+              background: `linear-gradient(135deg, ${darkColor} 0%, ${darkerColor} 100%)`,
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <div className="relative mb-6">
               <div 
-                className="absolute inset-0 rounded-full opacity-20 animate-ping"
-                style={{ border: `3px solid white` }}
-              />
-              <div 
-                className="absolute inset-3 rounded-full opacity-30 animate-pulse"
-                style={{ border: `2px solid white` }}
-              />
-              <div 
-                className="absolute inset-6 rounded-full opacity-40"
-                style={{ border: `2px solid white` }}
-              />
-              
-              <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-4xl font-semibold shadow-2xl">
+                className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-semibold shadow-xl"
+                style={{ backgroundColor: primaryColor }}
+              >
                 {otherPerson.avatar ? (
                   <img 
                     src={otherPerson.avatar} 
@@ -117,9 +99,12 @@ export function CallOverlay() {
                   otherPerson.name.charAt(0).toUpperCase()
                 )}
               </div>
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full border-4 border-slate-900 flex items-center justify-center animate-pulse">
+                <Phone className="w-4 h-4 text-white" />
+              </div>
             </div>
             
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-xl font-bold text-white mb-1">
               {otherPerson.name}
             </h1>
             <p className="text-white/80 text-lg">
@@ -127,54 +112,41 @@ export function CallOverlay() {
             </p>
           </div>
           
-          <div className="pb-20 px-6">
-            <div className="flex justify-center items-center gap-20">
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={declineCall}
-                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                >
-                  <PhoneOff className="w-7 h-7" />
-                </button>
-                <span className="text-white/80 text-sm">Decline</span>
-              </div>
-              
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={answerCall}
-                  className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                >
-                  <Phone className="w-7 h-7" />
-                </button>
-                <span className="text-white/80 text-sm">Answer</span>
-              </div>
-            </div>
+          <div className="fixed bottom-12 left-0 right-0 flex justify-center gap-12 px-6">
+            <button 
+              onClick={declineCall}
+              className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-600 transition-transform hover:scale-110 active:scale-95 group"
+            >
+              <PhoneOff className="w-7 h-7 text-white" />
+              <span className="absolute -top-8 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">Decline</span>
+            </button>
+            
+            <button 
+              onClick={answerCall}
+              className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-transform hover:scale-110 active:scale-95 group"
+            >
+              <Phone className="w-7 h-7 text-white" />
+              <span className="absolute -top-8 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">Answer</span>
+            </button>
           </div>
         </div>
       )}
       
       {/* Outgoing Call UI */}
       {isOutgoing && (
-        <div 
-          className="fixed inset-0 z-[9999] flex flex-col"
-          style={{ background: `linear-gradient(180deg, ${primaryColor} 0%, ${darkColor} 50%, ${darkerColor} 100%)` }}
-        >
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <div className="relative w-44 h-44 flex items-center justify-center mb-10">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950 p-6 overflow-hidden">
+          {/* Animated Background Rings */}
+          <div className="absolute inset-0 z-0 opacity-20 overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white rounded-full animate-ping duration-[3000ms]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-white rounded-full animate-ping duration-[2000ms] delay-500" />
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="mb-8 relative">
               <div 
-                className="absolute inset-0 rounded-full opacity-20 animate-[ping_2s_ease-in-out_infinite]"
-                style={{ border: `3px solid white` }}
-              />
-              <div 
-                className="absolute inset-3 rounded-full opacity-30 animate-pulse"
-                style={{ border: `2px solid white` }}
-              />
-              <div 
-                className="absolute inset-6 rounded-full opacity-40"
-                style={{ border: `2px solid white` }}
-              />
-              
-              <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-4xl font-semibold shadow-2xl">
+                className="w-32 h-32 rounded-full flex items-center justify-center text-white text-5xl font-semibold shadow-2xl animate-pulse"
+                style={{ backgroundColor: primaryColor }}
+              >
                 {otherPerson.avatar ? (
                   <img 
                     src={otherPerson.avatar} 
@@ -190,28 +162,24 @@ export function CallOverlay() {
             <h1 className="text-3xl font-bold text-white mb-2">
               {otherPerson.name}
             </h1>
-            <p className="text-white/80 text-lg flex items-center gap-2">
+            <p className="text-white/60 text-xl font-medium flex items-center gap-2">
               Calling
               <span className="flex gap-1">
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce duration-700 delay-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce duration-700 delay-150" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-bounce duration-700 delay-300" />
               </span>
             </p>
           </div>
           
-          <div className="pb-20 px-6">
-            <div className="flex justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={endCall}
-                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                >
-                  <PhoneOff className="w-7 h-7" />
-                </button>
-                <span className="text-white/80 text-sm">Cancel</span>
-              </div>
-            </div>
+          <div className="fixed bottom-16 z-20">
+            <button 
+              onClick={endCall}
+              className="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center shadow-2xl hover:bg-red-600 transition-transform hover:scale-110 active:scale-95 group"
+            >
+              <PhoneOff className="w-8 h-8 text-white" />
+              <span className="absolute -top-10 text-white/60 text-sm font-medium">Cancel Call</span>
+            </button>
           </div>
         </div>
       )}
@@ -272,31 +240,24 @@ export function CallOverlay() {
             </p>
           </div>
           
-          <div className="pb-20 px-6">
-            <div className="flex justify-center items-center gap-16">
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={toggleMute}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
-                    isMuted 
-                      ? 'bg-white text-slate-900' 
-                      : 'bg-white/10 text-white'
-                  }`}
-                >
-                  {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </button>
-                <span className="text-white/60 text-sm">{isMuted ? 'Unmute' : 'Mute'}</span>
-              </div>
-              
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={endCall}
-                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-                >
-                  <PhoneOff className="w-7 h-7" />
-                </button>
-                <span className="text-white/60 text-sm">End</span>
-              </div>
+          {/* Controls */}
+          <div className="bg-black/20 backdrop-blur-md p-8 pb-12 flex items-center justify-around rounded-t-[40px] border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+            <button 
+              onClick={toggleMute}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${isMuted ? 'bg-white text-slate-900 shadow-inner' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            </button>
+            
+            <button 
+              onClick={endCall}
+              className="w-20 h-20 rounded-full bg-red-500 flex items-center justify-center shadow-xl hover:bg-red-600 transition-transform hover:scale-105 active:scale-95"
+            >
+              <PhoneOff className="w-8 h-8 text-white" />
+            </button>
+            
+            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white/40 cursor-not-allowed">
+              <Volume2 className="w-6 h-6" />
             </div>
           </div>
         </div>

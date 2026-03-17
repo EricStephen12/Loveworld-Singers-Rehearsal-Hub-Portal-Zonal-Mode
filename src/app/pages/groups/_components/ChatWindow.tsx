@@ -5,8 +5,9 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Phone, PhoneOff, ArrowLeft, MoreVertical, Search, Check, 
-  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download, Pin
+  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download, Pin, Video
 } from 'lucide-react'
+import { useCall } from '@/contexts/CallContext'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { MessageBubble } from './MessageBubble'
 import { ChatInput } from './ChatInput'
@@ -49,6 +50,8 @@ export function ChatWindow({
     editMessage,
     userPresence
   } = useChatV2()
+
+  const { startCall, callState } = useCall()
 
   const [replyingTo, setReplyingTo] = useState<{ id: string; text: string; senderName: string } | null>(null)
   const [reactingToMessageId, setReactingToMessageId] = useState<string | null>(null)
@@ -223,7 +226,23 @@ export function ChatWindow({
           >
             <Search className="w-5 h-5" />
           </button>
-          <button className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all">
+          <button 
+            onClick={() => {
+              if (selectedChat && user) {
+                const otherId = selectedChat.participants.find(id => id !== user.uid) || ''
+                startCall(
+                  selectedChat.id,
+                  otherId,
+                  user.displayName || 'User',
+                  getChatDisplayName(selectedChat),
+                  user.photoURL || undefined,
+                  undefined
+                )
+              }
+            }}
+            disabled={callState !== 'idle'}
+            className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50"
+          >
             <Phone className="w-5 h-5" />
           </button>
           <button 

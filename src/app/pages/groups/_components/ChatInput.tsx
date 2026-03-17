@@ -66,23 +66,38 @@ export function ChatInput({
   }, [messageText])
 
   const handleSend = async () => {
-    if (!messageText.trim() || isSending) return
+    const trimmedMessage = messageText.trim()
+    if (!trimmedMessage || isSending) return
 
-    // If editing, call onEditComplete instead of sending a new message
+    // If editing, call onEditComplete
     if (editingMessage && onEditComplete) {
-      onEditComplete(messageText.trim())
+      onEditComplete(trimmedMessage)
       setMessageText('')
       return
     }
 
+    // Optimistically clear the input field
+    const originalMessage = messageText
+    setMessageText('')
+    onCancelReply()
+    
     setIsSending(true)
-    const success = await sendMessage(messageText.trim(), replyingTo || undefined)
-    setIsSending(false)
-
-    if (success) {
-      setMessageText('')
-      onCancelReply()
-      textareaRef.current?.focus()
+    try {
+      const success = await sendMessage(trimmedMessage, replyingTo || undefined)
+      if (!success) {
+        // If it failed, restore the message so the user doesn't lose it
+        setMessageText(originalMessage)
+        console.error('[ChatInput] Send failed, restoring message.')
+      }
+    } catch (error) {
+      console.error('[ChatInput] Error sending message:', error)
+      setMessageText(originalMessage)
+    } finally {
+      setIsSending(false)
+      // Ensure focus is kept/restored
+      setTimeout(() => {
+        textareaRef.current?.focus()
+      }, 0)
     }
   }
 
@@ -93,11 +108,24 @@ export function ChatInput({
     }
   }
 
+  const lastTypingUpdateRef = useRef<number>(0)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const handleTyping = () => {
-    setTypingStatus('typing')
-    // Clear typing status after 3 seconds of inactivity
-    const timer = setTimeout(() => setTypingStatus(null), 3000)
-    return () => clearTimeout(timer)
+    const now = Date.now()
+    
+    // Only send typing update every 3 seconds to avoid flooding Firestore
+    if (now - lastTypingUpdateRef.current > 3000) {
+      setTypingStatus('typing')
+      lastTypingUpdateRef.current = now
+    }
+
+    // Always reset the timer to clear typing status
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      setTypingStatus(null)
+      lastTypingUpdateRef.current = 0
+    }, 4000)
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'document') => {
@@ -247,7 +275,7 @@ export function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={isRecording ? "Recording..." : "Type a message"}
             className="flex-1 bg-transparent py-[10px] px-2 text-[15px] focus:outline-none resize-none max-h-[120px] scrollbar-none font-normal text-[#111b21] placeholder-[#8696a0] min-w-0"
-            disabled={isRecording || isSending || isUploading}
+            disabled={isRecording || isUploading}
           />
 
           {isUploading && (

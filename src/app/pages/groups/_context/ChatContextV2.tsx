@@ -35,7 +35,7 @@ import {
   setTypingStatus as setTypingStatusService,
   subscribeToTyping
 } from '../_lib/chat-service'
-import { subscribeToUserPresence } from '@/lib/presence-service'
+import { subscribeToUserPresence, updateUserPresence } from '@/lib/presence-service'
 
 interface ChatContextType {
   // State
@@ -107,6 +107,41 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     zoneName: currentZone?.name
   } : null
 
+  // Presence Management
+  useEffect(() => {
+    if (!user?.uid) return
+
+    const updateStatus = (status: 'online' | 'offline') => {
+      updateUserPresence(user.uid, status).catch(err => 
+        console.error('[ChatContext] Presence update failed:', err)
+      )
+    }
+
+    // Initial online status
+    updateStatus('online')
+
+    // Heartbeat to keep online status fresh (every 1 minute)
+    const heartbeat = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateStatus('online')
+      }
+    }, 60000)
+
+    // Handle focus/blur
+    const handleFocus = () => updateStatus('online')
+    const handleBlur = () => updateStatus('offline')
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+    window.addEventListener('beforeunload', () => updateStatus('offline'))
+
+    return () => {
+      clearInterval(heartbeat)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+      updateStatus('offline')
+    }
+  }, [user?.uid])
 
   // Subscribe to chats
   useEffect(() => {

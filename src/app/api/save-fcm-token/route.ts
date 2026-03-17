@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { admin, rtdb } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
@@ -26,8 +26,11 @@ export async function POST(request: NextRequest) {
 
     // Use Realtime Database instead of Firestore (separate quota, faster)
     const userIdToUse = userId && userId !== 'anonymous' ? userId : `anon_${token.substring(0, 20)}`;
+    
+    // Create a safe key for the token to support multi-device/multi-browser
+    const tokenKey = token.substring(0, 50).replace(/[.#$[\]]/g, '_');
 
-    await rtdb.ref(`fcm_tokens/${userIdToUse}`).set({
+    await rtdb.ref(`fcm_tokens/${userIdToUse}/${tokenKey}`).set({
       token,
       platform: platform || 'web',
       userId: userIdToUse,
