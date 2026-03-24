@@ -7,6 +7,7 @@ import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service'
 import { lowDataOptimizer } from '@/utils/low-data-optimizer'
 import { isHQGroup } from '@/config/zones'
+import { sanitizeImageUrl } from '@/utils/image-utils'
 
 async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
   try {
@@ -31,7 +32,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
       location: (page as any).location || '',
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
-      bannerImage: (page as any).bannerImage || (page as any).bannerimage || '',
+      bannerImage: sanitizeImageUrl((page as any).bannerImage || (page as any).bannerimage, 'banner'),
       categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
       countdown: {
         days: (page as any).countdownDays || (page as any).countdown?.days || (page as any).countdowndays || 0,

@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { sanitizeImageUrl } from '@/utils/image-utils';
 
 import { ChevronRight, ChevronLeft, Search, Clock, Music, User, BookOpen, Timer, Mic, ChevronDown, ChevronUp, Play, X, Users, Calendar, Heart, Sparkles, CheckCircle, Info, ArrowLeft, SkipForward, Piano, HandMetal, Volume2, Flag, Archive, RefreshCw } from "lucide-react";
 
@@ -133,32 +134,9 @@ function PraiseNightPageContent() {
     }
   }, [showDropdown, categoryFilter]);
 
-  // Re-initialize safe area when category changes (fixes bottom bar cut-off issue)
-  useEffect(() => {
-    const reinitializeSafeArea = async () => {
-      // Force re-calculation of safe area when navigating between categories
-      if (typeof window !== 'undefined') {
-        // Import and use SafeAreaManager for manual recalculation
-        const { SafeAreaManager } = await import('@/utils/safeAreaManager');
-        const safeAreaManager = SafeAreaManager.getInstance();
-        safeAreaManager.recalculate();
-
-        // Also trigger resize event for additional compatibility
-        setTimeout(() => {
-          window.dispatchEvent(new Event('resize'));
-        }, 100);
-
-
-      }
-    };
-
-    // Re-initialize when category changes
-    if (categoryFilter) {
-      reinitializeSafeArea();
-    }
-  }, [categoryFilter]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
   const [selectedPageCategory, setSelectedPageCategory] = useState<string | null>(null);
   const [pageCategories, setPageCategories] = useState<any[]>([]);
   const [loadingPageCategories, setLoadingPageCategories] = useState(true);
@@ -223,16 +201,16 @@ function PraiseNightPageContent() {
 
     // Filter by page category if selected
     if (selectedPageCategory) {
+      filtered = filtered.filter(praiseNight => praiseNight.pageCategory === selectedPageCategory);
+    }
 
-      const beforeCount = filtered.length;
-      filtered = filtered.filter(praiseNight => {
-        const matches = praiseNight.pageCategory === selectedPageCategory;
-        if (!matches) {
-
-        }
-        return matches;
-      });
-
+    // Filter by archive search query if viewing archive details
+    if (categoryFilter === 'archive' && archiveSearchQuery.trim() !== '' && selectedPageCategory) {
+      const query = archiveSearchQuery.toLowerCase();
+      filtered = filtered.filter(praiseNight => 
+        praiseNight.name?.toLowerCase().includes(query) || 
+        praiseNight.date?.toLowerCase().includes(query)
+      );
     }
 
     return filtered;
@@ -450,20 +428,7 @@ function PraiseNightPageContent() {
 
   // Use the banner image from the database, fallback to default
   const ecardSrc = useMemo(() => {
-    if (!currentPraiseNight) return "/Ecards/1000876785.png";
-
-
-
-    // Use the bannerImage from the database if available
-    if (currentPraiseNight.bannerImage) {
-
-      return currentPraiseNight.bannerImage;
-    }
-
-
-
-    // Fallback to default image
-    return "/Ecards/1000876785.png";
+    return sanitizeImageUrl(currentPraiseNight?.bannerImage, 'banner');
   }, [currentPraiseNight]);
 
   const toggleMenu = () => {
@@ -1217,11 +1182,19 @@ function PraiseNightPageContent() {
             {/* Normal Header Content */}
             <div className={`transition-all duration-300 ease-out ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               <ScreenHeader
-                title={categoryFilter === 'archive' ? 'Archives' :
+                title={categoryFilter === 'archive' ? (pageParam ? (currentPraiseNight?.name || 'Archive Page') : 'Archives') :
                   categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0 ? 'Pre-Rehearsal' :
                     (currentPraiseNight?.name || '')}
                 showBackButton={true}
-                backPath="/pages/rehearsals"
+                backPath={categoryFilter === 'archive' && pageParam ? `/pages/praise-night?category=archive` : "/pages/rehearsals"}
+                onBackClick={
+                  categoryFilter === 'archive' && !pageParam && selectedPageCategory 
+                    ? () => {
+                        setSelectedPageCategory(null);
+                        setArchiveSearchQuery('');
+                      } 
+                    : undefined
+                }
                 showMenuButton={false}
                 rightImageSrc="/logo.png"
                 leftButtons={categoryFilter !== 'archive' && !pageParam && (
@@ -1233,7 +1206,7 @@ function PraiseNightPageContent() {
                     <ChevronDown className="w-4 h-4" />
                   </button>
                 )}
-                rightButtons={categoryFilter !== 'archive' && (
+                rightButtons={(categoryFilter !== 'archive' || pageParam) && (
                   <button
                     onClick={() => setIsSearchOpen((v) => !v)}
                     aria-label="Toggle search"
@@ -1488,8 +1461,55 @@ function PraiseNightPageContent() {
         <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch">
           <div className="w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-4 relative mobile-content-with-bottom-nav">
             {/* Archive Cards Grid - Special layout for archive category */}
-            {categoryFilter === 'archive' && (
-              <div className="mb-6">
+            {categoryFilter === 'archive' && !pageParam && (
+              <div className="mb-6 px-1">
+                
+                {/* Archive Search & Breadcrumbs */}
+                <div className="mb-6 sticky top-0 z-10 bg-gray-50/95 backdrop-blur-md pt-2 pb-4 -mx-1 px-1">
+                  
+                  {/* Breadcrumbs Navigation */}
+                  <div className="mb-3 flex items-center gap-2 text-sm max-w-full overflow-x-auto whitespace-nowrap scrollbar-hide py-1">
+                    <button 
+                      onClick={() => {
+                        setSelectedPageCategory(null);
+                        setArchiveSearchQuery('');
+                      }}
+                      className={`font-medium transition-colors flex items-center gap-1.5 shrink-0 ${!selectedPageCategory ? 'text-purple-600' : 'text-slate-500 hover:text-purple-600'}`}
+                    >
+                      <Archive className="w-4 h-4" />
+                      All Categories
+                    </button>
+                    {selectedPageCategory && (
+                      <>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="font-semibold text-slate-900 truncate">{selectedPageCategory}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Persistent Archive Search Bar */}
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Search className="h-4.5 w-4.5 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={selectedPageCategory ? `Search inside ${selectedPageCategory}...` : "Search all archive categories..."}
+                      value={archiveSearchQuery}
+                      onChange={(e) => setArchiveSearchQuery(e.target.value)}
+                      className="block w-full pl-10 pr-10 py-3 border-0 bg-slate-100/80 rounded-2xl leading-5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:bg-white sm:text-sm transition-all duration-300"
+                    />
+                    {archiveSearchQuery && (
+                      <button
+                        onClick={() => setArchiveSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        <X className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Show skeleton while loading page categories */}
                 {loadingPageCategories && !selectedPageCategory && (
                   <div className="mb-6">
@@ -1519,7 +1539,7 @@ function PraiseNightPageContent() {
                       <span className="text-sm text-slate-500">{pageCategories.length} categories</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {pageCategories.map((category) => {
+                      {pageCategories.filter(category => !archiveSearchQuery.trim() || category.name?.toLowerCase().includes(archiveSearchQuery.toLowerCase()) || category.description?.toLowerCase().includes(archiveSearchQuery.toLowerCase())).map((category) => {
                         // Count pages in this category
                         const pagesInCategory = allPraiseNights.filter(p => {
                           const isArchive = p.category === 'archive';
@@ -1536,7 +1556,7 @@ function PraiseNightPageContent() {
                           <button
                             key={category.id}
                             onClick={() => {
-
+                              setSelectedPageCategory(category.name);
                             }}
                             className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-200 text-left"
                           >
@@ -1559,18 +1579,7 @@ function PraiseNightPageContent() {
                   </div>
                 )}
 
-                {/* Show back button if page category is selected */}
-                {selectedPageCategory && (
-                  <div className="mb-4">
-                    <button
-                      onClick={() => setSelectedPageCategory(null)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Back to Categories
-                    </button>
-                  </div>
-                )}
+                {/* Back button removed in favor of breadcrumb navigation above */}
 
                 {/* Show skeleton while loading pages */}
                 {loading && selectedPageCategory && (
@@ -1597,7 +1606,7 @@ function PraiseNightPageContent() {
                         onClick={() => {
                           // Navigate to praise-night page with this specific page's data
                           // Use Next.js router to avoid full page reload
-                          router.push(`/pages/praise-night?page=${praiseNight.id}`);
+                          router.push(`/pages/praise-night?category=${categoryFilter || 'archive'}&page=${praiseNight.id}`);
                         }}
                         className={`group relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${currentPraiseNight?.id === praiseNight.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                           }`}
@@ -1659,8 +1668,8 @@ function PraiseNightPageContent() {
               </div>
             )}
 
-            {/* E-card with embedded switcher below (single image, no slide) - Hide for archive */}
-            {categoryFilter !== 'archive' && currentPraiseNight && (
+            {/* E-card with embedded switcher below (single image, no slide) */}
+            {(categoryFilter !== 'archive' || pageParam) && currentPraiseNight && (
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mb-2 sm:mb-3 max-w-md sm:max-w-lg mx-auto shadow-2xl shadow-black/20 ring-1 ring-black/5 breathe-animation">
                 <div className="relative h-35 sm:h-43 md:h-51">
                   <Image
@@ -1684,8 +1693,8 @@ function PraiseNightPageContent() {
               </div>
             )}
 
-            {/* Pills under timer - Hide for archive, pre-rehearsal when empty, and when no content */}
-            {categoryFilter !== 'archive' && currentPraiseNight && filteredPraiseNights.length > 0 && !(categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0) && (
+            {/* Pills under timer */}
+            {(categoryFilter !== 'archive' || !!pageParam) && currentPraiseNight && filteredPraiseNights.length > 0 && !(categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0) && (
               <div className="mb-4 sm:mb-6">
                 <div
                   className="-mx-3 px-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"

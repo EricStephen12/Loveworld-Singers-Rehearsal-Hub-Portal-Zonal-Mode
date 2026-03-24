@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -12,10 +12,12 @@ import {
 } from '../_lib/playlist-service'
 import {
   ListVideo, MoreVertical, Trash2, Play, ThumbsUp, Clock,
-  Globe, Plus, Lock, X
+  Globe, Plus, Lock, X, Search, SlidersHorizontal, ChevronDown
 } from 'lucide-react'
 import YouTubeHeader from '../_components/YouTubeHeader'
 import YouTubeSidebar from '../_components/YouTubeSidebar'
+
+import ConfirmationModal from '@/components/ConfirmationModal'
 
 export default function PlaylistsPage() {
   const router = useRouter()
@@ -26,6 +28,15 @@ export default function PlaylistsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [creating, setCreating] = useState(false)
+
+  // Confirmation states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [playlistToDelete, setPlaylistToDelete] = useState<string | null>(null)
+
+  // UX States
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'count'>('date')
+  const [showSortMenu, setShowSortMenu] = useState(false)
+  const sortMenuRef = useRef<HTMLDivElement>(null)
 
   // YouTube UI States
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -42,33 +53,40 @@ export default function PlaylistsPage() {
     }
   }, [user?.uid, authLoading, profile])
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
+        setShowSortMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const initAndLoad = async (userId: string) => {
     setLoading(true)
     try {
       await ensureSystemPlaylists(userId)
       const data = await getUserPlaylists(userId)
-      const sorted = data.sort((a, b) => {
-        if (a.isSystem && !b.isSystem) return -1
-        if (!a.isSystem && b.isSystem) return 1
-        const aTime = a.updatedAt instanceof Date ? a.updatedAt.getTime() : new Date(a.updatedAt).getTime()
-        const bTime = b.updatedAt instanceof Date ? b.updatedAt.getTime() : new Date(b.updatedAt).getTime()
-        return bTime - aTime
-      })
-      setPlaylists(sorted)
+      setPlaylists(data)
     } catch (error) {
- console.error('Error loading playlists:', error)
+      console.error('Error loading playlists:', error)
     }
     setLoading(false)
   }
 
-  const handleDelete = async (playlistId: string) => {
-    if (!confirm('Delete this playlist?')) return
+  const handleDelete = async () => {
+    if (!playlistToDelete) return
     try {
-      await deletePlaylist(playlistId)
-      setPlaylists(prev => prev.filter(p => p.id !== playlistId))
+      await deletePlaylist(playlistToDelete)
+      setPlaylists(prev => prev.filter(p => p.id !== playlistToDelete))
     } catch (error) {
- console.error('Error deleting playlist:', error)
+      console.error('Error deleting playlist:', error)
     }
+    setPlaylistToDelete(null)
+    setShowDeleteModal(false)
     setMenuOpen(null)
   }
 
@@ -87,8 +105,26 @@ export default function PlaylistsPage() {
     setCreating(false)
   }
 
-  const systemPlaylists = playlists.filter(p => p.isSystem)
-  const customPlaylists = playlists.filter(p => !p.isSystem)
+  const getFilteredAndSorted = (list: Playlist[]) => {
+    return list
+      .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name)
+        if (sortBy === 'count') return (b.videoIds.length || 0) - (a.videoIds.length || 0)
+        
+        // Date sort (System first, then updatedAt)
+        if (a.isSystem && !b.isSystem) return -1
+        if (!a.isSystem && b.isSystem) return 1
+        
+        const aTime = a.updatedAt instanceof Date ? a.updatedAt.getTime() : new Date(a.updatedAt).getTime()
+        const bTime = b.updatedAt instanceof Date ? b.updatedAt.getTime() : new Date(b.updatedAt).getTime()
+        return bTime - aTime
+      })
+  }
+
+  const systemPlaylists = getFilteredAndSorted(playlists.filter(p => p.isSystem))
+  const customPlaylists = getFilteredAndSorted(playlists.filter(p => !p.isSystem))
+  const hasNoResults = searchQuery && systemPlaylists.length === 0 && customPlaylists.length === 0
 
   return (
     <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30 font-sans">
@@ -126,18 +162,79 @@ export default function PlaylistsPage() {
         </div>
 
         <main className="flex-1 max-w-[2100px] mx-auto px-6 pt-6 pb-24 overflow-y-auto bg-slate-950 custom-scrollbar">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="flex flex-col">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">Your Playlists</h1>
               <p className="text-slate-400 text-sm mt-1 font-medium">Curated music and rehearsal libraries</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2.5 px-6 h-11 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-[14px] font-bold shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 active:scale-95"
+              className="flex items-center gap-2.5 px-6 h-11 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-[14px] font-bold shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 active:scale-95 w-fit"
             >
               <Plus className="w-5 h-5" />
               New Playlist
             </button>
+          </div>
+
+          {/* Search and Sort Bar */}
+          <div className="flex flex-col md:flex-row items-center gap-3 mb-10">
+            <div className="relative flex-1 w-full group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search your playlists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-12 bg-slate-900/50 border border-slate-800 rounded-2xl pl-12 pr-12 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-800 rounded-xl text-slate-500 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative w-full md:w-auto" ref={sortMenuRef}>
+              <button
+                onClick={() => setShowSortMenu(!showSortMenu)}
+                className="w-full md:w-auto flex items-center justify-between gap-3 px-5 h-12 bg-slate-900/50 border border-slate-800 rounded-2xl text-sm font-bold text-slate-300 hover:bg-slate-800 transition-colors active:scale-95"
+              >
+                <div className="flex items-center gap-2.5">
+                  <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
+                  <span>Sort by: {sortBy === 'date' ? 'Recently Updated' : sortBy === 'name' ? 'A-Z' : 'Video Count'}</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showSortMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showSortMenu && (
+                <div className="absolute right-0 top-[56px] w-full md:w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <button
+                    onClick={() => { setSortBy('date'); setShowSortMenu(false); }}
+                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'date' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
+                  >
+                    Recently Updated
+                    {sortBy === 'date' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
+                  </button>
+                  <button
+                    onClick={() => { setSortBy('name'); setShowSortMenu(false); }}
+                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'name' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
+                  >
+                    Alphabetical (A-Z)
+                    {sortBy === 'name' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
+                  </button>
+                  <button
+                    onClick={() => { setSortBy('count'); setShowSortMenu(false); }}
+                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'count' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
+                  >
+                    Video Count
+                    {sortBy === 'count' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -150,15 +247,31 @@ export default function PlaylistsPage() {
                 </div>
               ))}
             </div>
+          ) : hasNoResults ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-800">
+              <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-white/5">
+                <Search className="w-10 h-10 text-slate-800" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-100">No matches found</h3>
+              <p className="text-slate-500 mt-2 font-medium">Try searching for a different keyword</p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-8 px-8 h-12 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-bold transition-all border border-white/5 active:scale-95"
+              >
+                Clear Search
+              </button>
+            </div>
           ) : (
             <div className="space-y-16">
               {/* System Playlists */}
               {systemPlaylists.length > 0 && (
                 <section className="space-y-6">
-                  <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">Essentials</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">Essentials</h2>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-500">{systemPlaylists.length}</span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-5 gap-y-12">
                     {systemPlaylists
-                      .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                       .map(playlist => (
                       <button
                         key={playlist.id}
@@ -193,11 +306,13 @@ export default function PlaylistsPage() {
 
               {/* Custom Playlists */}
               <section className="space-y-6 pt-8 border-t border-slate-800/60">
-                <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">My Playlists</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">My Playlists</h2>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-500">{customPlaylists.length}</span>
+                </div>
                 {customPlaylists.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-5 gap-y-12">
                     {customPlaylists
-                      .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
                       .map(playlist => (
                       <div key={playlist.id} className="group flex flex-col gap-4 relative">
                         <div
@@ -243,7 +358,10 @@ export default function PlaylistsPage() {
                                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
                                 <div className="absolute right-0 top-11 bg-slate-900 rounded-2xl shadow-2xl z-20 py-1.5 min-w-[180px] border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                   <button
-                                    onClick={() => handleDelete(playlist.id)}
+                                    onClick={() => {
+                                      setPlaylistToDelete(playlist.id)
+                                      setShowDeleteModal(true)
+                                    }}
                                     className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-red-500/10 text-red-400 text-sm font-bold transition-colors"
                                   >
                                     <Trash2 className="w-4.5 h-4.5" />
@@ -277,6 +395,20 @@ export default function PlaylistsPage() {
           )}
         </main>
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Playlist"
+        message="Are you sure you want to delete this playlist? This action cannot be undone and all organization within this list will be lost."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setShowDeleteModal(false)
+          setPlaylistToDelete(null)
+          setMenuOpen(null)
+        }}
+        isDanger={true}
+      />
 
       {/* Create Playlist Modal */}
       {showCreateModal && (

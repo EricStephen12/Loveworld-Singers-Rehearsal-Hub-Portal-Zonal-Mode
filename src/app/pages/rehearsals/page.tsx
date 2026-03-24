@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { ChevronRight, Calendar, Users, Music, MapPin, Bell, Mic } from 'lucide-react'
+import { ChevronRight, Calendar, Users, Music, MapPin, Bell, Mic, Archive } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -139,6 +139,16 @@ export default function RehearsalsPage() {
         gradient: 'from-blue-600 via-cyan-600 to-teal-600',
         iconBg: 'bg-blue-100',
         iconColor: 'text-blue-600'
+      },
+      {
+        id: 'archive',
+        title: 'Archives',
+        description: 'Access complete and past rehearsal sessions',
+        icon: Archive,
+        href: '/pages/praise-night?category=archive',
+        gradient: 'from-slate-600 via-gray-600 to-zinc-600',
+        iconBg: 'bg-slate-100',
+        iconColor: 'text-slate-600'
       }
     ];
 
@@ -153,6 +163,17 @@ export default function RehearsalsPage() {
         // 2. For other zones, visible IF coordinator OR granted access
         return isZoneCoordinator || profile?.can_access_pre_rehearsal === true;
       }
+      
+      if (option.id === 'archive') {
+        const isPresident = currentZone?.id === 'zone-president' || currentZone?.id === 'zone-president-2';
+        const isDirector = currentZone?.id === 'zone-director';
+        const isOftp = currentZone?.id === 'zone-oftp';
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'boss';
+        const isHqAdmin = profile?.is_hq_member === true;
+
+        return isPresident || isDirector || isOftp || isZoneCoordinator || isAdmin || isHqAdmin;
+      }
+      
       return true;
     });
   }, [currentZone, isZoneCoordinator, profile]);

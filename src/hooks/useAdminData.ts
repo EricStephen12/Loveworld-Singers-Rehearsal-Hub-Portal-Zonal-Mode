@@ -5,6 +5,7 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { ZoneDatabaseService } from '@/lib/zone-database-service'
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { isHQGroup } from '@/config/zones'
+import { sanitizeImageUrl } from '@/utils/image-utils'
 
 interface AdminData {
   pages: PraiseNight[]
@@ -60,7 +61,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       location: (page as any).location || '',
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
-      bannerImage: (page as any).bannerImage || '',
+      bannerImage: sanitizeImageUrl((page as any).bannerImage, 'banner'),
       categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
       songCount: allZoneSongs.filter((s: any) => {
         const songPageId = s.praiseNightId || s.praisenightid || s.praisenight_id || s.pageId

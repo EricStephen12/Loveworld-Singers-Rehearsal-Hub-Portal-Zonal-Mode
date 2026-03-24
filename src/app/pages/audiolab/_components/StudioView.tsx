@@ -10,6 +10,7 @@ import {
   Repeat, RotateCcw, Undo2
 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { createProject, getProject, updateProject, onProjectUpdate } from '../_lib/project-service';
@@ -86,6 +87,9 @@ export function StudioView() {
   const [isImporting, setIsImporting] = useState(false);
   const [isExportingHeader, setIsExportingHeader] = useState(false);
   const [exportProgressHeader, setExportProgressHeader] = useState(0);
+
+  // Confirmation states
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [countIn, setCountIn] = useState(0);
   const [lastRecordedTrackId, setLastRecordedTrackId] = useState<string | null>(null);
@@ -1580,18 +1584,18 @@ export function StudioView() {
 
   const handleBackClick = () => {
     if (hasUnsavedChanges()) {
-      const confirmLeave = window.confirm('You have unsaved recordings. Save before leaving?');
-      if (confirmLeave) {
-        handleSave();
-        setTimeout(() => {
-          setView('home');
-        }, 1000);
-      } else {
-        setView('home');
-      }
+      setShowLeaveConfirm(true);
     } else {
       setView('home');
     }
+  };
+
+  const handleConfirmLeave = () => {
+    handleSave();
+    setShowLeaveConfirm(false);
+    setTimeout(() => {
+      setView('home');
+    }, 1000);
   };
 
   const handleHeaderExport = async () => {
@@ -2355,6 +2359,19 @@ export function StudioView() {
         trackName={tracks.find(t => t.id === effectsTrackId)?.name || 'Track'}
         initialEffects={tracks.find(t => t.id === effectsTrackId)?.effects || DEFAULT_EFFECTS}
         onEffectsChange={handleEffectsChange}
+      />
+      <ConfirmationModal
+        isOpen={showLeaveConfirm}
+        title="Unsaved Changes"
+        message="You have unsaved recordings. Would you like to save them before leaving?"
+        confirmLabel="Save & Leave"
+        cancelLabel="Discard & Leave"
+        onConfirm={handleConfirmLeave}
+        onCancel={() => {
+          setShowLeaveConfirm(false);
+          setView('home');
+        }}
+        isDanger={false}
       />
     </div>
   );

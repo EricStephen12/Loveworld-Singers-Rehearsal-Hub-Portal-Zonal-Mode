@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -51,6 +51,7 @@ function sanitizeError(error: string): string {
 const SPECIAL_LOGIN_MAP: Record<string, { email: string }> = {
   // Senior HQ zones (have their own zones but are HQ groups, not necessarily HQ admins)
   'the president': { email: 'president@loveworldhq.org' },
+  'the president 2': { email: 'thepresident2@loveworld.com' },
   'the director': { email: 'director@loveworldhq.org' },
   'pst daba': { email: 'oftp.daba@loveworldhq.org' },
   'pst bisola': { email: 'oftp.bisola@loveworldhq.org' },
@@ -923,13 +924,13 @@ function AuthPageContent() {
               <input
                 type="text"
                 name="email"
-                placeholder="Email or Username"
+                placeholder="Email Address"
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-4 py-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 text-sm"
                 required
                 pattern=".*"
-                title="Enter your email or username"
+                title="Enter your email address"
               />
 
               <div className="relative">

@@ -90,14 +90,14 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
       onClick={handleClick}
     >
       {/* Thumbnail Container */}
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-md border border-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
+      <div className="relative w-full aspect-video rounded-[20px] sm:rounded-2xl overflow-hidden bg-slate-900 shadow-md border border-white/5 transition-all duration-500 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-indigo-500/20">
         {!imageLoaded && (
           <div className="absolute inset-0 bg-slate-800 animate-pulse" />
         )}
         <img
           src={thumbnailUrl}
           alt={media.title}
-          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105 transition-transform duration-500 ease-out`}
+          className={`w-full h-full object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-110 transition-transform duration-700 ease-out`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
@@ -116,32 +116,32 @@ export default function MediaCard({ media, categoryMap }: MediaCardProps) {
 
         {/* Duration Badge */}
         {media.duration && (
-          <div className="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-sm text-slate-200 text-[11px] font-semibold px-1.5 py-0.5 rounded-md shadow-sm tabular-nums tracking-tight border border-white/10">
+          <div className="absolute bottom-2.5 right-2.5 bg-black/80 backdrop-blur-md text-slate-200 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg shadow-lg tabular-nums tracking-tight border border-white/10">
             {formatDuration(media.duration)}
           </div>
         )}
       </div>
 
       {/* Video Info */}
-      <div className="flex gap-3 pt-3.5 pr-2 relative">
-        <div className="flex-shrink-0 w-[40px] h-[40px] flex items-center justify-center rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 text-slate-200 font-bold text-sm shadow-inner mt-0.5">
+      <div className="flex gap-3.5 pt-4 pr-1 relative">
+        <div className="flex-shrink-0 w-10 sm:w-11 h-10 sm:h-11 flex items-center justify-center rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 text-slate-200 font-black text-[15px] sm:text-base shadow-xl mt-0.5 transform transition-transform group-hover:scale-105">
           {media.title.charAt(0).toUpperCase()}
         </div>
 
         <div className="flex flex-col min-w-0 pb-6 relative">
-          <h3 className="text-slate-100 font-semibold text-[15px] sm:text-[16px] line-clamp-2 leading-snug mb-1 group-hover:text-indigo-300 transition-colors">
+          <h3 className="text-slate-100 font-bold text-[14px] sm:text-[15px] lg:text-[16px] line-clamp-2 leading-[1.4] mb-1.5 group-hover:text-indigo-300 transition-colors tracking-tight">
             {media.title}
           </h3>
 
-          <div className="flex flex-col text-slate-400 text-[13px] font-medium">
-            <span className="flex items-center gap-1.5 hover:text-slate-200 transition-colors cursor-pointer group/official">
+          <div className="flex flex-col text-slate-500 text-[12px] sm:text-[13px] font-bold">
+            <span className="flex items-center gap-1.5 hover:text-slate-300 transition-colors cursor-pointer group/official uppercase tracking-wider text-[11px] sm:text-[12px]">
               Official Session
-              <CheckCircle className="w-4 h-4 text-indigo-400 group-hover/official:text-indigo-300" strokeWidth={2} />
+              <CheckCircle className="w-3.5 h-3.5 text-indigo-500/80 group-hover/official:text-indigo-400" strokeWidth={3} />
             </span>
-            <div className="flex items-center gap-1.5 mt-0.5 max-w-full truncate">
-              <span>{formatViews(media.views || 0)}</span>
-              <span className="text-[10px] opacity-60">•</span>
-              <span>{getTimeAgo(media.createdAt)}</span>
+            <div className="flex items-center gap-2 mt-1 font-medium opacity-80">
+              <span className="truncate">{formatViews(media.views || 0)}</span>
+              <span className="text-[10px] opacity-40">•</span>
+              <span className="truncate">{getTimeAgo(media.createdAt)}</span>
             </div>
           </div>
         </div>

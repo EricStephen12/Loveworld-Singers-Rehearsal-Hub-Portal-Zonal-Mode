@@ -153,7 +153,7 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
 }
 
 // Protected senior zones - members only visible to their own zone or boss users
-const SENIOR_ZONES = ['zone-president', 'zone-director', 'zone-oftp']
+const SENIOR_ZONES = ['zone-president', 'zone-president-2', 'zone-director', 'zone-oftp']
 const SENIOR_TITLES = ['president', 'director', 'oftp']
 
 /**

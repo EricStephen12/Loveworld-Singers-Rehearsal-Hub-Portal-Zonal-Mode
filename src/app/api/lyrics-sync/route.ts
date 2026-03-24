@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Lyrics Sync API - Uses Groq Whisper to align existing lyrics with audio timing
  * 
  * This endpoint takes an audio URL and existing lyrics text,
@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { audioUrl, songId, existingLyrics } = body;
+    const { audioUrl, songId, existingLyrics, provider = 'groq', modalUrl } = body;
+
+    const activeModalUrl = modalUrl || process.env.MODAL_SYNC_URL || process.env.NEXT_PUBLIC_MODAL_SYNC_URL;
 
     if (!audioUrl) {
       return NextResponse.json(
@@ -51,8 +53,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
- console.log(`💎 [LyricsSync] Starting sync for song ${songId} using Groq`);
+    // --- CASE 1: Modal.com (WhisperX Alignment) ---
+    if (provider === 'modal' || activeModalUrl) {
+      if (!activeModalUrl) {
+        return NextResponse.json(
+          { error: 'Modal Sync URL not configured' },
+          { status: 400 }
+        );
+      }
 
+      console.log(`💎 [LyricsSync] Calling Modal.com for song ${songId}`);
+      
+      // Increased timeout for Modal.com (serverless GPU cold start can take time)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
+
+      try {
+        const modalResponse = await fetch(activeModalUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            audio_url: audioUrl,
+            text: existingLyrics || ""
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!modalResponse.ok) {
+          const errorText = await modalResponse.text();
+          console.error('[LyricsSync] Modal error:', errorText);
+          return NextResponse.json(
+            { error: 'Modal Backend Error', details: errorText },
+            { status: 500 }
+          );
+        }
+
+        const modalData = await modalResponse.json();
+        return NextResponse.json({
+          success: true,
+          songId,
+          lrc: modalData.lrc,
+          provider: 'modal'
+        });
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          return NextResponse.json(
+            { error: 'Modal timeout: The AI server took too long to wake up. Please try again in a few seconds.' },
+            { status: 504 }
+          );
+        }
+        throw fetchError;
+      }
+    }
+
+    // --- CASE 2: Groq (Standard Whisper) ---
+    console.log(`💎 [LyricsSync] Starting sync for song ${songId} using Groq`);
+    
     // 1. Fetch the audio file from URL
     const audioResponse = await fetch(audioUrl);
     if (!audioResponse.ok) {

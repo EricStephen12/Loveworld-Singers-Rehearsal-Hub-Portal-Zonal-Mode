@@ -172,56 +172,56 @@ export default function PlaylistDetailPage() {
               </div>
             </div>
           ) : playlist ? (
-            <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row lg:p-8 gap-8">
+            <div className="max-w-[1700px] mx-auto flex flex-col lg:flex-row lg:p-8 gap-6 sm:gap-8">
               {/* Sidebar (YouTube Style) */}
               <div className="w-full lg:w-[360px] lg:flex-shrink-0 lg:sticky lg:top-24 lg:h-fit">
-                <div className="relative flex flex-col gap-6 p-4 lg:p-0">
+                <div className="relative flex flex-col gap-5 sm:gap-6 p-4 lg:p-0">
                   {/* Thumbnail */}
-                  <div className="aspect-video w-full relative rounded-xl overflow-hidden bg-slate-900 group shadow-2xl">
+                  <div className="aspect-video w-full relative rounded-[20px] sm:rounded-2xl overflow-hidden bg-slate-900 group shadow-2xl border border-white/5">
                     <img src={playlist.thumbnail || videos[0]?.thumbnail || ''} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={playAll} className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                      <button onClick={playAll} className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:scale-110 transition-transform border border-white/20">
                         <Play className="w-7 h-7 text-white fill-white" />
                       </button>
                     </div>
                   </div>
 
                   {/* Metadata */}
-                  <div className="space-y-6">
+                  <div className="space-y-5 sm:space-y-6">
                     <div>
-                      <h1 className="text-2xl font-bold leading-tight mb-2">{playlist.name}</h1>
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold leading-tight mb-2 text-slate-100 tracking-tight">{playlist.name}</h1>
                       <div className="space-y-1">
-                        <p className="text-sm font-bold text-white hover:text-white/80 cursor-pointer">{playlist.isAdmin ? 'LWS Official' : profile?.display_name || 'User'}</p>
-                        <p className="text-[13px] text-slate-400 font-medium">
+                        <p className="text-[13px] sm:text-[14px] font-bold text-slate-200 hover:text-white cursor-pointer transition-colors px-1">{playlist.isAdmin ? 'LWS Official' : profile?.display_name || 'User'}</p>
+                        <p className="text-[12px] sm:text-[13px] text-slate-400 font-medium px-1">
                           {totalItems} items • Updated {new Date(playlist.updatedAt).toLocaleDateString()}
                         </p>
-                        <div className="flex items-center gap-1.5 text-[12px] text-slate-400 mt-1 font-bold">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-2 font-black px-1">
                           {playlist.isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                          <span className="uppercase tracking-wider">{playlist.isPublic ? 'Public' : 'Private'}</span>
+                          <span className="uppercase tracking-[0.2em]">{playlist.isPublic ? 'Public' : 'Private'}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2.5 px-0.5">
                       <button onClick={playAll} disabled={videos.length === 0}
-                        className="flex-1 flex items-center justify-center gap-2 h-10 bg-white text-black rounded-full text-sm font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors">
-                        <Play className="w-4 h-4 fill-black" /> Play all
+                        className="flex-1 flex items-center justify-center gap-2 h-11 bg-slate-100 text-slate-900 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-bold hover:bg-white disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-white/5">
+                        <Play className="w-4 h-4 fill-slate-900" /> Play all
                       </button>
                       <button onClick={shufflePlay} disabled={videos.length === 0}
-                        className="flex-1 flex items-center justify-center gap-2 h-10 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-[#3f3f3f] disabled:opacity-50 transition-colors">
+                        className="flex-1 flex items-center justify-center gap-2 h-11 bg-slate-900/80 backdrop-blur-md text-white rounded-xl sm:rounded-full text-[13px] sm:text-sm font-bold hover:bg-slate-800 disabled:opacity-50 transition-all border border-white/10 active:scale-95">
                         <Shuffle className="w-4 h-4" /> Shuffle
                       </button>
                     </div>
 
                     {playlist.description && (
-                      <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed font-medium bg-slate-900/50 p-3 rounded-xl">{playlist.description}</p>
+                      <p className="text-[13px] sm:text-sm text-slate-400 whitespace-pre-wrap leading-relaxed font-medium bg-slate-900/50 p-4 rounded-2xl border border-white/5">{playlist.description}</p>
                     )}
 
                     {isOwner && (
                       <button onClick={() => { loadAddablePlaylists(); setShowAddPlaylistModal(true) }}
-                        className="flex items-center justify-center gap-2 w-full h-10 border border-white/10 hover:bg-white/5 text-white rounded-full text-sm font-bold transition-all">
+                        className="flex items-center justify-center gap-2 w-full h-11 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600/20 text-indigo-400 rounded-xl sm:rounded-full text-sm font-bold transition-all active:scale-95">
                         <Plus className="w-5 h-5" /> Add Items
                       </button>
                     )}
@@ -233,27 +233,27 @@ export default function PlaylistDetailPage() {
               <div className="flex-1 px-4 lg:px-0 pb-20">
                 {/* Sub-Playlists List */}
                 {nestedPlaylists.length > 0 && (
-                  <div className="mb-10">
-                    <h3 className="text-[13px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-2">Sub-Playlists</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-10 sm:mb-12">
+                    <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-5 px-4 lg:px-2">Sub-Playlists</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 px-2 lg:px-0">
                       {nestedPlaylists.map(nested => (
-                        <div key={nested.id} className="group flex items-center gap-4 p-3 bg-slate-900/50 hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-white/5">
+                        <div key={nested.id} className="group flex items-center gap-4 p-3 bg-slate-900/40 hover:bg-slate-900/60 rounded-2xl cursor-pointer transition-all border border-white/5">
                           <div onClick={() => router.push(`/pages/media/playlists/${nested.id}`)}
-                            className="w-28 aspect-video bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 relative group">
-                            <img src={nested.thumbnail || ''} className="w-full h-full object-cover" />
+                            className="w-24 sm:w-28 aspect-video bg-slate-950 rounded-xl overflow-hidden flex-shrink-0 relative group shadow-sm border border-white/5">
+                            <img src={nested.thumbnail || ''} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Play className="w-6 h-6 fill-white" />
                             </div>
-                            <div className="absolute bottom-1.5 right-1.5 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                            <div className="absolute bottom-1.5 right-1.5 bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[10px] font-bold border border-white/10">
                               {nested.videoIds.length} ITEMS
                             </div>
                           </div>
                           <div className="flex-1 min-w-0" onClick={() => router.push(`/pages/media/playlists/${nested.id}`)}>
-                            <h4 className="font-bold text-sm line-clamp-1">{nested.name}</h4>
-                            <p className="text-xs text-slate-400 font-medium">Playlist</p>
+                            <h4 className="font-bold text-[14px] sm:text-sm text-slate-100 line-clamp-1 group-hover:text-indigo-300 transition-colors tracking-tight">{nested.name}</h4>
+                            <p className="text-[12px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Playlist</p>
                           </div>
                           {isOwner && (
-                            <button onClick={() => handleRemoveNestedPlaylist(nested.id)} className="p-2.5 hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded-full transition-colors">
+                            <button onClick={() => handleRemoveNestedPlaylist(nested.id)} className="p-2.5 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-full transition-colors active:scale-90">
                               <Trash2 className="w-4.5 h-4.5" />
                             </button>
                           )}
@@ -264,37 +264,41 @@ export default function PlaylistDetailPage() {
                 )}
 
                 {/* Video Feed */}
-                <div className="space-y-2">
+                <div className="space-y-1 sm:space-y-2">
                   {videos.map((video, index) => (
-                    <div key={video.id} className="group flex items-center gap-4 p-2.5 rounded-xl hover:bg-slate-900 transition-all relative">
-                      <div className="w-6 text-[13px] text-slate-400 font-bold flex items-center justify-center">
+                    <div key={video.id} className="group flex items-center gap-3 sm:gap-4 p-2 sm:p-2.5 rounded-2xl hover:bg-slate-900/50 transition-all relative border border-transparent hover:border-white/5 overflow-hidden">
+                      <div className="hidden sm:flex w-6 text-[13px] text-slate-500 font-black flex items-center justify-center">
                         <span className="group-hover:hidden">{index + 1}</span>
                         <Play className="hidden group-hover:block w-3.5 h-3.5 text-white fill-white" />
                       </div>
 
                       <div onClick={() => router.push(`/pages/media/player/${video.id}?playlist=${playlistId}`)}
-                        className="w-36 sm:w-44 aspect-video bg-slate-900 rounded-xl overflow-hidden flex-shrink-0 relative cursor-pointer">
-                        <img src={video.thumbnail} className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1.5 right-1.5 bg-black/80 px-1.5 rounded text-[11px] font-bold tabular-nums">
+                        className="w-[124px] sm:w-44 aspect-video bg-slate-950 rounded-[12px] sm:rounded-xl overflow-hidden flex-shrink-0 relative cursor-pointer shadow-sm border border-white/5">
+                        <img src={video.thumbnail} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <span className="absolute bottom-1.5 right-1.5 bg-black/80 backdrop-blur-md px-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold tabular-nums border border-white/10">
                           {video.duration || "HQ"}
                         </span>
                       </div>
 
                       <div className="flex-1 min-w-0" onClick={() => router.push(`/pages/media/player/${video.id}?playlist=${playlistId}`)}>
-                        <h4 className="font-bold text-[15px] sm:text-base line-clamp-2 leading-tight mb-1 text-white">{video.title}</h4>
-                        <p className="text-[13px] text-slate-400 font-medium">LWS Official • {(video.views || 0).toLocaleString()} views</p>
+                        <h4 className="font-bold text-[14px] sm:text-[15px] lg:text-[16px] line-clamp-2 leading-[1.3] text-slate-100 tracking-tight mb-1 group-hover:text-indigo-300 transition-colors uppercase sm:normal-case">{video.title}</h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <p className="text-[11px] sm:text-[13px] text-slate-500 font-bold uppercase tracking-wider truncate">LWS Official</p>
+                          <div className="hidden sm:block text-slate-700">•</div>
+                          <p className="text-[11px] sm:text-[13px] text-slate-500 font-medium truncate">{(video.views || 0).toLocaleString()} views</p>
+                        </div>
                       </div>
 
                       {isOwner && (
-                        <div className="relative">
-                          <button onClick={() => setMenuOpen(menuOpen === video.id ? null : video.id)} className="p-2.5 hover:bg-white/10 text-slate-400 hover:text-white rounded-full transition-colors">
+                        <div className="relative flex-shrink-0">
+                          <button onClick={() => setMenuOpen(menuOpen === video.id ? null : video.id)} className="p-2.5 hover:bg-white/5 text-slate-500 hover:text-white rounded-full transition-colors active:scale-90">
                             <MoreVertical className="w-5 h-5" />
                           </button>
                           {menuOpen === video.id && (
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
-                              <div className="absolute right-10 top-0 bg-[#282828] rounded-xl shadow-2xl z-20 py-1 min-w-[160px] border border-white/10 overflow-hidden">
-                                <button onClick={() => handleRemoveVideo(video.id)} className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 text-red-500 text-sm font-bold">
+                              <div className="absolute right-10 top-0 bg-slate-900 rounded-2xl shadow-2xl z-20 py-1.5 min-w-[200px] border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                <button onClick={() => handleRemoveVideo(video.id)} className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-red-500/10 text-red-400 text-[13px] font-bold transition-colors">
                                   <Trash2 className="w-4.5 h-4.5" /> Remove from playlist
                                 </button>
                               </div>

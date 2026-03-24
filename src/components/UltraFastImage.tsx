@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { sanitizeImageUrl } from '@/utils/image-utils';
 
 interface UltraFastImageProps {
   src: string;
@@ -58,7 +59,8 @@ export default function UltraFastImage({
     return originalSrc;
   };
 
-  const optimizedSrc = getUltraOptimizedSrc(src);
+  const { sanitizeImageUrl } = require('@/utils/image-utils');
+  const optimizedSrc = sanitizeImageUrl(getUltraOptimizedSrc(src), 'banner');
 
   const handleLoad = () => {
     setIsLoaded(true);

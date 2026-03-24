@@ -27,7 +27,7 @@ export class SessionManager {
 
   // Emails and zones that are permanently exempt from kickout
   private static readonly EXEMPT_EMAILS = ['takeshopstores@gmail.com']
-  private static readonly EXEMPT_ZONES = ['zone-president', 'zone-oftp']
+  private static readonly EXEMPT_ZONES = ['zone-president', 'zone-president-2', 'zone-oftp']
 
   // Generate unique device ID (Persist in SessionStorage to survive reloads)
   static generateDeviceId(forceNew: boolean = false): string {
@@ -229,16 +229,42 @@ export class SessionManager {
   // Fetch profile once and set the isExempt flag permanently for this session
   static async checkAndSetExemption(userId: string): Promise<void> {
     try {
+      // Synchronous check: if we already have it in localStorage, set it immediately
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('lwsrh_is_exempt')
+        if (cached === 'true') {
+          SessionManager.isExempt = true
+        }
+      }
+
       const profileRef = doc(db, 'profiles', userId)
       const profileSnap = await getDoc(profileRef)
       if (profileSnap.exists()) {
         const profile = profileSnap.data()
         const email = (profile.email || '').toLowerCase()
+        
+        // 1. Explicit Email/Zone Exemption (Legacy)
         const isExemptByEmail = SessionManager.EXEMPT_EMAILS.includes(email)
         const isExemptByZone = profile.zone && SessionManager.EXEMPT_ZONES.includes(profile.zone)
-        SessionManager.isExempt = isExemptByEmail || !!isExemptByZone
+        
+        // 2. Role-Based Exemption (Admins, HQ Admins, Bosses)
+        const isExemptByRole = ['super_admin', 'boss', 'hq_admin', 'admin'].includes(profile.role)
+        
+        // 3. HQ Email-Based Exemption (Single Source of Truth)
+        const { isHQAdminEmail } = await import('@/config/roles')
+        const isExemptByHQEmail = isHQAdminEmail(email)
+
+        SessionManager.isExempt = isExemptByEmail || !!isExemptByZone || isExemptByRole || isExemptByHQEmail
+
         if (SessionManager.isExempt) {
-          console.log(`[Session] 🛡️ Exempt flag SET for ${email} — this account will NEVER be kicked out`)
+          console.log(`[Session] 🛡️ Exempt flag SET for ${email} (Role: ${profile.role}) — Concurrent device use ENABLED.`)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lwsrh_is_exempt', 'true')
+          }
+        } else {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lwsrh_is_exempt', 'false')
+          }
         }
       }
     } catch (e) {
@@ -247,10 +273,13 @@ export class SessionManager {
   }
 
   // Start tracking user session validity
-  static startActivityTracking(userId: string): void {
+  static async startActivityTracking(userId: string): Promise<void> {
     if (this.sessionListener) {
       this.sessionListener() // Unsubscribe pending
     }
+
+    // Check exemption FIRST and await it to prevent race condition with onSnapshot
+    await this.checkAndSetExemption(userId)
 
     // Ensure we have an ID
     if (!this.deviceId) {
@@ -259,16 +288,11 @@ export class SessionManager {
 
     // ALWAYS read sessionId from localStorage — this is shared across all tabs
     // in the same browser, so same-browser tabs will never mismatch each other.
-    // A mismatch only happens when a NEW login from a different browser/device
-    // overwrites the Firestore session with a completely different sessionId.
     if (typeof window !== 'undefined') {
       this.sessionId = localStorage.getItem('lwsrh_session_id') || this.sessionId
     }
 
     console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
-
-    // Check exemption ONCE upfront and cache result — avoids async delay during kickout
-    SessionManager.checkAndSetExemption(userId)
 
     const sessionRef = doc(db, 'user_sessions', userId)
     // Real-time listener (Push Model - Industry Standard)
@@ -305,13 +329,43 @@ export class SessionManager {
         // This catches: login from a different device/browser which created a new sessionId.
         if (data.sessionId && this.sessionId && data.sessionId !== this.sessionId) {
           
-          // Transient Sync Guard: Wait 2 seconds and re-check (avoids metadata race conditions)
+          // 1. Tab-Sync Check: Did another tab in THIS browser already update our session?
+          const sharedSessionId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
+          if (sharedSessionId === data.sessionId) {
+            console.log(`[Session] 🔄 Adopting session updated by another tab: ${data.sessionId}`)
+            this.sessionId = data.sessionId
+            return
+          }
+
+          // 2. Multi-Device Conflict Verification
+          // Wait 2 seconds and re-verify from server (avoids local cache flutters)
           await new Promise(resolve => setTimeout(resolve, 2000))
           
           const latestSnap = await getDoc(sessionRef)
           const latestData = latestSnap.data() as UserSession
           
+          // Final check: if the shared storage ID changed WHILE we were waiting, adopt it
+          const finalSharedId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
+          if (finalSharedId === latestData?.sessionId && finalSharedId !== this.sessionId) {
+            console.log(`[Session] 🔄 Syncing with session from another tab (post-wait): ${finalSharedId}`)
+            this.sessionId = finalSharedId!
+            return
+          }
+
           if (!latestData || (latestData.sessionId && latestData.sessionId !== this.sessionId)) {
+            // 3. Same-Device Identity Check
+            // If the DeviceID in Firestore matches ours, it's a re-login on the same browser/app.
+            // We should adopt the session rather than kicking the user out.
+            const myDeviceId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_device_id') : this.deviceId
+            if (latestData?.deviceId === myDeviceId) {
+              console.log('[Session] 📱 Same device, different session instance. Adopting.')
+              this.sessionId = latestData.sessionId
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('lwsrh_session_id', this.sessionId)
+              }
+              return
+            }
+
             console.warn(`[Session] 💀 Session Mismatch! Active=${latestData?.sessionId} vs Me=${this.sessionId}`)
             this.handleSessionTermination()
           }
@@ -346,14 +400,10 @@ export class SessionManager {
 
     try {
       await signOut(auth)
-
+      SessionManager.clearSessionState()
+      
       // Force redirect to login with message
       if (typeof window !== 'undefined') {
-        // Clear local storage
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('userId')
-        localStorage.removeItem('lwsrh_has_user') // Clear cache flag
-
         window.location.href = '/auth?error=session_taken_over&message=You were logged out because this account was used on another device.'
       }
     } catch (e) {
@@ -390,5 +440,19 @@ export class SessionManager {
     } catch (error) {
  console.error('Error force logging out user:', error)
     }
+  }
+
+  // Clear all local session state
+  static clearSessionState(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('lwsrh_has_user')
+      localStorage.removeItem('lwsrh_is_exempt')
+      localStorage.removeItem('lwsrh_session_id')
+      localStorage.removeItem('lwsrh_device_id')
+    }
+    this.sessionId = ''
+    this.isExempt = false
   }
 }

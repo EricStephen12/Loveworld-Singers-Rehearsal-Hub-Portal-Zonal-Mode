@@ -30,7 +30,6 @@ import { CallProvider } from '@/contexts/CallContext'
 import { CallOverlay } from '@/components/CallOverlay'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import { PermissionProvider } from '@/contexts/PermissionContext'
-import '@/utils/safeAreaManager'
 import { disableConsoleLogs } from "@/utils/disable-logs"
 import AppBootstrap from '@/components/AppBootstrap'
 import { PageLoader } from '@/components/PageLoader'

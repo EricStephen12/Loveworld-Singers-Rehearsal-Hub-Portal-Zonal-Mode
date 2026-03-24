@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useMemo, useState } from 'react';
 import { 
@@ -13,6 +13,7 @@ import {
 import { Toast } from '../Toast';
 import MediaSelectionModal from '../MediaSelectionModal';
 import { useAdminTheme } from './AdminThemeProvider';
+import { sanitizeImageUrl } from '@/utils/image-utils';
 
 interface PageCategory {
   id: string;
@@ -212,14 +213,12 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                     onClick={() => onPageClick?.(page)}
                     className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                   >
-                    {page.bannerImage && (
                       <img
-                        src={page.bannerImage}
+                        src={sanitizeImageUrl(page.bannerImage, 'banner')}
                         alt={page.name}
                         className="w-full h-32 object-cover rounded-lg mb-3"
                       />
-                    )}
-                    <h4 className="font-semibold text-slate-900 mb-1">{page.name}</h4>
+                      <h4 className="font-semibold text-slate-900 mb-1">{page.name}</h4>
                     <p className="text-sm text-slate-500">{page.date}</p>
                     <p className="text-sm text-slate-500">{page.location}</p>
                     <div className="mt-2">
@@ -259,9 +258,9 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                   >
                     {/* Category Image/Icon */}
                     <div className="flex-shrink-0">
-                      {category.image ? (
+                      {sanitizeImageUrl(category.image, 'icon') ? (
                         <img 
-                          src={category.image} 
+                          src={sanitizeImageUrl(category.image, 'banner')} 
                           alt={category.name}
                           className="w-14 h-14 rounded-xl object-cover ring-2 ring-white shadow-sm"
                         />
@@ -320,9 +319,9 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
                           {pageCount} {pageCount === 1 ? 'page' : 'pages'}
                         </span>
                       </div>
-                      {category.image && (
+                      {sanitizeImageUrl(category.image, 'icon') && (
                         <img 
-                          src={category.image} 
+                          src={sanitizeImageUrl(category.image, 'banner')} 
                           alt={category.name}
                           className="w-full h-24 object-cover rounded mb-2"
                         />

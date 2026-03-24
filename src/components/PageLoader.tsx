@@ -129,17 +129,18 @@ export function PageLoader({ children }: PageLoaderProps) {
     return !!cache;
   };
 
-  // No Double Loaders: 
-  // If we're optimistically ready or have a cached session, we show the app content immediately.
-  // The pages (like Home) will show their own Skeletons.
-  const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
+  const [mounted, setMounted] = useState(false);
 
-  if (!isReady && !hasAuthCache) {
-    // DIAGNOSTIC LOG (Silent in prod mostly, but helpful for this fix)
-    if (typeof window !== 'undefined' && !window.location.host.includes('localhost')) {
- console.log(' PageLoader: Showing initial spinner (No cache found)');
-    }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
+  // Use a ref for the auth cache to avoid reading it on every render, 
+  // but we still need it to be consistent with the initial client render.
+  // HOWEVER, to avoid hydration mismatch, we MUST render the same as the server first.
+  const hasAuthCache = mounted && typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
+
+  if (!mounted || (!isReady && !hasAuthCache)) {
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />

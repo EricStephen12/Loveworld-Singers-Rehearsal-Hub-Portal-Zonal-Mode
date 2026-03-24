@@ -48,6 +48,28 @@ export const ZONES: Zone[] = [
       }
     ]
   },
+  {
+    id: 'zone-president-2',
+    name: 'The President 2 Zone',
+    slug: 'president-2-zone',
+    region: 'Headquarters',
+    invitationCode: 'ZONEPRES2',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
   { id: 'zone-director', name: 'The Director Zone', slug: 'director-zone', region: 'Headquarters', invitationCode: 'ZONEDIR', themeColor: '#9333EA' },
   { id: 'zone-oftp', name: 'OFTP Pastors Zone', slug: 'oftp-zone', region: 'Headquarters', invitationCode: 'ZONEOFTP', themeColor: '#9333EA' },
   { id: 'zone-oftd', name: 'Office of the Director', slug: 'oftd-zone', region: 'Headquarters', invitationCode: 'ZONEOFTD', themeColor: '#9333EA' },
@@ -216,7 +238,7 @@ export const BOSS_ZONE_ID = 'zone-boss'
 // HQ groups - these use unfiltered Firebase data
 export const HQ_GROUP_IDS = [
   'zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005',
-  'zone-orchestra', 'zone-president', 'zone-director', 'zone-oftp', 'zone-oftd', 'zone-national', 'zone-international'
+  'zone-orchestra', 'zone-president', 'zone-president-2', 'zone-director', 'zone-oftp', 'zone-oftd', 'zone-national', 'zone-international'
 ]
 
 export function isHQGroup(zoneId: string | undefined): boolean {

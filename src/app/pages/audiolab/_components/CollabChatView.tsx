@@ -1,12 +1,13 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ChevronLeft, Play, Send, Mic, Users,
   Smile, Check, CheckCheck, Clock,
-  Trash2, LogOut, Copy, Pause, StopCircle
+  Trash2, LogOut, Copy, Pause, StopCircle, AlertTriangle
 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -55,6 +56,16 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
   const [recordingTime, setRecordingTime] = useState(0);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // Confirmation states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    type: 'delete-message' | 'end-session' | 'leave-session',
+    item?: any,
+    title: string,
+    message: string,
+    confirmLabel: string
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -196,24 +207,55 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
   };
 
   // Delete message
-  const handleDelete = async (id: string) => {
-    if (!sessionId || !user?.uid || !confirm('Delete this message?')) return;
-    await deleteMessage(sessionId, id, user.uid);
-    setMessages(prev => prev.filter(m => m.id !== id));
+  const handleDelete = (id: string) => {
+    setConfirmConfig({
+      type: 'delete-message',
+      item: id,
+      title: 'Delete Message',
+      message: 'Are you sure you want to delete this message? This action cannot be undone.',
+      confirmLabel: 'Delete'
+    });
+    setShowConfirmModal(true);
   };
 
   // End/Leave session
-  const handleEndSession = async () => {
-    if (!sessionId || !user?.uid) return;
+  const handleEndSession = () => {
     if (isHost) {
-      if (!confirm('End this session for everyone?')) return;
-      await endSession(sessionId);
+      setConfirmConfig({
+        type: 'end-session',
+        title: 'End Session',
+        message: 'Are you sure you want to end this session for everyone? All participants will be disconnected.',
+        confirmLabel: 'End Session'
+      });
     } else {
-      if (!confirm('Leave this session?')) return;
-      await leaveSession(sessionId, user.uid, fullName);
+      setConfirmConfig({
+        type: 'leave-session',
+        title: 'Leave Session',
+        message: 'Are you sure you want to leave this session?',
+        confirmLabel: 'Leave'
+      });
     }
-    clearSession?.();
-    setView('collab');
+    setShowConfirmModal(true);
+  };
+
+  const executeConfirmedAction = async () => {
+    if (!confirmConfig || !sessionId || !user?.uid) return;
+
+    if (confirmConfig.type === 'delete-message') {
+      await deleteMessage(sessionId, confirmConfig.item, user.uid);
+      setMessages(prev => prev.filter(m => m.id !== confirmConfig.item));
+    } else if (confirmConfig.type === 'end-session') {
+      await endSession(sessionId);
+      clearSession?.();
+      setView('collab');
+    } else if (confirmConfig.type === 'leave-session') {
+      await leaveSession(sessionId, user.uid, fullName);
+      clearSession?.();
+      setView('collab');
+    }
+
+    setShowConfirmModal(false);
+    setConfirmConfig(null);
   };
 
   // Copy session code
@@ -367,6 +409,18 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
           )}
         </div>
       </footer>
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        title={confirmConfig?.title || 'Confirmation'}
+        message={confirmConfig?.message || ''}
+        confirmLabel={confirmConfig?.confirmLabel}
+        onConfirm={executeConfirmedAction}
+        onCancel={() => {
+          setShowConfirmModal(false);
+          setConfirmConfig(null);
+        }}
+        isDanger={true}
+      />
     </div>
   );
 }

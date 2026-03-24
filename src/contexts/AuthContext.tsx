@@ -73,6 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Start Session Tracking (Kick-Out Logic)
       if (firebaseUser) {
         SessionManager.startActivityTracking(firebaseUser.uid)
+      } else {
+        // Clear all tracking and exemptions on logout
+        SessionManager.clearSessionState()
       }
 
       // Update cache for instant next load

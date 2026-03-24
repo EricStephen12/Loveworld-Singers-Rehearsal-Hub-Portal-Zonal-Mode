@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import {
+  ListVideo, MoreVertical, Trash2, Play, ThumbsUp, Clock,
+  Globe, Plus, Lock, X, AlertTriangle, Search, Mic, Music, RefreshCw, ChevronDown, Sparkles, ArrowLeft, ListMusic
+} from 'lucide-react';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Mic, Music, RefreshCw, ChevronDown, Sparkles, ArrowLeft, ListMusic, Plus } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudio } from '@/contexts/AudioContext';
 import { useAudioLab } from '../_context/AudioLabContext';
@@ -66,6 +70,11 @@ export function LibraryView() {
   const [lastVisibleDoc, setLastVisibleDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(state.libraryData.lastDoc || null);
   const [hasMore, setHasMore] = useState(state.libraryData.hasMore);
   const [error, setError] = useState<string | null>(null);
+
+  // Confirmation states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteType, setDeleteType] = useState<'playlist' | 'song'>('playlist');
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, title: string, playlistId?: string } | null>(null);
 
   // Helper for de-duplication
   const getUniqueSongs = useCallback((inputSongs: Song[] | AudioLabSong[]) => {
@@ -312,15 +321,34 @@ export function LibraryView() {
     return () => unsubscribe();
   }, [currentZone?.id, selectedProgramId, praiseNightPages]);
 
-  const handleDeletePlaylist = async () => {
+  const openDeletePlaylistConfirm = () => {
     if (!activePlaylist) return;
-    const confirm = window.confirm(`Are you sure you want to delete "${activePlaylist.title}"?`);
-    if (confirm) {
-      const success = await deleteUserPlaylist(activePlaylist.id);
+    setDeleteType('playlist');
+    setItemToDelete({ id: activePlaylist.id, title: activePlaylist.title });
+    setShowDeleteModal(true);
+  };
+
+  const openDeleteSongConfirm = (song: Song) => {
+    if (!activePlaylist) return;
+    setDeleteType('song');
+    setItemToDelete({ id: song.id, title: song.title, playlistId: activePlaylist.id });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    if (deleteType === 'playlist') {
+      const success = await deleteUserPlaylist(itemToDelete.id);
       if (success) {
         setView('home');
       }
+    } else if (deleteType === 'song' && itemToDelete.playlistId) {
+      await removeSongFromUserPlaylist(itemToDelete.playlistId, itemToDelete.id);
     }
+
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const handleCreatePlaylist = useCallback(() => {
@@ -505,7 +533,7 @@ export function LibraryView() {
           </div>
           {isPlaylistView && (
             <button
-              onClick={handleDeletePlaylist}
+              onClick={openDeletePlaylistConfirm}
               className="text-red-400/70 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-colors text-xs font-bold uppercase tracking-wider"
             >
               Delete
@@ -660,9 +688,7 @@ export function LibraryView() {
                         duration={isThisSongPlaying ? duration : (song.duration || 0)}
                         onClick={() => handleOpenDetail(song)}
                         onRemove={isPlaylistView ? async () => {
-                          if (activePlaylist && window.confirm(`Remove "${song.title}" from this playlist?`)) {
-                            await removeSongFromUserPlaylist(activePlaylist.id, song.id);
-                          }
+                          openDeleteSongConfirm(song);
                         } : undefined}
                         onAdd={!isPlaylistView ? () => {
                           setSongToAddToPlaylist(song);
@@ -741,6 +767,23 @@ export function LibraryView() {
           }}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title={deleteType === 'playlist' ? 'Delete Playlist' : 'Remove Song'}
+        message={
+          deleteType === 'playlist' 
+            ? `Are you sure you want to delete "${itemToDelete?.title}"? This action cannot be undone.`
+            : `Are you sure you want to remove "${itemToDelete?.title}" from this playlist?`
+        }
+        confirmLabel={deleteType === 'playlist' ? 'Delete' : 'Remove'}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setItemToDelete(null);
+        }}
+        isDanger={true}
+      />
     </div>
   );
 }

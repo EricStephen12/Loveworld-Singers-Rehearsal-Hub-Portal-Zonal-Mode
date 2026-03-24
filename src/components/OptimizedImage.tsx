@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { sanitizeImageUrl } from '@/utils/image-utils';
 
 interface OptimizedImageProps {
   src: string;
@@ -57,7 +58,8 @@ export default function OptimizedImage({
     return originalSrc;
   };
 
-  const optimizedSrc = getOptimizedSrc(src);
+  const { sanitizeImageUrl } = require('@/utils/image-utils');
+  const optimizedSrc = sanitizeImageUrl(getOptimizedSrc(src), 'banner');
 
   const handleLoad = () => {
     setIsLoaded(true);

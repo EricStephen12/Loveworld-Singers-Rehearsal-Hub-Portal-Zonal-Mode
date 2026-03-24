@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Hash, Mic, Copy, Users, Volume2, MicOff, Share2, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Hash, Mic, Copy, Users, Volume2, MicOff, Share2, Trash2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { useAudioLab } from '../_context/AudioLabContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useZone } from '@/hooks/useZone';
@@ -32,6 +33,10 @@ export function CollabView() {
   const [classroomName, setClassroomName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+
+  // Confirmation states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [classroomToDelete, setClassroomToDelete] = useState<{ id: string, title: string } | null>(null);
 
   const fullName = profile?.first_name
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
@@ -173,23 +178,28 @@ export function CollabView() {
     alert(`Room code "${code}" copied to clipboard!`);
   };
 
-  const handleDeleteClassroom = async (classroomId: string, title: string) => {
+  const handleDeleteClassroom = (classroomId: string, title: string) => {
     if (!user?.uid) return;
+    setClassroomToDelete({ id: classroomId, title });
+    setShowDeleteModal(true);
+  };
 
-    const confirmed = window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`);
-    if (!confirmed) return;
+  const confirmDeleteClassroom = async () => {
+    if (!user?.uid || !classroomToDelete) return;
 
     try {
-      const result = await deleteClassroom(classroomId, user.uid);
+      const result = await deleteClassroom(classroomToDelete.id, user.uid);
       if (result.success) {
-        alert('Classroom deleted successfully!');
         loadData(); // Refresh the list
       } else {
         alert(result.error || 'Failed to delete classroom');
       }
     } catch (error) {
- console.error('[CollabView] Delete error:', error);
+      console.error('[CollabView] Delete error:', error);
       alert('Error deleting classroom');
+    } finally {
+      setShowDeleteModal(false);
+      setClassroomToDelete(null);
     }
   };
 
@@ -383,6 +393,18 @@ export function CollabView() {
           </div>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Classroom"
+        message={`Are you sure you want to delete "${classroomToDelete?.title}"? This action cannot be undone and all data associated with this classroom will be lost.`}
+        confirmLabel="Delete"
+        onConfirm={confirmDeleteClassroom}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setClassroomToDelete(null);
+        }}
+        isDanger={true}
+      />
     </div>
   );
 }
