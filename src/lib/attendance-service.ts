@@ -1,4 +1,5 @@
 import { FirebaseDatabaseService } from './firebase-database'
+import { HQ_GROUP_IDS, BOSS_ZONE_ID } from '@/config/zones'
 
 export interface AttendanceRecord {
   id?: string
@@ -6,11 +7,13 @@ export interface AttendanceRecord {
   event_type: 'rehearsal' | 'service' | 'event'
   event_name: string
   check_in_time: string
+  check_out_time?: string
   qr_code_used?: string
   status: 'present' | 'late' | 'absent'
   notes?: string
   zone_id?: string // Added to support zone-filtering for admins
   created_at?: string
+  date_string: string // "YYYY-MM-DD" for easy daily queries/filtering
 }
 
 export class AttendanceService {
@@ -23,54 +26,76 @@ export class AttendanceService {
         return { success: false, message: 'Invalid or expired QR code' }
       }
 
-      // Ensure the QR code was generated for THIS user (admin uses the scanner, but userId is extracted from the QR)
+      // Ensure the QR code was generated for THIS user (admin uses the scanner)
       const scannedUserId = qrData.userId
       if (!scannedUserId) {
         return { success: false, message: 'Invalid QR code format' }
       }
 
-      const today = new Date().toISOString().split('T')[0]
-      // Get today's attendance records for the scanned user
-      const todayStart = new Date(`${today}T00:00:00`).getTime()
+      // Use LOCAL date string for daily tracking to avoid UTC midnight shifts
+      const now = new Date()
+      const dateString = now.toLocaleDateString('en-CA') // Format: YYYY-MM-DD
+      const timestampString = now.toISOString()
 
-      const existingRecords = await FirebaseDatabaseService.getCollectionWhere(
+      // Get today's attendance record for this user and event
+      const records = (await FirebaseDatabaseService.getCollectionWhere(
         'attendance',
         'user_id',
         '==',
         scannedUserId
+      )) as any[]
+
+      // Filter for specific date and event name in JS (or use compound query if indexed)
+      const existingRecord = records.find((r: any) =>
+        r.date_string === dateString && r.event_name === eventName
       )
 
-      // Filter for today AND same event
-      const alreadyCheckedIn = existingRecords.some((record: any) => {
-        if (record.event_name !== eventName) return false
+      const fullName = await this.getUserFullName(scannedUserId)
 
-        let recordTime = 0
-        if (record.check_in_time) {
-          recordTime = new Date(record.check_in_time).getTime()
-        } else if (record.createdAt) {
-          // Fallback to Firestore createdAt if available
-          recordTime = new Date(record.createdAt).getTime()
+      if (existingRecord) {
+        // If already clocked out, don't allow more scans (or update clock-out again)
+        if (existingRecord.check_out_time) {
+          // Update clock-out again (allows user to re-scan if they left then came back then left again)
+          const updatedData = {
+            check_out_time: timestampString,
+            updatedAt: new Date()
+          }
+          await FirebaseDatabaseService.updateDocument('attendance', existingRecord.id, updatedData)
+
+          return {
+            success: true,
+            message: `${fullName} re-clocked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            record: { ...existingRecord, ...updatedData } as any
+          }
         }
 
-        return recordTime >= todayStart
-      })
+        // Logic: already clocked in, but no clock out. Perform CLOCK OUT.
+        const updateData = {
+          check_out_time: timestampString,
+          updatedAt: new Date()
+        }
 
-      if (alreadyCheckedIn) {
-        return { success: false, message: 'This user has already checked in for this event today' }
+        const updateResult = await FirebaseDatabaseService.updateDocument('attendance', existingRecord.id, updateData)
+        if (!updateResult.success) throw new Error('Failed to update check-out')
+
+        return {
+          success: true,
+          message: `${fullName} clocked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          record: { ...existingRecord, ...updateData } as any
+        }
       }
 
-      // Create attendance record
-      const checkInTime = new Date().toISOString()
-      const status = this.determineStatus()
+      // No record for today: perform CLOCK IN
       const attendanceData = {
         user_id: scannedUserId,
         event_type: 'rehearsal',
         event_name: eventName,
-        check_in_time: checkInTime,
+        check_in_time: timestampString,
+        date_string: dateString,
         qr_code_used: qrCode,
-        status: status,
+        status: this.determineStatus(),
         notes: 'Checked in via QR code',
-        zone_id: zoneId || null, // Connect record to the zone that scanned it
+        zone_id: zoneId || null,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -81,30 +106,14 @@ export class AttendanceService {
         throw new Error('Failed to save to database')
       }
 
-      // Format response exactly as frontend expects
-      const newRecord: AttendanceRecord = {
-        id: result.id,
-        user_id: scannedUserId,
-        event_type: 'rehearsal',
-        event_name: eventName,
-        check_in_time: checkInTime,
-        qr_code_used: qrCode,
-        status: status,
-        notes: 'Checked in via QR code',
-        zone_id: zoneId || undefined,
-        created_at: checkInTime
-      }
-
-      const fullName = await this.getUserFullName(scannedUserId)
-
       return {
         success: true,
-        message: `Successfully checked in ${fullName}`,
-        record: newRecord
+        message: `${fullName} clocked in at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        record: { ...attendanceData, id: result.id } as any
       }
     } catch (error) {
- console.error('Check-in error:', error)
-      return { success: false, message: 'Failed to check in. Please try again.' }
+      console.error('Check-in error:', error)
+      return { success: false, message: 'Failed to process attendance. Please try again.' }
     }
   }
 
@@ -156,8 +165,9 @@ export class AttendanceService {
       let records: any[] = []
 
       if (isHQ) {
-        // HQ can see all global attendance
-        records = await FirebaseDatabaseService.getCollection('attendance', limitCount)
+        // HQ Admin should only see records from HQ-specific zones
+        const hqZones = [...HQ_GROUP_IDS, BOSS_ZONE_ID]
+        records = await FirebaseDatabaseService.getCollectionWhereIn('attendance', 'zone_id', hqZones)
       } else {
         // Regular zone sees ONLY their zone's check-ins
         records = await FirebaseDatabaseService.getCollectionWhere(
