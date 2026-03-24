@@ -215,7 +215,8 @@ export function MasterSongDetailSheet({
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Conductor
                     </span>
-                    <span className="text-slate-900 italic">
+                    <span className="flex items-center gap-1.5 text-slate-900 italic">
+                      <Mic size={14} className="sm:w-3 sm:h-3 text-violet-500" />
                       {song.conductor}
                     </span>
                   </div>
@@ -225,7 +226,8 @@ export function MasterSongDetailSheet({
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Lead Keyboard
                     </span>
-                    <span className="text-slate-900">
+                    <span className="flex items-center gap-1.5 text-slate-900">
+                      <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
                       {song.leadKeyboardist}
                     </span>
                   </div>
@@ -235,7 +237,8 @@ export function MasterSongDetailSheet({
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Bass Guitar
                     </span>
-                    <span className="text-slate-900">
+                    <span className="flex items-center gap-1.5 text-slate-900">
+                      <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
                       {song.bassGuitarist}
                     </span>
                   </div>
@@ -245,7 +248,8 @@ export function MasterSongDetailSheet({
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Drummer
                     </span>
-                    <span className="text-slate-900">
+                    <span className="flex items-center gap-1.5 text-slate-900">
+                      <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
                       {song.drummer}
                     </span>
                   </div>

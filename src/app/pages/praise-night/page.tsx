@@ -23,6 +23,7 @@ import { useRealtimeSong } from "@/hooks/useRealtimeSong";
 import { FirebaseMetadataService } from "@/lib/firebase-metadata-service";
 import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
+import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 import { isHQGroup } from '@/config/zones';
 import { getMenuItems } from "@/config/menuItems";
 import { useAudio } from "@/contexts/AudioContext";
@@ -141,6 +142,11 @@ function PraiseNightPageContent() {
   const [pageCategories, setPageCategories] = useState<any[]>([]);
   const [loadingPageCategories, setLoadingPageCategories] = useState(true);
 
+  // 📂 Global Archive Search states
+  const [allArchiveSongs, setAllArchiveSongs] = useState<PraiseNightSong[]>([]);
+  const [isGlobalSearchLoading, setIsGlobalSearchLoading] = useState(false);
+  const [hasLoadedAllSongs, setHasLoadedAllSongs] = useState(false);
+
   // Load songs on demand like admin does
   const [allSongsFromFirebase, setAllSongsFromFirebase] = useState<PraiseNightSong[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
@@ -214,7 +220,74 @@ function PraiseNightPageContent() {
     }
 
     return filtered;
-  }, [allPraiseNights, categoryFilter, selectedPageCategory, loading]);
+  }, [allPraiseNights, categoryFilter, selectedPageCategory, loading, archiveSearchQuery]);
+
+  // Global search implementation: Fetch all songs for the zone if searching in top-level Archive
+  useEffect(() => {
+    const fetchAllSongsForSearch = async () => {
+      // Only trigger if: 
+      // 1. In Archive mode
+      // 2. No specific page is selected (top-level search)
+      // 3. There is a search query
+      // 4. We haven't loaded all songs yet
+      if (
+        categoryFilter === 'archive' && 
+        !pageParam && 
+        archiveSearchQuery.trim().length >= 2 && 
+        !hasLoadedAllSongs && 
+        currentZone?.id
+      ) {
+        setIsGlobalSearchLoading(true);
+        try {
+          const songs = await PraiseNightSongsService.getAllSongs(currentZone.id);
+          setAllArchiveSongs(songs);
+          setHasLoadedAllSongs(true);
+        } catch (error) {
+  console.error('Error fetching global archive songs:', error);
+        } finally {
+          setIsGlobalSearchLoading(false);
+        }
+      }
+    };
+
+    fetchAllSongsForSearch();
+  }, [categoryFilter, pageParam, archiveSearchQuery, hasLoadedAllSongs, currentZone?.id]);
+
+  // Compute global search results
+  const globalSearchResults = useMemo(() => {
+    if (categoryFilter !== 'archive' || pageParam || archiveSearchQuery.trim().length < 2) {
+      return [];
+    }
+
+    const query = archiveSearchQuery.toLowerCase().trim();
+    
+    // Filter allArchiveSongs:
+    // 1. Match the search query
+    // 2. Ensure the parent page is an "archive" page
+    return allArchiveSongs.filter(song => {
+      // Basic text matching
+      const matchesQuery = 
+        song.title?.toLowerCase().includes(query) ||
+        song.writer?.toLowerCase().includes(query) ||
+        song.leadSinger?.toLowerCase().includes(query) ||
+        song.lyrics?.toLowerCase().includes(query) ||
+        song.conductor?.toLowerCase().includes(query);
+
+      if (!matchesQuery) return false;
+
+      // Ensure it belongs to an archive page (by checking the pages list)
+      const parentPage = allPraiseNights.find(p => p.id === song.praiseNightId);
+      return parentPage?.category === 'archive';
+    }).map(song => {
+      // Attach parent page info for display
+      const parentPage = allPraiseNights.find(p => p.id === song.praiseNightId);
+      return {
+        ...song,
+        parentPageName: parentPage?.name || 'Unknown Session',
+        parentPageDate: parentPage?.date || ''
+      };
+    });
+  }, [archiveSearchQuery, allArchiveSongs, allPraiseNights, categoryFilter, pageParam]);
 
   // Preload data for instant access
   // No preloading needed - data loads fresh on each request
@@ -488,14 +561,18 @@ function PraiseNightPageContent() {
 
   // Handle song card click - now JUST updates URL to trigger the sync effect
   const handleSongClick = (song: any, index: number) => {
-
-
     // Track internal change to prevent URL sync bounce
     internalSongChangeRef.current = song.title;
     
-    // Update URL with song parameter
+    // Update URL with song parameter and page parameter for global search
     const params = new URLSearchParams(window.location.search);
     params.set('song', song.title);
+    
+    // 📂 Global search context fix: If song has a praiseNightId and it's different from current
+    if (song.praiseNightId && song.praiseNightId !== currentPraiseNight?.id) {
+      params.set('page', song.praiseNightId);
+    }
+    
     router.push(`?${params.toString()}`);
 
     // Dispatch event to hide mini player
@@ -504,14 +581,18 @@ function PraiseNightPageContent() {
 
   // Handle song card click when outside modal - opens modal AND updates URL
   const handleSongSwitch = (song: any, index: number) => {
-
-
     // Track internal change to prevent URL sync bounce
     internalSongChangeRef.current = song.title;
 
     // Update URL
     const params = new URLSearchParams(window.location.search);
     params.set('song', song.title);
+    
+    // 📂 Global search context fix: If song has a praiseNightId and it's different from current
+    if (song.praiseNightId && song.praiseNightId !== currentPraiseNight?.id) {
+      params.set('page', song.praiseNightId);
+    }
+    
     router.push(`?${params.toString()}`);
 
     // Set the current song with auto-play enabled (only if it has audio)
@@ -1511,8 +1592,80 @@ function PraiseNightPageContent() {
                   </div>
                 </div>
 
+                {/* Global Archive Search Results */}
+                {archiveSearchQuery.trim().length >= 2 && !pageParam && (
+                  <div className="mt-4 mb-8">
+                    <div className="flex items-center justify-between mb-4 px-1">
+                      <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                        <Music className="w-5 h-5 text-purple-600" />
+                        {isGlobalSearchLoading ? 'Searching songs...' : `Search Results (${globalSearchResults.length})`}
+                      </h3>
+                      {isGlobalSearchLoading && (
+                        <RefreshCw className="w-4 h-4 text-purple-600 animate-spin" />
+                      )}
+                    </div>
+
+                    {isGlobalSearchLoading ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="h-20 bg-white/50 animate-pulse rounded-xl border border-slate-200"></div>
+                        ))}
+                      </div>
+                    ) : globalSearchResults.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-3">
+                        {globalSearchResults.map((song, index) => (
+                          <button
+                            key={`${song.id}-${index}`}
+                            onClick={() => handleSongClick(song, index)}
+                            className="w-full text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-purple-400 hover:shadow-md transition-all duration-200 group flex items-center justify-between"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Music className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                                <h4 className="font-bold text-slate-900 truncate group-hover:text-purple-700 transition-colors">
+                                  {song.title}
+                                </h4>
+                                {song.status && (
+                                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold uppercase tracking-wider ${
+                                    song.status === 'heard' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                  }`}>
+                                    {song.status}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                <span className="flex items-center gap-1 font-medium text-purple-600">
+                                  <Archive className="w-3 h-3" />
+                                  {(song as any).parentPageName}
+                                </span>
+                                {song.leadSinger && (
+                                  <span className="flex items-center gap-1">
+                                    <User className="w-3 h-3" />
+                                    {song.leadSinger}
+                                  </span>
+                                )}
+                                {song.key && (
+                                  <span className="font-bold text-slate-400">KEY: {song.key}</span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : archiveSearchQuery.trim().length >= 2 ? (
+                      <div className="text-center py-10 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-600 font-medium">No songs found matching "{archiveSearchQuery}"</p>
+                        <p className="text-slate-400 text-sm mt-1">Try a different title, writer, or lyrics</p>
+                      </div>
+                    ) : null}
+                    <div className="h-px bg-slate-200 my-8 mx-auto w-1/4 opacity-50"></div>
+                  </div>
+                )}
+
                 {/* Show skeleton while loading page categories */}
-                {loadingPageCategories && !selectedPageCategory && (
+                {loadingPageCategories && !selectedPageCategory && !archiveSearchQuery.trim() && (
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
@@ -1533,7 +1686,7 @@ function PraiseNightPageContent() {
                 )}
 
                 {/* Show page categories if in archive and no category selected AND categories exist */}
-                {!loadingPageCategories && categoryFilter === 'archive' && !selectedPageCategory && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
+                {!loadingPageCategories && categoryFilter === 'archive' && !selectedPageCategory && !archiveSearchQuery.trim() && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-slate-900">Browse by Category</h3>
@@ -1599,7 +1752,7 @@ function PraiseNightPageContent() {
                 )}
 
                 {/* Show pages if: 1) category is selected, OR 2) no page categories exist (show all archived pages) */}
-                {!loading && !loadingPageCategories && (selectedPageCategory || pageCategories.length === 0) && filteredPraiseNights.length > 0 ? (
+                {!loading && !loadingPageCategories && (selectedPageCategory || pageCategories.length === 0) && filteredPraiseNights.length > 0 && !archiveSearchQuery.trim() ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                     {filteredPraiseNights.map((praiseNight) => (
                       <button
