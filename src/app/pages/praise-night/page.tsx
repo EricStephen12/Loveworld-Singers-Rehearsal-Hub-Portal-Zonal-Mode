@@ -1465,10 +1465,11 @@ function PraiseNightPageContent() {
               <div className="mb-6 px-1">
                 
                 {/* Archive Search & Breadcrumbs */}
-                <div className="mb-6 sticky top-0 z-10 bg-gray-50/95 backdrop-blur-md pt-2 pb-4 -mx-1 px-1">
+                {/* Archive Search & Breadcrumbs - Transparent Minimal Header */}
+                <div className="mb-6 sticky top-0 z-20 bg-transparent pt-2 pb-4 -mx-1 px-1">
                   
                   {/* Breadcrumbs Navigation */}
-                  <div className="mb-3 flex items-center gap-2 text-sm max-w-full overflow-x-auto whitespace-nowrap scrollbar-hide py-1">
+                  <div className="mb-4 flex items-center gap-2 text-xs sm:text-sm max-w-full overflow-x-auto whitespace-nowrap scrollbar-hide py-1">
                     <button 
                       onClick={() => {
                         setSelectedPageCategory(null);
@@ -1497,7 +1498,7 @@ function PraiseNightPageContent() {
                       placeholder={selectedPageCategory ? `Search inside ${selectedPageCategory}...` : "Search all archive categories..."}
                       value={archiveSearchQuery}
                       onChange={(e) => setArchiveSearchQuery(e.target.value)}
-                      className="block w-full pl-10 pr-10 py-3 border-0 bg-slate-100/80 rounded-2xl leading-5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:bg-white sm:text-sm transition-all duration-300"
+                      className="block w-full pl-10 pr-10 py-3 border-b border-slate-200/50 bg-transparent rounded-none leading-5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-400 focus:ring-0 sm:text-sm transition-all duration-300"
                     />
                     {archiveSearchQuery && (
                       <button
