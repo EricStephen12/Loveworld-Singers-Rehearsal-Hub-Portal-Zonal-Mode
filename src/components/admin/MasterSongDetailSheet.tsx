@@ -210,6 +210,46 @@ export function MasterSongDetailSheet({
                     </span>
                   </div>
                 )}
+                {song.conductor && (
+                  <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
+                    <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
+                      Conductor
+                    </span>
+                    <span className="text-slate-900 italic">
+                      {song.conductor}
+                    </span>
+                  </div>
+                )}
+                {song.leadKeyboardist && (
+                  <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
+                    <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
+                      Lead Keyboard
+                    </span>
+                    <span className="text-slate-900">
+                      {song.leadKeyboardist}
+                    </span>
+                  </div>
+                )}
+                {song.bassGuitarist && (
+                  <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
+                    <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
+                      Bass Guitar
+                    </span>
+                    <span className="text-slate-900">
+                      {song.bassGuitarist}
+                    </span>
+                  </div>
+                )}
+                {song.drummer && (
+                  <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
+                    <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
+                      Drummer
+                    </span>
+                    <span className="text-slate-900">
+                      {song.drummer}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

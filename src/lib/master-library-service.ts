@@ -1,4 +1,4 @@
-﻿import {
+import {
   collection,
   query,
   orderBy,
@@ -35,6 +35,10 @@ export interface MasterSong {
   tempo?: string
   writer?: string
   leadSinger?: string
+  conductor?: string
+  leadKeyboardist?: string
+  bassGuitarist?: string
+  drummer?: string
   category?: string
   categories?: string[]
   audioFile?: string
@@ -211,6 +215,10 @@ export class MasterLibraryService {
         tempo: originalSong.tempo || '',
         writer: originalSong.writer || '',
         leadSinger: originalSong.leadSinger || '',
+        conductor: originalSong.conductor || '',
+        leadKeyboardist: originalSong.leadKeyboardist || '',
+        bassGuitarist: originalSong.bassGuitarist || '',
+        drummer: originalSong.drummer || '',
         category: originalSong.category || '',
         categories: originalSong.categories || [],
         audioFile: originalSong.audioFile || '',
@@ -256,6 +264,10 @@ export class MasterLibraryService {
         tempo: songData.tempo || '',
         writer: songData.writer || '',
         leadSinger: songData.leadSinger || '',
+        conductor: songData.conductor || '',
+        leadKeyboardist: songData.leadKeyboardist || '',
+        bassGuitarist: songData.bassGuitarist || '',
+        drummer: songData.drummer || '',
         category: songData.category || '',
         categories: songData.categories || [],
         audioFile: songData.audioUrls?.full || songData.audioFile || '',
@@ -353,6 +365,10 @@ export class MasterLibraryService {
         tempo: masterSong.tempo || '',
         writer: masterSong.writer || '',
         leadSinger: masterSong.leadSinger || '',
+        conductor: masterSong.conductor || '',
+        leadKeyboardist: masterSong.leadKeyboardist || '',
+        bassGuitarist: masterSong.bassGuitarist || '',
+        drummer: masterSong.drummer || '',
         category: masterSong.category || '',
         categories: masterSong.categories || [],
         audioFile: masterSong.audioFile || '',

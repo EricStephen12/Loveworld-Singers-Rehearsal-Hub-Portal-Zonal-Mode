@@ -202,6 +202,7 @@ export interface PraiseNightSong {
   tempo?: string;
   leadKeyboardist?: string;
   leadGuitarist?: string;
+  bassGuitarist?: string;
   drummer?: string;
   lyrics?: string;
   solfas?: string;

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import {
@@ -84,6 +84,10 @@ export function MasterEditSongModal({
     leadSinger: song?.leadSinger || '',
     key: song?.key || '',
     tempo: song?.tempo || '',
+    conductor: song?.conductor || '',
+    leadKeyboardist: song?.leadKeyboardist || '',
+    bassGuitarist: song?.bassGuitarist || '',
+    drummer: song?.drummer || '',
     category: song?.category || '',
     lyrics: htmlToMarkdown(song?.lyrics || ''),
   });
@@ -127,6 +131,10 @@ export function MasterEditSongModal({
           leadSinger: song.leadSinger || '',
           key: song.key || '',
           tempo: song.tempo || '',
+          conductor: song.conductor || '',
+          leadKeyboardist: song.leadKeyboardist || '',
+          bassGuitarist: song.bassGuitarist || '',
+          drummer: song.drummer || '',
           category: song.category || '',
           lyrics: htmlToMarkdown(song.lyrics || ''),
         });
@@ -152,6 +160,10 @@ export function MasterEditSongModal({
           leadSinger: '',
           key: '',
           tempo: '',
+          conductor: '',
+          leadKeyboardist: '',
+          bassGuitarist: '',
+          drummer: '',
           category: '',
           lyrics: '',
         });
@@ -240,6 +252,10 @@ export function MasterEditSongModal({
         leadSinger: formData.leadSinger.trim(),
         key: formData.key.trim(),
         tempo: formData.tempo.trim(),
+        conductor: formData.conductor.trim(),
+        leadKeyboardist: formData.leadKeyboardist.trim(),
+        bassGuitarist: formData.bassGuitarist.trim(),
+        drummer: formData.drummer.trim(),
         category: formData.category.trim(),
         lyrics: markdownToHtml(formData.lyrics),
         audioUrls: allAudioUrls,
@@ -420,6 +436,50 @@ export function MasterEditSongModal({
                   onChange={(e) => handleInputChange('tempo', e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="e.g., 120 BPM"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Conductor</label>
+                <input
+                  type="text"
+                  value={formData.conductor}
+                  onChange={(e) => handleInputChange('conductor', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Conductor name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Lead Keyboardist</label>
+                <input
+                  type="text"
+                  value={formData.leadKeyboardist}
+                  onChange={(e) => handleInputChange('leadKeyboardist', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Keyboardist name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Bass Guitarist</label>
+                <input
+                  type="text"
+                  value={formData.bassGuitarist}
+                  onChange={(e) => handleInputChange('bassGuitarist', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Bass guitarist name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Drummer</label>
+                <input
+                  type="text"
+                  value={formData.drummer}
+                  onChange={(e) => handleInputChange('drummer', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Drummer name"
                 />
               </div>
             </div>

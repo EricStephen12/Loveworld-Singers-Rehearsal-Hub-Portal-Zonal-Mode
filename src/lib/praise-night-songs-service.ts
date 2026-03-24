@@ -124,6 +124,7 @@ export class PraiseNightSongsService {
         tempo: songData.tempo || '',
         leadKeyboardist: songData.leadKeyboardist || '',
         leadGuitarist: songData.leadGuitarist || '',
+        bassGuitarist: songData.bassGuitarist || '',
         drummer: songData.drummer || '',
         lyrics: songData.lyrics || '',
         solfas: songData.solfas || '',
