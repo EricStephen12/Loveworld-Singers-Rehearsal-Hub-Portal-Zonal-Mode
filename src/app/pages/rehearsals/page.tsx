@@ -17,7 +17,7 @@ export default function RehearsalsPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const { signOut, profile } = useAuth()
-  const { currentZone, isZoneCoordinator } = useZone()
+  const { currentZone, isZoneCoordinator, userRole } = useZone()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -168,10 +168,10 @@ export default function RehearsalsPage() {
         const isPresident = currentZone?.id === 'zone-president' || currentZone?.id === 'zone-president-2';
         const isDirector = currentZone?.id === 'zone-director';
         const isOftp = currentZone?.id === 'zone-oftp';
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'boss';
-        const isHqAdmin = profile?.is_hq_member === true;
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'boss' || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
+        const isHqMember = profile?.is_hq_member === true || userRole === 'hq_member';
 
-        return isPresident || isDirector || isOftp || isZoneCoordinator || isAdmin || isHqAdmin;
+        return isPresident || isDirector || isOftp || isZoneCoordinator || isAdmin || isHqMember;
       }
       
       return true;

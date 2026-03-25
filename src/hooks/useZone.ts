@@ -4,7 +4,7 @@ import { useAuthContext } from '@/contexts/AuthContext'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { HQMembersService } from '@/lib/hq-members-service'
 import { ZONES, Zone, isSuperAdmin, isHQGroup } from '@/config/zones'
-import { UserRole, hasPermission as checkPermission } from '@/config/roles'
+import { UserRole, hasPermission as checkPermission, isHQAdminEmail } from '@/config/roles'
 
 const getUserZonePreferenceKey = (userId: string) => `lwsrh-user-zone-${userId}`
 
@@ -185,7 +185,8 @@ export function useZone() {
       if (targetMembership?.role === 'coordinator') {
         role = 'zone_coordinator'
       } else if (targetZone && isHQGroup(targetZone.id)) {
-        role = 'hq_member'
+        // Elevate HQ members to admins if they are in the special list
+        role = isHQAdminEmail(email) ? 'hq_admin' : 'hq_member'
       }
 
       setCurrentZone(targetZone || null)
@@ -238,7 +239,8 @@ export function useZone() {
     if (membership?.role === 'coordinator') {
       role = 'zone_coordinator'
     } else if (membership?.isHQMember || isHQGroup(zoneId)) {
-      role = 'hq_member'
+      // Elevate HQ members to admins if they are in the special list
+      role = isHQAdminEmail(user.email) ? 'hq_admin' : 'hq_member'
     }
 
     setCurrentZoneMembership(membership)
