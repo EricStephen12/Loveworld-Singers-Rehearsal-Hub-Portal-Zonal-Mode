@@ -82,7 +82,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
         {carouselItems.length > 1 && (
           <button
             onClick={goToPrevious}
-            className="hidden sm:flex flex-shrink-0 p-1.5 sm:p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all active:scale-95 backdrop-blur-sm"
+            className="hidden sm:flex items-center justify-center flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full transition-all active:scale-95 backdrop-blur-sm"
             aria-label="Previous"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -248,7 +248,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
         {carouselItems.length > 1 && (
           <button
             onClick={goToNext}
-            className="hidden sm:flex flex-shrink-0 p-1.5 sm:p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all active:scale-95 backdrop-blur-sm"
+            className="hidden sm:flex items-center justify-center flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full transition-all active:scale-95 backdrop-blur-sm"
             aria-label="Next"
           >
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />

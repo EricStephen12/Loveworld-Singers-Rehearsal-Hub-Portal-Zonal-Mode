@@ -64,14 +64,14 @@ export default function CalendarToolbar({
         <div className="flex items-center gap-1">
           <button
             onClick={goToBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
           
           <button
             onClick={goToNext}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
           </button>
@@ -99,7 +99,9 @@ export default function CalendarToolbar({
               }`}
               style={isActive ? { backgroundColor: themeColor } : {}}
             >
-              <IconComponent className="w-4 h-4" />
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                <IconComponent className="w-4 h-4" />
+              </div>
               <span className="hidden sm:inline">
                 {VIEW_LABELS[viewName as keyof typeof VIEW_LABELS] || viewName}
               </span>

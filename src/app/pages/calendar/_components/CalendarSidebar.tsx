@@ -110,7 +110,9 @@ export default function CalendarSidebar({
                     }`}
                   style={view === option.id ? { backgroundColor: themeColor } : {}}
                 >
-                  <Icon className="w-5 h-5" />
+                  <div className="w-6 h-6 flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5" />
+                  </div>
                   <span className="font-medium">{option.label}</span>
                 </button>
               )
@@ -127,12 +129,16 @@ export default function CalendarSidebar({
             onClick={() => setMinistryCalendarOpen(!ministryCalendarOpen)}
             className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            {ministryCalendarOpen ? (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-gray-500" />
-            )}
-            <CalendarIcon className="w-5 h-5" style={{ color: themeColor }} />
+            <div className="w-6 h-6 flex items-center justify-center shrink-0">
+              {ministryCalendarOpen ? (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-500" />
+              )}
+            </div>
+            <div className="w-6 h-6 flex items-center justify-center shrink-0">
+              <CalendarIcon className="w-5 h-5" style={{ color: themeColor }} />
+            </div>
             <span className="font-medium">Ministry Calendar</span>
             {upcoming.length > 0 && (
               <span
@@ -179,8 +185,10 @@ export default function CalendarSidebar({
           <button
             className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            <div className="w-5" />
-            <Cake className="w-5 h-5 text-pink-400" />
+            <div className="w-6 h-6 shrink-0" />
+            <div className="w-6 h-6 flex items-center justify-center shrink-0">
+              <Cake className="w-5 h-5 text-pink-400" />
+            </div>
             <span className="font-medium">Birthdays</span>
           </button>
         </div>

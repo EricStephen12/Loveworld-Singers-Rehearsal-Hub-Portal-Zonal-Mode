@@ -40,7 +40,7 @@ export default function GoogleCalendarToolbar({
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all active:scale-95"
             aria-label="Toggle sidebar"
           >
             <Menu className="w-5 h-5 text-gray-600" />
@@ -71,7 +71,7 @@ export default function GoogleCalendarToolbar({
         <div className="flex items-center">
           <button
             onClick={goToBack}
-            className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all active:scale-95"
             aria-label="Previous"
           >
             <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -79,7 +79,7 @@ export default function GoogleCalendarToolbar({
           
           <button
             onClick={goToNext}
-            className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all active:scale-95"
             aria-label="Next"
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -91,15 +91,9 @@ export default function GoogleCalendarToolbar({
         </h2>
       </div>
 
-      {/* Right Section */}
+      {/* Right Section - Removed Search and Settings as they are not used */}
       <div className="flex items-center gap-2">
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95">
-          <Search className="w-5 h-5 text-gray-600" />
-        </button>
-
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95">
-          <Settings className="w-5 h-5 text-gray-600" />
-        </button>
+        <div className="w-2" />
       </div>
     </div>
   )
