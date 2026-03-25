@@ -1,4 +1,4 @@
-﻿// User Roles Configuration
+// User Roles Configuration
 import { isHQGroup } from '@/config/zones'
 
 export type UserRole = 'super_admin' | 'boss' | 'zone_coordinator' | 'zone_member' | 'hq_admin' | 'hq_member';
@@ -307,6 +307,7 @@ export const HQ_ADMIN_EMAILS = [
   'takeshopstores@gmail.com',   // Eric Stephen - HQ Admin
   'nnennawealth@gmail.com',     // Nnenna Wealth - HQ Admin
   'joykures@gmail.com',         // Joy Kures - HQ Admin (Restricted)
+  'styleirech@gmail.com',       // HQ Admin
 ];
 
 // Helper to check if email should be HQ admin
