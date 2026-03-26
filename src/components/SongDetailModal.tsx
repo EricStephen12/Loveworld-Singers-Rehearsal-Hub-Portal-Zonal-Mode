@@ -1381,16 +1381,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                               </div>
                                             </div>
                                           </div>
-                                          <audio
-                                            ref={el => {
-                                              if (el) historyAudioRefs.current[entry.id] = el;
-                                            }}
-                                            src={entry.new_value}
-                                            onTimeUpdate={() => handleHistoryAudioTimeUpdate(entry.id)}
-                                            onLoadedMetadata={() => handleHistoryAudioLoadedMetadata(entry.id)}
-                                            onEnded={() => handleHistoryAudioEnded(entry.id)}
-                                            preload="metadata"
-                                          />
+                                            <audio
+                                              ref={el => {
+                                                if (el) historyAudioRefs.current[entry.id] = el;
+                                              }}
+                                              src={entry.new_value}
+                                              onTimeUpdate={() => handleHistoryAudioTimeUpdate(entry.id)}
+                                              onLoadedMetadata={() => handleHistoryAudioLoadedMetadata(entry.id)}
+                                              onEnded={() => handleHistoryAudioEnded(entry.id)}
+                                              preload="none"
+                                            />
                                         </div>
                                       </div>
                                     )}

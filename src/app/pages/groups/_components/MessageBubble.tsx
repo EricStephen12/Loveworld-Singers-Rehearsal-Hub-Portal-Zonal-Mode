@@ -135,6 +135,7 @@ const VoiceMessagePlayer = ({ url, duration, isOwn, primaryColor }: { url: strin
       <audio
         ref={audioRef}
         src={url}
+        preload="none"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => { setIsPlaying(false); setProgress(0); }}

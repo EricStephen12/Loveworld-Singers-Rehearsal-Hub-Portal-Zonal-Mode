@@ -549,6 +549,7 @@ export function MasterEditSongModal({
                       <audio
                         src={audioUrls[key]}
                         controls
+                        preload="none"
                         className="h-8 w-full max-w-[140px]"
                         style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}
                       />
@@ -601,6 +602,7 @@ export function MasterEditSongModal({
                       <audio
                         src={audioUrls[partName]}
                         controls
+                        preload="none"
                         className="h-8 w-full max-w-[140px]"
                         style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}
                       />

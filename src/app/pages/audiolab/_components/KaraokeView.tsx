@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   X, Settings, Star, Play, Pause, Search,
-  RotateCcw, RotateCw, Maximize, Mic, MicOff, AlertCircle, Music
+  RotateCcw, RotateCw, Maximize, Mic, MicOff, AlertCircle, Music, Layers
 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAudioLab } from '../_context/AudioLabContext';
@@ -21,7 +21,7 @@ const defaultLyrics = [
 ];
 
 export function KaraokeView() {
-  const { goBack, formatTime, state, setView, togglePlay, seek, updatePracticeStats, loadLibraryData, playSong } = useAudioLab();
+  const { goBack, formatTime, state, setView, togglePlay, seek, switchPart, updatePracticeStats, loadLibraryData, playSong } = useAudioLab();
   const { user, profile } = useAuth();
   const { player } = state;
 
@@ -97,6 +97,7 @@ export function KaraokeView() {
   const [pitchAccuracy, setPitchAccuracy] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [showSongPicker, setShowSongPicker] = useState(false);
+  const [showTrackPicker, setShowTrackPicker] = useState(false);
   const [isPickerLoading, setIsPickerLoading] = useState(false);
   const [pickerSearch, setPickerSearch] = useState('');
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -342,9 +343,9 @@ export function KaraokeView() {
             }
           }}
           className="flex size-11 items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-white/20 active:scale-95"
-          title="Change Song"
+          title="Search Library"
         >
-          <Music size={22} className="text-white/80 transition-colors" />
+          <Search size={22} className="text-white/80 transition-colors" />
         </button>
       </header>
 
@@ -501,112 +502,106 @@ export function KaraokeView() {
               </div>
             </div>
 
-            {/* Tactical Control Layout */}
-            <div className="flex items-center justify-between px-1 md:px-2">
-              <button
-                onClick={() => {
-                  setShowSongPicker(true);
-                  if (state.libraryData.songs.length === 0) {
-                    setIsPickerLoading(true);
-                    loadLibraryData(profile?.zone || 'global', 50).finally(() => {
-                      setIsPickerLoading(false);
-                    });
-                  }
-                }}
-                className="group flex flex-col items-center gap-1 md:gap-1.5 transition-all text-white/40 hover:text-white"
-              >
-                <div className="p-2 md:p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-colors active:scale-95">
-                  <Maximize size={16} className="md:w-[18px] md:h-[18px]" />
-                </div>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">Browse</span>
-              </button>
+            {/* Tactical Control Layout - Sleek Design */}
+            <div className="flex items-center justify-between px-2 md:px-4 mt-2">
+              <div className="flex items-center gap-2 md:gap-3">
+                <button
+                  onClick={() => setShowTrackPicker(true)}
+                  className="flex items-center justify-center size-10 md:size-12 rounded-full bg-white/5 hover:bg-white/10 transition-colors border border-white/5 active:scale-95 text-white/50 hover:text-white relative"
+                  title="Audio Tracks"
+                >
+                  <Layers size={18} />
+                  {player.currentPart !== 'full' && (
+                    <div className="absolute top-0 right-0 size-2.5 rounded-full bg-pink-500 border-2 border-[#1b1224]" />
+                  )}
+                </button>
+              </div>
 
-              <div className="flex items-center gap-3 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-8">
                 <button
                   onClick={skipBack}
-                  className="size-10 md:size-12 flex items-center justify-center rounded-[1rem] md:rounded-[1.25rem] bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all border border-white/5 active:scale-90"
+                  className="flex items-center justify-center size-12 md:size-14 text-white/70 hover:text-white transition-colors active:scale-90"
                 >
-                  <RotateCcw size={18} className="md:w-[20px] md:h-[20px]" />
+                  <RotateCcw size={22} className="opacity-80 hover:opacity-100" />
                 </button>
 
                 <button
                   onClick={handlePlayPause}
-                  className={`size-14 md:size-20 flex items-center justify-center rounded-3xl md:rounded-[2rem] transition-all transform active:scale-90 shadow-2xl
+                  className={`flex items-center justify-center size-16 md:size-[4.5rem] rounded-full transition-all duration-300 transform active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)]
                     ${player.isPlaying
-                      ? 'bg-white text-[#191022] hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]'
-                      : 'bg-violet-600 text-white hover:bg-violet-500 shadow-violet-600/40'}`}
+                      ? 'bg-white text-black shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105'
+                      : 'bg-gradient-to-tr from-pink-600 to-violet-600 text-white shadow-pink-600/30 hover:scale-105'}`}
                 >
                   {player.isPlaying ? (
-                    <Pause size={24} className="md:w-[32px] md:h-[32px]" fill="currentColor" />
+                    <Pause size={28} className="md:w-[36px] md:h-[36px]" fill="currentColor" />
                   ) : (
-                    <Play size={24} className="md:w-[32px] md:h-[32px] ml-1 md:ml-1.5" fill="currentColor" />
+                    <Play size={28} className="md:w-[36px] md:h-[36px] translate-x-1" fill="currentColor" />
                   )}
                 </button>
 
                 <button
                   onClick={skipForward}
-                  className="size-10 md:size-12 flex items-center justify-center rounded-[1rem] md:rounded-[1.25rem] bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all border border-white/5 active:scale-90"
+                  className="flex items-center justify-center size-12 md:size-14 text-white/70 hover:text-white transition-colors active:scale-90"
                 >
-                  <RotateCw size={18} className="md:w-[20px] md:h-[20px]" />
+                  <RotateCw size={22} className="opacity-80 hover:opacity-100" />
                 </button>
               </div>
 
               {/* Mic Toggle Switch Design */}
-              <button
-                onClick={toggleMic}
-                className={`group flex flex-col items-center gap-1 md:gap-1.5 transition-all
-                  ${isMicActive ? 'text-pink-500' : 'text-white/40 hover:text-white'}`}
-              >
-                <div className={`p-2 md:p-2.5 rounded-xl transition-all border active:scale-95
-                  ${isMicActive
-                    ? 'bg-pink-500/10 border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.3)]'
-                    : 'bg-white/5 border-white/5 group-hover:bg-white/10'}`}>
-                  {isMicActive ? <Mic size={16} className="md:w-[18px] md:h-[18px]" /> : <MicOff size={16} className="md:w-[18px] md:h-[18px]" />}
-                </div>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">{isMicActive ? 'On Air' : 'Muted'}</span>
-              </button>
+              <div className="flex items-center gap-2 md:gap-3">
+                <button
+                  onClick={toggleMic}
+                  className={`flex items-center justify-center size-10 md:size-12 rounded-full transition-all border active:scale-95
+                    ${isMicActive
+                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)]'
+                      : 'bg-white/5 border-white/5 text-white/50 hover:text-white hover:bg-white/10'}`}
+                  title={isMicActive ? "Mute Mic" : "Turn On Mic"}
+                >
+                  {isMicActive ? <Mic size={18} /> : <MicOff size={18} />}
+                </button>
+              </div>
             </div>
           </div>
         </footer>
         {/* Song Picker Bottom Sheet - Refined Design */}
         <div
-          className={`fixed inset-0 z-[100] bg-black/80 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${showSongPicker ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${showSongPicker ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setShowSongPicker(false)}
         >
           <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-b from-[#1b1224] to-[#0f0814] rounded-t-[2.5rem] p-6 pt-4 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)] border-t border-white/5 ${showSongPicker ? 'translate-y-0' : 'translate-y-full'}`}
-            style={{ height: '75vh' }}
+            className={`absolute bottom-0 left-0 right-0 bg-[#130b1c]/95 backdrop-blur-3xl rounded-t-[2.5rem] p-6 pt-5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col shadow-[0_-30px_60px_rgba(0,0,0,0.6)] border-t border-white/10 ${showSongPicker ? 'translate-y-0' : 'translate-y-full'}`}
+            style={{ height: '80vh', paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Elegant Drag Handle Indicator */}
-            <div className="w-full flex justify-center mb-6 shrink-0 cursor-pointer" onClick={() => setShowSongPicker(false)}>
-              <div className="w-16 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+            <div className="w-full flex justify-center mb-8 shrink-0 cursor-pointer" onClick={() => setShowSongPicker(false)}>
+              <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
             </div>
 
-            <div className="flex items-center justify-between mb-4 shrink-0 px-2">
+            <div className="flex items-center justify-between mb-6 shrink-0 px-2 lg:px-4">
               <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">AudioLab Library</h2>
-                <p className="text-xs text-white/40 uppercase tracking-widest font-bold mt-1">Select a track to practice</p>
+                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 tracking-tight">Track Library</h2>
+                <p className="text-[10px] md:text-xs text-violet-400 uppercase tracking-[0.2em] font-black mt-2 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]">Select a track to practice</p>
               </div>
             </div>
 
             {/* Search Input for Song Picker */}
-            <div className="px-2 mb-6 shrink-0">
+            <div className="px-2 lg:px-4 mb-6 shrink-0">
                <div className="relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <Search size={18} className="text-white/20 group-focus-within:text-pink-500 transition-colors" />
+                  <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                    <Search size={18} className="text-white/30 group-focus-within:text-pink-400 transition-colors" />
                   </div>
                   <input
                     type="text"
                     placeholder="Search songs, artists, or lyrics..."
                     value={pickerSearch}
                     onChange={(e) => setPickerSearch(e.target.value)}
-                    className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white text-sm font-bold placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all"
+                    className="w-full h-14 bg-white/[0.03] border border-white/10 rounded-[1.5rem] pl-14 pr-12 text-white text-base font-bold placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 focus:bg-white/[0.05] transition-all shadow-inner"
                   />
                   {pickerSearch && (
                     <button 
                       onClick={() => setPickerSearch('')}
-                      className="absolute inset-y-0 right-4 flex items-center text-white/20 hover:text-white transition-colors"
+                      className="absolute inset-y-0 right-5 flex items-center text-white/30 hover:text-white transition-colors"
                     >
                       <X size={18} />
                     </button>
@@ -614,7 +609,7 @@ export function KaraokeView() {
                </div>
             </div>
 
-            <div className="overflow-y-auto flex-1 pb-10 space-y-4 relative rounded-xl pr-2 custom-scrollbar">
+            <div className="overflow-y-auto flex-1 pb-10 space-y-4 relative rounded-xl px-2 lg:px-4 custom-scrollbar">
               {isPickerLoading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <CustomLoader message="" />
@@ -646,11 +641,88 @@ export function KaraokeView() {
                 ))
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40">
-                  <div className="size-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                    <Music size={24} className="text-white/20" />
+                  <div className="size-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/5">
+                    <Music size={32} className="text-white/20" />
                   </div>
-                  <p className="font-bold text-sm tracking-widest uppercase text-white/60">Library Empty</p>
-                  <p className="text-xs mt-2 text-white/30 text-center max-w-[250px]">Songs added to the AudioLab Master Library will appear here.</p>
+                  <p className="font-black text-sm tracking-[0.2em] uppercase text-white/60">Library Empty</p>
+                  <p className="text-xs mt-3 text-white/30 text-center max-w-[250px] font-medium leading-relaxed">Songs added to the AudioLab Master Library will appear here.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Track Picker Bottom Sheet */}
+        <div
+          className={`fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${showTrackPicker ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => setShowTrackPicker(false)}
+        >
+          <div
+            className={`absolute bottom-0 left-0 right-0 bg-[#130b1c]/95 backdrop-blur-3xl rounded-t-[2.5rem] p-6 pt-5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col shadow-[0_-30px_60px_rgba(0,0,0,0.6)] border-t border-white/10 ${showTrackPicker ? 'translate-y-0' : 'translate-y-full'}`}
+            style={{ height: '55vh', paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Elegant Drag Handle Indicator */}
+            <div className="w-full flex justify-center mb-8 shrink-0 cursor-pointer" onClick={() => setShowTrackPicker(false)}>
+              <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
+            </div>
+
+            <div className="flex items-center justify-between mb-6 shrink-0 px-2 lg:px-4">
+              <div>
+                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 tracking-tight">Vocal Tracks</h2>
+                <p className="text-[10px] md:text-xs text-pink-400 uppercase tracking-[0.2em] font-black mt-2 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">Isolate Your Part</p>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1 pb-10 space-y-2 relative rounded-xl px-1 lg:px-3 custom-scrollbar">
+              {currentSong?.audioUrls && Object.entries(currentSong.audioUrls).filter(([, url]) => !!url).length > 0 ? (
+                Object.entries(currentSong.audioUrls)
+                  .filter(([, url]) => !!url)
+                  .map(([part]) => {
+                    const isActive = player.currentPart === part;
+                    return (
+                      <button
+                        key={part}
+                        onClick={() => {
+                          switchPart(part);
+                          setShowTrackPicker(false);
+                        }}
+                        className={`group w-full flex items-center justify-between p-4 md:p-5 rounded-3xl transition-all duration-300 border ${
+                          isActive 
+                            ? 'bg-pink-500/10 border-pink-500/40 shadow-[0_10px_30px_-10px_rgba(236,72,153,0.3)]' 
+                            : 'bg-transparent border-transparent hover:bg-white/[0.03] hover:border-white/5 active:scale-[0.98]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-5">
+                          <div className={`size-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-gradient-to-br from-pink-500 to-violet-600 text-white shadow-lg shadow-pink-500/40 scale-110' 
+                              : 'bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white/70'
+                          }`}>
+                            {part === 'full' ? <Layers size={20} /> : <Mic size={20} />}
+                          </div>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`font-black capitalize text-base md:text-lg tracking-wide transition-colors ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white/90'}`}>
+                              {part === 'full' ? 'Full Mix' : part}
+                            </span>
+                            {isActive && (
+                               <span className="text-[9px] font-black uppercase tracking-widest text-pink-400">Currently Playing</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {isActive && (
+                          <div className="flex items-center justify-center size-8 rounded-full bg-pink-500/20 text-pink-500 animate-in zoom-in duration-300">
+                             <div className="size-2.5 rounded-full bg-pink-500 shadow-[0_0_10px_#ec4899]" />
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                   <AlertCircle size={40} className="mb-6 text-white/20" />
+                   <p className="text-sm font-black tracking-[0.2em] uppercase text-center text-white/40">No stems available</p>
                 </div>
               )}
             </div>

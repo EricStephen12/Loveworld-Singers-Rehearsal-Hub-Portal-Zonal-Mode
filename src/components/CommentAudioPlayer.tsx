@@ -66,7 +66,7 @@ export default function CommentAudioPlayer({ src, accentColor = '#8B5CF6' }: Com
 
     return (
         <div className="flex flex-col gap-2 w-full max-w-md bg-white/50 backdrop-blur-sm rounded-xl p-3 border border-slate-200/60 shadow-sm transition-all hover:shadow-md group">
-            <audio ref={audioRef} src={src} muted={isMuted} />
+            <audio ref={audioRef} src={src} muted={isMuted} preload="none" />
 
             <div className="flex items-center gap-4">
                 {/* Play/Pause Button */}

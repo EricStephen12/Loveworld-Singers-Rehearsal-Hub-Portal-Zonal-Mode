@@ -1830,9 +1830,10 @@ function PraiseNightPageContent() {
                     src={ecardSrc}
                     alt="Praise Night E-card"
                     fill
+                    unoptimized={true}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
                     className="object-cover object-center"
-                    priority={false}
+                    priority
                     onError={(e) => {
  console.error('Image failed to load:', ecardSrc);
                       // Fallback to default image

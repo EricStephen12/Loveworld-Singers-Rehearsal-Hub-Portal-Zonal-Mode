@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AUDIOLAB AUDIO ENGINE
  * 
  * Core audio processing using Web Audio API
@@ -165,7 +165,7 @@ class AudioEngine {
       const audio = new Audio();
       audio.crossOrigin = "anonymous";
       audio.src = url;
-      audio.preload = 'auto';
+      audio.preload = 'metadata';
 
       const onMetadata = () => {
         this.useFallback = true;
