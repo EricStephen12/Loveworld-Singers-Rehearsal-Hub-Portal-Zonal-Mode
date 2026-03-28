@@ -386,34 +386,40 @@ function CardInfo({ label, value, accent }: { label: string; value: string; acce
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {data.rows.map((row: any, rIdx: number) => (
-                            <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
-                                {hasRowLabels && (
-                                    <td className="px-2 py-3 bg-slate-50/80 backdrop-blur-sm border-r border-slate-200 text-[10px] font-black text-slate-400 text-center uppercase tracking-widest whitespace-nowrap sticky left-0 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">
-                                        {row.label}
-                                    </td>
-                                )}
-                                {data.columns.map((_: any, cIdx: number) => {
-                                    const key = `${rIdx}:${cIdx}`;
-                                    const cell = data.data[key];
-                                    if (!cell) return <td key={cIdx} className="px-4 py-3 border-r border-slate-100/50 last:border-0 bg-white"></td>;
-
-                                    return (
-                                        <td
-                                            key={cIdx}
-                                            className={`px-4 py-3 text-sm border-r border-slate-100/50 last:border-0 bg-white
-                                            ${cell.bold ? 'font-bold' : ''}
-                                            ${cell.italic ? 'italic' : ''}
-                                            ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}
-                                        `}
-                                            style={{ color: cell.color }}
-                                        >
-                                            {cell.value}
+                        {data.rows.map((row: any, rIdx: number) => {
+                            const isEven = rIdx % 2 === 0;
+                            const rowBgClass = isEven ? 'bg-white' : 'bg-purple-50/70';
+                            const labelBgClass = isEven ? 'bg-slate-50/80' : 'bg-purple-100/40';
+                            
+                            return (
+                                <tr key={rIdx} className={`${rowBgClass} hover:bg-purple-200/40 transition-colors group/row`}>
+                                    {hasRowLabels && (
+                                        <td className={`px-2 py-3 ${labelBgClass} backdrop-blur-sm border-r border-slate-200 text-[10px] font-black text-slate-400 text-center uppercase tracking-widest whitespace-nowrap sticky left-0 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]`}>
+                                            {row.label}
                                         </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
+                                    )}
+                                    {data.columns.map((_: any, cIdx: number) => {
+                                        const key = `${rIdx}:${cIdx}`;
+                                        const cell = data.data[key];
+                                        if (!cell) return <td key={cIdx} className={`px-4 py-3 border-r border-slate-100/50 last:border-0 ${rowBgClass}`}></td>;
+
+                                        return (
+                                            <td
+                                                key={cIdx}
+                                                className={`px-4 py-3 text-sm border-r border-slate-100/50 last:border-0 ${rowBgClass}
+                                                ${cell.bold ? 'font-bold' : ''}
+                                                ${cell.italic ? 'italic' : ''}
+                                                ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}
+                                            `}
+                                                style={{ color: cell.color }}
+                                            >
+                                                {cell.value}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

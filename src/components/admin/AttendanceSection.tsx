@@ -96,7 +96,7 @@ export default function AttendanceSection() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 lg:bg-white p-4 lg:p-6 lg:pb-12 min-h-screen">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 lg:bg-white p-4 lg:p-6 pb-24 lg:pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex-1">
@@ -187,9 +187,9 @@ export default function AttendanceSection() {
           </div>
         </div>
 
-        {/* Table/List View - Scrollable (Only on Desktop) */}
-        <div className="bg-white border text-left border-gray-100 rounded-xl shadow-lg lg:max-h-[70vh] flex flex-col overflow-hidden lg:overflow-hidden overflow-x-auto">
-          <div className="overflow-x-auto lg:overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-200">
+        {/* Table/List View - Horizontal Scrollable */}
+        <div className="bg-white border text-left border-gray-100 rounded-xl shadow-lg flex flex-col overflow-hidden">
+          <div className="overflow-x-auto flex-1 scrollbar-thin scrollbar-thumb-gray-200">
             {filteredRecords.length > 0 ? (
               <table className="w-full min-w-[800px] text-left border-collapse">
                 <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">

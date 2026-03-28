@@ -1,4 +1,4 @@
-﻿"use client";
+﻿ "use client";
 
 // Smart Auto-History System - Fixed icon imports
 import React, { useState, useEffect } from 'react';
@@ -70,6 +70,7 @@ export default function EditSongModal({
   const [songLeadGuitarist, setSongLeadGuitarist] = useState('');
   const [songDrummer, setSongDrummer] = useState('');
   const [songSolfas, setSongSolfas] = useState('');
+  const [songNotation, setSongNotation] = useState('');
   const [songHistory, setSongHistory] = useState('');
   const [songAudioFile, setSongAudioFile] = useState('');
   const [audioFile, setAudioFile] = useState<MediaFile | null>(null);
@@ -113,12 +114,13 @@ export default function EditSongModal({
     leadGuitarist: '',
     drummer: '',
     key: '',
-    tempo: ''
+    tempo: '',
+    notation: ''
   });
 
   // Manual history creation state
   const [showHistoryForm, setShowHistoryForm] = useState(false);
-  const [historyType, setHistoryType] = useState<'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'audio' | 'comments'>('song-details');
+  const [historyType, setHistoryType] = useState<'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'notation' | 'audio' | 'comments'>('song-details');
   const [historyTitle, setHistoryTitle] = useState('');
   const [historyDescription, setHistoryDescription] = useState('');
   const [historyEntries, setHistoryEntries] = useState<any[]>([]);
@@ -127,7 +129,7 @@ export default function EditSongModal({
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(true);
 
   // Manual history creation functions
-  const handleCreateHistory = (type: 'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'audio' | 'comments') => {
+  const handleCreateHistory = (type: 'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'notation' | 'audio' | 'comments') => {
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
       window.dispatchEvent(new CustomEvent('showToast', {
         detail: {
@@ -150,6 +152,7 @@ export default function EditSongModal({
       'music-details': 'Music Details',
       'lyrics': 'Lyrics',
       'solfas': "Conductor's Guide",
+      'notation': 'Solfas Notation',
       'audio': 'Audio',
       'comments': 'Comments'
     };
@@ -218,6 +221,10 @@ export default function EditSongModal({
         case 'solfas':
           currentContent = songSolfas;
           oldValue = originalValues.solfas;
+          break;
+        case 'notation':
+          currentContent = songNotation;
+          oldValue = originalValues.notation;
           break;
         case 'audio':
           currentContent = audioFile ? audioFile.url : songAudioFile;
@@ -327,6 +334,7 @@ export default function EditSongModal({
             'music-details': 'Music Details',
             'lyrics': 'Lyrics',
             'solfas': "Conductor's Guide",
+            'notation': 'Solfas Notation',
             'audio': 'Audio',
             'comments': 'Comments'
           };
@@ -628,13 +636,14 @@ export default function EditSongModal({
       setSongLeadKeyboardist(song.leadKeyboardist || '');
       setSongLeadGuitarist(song.leadGuitarist || '');
       setSongDrummer(song.drummer || '');
-      setSongHistory('');
+      setSongHistory(song.history ? JSON.stringify(song.history) : '');
       setSongAudioFile(song.audioFile || '');
       setAudioFile(null); // Reset file object when editing existing song
 
       // Use HTML directly for BasicTextEditor
       setSongLyrics(song.lyrics || '');
       setSongSolfas(song.solfas || '');
+      setSongNotation(song.notation || '');
 
       setSongComments(Array.isArray(song.comments) ? song.comments : []);
       setNewComment('');
@@ -666,6 +675,7 @@ export default function EditSongModal({
       setOriginalValues({
         lyrics: song.lyrics || '',
         solfas: song.solfas || '',
+        notation: song.notation || '',
         audioFile: song.audioFile || '',
         title: song.title || '',
         category: song.category || '',
@@ -695,6 +705,7 @@ export default function EditSongModal({
       setSongLeadGuitarist('');
       setSongDrummer('');
       setSongSolfas('');
+      setSongNotation('');
       setSongHistory('');
       setSongAudioFile('');
       setAudioFile(null);
@@ -713,6 +724,7 @@ export default function EditSongModal({
       setOriginalValues({
         lyrics: '',
         solfas: '',
+        notation: '',
         audioFile: '',
         title: '',
         category: '',
@@ -739,6 +751,7 @@ export default function EditSongModal({
     setOriginalValues({
       lyrics: songLyrics,
       solfas: songSolfas,
+      notation: songNotation,
       audioFile: songAudioFile,
       title: songTitle,
       category: songCategory,
@@ -799,6 +812,7 @@ export default function EditSongModal({
         leadGuitarist: songLeadGuitarist,
         drummer: songDrummer,
         solfas: songSolfas, // BasicTextEditor provides HTML
+        notation: songNotation, // NEW: Solfas notation field
         rehearsalCount: rehearsalCount, // Save rehearsal count to database
         comments: finalComments,
         audioFile: finalAudioFile, // Main audio file (not part of audioUrls)
@@ -831,6 +845,7 @@ export default function EditSongModal({
           songTempo !== originalValues.tempo ||
           songLyrics !== originalValues.lyrics ||
           songSolfas !== originalValues.solfas ||
+          songNotation !== originalValues.notation ||
           finalAudioFile !== originalValues.audioFile ||
           songLeadSinger !== originalValues.leadSinger ||
           songWriter !== originalValues.writer ||
@@ -853,6 +868,7 @@ export default function EditSongModal({
               tempo: originalValues.tempo,
               lyrics: originalValues.lyrics,
               solfas: originalValues.solfas,
+              notation: originalValues.notation,
               audioFile: originalValues.audioFile,
               leadSinger: originalValues.leadSinger,
               writer: originalValues.writer,
@@ -868,6 +884,7 @@ export default function EditSongModal({
               tempo: songTempo,
               lyrics: songLyrics,
               solfas: songSolfas,
+              notation: songNotation,
               audioFile: finalAudioFile,
               leadSinger: songLeadSinger,
               writer: songWriter,
@@ -1575,6 +1592,42 @@ Do Ti La Sol Fa Mi Re Do
 Chorus:
 Do Re Mi Fa Sol La Ti Do
 Do Re Mi Fa Sol La Ti Do"
+                          className="w-full font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Solfas Notation Section */}
+                  <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                          Solfas Notation
+                        </h4>
+                        <button
+                          onClick={() => handleCreateHistory('notation')}
+                          className={historyButtonClasses}
+                        >
+                          <History className="w-3 h-3" />
+                          Add History
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 sm:p-6">
+                      <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600">
+                        Rich text editor - Enter the primary Solfas notation here
+                      </div>
+
+                      <div className="relative">
+                        <BasicTextEditor
+                          id="notation-editor"
+                          value={songNotation}
+                          onChange={(value) => {
+                            setSongNotation(value);
+                          }}
+                          placeholder="Enter solfas notation (primary version) here..."
                           className="w-full font-mono"
                         />
                       </div>

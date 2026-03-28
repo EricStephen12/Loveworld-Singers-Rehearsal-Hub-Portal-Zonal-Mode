@@ -1,4 +1,4 @@
-﻿// Database Service for Loveworld Praise App
+// Database Service for Loveworld Praise App
 // This service bridges your existing data structure with Supabase
 
 import { createClient } from '@supabase/supabase-js';
@@ -76,6 +76,7 @@ export interface DatabaseSong {
   drummer: string;
   lyrics: string;
   solfas?: string;
+  notation?: string;
   rehearsalCount?: number;
   audioFile?: string;
   createdAt: string;
@@ -137,6 +138,7 @@ export async function getAllPages(): Promise<PraiseNight[]> {
           drummer,
           lyrics,
           solfas,
+          notation,
           rehearsalcount,
           audiofile,
           mediaid,
@@ -181,6 +183,7 @@ export async function getAllPages(): Promise<PraiseNight[]> {
             drummer: song.drummer,
             lyrics: song.lyrics,
             solfas: song.solfas,
+            notation: song.notation,
             rehearsalCount: song.rehearsalcount ?? 0,
             audioFile: audioFile,
             mediaId: song.mediaid,
@@ -433,6 +436,7 @@ export async function getSongsByPageId(pageId: string | number): Promise<PraiseN
         drummer: song.drummer,
         lyrics: song.lyrics,
         solfas: song.solfas,
+        notation: song.notation,
         rehearsalCount: song.rehearsalcount,
         audioFile: audioFile,
         comments: comments,
@@ -472,6 +476,7 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
         drummer: songData.drummer,
         lyrics: songData.lyrics,
         solfas: songData.solfas,
+        notation: songData.notation,
         rehearsalcount: songData.rehearsalCount,
         audiofile: songData.audioFile,
         mediaid: songData.mediaId
@@ -499,6 +504,7 @@ export async function createSong(songData: Omit<PraiseNightSong, 'comments' | 'h
       drummer: data.drummer,
       lyrics: data.lyrics,
       solfas: data.solfas,
+      notation: data.notation,
       rehearsalCount: data.rehearsalcount,
       audioFile: data.audiofile,
       comments: [],
@@ -536,6 +542,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
     if (songData.drummer !== undefined) updateData.drummer = songData.drummer;
     if (songData.lyrics !== undefined) updateData.lyrics = songData.lyrics;
     if (songData.solfas !== undefined) updateData.solfas = songData.solfas;
+    if (songData.notation !== undefined) updateData.notation = songData.notation;
     if (songData.rehearsalCount !== undefined) updateData.rehearsalcount = songData.rehearsalCount;
     if (songData.comments !== undefined) updateData.comments = songData.comments;
     // Handle audio file updates - always update both fields together
@@ -597,6 +604,7 @@ export async function updateSong(songId: number, songData: Partial<PraiseNightSo
         if (updateData.drummer !== undefined) minimalUpdateData.drummer = updateData.drummer;
         if (updateData.lyrics) minimalUpdateData.lyrics = updateData.lyrics;
         if (updateData.solfas) minimalUpdateData.solfas = updateData.solfas;
+        if (updateData.notation) minimalUpdateData.notation = updateData.notation;
         if (updateData.rehearsalcount !== undefined) minimalUpdateData.rehearsalcount = updateData.rehearsalcount;
         if (updateData.comments) minimalUpdateData.comments = updateData.comments;
         if (updateData.audiofile !== undefined) minimalUpdateData.audiofile = updateData.audiofile;
@@ -819,6 +827,7 @@ export async function getSongsByCategory(categoryName: string): Promise<PraiseNi
         drummer: song.drummer,
         lyrics: song.lyrics,
         solfas: song.solfas,
+        notation: song.notation,
         rehearsalCount: song.rehearsalcount,
         audioFile: song.audiofile,
         comments: comments,

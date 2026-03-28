@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, RefreshCw, Loader2, MoreVertical } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
 import { useZone } from "@/hooks/useZone";
@@ -26,8 +26,28 @@ interface SongDetailModalProps {
 
 export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [], activeCategory = '' }: SongDetailModalProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'comments' | 'history'>('lyrics');
-  const [activeHistoryTab, setActiveHistoryTab] = useState<'lyrics' | 'audio' | 'solfas' | 'comments' | 'metadata'>('lyrics');
+  const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'comments' | 'history' | 'notation'>('lyrics');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close 'More' menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreMenu]);
+
+  const [activeHistoryTab, setActiveHistoryTab] = useState<'lyrics' | 'audio' | 'solfas' | 'comments' | 'metadata' | 'notation'>('lyrics');
   const [isRepeating, setIsRepeating] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [categorySongs, setCategorySongs] = useState<PraiseNightSong[]>([]);
@@ -110,7 +130,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // State for history audio players
   const [historyAudioStates, setHistoryAudioStates] = useState<{ [key: string]: { isPlaying: boolean, currentTime: number, duration: number } }>({});
-  const historyAudioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
+  const historyAudioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
   const [mainPlayerWasPlaying, setMainPlayerWasPlaying] = useState(false);
 
   // Translation state
@@ -473,6 +493,25 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   // Single source of truth for what the UI should display (realtime → fresh → initial)
   const displayedSongData = realtimeSongData || currentSongData;
 
+  // Close More menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    if (showMoreMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreMenu]);
+
   // Load history entries for the current song (same as EditSongModal)
   const loadHistoryEntries = async () => {
     if (!currentSongData?.id) {
@@ -543,13 +582,21 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     };
   }, [currentSongData?.id, isOpen]);
 
+  // Helper to check if rich text actually has visible content
+  const hasVisibleContent = (html?: string | null) => {
+    if (!html) return false;
+    const stripped = html.replace(/<[^>]*>?/gm, '').trim();
+    const noEntities = stripped.replace(/&nbsp;|\u200B/g, '').trim();
+    return noEntities !== '';
+  };
+
   // Get history data for the current song using local state (same as EditSongModal)
-  const getHistoryData = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'metadata'): HistoryEntry[] => {
+  const getHistoryData = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'metadata' | 'notation'): HistoryEntry[] => {
     return historyEntries.filter(entry => entry.type === type);
   };
 
   // Get latest content (what's shown in main tabs) - uses real-time data
-  const getLatestContent = (type: 'lyrics' | 'solfas' | 'audio' | 'comments') => {
+  const getLatestContent = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'notation') => {
     // Use real-time song data if available, otherwise fallback to selectedSong
     const currentSong = realtimeSongData || selectedSong;
     if (!currentSong) return null;
@@ -559,6 +606,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         return currentSong.lyrics;
       case 'solfas':
         return currentSong.solfas;
+      case 'notation':
+        return currentSong.notation;
       case 'audio':
         return currentSong.audioFile;
       case 'comments':
@@ -951,21 +1000,24 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               </div>
 
               {/* Header with Album Art and Song Info - Sticky */}
-              <div className="relative bg-white/80 backdrop-blur-xl px-6 py-4 border-b border-white/30 overflow-hidden flex-shrink-0">
-                {/* Background Image with Blur */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{
-                    backgroundImage: `url('/images/DSC_6155_scaled.jpg')`,
-                    filter: 'blur(8px)',
-                    transform: 'scale(1.1)'
-                  }}
-                />
-                {/* Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-50 bg-white/80 backdrop-blur-xl border-b border-white/30 flex-shrink-0">
+                {/* Background layers wrapper with overflow hidden to contain the blur/scale */}
+                <div className="absolute inset-0 overflow-hidden z-0">
+                  {/* Background Image with Blur */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    style={{
+                      backgroundImage: `url('/images/DSC_6155_scaled.jpg')`,
+                      filter: 'blur(8px)',
+                      transform: 'scale(1.1)'
+                    }}
+                  />
+                  {/* Overlay for better text readability */}
+                  <div className="absolute inset-0 bg-black/40" />
+                </div>
 
                 {/* Content with relative positioning */}
-                <div className="relative z-10">
+                <div className="relative z-10 px-6 py-4">
                   {/* Back Button Row */}
                   <div className="flex items-center mb-3">
                     <button
@@ -1007,55 +1059,86 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   </div>
 
                   {/* Tab Navigation inside header */}
-                  <div className="flex justify-center items-center space-x-8 pt-2">
+                  <div className="flex justify-between sm:justify-center items-start sm:items-center sm:space-x-8 pt-2 w-full px-1 sm:px-0">
                     <button
                       onClick={() => setActiveTab('lyrics')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
+                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
                     >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'lyrics'
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'lyrics'
                         ? 'bg-white text-black'
                         : 'text-white hover:bg-white/20'
                         }`}>
                         <BookOpen className="w-4 h-4" />
                       </div>
-                      <span className="text-xs font-medium">Lyrics</span>
+                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Lyrics</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('solfas')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
+                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
                     >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'solfas'
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'solfas'
                         ? 'bg-white text-black'
                         : 'text-white hover:bg-white/20'
                         }`}>
                         <Music className="w-4 h-4" />
                       </div>
-                      <span className="text-xs font-medium">Conductor's Guide</span>
+                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Conductor</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('comments')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
+                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
                     >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'comments'
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'comments'
                         ? 'bg-white text-black'
                         : 'text-white hover:bg-white/20'
                         }`}>
                         <Users className="w-4 h-4" />
                       </div>
-                      <span className="text-xs font-medium">Comments</span>
+                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Comments</span>
                     </button>
-                    <button
-                      onClick={() => setActiveTab('history')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white"
-                    >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${activeTab === 'history'
-                        ? 'bg-white text-black'
-                        : 'text-white hover:bg-white/20'
-                        }`}>
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-medium">History</span>
-                    </button>
+                    {/* History is now in the More menu */}
+
+                    {/* More Menu */}
+                    <div className="relative flex-1 sm:flex-none flex justify-center px-1" ref={moreMenuRef}>
+                      <button
+                        onClick={() => setShowMoreMenu(!showMoreMenu)}
+                        className={`flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white ${(activeTab === 'notation' || activeTab === 'history') ? 'scale-110' : ''}`}
+                      >
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${(activeTab === 'notation' || activeTab === 'history')
+                          ? 'bg-white text-black'
+                          : 'text-white hover:bg-white/20'
+                          }`}>
+                          <MoreVertical className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">More</span>
+                      </button>
+
+                      {showMoreMenu && (
+                        <div className="absolute top-12 right-0 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 z-[200] animate-in fade-in zoom-in duration-200 origin-top-right">
+                          <button
+                            onClick={() => {
+                              setActiveTab('notation');
+                              setShowMoreMenu(false);
+                            }}
+                            className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'notation' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
+                          >
+                            <Music2 className="w-4 h-4" />
+                            <span className="text-sm font-medium">Solfas</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              setActiveTab('history');
+                              setShowMoreMenu(false);
+                            }}
+                            className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'history' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">History</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1065,9 +1148,9 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeTab === 'lyrics' && (
                   <div className="max-w-none">
                     <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {displayedSongData?.lyrics ? (
+                      {hasVisibleContent(displayedSongData?.lyrics) ? (
                         <div
-                          dangerouslySetInnerHTML={{ __html: displayedSongData.lyrics }}
+                          dangerouslySetInnerHTML={{ __html: displayedSongData?.lyrics || '' }}
                           dir="ltr"
                           style={{
                             lineHeight: '1.8',
@@ -1090,9 +1173,9 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 {activeTab === 'solfas' && (
                   <div className="max-w-none">
                     <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {displayedSongData?.solfas && displayedSongData.solfas.trim() !== '' ? (
+                      {hasVisibleContent(displayedSongData?.solfas) ? (
                         <div
-                          dangerouslySetInnerHTML={{ __html: displayedSongData.solfas }}
+                          dangerouslySetInnerHTML={{ __html: displayedSongData?.solfas || '' }}
                           dir="ltr"
                           style={{
                             lineHeight: '1.8',
@@ -1108,6 +1191,32 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         <div className="text-center py-8">
                           <div className="text-gray-500 text-sm mb-2">No Conductor's Guide Available</div>
                           <div className="text-gray-400 text-xs">Conductor's guide notation will be displayed here when available</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'notation' && (
+                  <div className="max-w-none">
+                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
+                      {hasVisibleContent(displayedSongData?.notation) ? (
+                        <div
+                          dangerouslySetInnerHTML={{ __html: displayedSongData?.notation || '' }}
+                          dir="ltr"
+                          style={{
+                            lineHeight: '1.8',
+                            fontSize: '14px',
+                            fontFamily: 'monospace',
+                            textAlign: 'left',
+                            direction: 'ltr',
+                            color: '#000000'
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="text-gray-500 text-sm mb-2">No Solfas Notation Available</div>
+                          <div className="text-gray-400 text-xs">Solfas notation will be displayed here when available</div>
                         </div>
                       )}
                     </div>
@@ -1190,6 +1299,16 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         style={activeHistoryTab === 'solfas' ? { backgroundColor: zoneColor } : {}}
                       >
                         Conductor's Guide
+                      </button>
+                      <button
+                        onClick={() => setActiveHistoryTab('notation')}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'notation'
+                          ? 'text-white shadow-md'
+                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
+                          }`}
+                        style={activeHistoryTab === 'notation' ? { backgroundColor: zoneColor } : {}}
+                      >
+                        Solfas Notation
                       </button>
                       <button
                         onClick={() => setActiveHistoryTab('comments')}
@@ -1444,6 +1563,80 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                                         <div className="flex-1">
                                           <div className="flex items-center gap-2 mb-2">
                                             <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                                              {entry.type}
+                                            </span>
+                                            <span className="text-xs text-slate-500">
+                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center justify-between">
+                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
+                                            {isExpanded ? (
+                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                                            ) : (
+                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {isExpanded && (
+                                      <div className="px-4 pb-4">
+                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
+                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {activeHistoryTab === 'notation' && (
+                        <div className="space-y-4">
+                          {isLoadingHistory ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                              <p className="text-gray-500 text-sm">Loading notation history...</p>
+                            </div>
+                          ) : getHistoryData('notation').length === 0 ? (
+                            <div className="text-center py-8">
+                              <Music2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                              <p className="text-gray-500 text-sm font-medium">No Notation History</p>
+                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
+                              <button
+                                onClick={() => loadHistoryEntries()}
+                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+                                title="Refresh history"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {getHistoryData('notation').map((entry) => {
+                                const isExpanded = expandedHistoryEntries.has(entry.id);
+                                return (
+                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
+                                    <div
+                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
+                                      onClick={() => toggleHistoryEntry(entry.id)}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <div
+                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                          style={{
+                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
+                                          }}
+                                        >
+                                          <Music2 className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
                                               {entry.type}
                                             </span>
                                             <span className="text-xs text-slate-500">

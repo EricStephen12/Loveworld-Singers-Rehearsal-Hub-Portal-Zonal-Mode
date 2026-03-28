@@ -128,6 +128,7 @@ export class PraiseNightSongsService {
         drummer: songData.drummer || '',
         lyrics: songData.lyrics || '',
         solfas: songData.solfas || '',
+        notation: songData.notation || '',
         audioFile: songData.audioFile || '',
         category: songData.category || '',
         categories: songData.categories || [],

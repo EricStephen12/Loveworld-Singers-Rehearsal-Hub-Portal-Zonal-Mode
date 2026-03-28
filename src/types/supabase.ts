@@ -206,6 +206,7 @@ export interface PraiseNightSong {
   drummer?: string;
   lyrics?: string;
   solfas?: string;
+  notation?: string;
   rehearsalCount?: number; // Manual rehearsal count
   audioFile?: string;
   mediaId?: number; // Reference to media table for uploaded audio files
@@ -229,7 +230,7 @@ export interface Comment {
 
 export interface HistoryEntry {
   id: string;
-  type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'song-details' | 'personnel' | 'music-details';
+  type: 'lyrics' | 'solfas' | 'notation' | 'audio' | 'comments' | 'song-details' | 'personnel' | 'music-details';
   title: string;
   description: string;
   old_value: string;
