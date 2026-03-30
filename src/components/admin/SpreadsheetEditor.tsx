@@ -103,6 +103,7 @@ export default function SpreadsheetEditor({
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [resizingCol, spreadsheet, onChange]);
+    
     useEffect(() => {
         if (initialData) {
             setSpreadsheet(initialData)
@@ -221,61 +222,63 @@ export default function SpreadsheetEditor({
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex flex-col h-full bg-white/95 backdrop-blur-xl border border-purple-200/60 rounded-2xl overflow-hidden shadow-xl shadow-purple-900/5 ring-1 ring-purple-100">
             {/* Toolbar */}
-            <div className="p-2 bg-white border-b border-slate-200 flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg">
+            <div className="p-3 bg-gradient-to-r from-purple-50/80 to-pink-50/80 border-b border-purple-100 flex items-center gap-3 flex-wrap backdrop-blur-md">
+                <div className="flex items-center gap-1 bg-white/60 shadow-sm border border-purple-100 p-1 rounded-xl">
                     <button
                         onClick={() => toggleStyle('bold')}
-                        className={`p-1.5 rounded-md transition-colors ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.bold ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-white/50'}`}
+                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.bold ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
                         <Bold className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => toggleStyle('italic')}
-                        className={`p-1.5 rounded-md transition-colors ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.italic ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-white/50'}`}
+                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.italic ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
                         <Italic className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="h-4 w-px bg-slate-200 mx-1" />
+                <div className="h-5 w-px bg-purple-200/60 mx-1" />
 
-                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg">
+                <div className="flex items-center gap-1 bg-white/60 shadow-sm border border-purple-100 p-1 rounded-xl">
                     <button
                         onClick={() => setAlignment('left')}
-                        className={`p-1.5 rounded-md transition-colors ${selectedCell && (spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'left' || !spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align) ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-white/50'}`}
+                        className={`p-1.5 rounded-lg transition-all ${selectedCell && (spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'left' || !spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align) ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
                         <AlignLeft className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => setAlignment('center')}
-                        className={`p-1.5 rounded-md transition-colors ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'center' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-white/50'}`}
+                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'center' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
                         <AlignCenter className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => setAlignment('right')}
-                        className={`p-1.5 rounded-md transition-colors ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'right' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-white/50'}`}
+                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'right' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
                         <AlignRight className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="h-4 w-px bg-slate-200 mx-1" />
+                <div className="h-5 w-px bg-purple-200/60 mx-1" />
 
-                <button
-                    onClick={addColumn}
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
-                >
-                    <Plus className="w-3.5 h-3.5" /> Col
-                </button>
-                <button
-                    onClick={addRow}
-                    className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors"
-                >
-                    <Plus className="w-3.5 h-3.5" /> Row
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={addColumn}
+                        className="flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100/80 border border-purple-200 px-3 py-1.5 rounded-xl hover:bg-purple-200 transition-all hover:shadow-sm"
+                    >
+                        <Plus className="w-3.5 h-3.5" /> Col
+                    </button>
+                    <button
+                        onClick={addRow}
+                        className="flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100/80 border border-purple-200 px-3 py-1.5 rounded-xl hover:bg-purple-200 transition-all hover:shadow-sm"
+                    >
+                        <Plus className="w-3.5 h-3.5" /> Row
+                    </button>
+                </div>
 
                 <div className="flex-1" />
 
@@ -283,10 +286,10 @@ export default function SpreadsheetEditor({
                     <button
                         onClick={() => onSave(spreadsheet)}
                         disabled={isSaving}
-                        className="flex items-center gap-2 text-xs font-bold text-white px-4 py-2 rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
-                        style={{ backgroundColor: themeColor }}
+                        className="flex items-center gap-2 text-xs font-bold text-white px-5 py-2.5 rounded-xl shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all active:scale-95 disabled:opacity-50"
+                        style={{ background: `linear-gradient(to right, ${themeColor}, #c026d3)` }}
                     >
-                        {isSaving ? <RotateCcw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Save Changes
                     </button>
                 )}
@@ -295,25 +298,25 @@ export default function SpreadsheetEditor({
             {/* Grid Area - Scrollable with fixed row/col headers */}
             <div
                 ref={scrollContainerRef}
-                className="flex-1 w-full overflow-auto relative rounded-b-xl pb-4"
+                className="flex-1 w-full overflow-auto relative rounded-b-xl pb-4 bg-white"
             >
                 {/* Visual indicator that it's scrollable */}
                 {canScrollRight && (
-                    <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-slate-900/10 to-transparent pointer-events-none z-30" />
+                    <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-purple-900/10 to-transparent pointer-events-none z-30" />
                 )}
                 {canScrollLeft && (
-                    <div className="absolute top-0 left-10 bottom-0 w-8 bg-gradient-to-r from-slate-900/10 to-transparent pointer-events-none z-30" />
+                    <div className="absolute top-0 left-10 bottom-0 w-8 bg-gradient-to-r from-purple-900/10 to-transparent pointer-events-none z-30" />
                 )}
 
                 <table className={`border-collapse bg-white min-w-[600px] sm:min-w-full ${resizingCol ? 'select-none' : ''}`}>
                     <thead>
                         <tr>
-                            <th className="w-10 bg-slate-100 border border-slate-200 sticky top-0 left-0 z-20"></th>
+                            <th className="w-10 bg-purple-50/80 border border-purple-100 sticky top-0 left-0 z-20 backdrop-blur-sm"></th>
                             {spreadsheet.columns.map((col, cIdx) => (
                                 <th
                                     key={cIdx}
                                     style={{ width: col.width, minWidth: Math.max(100, col.width) }}
-                                    className={`bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest py-2 px-1 sticky top-0 z-10 group relative transition-colors ${editingHeader?.type === 'col' && editingHeader.index === cIdx ? 'ring-2 ring-indigo-500 z-30' : ''}`}
+                                    className={`bg-purple-50/80 border border-purple-100 text-[10px] font-black text-purple-600 uppercase tracking-widest py-2 px-1 sticky top-0 z-10 group relative transition-colors backdrop-blur-sm ${editingHeader?.type === 'col' && editingHeader.index === cIdx ? 'ring-2 ring-fuchsia-400 z-30' : ''}`}
                                 >
                                     <div
                                         className="w-full h-full flex items-center justify-center cursor-pointer"
@@ -322,7 +325,7 @@ export default function SpreadsheetEditor({
                                         {editingHeader?.type === 'col' && editingHeader.index === cIdx ? (
                                             <input
                                                 autoFocus
-                                                className="w-full bg-white px-2 py-1 text-xs font-bold text-slate-900 normal-case outline-none ring-1 ring-indigo-300 rounded"
+                                                className="w-full bg-white px-2 py-1 text-xs font-bold text-slate-900 normal-case outline-none ring-2 ring-fuchsia-400 rounded-lg shadow-sm"
                                                 value={col.label || ''}
                                                 onChange={(e) => updateHeaderLabel('col', cIdx, e.target.value)}
                                                 onBlur={() => setEditingHeader(null)}
@@ -332,22 +335,22 @@ export default function SpreadsheetEditor({
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center justify-center gap-0.5">
-                                                <span className="opacity-60">{getColumnName(cIdx)}</span>
-                                                {col.label && <span className="normal-case font-bold text-slate-700 text-[9px] truncate max-w-full px-1">{col.label}</span>}
+                                                <span className="opacity-70 text-purple-500">{getColumnName(cIdx)}</span>
+                                                {col.label && <span className="normal-case font-bold text-purple-900 text-[10px] truncate max-w-full px-1">{col.label}</span>}
                                             </div>
                                         )}
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); deleteColumn(cIdx); }}
-                                        className="absolute right-3 top-0.5 p-1 rounded-md bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                        className="absolute right-3 top-1 p-1 rounded-md bg-rose-100 text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-rose-200"
                                         title="Delete Column"
                                     >
-                                        <Trash2 className="w-2.5 h-2.5" />
+                                        <Trash2 className="w-3 h-3" />
                                     </button>
 
                                     {/* Column Resizer Handle */}
                                     <div
-                                        className={`absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-400 z-30 ${resizingCol?.index === cIdx ? 'bg-indigo-500' : ''}`}
+                                        className={`absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-fuchsia-400 z-30 transition-colors ${resizingCol?.index === cIdx ? 'bg-fuchsia-500' : ''}`}
                                         onMouseDown={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
@@ -362,13 +365,13 @@ export default function SpreadsheetEditor({
                         {spreadsheet.rows.map((row, rIdx) => (
                             <tr key={rIdx} style={{ height: row.height }}>
                                 <td
-                                    className={`bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-400 text-center sticky left-0 z-10 group relative cursor-pointer hover:bg-slate-100 transition-colors ${editingHeader?.type === 'row' && editingHeader.index === rIdx ? 'ring-2 ring-indigo-500 z-30' : ''}`}
+                                    className={`bg-purple-50/50 border border-purple-100 text-[10px] font-black text-purple-500 text-center sticky left-0 z-10 group relative cursor-pointer hover:bg-purple-100/80 transition-colors ${editingHeader?.type === 'row' && editingHeader.index === rIdx ? 'ring-2 ring-fuchsia-400 z-30' : ''}`}
                                     onClick={() => setEditingHeader({ type: 'row', index: rIdx })}
                                 >
                                     {editingHeader?.type === 'row' && editingHeader.index === rIdx ? (
                                         <input
                                             autoFocus
-                                            className="w-16 bg-white px-1 py-0.5 text-center text-xs font-bold text-slate-900 normal-case outline-none ring-1 ring-indigo-300 rounded shadow-lg absolute left-10 top-0 z-40"
+                                            className="w-16 bg-white px-1 py-1 text-center text-xs font-bold text-slate-900 normal-case outline-none ring-2 ring-fuchsia-400 rounded-lg shadow-xl absolute left-10 top-0 z-40"
                                             value={row.label || ''}
                                             onChange={(e) => updateHeaderLabel('row', rIdx, e.target.value)}
                                             onBlur={() => setEditingHeader(null)}
@@ -378,15 +381,15 @@ export default function SpreadsheetEditor({
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center">
-                                            <span className="opacity-60">{rIdx + 1}</span>
-                                            {row.label && <span className="normal-case font-bold text-indigo-600 text-[8px] truncate max-w-[36px] mt-0.5">{row.label}</span>}
+                                            <span className="opacity-80">{rIdx + 1}</span>
+                                            {row.label && <span className="normal-case font-bold text-fuchsia-600 text-[9px] truncate max-w-[36px] mt-0.5">{row.label}</span>}
                                         </div>
                                     )}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); deleteRow(rIdx); }}
-                                        className="absolute left-0 bottom-0 p-1 rounded-md bg-rose-50 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                        className="absolute left-0 bottom-0 p-1 rounded-md bg-rose-100 text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-rose-200"
                                     >
-                                        <Trash2 className="w-2.5 h-2.5" />
+                                        <Trash2 className="w-3 h-3" />
                                     </button>
                                 </td>
                                 {spreadsheet.columns.map((_, cIdx) => {
@@ -397,14 +400,14 @@ export default function SpreadsheetEditor({
                                     return (
                                         <td
                                             key={cIdx}
-                                            className={`border border-slate-200 p-0 transition-all ${isSelected ? 'ring-2 ring-indigo-500 ring-inset z-10 shadow-lg shadow-indigo-100' : 'hover:bg-slate-50/50'}`}
+                                            className={`border border-purple-100/60 p-0 transition-all ${isSelected ? 'ring-2 ring-fuchsia-400 ring-inset z-10 shadow-lg shadow-fuchsia-500/10 bg-fuchsia-50/30' : 'hover:bg-purple-50/40'}`}
                                             onClick={() => setSelectedCell({ row: rIdx, col: cIdx })}
                                         >
                                             <input
                                                 value={cell.value}
                                                 onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
-                                                className={`w-full h-full min-h-[40px] px-3 py-2 text-sm bg-transparent outline-none border-none
-                                                    ${cell.bold ? 'font-bold' : ''}
+                                                className={`w-full h-full min-h-[40px] px-3 py-2 text-sm bg-transparent outline-none border-none text-slate-700 placeholder:text-purple-300
+                                                    ${cell.bold ? 'font-bold text-slate-900' : ''}
                                                     ${cell.italic ? 'italic' : ''}
                                                     ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}
                                                 `}
@@ -420,10 +423,15 @@ export default function SpreadsheetEditor({
             </div>
 
             {/* Footer / Info */}
-            <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                <div>{spreadsheet.rows.length} Rows × {spreadsheet.columns.length} Columns</div>
+            <div className="px-4 py-3 bg-purple-50/80 border-t border-purple-100 flex justify-between items-center text-[10px] font-bold text-purple-600 uppercase tracking-widest backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></span>
+                    {spreadsheet.rows.length} Rows × {spreadsheet.columns.length} Columns
+                </div>
                 {selectedCell && (
-                    <div className="text-indigo-600">Cell {getColumnName(selectedCell.col)}{selectedCell.row + 1}</div>
+                    <div className="text-fuchsia-600 bg-white px-3 py-1 rounded-full shadow-sm border border-purple-100">
+                        Cell {getColumnName(selectedCell.col)}{selectedCell.row + 1}
+                    </div>
                 )}
             </div>
         </div>

@@ -1124,7 +1124,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                               className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'notation' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
                             >
                               <Music2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                              <span className="text-sm font-medium whitespace-nowrap">Solfas Notation</span>
+                              <span className="text-sm font-medium whitespace-nowrap">Solfa Notation</span>
                             </button>
                             
                             <button
@@ -1217,7 +1217,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                         />
                       ) : (
                         <div className="text-center py-8">
-                          <div className="text-gray-500 text-sm mb-2">No Solfas Notation Available</div>
+                          <div className="text-gray-500 text-sm mb-2">No Solfa Notation Available</div>
                           <div className="text-gray-400 text-xs">Solfas notation will be displayed here when available</div>
                         </div>
                       )}
@@ -1310,7 +1310,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           }`}
                         style={activeHistoryTab === 'notation' ? { backgroundColor: zoneColor } : {}}
                       >
-                        Solfas Notation
+                        Solfa Notation
                       </button>
                       <button
                         onClick={() => setActiveHistoryTab('comments')}

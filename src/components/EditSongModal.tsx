@@ -1,4 +1,4 @@
-﻿ "use client";
+ "use client";
 
 // Smart Auto-History System - Fixed icon imports
 import React, { useState, useEffect } from 'react';
@@ -152,7 +152,7 @@ export default function EditSongModal({
       'music-details': 'Music Details',
       'lyrics': 'Lyrics',
       'solfas': "Conductor's Guide",
-      'notation': 'Solfas Notation',
+      'notation': 'Solfa Notation',
       'audio': 'Audio',
       'comments': 'Comments'
     };
@@ -334,7 +334,7 @@ export default function EditSongModal({
             'music-details': 'Music Details',
             'lyrics': 'Lyrics',
             'solfas': "Conductor's Guide",
-            'notation': 'Solfas Notation',
+            'notation': 'Solfa Notation',
             'audio': 'Audio',
             'comments': 'Comments'
           };
@@ -1598,13 +1598,13 @@ Do Re Mi Fa Sol La Ti Do"
                     </div>
                   </div>
 
-                  {/* Solfas Notation Section */}
+                  {/* Solfa Notation Section */}
                   <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
                     <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
                       <div className="flex items-center justify-between">
                         <h4 className="text-base sm:text-lg font-semibold text-slate-900 flex items-center gap-2">
                           <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                          Solfas Notation
+                          Solfa Notation
                         </h4>
                         <button
                           onClick={() => handleCreateHistory('notation')}
