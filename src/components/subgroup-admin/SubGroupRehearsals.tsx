@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -12,10 +12,13 @@ import {
   X
 } from 'lucide-react';
 import CustomLoader from '@/components/CustomLoader';
+import { useAuth } from '@/hooks/useAuth';
+import { Toast, ToastContainer } from '@/components/Toast';
 
 interface SubGroupRehearsalsProps {
   subGroupId: string;
   zoneId: string;
+  subGroupName?: string;
 }
 
 interface Rehearsal {
@@ -26,11 +29,22 @@ interface Rehearsal {
   songCount: number;
 }
 
-export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehearsalsProps) {
+export default function SubGroupRehearsals({ subGroupId, zoneId, subGroupName }: SubGroupRehearsalsProps) {
+  const { user } = useAuth();
   const [rehearsals, setRehearsals] = useState<Rehearsal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Toast state
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Form state
   const [newName, setNewName] = useState('');
@@ -62,7 +76,7 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
   };
 
   const handleCreate = async () => {
-    if (!newName.trim() || !newDate) return;
+    if (!newName.trim() || !newDate || !user) return;
 
     setCreating(true);
     try {
@@ -70,27 +84,47 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
       const result = await SubGroupDatabaseService.createRehearsal(
         subGroupId,
         zoneId,
-        { name: newName, date: newDate, location: newLocation },
-        'system');
+        { 
+          name: newName, 
+          date: newDate, 
+          location: newLocation,
+          subGroupName: subGroupName || ''
+        },
+        user.uid);
 
       if (result.success) {
+        addToast({
+          type: 'success',
+          message: `Rehearsal "${newName}" created successfully!`
+        });
         setNewName('');
         setNewDate('');
         setNewLocation('');
         setShowCreateModal(false);
         loadRehearsals();
+      } else {
+        addToast({
+          type: 'error',
+          message: result.error || 'Failed to create rehearsal'
+        });
       }
     } catch (error) {
- console.error('Error creating rehearsal:', error);
+      console.error('Error creating rehearsal:', error);
+      addToast({
+        type: 'error',
+        message: 'A system error occurred. Please try again.'
+      });
     } finally {
       setCreating(false);
     }
   };
 
-  const filteredRehearsals = rehearsals.filter(r =>
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.location?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRehearsals = rehearsals
+    .filter(r =>
+      r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.location?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (isLoading) {
     return (
@@ -253,6 +287,8 @@ export default function SubGroupRehearsals({ subGroupId, zoneId }: SubGroupRehea
           </div>
         </div>
       )}
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

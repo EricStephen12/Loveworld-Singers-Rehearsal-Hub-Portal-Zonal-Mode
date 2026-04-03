@@ -7,9 +7,8 @@ import {
   Users,
   Bell,
   Menu,
-  Music,
-  Calendar
 } from "lucide-react";
+import { useZone } from '@/hooks/useZone';
 
 interface AdminMobileNavProps {
   activeSection: string;
@@ -24,6 +23,9 @@ const AdminMobileNav = React.memo(({
   isRestrictedAdmin = false,
   onMenuOpen
 }: AdminMobileNavProps) => {
+  const { currentZone } = useZone();
+  const themeColor = currentZone?.themeColor || '#9333EA';
+
   // Map sections to their nav item for highlighting
   const getSectionNavItem = (section: string): string => {
     switch (section) {
@@ -69,36 +71,63 @@ const AdminMobileNav = React.memo(({
   });
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-gray-200 safe-area-bottom">
-      <div className="flex items-center justify-around h-14">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.section === 'menu'
-            ? currentNavItem === 'More'
-            : currentNavItem === item.section;
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[50] px-3 pb-[env(safe-area-inset-bottom,0px)]">
+      {/* Floating pill container */}
+      <div className="bg-white/95 backdrop-blur-xl border border-gray-200/60 rounded-2xl shadow-[0_-2px_20px_rgba(0,0,0,0.08)] mb-1.5">
+        <div className="flex items-center justify-around h-[60px] px-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.section === 'menu'
+              ? currentNavItem === 'More'
+              : currentNavItem === item.section;
 
-          return (
-            <button
-              key={item.section}
-              onClick={() => {
-                if (item.section === 'menu') {
-                  onMenuOpen();
-                } else {
-                  setActiveSection(item.section);
-                }
-              }}
-              className="flex flex-col items-center justify-center flex-1 h-full active:opacity-60 transition-opacity"
-            >
-              <Icon
-                className={`w-6 h-6 ${isActive ? 'text-purple-600' : 'text-gray-400'}`}
-                strokeWidth={isActive ? 2.5 : 1.5}
-              />
-              <span className={`text-[10px] mt-0.5 ${isActive ? 'text-purple-600 font-semibold' : 'text-gray-400'}`}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={item.section}
+                onClick={() => {
+                  if (item.section === 'menu') {
+                    onMenuOpen();
+                  } else {
+                    setActiveSection(item.section);
+                  }
+                }}
+                className={`
+                  relative flex flex-col items-center justify-center flex-1 h-full
+                  transition-all duration-200 active:scale-90
+                  ${isActive ? '' : 'opacity-50'}
+                `}
+              >
+                {/* Active background pill */}
+                {isActive && (
+                  <div
+                    className="absolute inset-x-2 inset-y-1.5 rounded-xl opacity-[0.08]"
+                    style={{ backgroundColor: themeColor }}
+                  />
+                )}
+
+                <Icon
+                  className="w-[22px] h-[22px] relative z-10 transition-colors duration-200"
+                  style={{ color: isActive ? themeColor : '#9CA3AF' }}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                />
+                <span
+                  className="text-[10px] mt-0.5 font-semibold relative z-10 transition-colors duration-200"
+                  style={{ color: isActive ? themeColor : '#9CA3AF' }}
+                >
+                  {item.label}
+                </span>
+
+                {/* Active indicator dot */}
+                {isActive && (
+                  <div
+                    className="absolute bottom-1 w-1 h-1 rounded-full"
+                    style={{ backgroundColor: themeColor }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

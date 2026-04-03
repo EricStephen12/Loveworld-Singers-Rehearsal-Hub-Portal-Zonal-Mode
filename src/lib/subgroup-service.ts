@@ -1,11 +1,10 @@
-﻿/**
+/**
  * Sub-Group Service
  * Handles sub-group creation, approval, and management
  * 
  * Flow:
  * 1. Member requests to create a sub-group (status: 'pending')
- * 2. Zone Coordinator approves (status: 'approved_pending_payment')
- * 3. Sub-Group Coordinator pays (status: 'active')
+ * 2. Zone Coordinator approves (status: 'active')
  */
 
 import { FirebaseDatabaseService } from './firebase-database'
@@ -24,7 +23,7 @@ import { db } from './firebase-setup'
 
 // Sub-Group Types
 export type SubGroupType = 'church' | 'campus' | 'cell' | 'youth' | 'other'
-export type SubGroupStatus = 'pending' | 'approved_pending_payment' | 'active' | 'rejected'
+export type SubGroupStatus = 'pending' | 'active' | 'rejected'
 
 export interface SubGroup {
   id: string
@@ -247,8 +246,9 @@ export class SubGroupService {
       }
       
       await FirebaseDatabaseService.updateDocument('subgroups', subGroupId, {
-        status: 'approved_pending_payment',
+        status: 'active',
         approvedAt: new Date(),
+        activatedAt: new Date(),
         approvedBy,
         approvedByName
       })
@@ -258,7 +258,7 @@ export class SubGroupService {
         subGroup.coordinatorId,
         subGroup.name,
         'approved',
-        'Your sub-group request has been approved! Please complete payment to activate.'
+        'Your sub-group request has been approved and is now active! You can now start managing your songs and rehearsals.'
       )
       
       return { success: true }
@@ -317,32 +317,17 @@ export class SubGroupService {
   }
   
   /**
-   * Activate a sub-group after payment (Sub-Group Coordinator action)
+   * Activate a sub-group (Deprecated - now active immediately on approval)
    */
   static async activateSubGroup(subGroupId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      
-      const subGroup = await this.getSubGroup(subGroupId)
-      if (!subGroup) {
-        return { success: false, error: 'Sub-group not found' }
-      }
-      
-      if (subGroup.status !== 'approved_pending_payment') {
-        return { success: false, error: 'Sub-group is not approved for activation' }
-      }
-      
       await FirebaseDatabaseService.updateDocument('subgroups', subGroupId, {
         status: 'active',
         activatedAt: new Date()
       })
-      
       return { success: true }
     } catch (error) {
- console.error(' Error activating sub-group:', error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      }
+      return { success: false, error: 'Failed to activate' }
     }
   }
   

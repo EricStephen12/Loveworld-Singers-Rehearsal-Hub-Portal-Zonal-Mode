@@ -12,15 +12,13 @@ import {
   X,
   ChevronRight,
   Home,
-  Settings
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubGroup } from '@/hooks/useSubGroup';
 
 // Sub-group admin sections
 import SubGroupDashboard from '@/components/subgroup-admin/SubGroupDashboard';
-import SubGroupRehearsals from '@/components/subgroup-admin/SubGroupRehearsals';
-import SubGroupSongs from '@/components/subgroup-admin/SubGroupSongs';
+import SubGroupPagesSection from '@/components/subgroup-admin/SubGroupPagesSection';
 import SubGroupMembers from '@/components/subgroup-admin/SubGroupMembers';
 import SubGroupNotifications from '@/components/subgroup-admin/SubGroupNotifications';
 
@@ -67,8 +65,7 @@ export default function SubGroupAdminPage() {
 
   const sidebarItems = [
     { icon: BarChart3, label: 'Dashboard', active: activeSection === 'Dashboard' },
-    { icon: Calendar, label: 'Rehearsals', active: activeSection === 'Rehearsals' },
-    { icon: Music, label: 'Songs', active: activeSection === 'Songs' },
+    { icon: Calendar, label: 'Pages', active: activeSection === 'Pages' },
     { icon: Users, label: 'Members', active: activeSection === 'Members' },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications' },
   ];
@@ -192,13 +189,17 @@ export default function SubGroupAdminPage() {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto">
           {activeSection === 'Dashboard' && currentSubGroup && (
-            <SubGroupDashboard subGroup={currentSubGroup} />
+            <SubGroupDashboard 
+              subGroup={currentSubGroup} 
+              onNavigate={(section) => setActiveSection(section)}
+            />
           )}
-          {activeSection === 'Rehearsals' && currentSubGroup && (
-            <SubGroupRehearsals subGroupId={currentSubGroup.id} zoneId={currentSubGroup.zoneId} />
-          )}
-          {activeSection === 'Songs' && currentSubGroup && (
-            <SubGroupSongs subGroupId={currentSubGroup.id} zoneId={currentSubGroup.zoneId} />
+          {activeSection === 'Pages' && currentSubGroup && (
+            <SubGroupPagesSection 
+              subGroupId={currentSubGroup.id} 
+              zoneId={currentSubGroup.zoneId} 
+              subGroupName={currentSubGroup.name}
+            />
           )}
           {activeSection === 'Members' && currentSubGroup && (
             <SubGroupMembers subGroupId={currentSubGroup.id} zoneId={currentSubGroup.zoneId} />

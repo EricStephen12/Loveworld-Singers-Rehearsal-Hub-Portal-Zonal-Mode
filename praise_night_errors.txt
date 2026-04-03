@@ -1,0 +1,2 @@
+﻿src/app/pages/praise-night/page.tsx(2422,5): error TS1005: ')' expected.
+src/app/pages/praise-night/page.tsx(2423,3): error TS1109: Expression expected.

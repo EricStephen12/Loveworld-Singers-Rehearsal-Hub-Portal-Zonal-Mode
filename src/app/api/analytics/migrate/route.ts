@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // ANALYTICS MIGRATION API - BIG DATA APPROACH
 // Like big companies: fetch raw data in TIME-BOUNDED CHUNKS
 // Process one month at a time, not everything at once

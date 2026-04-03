@@ -1,4 +1,4 @@
-﻿import { Home, User, Bell, Users, Music, Calendar, Play, BarChart3, HelpCircle, LogOut, Headphones, MessageCircle, RefreshCw, RotateCcw, RotateCw, Mic, Film, Shield, Crown } from 'lucide-react'
+import { Home, User, Bell, Users, Music, Calendar, Play, BarChart3, HelpCircle, LogOut, Headphones, MessageCircle, RefreshCw, RotateCcw, RotateCw, Mic, Film, Shield, Crown } from 'lucide-react'
 
 export type MenuItem = {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>

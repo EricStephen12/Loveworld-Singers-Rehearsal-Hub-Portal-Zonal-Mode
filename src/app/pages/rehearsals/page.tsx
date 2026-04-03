@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { ChevronRight, Calendar, Users, Music, MapPin, Bell, Mic, Archive } from 'lucide-react'
+import { ChevronRight, Calendar, Users, Music, MapPin, Bell, Mic, Archive, Shield } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -12,12 +12,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { handleAppRefresh } from '@/utils/refresh-utils'
 import { useZone } from '@/hooks/useZone'
 import { isHQGroup } from '@/config/zones'
+import { useSubGroup } from '@/hooks/useSubGroup'
 
 export default function RehearsalsPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const { signOut, profile } = useAuth()
   const { currentZone, isZoneCoordinator, userRole } = useZone()
+  const { isSubGroupCoordinator, memberSubGroups } = useSubGroup()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -149,7 +151,29 @@ export default function RehearsalsPage() {
         gradient: 'from-slate-600 via-gray-600 to-zinc-600',
         iconBg: 'bg-slate-100',
         iconColor: 'text-slate-600'
-      }
+      },
+      {
+        id: 'subgroups',
+        title: 'Sub-Groups',
+        description: 'Access your church choir or campus fellowship rehearsal hub',
+        icon: Users,
+        href: memberSubGroups.length > 0 
+          ? '/pages/subgroups' 
+          : '/pages/profile?tab=subgroups',
+        gradient: 'from-orange-600 via-amber-600 to-yellow-600',
+        iconBg: 'bg-orange-100',
+        iconColor: 'text-orange-600'
+      },
+      ...(isSubGroupCoordinator ? [{
+        id: 'subgroup-admin',
+        title: 'Subgroup Admin',
+        description: 'Manage your subgroup songs, members, and rehearsals',
+        icon: Shield,
+        href: '/subgroup-admin',
+        gradient: 'from-indigo-600 via-violet-600 to-purple-600',
+        iconBg: 'bg-indigo-100',
+        iconColor: 'text-indigo-600'
+      }] : [])
     ];
 
     const isHQ = currentZone ? isHQGroup(currentZone.id) : false;
@@ -165,18 +189,27 @@ export default function RehearsalsPage() {
       }
       
       if (option.id === 'archive') {
-        const isPresident = currentZone?.id === 'zone-president' || currentZone?.id === 'zone-president-2';
-        const isDirector = currentZone?.id === 'zone-director';
-        const isOftp = currentZone?.id === 'zone-oftp';
-        const isAdmin = profile?.role === 'admin' || profile?.role === 'boss' || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
-        const isHqMember = profile?.is_hq_member === true || userRole === 'hq_member';
+        const isSpecialZone = 
+          currentZone?.id === 'zone-president' || 
+          currentZone?.id === 'zone-president-2' ||
+          currentZone?.id === 'zone-director' || 
+          currentZone?.id === 'zone-oftp' ||
+          currentZone?.id === 'zone-oftd';
 
-        return isPresident || isDirector || isOftp || isZoneCoordinator || isAdmin || isHqMember;
+        const isAdmin = 
+          profile?.role === 'admin' || 
+          profile?.role === 'boss' || 
+          userRole === 'hq_admin' || 
+          userRole === 'super_admin' || 
+          userRole === 'boss';
+
+        // Archive visibility: Admins, Zonal Coordinators, or Special Zones (President, Director, OFTP)
+        return isSpecialZone || isZoneCoordinator || isAdmin;
       }
       
       return true;
     });
-  }, [currentZone, isZoneCoordinator, profile]);
+  }, [currentZone, isZoneCoordinator, profile, userRole, isSubGroupCoordinator, memberSubGroups]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-slate-50">

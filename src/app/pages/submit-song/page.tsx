@@ -11,7 +11,6 @@ import { uploadAudio } from '@/lib/cloudinary-setup'
 import { isHQGroup } from '@/config/zones'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
-import { NavigationManager } from '@/utils/navigation'
 import { ScreenHeader } from '@/components/ScreenHeader'
 
 

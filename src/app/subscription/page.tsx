@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
-import { SUBSCRIPTION_PLANS, formatPrice, ESPEES_CONFIG } from '@/config/subscriptions'
-import { Check, CreditCard, Shield, Crown, X, Upload, Copy, CheckCircle, AlertCircle, Home as HomeIcon, User as UserIcon, Sparkles, Calendar, Trash2, Info } from 'lucide-react'
+import { Check, CreditCard, Shield, Crown, X, Upload, Copy, CheckCircle, AlertCircle, Home as HomeIcon, User as UserIcon, Sparkles, Calendar, Trash2, Info, RefreshCw } from 'lucide-react'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { cancelSubscription } from '@/lib/subscription-service'
@@ -161,68 +160,67 @@ export default function SubscriptionPage() {
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-      {/* Header */}
-      <ScreenHeader
-        title={step === 'plans' ? 'Upgrade to Premium' : step === 'success' ? 'Success' : 'Subscription'}
-        showBackButton={true}
-        onBackClick={() => router.push('/home')}
-        rightImageSrc="/logo.png"
-      />
+      {/* Header - Minimalist & Integrated */}
+      <div className="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-50">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/home')}
+              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter font-outfit">Subscription Hub</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100/50">
+              <Shield className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Secure & Verified</span>
+            </div>
+            <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="px-4 py-6">
         {step === 'plans' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto py-12">
             {/* Header Section */}
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Go Premium</h2>
-              <p className="text-gray-600 text-lg mb-6">
+            <div className="text-center mb-16 px-6">
+              <h2 className="text-5xl font-black text-slate-950 mb-6 tracking-tighter uppercase font-outfit">Go Premium</h2>
+              <p className="text-slate-500 text-lg max-w-xl mx-auto leading-relaxed font-medium">
                 Unlock the full power of Loveworld Singers Rehearsal Hub.
               </p>
-
-              {/* HQ / Admin Acknowledgement */}
-              {isPremiumTier && !isIndividualPremium && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto flex items-start gap-4 text-left shadow-sm">
-                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Crown className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-amber-900 text-sm">Zone Premium Access</h4>
-                    <p className="text-amber-800/70 text-xs mt-1 leading-relaxed">
-                      You already have Premium features unlocked through your current Zone or administrative role. You don't need to purchase a plan, but you can still buy an individual subscription to maintain Premium status across all zones.
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Pricing Card: Premium Individual */}
-            <div className="max-w-md mx-auto mb-12 pt-4">
-              <div className="relative rounded-[2.5rem] p-10 bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 border-2 border-white/10 shadow-2xl flex flex-col group transition-all hover:border-purple-500/50">
+            <div className="max-w-[480px] mx-auto px-6 mb-16">
+              <div className="relative rounded-[3rem] p-12 bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950 border-2 border-white/10 shadow-[0_32px_64px_-16px_rgba(79,70,229,0.3)] flex flex-col group transition-all hover:border-purple-500/50">
                 {/* Badge */}
-                <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
-                  <div className="px-6 py-2.5 bg-gradient-to-r from-yellow-400 to-amber-600 rounded-full text-[10px] font-black tracking-[0.2em] text-white shadow-xl flex items-center gap-2">
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <div className="px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-600 rounded-full text-[10px] font-black tracking-[0.25em] text-white shadow-2xl flex items-center gap-2 border-2 border-white/10">
                     <Crown className="w-4 h-4" />
                     PREMIUM INDIVIDUAL
                   </div>
                 </div>
 
-                <div className="text-center mb-10 pt-4">
-                  <h3 className="text-3xl font-black text-white mb-3 tracking-tight">Full Access</h3>
-                  <p className="text-purple-200/50 text-sm leading-relaxed">Everything you need to grow as a Loveworld Singer.</p>
+                <div className="text-center mb-12 pt-6">
+                  <h3 className="text-3xl font-black text-white mb-3 tracking-tighter uppercase font-outfit">Full Access</h3>
+                  <p className="text-purple-200/40 text-sm leading-relaxed font-medium">Everything you need to grow as a Loveworld Singer.</p>
                 </div>
 
-                <div className="text-center mb-10">
+                <div className="text-center mb-12">
                   <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-7xl font-black text-white tracking-tighter">1</span>
+                    <span className="text-8xl font-black text-white tracking-tighter font-outfit">1</span>
                     <div className="text-left">
-                      <span className="block text-xl font-bold text-amber-400 leading-none">ESPEE</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Per Month</span>
+                      <span className="block text-2xl font-black text-amber-400 leading-none uppercase font-outfit">ESPEE</span>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Per Month</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-5 flex-1 mb-10">
+                <div className="space-y-6 flex-1 mb-12 px-2">
                   {[
                     'AudioLab',
                     'Unlimited Account Access',
@@ -231,10 +229,10 @@ export default function SubscriptionPage() {
                     'Advanced Admin Analytics'
                   ].map((feature, i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <div className="w-6 h-6 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3.5 h-3.5 text-purple-400" />
+                      <div className="w-7 h-7 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0 border border-purple-500/30">
+                        <Check className="w-4 h-4 text-purple-400" />
                       </div>
-                      <span className="text-gray-300 font-medium text-sm">{feature}</span>
+                      <span className="text-gray-300 font-bold text-sm tracking-tight">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -242,13 +240,13 @@ export default function SubscriptionPage() {
                 <button
                   onClick={handlePayWithKingsPay}
                   disabled={isProcessing}
-                  className="w-full py-5 bg-white text-gray-950 rounded-2xl font-black text-xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-purple-900/40 flex items-center justify-center gap-3 group-hover:bg-purple-500 group-hover:text-white"
+                  className="w-full h-20 bg-white text-gray-950 rounded-[2rem] font-black text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-purple-900/40 flex items-center justify-center gap-4 group-hover:bg-purple-500 group-hover:text-white uppercase tracking-widest"
                 >
                   {isProcessing ? (
-                    <div className="w-6 h-6 border-3 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+                    <RefreshCw className="w-6 h-6 animate-spin" />
                   ) : (
                     <>
-                      <CreditCard className="w-6 h-6" />
+                      <CreditCard className="w-7 h-7" />
                       PAY WITH ESPEES
                     </>
                   )}
@@ -258,7 +256,7 @@ export default function SubscriptionPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="max-w-md mx-auto mb-8 p-5 bg-red-50/50 border border-red-200/50 rounded-[2rem] flex items-start gap-4 backdrop-blur-sm">
+              <div className="max-w-md mx-auto mb-12 p-5 bg-red-50/50 border border-red-200/50 rounded-[2rem] flex items-start gap-4 backdrop-blur-sm">
                 <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
                   <AlertCircle className="w-5 h-5 text-red-600" />
                 </div>
@@ -270,177 +268,54 @@ export default function SubscriptionPage() {
             )}
 
             {/* Trust Badges */}
-            <div className="flex justify-center items-center gap-8 text-gray-400">
-              <div className="flex items-center gap-2">
+            <div className="flex justify-center items-center gap-10 text-slate-400 opacity-60">
+              <div className="flex items-center gap-2.5">
                 <Shield className="w-4 h-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Secure Payment</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Secure</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+              <div className="flex items-center gap-2.5">
                 <CheckCircle className="w-4 h-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Instant Activation</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Instant</span>
               </div>
             </div>
           </div>
         )}
 
         {step === 'success' && (
-          <div className="text-center py-12 px-6 max-w-md mx-auto">
+          <div className="text-center py-24 px-6 max-w-xl mx-auto">
             <div className="relative mb-12">
-              <div className="w-32 h-32 bg-gradient-to-tr from-green-400 to-emerald-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-green-500/30 rotate-12 transition-transform hover:rotate-0 duration-500">
+              <div className="w-32 h-32 bg-gradient-to-tr from-green-400 to-emerald-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/30 rotate-12 transition-transform hover:rotate-0 duration-500">
                 <CheckCircle className="w-16 h-16 text-white" />
               </div>
               <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-yellow-400 animate-pulse" />
             </div>
 
-            <h2 className="text-5xl font-black text-gray-900 mb-6 tracking-tighter">
+            <h2 className="text-6xl font-black text-slate-950 mb-6 tracking-tighter uppercase font-outfit">
               BEYOND LIMITS!
             </h2>
 
-            <p className="text-gray-600 mb-10 text-lg leading-relaxed font-medium">
-              Your Individual Premium subscription is now active. The Hub is officially yours!
+            <p className="text-slate-500 mb-12 text-lg leading-relaxed font-medium">
+              Your Individual Premium subscription is now active. <br />
+              The Hub is officially yours!
             </p>
 
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 rounded-[2rem] p-8 mb-12 flex flex-col items-center text-center shadow-inner">
-              <div className="w-16 h-16 bg-white p-4 rounded-2xl shadow-md mb-4 rotate-3">
-                <Crown className="w-8 h-8 text-purple-600" />
-              </div>
-              <div>
-                <h4 className="font-black text-purple-900 text-lg">Premium Active</h4>
-                <p className="text-purple-700/60 text-sm mt-2 leading-relaxed">
-                  Enjoy unrestricted access to the AudioLab, Custom Song Submission, and all Rehearsals.
-                </p>
-              </div>
+            <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-slate-100 rounded-[3rem] p-10 mb-12 flex flex-col items-center text-center shadow-inner relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-3xl" />
+                <div className="w-20 h-20 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-center shadow-xl mb-6 rotate-3">
+                  <Crown className="w-10 h-10 text-indigo-600" />
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-950 text-xl tracking-tight uppercase mb-3 font-outfit">Premium Active</h4>
+                  <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                    Enjoy unrestricted access to the AudioLab, Custom Song Submission, and all professional Rehearsal Hubs.
+                  </p>
+                </div>
             </div>
 
-            {/* Payment History Section */}
-            {isIndividualPremium && (
-              <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden mb-8">
-                <div className="p-8 border-b border-gray-50 bg-gray-50/50">
-                  <h3 className="text-lg font-bold text-gray-900">Payment History</h3>
-                  <p className="text-sm text-gray-500">View all your subscription payments</p>
-                </div>
-
-                <div className="p-8">
-                  {loadingHistory ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="w-8 h-8 border-3 border-purple-600/30 border-t-purple-600 rounded-full animate-spin" />
-                    </div>
-                  ) : paymentHistory.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <CreditCard className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <p className="text-gray-500 font-medium">No payment history yet</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto -mx-8 px-8">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-gray-100">
-                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Period</th>
-                            <th className="text-right py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Receipt</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                          {paymentHistory.map((payment) => (
-                            <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="py-4 px-4">
-                                <p className="text-sm font-medium text-gray-900">
-                                  {new Date(payment.createdAt).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </p>
-                              </td>
-                              <td className="py-4 px-4">
-                                <p className="text-sm font-bold text-gray-900">
-                                  {payment.amount / 100} {payment.currency}
-                                </p>
-                              </td>
-                              <td className="py-4 px-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${payment.status === 'success'
-                                  ? 'bg-green-100 text-green-700'
-                                  : payment.status === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : payment.status === 'refunded'
-                                      ? 'bg-orange-100 text-orange-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}>
-                                  {payment.status.toUpperCase()}
-                                </span>
-                              </td>
-                              <td className="py-4 px-4">
-                                <p className="text-xs text-gray-500">
-                                  {payment.subscriptionPeriod?.start && payment.subscriptionPeriod?.end ? (
-                                    <>
-                                      {new Date(payment.subscriptionPeriod.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                      {' - '}
-                                      {new Date(payment.subscriptionPeriod.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </>
-                                  ) : 'N/A'}
-                                </p>
-                              </td>
-                              <td className="py-4 px-4 text-right">
-                                <button
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch(`/api/payments/receipt/${payment.id}`)
-                                      if (response.ok) {
-                                        const data = await response.json()
-                                        const receiptWindow = window.open('', '_blank')
-                                        if (receiptWindow) {
-                                          receiptWindow.document.write(`
-                                            <html>
-                                              <head>
-                                                <title>Receipt - ${payment.paymentCode || payment.id}</title>
-                                                <style>
-                                                  body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
-                                                  h1 { color: #6366f1; }
-                                                  .detail { margin: 10px 0; }
-                                                  .label { font-weight: bold; }
-                                                </style>
-                                              </head>
-                                              <body>
-                                                <h1>Payment Receipt</h1>
-                                                <div class="detail"><span class="label">Receipt ID:</span> ${data.receipt.paymentCode || data.receipt.id}</div>
-                                                <div class="detail"><span class="label">Date:</span> ${new Date(data.receipt.createdAt).toLocaleString()}</div>
-                                                <div class="detail"><span class="label">Amount:</span> ${data.receipt.amount / 100} ${data.receipt.currency}</div>
-                                                <div class="detail"><span class="label">Status:</span> ${data.receipt.status}</div>
-                                                <div class="detail"><span class="label">Subscription Type:</span> ${data.receipt.subscriptionType}</div>
-                                                <div class="detail"><span class="label">Period:</span> ${new Date(data.receipt.subscriptionPeriod.start).toLocaleDateString()} - ${new Date(data.receipt.subscriptionPeriod.end).toLocaleDateString()}</div>
-                                                <div class="detail"><span class="label">User:</span> ${data.receipt.userName} (${data.receipt.userEmail})</div>
-                                              </body>
-                                            </html>
-                                          `)
-                                        }
-                                      }
-                                    } catch (error) {
- console.error('Error fetching receipt:', error)
-                                      alert('Failed to load receipt')
-                                    }
-                                  }}
-                                  className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ml-auto"
-                                >
-                                  <Info className="w-3.5 h-3.5" />
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
             <button
               onClick={() => router.push('/home')}
-              className="w-full py-6 bg-gray-900 text-white rounded-[2rem] font-black text-xl shadow-2xl hover:bg-purple-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
+              className="w-full max-w-sm mx-auto h-20 bg-slate-950 text-white rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-slate-200 hover:bg-emerald-600 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-4"
             >
               <HomeIcon className="w-6 h-6" />
               TAKE ME HOME
@@ -449,150 +324,122 @@ export default function SubscriptionPage() {
         )}
 
         {step === 'manage' && isPremiumTier && (
-          <div className="max-w-2xl mx-auto py-8">
-            <div className="text-center mb-10">
-              <div className="w-20 h-20 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                <Crown className="w-10 h-10 text-amber-600" />
+          <div className="max-w-5xl mx-auto py-12 px-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
+            <div className="flex flex-col md:flex-row items-baseline justify-between gap-8 mb-16 px-2">
+              <div>
+                <h2 className="text-4xl font-black text-slate-950 tracking-tighter font-outfit uppercase leading-none mb-4">Account <br /> Membership</h2>
+                <div className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Access Active</p>
+                </div>
               </div>
-              <h2 className="text-3xl font-black text-gray-900 mb-2">Subscription Details</h2>
-              <p className="text-gray-500">
-                {isIndividualPremium ? 'You are a Premium Individual member' : 'You have Complimentary Premium access'}
-              </p>
+              
+              <div className="flex flex-col items-start md:items-end gap-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Current Authority</p>
+                <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
+                  <Shield className="w-4 h-4 text-indigo-600" />
+                  <span className="text-sm font-black text-slate-900 tracking-tight">{isOfficialAccess ? 'Zonal/HQ Level' : 'Individual Premium'}</span>
+                </div>
+              </div>
             </div>
 
-            {/* Expiring Soon Alert */}
-            {isIndividualPremium && daysRemaining !== null && daysRemaining <= 7 && (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-[2rem] p-6 mb-8 shadow-lg">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="w-6 h-6 text-amber-600" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/* Left Column - Membership Info */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Dashboard Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 group transition-all hover:border-indigo-100">
+                    <div className="w-12 h-12 bg-indigo-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
+                      <Crown className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Membership Status</p>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">Elite Member</h3>
+                    <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
+                      <CheckCircle className="w-3 h-3" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Active Access</span>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-black text-amber-900 mb-1">Subscription Expiring Soon</h3>
-                    <p className="text-amber-800 text-sm mb-4">
-                      Your Premium subscription expires in <strong>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</strong>.
-                      Renew now to maintain uninterrupted access.
+
+                  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 group transition-all hover:border-indigo-100">
+                    <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
+                      <Calendar className="w-6 h-6 text-slate-600" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Next Renewal</p>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Perpetual'}
+                    </h3>
+                    <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-widest">
+                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { year: 'numeric' }) : 'Unrestricted Access'}
                     </p>
+                  </div>
+                </div>
+
+                {/* Billing History Integrated */}
+                {paymentHistory.length > 0 && (
+                  <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden">
+                    <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Payment Records</h3>
+                      <CreditCard className="w-4 h-4 text-slate-300" />
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <tbody className="divide-y divide-slate-50">
+                          {paymentHistory.map((payment) => (
+                            <tr key={payment.id} className="group hover:bg-slate-50/50 transition-colors">
+                              <td className="px-8 py-5">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Reference</p>
+                                <p className="text-sm font-bold text-slate-900 tracking-tight">#{payment.paymentCode?.substring(0, 8) || payment.id.substring(0, 8)}</p>
+                              </td>
+                              <td className="px-8 py-5">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Amount</p>
+                                <p className="text-sm font-black text-slate-950 tracking-tight">{payment.amount / 100} ESPEE</p>
+                              </td>
+                              <td className="px-8 py-5 text-right">
+                                <div className="w-10 h-10 border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 ml-auto">
+                                  <Info className="w-5 h-5" />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Actions & Details */}
+              <div className="space-y-8">
+                <div className="p-8 rounded-[2.5rem] bg-slate-950 text-white shadow-2xl shadow-indigo-900/10">
+                  <h4 className="text-xs font-black uppercase tracking-[0.25em] mb-6 text-slate-400">Account Access</h4>
+                  <p className="text-sm text-slate-300 leading-relaxed font-medium mb-8">
+                    Your account has global cross-zone authority. All professional instruments, store assets, and rehearsal hubs are fully unlocked.
+                  </p>
+                  
+                  <button
+                    onClick={() => router.push('/home')}
+                    className="w-full h-14 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-xl"
+                  >
+                    <HomeIcon className="w-4 h-4" />
+                    Return Home
+                  </button>
+                </div>
+
+                {isIndividualPremium && (
+                  <div className="p-8 rounded-[2.5rem] border border-rose-100 bg-rose-50/30">
+                    <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-4">Danger Zone</h4>
                     <button
-                      onClick={() => {
-                        setStep('plans')
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                      }}
-                      className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md"
+                      onClick={handleCancelSubscription}
+                      disabled={isCancelling}
+                      className="w-full h-12 border border-rose-200 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all active:scale-95 disabled:opacity-50"
                     >
-                      Renew Now
+                      {isCancelling ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      Cancel Premium
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden mb-8">
-              <div className="p-8 border-b border-gray-50 bg-gray-50/50">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">Current Status</h3>
-                    <p className="text-sm text-gray-500">
-                      {isOfficialAccess ? 'Official Unlimited Plan' : 'Premium Individual Plan'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-black text-amber-600">
-                      {isOfficialAccess ? 'UNLIMITED' : '1 ESPEE'}
-                    </p>
-                    <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
-                      {isOfficialAccess ? 'OFFICIAL ACCESS' : 'RENEWAL ACTIVE'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">Health</p>
-                      <p className={`text-xs text-green-600 font-medium`}>
-                        ACTIVE
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {subscription && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">Next Renewal</p>
-                        <p className="text-xs text-gray-500">
-                          {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'N/A'}
-                          {daysRemaining !== null && ` (${daysRemaining} days left)`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {!subscription && (
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">Access Basis</p>
-                      <p className="text-xs text-gray-500">
-                        Unlocked via {currentZone?.name || 'HQ Status'}
-                      </p>
-                    </div>
-                  </div>
                 )}
               </div>
-
-              {isIndividualPremium && (
-                <div className="p-8 bg-red-50/30 border-t border-red-100/50">
-                  <button
-                    onClick={handleCancelSubscription}
-                    disabled={isCancelling}
-                    className="w-full py-4 bg-white border border-red-200 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-300 transition-all active:scale-[0.98] shadow-sm"
-                  >
-                    {isCancelling ? (
-                      <div className="w-5 h-5 border-2 border-red-600/30 border-t-red-600 rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Trash2 className="w-5 h-5" />
-                        CANCEL SUBSCRIPTION
-                      </>
-                    )}
-                  </button>
-                  <p className="text-center text-[10px] text-gray-400 mt-4 px-4">
-                    Note: Access will be revoked immediately upon cancellation.
-                  </p>
-                </div>
-              )}
-
-              {!isIndividualPremium && (
-                <div className="p-8 bg-green-50 border-t border-green-100/50">
-                  <div className="flex items-center justify-center gap-3 text-green-700">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-bold">Full Access Granted by HQ</span>
-                  </div>
-                </div>
-              )}
             </div>
-
-            <button
-              onClick={() => router.push('/home')}
-              className="w-full py-4 text-gray-500 font-bold flex items-center justify-center gap-2 hover:text-gray-900 transition-colors"
-            >
-              <HomeIcon className="w-5 h-5" />
-              BACK TO HOME
-            </button>
           </div>
         )}
       </div>

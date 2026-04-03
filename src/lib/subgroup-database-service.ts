@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sub-Group Database Service
  * Handles CRUD operations for sub-group songs, rehearsals, and members
  */
@@ -10,13 +10,15 @@ import {
   orderBy,
   getDocs,
   getDoc,
+  onSnapshot,
   doc,
   addDoc,
   updateDoc,
   deleteDoc,
   arrayUnion,
   arrayRemove,
-  Timestamp
+  Timestamp,
+  FirestoreError
 } from 'firebase/firestore';
 import { db } from './firebase-setup';
 
@@ -33,6 +35,8 @@ export interface SubGroupSong {
   writer?: string;
   leadSinger?: string;
   category?: string;
+  status?: 'heard' | 'unheard';
+  isActive?: boolean;
   audioUrls?: {
     full?: string;
     soprano?: string;
@@ -205,6 +209,26 @@ export class SubGroupDatabaseService {
   }
 
   /**
+   * Update a subgroup song
+   */
+  static async updateSong(
+    songId: string,
+    updates: Partial<SubGroupSong>
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const songRef = doc(db, 'subgroup_songs', songId);
+      await updateDoc(songRef, {
+        ...updates,
+        updatedAt: Timestamp.now()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating song:', error);
+      return { success: false, error: 'Failed to update song' };
+    }
+  }
+
+  /**
    * Delete a sub-group song
    */
   static async deleteSong(songId: string): Promise<{ success: boolean; error?: string }> {
@@ -212,23 +236,84 @@ export class SubGroupDatabaseService {
       await deleteDoc(doc(db, 'subgroup_songs', songId));
       return { success: true };
     } catch (error) {
- console.error('Error deleting song:', error);
+  console.error('Error deleting song:', error);
       return { success: false, error: 'Failed to delete song' };
+    }
+  }
+
+  /**
+   * Toggle song status (heard/unheard)
+   */
+  static async toggleSongStatus(songId: string, currentStatus: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const newStatus = currentStatus === 'heard' ? 'unheard' : 'heard';
+      await updateDoc(doc(db, 'subgroup_songs', songId), {
+        status: newStatus,
+        updatedAt: Timestamp.now()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error toggling song status:', error);
+      return { success: false, error: 'Failed to toggle status' };
+    }
+  }
+
+  /**
+   * Toggle song active state
+   */
+  static async toggleSongActive(songId: string, currentActive: boolean): Promise<{ success: boolean; error?: string }> {
+    try {
+      await updateDoc(doc(db, 'subgroup_songs', songId), {
+        isActive: !currentActive,
+        updatedAt: Timestamp.now()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error toggling song active status:', error);
+      return { success: false, error: 'Failed to toggle active status' };
     }
   }
 
   // Rehearsals
 
   /**
-   * Get all rehearsals for a sub-group
+   * Real-time subscription to subgroup rehearsals
+   */
+  static subscribeToRehearsals(
+    subGroupId: string,
+    onUpdate: (rehearsals: SubGroupRehearsal[]) => void,
+    onError?: (error: FirestoreError) => void
+  ) {
+    const rehearsalsRef = collection(db, 'subgroup_praise_nights');
+    const q = query(
+      rehearsalsRef,
+      where('subGroupId', '==', subGroupId)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const rehearsals = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as SubGroupRehearsal[];
+      onUpdate(rehearsals);
+    }, (error) => {
+      console.error('Rehearsal subscription error:', error);
+      if (onError) onError(error);
+    });
+  }
+
+  /**
+   * Get all rehearsals for a sub-group (Legacy)
    */
   static async getSubGroupRehearsals(subGroupId: string): Promise<SubGroupRehearsal[]> {
     try {
       const rehearsalsRef = collection(db, 'subgroup_praise_nights');
       const q = query(
         rehearsalsRef,
-        where('subGroupId', '==', subGroupId),
-        orderBy('date', 'desc')
+        where('subGroupId', '==', subGroupId)
+        // orderBy('date', 'desc') // Temporarily disabled to avoid missing index errors
       );
 
       const snapshot = await getDocs(q);
@@ -239,9 +324,47 @@ export class SubGroupDatabaseService {
         updatedAt: doc.data().updatedAt?.toDate() || new Date()
       })) as SubGroupRehearsal[];
     } catch (error) {
- console.error('Error getting sub-group rehearsals:', error);
+  console.error('Error getting sub-group rehearsals:', error);
       return [];
     }
+  }
+
+  /**
+   * Real-time subscription to songs for a specific rehearsal
+   */
+  static subscribeToRehearsalSongs(
+    songIds: string[],
+    onUpdate: (songs: SubGroupSong[]) => void,
+    onError?: (error: FirestoreError) => void
+  ) {
+    if (!songIds || songIds.length === 0) {
+      onUpdate([]);
+      return () => { };
+    }
+
+    const songsRef = collection(db, 'subgroup_songs');
+    
+    // Firestore 'in' has a limit of 10-30 depending on version. 
+    // For now, let's take up to 30.
+    const limitedIds = songIds.slice(0, 30);
+    
+    const q = query(
+      songsRef,
+      where('__name__', 'in', limitedIds)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const songs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as SubGroupSong[];
+      onUpdate(songs);
+    }, (error) => {
+      console.error('Songs subscription error:', error);
+      if (onError) onError(error);
+    });
   }
 
   /**
@@ -264,7 +387,7 @@ export class SubGroupDatabaseService {
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as SubGroupRehearsal;
     } catch (error) {
- console.error('Error getting rehearsal by ID:', error);
+  console.error('Error getting rehearsal by ID:', error);
       return null;
     }
   }
@@ -513,14 +636,20 @@ export class SubGroupDatabaseService {
   }> {
     try {
 
-      // 1. Get zone rehearsals
-      const zoneRehearsalsRef = collection(db, 'zone_praise_nights');
-      const zoneQuery = query(
-        zoneRehearsalsRef,
-        where('zoneId', '==', zoneId),
-        orderBy('date', 'desc')
-      );
-      const zoneSnapshot = await getDocs(zoneQuery);
+      // 1 & 2. Get zone rehearsals and user's sub-groups in parallel
+      const [zoneSnapshot, subGroupsSnapshot] = await Promise.all([
+        getDocs(query(
+          collection(db, 'zone_praise_nights'),
+          where('zoneId', '==', zoneId),
+          orderBy('date', 'desc')
+        )),
+        getDocs(query(
+          collection(db, 'subgroups'),
+          where('memberIds', 'array-contains', userId),
+          where('status', '==', 'active')
+        ))
+      ]);
+
       const zoneRehearsals = zoneSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -529,14 +658,6 @@ export class SubGroupDatabaseService {
         createdAt: doc.data().createdAt?.toDate() || new Date()
       }));
 
-      // 2. Get user's sub-groups
-      const subGroupsRef = collection(db, 'subgroups');
-      const subGroupsQuery = query(
-        subGroupsRef,
-        where('memberIds', 'array-contains', userId),
-        where('status', '==', 'active')
-      );
-      const subGroupsSnapshot = await getDocs(subGroupsQuery);
       const userSubGroupIds = subGroupsSnapshot.docs.map(doc => doc.id);
       const subGroupNames: Record<string, string> = {};
       subGroupsSnapshot.docs.forEach(doc => {

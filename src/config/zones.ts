@@ -85,6 +85,7 @@ export const ZONES: Zone[] = [
   { id: 'zone-010', name: 'Loveworld Singers Durban Zone', slug: 'lws-durban', region: 'South Africa', invitationCode: 'ZONE010', themeColor: '#3B82F6' },
   { id: 'zone-011', name: 'Loveworld Singers Cape Town Zone 1', slug: 'lws-cape-town-1', region: 'South Africa', invitationCode: 'ZONE011', themeColor: '#3B82F6' },
   { id: 'zone-012', name: 'Loveworld Singers Cape Town Zone 2', slug: 'lws-cape-town-2', region: 'South Africa', invitationCode: 'ZONE012', themeColor: '#3B82F6' },
+  { id: 'zone-089', name: 'CE Cape Town Zone 2', slug: 'ce-cape-town-2', region: 'South Africa', invitationCode: 'ZONE089', themeColor: '#3B82F6' },
 
   // International
   { id: 'zone-013', name: 'Loveworld Singers India Zone', slug: 'lws-india', region: 'India', invitationCode: 'ZONE013', themeColor: '#F59E0B' },

@@ -143,84 +143,106 @@ export default function ActivityLogsPage() {
 
   if (loading || zoneLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-purple-100 shadow-sm">
+      <div className="flex flex-col items-center justify-center p-12 bg-white min-h-[400px]">
         <CustomLoader message="Loading activity logs..." />
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-purple-50">
-      <div className="p-4 lg:p-6 max-w-7xl mx-auto pb-24">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-start sm:items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Activity Logs</h1>
-              <p className="text-gray-600 text-xs sm:text-sm mt-0.5 truncate">
-                {isHQ ? 'All HQ activity' : currentZone?.name || 'Your zone'}
-              </p>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <button onClick={loadActivityLogs} className="w-9 h-9 sm:w-auto sm:px-4 sm:py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2" title="Refresh">
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-              <button onClick={exportLogs} className="h-9 px-3 sm:px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 flex items-center gap-2 shadow-lg text-sm">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export</span>
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="h-full overflow-y-auto bg-gray-50 pb-24 lg:pb-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 pt-5 lg:pt-8">
 
-        {/* Date Filter */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-100 p-3 sm:p-4 mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-gray-700">Date:</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => navigateMonth('prev')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 bg-white">
-                {MONTHS.map((month, idx) => <option key={idx} value={idx}>{month}</option>)}
-              </select>
-              <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 bg-white">
-                {yearOptions.map(year => <option key={year} value={year}>{year}</option>)}
-              </select>
-              <button onClick={() => navigateMonth('next')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-            <button onClick={() => { setSelectedMonth(new Date().getMonth()); setSelectedYear(new Date().getFullYear()); }}
-              className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-              Today
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between gap-3 mb-5">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Activity Logs</h1>
+            <p className="text-sm text-gray-400 mt-1">
+              {isHQ ? 'All HQ activity' : currentZone?.name || 'Your zone'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={loadActivityLogs}
+              className="p-2 bg-white border border-gray-100 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors active:scale-95 flex items-center gap-1.5 shadow-sm"
+              title="Refresh"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">Refresh</span>
+            </button>
+            <button
+              onClick={exportLogs}
+              className="p-2 text-white rounded-xl transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+              style={{ backgroundColor: '#9333EA' }}
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-semibold">Export</span>
             </button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-100 p-3 sm:p-4 mb-4">
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input type="text" placeholder="Search logs..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm" />
+        {/* ── Date + Filters combined ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4 space-y-3">
+          {/* Month navigation */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <button onClick={() => navigateMonth('prev')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <ChevronLeft className="w-4 h-4 text-gray-500" />
+            </button>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="px-3 py-1.5 border border-gray-100 rounded-xl text-sm font-medium focus:ring-2 focus:outline-none bg-gray-50"
+            >
+              {MONTHS.map((month, idx) => <option key={idx} value={idx}>{month}</option>)}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-3 py-1.5 border border-gray-100 rounded-xl text-sm font-medium focus:ring-2 focus:outline-none bg-gray-50"
+            >
+              {yearOptions.map(year => <option key={year} value={year}>{year}</option>)}
+            </select>
+            <button onClick={() => navigateMonth('next')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <ChevronRight className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={() => { setSelectedMonth(new Date().getMonth()); setSelectedYear(new Date().getFullYear()); }}
+              className="text-xs font-semibold px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl transition-colors"
+              style={{ color: '#9333EA' }}
+            >
+              This month
+            </button>
           </div>
-          <div className="flex gap-2">
-            <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm bg-white">
+
+          {/* Search + Action + Section */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search logs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-gray-100 rounded-xl focus:ring-2 focus:outline-none text-sm bg-gray-50"
+              />
+            </div>
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-100 rounded-xl text-sm font-medium focus:ring-2 focus:outline-none bg-gray-50"
+            >
               <option value="">All Actions</option>
               <option value="created">Created</option>
               <option value="updated">Updated</option>
               <option value="deleted">Deleted</option>
+              <option value="uploaded">Uploaded</option>
             </select>
-            <select value={sectionFilter} onChange={(e) => setSectionFilter(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm bg-white">
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-100 rounded-xl text-sm font-medium focus:ring-2 focus:outline-none bg-gray-50"
+            >
               <option value="">All Sections</option>
               <option value="songs">Songs</option>
               <option value="pages">Pages</option>
@@ -230,103 +252,132 @@ export default function ActivityLogsPage() {
               <option value="media">Media</option>
             </select>
           </div>
-          {(actionFilter || sectionFilter || searchTerm) && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-              <span className="text-xs text-gray-500">Showing {filteredLogs.length} logs</span>
-              <button onClick={() => { setSearchTerm(''); setActionFilter(''); setSectionFilter(''); }}
-                className="text-xs text-purple-600 hover:text-purple-700 font-medium ml-auto">Clear filters</button>
-            </div>
-          )}
-        </div>
 
-        {/* Summary */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-4 mb-4 text-white">
+          {/* Active filters + count */}
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">{MONTHS[selectedMonth]} {selectedYear}</p>
-              <p className="text-2xl font-bold">{filteredLogs.length} Activities</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{MONTHS[selectedMonth]} {selectedYear}</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-full text-xs font-bold text-gray-700">
+                {filteredLogs.length} logs
+              </span>
+              {filteredLogs.filter(l => l.action === 'created').length > 0 && (
+                <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-semibold rounded-full">
+                  {filteredLogs.filter(l => l.action === 'created').length} created
+                </span>
+              )}
+              {filteredLogs.filter(l => l.action === 'updated').length > 0 && (
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-semibold rounded-full">
+                  {filteredLogs.filter(l => l.action === 'updated').length} updated
+                </span>
+              )}
+              {filteredLogs.filter(l => l.action === 'deleted').length > 0 && (
+                <span className="px-2 py-0.5 bg-red-50 text-red-700 text-[11px] font-semibold rounded-full">
+                  {filteredLogs.filter(l => l.action === 'deleted').length} deleted
+                </span>
+              )}
             </div>
-            <div className="text-right text-sm opacity-80">
-              <p>{filteredLogs.filter(l => l.action === 'created').length} Created</p>
-              <p>{filteredLogs.filter(l => l.action === 'updated').length} Updated</p>
-              <p>{filteredLogs.filter(l => l.action === 'deleted').length} Deleted</p>
-            </div>
+            {(actionFilter || sectionFilter || searchTerm) && (
+              <button
+                onClick={() => { setSearchTerm(''); setActionFilter(''); setSectionFilter(''); }}
+                className="text-xs font-semibold hover:underline flex-shrink-0"
+                style={{ color: '#9333EA' }}
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Logs */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-100 overflow-hidden">
+        {/* ── Logs ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {filteredLogs.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-8 h-8 text-purple-400" />
+            <div className="p-14 text-center">
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-gray-300" />
               </div>
-              <p className="text-gray-700 font-medium">No activity logs for {MONTHS[selectedMonth]} {selectedYear}</p>
-              <p className="text-gray-500 text-sm mt-1">Try selecting a different month or adjusting filters</p>
+              <p className="text-gray-500 font-semibold">No activity for {MONTHS[selectedMonth]} {selectedYear}</p>
+              <p className="text-sm text-gray-400 mt-1">Try selecting a different month or adjusting filters</p>
             </div>
           ) : (
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 420px)', minHeight: '300px' }}>
+            <>
               {/* Desktop Table */}
               <table className="hidden lg:table w-full">
-                <thead className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-purple-700 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-purple-700 uppercase">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-purple-700 uppercase">Message</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-purple-700 uppercase">Action</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-purple-700 uppercase">Section</th>
+                <thead>
+                  <tr className="bg-gray-50/70 border-b border-gray-100">
+                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">User</th>
+                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Message</th>
+                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                    <th className="px-5 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Section</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-50">
                   {filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-purple-50/50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{format(new Date(log.timestamp), 'MMM d, h:mm a')}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{log.userName || 'Unknown'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">{log.message}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
-                          {log.action?.toUpperCase() || '?'}
+                    <tr key={log.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap font-medium tabular-nums">
+                        {format(new Date(log.timestamp), 'MMM d, h:mm a')}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style={{ backgroundColor: '#9333EA' }}>
+                            {(log.userName || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">{log.userName || 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-gray-600 max-w-xs truncate">{log.message}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getActionColor(log.action)}`}>
+                          {getActionIcon(log.action)}
+                          {log.action || '—'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{log.section || '-'}</td>
+                      <td className="px-5 py-3.5">
+                        {log.section && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium">
+                            {log.section}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              {/* Mobile Cards */}
-              <div className="lg:hidden divide-y divide-gray-100">
+              {/* Mobile timeline feed */}
+              <div className="lg:hidden divide-y divide-gray-50">
                 {filteredLogs.map((log) => (
-                  <div key={log.id} className="p-3 hover:bg-purple-50/50 active:bg-purple-100/50">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${getActionColor(log.action)}`}>
-                        {getActionIcon(log.action)}
+                  <div key={log.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${getActionColor(log.action)}`}>
+                      {getActionIcon(log.action)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-gray-900 leading-snug">{log.message}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${getActionColor(log.action)}`}>
+                          {log.action?.toUpperCase()}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <p className="text-sm font-medium text-gray-900 line-clamp-2">{log.message}</p>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${getActionColor(log.action)}`}>
-                            {log.action?.toUpperCase() || '?'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                          <span className="font-medium text-gray-700">{log.userName || 'Unknown'}</span>
-                          <span>•</span>
-                          <span>{format(new Date(log.timestamp), 'MMM d, h:mm a')}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {log.section && <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-700">{log.section}</span>}
-                          {log.itemName && <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-100 text-blue-700 max-w-[150px] truncate">{log.itemName}</span>}
-                        </div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-xs font-semibold text-gray-700">{log.userName || 'Unknown'}</span>
+                        <span className="text-gray-300 text-xs">•</span>
+                        <span className="text-xs text-gray-400">{format(new Date(log.timestamp), 'MMM d, h:mm a')}</span>
+                        {log.section && (
+                          <>
+                            <span className="text-gray-300 text-xs">•</span>
+                            <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-md">{log.section}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
     </div>
   );
 }
+

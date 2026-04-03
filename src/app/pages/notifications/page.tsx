@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Bell, Users, Building2, ArrowLeft, Calendar,
+  Bell, Users, Building2, Calendar,
   Mic, Gift, Image, RefreshCw, Music, MessageCircle,
-  ChevronRight, Clock, Trash2, AlertCircle, CheckCircle2
+ Clock, Trash2, AlertCircle,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
-import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
-import { getUserSongNotifications, SongNotification } from '@/lib/song-submission-service'
 import { BirthdayService } from '@/app/pages/calendar/_lib/birthday-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'

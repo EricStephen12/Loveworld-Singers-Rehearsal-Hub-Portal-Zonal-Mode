@@ -7,14 +7,19 @@ import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service'
 import { lowDataOptimizer } from '@/utils/low-data-optimizer'
 import { isHQGroup } from '@/config/zones'
+import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
 import { sanitizeImageUrl } from '@/utils/image-utils'
 
-async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
+async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promise<PraiseNight[]> {
   try {
     let pages: any[] = []
 
     if (zoneId && isHQGroup(zoneId)) {
       pages = await FirebaseDatabaseService.getCollection('praise_nights')
+    } else if (zoneId && userId) {
+      // 1. Get combined rehearsals (zone + subgroup)
+      const data = await SubGroupDatabaseService.getMemberRehearsals(zoneId, userId)
+      pages = data.combined
     } else if (zoneId) {
       pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000)
     } else {
@@ -33,7 +38,10 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: sanitizeImageUrl((page as any).bannerImage || (page as any).bannerimage, 'banner'),
-      categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
+      categoryOrder: (page as any).categoryOrder || [],
+      scope: (page as any).scope || 'zone',
+      scopeLabel: (page as any).scopeLabel || '',
+      subGroupName: (page as any).subGroupName || '',
       countdown: {
         days: (page as any).countdownDays || (page as any).countdown?.days || (page as any).countdowndays || 0,
         hours: (page as any).countdownHours || (page as any).countdown?.hours || (page as any).countdownhours || 0,
@@ -48,7 +56,7 @@ async function fetchFirebaseData(zoneId?: string): Promise<PraiseNight[]> {
   }
 }
 
-export function useRealtimeData(zoneId?: string) {
+export function useRealtimeData(zoneId?: string, userId?: string | null) {
   const [pages, setPages] = useState<PraiseNight[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,12 +79,12 @@ export function useRealtimeData(zoneId?: string) {
     // Helper to fetch and update cache
     async function fetchAndCache(timestampOverride?: number) {
       try {
-        const firebasePages = await fetchFirebaseData(zoneId!)
+        const firebasePages = await fetchFirebaseData(zoneId!, userId)
         if (firebasePages && isMounted) {
           setPages(firebasePages)
-          const cacheKey = `praise-nights-data-${zoneId}`
-          const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
-          const metadataKey = `praise-nights-metadata-time-${zoneId}`
+          const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
+          const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
+          const metadataKey = `praise-nights-metadata-time-${zoneId}-${userId || 'public'}`
 
           lowDataOptimizer.set(cacheKey, firebasePages)
           lowDataOptimizer.set(lastFetchKey, Date.now())
@@ -93,8 +101,8 @@ export function useRealtimeData(zoneId?: string) {
     async function loadInitialData() {
       try {
         setError(null)
-        const cacheKey = `praise-nights-data-${zoneId}`
-        const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
+        const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
+        const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
 
         const cachedData = lowDataOptimizer.get(cacheKey)
         const lastFetchTime = lowDataOptimizer.get(lastFetchKey)
@@ -128,7 +136,7 @@ export function useRealtimeData(zoneId?: string) {
     // 2. Subscribe to Page Metadata (The Magic)
 
     const unsubPraiseNights = FirebaseMetadataService.subscribeToMetadata(zoneId, 'praise_nights', async (serverTimestamp) => {
-      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}`) || 0
+      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`) || 0
       if (serverTimestamp > lastKnownTimestamp) {
 
         await fetchAndCache(serverTimestamp)
@@ -144,17 +152,23 @@ export function useRealtimeData(zoneId?: string) {
     unsubscribes.push(unsubCategories);
 
     const unsubPageCategories = FirebaseMetadataService.subscribeToMetadata(zoneId, 'page_categories', () => {
-
       ZoneDatabaseService.invalidatePageCategoriesCache(zoneId!);
     });
     unsubscribes.push(unsubPageCategories);
 
+    // 4. Subscribe to Songs Metadata (Ensures rehearsal counts and song updates are picked up)
+    const unsubSongs = FirebaseMetadataService.subscribeToMetadata(zoneId, 'songs', async (serverTimestamp) => {
+      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`) || 0;
+      if (serverTimestamp > lastKnownTimestamp) {
+        await fetchAndCache(serverTimestamp);
+      }
+    });
+    unsubscribes.push(unsubSongs);
     return () => {
       isMounted = false;
-
       unsubscribes.forEach(unsub => unsub());
     }
-  }, [zoneId])
+  }, [zoneId, userId])
 
   const getCurrentPage = useCallback((id: number | string): PraiseNight | null => {
     return pages.find(page => page.id === id || page.id === id.toString()) || null
@@ -183,12 +197,12 @@ export function useRealtimeData(zoneId?: string) {
         setError(null)
 
 
-        const updatedPages = await fetchFirebaseData(zoneId)
+        const updatedPages = await fetchFirebaseData(zoneId, userId)
         setPages(updatedPages)
 
         if (zoneId) {
-          const cacheKey = `praise-nights-data-${zoneId}`
-          const lastFetchKey = `praise-nights-fetch-time-${zoneId}`
+          const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
+          const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
 
           lowDataOptimizer.set(cacheKey, updatedPages)
           lowDataOptimizer.set(lastFetchKey, Date.now()) // Reset timer
@@ -197,6 +211,8 @@ export function useRealtimeData(zoneId?: string) {
           // (Since we just fetched fresh data, we are conceptually "up to date")
           // slightly risky if another user updated EXACTLY now, but acceptable for manual refresh
           await FirebaseMetadataService.ensureMetadataExists(zoneId, 'praise_nights')
+          const metadataKey = `praise-nights-metadata-time-${zoneId}-${userId || 'public'}`
+          lowDataOptimizer.set(metadataKey, Date.now())
         }
       } catch (err) {
  console.error('Error refreshing data:', err)

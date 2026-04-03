@@ -14,10 +14,7 @@ import {
   Edit,
   Shield,
   Key,
-  Mail,
-  Phone,
   Camera,
-  MapPin,
   Users,
   AlertCircle
 } from 'lucide-react';

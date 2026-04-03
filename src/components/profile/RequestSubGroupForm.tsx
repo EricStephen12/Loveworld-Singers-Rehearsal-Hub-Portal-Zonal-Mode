@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from 'react';
 import {
@@ -38,12 +38,6 @@ const STATUS_CONFIG: Record<SubGroupStatus, { label: string; color: string; bgCo
     color: 'text-yellow-700', 
     bgColor: 'bg-yellow-100',
     icon: <Clock className="w-4 h-4" /> 
-  },
-  approved_pending_payment: { 
-    label: 'Approved - Awaiting Payment', 
-    color: 'text-blue-700', 
-    bgColor: 'bg-blue-100',
-    icon: <CreditCard className="w-4 h-4" /> 
   },
   active: { 
     label: 'Active', 
@@ -197,11 +191,7 @@ export default function RequestSubGroupForm() {
                         Reason: {request.rejectionReason}
                       </p>
                     )}
-                    {request.status === 'approved_pending_payment' && (
-                      <button className="mt-2 w-full py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
-                        Complete Payment to Activate
-                      </button>
-                    )}
+                    {/* Payment UI removed as subgroups are now immediate on approval */}
                   </div>
                 );
               })}

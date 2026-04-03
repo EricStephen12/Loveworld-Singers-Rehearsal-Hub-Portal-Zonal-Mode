@@ -14,9 +14,10 @@ import { SubGroupDatabaseService } from '@/lib/subgroup-database-service';
 
 interface SubGroupDashboardProps {
   subGroup: SubGroup;
+  onNavigate?: (section: string) => void;
 }
 
-export default function SubGroupDashboard({ subGroup }: SubGroupDashboardProps) {
+export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDashboardProps) {
   const [stats, setStats] = useState({
     totalMembers: 0,
     totalSongs: 0,
@@ -109,19 +110,30 @@ export default function SubGroupDashboard({ subGroup }: SubGroupDashboardProps) 
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
         <h2 className="font-semibold text-slate-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <button className="flex flex-col items-center gap-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => onNavigate?.('Rehearsals')}
+            className="flex flex-col items-center gap-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+          >
             <Calendar className="w-6 h-6 text-purple-600" />
             <span className="text-sm font-medium text-purple-700">New Rehearsal</span>
           </button>
-          <button className="flex flex-col items-center gap-2 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => onNavigate?.('Songs')}
+            className="flex flex-col items-center gap-2 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
             <Music className="w-6 h-6 text-blue-600" />
             <span className="text-sm font-medium text-blue-700">Add Song</span>
           </button>
-          <button className="flex flex-col items-center gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => onNavigate?.('Members')}
+            className="flex flex-col items-center gap-2 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+          >
             <Users className="w-6 h-6 text-green-600" />
             <span className="text-sm font-medium text-green-700">Add Member</span>
           </button>
-          <button className="flex flex-col items-center gap-2 p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+          <button 
+            className="flex flex-col items-center gap-2 p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+          >
             <TrendingUp className="w-6 h-6 text-orange-600" />
             <span className="text-sm font-medium text-orange-700">View Reports</span>
           </button>

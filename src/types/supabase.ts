@@ -3,6 +3,7 @@
 // User Profile Types
 export interface UserProfile {
   id: string;
+  uid?: string; // Common alias for id in Auth context
   first_name?: string;
   middle_name?: string;
   last_name?: string;
@@ -174,6 +175,8 @@ export interface PraiseNight {
   location: string;
   category: 'unassigned' | 'pre-rehearsal' | 'ongoing' | 'archive';
   pageCategory?: string; // New field for page categories
+  scope?: 'zone' | 'subgroup'; // New field for context scope
+  subGroupName?: string; // New field for subgroup specificity
   bannerImage?: string;
   songCount?: number; // Added to cache song count for UI
   categoryOrder?: string[]; // New field for manual category sorting

@@ -6,9 +6,8 @@ A Progressive Web App (PWA) for managing praise and worship rehearsals, media, a
 
 - **Framework**: Next.js 15 (App Router) + React 19 + TypeScript
 - **Styling**: Tailwind CSS v4 + shadcn/ui components
-- **Database**: Supabase (auth & data) + Firebase (realtime features)
+- **Database**: Firebase (realtime features)
 - **Media**: Cloudinary (storage) + YouTube integration
-- **State**: Zustand stores + React Context
 - **PWA**: Custom service workers with offline-first architecture
 
 ## Getting Started
@@ -33,28 +32,6 @@ cp .env.example .env.local
 
 Create `.env.local` with:
 
-```env
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your_api_key
-NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_preset
-CLOUDINARY_API_SECRET=your_secret
-
-# Firebase
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-```
 
 ### Development
 

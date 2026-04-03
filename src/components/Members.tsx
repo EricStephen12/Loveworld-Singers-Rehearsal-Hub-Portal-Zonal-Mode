@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -11,10 +11,25 @@ import {
   UserX,
   Edit,
   Trash2,
-  Download,
-  RefreshCw,
   X,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  UserPlus,
+  ShieldCheck,
+  Shield,
+  Zap,
+  Filter,
+  ArrowDownWideNarrow,
+  Check,
+  RefreshCw,
+  Download,
+  Building2,
+  MapPin,
+  MoreVertical,
+  Plus,
+  Star,
+  Tag,
+  Edit2
 } from 'lucide-react';
 import { useAdminTheme } from './admin/AdminThemeProvider';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
@@ -308,6 +323,18 @@ export default function Members() {
     return matchesSearch;
   });
 
+  // Calculate member stats
+  const memberStats = {
+    total: members.length,
+    active: members.filter(m => m.is_active).length,
+    coordinators: members.filter(m => m.role === 'coordinator').length,
+    today: members.filter(m => {
+      const today = new Date();
+      const joinDate = new Date(m.created_at);
+      return today.toDateString() === joinDate.toDateString();
+    }).length
+  };
+
   // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -451,120 +478,107 @@ export default function Members() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-white lg:bg-gray-50">
-      {/* Header - Hidden on mobile (shown in AdminMobileHeader) */}
-      <div className="hidden lg:flex flex-shrink-0 p-6 bg-white border-b border-gray-200 items-center gap-3">
-        <h2 className="text-2xl font-bold text-slate-900 flex-1">Members</h2>
-        {members.length > 0 && (
-          <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
-            {filteredMembers.length} / {members.length}
-          </span>
-        )}
-        <button
-          onClick={() => loadMembers(true)}
-          disabled={loading}
-          className={`p-2 ${theme.primary} text-white rounded-lg ${theme.primaryHover} transition-colors disabled:opacity-50 flex items-center justify-center`}
-          title="Refresh"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-        <button
-          onClick={exportMembers}
-          className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          title="Export CSV"
-        >
-          <Download className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Mobile Stats Bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <Users className="w-5 h-5 text-white" />
-          </div>
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-white lg:bg-slate-50">
+      {/* Premium Header */}
+      <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-5 lg:py-8 flex-shrink-0">
+        <div className="flex items-start justify-between mb-6 lg:mb-8">
           <div>
-            <p className="text-white/80 text-xs">Total Members</p>
-            <p className="text-white font-bold text-lg">{members.length}</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">Members</h1>
+            <p className="text-sm text-slate-400 mt-1">Manage personnel and oversight for your {currentZone?.name || 'Zone'}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => loadMembers(true)}
+              disabled={loading}
+              className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl transition-all active:scale-95 border border-slate-100 shadow-sm"
+              title="Refresh List"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={exportMembers}
+              className="px-4 py-2 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => loadMembers(true)}
-            disabled={loading}
-            className="p-2.5 bg-white/20 text-white rounded-xl transition-colors active:scale-95 flex items-center justify-center"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={exportMembers}
-            className="p-2.5 bg-white/20 text-white rounded-xl transition-colors active:scale-95"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+
+        {/* Modern Stats Pulse - Horizontal Scroll */}
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+          <StatCard
+            label="Total Members"
+            value={memberStats.total}
+            icon={<Users className="w-4 h-4" />}
+            color="purple"
+          />
+          <StatCard
+            label="Active Now"
+            value={memberStats.active}
+            icon={<Zap className="w-4 h-4" />}
+            color="green"
+            pulse
+          />
+          <StatCard
+            label="Coordinators"
+            value={memberStats.coordinators}
+            icon={<ShieldCheck className="w-4 h-4" />}
+            color="blue"
+          />
+          <StatCard
+            label="Joined Today"
+            value={memberStats.today}
+            icon={<TrendingUp className="w-4 h-4" />}
+            color="orange"
+          />
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-100 lg:border-gray-200">
-        <div className="p-4 lg:px-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      {/* Filters & Search Bar */}
+      <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-4 flex-shrink-0">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search members..."
+              placeholder="Search by name, email, or designation..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50 lg:bg-white"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
             />
           </div>
-        </div>
 
-        {/* Zone Filter Toggle Buttons - Only for HQ Admins */}
-        {currentZone && isHQGroup(currentZone.id) && (
-          <div className="px-4 lg:px-6 pb-3">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {/* All Members Button */}
+          {/* Type Filters (Zone selection for HQ) */}
+          {currentZone && isHQGroup(currentZone.id) && (
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setFilterZone('all')}
-                className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all ${filterZone === 'all'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  filterZone === 'all'
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100'
+                    : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'
+                }`}
               >
-                🌍 All Members
+                All Zones
               </button>
-
-              {/* HQ Group Buttons */}
-              {allZones.filter(z => isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
+              {allZones.filter(z => z.id !== 'zone-boss').map(zone => (
                 <button
                   key={zone.id}
                   onClick={() => setFilterZone(zone.id)}
-                  className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap ${filterZone === zone.id
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                    }`}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all border whitespace-nowrap ${
+                    filterZone === zone.id
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100'
+                      : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'
+                  }`}
                 >
-                  🏢 {zone.name.replace('Loveworld Singers ', '').replace('LWS ', '')}
-                </button>
-              ))}
-
-              {/* Regional Zone Buttons */}
-              {allZones.filter(z => !isHQGroup(z.id) && z.id !== 'zone-boss').map(zone => (
-                <button
-                  key={zone.id}
-                  onClick={() => setFilterZone(zone.id)}
-                  className={`flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap ${filterZone === zone.id
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                  {zone.name.replace('Loveworld Singers ', '')}
+                  {zone.name.replace('Loveworld Singers ', '').replace('LWS ', '')}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Members List - Scrollable */}
@@ -594,119 +608,94 @@ export default function Members() {
             {/* Desktop Table */}
             <div className="hidden lg:block overflow-auto h-full">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Member
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Role & Designation
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Joined
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Member</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Role & Designation</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-slate-100">
                   {filteredMembers.slice(0, displayLimit).map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr 
+                      key={member.id} 
+                      className="group hover:bg-slate-50 transition-all cursor-pointer"
+                      onClick={() => setSelectedMember(member)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap border-l-4 border-transparent group-hover:border-purple-500 transition-all">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
+                          <div className="relative flex-shrink-0 h-10 w-10">
                             {member.profile_image_url ? (
                               <img
-                                className="h-10 w-10 rounded-full object-cover"
+                                className="h-10 w-10 rounded-xl object-cover shadow-sm ring-2 ring-white"
                                 src={member.profile_image_url}
-                                alt={`${member.first_name} ${member.last_name}`}
+                                alt={member.first_name}
                               />
                             ) : (
-                              <div className={`h-10 w-10 rounded-full ${theme.primaryLight} flex items-center justify-center`}>
-                                <span className={`${theme.text} font-medium text-sm`}>
+                              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border border-slate-100 shadow-sm">
+                                <span className="text-slate-500 font-bold text-xs">
                                   {member.first_name.charAt(0)}{member.last_name.charAt(0)}
                                 </span>
                               </div>
                             )}
+                            {member.is_active && (
+                              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+                            )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
                               {member.first_name} {member.last_name}
                             </div>
-                            <div className="text-sm text-gray-500">
-                              ID: {member.id}
+                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">
+                              ID: {member.id.substring(0, 8)}...
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          <div className="flex items-center gap-1 mb-1">
-                            <Mail className="w-3 h-3 text-gray-400" />
+                        <div className="text-xs text-slate-600 space-y-0.5">
+                          <div className="flex items-center gap-1.5 hover:text-purple-600 transition-colors cursor-pointer">
+                            <Mail className="w-3.5 h-3.5 text-slate-300" />
                             {member.email}
                           </div>
                           {member.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-gray-400" />
+                            <div className="flex items-center gap-1.5 hover:text-purple-600 transition-colors cursor-pointer">
+                              <Phone className="w-3.5 h-3.5 text-slate-300" />
                               {member.phone}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          <div className="font-medium">{member.designation || 'Member'}</div>
-                          {member.administration && (
-                            <div className="text-gray-500">{member.administration}</div>
-                          )}
-                          <div className={`text-xs ${theme.text} font-medium`}>
-                            {member.role || 'member'}
-                          </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700">{member.designation || 'Member'}</span>
+                          <span className="text-[11px] font-medium text-slate-400">{member.administration || 'No Admin Unit'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${member.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                          }`}>
-                          {member.is_active ? (
-                            <>
-                              <UserCheck className="w-3 h-3 mr-1" />
-                              Active
-                            </>
-                          ) : (
-                            <>
-                              <UserX className="w-3 h-3 mr-1" />
-                              Inactive
-                            </>
-                          )}
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          member.is_active 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {member.is_active ? <UserCheck className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
+                          {member.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(member.created_at)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center gap-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => setSelectedMember(member)}
-                            className={`${theme.text} ${theme.textHover} p-1 ${theme.bgHover} rounded`}
-                            title="View Details"
+                            className="p-2 hover:bg-slate-100 text-slate-400 hover:text-purple-600 rounded-xl transition-all active:scale-95"
+                            title="Edit Profile"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteMember(member)}
-                            className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded"
+                            className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all active:scale-95"
                             title="Delete Member"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -790,7 +779,9 @@ export default function Members() {
                     </div>
 
                     {/* Arrow */}
-                    <ChevronRight className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                    <div className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-full text-slate-300">
+                      <ChevronRight className="w-5 h-5 transition-transform group-active:translate-x-1" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -815,287 +806,416 @@ export default function Members() {
 
       {/* Member Detail Modal - Full Profile View */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-lg font-semibold text-gray-900">{isEditing ? 'Edit Profile' : 'Member Profile'}</h3>
-              <div className="flex items-center gap-2">
-                {!isEditing && (
-                  <button
-                    onClick={() => startEditing(selectedMember)}
-                    className="p-2 hover:bg-gray-100 rounded-lg text-purple-600 transition-colors"
-                    title="Edit Member"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                )}
-                <button
-                  onClick={() => { setSelectedMember(null); setIsEditing(false); }}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
+        <MemberProfileModal 
+          member={selectedMember} 
+          onClose={() => setSelectedMember(null)}
+          setMembers={setMembers}
+          setSelectedMember={setSelectedMember}
+          showToast={showToast}
+        />
+      )}
+      {/* Old modal code removed */}
+    </div>
+  );
+}
+
+// Stats Card Component
+function StatCard({
+  label,
+  value,
+  icon,
+  color,
+  pulse
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  color: 'purple' | 'green' | 'blue' | 'orange';
+  pulse?: boolean;
+}) {
+  const colors = {
+    purple: 'border-purple-500 bg-purple-50/50 text-purple-600',
+    green: 'border-emerald-500 bg-emerald-50/50 text-emerald-600',
+    blue: 'border-blue-500 bg-blue-50/50 text-blue-600',
+    orange: 'border-orange-500 bg-orange-50/50 text-orange-600'
+  };
+
+  const iconColors = {
+    purple: 'bg-purple-500 text-white shadow-purple-200',
+    green: 'bg-emerald-500 text-white shadow-emerald-200',
+    blue: 'bg-blue-500 text-white shadow-blue-200',
+    orange: 'bg-orange-500 text-white shadow-orange-200'
+  };
+
+  return (
+    <div className={`flex-shrink-0 w-[160px] lg:w-auto lg:flex-1 bg-white rounded-3xl p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md border-l-4 ${colors[color]}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${iconColors[color]}`}>
+          {icon}
+        </div>
+        {pulse && (
+          <div className="flex h-2.5 w-2.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </div>
+        )}
+      </div>
+      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.1em] mb-1">{label}</p>
+      <div className="flex items-baseline gap-1">
+        <p className="text-3xl font-black text-slate-900">{value.toLocaleString()}</p>
+      </div>
+    </div>
+  );
+}
+
+// Member Profile Modal Component (Slide-over)
+function MemberProfileModal({
+  member,
+  onClose,
+  setMembers,
+  setSelectedMember,
+  showToast
+}: {
+  member: Member;
+  onClose: () => void;
+  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
+  setSelectedMember: React.Dispatch<React.SetStateAction<Member | null>>;
+  showToast: (message: string, type: 'success' | 'error') => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'info' | 'activity' | 'settings'>('info');
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Member>>({ ...member });
+
+  useEffect(() => {
+    setEditForm({ ...member });
+  }, [member]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await FirebaseDatabaseService.updateDocument('profiles', member.id, editForm);
+      const updatedMember = { ...member, ...editForm };
+      
+      setMembers(prev => prev.map(m => m.id === member.id ? updatedMember : m));
+      setSelectedMember(updatedMember);
+      setIsEditing(false);
+      showToast(' Member profile updated successfully', 'success');
+    } catch (error) {
+      console.error('Error updating member:', error);
+      showToast(' Failed to update member profile', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(' Are you sure you want to delete this member? This action cannot be undone.')) return;
+    
+    setLoading(true);
+    try {
+      await FirebaseDatabaseService.deleteDocument('profiles', member.id);
+      setMembers(prev => prev.filter(m => m.id !== member.id));
+      onClose();
+      showToast(' Member deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      showToast(' Failed to delete member', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] overflow-hidden">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      
+      <div className="absolute inset-y-0 right-0 max-w-full flex">
+        <div className="w-screen max-w-lg bg-white shadow-2xl flex flex-col transform transition-transform duration-500 ease-in-out slide-in-from-right">
+          {/* Header */}
+          <div className="relative p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={onClose}
+                className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-600 shadow-sm border border-transparent hover:border-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl font-bold text-slate-900">Member Profile</h2>
             </div>
-
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Profile Section */}
-              <div className="p-4 flex items-center gap-4 border-b border-gray-100">
-                {selectedMember.profile_image_url ? (
-                  <img
-                    className="h-16 w-16 rounded-full object-cover"
-                    src={selectedMember.profile_image_url}
-                    alt={`${selectedMember.first_name} ${selectedMember.last_name}`}
-                  />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center">
-                    <span className="text-purple-600 font-bold text-xl">
-                      {selectedMember.first_name.charAt(0)}{selectedMember.last_name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-
-                {isEditing ? (
-                  <div className="flex-1 space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        value={editForm.first_name || ''}
-                        onChange={e => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
-                        placeholder="First Name"
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
-                      />
-                      <input
-                        value={editForm.last_name || ''}
-                        onChange={e => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
-                        placeholder="Last Name"
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
-                      />
-                    </div>
-                    <input
-                      value={editForm.email || selectedMember.email}
-                      disabled
-                      className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 text-gray-500"
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">
-                      {selectedMember.first_name} {selectedMember.middle_name ? selectedMember.middle_name + ' ' : ''}{selectedMember.last_name}
-                    </h4>
-                    <p className="text-sm text-gray-500">{selectedMember.email}</p>
-                    {selectedMember.zoneName && (
-                      <p className="text-xs text-purple-600 font-medium mt-1">{selectedMember.zoneName}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Personal Information */}
-              <div className="p-4 border-b border-gray-100">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Personal Information</h5>
-                <div className="space-y-3">
-                  {isEditing ? (
-                    <>
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Phone</label>
-                        <input
-                          value={editForm.phone || ''}
-                          onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-gray-500 block mb-1">Gender</label>
-                          <select
-                            value={editForm.gender || ''}
-                            onChange={e => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm"
-                          >
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500 block mb-1">Birthday</label>
-                          <input
-                            type="date"
-                            value={editForm.birthday || ''}
-                            onChange={e => setEditForm(prev => ({ ...prev, birthday: e.target.value }))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Phone</span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedMember.phone || 'Not set'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Gender</span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedMember.gender || 'Not set'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Birthday</span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedMember.birthday || 'Not set'}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Location Information */}
-              <div className="p-4 border-b border-gray-100">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Location</h5>
-                <div className="space-y-3">
-                  {isEditing ? (
-                    <>
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Region</label>
-                        <input
-                          value={editForm.region || ''}
-                          onChange={e => setEditForm(prev => ({ ...prev, region: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Church</label>
-                        <input
-                          value={editForm.church || ''}
-                          onChange={e => setEditForm(prev => ({ ...prev, church: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Region</span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedMember.region || 'Not set'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Church</span>
-                        <span className="text-sm text-gray-900 font-medium">{selectedMember.church || 'Not set'}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Designation Information */}
-              <div className="p-4">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-3">Designation</h5>
-                <div className="space-y-3">
-                  {isEditing ? (
-                    <>
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Designation</label>
-                        <input
-                          value={editForm.designation || ''}
-                          onChange={e => setEditForm(prev => ({ ...prev, designation: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
-                          placeholder="e.g. Soprano, Alto, Tenor"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Role</span>
-                      <span className="text-sm text-gray-900 font-medium">{selectedMember.designation || 'Member'}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Access Control - Hide in Edit Mode */}
-            {!isEditing && (
-              <div className="p-4 border-t border-gray-100 bg-purple-50/30">
-                <h5 className="text-xs font-semibold text-purple-600 uppercase mb-3">Access Control</h5>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Pre-Rehearsal Access</p>
-                    <p className="text-xs text-gray-500">Allow this member to access preparing sessions</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const newState = !selectedMember.can_access_pre_rehearsal;
-                        await FirebaseDatabaseService.updateDocument('profiles', selectedMember.id, {
-                          can_access_pre_rehearsal: newState
-                        });
-
-                        // Update local state
-                        const updatedMember = { ...selectedMember, can_access_pre_rehearsal: newState };
-                        setSelectedMember(updatedMember);
-
-                        // Update in list
-                        setMembers(prev => prev.map(m => m.id === selectedMember.id ? updatedMember : m));
-
-                        showToast(` Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                      } catch (error) {
- console.error('Error updating access:', error);
-                        showToast(' Failed to update access', 'error');
-                      }
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedMember.can_access_pre_rehearsal ? 'bg-purple-600' : 'bg-gray-200'
-                      }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedMember.can_access_pre_rehearsal ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="p-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
-              {isEditing ? (
+            
+            <div className="flex items-center gap-2">
+              {!isEditing ? (
                 <>
                   <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                    title="Edit Profile"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
                     onClick={() => setIsEditing(false)}
-                    className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                    className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleSaveMember}
+                    onClick={handleSave}
                     disabled={loading}
-                    className="flex-1 px-4 py-2.5 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                    className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl transition-colors shadow-lg shadow-indigo-200 flex items-center gap-2"
                   >
                     {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                   </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setSelectedMember(null)}
-                    className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteMember(selectedMember);
-                      setSelectedMember(null);
-                    }}
-                    className="px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm"
-                  >
-                    Delete
-                  </button>
-                </>
+                </div>
               )}
             </div>
           </div>
+
+          {/* User Hero Section */}
+          <div className="p-8 pb-4 text-center border-b border-slate-50">
+            <div className="relative inline-block mb-4">
+              <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-100 overflow-hidden">
+                {member.profile_image_url ? (
+                  <img src={member.profile_image_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  `${member.first_name?.[0].toUpperCase()}${member.last_name?.[0].toUpperCase()}`
+                )}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" />
+            </div>
+            
+            <h3 className="text-2xl font-black text-slate-900 mb-1">
+              {member.first_name} {member.last_name}
+            </h3>
+            <p className="text-slate-500 font-medium text-sm mb-4">{member.email}</p>
+            
+            <div className="flex items-center justify-center gap-2">
+              <StatusBadge label={member.zoneName || 'Zonal Member'} color="indigo" icon={<Shield className="w-3 h-3" />} />
+              {member.designation && (
+                <StatusBadge label={member.designation} color="emerald" icon={<Star className="w-3 h-3" />} />
+              )}
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex p-2 gap-1 bg-slate-50/50 border-b border-slate-100">
+            {[
+              { id: 'info', label: 'Details', icon: <Building2 className="w-4 h-4" /> },
+              { id: 'activity', label: 'Activity', icon: <Calendar className="w-4 h-4" /> },
+              { id: 'settings', label: 'Access', icon: <Shield className="w-4 h-4" /> }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === tab.id 
+                    ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+            {activeTab === 'info' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Personal Information</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <EditableField 
+                      label="First Name" 
+                      value={editForm.first_name || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, first_name: val }))} 
+                    />
+                    <EditableField 
+                      label="Last Name" 
+                      value={editForm.last_name || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, last_name: val }))} 
+                    />
+                    <InfoField label="Primary Email" value={member.email} icon={<Mail className="w-4 h-4" />} />
+                    <EditableField 
+                      label="Phone Number" 
+                      value={editForm.phone || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, phone: val }))} 
+                      icon={<Phone className="w-4 h-4" />}
+                    />
+                  </div>
+                </section>
+
+                <section>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Church Details</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <EditableField 
+                      label="Zone" 
+                      value={editForm.zoneName || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, zoneName: val }))} 
+                      icon={<MapPin className="w-4 h-4" />}
+                    />
+                    <EditableField 
+                      label="Church" 
+                      value={editForm.church || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, church: val }))} 
+                      icon={<Building2 className="w-4 h-4" />}
+                    />
+                    <EditableField 
+                      label="Designation" 
+                      value={editForm.designation || ''} 
+                      isEditing={isEditing} 
+                      onChange={val => setEditForm(p => ({ ...p, designation: val }))} 
+                      icon={<Tag className="w-4 h-4" />}
+                    />
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'activity' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col items-center justify-center h-full text-center p-12">
+                <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
+                  <Calendar className="w-8 h-8" />
+                </div>
+                <h5 className="text-slate-900 font-bold mb-1 font-outfit">No Recent Activity</h5>
+                <p className="text-slate-500 text-sm">Attendance and contribution logs will appear here soon.</p>
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">System Access</h4>
+                  <div className="p-5 rounded-3xl border border-slate-100 bg-slate-50/30 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Pre-Rehearsal Access</p>
+                        <p className="text-xs text-slate-500">Allow member to view practice materials early</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const newState = !member.can_access_pre_rehearsal;
+                          try {
+                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
+                              can_access_pre_rehearsal: newState
+                            });
+                            const updated = { ...member, can_access_pre_rehearsal: newState };
+                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                            setSelectedMember(updated);
+                            showToast(` Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                          } catch (exp) {
+                            showToast(' Failed to change access', 'error');
+                          }
+                        }}
+                        className={`w-11 h-6 rounded-full transition-all relative ${member.can_access_pre_rehearsal ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.can_access_pre_rehearsal ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Account Status</p>
+                          <p className="text-xs text-slate-500">Enable or disable this member's entire account</p>
+                        </div>
+                        <StatusBadge label="Active" color="emerald" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
+  );
+}
+
+// Reusable Helper Components
+function InfoField({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+  return (
+    <div className="p-4 rounded-2xl border border-slate-50 bg-slate-50/30 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+        <p className="text-slate-900 font-bold">{value || '---'}</p>
+      </div>
+    </div>
+  );
+}
+
+function EditableField({ 
+  label, 
+  value, 
+  isEditing, 
+  onChange, 
+  icon 
+}: { 
+  label: string; 
+  value: string; 
+  isEditing: boolean; 
+  onChange: (val: string) => void;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className={`p-4 rounded-2xl border transition-all ${isEditing ? 'border-indigo-200 bg-indigo-50/20' : 'border-slate-50 bg-slate-50/30'}`}>
+      <div className="flex items-center gap-4">
+        {icon && (
+          <div className={`w-10 h-10 rounded-xl bg-white border flex items-center justify-center shadow-sm ${isEditing ? 'border-indigo-100 text-indigo-400' : 'border-slate-100 text-slate-400'}`}>
+            {icon}
+          </div>
+        )}
+        <div className="flex-1">
+          <p className={`text-[10px] font-black uppercase tracking-widest ${isEditing ? 'text-indigo-400' : 'text-slate-400'}`}>{label}</p>
+          {isEditing ? (
+            <input
+              type="text"
+              value={value}
+              onChange={e => onChange(e.target.value)}
+              className="w-full bg-transparent border-none p-0 text-slate-900 font-bold focus:ring-0 text-base"
+              autoFocus
+            />
+          ) : (
+            <p className="text-slate-900 font-bold">{value || '---'}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, color, icon }: { label: string; color: 'indigo' | 'emerald' | 'rose' | 'amber'; icon?: React.ReactNode }) {
+  const colors = {
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100'
+  };
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold flex items-center gap-1.5 border shadow-sm ${colors[color]}`}>
+      {icon}
+      {label}
+    </span>
   );
 }

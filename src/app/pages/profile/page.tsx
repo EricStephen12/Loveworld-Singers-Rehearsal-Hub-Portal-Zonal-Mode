@@ -25,6 +25,8 @@ import { ZoneInvitationService } from '@/lib/zone-invitation-service'
 import { isHQGroup } from '@/config/zones'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import QRCode from 'qrcode'
+import RequestSubGroupForm from '@/components/profile/RequestSubGroupForm'
+import { useSearchParams } from 'next/navigation'
 
 // Helper function to adjust color brightness for gradient
 const adjustColor = (color: string, amount: number) => {
@@ -40,6 +42,8 @@ function ProfilePage() {
   const { user, signOut, profile: currentProfile, refreshProfile, isLoading } = useAuth()
   const { userZones, currentZone, isSuperAdmin, isZoneCoordinator } = useZone()
   const { isPremiumTier, isIndividualPremium, subscription, isExpiringSoon, daysRemaining } = useSubscription()
+  const searchParams = useSearchParams()
+  const activeTab = searchParams?.get('tab')
 
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -62,6 +66,19 @@ function ProfilePage() {
   const [saveProgress, setSaveProgress] = useState(0)
   const [saveStage, setSaveStage] = useState('')
   const [isClient, setIsClient] = useState(false)
+  
+  // Handle tab from URL
+  useEffect(() => {
+    if (activeTab === 'subgroups') {
+      setExpandedSections(prev => ({ ...prev, subgroups: true }))
+      // Optional: scroll to the section
+      const timer = setTimeout(() => {
+        const el = document.getElementById('subgroups-section')
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [activeTab])
   
   // Attendance state
   const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([])
@@ -134,7 +151,8 @@ function ProfilePage() {
     ministry: false,
     contact: false,
     attendance: false,
-    zones: false
+    zones: false,
+    subgroups: false
   })
 
   // Set client flag to prevent hydration issues
@@ -1398,6 +1416,11 @@ function ProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Sub-Groups Section */}
+          <div id="subgroups-section" className="px-4 mt-2 mb-6">
+            <RequestSubGroupForm />
           </div>
 
           {/* Location Information - Collapsible */}
