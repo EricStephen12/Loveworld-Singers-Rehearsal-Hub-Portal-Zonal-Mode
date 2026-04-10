@@ -773,7 +773,7 @@ export default function PagesSection(props: PagesSectionProps) {
                                   : 'bg-yellow-100 text-yellow-700'
                                   }`}
                               >
-                                {song.status === 'heard' ? '✓ Heard' : 'Unheard'}
+                                {song.status === 'heard' ? ' Heard' : 'Unheard'}
                               </button>
                             </div>
 
@@ -787,7 +787,7 @@ export default function PagesSection(props: PagesSectionProps) {
                                 )}
                                 {song.conductor && (
                                   <span className="text-xs text-slate-500 truncate max-w-[100px]">
-                                    🎼 {song.conductor}
+                                     {song.conductor}
                                   </span>
                                 )}
                               </div>

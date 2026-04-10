@@ -364,7 +364,7 @@ export async function addTrack(
           body: JSON.stringify({
             type: 'audiolab',
             recipientIds: allParticipants,
-            title: '🎹 New Track Added',
+            title: ' New Track Added',
             body: `A new track "${track.name}" was added to "${project.name}"`,
             data: { projectId, trackId, type: 'track_added' }
           })

@@ -46,7 +46,7 @@ function PraiseNightPageContent() {
   const songParam = searchParams?.get('song');
   const { currentSong, isPlaying, setCurrentSong, play, isLoading, hasError, audioRef } = useAudio();
 
-  // 🏥 Song detail modal states (moved up to avoid TDZ errors)
+  //  Song detail modal states (moved up to avoid TDZ errors)
   const [selectedSong, setSelectedSong] = useState<any>(null);
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false);
   const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(null);
@@ -143,7 +143,7 @@ function PraiseNightPageContent() {
   const [pageCategories, setPageCategories] = useState<any[]>([]);
   const [loadingPageCategories, setLoadingPageCategories] = useState(true);
 
-  // 📂 Global Archive Search states
+  //  Global Archive Search states
   const [allArchiveSongs, setAllArchiveSongs] = useState<PraiseNightSong[]>([]);
   const [isGlobalSearchLoading, setIsGlobalSearchLoading] = useState(false);
   const [hasLoadedAllSongs, setHasLoadedAllSongs] = useState(false);
@@ -347,7 +347,7 @@ function PraiseNightPageContent() {
       // 1. HQ is always hidden/redirected
       // 2. Others must have permission
       if (isHQ || !hasAccess) {
- console.warn('🚫 Access Denied to Pre-Rehearsal category');
+ console.warn(' Access Denied to Pre-Rehearsal category');
         router.replace('/pages/rehearsals');
       }
     }
@@ -376,7 +376,7 @@ function PraiseNightPageContent() {
       const hasAccess = isSpecialZone || isZoneCoordinator || isAdmin;
 
       if (!hasAccess) {
-        console.warn('🚫 Access Denied to Archive category');
+        console.warn(' Access Denied to Archive category');
         router.replace('/pages/rehearsals');
       }
     }
@@ -604,7 +604,7 @@ function PraiseNightPageContent() {
     const params = new URLSearchParams(window.location.search);
     params.set('song', song.title);
     
-    // 📂 Global search context fix: If song has a praiseNightId and it's different from current
+    //  Global search context fix: If song has a praiseNightId and it's different from current
     if (song.praiseNightId && song.praiseNightId !== currentPraiseNight?.id) {
       params.set('page', song.praiseNightId);
     }
@@ -624,7 +624,7 @@ function PraiseNightPageContent() {
     const params = new URLSearchParams(window.location.search);
     params.set('song', song.title);
     
-    // 📂 Global search context fix: If song has a praiseNightId and it's different from current
+    //  Global search context fix: If song has a praiseNightId and it's different from current
     if (song.praiseNightId && song.praiseNightId !== currentPraiseNight?.id) {
       params.set('page', song.praiseNightId);
     }

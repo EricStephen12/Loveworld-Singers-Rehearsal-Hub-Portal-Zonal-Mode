@@ -99,7 +99,7 @@ export default function NotificationsSection() {
       case 'announcement':
         return { bg: theme.primaryLight, text: theme.text, icon: '' };
       case 'admin':
-        return { bg: theme.primaryLight, text: theme.text, icon: '👤' };
+        return { bg: theme.primaryLight, text: theme.text, icon: '' };
       default:
         return { bg: 'bg-gray-100', text: 'text-gray-600', icon: 'ℹ️' };
     }
@@ -265,7 +265,7 @@ export default function NotificationsSection() {
               onClick={() => openModal('group')}
               className={`${theme.primary} text-white py-2.5 px-3 rounded-xl ${theme.primaryHover} transition-all active:scale-95 font-medium flex flex-col items-center justify-center gap-1 text-xs`}
             >
-              <span className="text-lg">👥</span>
+              <span className="text-lg"></span>
               <span>Group</span>
             </button>
             <button
@@ -395,7 +395,7 @@ export default function NotificationsSection() {
             {/* Modal Header */}
             <div className="border-b border-gray-200 px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                {modalType === 'all' ? ' Send to All Users' : '👥 Send to Group'}
+                {modalType === 'all' ? ' Send to All Users' : ' Send to Group'}
               </h3>
             </div>
 

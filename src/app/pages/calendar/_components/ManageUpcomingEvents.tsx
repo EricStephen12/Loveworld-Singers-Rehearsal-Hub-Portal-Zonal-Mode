@@ -80,7 +80,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
       case 'announcement': return ''
       case 'event': return ''
       case 'reminder': return ''
-      case 'meeting': return '👥'
+      case 'meeting': return ''
       case 'rehearsal': return ''
       default: return ''
     }
@@ -185,7 +185,7 @@ export default function ManageUpcomingEvents({ themeColor }: ManageUpcomingEvent
                 </div>
                 {event.time && (
                   <div className="flex items-center gap-2 text-gray-700">
-                    <span className="w-4 h-4 flex items-center justify-center">🕐</span>
+                    <span className="w-4 h-4 flex items-center justify-center"></span>
                     <span>{event.time}</span>
                   </div>
                 )}

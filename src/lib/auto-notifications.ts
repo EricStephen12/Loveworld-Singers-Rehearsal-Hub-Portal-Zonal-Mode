@@ -118,7 +118,7 @@ class AutoNotificationService {
    */
   async notifyAudioAdded(songTitle: string, songId: string, senderId?: string) {
     return this.createNotification({
-      title: `🎧 Audio Added: ${songTitle}`,
+      title: ` Audio Added: ${songTitle}`,
       message: `Audio file is now available for "${songTitle}". Listen and practice!`,
       type: 'success',
       category: 'song',
@@ -208,7 +208,7 @@ class AutoNotificationService {
    */
   async notifyGroup(groupName: string, title: string, message: string, priority: 'low' | 'medium' | 'high' = 'medium', senderId?: string) {
     return this.createNotification({
-      title: `👥 ${groupName}: ${title}`,
+      title: ` ${groupName}: ${title}`,
       message,
       type: 'info',
       category: 'announcement',

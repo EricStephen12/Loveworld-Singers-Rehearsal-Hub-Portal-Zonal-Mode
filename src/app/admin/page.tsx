@@ -168,7 +168,7 @@ function AdminContent() {
     }
   }, [currentZone, setZoneId]);
 
-  // 🔄 Restore Admin state from URL on mount/change
+  //  Restore Admin state from URL on mount/change
   useEffect(() => {
     const sectionParam = searchParams.get('section');
     const pageIdParam = searchParams.get('pageId');
@@ -197,8 +197,8 @@ function AdminContent() {
     }
   }, [searchParams, allPraiseNights]);
 
-  // 💾 Save Admin state to URL when changed
-  // 💾 Save Admin state to URL when changed
+  //  Save Admin state to URL when changed
+  //  Save Admin state to URL when changed
   useEffect(() => {
     // Create new params based on current searchParams to preserve other values
     const params = new URLSearchParams(searchParams.toString());
@@ -569,7 +569,7 @@ function AdminContent() {
         throw new Error(result.error || 'Failed to create category');
       }
     } catch (error) {
-      console.error('❌ Error adding category:', error);
+      console.error(' Error adding category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to add category'
@@ -654,7 +654,7 @@ function AdminContent() {
         throw new Error('Failed to update category');
       }
     } catch (error) {
-      console.error('❌ Error updating category:', error);
+      console.error(' Error updating category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update category'
@@ -721,7 +721,7 @@ function AdminContent() {
         throw new Error('Failed to delete category');
       }
     } catch (error) {
-      console.error('❌ Error deleting category:', error);
+      console.error(' Error deleting category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to delete category'
@@ -793,7 +793,7 @@ function AdminContent() {
         throw new Error(('error' in result ? result.error : 'Failed to create page category') as string);
       }
     } catch (error) {
-      console.error('❌ Error adding page category:', error);
+      console.error(' Error adding page category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to add page category'
@@ -918,7 +918,7 @@ function AdminContent() {
         throw new Error('Failed to update page category');
       }
     } catch (error) {
-      console.error('❌ Error updating page category:', error);
+      console.error(' Error updating page category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update page category'
@@ -973,7 +973,7 @@ function AdminContent() {
         throw new Error('Failed to delete page category');
       }
     } catch (error) {
-      console.error('❌ Error deleting page category:', error);
+      console.error(' Error deleting page category:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to delete page category'
@@ -1034,7 +1034,7 @@ function AdminContent() {
               currentZone?.id
             );
           } else {
-            console.warn('⚠️ Banner image upload failed:', uploadResult.error);
+            console.warn('️ Banner image upload failed:', uploadResult.error);
           }
         }
 
@@ -1062,7 +1062,7 @@ function AdminContent() {
         throw new Error('Failed to add page');
       }
     } catch (error) {
-      console.error('❌ Error adding page:', error);
+      console.error(' Error adding page:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to add page'
@@ -1164,7 +1164,7 @@ function AdminContent() {
         throw new Error('Failed to update page');
       }
     } catch (error) {
-      console.error('❌ Error updating page:', error);
+      console.error(' Error updating page:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update page'
@@ -1209,7 +1209,7 @@ function AdminContent() {
         throw new Error('Failed to delete page');
       }
     } catch (error) {
-      console.error('❌ Error deleting page:', error);
+      console.error(' Error deleting page:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to delete page'
@@ -1258,7 +1258,7 @@ function AdminContent() {
         throw new Error(result.error || 'Failed to update song status');
       }
     } catch (error) {
-      console.error('❌ Error updating song status:', error);
+      console.error(' Error updating song status:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update song status'
@@ -1274,7 +1274,7 @@ function AdminContent() {
         throw new Error('Invalid song ID for active status update');
       }
 
-      console.debug('🎯 [Admin] Toggling active status:', {
+      console.debug(' [Admin] Toggling active status:', {
         songId: song.id,
         songTitle: song.title,
         currentActive: (song as any).isActive,
@@ -1285,13 +1285,13 @@ function AdminContent() {
 
       const result = await PraiseNightSongsService.updateSong(song.id, {
         isActive: newActiveStatus,
-        praiseNightId: song.praiseNightId // ✅ CRITICAL: Include praiseNightId for metadata trigger
+        praiseNightId: song.praiseNightId //  CRITICAL: Include praiseNightId for metadata trigger
       }, currentZone?.id);
 
       if (result.success) {
         addToast({
           type: 'success',
-          message: newActiveStatus ? `🔴 ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
+          message: newActiveStatus ? ` ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
         });
         refreshData();
 
@@ -1303,7 +1303,7 @@ function AdminContent() {
         throw new Error(result.error || 'Failed to update song active status');
       }
     } catch (error) {
-      console.error('❌ Error updating song active status:', error);
+      console.error(' Error updating song active status:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update song active status'
@@ -1334,7 +1334,7 @@ function AdminContent() {
             logAdminAction.updateSong(currentAdmin, `Updated song: ${songData.title}`);
           }
         } else {
-          console.error('❌ [FRESH] Song update failed:', result.error);
+          console.error(' [FRESH] Song update failed:', result.error);
           addToast({
             type: 'error',
             message: result.error || 'Failed to update song'
@@ -1363,7 +1363,7 @@ function AdminContent() {
             logAdminAction.addSong(currentAdmin, songData.title, songData.category);
           }
         } else {
-          console.error('❌ [FRESH] Song creation failed:', result.error);
+          console.error(' [FRESH] Song creation failed:', result.error);
           addToast({
             type: 'error',
             message: result.error || 'Failed to create song'
@@ -1383,7 +1383,7 @@ function AdminContent() {
         throw new Error('Failed to save song');
       }
     } catch (error) {
-      console.error('❌ Error saving song:', error);
+      console.error(' Error saving song:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to save song'
@@ -1420,7 +1420,7 @@ function AdminContent() {
         throw new Error(deleteResult.error || 'Failed to delete song');
       }
     } catch (error) {
-      console.error('❌ Error deleting song:', error);
+      console.error(' Error deleting song:', error);
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to delete song'

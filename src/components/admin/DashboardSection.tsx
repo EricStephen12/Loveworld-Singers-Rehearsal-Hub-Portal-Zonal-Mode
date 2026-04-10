@@ -280,7 +280,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-                {getGreeting()}, {firstName} 👋
+                {getGreeting()}, {firstName} 
               </h1>
               <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
                 <span

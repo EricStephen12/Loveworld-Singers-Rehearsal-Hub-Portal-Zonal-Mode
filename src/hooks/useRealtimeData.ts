@@ -37,7 +37,7 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
     } else if (zoneId) {
       pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000)
     } else {
-      console.warn('⚠️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
+      console.warn('️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
       return []
     }
 

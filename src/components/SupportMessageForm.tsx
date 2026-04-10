@@ -43,11 +43,11 @@ export default function SupportMessageForm({ isOpen, onClose, onSuccess }: Suppo
   const [success, setSuccess] = useState(false);
 
   const categories = [
-    { value: 'general', label: 'General Question', icon: '❓' },
+    { value: 'general', label: 'General Question', icon: '' },
     { value: 'technical', label: 'Technical Issue', icon: '' },
-    { value: 'billing', label: 'Billing/Account', icon: '💳' },
+    { value: 'billing', label: 'Billing/Account', icon: '' },
     { value: 'feature', label: 'Feature Request', icon: '' },
-    { value: 'bug', label: 'Bug Report', icon: '🐛' },
+    { value: 'bug', label: 'Bug Report', icon: '' },
     { value: 'other', label: 'Other', icon: '' }
   ];
 

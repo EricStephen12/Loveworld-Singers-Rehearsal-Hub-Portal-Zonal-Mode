@@ -592,7 +592,7 @@ export function LiveSessionView() {
             <div className="flex flex-col h-full">
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <h3 className="text-xl font-bold">Participants ({participantCount})</h3>
-                <button onClick={() => setShowParticipants(false)} className="text-white/40 hover:text-white transition-colors">✕</button>
+                <button onClick={() => setShowParticipants(false)} className="text-white/40 hover:text-white transition-colors"></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {participants.map(p => (

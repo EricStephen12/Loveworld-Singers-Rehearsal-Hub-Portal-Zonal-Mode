@@ -218,7 +218,7 @@ export class SessionManager {
     } catch (error: any) {
       // TRAP: If write fails (Permission Denied implies our Session ID is old), we die.
       if (error.code === 'permission-denied') {
- console.warn('[Session] 💀 Activity update blocked! Session invalid. Logging out.')
+ console.warn('[Session]  Activity update blocked! Session invalid. Logging out.')
         this.handleSessionTermination()
       } else {
  console.error('Error updating activity:', error)
@@ -358,19 +358,19 @@ export class SessionManager {
               return
             }
 
-            console.warn(`[Session] 💀 Session Mismatch! Active=${latestData?.sessionId} vs Me=${this.sessionId}`)
+            console.warn(`[Session]  Session Mismatch! Active=${latestData?.sessionId} vs Me=${this.sessionId}`)
             this.handleSessionTermination()
           }
         }
       } else {
         // Only terminate if we are definitely online and the doc is gone
         if (typeof navigator !== 'undefined' && navigator.onLine) {
-          console.warn(`[Session] 💀 Session deleted.`)
+          console.warn(`[Session]  Session deleted.`)
           this.handleSessionTermination()
         }
       }
     }, (error: any) => {
-      console.error('[Session] ❌ Listener error:', error)
+      console.error('[Session]  Listener error:', error)
     })
 
     this.sessionListener = unsubscribe

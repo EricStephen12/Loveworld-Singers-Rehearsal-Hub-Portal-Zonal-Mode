@@ -371,7 +371,7 @@ export default function BasicTextEditor({
           >
             <Languages className="w-4 h-4" />
             <span className="text-xs">
-              {isTranslating ? 'Translating...' : translationService.LANGUAGES.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+              {isTranslating ? 'Translating...' : translationService.LANGUAGES.find(l => l.code === selectedLanguage)?.flag || ''}
             </span>
           </button>
 

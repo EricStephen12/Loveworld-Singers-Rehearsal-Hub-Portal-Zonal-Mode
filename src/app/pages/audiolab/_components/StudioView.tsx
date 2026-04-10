@@ -1998,7 +1998,7 @@ export function StudioView() {
                                     }`}
                                   title={track.audioUrl ? 'Saved to cloud' : 'Saved locally'}
                                 >
-                                  {track.audioUrl ? '☁️' : ''}
+                                  {track.audioUrl ? '️' : ''}
                                 </span>
                               )}
                             </div>

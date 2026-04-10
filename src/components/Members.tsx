@@ -767,7 +767,7 @@ export default function Members() {
                         </h3>
                         {member.role === 'coordinator' && (
                           <span className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-[8px]">✓</span>
+                            <span className="text-white text-[8px]"></span>
                           </span>
                         )}
                       </div>

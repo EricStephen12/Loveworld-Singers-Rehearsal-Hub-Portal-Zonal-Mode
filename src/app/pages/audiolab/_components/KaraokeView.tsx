@@ -15,7 +15,7 @@ import { SimpleSongCard } from './SimpleSongCard';
 
 // Default lyrics when no lyrics available
 const defaultLyrics = [
-  { time: 0, text: "♪" },
+  { time: 0, text: "" },
   { time: 5, text: "No synchronized lyrics available" },
   { time: 10, text: "Please add LRC-formatted lyrics in Admin Area" },
 ];
@@ -290,7 +290,7 @@ export function KaraokeView() {
 
   const progress = songDuration > 0 ? (player.currentTime / songDuration) * 100 : 0;
 
-  const getCurrentLyric = () => songLyrics[currentLine]?.text || '♪ ♪ ♪';
+  const getCurrentLyric = () => songLyrics[currentLine]?.text || '  ';
   const getNextLyric = () => songLyrics[currentLine + 1]?.text || '';
 
   return (

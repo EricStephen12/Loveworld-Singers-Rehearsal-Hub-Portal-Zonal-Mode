@@ -56,7 +56,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
       case 'announcement': return ''
       case 'event': return ''
       case 'reminder': return ''
-      case 'meeting': return '👥'
+      case 'meeting': return ''
       case 'rehearsal': return ''
       default: return ''
     }

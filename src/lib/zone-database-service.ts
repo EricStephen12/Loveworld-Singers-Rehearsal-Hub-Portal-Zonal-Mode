@@ -146,7 +146,7 @@ export class ZoneDatabaseService {
 
       const result = await FirebaseDatabaseService.addDocument('zone_songs', cleanData)
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       if (result.success && result.id) {
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
         // Also update individual song metadata
@@ -232,7 +232,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.updateDocument('zone_songs', songId, cleanData)
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       // We need praiseNightId to update the correct list
       // Since we don't have it in data significantly often, we might need it.
       // However, for updateSong, usually we interact with a loaded song.
@@ -324,7 +324,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.deleteDocument('zone_songs', songId)
 
-      // 🔔 Trigger metadata update
+      //  Trigger metadata update
       if (zId && praiseNightId) {
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zId, praiseNightId)
       }
@@ -364,7 +364,7 @@ export class ZoneDatabaseService {
 
       const result = await FirebaseDatabaseService.addDocument(collection, data)
       this.invalidateCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true, id: result.id, ...data }
     } catch (error) {
@@ -401,7 +401,7 @@ export class ZoneDatabaseService {
 
       const result = await FirebaseDatabaseService.addDocument(collection, categoryData)
       this.invalidatePageCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true, id: result.id }
     } catch (error) {
@@ -419,7 +419,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.updateDocument(collection, pageCategoryId, updateData)
       this.invalidatePageCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
@@ -435,7 +435,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.deleteDocument(collection, pageCategoryId)
       this.invalidatePageCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'page_categories')
       return { success: true }
     } catch (error) {
@@ -453,7 +453,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.updateDocument(collection, categoryId, updateData)
       this.invalidateCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {
@@ -469,7 +469,7 @@ export class ZoneDatabaseService {
 
       await FirebaseDatabaseService.deleteDocument(collection, categoryId)
       this.invalidateCategoriesCache(zoneId)
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       await FirebaseMetadataService.updateMetadata(zoneId, 'categories')
       return { success: true }
     } catch (error) {

@@ -16,21 +16,21 @@ export const CONTENT_TYPES: ContentTypeConfig[] = [
     name: 'Praise',
     description: 'Praise and worship songs',
     color: '#8B5CF6', // Purple
-    icon: '🙌'
+    icon: ''
   },
   {
     id: 'medley',
     name: 'Medley',
     description: 'Song medleys and combinations',
     color: '#06B6D4', // Cyan
-    icon: '🎵'
+    icon: ''
   },
   {
     id: 'healing',
     name: 'Healing',
     description: 'Healing and prayer songs',
     color: '#10B981', // Green
-    icon: '✨'
+    icon: ''
   },
   {
     id: 'gfap',

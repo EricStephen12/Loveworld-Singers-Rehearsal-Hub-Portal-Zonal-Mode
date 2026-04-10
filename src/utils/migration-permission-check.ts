@@ -143,7 +143,7 @@ export class MigrationPermissionCheck {
       return true
     }
     
- console.error('🚫 [Migration] Permission Issues Found:')
+ console.error(' [Migration] Permission Issues Found:')
  results.errors.forEach(error => console.error(` • ${error}`))
  console.error('')
  console.error(' [Migration] To fix permissions:')

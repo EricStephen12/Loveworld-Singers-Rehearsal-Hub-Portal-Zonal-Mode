@@ -241,7 +241,7 @@ export default function EventDetailsModal({
                   <div className="space-y-1">
                     {event.reminders.map((reminder, index) => (
                       <p key={index} className="text-gray-600 text-sm">
-                        {reminder.type === 'email' ? '📧' : '🔔'} {reminder.minutes} minutes before
+                        {reminder.type === 'email' ? '' : ''} {reminder.minutes} minutes before
                       </p>
                     ))}
                   </div>

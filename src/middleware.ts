@@ -5,7 +5,7 @@ export async function middleware(req: NextRequest) {
   const isLoggedIn = req.cookies.get('lwsrh_is_logged_in')?.value === 'true'
   const { pathname } = req.nextUrl
 
-  // 🛡️ Protected routes: users MUST be logged in
+  // ️ Protected routes: users MUST be logged in
   const isProtectedRoute = 
     pathname.startsWith('/pages') || 
     pathname.startsWith('/admin') || 
@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/profile') ||
     pathname === '/home'
 
-  // 🔓 Auth routes: users MUST NOT be logged in (redirect to home if they are)
+  //  Auth routes: users MUST NOT be logged in (redirect to home if they are)
   const isAuthRoute = pathname.startsWith('/auth')
 
   if (isProtectedRoute && !isLoggedIn) {

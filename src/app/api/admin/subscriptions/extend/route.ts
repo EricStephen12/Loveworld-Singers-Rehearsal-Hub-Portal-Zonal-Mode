@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
             if (userProfile?.kingschatUserId) {
                 await KingsChatAuthService.sendMessage(
                     userProfile.kingschatUserId,
-                    ` Subscription Extended!\n\nYour subscription has been extended by ${months} month(s).\n\nNew expiry date: ${newExpiry.toLocaleDateString()}\n\nThank you for being with us! 🙏`
+                    ` Subscription Extended!\n\nYour subscription has been extended by ${months} month(s).\n\nNew expiry date: ${newExpiry.toLocaleDateString()}\n\nThank you for being with us! `
                 );
             }
         } catch (error) {

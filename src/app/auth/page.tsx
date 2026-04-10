@@ -832,7 +832,7 @@ function AuthPageContent() {
                       maxLength={10}
                     />
                     {zoneName && (
-                      <p className="text-xs text-green-600 mt-1 ml-1">✓ {zoneName}</p>
+                      <p className="text-xs text-green-600 mt-1 ml-1"> {zoneName}</p>
                     )}
                   </div>
 
@@ -1150,7 +1150,7 @@ function AuthPageContent() {
                   <>
                     <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
                       <p className="text-green-700 text-sm">
-                        ✓ KingsChat verified for: <strong>{forgotPasswordEmail}</strong>
+                         KingsChat verified for: <strong>{forgotPasswordEmail}</strong>
                       </p>
                     </div>
                     <div className="relative">

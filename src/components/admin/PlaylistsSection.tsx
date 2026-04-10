@@ -399,14 +399,14 @@ export default function PlaylistsSection() {
                   className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${forHQ ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'
                     }`}
                 >
-                  🏢 HQ Zones
+                   HQ Zones
                 </button>
                 <button
                   onClick={() => setForHQ(false)}
                   className={`px-4 py-3 rounded-xl border-2 font-medium transition-all ${!forHQ ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600'
                     }`}
                 >
-                  🌍 Regular Zones
+                   Regular Zones
                 </button>
               </div>
             </div>

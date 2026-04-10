@@ -196,7 +196,7 @@ export default function UpcomingEventForm({
               <option value="announcement"> Announcement</option>
               <option value="event"> Event</option>
               <option value="reminder"> Reminder</option>
-              <option value="meeting">👥 Meeting</option>
+              <option value="meeting"> Meeting</option>
               <option value="rehearsal"> Rehearsal</option>
             </select>
           </div>

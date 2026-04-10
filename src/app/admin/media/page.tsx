@@ -308,7 +308,7 @@ export default function AdminMediaUploadPage() {
                   Upload Video
                 </button>
                 {formData.videoUrl && !formData.isYouTube && (
-                  <span className="text-sm text-green-500">✓ Video uploaded</span>
+                  <span className="text-sm text-green-500"> Video uploaded</span>
                 )}
               </div>
               {formData.videoUrl && !formData.isYouTube && (

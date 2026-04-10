@@ -430,7 +430,7 @@ export default function BossPage() {
                     onClick={() => setShowImageModal(false)}
                     className="absolute -top-10 right-0 text-white hover:text-gray-300 text-sm font-medium"
                   >
-                    Close ✕
+                    Close 
                   </button>
                   <img
                     src={selectedPayment.proofImageUrl}

@@ -98,13 +98,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       const now = Date.now();
       const newTime = audioRef.current.currentTime;
 
-      // 🔄 Update state every 250ms (Smooth enough for progress bars, saves CPU)
+      //  Update state every 250ms (Smooth enough for progress bars, saves CPU)
       if (now - lastUpdateRef.current > 250) {
         setCurrentTime(newTime);
         lastUpdateRef.current = now;
       }
 
-      // 💾 Save to disk every 3 seconds (Prevents SSD/Battery wear)
+      //  Save to disk every 3 seconds (Prevents SSD/Battery wear)
       if (now - lastSaveRef.current > 3000) {
         localStorage.setItem(AUDIO_TIME_KEY, newTime.toString());
         if (currentSong && isPlaying) {

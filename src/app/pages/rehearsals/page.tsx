@@ -246,7 +246,7 @@ export default function RehearsalsPage() {
         />
 
 
-        {/* ✅ Scrollable Content Container */}
+        {/*  Scrollable Content Container */}
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 content-bottom-safe">
             {/* Image Carousel */}

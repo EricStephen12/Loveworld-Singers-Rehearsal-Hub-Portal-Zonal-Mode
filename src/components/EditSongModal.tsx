@@ -393,7 +393,7 @@ export default function EditSongModal({
 
     try {
       if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        console.warn('⚠️ Firebase not configured - history features will not work');
+        console.warn('️ Firebase not configured - history features will not work');
         setHistoryEntries([]);
         return;
       }
@@ -1748,7 +1748,7 @@ Do Re Mi Fa Sol La Ti Do"
                 )}
                 {!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
                   <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Firebase not configured">
-                    ⚠️
+                    ️
                   </span>
                 )}
               </button>

@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           // Send KingsChat notification if user has KingsChat linked
           if (coordinatorProfile?.kingschatUserId) {
             try {
-              const message = ` Payment Successful!\n\nYour zone subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nMembers: ${memberCount}\nExpires: ${expiresAt.toLocaleDateString()}\n\nThank you for subscribing! 🙏`;
+              const message = ` Payment Successful!\n\nYour zone subscription is now active!\n\nAmount: ${paymentData.amount / 100} ESPEES\nMembers: ${memberCount}\nExpires: ${expiresAt.toLocaleDateString()}\n\nThank you for subscribing! `;
 
               await KingsChatAuthService.sendMessage(
                 coordinatorProfile.kingschatUserId,

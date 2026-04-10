@@ -19,7 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // 🛡️ INSTANT SESSION ADOPTION (Prevents accidental logouts on first boot)
+  // ️ INSTANT SESSION ADOPTION (Prevents accidental logouts on first boot)
   if (typeof window !== 'undefined') {
     const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';
     const hasCookie = document.cookie.includes('lwsrh_is_logged_in=true');
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [loading, setLoading] = useState(() => !auth.currentUser)
 
-  // 🛡️ SESSION MIGRATION BRIDGE (Prevents accidental logouts on first load)
+  // ️ SESSION MIGRATION BRIDGE (Prevents accidental logouts on first load)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';

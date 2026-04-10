@@ -593,18 +593,29 @@ export async function markChatAsRead(chatId: string, userId: string): Promise<bo
  */
 export function subscribeToMessages(chatId: string, callback: (messages: Message[]) => void): () => void {
   const q = query(collection(db, MESSAGES_COLLECTION), where('chatId', '==', chatId), orderBy('timestamp', 'asc'), limit(100))
-  return onSnapshot(q, (snap) => {
+  
+  let fallbackUnsub: (() => void) | undefined;
+  
+  const mainUnsub = onSnapshot(q, (snap) => {
     callback(snap.docs.map(docToMessage))
   }, (error) => {
     if (error.message?.includes('index')) {
       const fallbackQ = query(collection(db, MESSAGES_COLLECTION), where('chatId', '==', chatId), limit(100))
-      return onSnapshot(fallbackQ, (snap) => {
+      fallbackUnsub = onSnapshot(fallbackQ, (snap) => {
         const msgs = snap.docs.map(docToMessage).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         callback(msgs)
       })
+    } else {
+      callback([])
     }
-    callback([])
   })
+
+  return () => {
+    mainUnsub();
+    if (fallbackUnsub) {
+      fallbackUnsub();
+    }
+  }
 }
 
 // TYPING STATUS

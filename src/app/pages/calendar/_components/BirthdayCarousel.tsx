@@ -107,8 +107,8 @@ export default function BirthdayCarousel({ birthdays, themeColor }: BirthdayCaro
             </p>
             <p className="text-base sm:text-lg text-white/90 font-medium">
               {currentBirthday.isToday 
-                ? (currentBirthday.age ? `🎉 Celebrating ${currentBirthday.age} amazing years! 🎉` : '🎉 Wishing you an amazing day! 🎉')
-                : `🎂 Birthday on ${moment(currentBirthday.birthday).format('MMMM D')} 🎂`
+                ? (currentBirthday.age ? ` Celebrating ${currentBirthday.age} amazing years! ` : ' Wishing you an amazing day! ')
+                : ` Birthday on ${moment(currentBirthday.birthday).format('MMMM D')} `
               }
             </p>
           </div>

@@ -126,7 +126,7 @@ export function TrackEffectsSheet({
                       : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <span className="text-xl">🎛️</span>
+                  <span className="text-xl">️</span>
                   <span className="text-xs font-medium">{preset.name}</span>
                 </button>
               ))}

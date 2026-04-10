@@ -76,19 +76,19 @@ export default function UpgradePrompt({ feature, description, onClose }: Upgrade
             <p className="text-sm font-semibold text-gray-900 mb-3">Premium includes:</p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-center gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-green-600"></span>
                 Up to 500 members
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-green-600"></span>
                 AudioLab access
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-green-600"></span>
                 Rehearsal tracking
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-600">✓</span>
+                <span className="text-green-600"></span>
                 Advanced analytics
               </li>
             </ul>

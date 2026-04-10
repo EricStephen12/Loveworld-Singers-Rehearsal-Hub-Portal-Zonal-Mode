@@ -55,7 +55,7 @@ const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Offl
           ? 'bg-green-500 text-white'
           : 'bg-red-500 text-white'
       }`}>
-        {isOnline ? '🌐 Online' : ' Offline'}
+        {isOnline ? ' Online' : ' Offline'}
       </div>
     </div>
   )

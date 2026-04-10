@@ -150,7 +150,7 @@ export class PraiseNightSongsService {
       const songsRef = collection(db, collectionName)
       const docRef = await addDoc(songsRef, cleanData)
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       if (zoneId && songData.praiseNightId) {
         await FirebaseMetadataService.updateSongMetadata(zoneId, songData.praiseNightId, docRef.id)
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, songData.praiseNightId)
@@ -182,7 +182,7 @@ export class PraiseNightSongsService {
 
       await updateDoc(songRef, { ...cleanedData, updatedAt: serverTimestamp() })
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       const existingData = songDoc.data()
       const praiseNightId = songData.praiseNightId || existingData.praiseNightId
 
@@ -220,7 +220,7 @@ export class PraiseNightSongsService {
 
       await deleteDoc(songRef)
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       if (zoneId && praiseNightId) {
         await FirebaseMetadataService.updateSongMetadata(zoneId, praiseNightId, songId)
         await FirebaseMetadataService.updatePraiseNightSongsMetadata(zoneId, praiseNightId)
@@ -245,7 +245,7 @@ export class PraiseNightSongsService {
 
       await updateDoc(songRef, { status, updatedAt: serverTimestamp() })
 
-      // 🔔 Trigger metadata update for realtime sync
+      //  Trigger metadata update for realtime sync
       const existingData = songDoc.data()
       const praiseNightId = existingData.praiseNightId
       if (zoneId && praiseNightId) {

@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
                 const payment = await PaymentRecordsService.getPaymentRecord(paymentId);
                 await KingsChatAuthService.sendMessage(
                     userProfile.kingschatUserId,
-                    `💰 Refund Processed\n\nYour payment has been refunded.\n\nAmount: ${payment ? (payment.amount / 100) + ' ESPEES' : 'N/A'}\nReason: ${reason || 'Administrative action'}\n\nYour subscription has been cancelled. Please contact support if you have questions.`
+                    ` Refund Processed\n\nYour payment has been refunded.\n\nAmount: ${payment ? (payment.amount / 100) + ' ESPEES' : 'N/A'}\nReason: ${reason || 'Administrative action'}\n\nYour subscription has been cancelled. Please contact support if you have questions.`
                 );
             }
         } catch (error) {

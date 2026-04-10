@@ -175,7 +175,7 @@ export async function syncPaymentStatus(
       return { success: true, status: subscription?.status || 'none' }
     }
 
-    // 📡 Check REAL status from KingsPay
+    //  Check REAL status from KingsPay
     const kpStatus = await getKingsPayPaymentStatus(subscription.paymentId)
     
     if (kpStatus?.status === 'SUCCESS') {

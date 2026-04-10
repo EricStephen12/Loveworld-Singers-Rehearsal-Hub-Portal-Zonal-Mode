@@ -160,7 +160,7 @@ export default function CloneFromMasterModal({
                   <div className="flex flex-wrap gap-2 mb-4 text-xs">
                     {song.key && (
                       <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium border border-slate-200">
-                        🔑 {song.key}
+                         {song.key}
                       </span>
                     )}
                     {song.category && (
