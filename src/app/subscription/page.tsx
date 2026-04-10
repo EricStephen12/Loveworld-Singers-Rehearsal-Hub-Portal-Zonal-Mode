@@ -9,6 +9,7 @@ import { ScreenHeader } from '@/components/ScreenHeader'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { cancelSubscription } from '@/lib/subscription-service'
 import { useEffect } from 'react'
+import { authedFetch } from '@/lib/authed-fetch'
 
 
 export default function SubscriptionPage() {
@@ -38,7 +39,7 @@ export default function SubscriptionPage() {
 
     setLoadingHistory(true)
     try {
-      const response = await fetch(`/api/payments/history?userId=${user.uid}`)
+      const response = await authedFetch(`/api/payments/history?userId=${user.uid}`)
       if (response.ok) {
         const data = await response.json()
         setPaymentHistory(data.payments || [])
@@ -292,12 +293,11 @@ export default function SubscriptionPage() {
             </div>
 
             <h2 className="text-6xl font-black text-slate-950 mb-6 tracking-tighter uppercase font-outfit">
-              BEYOND LIMITS!
+              ACTIVE
             </h2>
 
             <p className="text-slate-500 mb-12 text-lg leading-relaxed font-medium">
-              Your Individual Premium subscription is now active. <br />
-              The Hub is officially yours!
+              Your premium subscription is now active.
             </p>
 
             <div className="bg-gradient-to-br from-indigo-50 to-slate-50 border border-slate-100 rounded-[3rem] p-10 mb-12 flex flex-col items-center text-center shadow-inner relative overflow-hidden">
@@ -308,7 +308,7 @@ export default function SubscriptionPage() {
                 <div>
                   <h4 className="font-black text-slate-950 text-xl tracking-tight uppercase mb-3 font-outfit">Premium Active</h4>
                   <p className="text-slate-500 text-sm leading-relaxed font-medium">
-                    Enjoy unrestricted access to the AudioLab, Custom Song Submission, and all professional Rehearsal Hubs.
+                    Enjoy full access to the AudioLab, Custom Song Submission, and all professional Rehearsal Hubs.
                   </p>
                 </div>
             </div>
@@ -327,18 +327,10 @@ export default function SubscriptionPage() {
           <div className="max-w-5xl mx-auto py-12 px-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
             <div className="flex flex-col md:flex-row items-baseline justify-between gap-8 mb-16 px-2">
               <div>
-                <h2 className="text-4xl font-black text-slate-950 tracking-tighter font-outfit uppercase leading-none mb-4">Account <br /> Membership</h2>
+                <h2 className="text-4xl font-black text-slate-100 tracking-tighter font-outfit uppercase leading-none mb-4">Subscription</h2>
                 <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Access Active</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-start md:items-end gap-1.5">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Current Authority</p>
-                <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
-                  <Shield className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm font-black text-slate-900 tracking-tight">{isOfficialAccess ? 'Zonal/HQ Level' : 'Individual Premium'}</span>
+                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active</p>
                 </div>
               </div>
             </div>
@@ -348,15 +340,15 @@ export default function SubscriptionPage() {
               <div className="lg:col-span-2 space-y-8">
                 {/* Dashboard Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 group transition-all hover:border-indigo-100">
-                    <div className="w-12 h-12 bg-indigo-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
+                  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 group transition-all">
+                    <div className="w-12 h-12 bg-indigo-50 border border-indigo-100/50 rounded-2xl flex items-center justify-center mb-6">
                       <Crown className="w-6 h-6 text-indigo-600" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Membership Status</p>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">Elite Member</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Plan</p>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">Active Member</h3>
                     <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
                       <CheckCircle className="w-3 h-3" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Active Access</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Premium Access</span>
                     </div>
                   </div>
 
@@ -364,12 +356,12 @@ export default function SubscriptionPage() {
                     <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
                       <Calendar className="w-6 h-6 text-slate-600" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Next Renewal</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Next Payment</p>
                     <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
-                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Perpetual'}
+                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'No Expiry'}
                     </h3>
                     <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-widest">
-                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { year: 'numeric' }) : 'Unrestricted Access'}
+                      {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { year: 'numeric' }) : 'Full Access'}
                     </p>
                   </div>
                 </div>
@@ -411,9 +403,8 @@ export default function SubscriptionPage() {
               {/* Right Column - Actions & Details */}
               <div className="space-y-8">
                 <div className="p-8 rounded-[2.5rem] bg-slate-950 text-white shadow-2xl shadow-indigo-900/10">
-                  <h4 className="text-xs font-black uppercase tracking-[0.25em] mb-6 text-slate-400">Account Access</h4>
                   <p className="text-sm text-slate-300 leading-relaxed font-medium mb-8">
-                    Your account has global cross-zone authority. All professional instruments, store assets, and rehearsal hubs are fully unlocked.
+                    Your account has full access. All professional instruments and rehearsal hubs are unlocked.
                   </p>
                   
                   <button
@@ -421,13 +412,12 @@ export default function SubscriptionPage() {
                     className="w-full h-14 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-xl"
                   >
                     <HomeIcon className="w-4 h-4" />
-                    Return Home
+                    Home
                   </button>
                 </div>
 
                 {isIndividualPremium && (
                   <div className="p-8 rounded-[2.5rem] border border-rose-100 bg-rose-50/30">
-                    <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-4">Danger Zone</h4>
                     <button
                       onClick={handleCancelSubscription}
                       disabled={isCancelling}

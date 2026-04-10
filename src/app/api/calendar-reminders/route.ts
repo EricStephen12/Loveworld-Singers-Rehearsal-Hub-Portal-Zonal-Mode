@@ -166,7 +166,10 @@ async function sendEventReminder(
 
       await fetch(`${baseUrl}/api/send-notification`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.LWSRH_INTERNAL_API_KEY ? { 'x-internal-api-key': process.env.LWSRH_INTERNAL_API_KEY } : {})
+        },
         body: JSON.stringify({
           type: 'calendar',
           recipientIds: batch,
@@ -258,7 +261,10 @@ async function sendBirthdayGreeting(userId: string, name: string, zoneId: string
       const batch = recipientIds.slice(i, i + batchSize);
       await fetch(`${baseUrl}/api/send-notification`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.LWSRH_INTERNAL_API_KEY ? { 'x-internal-api-key': process.env.LWSRH_INTERNAL_API_KEY } : {})
+        },
         body: JSON.stringify({
           type: 'zone',
           recipientIds: batch,

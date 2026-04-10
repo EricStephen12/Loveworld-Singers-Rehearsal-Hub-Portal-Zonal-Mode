@@ -22,9 +22,10 @@ interface SongDetailModalProps {
   currentFilter?: 'heard' | 'unheard'; // Add current filter prop
   songs?: PraiseNightSong[]; // Add songs prop
   activeCategory?: string; // Add active category prop
+  isSubGroup?: boolean;
 }
 
-export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [], activeCategory = '' }: SongDetailModalProps) {
+export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongChange, currentFilter = 'heard', songs = [], activeCategory = '', isSubGroup = false }: SongDetailModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'comments' | 'history' | 'notation'>('lyrics');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -82,6 +83,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // Helper function to get correct comment terminology based on zone
   const getCommentLabel = () => {
+    if (isSubGroup) return "Sub-Group Lead";
     // HQ groups see "Pastor Comments", regular zones see "Coordinator Comments"
     return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
   };
@@ -1072,18 +1074,20 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       </div>
                       <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Lyrics</span>
                     </button>
-                    <button
-                      onClick={() => setActiveTab('solfas')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
-                    >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'solfas'
-                        ? 'bg-white text-black'
-                        : 'text-white hover:bg-white/20'
-                        }`}>
-                        <Music className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Conductor</span>
-                    </button>
+                    {!isSubGroup && (
+                      <button
+                        onClick={() => setActiveTab('solfas')}
+                        className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
+                      >
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'solfas'
+                          ? 'bg-white text-black'
+                          : 'text-white hover:bg-white/20'
+                          }`}>
+                          <Music className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Conductor</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => setActiveTab('comments')}
                       className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
@@ -1099,48 +1103,50 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                     {/* History is now in the More menu */}
 
                     {/* More Menu */}
-                    <div className="flex-1 sm:flex-none flex justify-center px-1" ref={moreMenuRef}>
-                      <div className="relative flex flex-col items-center w-full">
-                        <button
-                          onClick={() => setShowMoreMenu(!showMoreMenu)}
-                          className={`flex flex-col items-center space-y-1 w-full transition-all duration-200 text-white hover:text-white ${(activeTab === 'notation' || activeTab === 'history') ? 'scale-110' : ''}`}
-                        >
-                          <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${(activeTab === 'notation' || activeTab === 'history')
-                            ? 'bg-white text-black'
-                            : 'text-white hover:bg-white/20'
-                            }`}>
-                            <MoreVertical className="w-4 h-4" />
-                          </div>
-                          <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">More</span>
-                        </button>
+                    {!isSubGroup && (
+                      <div className="flex-1 sm:flex-none flex justify-center px-1" ref={moreMenuRef}>
+                        <div className="relative flex flex-col items-center w-full">
+                          <button
+                            onClick={() => setShowMoreMenu(!showMoreMenu)}
+                            className={`flex flex-col items-center space-y-1 w-full transition-all duration-200 text-white hover:text-white ${(activeTab === 'notation' || activeTab === 'history') ? 'scale-110' : ''}`}
+                          >
+                            <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${(activeTab === 'notation' || activeTab === 'history')
+                              ? 'bg-white text-black'
+                              : 'text-white hover:bg-white/20'
+                              }`}>
+                              <MoreVertical className="w-4 h-4" />
+                            </div>
+                            <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">More</span>
+                          </button>
 
-                        {showMoreMenu && (
-                          <div className="absolute top-full mt-2 sm:mt-3 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto min-w-[200px] w-max bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 sm:py-2 z-[200] animate-in fade-in zoom-in duration-200 origin-top-right sm:origin-top">
-                            <button
-                              onClick={() => {
-                                setActiveTab('notation');
-                                setShowMoreMenu(false);
-                              }}
-                              className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'notation' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                            >
-                              <Music2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                              <span className="text-sm font-medium whitespace-nowrap">Solfa Notation</span>
-                            </button>
-                            
-                            <button
-                              onClick={() => {
-                                setActiveTab('history');
-                                setShowMoreMenu(false);
-                              }}
-                              className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'history' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                            >
-                              <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                              <span className="text-sm font-medium whitespace-nowrap">History</span>
-                            </button>
-                          </div>
-                        )}
+                          {showMoreMenu && (
+                            <div className="absolute top-full mt-2 sm:mt-3 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto min-w-[200px] w-max bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 sm:py-2 z-[200] animate-in fade-in zoom-in duration-200 origin-top-right sm:origin-top">
+                              <button
+                                onClick={() => {
+                                  setActiveTab('notation');
+                                  setShowMoreMenu(false);
+                                }}
+                                className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'notation' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
+                              >
+                                <Music2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                                <span className="text-sm font-medium whitespace-nowrap">Solfa Notation</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  setActiveTab('history');
+                                  setShowMoreMenu(false);
+                                }}
+                                className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'history' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
+                              >
+                                <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                                <span className="text-sm font-medium whitespace-nowrap">History</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>

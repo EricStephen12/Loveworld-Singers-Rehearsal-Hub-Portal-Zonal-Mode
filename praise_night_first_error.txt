@@ -1,4 +1,0 @@
-﻿src/app/pages/praise-night/page.tsx(1493,64): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-src/app/pages/praise-night/page.tsx(1772,13): error TS1005: ')' expected.
-src/app/pages/praise-night/page.tsx(2342,5): error TS1005: ')' expected.
-src/app/pages/praise-night/page.tsx(2343,3): error TS1109: Expression expected.

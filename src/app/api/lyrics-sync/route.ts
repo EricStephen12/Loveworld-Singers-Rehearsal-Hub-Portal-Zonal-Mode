@@ -7,35 +7,53 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { LyricLine } from '@/app/pages/audiolab/_types';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 
+function isAllowedAudioUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw)
+    if (url.protocol !== 'https:') return false
+    // Basic SSRF protection: allowlist common media hosts you use.
+    const allowedHosts = new Set([
+      'firebasestorage.googleapis.com',
+      'storage.googleapis.com',
+      'res.cloudinary.com',
+      'cdn.jsdelivr.net',
+    ])
+    return allowedHosts.has(url.hostname)
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const auth = await verifyFirebaseIdToken(request)
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const rate = await enforceRateLimit({
+    name: 'lyrics-sync',
+    tokensPerInterval: 6,
+    intervalMs: 60_000,
+    req: request,
+    key: () => `uid:${auth.uid}`,
+  })
+  if (!rate.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+  }
+
   const allEnvKeys = Object.keys(process.env);
 
- console.log('💎 [LyricsSync] Exhaustive Env Check:');
- console.log(' - Total system keys:', allEnvKeys.length);
-
-  // Resilient search
+  // Resilient search for Groq API Key
   const groqKeyName = allEnvKeys.find(k => k.trim().toUpperCase().includes('GROQ'));
   const GROQ_API_KEY = groqKeyName ? process.env[groqKeyName] : null;
 
- console.log(' - Groq key found under name:', groqKeyName || 'NONE');
-  if (GROQ_API_KEY) {
- console.log(' - Key Value Preview:', GROQ_API_KEY.slice(0, 6) + '...');
-  } else {
- console.log(' - API Keys that exist:', allEnvKeys.filter(k => k.toUpperCase().includes('API_KEY')));
-  }
-
   if (!GROQ_API_KEY) {
     return NextResponse.json(
-      {
-        error: 'Groq API key not configured.',
-        details: {
-          existsInEnv: !!groqKeyName,
-          foundKeys: allEnvKeys.filter(k => k.toUpperCase().includes('API_KEY'))
-        }
-      },
+      { error: 'Groq API key not configured.' },
       { status: 500 }
     );
   }
@@ -53,6 +71,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!isAllowedAudioUrl(audioUrl)) {
+      return NextResponse.json(
+        { error: 'Audio URL host not allowed' },
+        { status: 400 }
+      )
+    }
+
+    if (typeof existingLyrics === 'string' && existingLyrics.length > 30_000) {
+      return NextResponse.json({ error: 'Lyrics text too large' }, { status: 413 })
+    }
+
     // --- CASE 1: Modal.com (WhisperX Alignment) ---
     if (provider === 'modal' || activeModalUrl) {
       if (!activeModalUrl) {
@@ -62,7 +91,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log(`💎 [LyricsSync] Calling Modal.com for song ${songId}`);
       
       // Increased timeout for Modal.com (serverless GPU cold start can take time)
       const controller = new AbortController();
@@ -110,7 +138,6 @@ export async function POST(request: NextRequest) {
     }
 
     // --- CASE 2: Groq (Standard Whisper) ---
-    console.log(`💎 [LyricsSync] Starting sync for song ${songId} using Groq`);
     
     // 1. Fetch the audio file from URL
     const audioResponse = await fetch(audioUrl);
@@ -155,7 +182,6 @@ export async function POST(request: NextRequest) {
     if (existingLyrics && existingLyrics.trim()) {
       // Align existing lyrics with detected timestamps
       lyrics = alignLyricsWithSegments(existingLyrics, segments);
- console.log(`💎 [LyricsSync] Aligned ${lyrics.length} lines for ${songId}`);
     } else {
       // No existing lyrics - just convert segments to lines
       lyrics = segments.map((seg: any) => ({
@@ -163,7 +189,6 @@ export async function POST(request: NextRequest) {
         text: seg.text.trim(),
         duration: seg.end - seg.start
       }));
- console.log(`💎 [LyricsSync] Generated ${lyrics.length} lines from scratch for ${songId}`);
     }
 
     return NextResponse.json({

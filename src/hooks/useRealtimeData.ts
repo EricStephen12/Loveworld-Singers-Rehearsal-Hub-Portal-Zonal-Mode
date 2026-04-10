@@ -15,19 +15,32 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
     let pages: any[] = []
 
     if (zoneId && isHQGroup(zoneId)) {
-      pages = await FirebaseDatabaseService.getCollection('praise_nights')
+      // HQ zones: fetch from praise_nights AND include subgroup rehearsals if user is logged in
+      const hqPages = await FirebaseDatabaseService.getCollection('praise_nights')
+      pages = [...hqPages]
+      
+      // Also fetch subgroup rehearsals for the user
+      if (userId) {
+        try {
+          const subgroupData = await SubGroupDatabaseService.getMemberRehearsals(zoneId, userId)
+          if (subgroupData.subGroupRehearsals.length > 0) {
+            pages = [...pages, ...subgroupData.subGroupRehearsals]
+          }
+        } catch (e) {
+          // Subgroup fetch failure shouldn't break HQ data
+          console.error('Error fetching subgroup data for HQ user:', e)
+        }
+      }
     } else if (zoneId && userId) {
-      // 1. Get combined rehearsals (zone + subgroup)
       const data = await SubGroupDatabaseService.getMemberRehearsals(zoneId, userId)
       pages = data.combined
     } else if (zoneId) {
       pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000)
     } else {
-      // If no zoneId is provided, do NOT fall back to fetching all praise nights (data leak prevention)
-      // This happens when app is restoring state and zoneId is temporarily undefined
- console.warn('️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
+      console.warn('⚠️ No zoneId provided to useRealtimeData, returning empty list to prevent data leak');
       return []
     }
+
 
     return pages.map((page) => ({
       id: page.id,
@@ -51,7 +64,7 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
       songs: []
     }))
   } catch (error) {
- console.error('Error fetching Firebase data:', error)
+    console.error('Error fetching Firebase data:', error)
     return []
   }
 }
@@ -94,7 +107,7 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
           }
         }
       } catch (e) {
- console.error('Error in fetchAndCache:', e)
+        console.error('Error in fetchAndCache:', e)
       }
     }
 
@@ -123,7 +136,7 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
         // BACKGROUND REVALIDATION (silently updates UI if data changed)
         await fetchAndCache()
       } catch (err) {
- console.error('Failed to load initial data:', err)
+        console.error('Failed to load initial data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load data')
       } finally {
         if (isMounted) setLoading(false)
@@ -176,14 +189,25 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
 
   const getCurrentSongs = useCallback(async (pageId: number | string, forceRefresh?: boolean): Promise<PraiseNightSong[]> => {
     try {
-      // Note: forceRefresh parameter added for API compatibility with useAdminData
-      // Currently not used as PraiseNightSongsService.getSongsByPraiseNight always fetches fresh data
+      // Check if this is a subgroup rehearsal
+      const page = pages.find(p => p.id === pageId || p.id === pageId.toString());
+      if (page?.scope === 'subgroup') {
+        const subgroupSongs = await SubGroupDatabaseService.getSongsByRehearsalId(String(pageId));
+        return subgroupSongs.map(s => ({
+          ...s,
+          firebaseId: s.id,
+          rehearsalCount: 0,
+          updatedAt: (s.updatedAt as any)?.toISOString?.() || new Date().toISOString(),
+          createdAt: (s.createdAt as any)?.toISOString?.() || new Date().toISOString()
+        })) as unknown as PraiseNightSong[];
+      }
+      
       return await PraiseNightSongsService.getSongsByPraiseNight(String(pageId), zoneId)
     } catch (error) {
- console.error(`Error fetching songs for page ${pageId}:`, error)
+      console.error(`Error fetching songs for page ${pageId}:`, error)
       return []
     }
-  }, [zoneId])
+  }, [zoneId, pages])
 
   return {
     pages,
@@ -196,6 +220,10 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
         setLoading(true)
         setError(null)
 
+        // Clear local cache timestamps to force a truly fresh check
+        if (zoneId) {
+          lowDataOptimizer.set(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`, 0);
+        }
 
         const updatedPages = await fetchFirebaseData(zoneId, userId)
         setPages(updatedPages)
@@ -215,7 +243,7 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
           lowDataOptimizer.set(metadataKey, Date.now())
         }
       } catch (err) {
- console.error('Error refreshing data:', err)
+        console.error('Error refreshing data:', err)
         setError('Failed to refresh data')
       } finally {
         setLoading(false)

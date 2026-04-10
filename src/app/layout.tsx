@@ -1,5 +1,7 @@
-import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
+import type { ReactNode } from 'react'
+import type { Metadata, Viewport } from 'next'
+import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -34,6 +36,18 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 // Static version for PWA stability (only change when manifest actually changes)
 const APP_VERSION = '3.0.0'; // Updated for instant loading optimizations
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -91,7 +105,7 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -135,7 +149,7 @@ export default function RootLayout({
         {/* Firebase Cloud Messaging Handler for Android */}
         <script src="/fcm-handler.js"></script>
       </head>
-      <body className="font-sans">
+      <body className={`${inter.variable} ${outfit.variable} font-sans`}>
         <Suspense fallback={null}>
           <AppBootstrap />
         </Suspense>

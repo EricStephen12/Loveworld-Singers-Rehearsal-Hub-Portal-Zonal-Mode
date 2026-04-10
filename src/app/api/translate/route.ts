@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyFirebaseIdToken(request)
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rate = await enforceRateLimit({
+      name: 'translate',
+      tokensPerInterval: 15,
+      intervalMs: 60_000,
+      req: request,
+      key: () => `uid:${auth.uid}`,
+    })
+    if (!rate.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+    }
+
     const body = await request.json()
     const { text, targetLanguage, userId, songId } = body
 
@@ -11,6 +28,10 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       )
+    }
+
+    if (typeof text === 'string' && text.length > 10_000) {
+      return NextResponse.json({ error: 'Text too large' }, { status: 413 })
     }
 
     // For now, use a simple translation API (Google Translate or OpenAI)

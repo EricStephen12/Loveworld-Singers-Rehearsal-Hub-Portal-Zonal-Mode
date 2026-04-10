@@ -38,6 +38,7 @@ import { ZoneInvitationService } from '@/lib/zone-invitation-service';
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
 import CustomLoader from './CustomLoader';
+import { authedFetch } from '@/lib/authed-fetch'
 
 // In-memory cache for members data
 const CACHE_TTL = 30 * 1000; // 30 seconds - shorter for real-time updates
@@ -382,7 +383,7 @@ export default function Members() {
 
       // 1. Call our custom API to delete from Auth and Profile
       // This is more robust than just deleting the document
-      const response = await fetch('/api/admin/delete-user', {
+      const response = await authedFetch('/api/admin/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -478,7 +479,7 @@ export default function Members() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-white lg:bg-slate-50">
+    <div className="flex-1 flex flex-col min-h-full bg-white lg:bg-slate-50">
       {/* Premium Header */}
       <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-5 lg:py-8 flex-shrink-0">
         <div className="flex items-start justify-between mb-6 lg:mb-8">
@@ -581,32 +582,32 @@ export default function Members() {
         </div>
       </div>
 
-      {/* Members List - Scrollable */}
-      <div className="flex-1 overflow-hidden bg-gray-50">
+      {/* Members List - Flowing naturally */}
+      <div className="flex-1 bg-slate-50/50">
         {/* Loading Overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center p-8 backdrop-blur-[1px]">
+          <div className="fixed inset-0 bg-white/80 z-50 flex flex-col items-center justify-center p-8 backdrop-blur-[1px]">
             <CustomLoader message="Loading members..." />
           </div>
         )}
         {filteredMembers.length === 0 ? (
-          <div className="flex items-center justify-center h-full p-8">
-            <div className="text-center max-w-xs">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-10 h-10 text-purple-400" />
+          <div className="flex items-center justify-center p-12 lg:p-20">
+            <div className="text-center max-w-sm">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-600/5 transition-transform hover:scale-110">
+                <Users className="w-10 h-10 text-indigo-500" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No members found</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="text-xl font-black text-slate-900 mb-2">No Members Found</h3>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
                 {searchTerm
-                  ? 'Try adjusting your search'
-                  : 'Members will appear here once they join your zone'}
+                  ? 'Adjust your search parameters'
+                  : 'Start building your zone community'}
               </p>
             </div>
           </div>
         ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-auto h-full">
+          <div className="pb-24">
+            {/* Desktop Table - Clean & Flowing */}
+            <div className="hidden lg:block">
               <table className="w-full">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr>
@@ -721,8 +722,8 @@ export default function Members() {
               )}
             </div>
 
-            {/* Mobile Cards - Instagram Style */}
-            <div className="lg:hidden overflow-auto h-full">
+            {/* Mobile Cards - Instagram Style - Clean & Flowing */}
+            <div className="lg:hidden">
               {/* Member count badge */}
               <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
                 <p className="text-xs text-slate-500">
@@ -799,8 +800,7 @@ export default function Members() {
                 </div>
               )}
             </div>
-
-          </>
+          </div>
         )}
       </div>
 

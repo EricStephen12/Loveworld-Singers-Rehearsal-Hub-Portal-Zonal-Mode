@@ -19,12 +19,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // 🛡️ INSTANT SESSION ADOPTION (Prevents accidental logouts on first boot)
+  if (typeof window !== 'undefined') {
+    const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';
+    const hasCookie = document.cookie.includes('lwsrh_is_logged_in=true');
+    if (hasUser && !hasCookie) {
+      document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax";
+    }
+  }
+
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window === 'undefined') return null
     return auth.currentUser
   })
 
   const [loading, setLoading] = useState(() => !auth.currentUser)
+
+  // 🛡️ SESSION MIGRATION BRIDGE (Prevents accidental logouts on first load)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';
+      const cookieExists = document.cookie.includes('lwsrh_is_logged_in=true');
+      
+      if (hasUser && !cookieExists) {
+        // Instantly sync the session to the cookie for the Middleware
+        document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax";
+      }
+    }
+  }, []);
 
   // GLOBAL PRESENCE TRACKING
   useEffect(() => {
@@ -81,6 +103,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update cache for instant next load
       if (typeof window !== 'undefined') {
         localStorage.setItem('lwsrh_has_user', firebaseUser ? 'true' : 'false')
+        
+        //  Set cookie for Middleware route protection
+        if (firebaseUser) {
+          document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+        } else {
+          document.cookie = "lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        }
       }
     })
 

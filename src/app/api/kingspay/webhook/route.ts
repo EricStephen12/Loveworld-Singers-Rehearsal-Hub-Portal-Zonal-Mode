@@ -9,14 +9,18 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(body)
 
     // Verify webhook signature
-    const secretKey = process.env.KINGSPAY_SECRET_KEY || process.env.NEXT_PUBLIC_KINGSPAY_SECRET_KEY
+    const secretKey = process.env.KINGSPAY_SECRET_KEY
 
     if (!secretKey) {
  console.error(' KingsPay secret key not configured')
       return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
     }
 
-    if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+    }
+
+    if (!verifyKingsPayWebhookSignature(signature, body, secretKey)) {
  console.error(' Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }

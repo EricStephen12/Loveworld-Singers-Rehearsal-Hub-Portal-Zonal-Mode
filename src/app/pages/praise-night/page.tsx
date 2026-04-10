@@ -307,7 +307,6 @@ function PraiseNightPageContent() {
     /* 
     const handleVisibilityChange = async () => {
       if (!document.hidden) {
- console.log(' Page became visible, refreshing data...');
         refreshData();
 
         // Also re-initialize safe area when page becomes visible
@@ -318,7 +317,6 @@ function PraiseNightPageContent() {
     };
 
     const handleFocus = async () => {
- console.log(' Page focused, refreshing data...');
       refreshData();
 
       // Re-initialize safe area when page gains focus
@@ -840,15 +838,6 @@ function PraiseNightPageContent() {
 
     const uniqueCategories = [...new Set(allCategories)];
 
-    // Debug logging
- console.log(' Available categories from songs:', uniqueCategories);
- console.log(' Songs used for categories:', songsToUse.length);
- console.log(' All songs data:', songsToUse.map(song => ({
-      title: song.title,
-      category: song.category,
-      categories: song.categories,
-      status: song.status
-    })));
 
     return uniqueCategories;
   }, [finalSongData, currentPraiseNight?.songs]);
@@ -900,13 +889,6 @@ function PraiseNightPageContent() {
   // No more FAB categories - all moved to main bar
   const otherCategories: string[] = [];
 
-  // Debug logging for categories
- console.log(' Category bar data:', {
-    songCategories: songCategories,
-    mainCategories: mainCategories,
-    otherCategories: otherCategories,
-    activeCategory: activeCategory
-  });
 
 
   // Prefer auto-selecting a category that has active songs; otherwise fall back to first
@@ -1926,7 +1908,7 @@ function PraiseNightPageContent() {
 
             {/* Song Title Cards - Scrollable - Show for archive individual pages */}
             {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
-              <div className="px-1 py-4 max-h-96 lg:max-h-none overflow-y-auto">
+              <div className="px-1 py-4 lg:max-h-none overflow-y-auto lg:overflow-visible">
                 {/* CRITICAL FIX: Show loading skeleton while fetching, not empty state */}
                 {songsLoading ? (
                   <div className="space-y-3">

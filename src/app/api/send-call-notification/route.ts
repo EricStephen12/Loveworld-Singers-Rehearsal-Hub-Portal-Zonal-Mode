@@ -3,9 +3,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, rtdb } from '@/lib/firebase-admin';
+import { enforceRateLimit, isInternalRequest, verifyFirebaseIdToken } from '@/lib/api-guards';
 
 export async function POST(req: NextRequest) {
   try {
+    const isInternal = isInternalRequest(req, 'LWSRH_INTERNAL_API_KEY')
+    const auth = isInternal ? null : await verifyFirebaseIdToken(req)
+    if (!isInternal && !auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rate = await enforceRateLimit({
+      name: 'send-call-notification',
+      tokensPerInterval: 10,
+      intervalMs: 60_000,
+      req,
+      key: () => (auth?.uid ? `uid:${auth.uid}` : 'unknown'),
+    })
+    if (!rate.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+    }
+
     const { receiverId, title, body, data } = await req.json();
 
     // Get user's FCM tokens (both web and mobile)

@@ -1,5 +1,5 @@
 import { FirebaseDatabaseService } from './firebase-database'
-import { initializeKingsPayPayment, getKingsPayPaymentUrl } from './kingspay-service'
+import { initializeKingsPayPayment, getKingsPayPaymentUrl, getKingsPayPaymentStatus } from './kingspay-service'
 import { calculateSubscriptionPrice, calculateIndividualPrice } from './subscription-pricing'
 
 export interface ZoneSubscription {
@@ -157,6 +157,46 @@ export async function hasPremiumAccess(userId: string, zoneId?: string): Promise
   } catch (error) {
  console.error('Error checking premium access:', error)
     return false
+  }
+}
+
+export async function syncPaymentStatus(
+  userId: string,
+  type: 'individual' | 'zone',
+  targetId: string // userId or zoneId
+): Promise<{ success: boolean; status?: string; error?: string }> {
+  try {
+    let subscription: any = null
+    const collectionName = type === 'individual' ? 'individual_subscriptions' : 'zone_subscriptions'
+    
+    subscription = await FirebaseDatabaseService.getDocument(collectionName, targetId)
+    
+    if (!subscription || subscription.status !== 'pending' || !subscription.paymentId) {
+      return { success: true, status: subscription?.status || 'none' }
+    }
+
+    // 📡 Check REAL status from KingsPay
+    const kpStatus = await getKingsPayPaymentStatus(subscription.paymentId)
+    
+    if (kpStatus?.status === 'SUCCESS') {
+      const expiresAt = new Date()
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1) // 1 year default
+
+      const updateData = {
+        status: 'active',
+        paidAt: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      await FirebaseDatabaseService.updateDocument(collectionName, targetId, updateData)
+      return { success: true, status: 'active' }
+    }
+
+    return { success: true, status: 'pending' }
+  } catch (error) {
+    console.error('Error syncing payment status:', error)
+    return { success: false, error: 'Reconciliation failed' }
   }
 }
 

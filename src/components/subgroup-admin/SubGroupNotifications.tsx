@@ -1,11 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from 'react';
 import {
   Bell,
   Send,
-  RefreshCw,
-  X,
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,89 +40,71 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
         setMessage('');
         setSent(true);
         setTimeout(() => setSent(false), 3000);
-      } else {
- console.error('Failed to send notification:', result.error);
       }
     } catch (error) {
- console.error('Error sending notification:', error);
+      console.error('Error sending notification:', error);
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="flex-1 min-h-0">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
-        <p className="text-slate-500">Send messages to your sub-group members</p>
+      <div className="mb-10">
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Notifications</h1>
       </div>
 
       {/* Success Toast */}
       {sent && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-          <div className="p-1 bg-green-100 rounded-full">
-            <Bell className="w-4 h-4 text-green-600" />
-          </div>
-          <p className="text-green-700">Notification sent successfully!</p>
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Bell className="w-4 h-4 text-emerald-600" />
+          <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">Message Sent</p>
         </div>
       )}
 
       {/* Send Notification Form */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <MessageSquare className="w-5 h-5 text-purple-600" />
+      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 max-w-2xl shadow-sm">
+        <div className="flex items-center gap-4 mb-10">
+          <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
+            <MessageSquare className="w-6 h-6 text-purple-600" />
           </div>
-          <div>
-            <h2 className="font-semibold text-slate-900">New Notification</h2>
-            <p className="text-sm text-slate-500">This will be sent to all sub-group members</p>
-          </div>
+          <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">New Message</h2>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Title *
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">
+              Subject
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Rehearsal Reminder"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="..."
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 focus:border-purple-600 focus:bg-white rounded-xl transition-all text-slate-900 font-bold placeholder:text-slate-300 text-sm"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Message *
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">
+              Message
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter your message..."
+              placeholder="..."
               rows={5}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 focus:border-purple-600 focus:bg-white rounded-xl transition-all text-slate-900 font-bold placeholder:text-slate-300 text-sm resize-none"
             />
           </div>
 
           <button
             onClick={handleSend}
             disabled={!title.trim() || !message.trim() || sending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-purple-600/10"
           >
-            {sending ? (
-              <>
-                <CustomLoader size="sm" />
-                <span>Sending...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                Send Notification
-              </>
-            )}
+            {sending ? 'Sending...' : 'Send Message'}
           </button>
         </div>
       </div>

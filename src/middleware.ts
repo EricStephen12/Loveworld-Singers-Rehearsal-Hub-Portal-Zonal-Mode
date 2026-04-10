@@ -1,10 +1,35 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(_req: NextRequest) {
-  // For now, we'll handle auth protection in the components themselves
-  // This middleware can be extended later for more complex routing logic
-  
+export async function middleware(req: NextRequest) {
+  const isLoggedIn = req.cookies.get('lwsrh_is_logged_in')?.value === 'true'
+  const { pathname } = req.nextUrl
+
+  // 🛡️ Protected routes: users MUST be logged in
+  const isProtectedRoute = 
+    pathname.startsWith('/pages') || 
+    pathname.startsWith('/admin') || 
+    pathname.startsWith('/subgroup-admin') ||
+    pathname.startsWith('/profile') ||
+    pathname === '/home'
+
+  // 🔓 Auth routes: users MUST NOT be logged in (redirect to home if they are)
+  const isAuthRoute = pathname.startsWith('/auth')
+
+  if (isProtectedRoute && !isLoggedIn) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/auth'
+    // Optional: save the return URL for a better UX
+    url.searchParams.set('returnUrl', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  if (isAuthRoute && isLoggedIn) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/home'
+    return NextResponse.redirect(url)
+  }
+
   return NextResponse.next()
 }
 

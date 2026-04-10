@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PaymentRecordsService } from '@/lib/payment-records-service';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
+import { isHQAdminEmail } from '@/config/roles'
 
 /**
  * GET /api/payments/receipt/{paymentId}
@@ -10,6 +12,22 @@ export async function GET(
     { params }: { params: Promise<{ paymentId: string }> }
 ) {
     try {
+        const auth = await verifyFirebaseIdToken(request)
+        if (!auth) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const rate = await enforceRateLimit({
+            name: 'payments-receipt',
+            tokensPerInterval: 60,
+            intervalMs: 60_000,
+            req: request,
+            key: () => `uid:${auth.uid}`,
+        })
+        if (!rate.ok) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+        }
+
         const { paymentId } = await params;
 
         if (!paymentId) {
@@ -26,6 +44,12 @@ export async function GET(
                 { error: 'Payment record not found' },
                 { status: 404 }
             );
+        }
+
+        const isAdmin = !!auth.email && isHQAdminEmail(auth.email)
+        // Only the payment owner (or HQ admin) can view a receipt
+        if (!isAdmin && paymentRecord.userId && paymentRecord.userId !== auth.uid) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
         // Return receipt data

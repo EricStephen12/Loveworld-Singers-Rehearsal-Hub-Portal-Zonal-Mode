@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useRef, useState, useEffect, ReactNode } from "react";
 import { PraiseNightSong } from "@/types/supabase";
@@ -90,21 +90,39 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const lastUpdateRef = useRef<number>(0);
+  const lastSaveRef = useRef<number>(0);
+
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-      localStorage.setItem(AUDIO_TIME_KEY, audioRef.current.currentTime.toString());
+      const now = Date.now();
+      const newTime = audioRef.current.currentTime;
+
+      // 🔄 Update state every 250ms (Smooth enough for progress bars, saves CPU)
+      if (now - lastUpdateRef.current > 250) {
+        setCurrentTime(newTime);
+        lastUpdateRef.current = now;
+      }
+
+      // 💾 Save to disk every 3 seconds (Prevents SSD/Battery wear)
+      if (now - lastSaveRef.current > 3000) {
+        localStorage.setItem(AUDIO_TIME_KEY, newTime.toString());
+        if (currentSong && isPlaying) {
+          saveAudioState();
+        }
+        lastSaveRef.current = now;
+      }
     }
   };
 
   const saveAudioState = () => {
     if (currentSong && isPlaying && currentTime > 5) {
-      localStorage.setItem(AUDIO_STATE_KEY, isPlaying.toString());
+      localStorage.setItem(AUDIO_STATE_KEY, 'true');
       localStorage.setItem(AUDIO_SONG_KEY, JSON.stringify({
         id: currentSong.id,
         title: currentSong.title,
         audioFile: currentSong.audioFile,
-        mediaId: currentSong.mediaId,
+        mediaId: (currentSong as any).mediaId,
         duration: duration
       }));
       localStorage.setItem('audio_timestamp', Date.now().toString());

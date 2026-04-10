@@ -12,6 +12,7 @@
 
 import { db } from './firebase-setup'
 import { isHQGroup } from '@/config/zones'
+import { authedFetch } from '@/lib/authed-fetch'
 
 const CACHE_TTL = 2 * 60 * 1000
 
@@ -114,7 +115,7 @@ async function sendZoneAnnouncementNotification(
     const batchSize = 100
     for (let i = 0; i < recipientIds.length; i += batchSize) {
       const batch = recipientIds.slice(i, i + batchSize)
-      await fetch('/api/send-notification', {
+      await authedFetch('/api/send-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

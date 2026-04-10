@@ -15,6 +15,7 @@
 
 import { db } from './firebase-setup'
 import { isHQGroup } from '@/config/zones'
+import { authedFetch } from '@/lib/authed-fetch'
 
 const SONGS_COLLECTION = 'songs'
 const SUBMITTED_SONGS_COLLECTION = 'submitted_songs'
@@ -141,7 +142,7 @@ async function createSubmissionNotification(
       const adminIds = hqSnapshot.docs.map(doc => doc.data().userId).filter(Boolean)
 
       if (adminIds.length > 0) {
-        await fetch('/api/send-notification', {
+        await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -340,7 +341,7 @@ async function createStatusNotification(
       const body = customMessage || `Your song "${songTitle}" has been ${status}`
 
       try {
-        await fetch('/api/send-notification', {
+        await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

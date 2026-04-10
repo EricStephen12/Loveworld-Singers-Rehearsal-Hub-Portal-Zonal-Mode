@@ -11,8 +11,8 @@ interface UserSession {
   deviceModel: string
   browserInfo: string
   osInfo: string
-  loginTime: any
-  lastActivity: any
+  loginTime: { seconds: number; nanoseconds: number } | any
+  lastActivity: { seconds: number; nanoseconds: number } | any
   isActive: boolean
   terminatedAt?: any
   terminatedByDeviceId?: string
@@ -257,7 +257,6 @@ export class SessionManager {
         SessionManager.isExempt = isExemptByEmail || !!isExemptByZone || isExemptByRole || isExemptByHQEmail
 
         if (SessionManager.isExempt) {
-          console.log(`[Session] 🛡️ Exempt flag SET for ${email} (Role: ${profile.role}) — Concurrent device use ENABLED.`)
           if (typeof window !== 'undefined') {
             localStorage.setItem('lwsrh_is_exempt', 'true')
           }
@@ -292,7 +291,6 @@ export class SessionManager {
       this.sessionId = localStorage.getItem('lwsrh_session_id') || this.sessionId
     }
 
-    console.log(`[Session] 🟢 Tracking. SessID: ${this.sessionId}`)
 
     const sessionRef = doc(db, 'user_sessions', userId)
     // Real-time listener (Push Model - Industry Standard)
@@ -300,13 +298,11 @@ export class SessionManager {
     const unsubscribe = onSnapshot(sessionRef, async (docSnap) => {
       // 0. Exempt Guard: If this user is permanently exempt, NEVER kick them out
       if (SessionManager.isExempt) {
-        console.log('[Session] 🛡️ Exempt user — skipping all session checks')
         return
       }
 
       // 1. Offline Guard: Never kick out if the device is currently offline
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        console.log('[Session] 📡 Device offline. Skipping session check.')
         return
       }
 
@@ -317,7 +313,6 @@ export class SessionManager {
         // ADOPT the existing Firestore session instead of treating it as a conflict.
         // This prevents kicking out users who are simply restoring their session.
         if (data.sessionId && !this.sessionId) {
-          console.log(`[Session] 🔄 No local session — adopting existing session: ${data.sessionId}`)
           this.sessionId = data.sessionId
           if (typeof window !== 'undefined') {
             localStorage.setItem('lwsrh_session_id', this.sessionId)
@@ -332,7 +327,6 @@ export class SessionManager {
           // 1. Tab-Sync Check: Did another tab in THIS browser already update our session?
           const sharedSessionId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
           if (sharedSessionId === data.sessionId) {
-            console.log(`[Session] 🔄 Adopting session updated by another tab: ${data.sessionId}`)
             this.sessionId = data.sessionId
             return
           }
@@ -347,7 +341,6 @@ export class SessionManager {
           // Final check: if the shared storage ID changed WHILE we were waiting, adopt it
           const finalSharedId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
           if (finalSharedId === latestData?.sessionId && finalSharedId !== this.sessionId) {
-            console.log(`[Session] 🔄 Syncing with session from another tab (post-wait): ${finalSharedId}`)
             this.sessionId = finalSharedId!
             return
           }
@@ -358,7 +351,6 @@ export class SessionManager {
             // We should adopt the session rather than kicking the user out.
             const myDeviceId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_device_id') : this.deviceId
             if (latestData?.deviceId === myDeviceId) {
-              console.log('[Session] 📱 Same device, different session instance. Adopting.')
               this.sessionId = latestData.sessionId
               if (typeof window !== 'undefined') {
                 localStorage.setItem('lwsrh_session_id', this.sessionId)

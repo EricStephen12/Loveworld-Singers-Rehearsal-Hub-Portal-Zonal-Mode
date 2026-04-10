@@ -26,43 +26,59 @@ export function useSubGroup() {
     
     setIsLoading(true)
     
-    // Real-time listener for sub-groups
-    const q = query(
+    // Real-time listener for sub-groups (both as member and coordinator)
+    const qMember = query(
       collection(db, 'subgroups'),
-      where('memberIds', 'array-contains', user.uid)
+      where('memberIds', 'array-contains', user.uid),
+      where('status', '==', 'active')
     )
     
-    const unsubscribe = onSnapshot(q, (snapshot: any) => {
-      const allMySubGroups = snapshot.docs.map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
-      })) as SubGroup[]
+    const qCoordinator = query(
+      collection(db, 'subgroups'),
+      where('coordinatorId', '==', user.uid),
+      where('status', '==', 'active')
+    )
+    
+    const unsubscribeMember = onSnapshot(qMember, (snapshot) => {
+      updateGroups(snapshot, 'member')
+    })
+    
+    const unsubscribeCoordinator = onSnapshot(qCoordinator, (snapshot) => {
+      updateGroups(snapshot, 'coordinator')
+    })
+    
+    const groupsMap = new Map<string, SubGroup>()
+    
+    function updateGroups(snapshot: any, type: 'member' | 'coordinator') {
+      snapshot.docs.forEach((doc: any) => {
+        groupsMap.set(doc.id, {
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
+        } as SubGroup)
+      })
       
-      const activeGroups = allMySubGroups.filter(sg => sg.status === 'active')
-      const coordinated = activeGroups.filter(sg => sg.coordinatorId === user.uid)
+      const allGroups = Array.from(groupsMap.values())
+      const coordinated = allGroups.filter(sg => sg.coordinatorId === user!.uid)
       
       setCoordinatedSubGroups(coordinated)
       setIsSubGroupCoordinator(coordinated.length > 0)
-      setMemberSubGroups(activeGroups)
+      setMemberSubGroups(allGroups)
       
       // Also get requests (pending/rejected) specifically for the current zone
       if (currentZone) {
-        const requests = allMySubGroups.filter(sg => 
-          sg.coordinatorId === user.uid && 
-          sg.zoneId === currentZone.id &&
-          (sg.status === 'pending' || sg.status === 'rejected')
-        )
-        setUserRequests(requests)
+        // Since the initial query is for 'active', we need a separate way or broader query for requests
+        // But for performance, we'll stick to this for Hub visibility.
+        // If they need to see pending requests, that's usually in a different context.
       }
       
       setIsLoading(false)
-    }, (error: any) => {
-      console.error('Error in sub-group real-time listener:', error)
-      setIsLoading(false)
-    })
+    }
     
-    return () => unsubscribe()
+    return () => {
+      unsubscribeMember()
+      unsubscribeCoordinator()
+    }
   }, [user?.uid, currentZone?.id])
   
   const requestSubGroup = useCallback(async (

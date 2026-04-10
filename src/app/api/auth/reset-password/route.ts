@@ -4,9 +4,21 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/firebase-admin'
+import { enforceRateLimit } from '@/lib/api-guards'
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = await enforceRateLimit({
+      name: 'reset-password',
+      tokensPerInterval: 5,
+      intervalMs: 60_000,
+      req: request,
+      key: (r) => r.headers.get('x-forwarded-for') || 'unknown',
+    })
+    if (!rate.ok) {
+      return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+    }
+
     const { email, newPassword, storedKingschatId, verifiedKingschatId, action } = await request.json()
 
     // Action: reset - Reset password after KingsChat verification (done client-side)
@@ -38,6 +50,10 @@ export async function POST(request: NextRequest) {
           success: false,
           error: 'Password must be at least 6 characters'
         }, { status: 400 })
+      }
+
+      if (newPassword.length > 128) {
+        return NextResponse.json({ success: false, error: 'Password too long' }, { status: 400 })
       }
 
       try {

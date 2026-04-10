@@ -3,6 +3,7 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { SubscriptionAuditService } from '@/lib/payment-records-service';
 import { isHQAdminEmail } from '@/config/roles';
 import { KingsChatAuthService } from '@/lib/kingschat-auth';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 /**
  * POST /api/admin/subscriptions/revoke
@@ -10,14 +11,24 @@ import { KingsChatAuthService } from '@/lib/kingschat-auth';
  */
 export async function POST(request: NextRequest) {
     try {
-        // Check admin authorization
-        const userEmail = request.headers.get('x-user-email');
-
-        if (!userEmail || !isHQAdminEmail(userEmail)) {
+        const auth = await verifyFirebaseIdToken(request)
+        const userEmail = auth?.email
+        if (!auth || !userEmail || !isHQAdminEmail(userEmail)) {
             return NextResponse.json(
                 { error: 'Unauthorized. HQ Admin access required.' },
                 { status: 403 }
             );
+        }
+
+        const rate = await enforceRateLimit({
+            name: 'admin-subscriptions-revoke',
+            tokensPerInterval: 20,
+            intervalMs: 60_000,
+            req: request,
+            key: () => `uid:${auth.uid}`,
+        })
+        if (!rate.ok) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
         }
 
         const body = await request.json();

@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase-setup'
 import { isHQGroup } from '@/config/zones'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
+import { authedFetch } from '@/lib/authed-fetch'
 
 export interface NotificationData {
   id: string
@@ -232,7 +233,7 @@ export function useNotificationActions() {
         const recipientIds = snapshot.map((m: any) => m.userId || m.id).filter(Boolean)
 
         if (recipientIds.length > 0) {
-          await fetch('/api/send-notification', {
+          await authedFetch('/api/send-notification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -294,7 +295,7 @@ export function useNotificationActions() {
         const recipientIds = groupMembers.map((gm: any) => gm.user_id).filter(Boolean);
 
         if (recipientIds.length > 0) {
-          await fetch('/api/send-notification', {
+          await authedFetch('/api/send-notification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -350,7 +351,7 @@ export function useNotificationActions() {
 
       // Trigger FCM for User
       try {
-        await fetch('/api/send-notification', {
+        await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,5 +1,7 @@
 // Cloudinary Storage Service (25GB Storage + 25GB Bandwidth FREE)
 
+import { authedFetch } from '@/lib/authed-fetch'
+
 export const cloudinaryConfig = {
   cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
   apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '',
@@ -75,7 +77,7 @@ export async function uploadToCloudinary(
 // Delete file from Cloudinary
 export async function deleteFromCloudinary(publicId: string, resourceType: string = 'image'): Promise<boolean> {
   try {
-    const response = await fetch('/api/cloudinary/delete', {
+    const response = await authedFetch('/api/cloudinary/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ publicId, resourceType })

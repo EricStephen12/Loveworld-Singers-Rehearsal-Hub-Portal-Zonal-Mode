@@ -1,4 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 /**
  * DELETE FILE FROM CLOUDINARY
@@ -9,6 +10,25 @@
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyFirebaseIdToken(request)
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rate = await enforceRateLimit({
+      name: 'cloudinary-delete',
+      tokensPerInterval: 30,
+      intervalMs: 60_000,
+      req: request,
+      key: () => `uid:${auth.uid}`,
+    })
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+      )
+    }
+
     const { publicId, resourceType = 'image' } = await request.json();
 
     if (!publicId) {

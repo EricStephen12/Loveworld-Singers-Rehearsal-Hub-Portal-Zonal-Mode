@@ -16,6 +16,7 @@ import {
   Timestamp,
   limit
 } from 'firebase/firestore'
+import { authedFetch } from '@/lib/authed-fetch'
 
 export interface AdminPlaylist {
   id: string
@@ -237,7 +238,7 @@ async function triggerPlaylistNotification(playlistId: string, name: string, for
     const batchSize = 100
     for (let i = 0; i < recipientIds.length; i += batchSize) {
       const batch = recipientIds.slice(i, i + batchSize)
-      await fetch('/api/send-notification', {
+      await authedFetch('/api/send-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

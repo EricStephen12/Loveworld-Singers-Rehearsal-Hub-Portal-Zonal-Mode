@@ -10,6 +10,7 @@ import moment from 'moment'
 import { db } from '@/lib/firebase-setup'
 import { collection, query, getDocs, limit } from 'firebase/firestore'
 import { isHQGroup } from '@/config/zones'
+import { authedFetch } from '@/lib/authed-fetch'
 
 const EVENT_TYPES = [
   { id: 'event', label: 'Event' },
@@ -145,7 +146,7 @@ export default function CalendarSection() {
           const recipientIds = membersSnapshot.docs.map(doc => doc.data().userId).filter(Boolean)
 
           if (recipientIds.length > 0) {
-            await fetch('/api/send-notification', {
+            await authedFetch('/api/send-notification', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

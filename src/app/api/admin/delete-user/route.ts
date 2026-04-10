@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase-admin';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
+import { isHQAdminEmail } from '@/config/roles'
 
 /**
  * DELETE USER API
@@ -14,9 +16,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
         }
 
-        // 1. Verify that the caller is an authorized admin
-        // In a real production app, we would verify the admin's ID token here.
-        // For now, we'll proceed with the provided IDs as the frontend already checks roles.
+        // Verify caller is HQ admin via signed Firebase ID token (do not trust client headers).
+        const caller = await verifyFirebaseIdToken(request)
+        const callerEmail = caller?.email
+        if (!caller || !callerEmail || !isHQAdminEmail(callerEmail)) {
+            return NextResponse.json({ success: false, error: 'Unauthorized. HQ Admin access required.' }, { status: 403 })
+        }
+
+        const rate = await enforceRateLimit({
+            name: 'admin-delete-user',
+            tokensPerInterval: 5,
+            intervalMs: 60_000,
+            req: request,
+            key: () => `uid:${caller.uid}`,
+        })
+        if (!rate.ok) {
+            return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+        }
 
         // 2. Delete from Firestore profiles
         try {

@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { admin, rtdb } from '@/lib/firebase-admin'
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyFirebaseIdToken(request)
+    const rate = await enforceRateLimit({
+      name: 'save-fcm-token',
+      tokensPerInterval: 30,
+      intervalMs: 60_000,
+      req: request,
+      key: (r) => (auth?.uid ? `uid:${auth.uid}` : `ip:${r.headers.get('x-forwarded-for') || 'unknown'}`),
+    })
+    if (!rate.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
+    }
+
     let body;
     try {
       body = await request.json();
@@ -14,6 +27,16 @@ export async function POST(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json({ error: 'FCM token is required' }, { status: 400 });
+    }
+
+    // If a userId is provided, require it to match the authenticated user.
+    if (userId && userId !== 'anonymous') {
+      if (!auth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      if (userId !== auth.uid) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     if (!admin.apps.length) {

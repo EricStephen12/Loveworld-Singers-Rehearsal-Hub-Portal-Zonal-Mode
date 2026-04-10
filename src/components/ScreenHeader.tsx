@@ -67,9 +67,9 @@ export function ScreenHeader({
 
   return (
     <div className={`sticky top-0 z-50 ${bgColor} ${showDivider ? `border-b ${borderColor}` : ''}`}>
-      <div className="flex items-center justify-between p-2 sm:p-3 relative min-h-[60px] sm:min-h-[70px]">
-        {/* Left side - Menu button and left buttons */}
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between px-4 h-16 sm:h-20 gap-4">
+        {/* Left Section - Controls */}
+        <div className="flex items-center gap-1.5 shrink-0 min-w-[40px]">
           {showBackButton && (
             <button
               onClick={() => {
@@ -81,10 +81,8 @@ export function ScreenHeader({
                   NavigationManager.safeBack(router)
                 }
               }}
-
-              className={`flex items-center p-2 rounded-lg transition-all duration-1000 ease-out focus:outline-none focus:ring-0 focus:border-0 ${hoverBg} ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-4 scale-75'}`}
+              className={`p-2.5 rounded-xl transition-all duration-300 ${hoverBg} ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}
               aria-label="Go back"
-              style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
             >
               <ArrowLeft className={`w-5 h-5 ${iconColor}`} />
             </button>
@@ -92,53 +90,56 @@ export function ScreenHeader({
           {showMenuButton && (
             <button
               onClick={onMenuClick}
-              className={`flex items-center p-2 rounded-lg transition-all duration-1000 ease-out focus:outline-none focus:ring-0 focus:border-0 ${hoverBg} ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-4 scale-75'}`}
+              className={`p-2.5 rounded-xl transition-all duration-300 ${hoverBg} ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}
               aria-label="Open menu"
-              style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
             >
               <Menu className={`w-5 h-5 ${iconColor}`} />
             </button>
           )}
           {leftButtons && (
-            <div className={`transition-all duration-1000 ease-out ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-4 scale-75'}`}>
+            <div className={`transition-all duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               {leftButtons}
             </div>
           )}
         </div>
 
-        {/* Center - Title and Timer (centered on all screen sizes) */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+        {/* Center Section - Branding & Identity */}
+        <div className="flex-1 flex flex-col items-center min-w-0">
           <button
             onClick={onTitleClick}
-            className={`text-base sm:text-lg font-outfit-semibold ${textColor} transition-all duration-1000 ease-out delay-200 ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-90'} ${onTitleClick ? (darkMode ? 'hover:text-white' : 'hover:text-gray-900') + ' active:scale-95' : 'cursor-default'}`}
+            className={`text-sm sm:text-base font-black tracking-tight ${textColor} transition-all duration-500 delay-100 truncate w-full text-center ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'} ${onTitleClick ? 'active:scale-95 hover:opacity-70' : 'cursor-default'}`}
             disabled={!onTitleClick}
           >
             {title}
           </button>
           {subtitle && (
-            <div className={`text-xs sm:text-sm ${subtextColor} font-medium transition-all duration-1000 ease-out delay-250 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+            <div className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] ${subtextColor} transition-all duration-500 delay-150 truncate w-full text-center ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               {subtitle}
             </div>
           )}
           {timer && (
-            <div className={`mt-0.5 transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+            <div className={`mt-1 transition-all duration-500 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               {timer}
             </div>
           )}
         </div>
 
-        {/* Right side - Buttons and Logo */}
-        <div className={`flex items-center space-x-2 transition-all duration-1000 ease-out delay-400 ${mounted ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-4 scale-75'}`}>
-          {rightButtons}
+        {/* Right Section - Status & Identity */}
+        <div className="flex items-center gap-3 shrink-0 min-w-[40px] justify-end">
+          {rightButtons && (
+            <div className={`transition-all duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+              {rightButtons}
+            </div>
+          )}
           <button
             onClick={handleLogoClick}
-            className="hover:scale-105 active:scale-95 transition-transform duration-200"
+            className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/5 hover:scale-110 active:scale-95 transition-all duration-300 overflow-hidden"
             aria-label="Go to home"
           >
             <img
               src={rightImageSrc}
               alt="Logo"
-              className="w-8 h-8 object-contain"
+              className="w-7 h-7 object-contain"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).style.display = 'none'
               }}

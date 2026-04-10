@@ -1,6 +1,8 @@
 ﻿// Simple integration with your existing voice call system
 // This adds push notifications to your current Realtime DB approach
 
+import { authedFetch } from '@/lib/authed-fetch'
+
 interface CallParams {
   chatId: string;
   receiverId: string;
@@ -102,7 +104,7 @@ async function createVoiceCallInDB(params: CallParams) {
 // Send push notification via your server API
 async function sendCallPushNotification(notificationData: CallNotificationData) {
   try {
-    const response = await fetch('/api/send-call-notification', {
+    const response = await authedFetch('/api/send-call-notification', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

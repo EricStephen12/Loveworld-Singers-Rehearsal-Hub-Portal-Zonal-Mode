@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, Users, TrendingUp, Search, RefreshCw, Plus, Ban, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CustomLoader from '@/components/CustomLoader';
+import { authedFetch } from '@/lib/authed-fetch'
 
 interface PaymentRecord {
     id: string;
@@ -53,11 +54,7 @@ export default function PaymentDashboardSection() {
     const loadSubscriptions = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/admin/subscriptions', {
-                headers: {
-                    'x-user-email': profile?.email || ''
-                }
-            });
+            const response = await authedFetch('/api/admin/subscriptions');
 
             if (response.ok) {
                 const data = await response.json();
@@ -111,11 +108,10 @@ export default function PaymentDashboardSection() {
 
         setActionLoading(true);
         try {
-            const response = await fetch('/api/admin/subscriptions/revoke', {
+            const response = await authedFetch('/api/admin/subscriptions/revoke', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-user-email': profile?.email || ''
                 },
                 body: JSON.stringify({
                     userId: selectedSubscription.payment.subscriptionType === 'zone'
@@ -148,11 +144,10 @@ export default function PaymentDashboardSection() {
 
         setActionLoading(true);
         try {
-            const response = await fetch('/api/admin/subscriptions/extend', {
+            const response = await authedFetch('/api/admin/subscriptions/extend', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-user-email': profile?.email || ''
                 },
                 body: JSON.stringify({
                     userId: selectedSubscription.payment.subscriptionType === 'zone'
@@ -187,11 +182,10 @@ export default function PaymentDashboardSection() {
 
         setActionLoading(true);
         try {
-            const response = await fetch('/api/admin/subscriptions/refund', {
+            const response = await authedFetch('/api/admin/subscriptions/refund', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-user-email': profile?.email || ''
                 },
                 body: JSON.stringify({
                     paymentId: selectedSubscription.payment.id,

@@ -22,6 +22,7 @@ import {
   increment
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import { authedFetch } from '@/lib/authed-fetch'
 
 // TYPES
 
@@ -858,7 +859,7 @@ function toDate(timestamp: any): Date {
 
 async function sendChatNotification(recipientIds: string[], title: string, body: string, chatId: string, senderId: string, senderName?: string): Promise<void> {
   try {
-    const response = await fetch('/api/send-notification', {
+    const response = await authedFetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'chat', recipientIds, title, body, data: { chatId, senderName: senderName || 'Someone' }, excludeUserId: senderId })

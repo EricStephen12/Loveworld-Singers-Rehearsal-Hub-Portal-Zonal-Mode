@@ -23,6 +23,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
+import { authedFetch } from '@/lib/authed-fetch'
 import type {
   AudioLabProject,
   Track,
@@ -269,7 +270,7 @@ export async function updateProject(
         // but here we don't have the context easily without changing the signature.
         // Let's assume most updates are worthwhile to notify about.
 
-        await fetch('/api/send-notification', {
+        await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -357,7 +358,7 @@ export async function addTrack(
     try {
       const allParticipants = [project.ownerId, ...project.collaborators];
       if (allParticipants.length > 0) {
-        await fetch('/api/send-notification', {
+        await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -524,7 +525,7 @@ export async function addCollaborator(
 
 
     // Send push notification to the invited user (non-blocking)
-    fetch('/api/send-notification', {
+    authedFetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

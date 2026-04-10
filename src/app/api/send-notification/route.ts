@@ -1,9 +1,10 @@
-﻿// app/api/send-notification/route.ts
+// app/api/send-notification/route.ts
 // Unified server-side endpoint for sending push notifications
 // Supports: chat, audiolab, calendar, song, media, zone, call
 
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, rtdb } from '@/lib/firebase-admin';
+import { enforceRateLimit, isInternalRequest, verifyFirebaseIdToken } from '@/lib/api-guards';
 
 // Notification types
 type NotificationType = 'chat' | 'audiolab' | 'calendar' | 'song' | 'media' | 'zone' | 'call';
@@ -18,28 +19,6 @@ interface NotificationRequest {
   senderName?: string;
   senderAvatar?: string;
   senderImage?: string; // For sending images content
-}
-
-// Simple in-memory rate limiting (resets on server restart)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 100; // max requests per window
-const RATE_WINDOW = 60000; // 1 minute window
-
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_WINDOW });
-    return true;
-  }
-
-  if (record.count >= RATE_LIMIT) {
-    return false;
-  }
-
-  record.count++;
-  return true;
 }
 
 // Get URL for notification type (returns RELATIVE path)
@@ -92,10 +71,24 @@ export async function POST(req: NextRequest) {
     const body: NotificationRequest = await req.json();
     const { type, recipientIds, title, body: notifBody, data, excludeUserId, senderName, senderAvatar, senderImage } = body;
 
-    // Rate limiting
-    const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    // AuthZ: require Firebase user OR internal key (server-to-server).
+    // This endpoint can spam push notifications; do not leave it public.
+    const isInternal = isInternalRequest(req, 'LWSRH_INTERNAL_API_KEY')
+    const auth = isInternal ? null : await verifyFirebaseIdToken(req)
+    if (!isInternal && !auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting (in-memory per instance; still valuable as a backstop)
+    const rate = await enforceRateLimit({
+      name: 'send-notification',
+      tokensPerInterval: 20,
+      intervalMs: 60_000,
+      req,
+      key: (r) => (auth?.uid ? `uid:${auth.uid}` : `ip:${r.headers.get('x-forwarded-for') || 'unknown'}`),
+    })
+    if (!rate.ok) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
     }
 
     if (!recipientIds || recipientIds.length === 0) {

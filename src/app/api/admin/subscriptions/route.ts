@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PaymentRecordsService, SubscriptionAuditService } from '@/lib/payment-records-service';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { isHQAdminEmail } from '@/config/roles';
+import { enforceRateLimit, verifyFirebaseIdToken } from '@/lib/api-guards'
 
 /**
  * GET /api/admin/subscriptions
@@ -9,15 +10,24 @@ import { isHQAdminEmail } from '@/config/roles';
  */
 export async function GET(request: NextRequest) {
     try {
-        // Check admin authorization
-        const authHeader = request.headers.get('authorization');
-        const userEmail = request.headers.get('x-user-email');
-
-        if (!userEmail || !isHQAdminEmail(userEmail)) {
+        const auth = await verifyFirebaseIdToken(request)
+        const userEmail = auth?.email
+        if (!auth || !userEmail || !isHQAdminEmail(userEmail)) {
             return NextResponse.json(
                 { error: 'Unauthorized. HQ Admin access required.' },
                 { status: 403 }
             );
+        }
+
+        const rate = await enforceRateLimit({
+            name: 'admin-subscriptions',
+            tokensPerInterval: 60,
+            intervalMs: 60_000,
+            req: request,
+            key: () => `uid:${auth.uid}`,
+        })
+        if (!rate.ok) {
+            return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } })
         }
 
         const { searchParams } = new URL(request.url);

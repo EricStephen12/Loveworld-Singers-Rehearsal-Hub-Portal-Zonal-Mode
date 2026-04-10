@@ -1,5 +1,7 @@
 // Client-side Cloudinary functions (no server-side imports)
 
+import { authedFetch } from '@/lib/authed-fetch'
+
 // Function to upload audio file to Cloudinary
 export async function uploadAudioToCloudinary(file: File): Promise<string | null> {
   try {
@@ -26,7 +28,7 @@ export async function uploadAudioToCloudinary(file: File): Promise<string | null
 // Function to delete audio file from Cloudinary
 export async function deleteAudioFromCloudinary(publicId: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/cloudinary/delete', {
+    const response = await authedFetch('/api/cloudinary/delete', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

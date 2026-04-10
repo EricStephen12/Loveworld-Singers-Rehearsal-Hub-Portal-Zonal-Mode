@@ -11,13 +11,21 @@ export async function POST(request: NextRequest) {
     const data = JSON.parse(body);
 
     // Verify webhook signature
-    const environment = process.env.NEXT_PUBLIC_KINGSPAY_ENVIRONMENT || 'test';
+    // IMPORTANT: never use NEXT_PUBLIC_* for webhook secrets
+    const environment = process.env.KINGSPAY_ENVIRONMENT || 'test';
     const secretKey = environment === 'production'
-      ? process.env.NEXT_PUBLIC_KINGSPAY_PRODUCTION_SECRET_KEY || ''
-      : process.env.NEXT_PUBLIC_KINGSPAY_TEST_SECRET_KEY || '';
+      ? process.env.KINGSPAY_PRODUCTION_SECRET_KEY || ''
+      : process.env.KINGSPAY_TEST_SECRET_KEY || '';
 
-    if (signature && !verifyKingsPayWebhookSignature(signature, body, secretKey)) {
- console.error('Invalid webhook signature');
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
+    if (!secretKey) {
+      console.error('[Webhook] Secret key not configured');
+      return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
+    }
+    if (!verifyKingsPayWebhookSignature(signature, body, secretKey)) {
+      console.error('Invalid webhook signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 

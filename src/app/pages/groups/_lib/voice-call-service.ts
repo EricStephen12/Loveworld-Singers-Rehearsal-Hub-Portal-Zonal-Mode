@@ -16,6 +16,7 @@ import {
   update
 } from 'firebase/database'
 import { realtimeDb, isRealtimeDbAvailable } from '@/lib/firebase-setup'
+import { authedFetch } from '@/lib/authed-fetch'
 
 // Optimized ICE servers - prioritize faster STUN servers
 const ICE_SERVERS: RTCIceServer[] = [
@@ -588,7 +589,7 @@ export class VoiceCallService {
 
       // ENTERPRISE FEATURE - Send push notification to offline users
       // NON-BLOCKING: Fire and forget to reduce call start latency
-      fetch('/api/send-call-notification', {
+      authedFetch('/api/send-call-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

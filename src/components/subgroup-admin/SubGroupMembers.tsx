@@ -3,10 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users,
-  Plus,
   Search,
   UserPlus,
-  RefreshCw,
   X,
   Mail,
   Phone,
@@ -54,7 +52,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
         joinedAt: m.createdAt || new Date()
       })));
     } catch (error) {
- console.error('Error loading members:', error);
+      console.error('Error loading members:', error);
     } finally {
       setIsLoading(false);
     }
@@ -63,11 +61,10 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   const loadZoneMembers = async () => {
     try {
       const allZoneMembers = await ZoneInvitationService.getZoneMembers(zoneId);
-      // Filter out already added members
       const memberIds = members.map(m => m.id);
       setZoneMembers(allZoneMembers.filter(m => !memberIds.includes(m.id)));
     } catch (error) {
- console.error('Error loading zone members:', error);
+      console.error('Error loading zone members:', error);
     }
   };
 
@@ -78,36 +75,32 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
 
   const handleAddMembers = async () => {
     if (selectedForAdd.length === 0) return;
-
     setAdding(true);
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const result = await SubGroupDatabaseService.addMembers(subGroupId, selectedForAdd);
-
       if (result.success) {
         setSelectedForAdd([]);
         setShowAddModal(false);
         loadMembers();
       }
     } catch (error) {
- console.error('Error adding members:', error);
+      console.error('Error adding members:', error);
     } finally {
       setAdding(false);
     }
   };
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Remove this member from the sub-group?')) return;
-
+    if (!confirm('Remove from group?')) return;
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const result = await SubGroupDatabaseService.removeMember(subGroupId, memberId);
-
       if (result.success) {
         loadMembers();
       }
     } catch (error) {
- console.error('Error removing member:', error);
+      console.error('Error removing member:', error);
     }
   };
 
@@ -133,188 +126,158 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="flex-1 min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Members</h1>
-          <p className="text-slate-500">Manage your sub-group members</p>
-        </div>
+      <div className="flex items-center justify-between gap-8 mb-10">
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Members</h1>
         <button
           onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="flex items-center justify-center gap-2 px-8 py-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-black text-xs uppercase tracking-widest"
         >
-          <UserPlus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add Members</span>
+          <UserPlus className="w-5 h-5" />
+          <span>Add</span>
         </button>
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+      <div className="relative mb-10">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
         <input
           type="text"
-          placeholder="Search members..."
+          placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-purple-600 transition-all"
         />
       </div>
 
       {/* Members List */}
       {filteredMembers.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-          <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 mb-4">No members yet</p>
-          <button
-            onClick={handleOpenAdd}
-            className="text-purple-600 hover:text-purple-700 font-medium"
-          >
-            Add members from your zone →
-          </button>
+        <div className="bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 p-20 text-center">
+          <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No members found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="divide-y divide-slate-100">
-            {filteredMembers.map((member) => (
-              <div
-                key={member.id}
-                className="p-4 hover:bg-slate-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-purple-600 font-semibold">
-                        {member.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900">{member.name}</h3>
-                      <div className="flex items-center gap-3 text-sm text-slate-500">
-                        {member.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {member.email}
-                          </span>
-                        )}
-                        {member.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {member.phone}
-                          </span>
-                        )}
+        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Member</th>
+                <th className="py-4 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                <th className="py-4 px-8 text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {filteredMembers.map((member) => (
+                <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <td className="py-5 px-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center">
+                        <span className="text-slate-400 font-black text-sm">
+                          {member.name.charAt(0).toUpperCase()}
+                        </span>
                       </div>
+                      <h3 className="font-black text-slate-900 text-sm tracking-tight">{member.name}</h3>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                  </td>
+                  <td className="py-5 px-8">
+                    <div className="flex flex-col gap-1">
+                      {member.email && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                          <Mail className="w-3 h-3 opacity-30" />
+                          {member.email}
+                        </div>
+                      )}
+                      {member.phone && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                          <Phone className="w-3 h-3 opacity-30" />
+                          {member.phone}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-5 px-8 text-right">
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="p-3 text-slate-200 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Add Members Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <UserPlus className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">Add Members</h2>
-                    <p className="text-sm text-slate-500">Select from zone members</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg"
-                >
-                  <X className="w-5 h-5 text-slate-500" />
-                </button>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[130] p-6 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh] overflow-hidden border border-slate-100">
+            <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">Add Members</h2>
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">Zone Selection</p>
               </div>
+              <button onClick={() => setShowAddModal(false)} className="w-10 h-10 bg-white border border-slate-200 text-slate-400 rounded-xl flex items-center justify-center hover:text-slate-600 transition-all">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 overflow-auto p-8 space-y-3 bg-white">
               {zoneMembers.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-500">No more members available to add</p>
+                <div className="text-center py-10">
+                  <Users className="w-10 h-10 text-slate-100 mx-auto mb-2" />
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No members found</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {zoneMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      onClick={() => toggleAddSelection(member.id)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedForAdd.includes(member.id)
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedForAdd.includes(member.id)
-                            ? 'border-purple-500 bg-purple-500'
-                            : 'border-slate-300'
-                          }`}>
-                          {selectedForAdd.includes(member.id) && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                          <span className="text-slate-600 font-medium text-sm">
-                            {(member.first_name || member.name || 'U').charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 truncate">
-                            {member.first_name ? `${member.first_name} ${member.last_name || ''}` : member.name || 'Unknown'}
-                          </p>
-                          <p className="text-sm text-slate-500 truncate">{member.email}</p>
-                        </div>
+                zoneMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    onClick={() => toggleAddSelection(member.id)}
+                    className={`p-5 rounded-2xl border cursor-pointer transition-all ${selectedForAdd.includes(member.id)
+                        ? 'border-purple-600 bg-purple-50'
+                        : 'border-slate-100 hover:border-purple-200 bg-white'
+                      }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${selectedForAdd.includes(member.id)
+                          ? 'border-purple-600 bg-purple-600 shadow-md shadow-purple-600/20'
+                          : 'border-slate-200'
+                        }`}>
+                        {selectedForAdd.includes(member.id) && (
+                          <div className="w-2.5 h-2.5 bg-white rounded-sm" />
+                        )}
+                      </div>
+                      <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
+                        <span className="text-slate-400 font-black text-xs uppercase">
+                          {(member.first_name || member.name || 'U').charAt(0)}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-900 text-sm truncate">
+                          {member.first_name ? `${member.first_name} ${member.last_name || ''}` : member.name || 'Unknown'}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate">{member.email}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-600">
-                  {selectedForAdd.length} selected
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddMembers}
-                    disabled={selectedForAdd.length === 0 || adding}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {adding ? (
-                      <>
-                        <CustomLoader size="sm" />
-                        <span>Adding...</span>
-                      </>
-                    ) : 'Add Selected'}
-                  </button>
-                </div>
-              </div>
+            <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                {selectedForAdd.length} Selected
+              </span>
+              <button
+                onClick={handleAddMembers}
+                disabled={selectedForAdd.length === 0 || adding}
+                className="px-8 py-3 bg-purple-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-purple-700 transition-all disabled:opacity-50 shadow-lg shadow-purple-600/20"
+              >
+                {adding ? 'Processing...' : 'Add Members'}
+              </button>
             </div>
           </div>
         </div>

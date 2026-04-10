@@ -21,8 +21,17 @@ import {
   FirestoreError
 } from 'firebase/firestore';
 import { db } from './firebase-setup';
+import { authedFetch } from '@/lib/authed-fetch'
 
 // Types
+export interface SubGroupComment {
+  id: string;
+  text: string;
+  audioUrl?: string;
+  date: string;
+  author: string;
+}
+
 export interface SubGroupSong {
   id: string;
   subGroupId: string;
@@ -50,6 +59,11 @@ export interface SubGroupSong {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  comments?: SubGroupComment[];
+  // Mapping to PraiseNightSong for modal compatibility
+  audioFile?: string;
+  praiseNightId?: string;
+  history?: any[];
 }
 
 export interface SubGroupRehearsal {
@@ -62,14 +76,31 @@ export interface SubGroupRehearsal {
   description?: string;
   songIds: string[];
   scope: 'subgroup'; // Always 'subgroup' for sub-group rehearsals
+  category: 'ongoing' | 'archive' | 'pre-rehearsal';
   scopeLabel?: string; // For display purposes in combined lists
   subGroupName?: string; // For display purposes
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  bannerImage?: string;
 }
 
 export class SubGroupDatabaseService {
+  /**
+   * Static helper to strip HTML from lyrics for a clean text-only experience.
+   */
+  private static sanitizeLyrics(text: string): string {
+    if (!text) return '';
+    return text
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<div>/gi, '\n')
+      .replace(/<[^>]*>?/gm, '') // Strip remaining tags
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\n\s*\n/g, '\n\n') // Normalize multiple newlines
+      .trim();
+  }
 
   // Songs
 
@@ -100,6 +131,42 @@ export class SubGroupDatabaseService {
   }
 
   /**
+   * Get songs for a specific rehearsal
+   */
+  static async getSubGroupSongsByRehearsalId(rehearsalId: string): Promise<SubGroupSong[]> {
+    try {
+      const rehearsalRef = doc(db, 'subgroup_praise_nights', rehearsalId);
+      const rehearsalSnap = await getDoc(rehearsalRef);
+      
+      if (!rehearsalSnap.exists()) return [];
+      
+      const songIds = rehearsalSnap.data().songIds || [];
+      if (songIds.length === 0) return [];
+      
+      // Fetch songs in batches of 10 (Firebase 'in' limit)
+      const songs: SubGroupSong[] = [];
+      const songsRef = collection(db, 'subgroup_songs');
+      
+      for (let i = 0; i < songIds.length; i += 10) {
+        const batch = songIds.slice(i, i + 10);
+        const q = query(songsRef, where('__name__', 'in', batch));
+        const snapshot = await getDocs(q);
+        songs.push(...snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date()
+        })) as SubGroupSong[]);
+      }
+      
+      return songs;
+    } catch (error) {
+      console.error('Error getting rehearsal songs:', error);
+      return [];
+    }
+  }
+
+  /**
    * Create a new song for a sub-group
    */
   static async createSong(
@@ -116,13 +183,16 @@ export class SubGroupDatabaseService {
         subGroupId,
         zoneId,
         title: songData.title || '',
-        lyrics: songData.lyrics || '',
+        lyrics: this.sanitizeLyrics(songData.lyrics || ''),
         solfa: songData.solfa || '',
         key: songData.key || '',
         tempo: songData.tempo || '',
         writer: songData.writer || '',
         leadSinger: songData.leadSinger || '',
         category: songData.category || '',
+        status: 'unheard',
+        isActive: true,
+        audioFile: songData.audioFile || '',
         audioUrls: songData.audioUrls || {},
         createdBy,
         createdAt: now,
@@ -150,6 +220,139 @@ export class SubGroupDatabaseService {
   }
 
   /**
+   * Get all songs from the official Master Library
+   */
+  static async getMasterLibrarySongs(): Promise<any[]> {
+    try {
+      const masterSongsRef = collection(db, 'master_songs');
+      const q = query(
+        masterSongsRef,
+        orderBy('title', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting Master library songs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Import a single song from the Master Library to the Subgroup
+   */
+  static async importMasterSongToSubGroup(
+    masterSong: any,
+    subGroupId: string,
+    zoneId: string,
+    createdBy: string
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const songsRef = collection(db, 'subgroup_songs');
+      const now = Timestamp.now();
+
+      const newSong = {
+        subGroupId,
+        zoneId,
+        title: masterSong.title || '',
+        lyrics: this.sanitizeLyrics(masterSong.lyrics || ''),
+        solfa: masterSong.solfa || '',
+        key: masterSong.key || '',
+        tempo: masterSong.tempo || '',
+        writer: masterSong.writer || '',
+        leadSinger: masterSong.leadSinger || '',
+        category: masterSong.category || '',
+        status: 'unheard',
+        isActive: true,
+        audioFile: masterSong.audioFile || (masterSong.audioUrls?.full || masterSong.audioUrls?.main || ''),
+        audioUrls: masterSong.audioUrls || {},
+        importedFrom: 'master',
+        originalSongId: masterSong.id,
+        importedAt: now,
+        createdBy,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      const docRef = await addDoc(songsRef, newSong);
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      console.error('Error importing master song:', error);
+      return { success: false, error: 'Failed to import song' };
+    }
+  }
+
+  /**
+   * Get all songs from the official Zone Library
+   */
+  static async getZoneLibrarySongs(zoneId: string): Promise<any[]> {
+    try {
+      const zoneSongsRef = collection(db, 'zone_songs');
+      const q = query(
+        zoneSongsRef,
+        where('zoneId', '==', zoneId),
+        orderBy('title', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting zone songs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Import a single song from the Zone Library to the Subgroup
+   */
+  static async importZoneSongToSubGroup(
+    zoneSong: any,
+    subGroupId: string,
+    zoneId: string,
+    createdBy: string
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const songsRef = collection(db, 'subgroup_songs');
+      const now = Timestamp.now();
+
+      const newSong = {
+        subGroupId,
+        zoneId,
+        title: zoneSong.title || '',
+        lyrics: this.sanitizeLyrics(zoneSong.lyrics || ''),
+        solfa: zoneSong.solfa || '',
+        key: zoneSong.key || '',
+        tempo: zoneSong.tempo || '',
+        writer: zoneSong.writer || '',
+        leadSinger: zoneSong.leadSinger || '',
+        category: zoneSong.category || '',
+        status: 'unheard',
+        isActive: true,
+        audioFile: zoneSong.audioFile || (zoneSong.audioUrls?.full || zoneSong.audioUrls?.main || ''),
+        audioUrls: zoneSong.audioUrls || {},
+        importedFrom: 'zone',
+        originalSongId: zoneSong.id || zoneSong.firebaseId,
+        importedAt: now,
+        createdBy,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      const docRef = await addDoc(songsRef, newSong);
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      console.error('Error importing zone song:', error);
+      return { success: false, error: 'Failed to import song' };
+    }
+  }
+
+  /**
    * Import songs from zone to sub-group
    */
   static async importSongsFromZone(
@@ -168,13 +371,16 @@ export class SubGroupDatabaseService {
           subGroupId,
           zoneId,
           title: zoneSong.title || '',
-          lyrics: zoneSong.lyrics || '',
+          lyrics: this.sanitizeLyrics(zoneSong.lyrics || ''),
           solfa: zoneSong.solfa || '',
           key: zoneSong.key || '',
           tempo: zoneSong.tempo || '',
           writer: zoneSong.writer || '',
           leadSinger: zoneSong.leadSinger || '',
           category: zoneSong.category || '',
+          status: 'unheard',
+          isActive: true,
+          audioFile: zoneSong.audioFile || (zoneSong.audioUrls?.full || zoneSong.audioUrls?.main || ''),
           audioUrls: zoneSong.audioUrls || {},
           importedFrom: 'zone',
           originalSongId: zoneSong.id || zoneSong.firebaseId,
@@ -217,10 +423,23 @@ export class SubGroupDatabaseService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const songRef = doc(db, 'subgroup_songs', songId);
-      await updateDoc(songRef, {
+      const now = Timestamp.now();
+
+      const updateData: any = {
         ...updates,
-        updatedAt: Timestamp.now()
-      });
+        updatedAt: now
+      };
+
+      if (updates.lyrics) {
+        updateData.lyrics = this.sanitizeLyrics(updates.lyrics);
+      }
+
+      // Sync audioFile if only audioUrls was provided (Admin UI support)
+      if (updates.audioUrls?.full && !updates.audioFile) {
+        updateData.audioFile = updates.audioUrls.full;
+      }
+
+      await updateDoc(songRef, updateData);
       return { success: true };
     } catch (error) {
       console.error('Error updating song:', error);
@@ -398,7 +617,7 @@ export class SubGroupDatabaseService {
   static async createRehearsal(
     subGroupId: string,
     zoneId: string,
-    rehearsalData: { name: string; date: string; location?: string; description?: string; subGroupName?: string },
+    rehearsalData: { name: string; date: string; location?: string; description?: string; subGroupName?: string; category?: 'ongoing' | 'archive' | 'pre-rehearsal' },
     createdBy: string,
     sendNotification: boolean = true
   ): Promise<{ success: boolean; id?: string; error?: string }> {
@@ -415,6 +634,7 @@ export class SubGroupDatabaseService {
         description: rehearsalData.description || '',
         songIds: [],
         scope: 'subgroup', // Mark as sub-group rehearsal
+        category: rehearsalData.category || 'ongoing', 
         subGroupName: rehearsalData.subGroupName || '',
         createdBy,
         createdAt: now,
@@ -632,12 +852,12 @@ export class SubGroupDatabaseService {
   ): Promise<{
     zoneRehearsals: any[];
     subGroupRehearsals: SubGroupRehearsal[];
-    combined: any[];
+    combined: (SubGroupRehearsal | (any & { scope: 'zone' }))[];
   }> {
     try {
 
-      // 1 & 2. Get zone rehearsals and user's sub-groups in parallel
-      const [zoneSnapshot, subGroupsSnapshot] = await Promise.all([
+      // 1 & 2. Get zone rehearsals, user's sub-groups, and coordinated sub-groups in parallel
+      const [zoneSnapshot, memberSubGroupsSnapshot, coordinatedSubGroupsSnapshot] = await Promise.all([
         getDocs(query(
           collection(db, 'zone_praise_nights'),
           where('zoneId', '==', zoneId),
@@ -646,6 +866,11 @@ export class SubGroupDatabaseService {
         getDocs(query(
           collection(db, 'subgroups'),
           where('memberIds', 'array-contains', userId),
+          where('status', '==', 'active')
+        )),
+        getDocs(query(
+          collection(db, 'subgroups'),
+          where('coordinatorId', '==', userId),
           where('status', '==', 'active')
         ))
       ]);
@@ -658,10 +883,23 @@ export class SubGroupDatabaseService {
         createdAt: doc.data().createdAt?.toDate() || new Date()
       }));
 
-      const userSubGroupIds = subGroupsSnapshot.docs.map(doc => doc.id);
+
+
+      // Combine subgroup IDs from both sources (member and coordinator)
+      const allSubGroupDocs = [
+        ...memberSubGroupsSnapshot.docs,
+        ...coordinatedSubGroupsSnapshot.docs
+      ];
+
+      // Use a Map to deduplicate by ID
+      const uniqueSubGroupDocs = new Map();
+      allSubGroupDocs.forEach(doc => uniqueSubGroupDocs.set(doc.id, doc));
+
+      const userSubGroupIds = Array.from(uniqueSubGroupDocs.keys());
+      
       const subGroupNames: Record<string, string> = {};
-      subGroupsSnapshot.docs.forEach(doc => {
-        subGroupNames[doc.id] = doc.data().name;
+      uniqueSubGroupDocs.forEach((doc, id) => {
+        subGroupNames[id] = doc.data().name;
       });
 
       // 3. Get sub-group rehearsals for user's sub-groups
@@ -674,8 +912,8 @@ export class SubGroupDatabaseService {
           const batch = userSubGroupIds.slice(i, i + 10);
           const batchQuery = query(
             subGroupRehearsalsRef,
-            where('subGroupId', 'in', batch),
-            orderBy('date', 'desc')
+            where('subGroupId', 'in', batch)
+            // orderBy removed to avoid index issues
           );
           batches.push(getDocs(batchQuery));
         }
@@ -693,17 +931,22 @@ export class SubGroupDatabaseService {
               location: data.location,
               description: data.description,
               songIds: data.songIds || [],
+              category: data.category || 'ongoing',
+              bannerImage: data.bannerImage || '',
+              categoryOrder: data.categoryOrder || [],
+              pageCategory: data.pageCategory || '',
               scope: 'subgroup' as const,
               scopeLabel: subGroupNames[data.subGroupId] || 'Sub-Group Rehearsal',
               subGroupName: subGroupNames[data.subGroupId] || '',
               createdBy: data.createdBy,
               createdAt: data.createdAt?.toDate() || new Date(),
               updatedAt: data.updatedAt?.toDate() || new Date()
-            };
-          }) as SubGroupRehearsal[];
+            } as SubGroupRehearsal;
+          });
           subGroupRehearsals.push(...rehearsals);
         }
       }
+
 
       // 4. Combine and sort by date (newest first)
       const combined = [...zoneRehearsals, ...subGroupRehearsals].sort((a, b) => {
@@ -728,7 +971,67 @@ export class SubGroupDatabaseService {
     }
   }
 
-  // ==================== SUB-GROUP NOTIFICATIONS ====================
+  /**
+   * Subscribe to all rehearsals for a member (Hub Real-time)
+   */
+  static subscribeToMemberRehearsals(
+    zoneId: string, 
+    userId: string, 
+    callback: (rehearsals: any[]) => void
+  ) {
+    const rehearsalsRef = collection(db, 'subgroup_praise_nights');
+    
+    // We listen to subgroup rehearsals and filter for the user's groups
+    return onSnapshot(rehearsalsRef, async (snapshot) => {
+      try {
+        // 1. Get user's active subgroups to know what to filter
+        const qSubgroups = query(
+          collection(db, 'subgroups'),
+          where('status', '==', 'active')
+        );
+        const subgroupSnap = await getDocs(qSubgroups);
+        
+        const userSubGroups = subgroupSnap.docs.filter(doc => {
+          const data = doc.data();
+          return (data.memberIds || []).includes(userId) || data.coordinatorId === userId;
+        });
+
+        const subGroupIds = userSubGroups.map(doc => doc.id);
+        const subGroupNames: Record<string, string> = {};
+        userSubGroups.forEach(doc => { subGroupNames[doc.id] = doc.data().name; });
+
+        if (subGroupIds.length === 0) {
+          callback([]);
+          return;
+        }
+
+        // 2. Map and filter rehearsals from the snapshot
+        const filtered = snapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              scope: 'subgroup' as const,
+              scopeLabel: subGroupNames[data.subGroupId] || 'Sub-Group',
+              subGroupName: subGroupNames[data.subGroupId] || '',
+              createdAt: data.createdAt?.toDate() || new Date(),
+              updatedAt: data.updatedAt?.toDate() || new Date()
+            } as any;
+          })
+          .filter(r => subGroupIds.includes(r.subGroupId))
+          .sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
+          });
+
+        callback(filtered);
+      } catch (error) {
+        console.error('Error in member rehearsals subscription:', error);
+      }
+    });
+  }
 
   /**
    * Send notification to all sub-group members
@@ -788,7 +1091,7 @@ export class SubGroupDatabaseService {
         const batchSize = 100;
         for (let i = 0; i < recipientIds.length; i += batchSize) {
           const batch = recipientIds.slice(i, i + batchSize);
-          fetch('/api/send-notification', {
+          authedFetch('/api/send-notification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -872,8 +1175,35 @@ export class SubGroupDatabaseService {
       await updateDoc(notificationRef, { read: true });
       return { success: true };
     } catch (error) {
- console.error('Error marking notification read:', error);
+      console.error('Error marking notification read:', error);
       return { success: false };
+    }
+  }
+
+  static async getSongsByRehearsalId(rehearsalId: string): Promise<SubGroupSong[]> {
+    try {
+      const rehearsal = await this.getRehearsalById(rehearsalId);
+      if (!rehearsal || !rehearsal.songIds || rehearsal.songIds.length === 0) {
+        return [];
+      }
+
+      const songsRef = collection(db, 'subgroup_songs');
+      const songIds = rehearsal.songIds;
+
+      // Handle Firestore 'in' limit of 30
+      const limitedIds = songIds.slice(0, 30);
+      const q = query(songsRef, where('__name__', 'in', limitedIds));
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as SubGroupSong[];
+    } catch (error) {
+      console.error('Error getting songs by rehearsal ID:', error);
+      return [];
     }
   }
 }
