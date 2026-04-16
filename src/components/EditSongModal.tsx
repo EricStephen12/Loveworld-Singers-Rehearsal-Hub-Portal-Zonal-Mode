@@ -1442,7 +1442,7 @@ export default function EditSongModal({
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Conductor
+                          Conductor's Guide
                         </label>
                         <input
                           type="text"

@@ -90,6 +90,7 @@ export function MasterEditSongModal({
     drummer: song?.drummer || '',
     category: song?.category || '',
     lyrics: htmlToMarkdown(song?.lyrics || ''),
+    solfa: htmlToMarkdown(song?.solfa || ''),
   });
 
   // Initialize audio URLs with existing data or empty
@@ -137,6 +138,7 @@ export function MasterEditSongModal({
           drummer: song.drummer || '',
           category: song.category || '',
           lyrics: htmlToMarkdown(song.lyrics || ''),
+          solfa: htmlToMarkdown(song.solfa || ''),
         });
         const initial: Record<string, string> = {
           full: song.audioUrls?.full || song.audioFile || '',
@@ -166,6 +168,7 @@ export function MasterEditSongModal({
           drummer: '',
           category: '',
           lyrics: '',
+          solfa: '',
         });
         setAudioUrls({
           full: '',
@@ -258,6 +261,7 @@ export function MasterEditSongModal({
         drummer: formData.drummer.trim(),
         category: formData.category.trim(),
         lyrics: markdownToHtml(formData.lyrics),
+        solfa: markdownToHtml(formData.solfa),
         audioUrls: allAudioUrls,
         audioFile: audioUrls.full,
         customParts: customParts,
@@ -440,13 +444,13 @@ export function MasterEditSongModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Conductor</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Conductor's Guide</label>
                 <input
                   type="text"
                   value={formData.conductor}
                   onChange={(e) => handleInputChange('conductor', e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Conductor name"
+                  placeholder="Enter conductor or guide info"
                 />
               </div>
 
@@ -642,6 +646,23 @@ export function MasterEditSongModal({
             />
             <p className="text-xs text-slate-500">
                Tip: Use <strong>**double asterisks**</strong> for bold. Click "AI Sync Timing" to match lyrics with audio for karaoke.
+            </p>
+          </div>
+
+          {/* Conductor's Guide Notation */}
+          <div className="space-y-2 border-t border-slate-100 pt-5">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">Conductor's Guide Notation</label>
+            </div>
+            <textarea
+              value={formData.solfa}
+              onChange={(e) => handleInputChange('solfa', e.target.value)}
+              rows={8}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none font-mono text-emerald-800"
+              placeholder="Enter conductor's guide notation (solfas)..."
+            />
+            <p className="text-xs text-slate-500">
+               Enter the musical notation or guide instructions for the conductor.
             </p>
           </div>
         </div>

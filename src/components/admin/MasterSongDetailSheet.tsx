@@ -62,7 +62,7 @@ export function MasterSongDetailSheet({
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
   const isCurrentSong = currentSong?.id === song.id;
 
-  const [showLyrics, setShowLyrics] = useState(true);
+  const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas'>('lyrics');
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Only use Full Mix audio in the detail sheet - other parts are for AudioLab
@@ -213,7 +213,7 @@ export function MasterSongDetailSheet({
                 {song.conductor && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
-                      Conductor
+                      Conductor's Guide
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900 italic">
                       <Mic size={14} className="sm:w-3 sm:h-3 text-violet-500" />
@@ -255,9 +255,37 @@ export function MasterSongDetailSheet({
                   </div>
                 )}
               </div>
+              </div>
+            </div>
+            
+            {/* Tab Navigation inside header - Styled like SongDetailModal */}
+            <div className="flex justify-center items-center gap-2 mt-4 sm:mt-2 px-1 relative z-10">
+              <button
+                onClick={() => setActiveTab('lyrics')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all duration-200 border ${
+                  activeTab === 'lyrics'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
+                }`}
+              >
+                <BookOpen className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-tight">Lyrics</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('solfas')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all duration-200 border ${
+                  activeTab === 'solfas'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
+                }`}
+              >
+                <Music className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-tight">Conductor's Guide</span>
+              </button>
             </div>
           </div>
-        </div>
+
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 bg-slate-50/80 min-h-0">
@@ -298,54 +326,67 @@ export function MasterSongDetailSheet({
             </div>
           )}
 
-          {/* Lyrics Section */}
-          {song.lyrics && (
-            <div className="mb-4">
-              <button
-                onClick={() => setShowLyrics(!showLyrics)}
-                className="w-full flex items-center justify-between px-4 sm:px-3 py-3 sm:py-2.5 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center gap-2">
-                  <BookOpen size={20} className="sm:w-[18px] sm:h-[18px] text-purple-600" />
-                  <span className="font-medium text-slate-900 text-base sm:text-sm">Lyrics</span>
-                </div>
-                {showLyrics ? (
-                  <ChevronUp size={20} className="sm:w-[18px] sm:h-[18px] text-slate-400" />
-                ) : (
-                  <ChevronDown size={20} className="sm:w-[18px] sm:h-[18px] text-slate-400" />
-                )}
-              </button>
-              {showLyrics && (
-                <div className="mt-2 p-4 bg-white rounded-xl border border-slate-100 overflow-y-auto">
-                  <style>{`
-                    .lyrics-content {
-                      white-space: pre-wrap;
-                      word-wrap: break-word;
-                      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-                      font-size: 14px;
-                      line-height: 1.6;
-                    }
-                    .lyrics-content div {
-                      margin-bottom: 0;
-                      padding: 0;
-                    }
-                    .lyrics-content br {
-                      display: block;
-                      content: "";
-                    }
-                    .lyrics-content b,
-                    .lyrics-content strong {
-                      font-weight: 700;
-                    }
-                  `}</style>
-                  <pre
-                    className="lyrics-content text-slate-800 whitespace-pre-wrap font-mono text-sm"
-                    dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(song.lyrics) }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+          {/* Conditional Content based on activeTab */}
+          <div className="mb-4">
+            {activeTab === 'lyrics' && song.lyrics && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-4 overflow-hidden">
+                <style>{`
+                  .lyrics-content {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+                    font-size: 15px;
+                    line-height: 1.7;
+                  }
+                  .lyrics-content b, .lyrics-content strong {
+                    font-weight: 800;
+                    color: #4a1d96;
+                    display: block;
+                    margin-bottom: 0px;
+                    margin-top: 8px;
+                  }
+                `}</style>
+                <pre
+                  className="lyrics-content text-slate-800 whitespace-pre-wrap font-mono"
+                  dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(song.lyrics) }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'solfas' && song.solfa && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-4 overflow-hidden">
+                <style>{`
+                  .solfa-content {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    font-style: italic;
+                    color: #065f46;
+                  }
+                `}</style>
+                <pre
+                  className="solfa-content whitespace-pre-wrap font-mono"
+                  dangerouslySetInnerHTML={{ __html: song.solfa }}
+                />
+              </div>
+            )}
+            
+            {activeTab === 'lyrics' && !song.lyrics && (
+               <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+                  <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium">No lyrics available for this song.</p>
+               </div>
+            )}
+            
+            {activeTab === 'solfas' && !song.solfa && (
+               <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+                  <Music className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium">No conductor's guide available.</p>
+               </div>
+            )}
+          </div>
         </div>
 
         {/* Footer Actions - Only show for non-HQ zones */}
