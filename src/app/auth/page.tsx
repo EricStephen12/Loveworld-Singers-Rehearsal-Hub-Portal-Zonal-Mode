@@ -8,6 +8,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
+import { useAuthContext } from '@/contexts/AuthContext'
 
 // Helper function to convert Firebase errors to user-friendly messages
 function sanitizeError(error: string): string {
@@ -60,6 +61,7 @@ const SPECIAL_LOGIN_MAP: Record<string, { email: string }> = {
 
 function AuthPageContent() {
   const router = useRouter()
+  const { user, loading } = useAuthContext()
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -131,6 +133,19 @@ function AuthPageContent() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [])
+
+  // ️ STRATEGIC STATE-DRIVEN REDIRECT
+  // Instead of a hard redirect or a timed delay, we watch the AuthContext.
+  // As soon as the context detects the user and the middleware cookie is set, we transition.
+  useEffect(() => {
+    if (user && !loading) {
+      // Check for returnUrl or default to /home
+      const urlParams = new URLSearchParams(window.location.search)
+      const returnUrl = urlParams.get('returnUrl')
+      
+      router.replace(returnUrl || '/home')
+    }
+  }, [user, loading, router])
 
   // Validate zone code when user types
   const handleZoneCodeChange = async (code: string) => {
@@ -275,10 +290,7 @@ function AuthPageContent() {
           setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
         }
 
-        // Go directly to home - Firebase auth listener will handle the rest
-        setTimeout(() => {
-          router.push('/home')
-        }, 1000)
+        // NO MANUAL REDIRECT HERE - The useEffect above will handle it as soon as 'user' updates
       } else {
         setSuccess('Checking your account...')
 
@@ -304,19 +316,12 @@ function AuthPageContent() {
 
         setSuccess('Login successful! Welcome back!')
 
+        // NO MANUAL REDIRECT HERE - The useEffect above will handle it as soon as 'user' updates
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('justLoggedIn', 'true')
+          const { AUTH_CACHE_KEY } = require('@/config/routes')
+          localStorage.setItem(AUTH_CACHE_KEY, 'true')
         }
-
-        // Redirect after showing success message - Faster transition (500ms)
-        setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('justLoggedIn')
-            const { AUTH_CACHE_KEY } = require('@/config/routes')
-            localStorage.setItem(AUTH_CACHE_KEY, 'true')
-          }
-          router.replace('/home')
-        }, 500)
       }
     } catch (error: any) {
  console.error('Auth error:', error)
@@ -375,7 +380,7 @@ function AuthPageContent() {
       setIsLoading(false)
       setIsCheckingAccount(false)
 
-      router.push('/home')
+      // The useEffect above will handle the actual router transition
     } catch (error: any) {
  console.error('Account selection error:', error)
       setError(sanitizeError('Failed to sign in with selected account. Please use email/password login.'))

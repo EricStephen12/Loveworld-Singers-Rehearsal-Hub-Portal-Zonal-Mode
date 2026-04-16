@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { Search, Music, Play, Pause, Loader2, ArrowLeft, ArrowUpDown, ChevronDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -317,8 +317,8 @@ export default function AllMinisteredSongsPage() {
           onTitleClick={() => router.push('/home')}
         />
 
-        {/* Search */}
-        <div className="px-4 py-3 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+        {/* Search and Filters */}
+        <div className="relative z-30 px-4 py-3 bg-white/80 backdrop-blur-sm border-b border-gray-100">
           <div className="flex items-center gap-3 mb-3">
             <h2 className="text-lg font-semibold text-gray-900">
               {filteredSongs.length} song{filteredSongs.length !== 1 ? 's' : ''}
@@ -364,10 +364,10 @@ export default function AllMinisteredSongsPage() {
               {isLeadSingerDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setIsLeadSingerDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-20 min-w-[200px] max-h-[300px] overflow-y-auto">
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
                     <button
                       onClick={() => {
                         setSelectedLeadSinger('')
@@ -419,10 +419,10 @@ export default function AllMinisteredSongsPage() {
               {isProgramsDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setIsProgramsDropdownOpen(false)}
                   />
-                  <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-20 min-w-[200px] max-h-[300px] overflow-y-auto">
+                  <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
                     <button
                       onClick={() => {
                         setSelectedProgramId('')
