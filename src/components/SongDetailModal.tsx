@@ -1045,7 +1045,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                           <span className="font-bold">x{displayedSongData?.rehearsalCount ?? 0}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                          <span><span className="font-semibold uppercase">CONDUCTOR'S GUIDE:</span> {displayedSongData?.conductor || ''}</span>
+                          <span><span className="font-semibold uppercase">CONDUCTOR:</span> {displayedSongData?.conductor || ''}</span>
                           <span><span className="font-semibold uppercase">KEY:</span> {displayedSongData?.key || ''}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">

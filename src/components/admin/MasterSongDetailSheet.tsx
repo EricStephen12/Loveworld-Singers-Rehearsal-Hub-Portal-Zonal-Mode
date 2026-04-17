@@ -213,7 +213,7 @@ export function MasterSongDetailSheet({
                 {song.conductor && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
-                      Conductor's Guide
+                      Conductor
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900 italic">
                       <Mic size={14} className="sm:w-3 sm:h-3 text-violet-500" />
