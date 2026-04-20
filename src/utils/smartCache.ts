@@ -1,4 +1,4 @@
-﻿// Smart Cache Manager - Intelligent cache invalidation for production updates
+// Cache management
 
 interface CacheConfig {
   key: string;
@@ -45,15 +45,13 @@ class SmartCacheManager {
     }
   }
 
-  // Set cache with smart invalidation - DISABLED (no caching)
+  // Caching disabled
   public setCache(config: CacheConfig, data: any): void {
-    // No caching - always return without storing
     return;
   }
 
-  // Get cache with smart validation - DISABLED (no caching)
+  // Caching disabled
   public getCache(key: string): any | null {
-    // No caching - always return null to force fresh data
     return null;
   }
 
@@ -88,7 +86,7 @@ class SmartCacheManager {
       return a[1].timestamp - b[1].timestamp;
     });
 
-    // Remove oldest low priority entries
+    // Eviction logic
     const toRemove = entries.slice(0, Math.floor(this.MAX_CACHE_SIZE * 0.2));
     toRemove.forEach(([key]) => {
       this.cache.delete(key);
@@ -121,7 +119,7 @@ class SmartCacheManager {
     }
   }
 
-  // Get cache statistics
+  // Metadata
   public getCacheStats(): { size: number; entries: string[] } {
     return {
       size: this.cache.size,
@@ -129,7 +127,7 @@ class SmartCacheManager {
     };
   }
 
-  // Force refresh specific cache
+  // Force refresh
   public async refreshCache(key: string, fetchFn: () => Promise<any>, config: CacheConfig): Promise<any> {
     this.clearCache(key);
     
@@ -146,7 +144,7 @@ class SmartCacheManager {
 
 export const smartCache = SmartCacheManager.getInstance();
 
-// Helper functions for common cache patterns
+// Cache helpers
 export const createCacheConfig = (
   key: string, 
   duration: number, 
@@ -157,7 +155,7 @@ export const createCacheConfig = (
   priority
 });
 
-// Instagram-style cache durations
+// Cache durations
 export const CACHE_DURATIONS = {
   NO_CACHE: 0, // No cache for real-time features
   REAL_TIME: 1 * 1000, // 1 second for dynamic content
@@ -167,21 +165,19 @@ export const CACHE_DURATIONS = {
   VERY_LONG: 2 * 60 * 60 * 1000 // 2 hours for extremely static content
 } as const;
 
-// High priority cache keys (won't be evicted easily)
+// Priority keys
 export const HIGH_PRIORITY_KEYS = [
   'user-profile',
   'app-settings',
   'auth-token'
 ];
 
-// Medium priority cache keys
 export const MEDIUM_PRIORITY_KEYS = [
   'pages-data',
   'songs-data',
   'categories-data'
 ];
 
-// Low priority cache keys (can be evicted first)
 export const LOW_PRIORITY_KEYS = [
   'search-results',
   'temp-data',

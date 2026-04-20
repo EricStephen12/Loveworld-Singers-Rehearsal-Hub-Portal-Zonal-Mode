@@ -1,5 +1,4 @@
-﻿// Low Data Firebase Service - Minimizes Firebase costs and requests
-// Instagram-style optimization for poor connections
+// Low Data Firebase Service
 
 import { FirebaseDatabaseService } from './firebase-database';
 import { lowDataOptimizer } from '@/utils/low-data-optimizer';
@@ -14,7 +13,7 @@ class FirebaseLowDataService {
     return FirebaseLowDataService.instance;
   }
 
-  // Get collection with smart caching
+  // Caching getters
   async getCollection(collection: string, useCache = true): Promise<any[]> {
     const cacheKey = `collection_${collection}`;
     
@@ -42,7 +41,6 @@ class FirebaseLowDataService {
     return lowDataOptimizer.get(cacheKey) || [];
   }
 
-  // Get document with smart caching
   async getDocument(collection: string, docId: string, useCache = true): Promise<any> {
     const cacheKey = `document_${collection}_${docId}`;
     
@@ -70,7 +68,6 @@ class FirebaseLowDataService {
     return lowDataOptimizer.get(cacheKey) || null;
   }
 
-  // Get songs by page ID with smart caching
   async getSongsByPageId(pageId: number, useCache = true): Promise<any[]> {
     const cacheKey = `songs_page_${pageId}`;
     
@@ -98,7 +95,6 @@ class FirebaseLowDataService {
     return lowDataOptimizer.get(cacheKey) || [];
   }
 
-  // Get songs by category with smart caching
   async getSongsByCategory(category: string, useCache = true): Promise<any[]> {
     const cacheKey = `songs_category_${category}`;
     
@@ -126,7 +122,7 @@ class FirebaseLowDataService {
     return lowDataOptimizer.get(cacheKey) || [];
   }
 
-  // Get comments with smart caching (shorter TTL for real-time feel)
+  // Comments getter
   async getComments(songId: number, useCache = true): Promise<any[]> {
     const cacheKey = `comments_${songId}`;
     
@@ -142,7 +138,7 @@ class FirebaseLowDataService {
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
       const data = await FirebaseDatabaseService.getCollectionWhere('comments', 'songId', songId, '==');
       
-      // Cache the data with shorter TTL for comments
+      // Cache update
       if (useCache) {
         lowDataOptimizer.set(cacheKey, data);
       }
@@ -167,7 +163,7 @@ class FirebaseLowDataService {
     }
   }
 
-  // Get cache statistics
+  // Metadata
   getCacheStats(): { size: number; keys: string[]; connectionInfo: any } {
     return {
       ...lowDataOptimizer.getCacheStats(),

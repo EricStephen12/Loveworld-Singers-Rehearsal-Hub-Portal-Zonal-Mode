@@ -16,7 +16,7 @@ import { useAdminTheme } from './AdminThemeProvider'
 import { isHQGroup } from '@/config/zones'
 import CustomLoader from '@/components/CustomLoader'
 
-// Dashboard cache for reducing Firebase reads
+// Dashboard cache
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 interface DashboardCache {
   members: any[];
@@ -33,7 +33,7 @@ function isCacheValid(cache: DashboardCache | undefined): boolean {
   return Date.now() - cache.timestamp < CACHE_TTL;
 }
 
-// Animated counter component
+// Counter component
 function AnimatedCounter({ value, duration = 800 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
   const ref = useRef<number>(0);
@@ -61,7 +61,7 @@ function AnimatedCounter({ value, duration = 800 }: { value: number; duration?: 
   return <>{display.toLocaleString()}</>;
 }
 
-// Time-based greeting
+// Greeting logic
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
@@ -69,7 +69,7 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-// Relative time helper
+// Time helpers
 function timeAgo(dateInput: any): string {
   if (!dateInput) return '';
   let date: Date;
@@ -273,9 +273,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
     <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white lg:bg-gradient-to-br lg:from-slate-50 lg:via-white lg:to-slate-50">
       <div className="max-w-7xl mx-auto">
 
-        {/* ═══════════════════════════════════════════════════ */}
-        {/* GREETING BANNER                                    */}
-        {/* ═══════════════════════════════════════════════════ */}
+        {/* Greeting Banner */}
         <div className="px-4 pt-5 pb-1 lg:px-6 lg:pt-8 lg:pb-2">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -309,9 +307,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
 
         <div className="px-4 lg:px-6 pt-4 pb-6 space-y-5">
 
-          {/* ═══════════════════════════════════════════════════ */}
-          {/* STATS — Horizontal scroll on mobile, grid desktop  */}
-          {/* ═══════════════════════════════════════════════════ */}
+          {/* Statistics */}
           <div>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Overview</p>
             <div className="flex lg:grid lg:grid-cols-5 gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:overflow-visible snap-x snap-mandatory scrollbar-hide">
@@ -410,9 +406,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
           </div>
 
 
-          {/* ═══════════════════════════════════════════════════ */}
-          {/* INVITE CODE — Compact pill                         */}
-          {/* ═══════════════════════════════════════════════════ */}
+          {/* Invite Code */}
           <div>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Invite Code</p>
             <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-2xl border border-gray-100">
@@ -439,9 +433,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════ */}
-          {/* QUICK ACTIONS — Clean icon buttons                 */}
-          {/* ═══════════════════════════════════════════════════ */}
+          {/* Quick Actions */}
           <div>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Actions</p>
             <div className="grid grid-cols-4 gap-2 lg:gap-3">
@@ -490,9 +482,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════ */}
-          {/* RECENT MEMBERS — Premium card                      */}
-          {/* ═══════════════════════════════════════════════════ */}
+          {/* Recent Members */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {/* Card Header */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-50">

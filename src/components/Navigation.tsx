@@ -20,7 +20,6 @@ export default function Navigation() {
     <nav className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         <div className="flex justify-between items-center h-16 sm:h-20">
-          {/* Logo - Elite Branding */}
           <div className="flex items-center">
             <Link href="/home" className="flex items-center gap-3 group transition-all">
               <div className="w-9 h-9 sm:w-11 sm:h-11 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-transform duration-300">
@@ -33,7 +32,6 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Premium */}
           <div className="hidden md:flex items-center space-x-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -54,7 +52,6 @@ export default function Navigation() {
             })}
           </div>
 
-          {/* Mobile menu button - Touch Optimized */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -69,7 +66,6 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Navigation - Frosted Elite Dropdown */}
         {isMenuOpen && (
           <div className="md:hidden animate-in slide-in-from-top-4 duration-300 overflow-hidden">
             <div className="px-4 pt-4 pb-10 space-y-3 bg-white/40 backdrop-blur-2xl border-t border-slate-100/50">

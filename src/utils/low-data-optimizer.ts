@@ -1,5 +1,4 @@
-﻿// Low Data Optimizer - Super fast loading with minimal Firebase costs
-// Instagram-style optimization for poor connections
+// Network optimization
 
 interface ConnectionInfo {
   effectiveType: string;
@@ -14,7 +13,7 @@ class LowDataOptimizer {
   private isLowData = false;
   private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 
-  // Cache TTLs based on connection speed
+  // TTL configuration
   private readonly TTL = {
     FAST: 5 * 60 * 1000,      // 5 minutes for fast connections
     SLOW: 30 * 60 * 1000,     // 30 minutes for slow connections
@@ -44,7 +43,7 @@ class LowDataOptimizer {
         saveData: connection.saveData || false
       };
 
-      // Determine if this is a low data connection
+      // Status determination
       this.isLowData =
         this.connectionInfo.effectiveType === 'slow-2g' ||
         this.connectionInfo.effectiveType === '2g' ||
@@ -65,7 +64,7 @@ class LowDataOptimizer {
       });
     }
 
-    // Listen for online/offline events
+    // Connectivity listeners
     window.addEventListener('online', () => {
       this.detectConnection();
     });
@@ -75,7 +74,7 @@ class LowDataOptimizer {
     });
   }
 
-  // Get cache TTL based on connection speed
+  // TTL calculation
   getCacheTTL(): number {
     if (!navigator.onLine) return this.TTL.OFFLINE;
     if (!this.connectionInfo) return this.TTL.FAST;
@@ -91,7 +90,7 @@ class LowDataOptimizer {
     }
   }
 
-  // Smart caching with connection-aware TTL
+  // Caching
   set(key: string, data: any): void {
     const ttl = this.getCacheTTL();
     this.cache.set(key, {
@@ -100,7 +99,7 @@ class LowDataOptimizer {
       ttl
     });
 
-    // Also store in localStorage for persistence
+    // Persistence
     try {
       localStorage.setItem(`lowdata_${key}`, JSON.stringify({
         data,
@@ -141,7 +140,7 @@ class LowDataOptimizer {
     return null;
   }
 
-  // Remove specific item from cache
+  // Eviction
   remove(key: string): void {
     // Remove from memory
     this.cache.delete(key);
@@ -163,7 +162,7 @@ class LowDataOptimizer {
     return true;
   }
 
-  // Get connection info
+  // Metadata
   getConnectionInfo(): ConnectionInfo | null {
     return this.connectionInfo;
   }
@@ -181,7 +180,7 @@ class LowDataOptimizer {
     });
   }
 
-  // Get cache stats
+  // Statistics
   getCacheStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,

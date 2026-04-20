@@ -2,12 +2,16 @@
 
 import React, { useState } from 'react';
 import {
-  Bell,
   Send,
-  MessageSquare
+  CheckCircle2,
+  X,
+  Megaphone,
+  Bell,
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import CustomLoader from '@/components/CustomLoader';
+import { useZone } from '@/hooks/useZone';
 
 interface SubGroupNotificationsProps {
   subGroupId: string;
@@ -15,10 +19,13 @@ interface SubGroupNotificationsProps {
 
 export default function SubGroupNotifications({ subGroupId }: SubGroupNotificationsProps) {
   const { user } = useAuth();
+  const { currentZone } = useZone();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const themeColor = currentZone?.themeColor || '#9333ea';
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) return;
@@ -39,7 +46,7 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
         setTitle('');
         setMessage('');
         setSent(true);
-        setTimeout(() => setSent(false), 3000);
+        setTimeout(() => setSent(false), 5000);
       }
     } catch (error) {
       console.error('Error sending notification:', error);
@@ -49,63 +56,74 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
   };
 
   return (
-    <div className="flex-1 min-h-0">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Notifications</h1>
-      </div>
-
-      {/* Success Toast */}
+    <div className="flex-1 min-h-0 space-y-6 animate-in fade-in duration-700 max-w-3xl">
+      {/* Banner */}
       {sent && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-          <Bell className="w-4 h-4 text-emerald-600" />
-          <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">Message Sent</p>
+        <div className="p-4 bg-green-500 rounded-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300 shadow-md">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-white" />
+            <p className="text-sm font-semibold text-white">Message sent to all members.</p>
+          </div>
+          <button onClick={() => setSent(false)} className="p-1 text-white/80 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {/* Send Notification Form */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 max-w-2xl shadow-sm">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
-            <MessageSquare className="w-6 h-6 text-purple-600" />
+      {/* Message Composer - Matching Admin Style */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-10 shadow-sm relative overflow-hidden">
+        <div className="flex items-center gap-4 mb-8">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+            style={{ backgroundColor: themeColor }}
+          >
+            <Bell className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">New Message</h2>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Notifications</h2>
+            <p className="text-xs text-gray-400 font-medium mt-0.5">Send a message to your group members</p>
+          </div>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">
-              Subject
-            </label>
+            <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest ml-1">Subject</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="..."
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 focus:border-purple-600 focus:bg-white rounded-xl transition-all text-slate-900 font-bold placeholder:text-slate-300 text-sm"
+              placeholder="e.g. Rehearsal Update"
+              className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-semibold placeholder:text-gray-300 text-sm shadow-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">
-              Message
-            </label>
+            <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest ml-1">Message</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="..."
-              rows={5}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 focus:border-purple-600 focus:bg-white rounded-xl transition-all text-slate-900 font-bold placeholder:text-slate-300 text-sm resize-none"
+              placeholder="Write your message here..."
+              rows={6}
+              className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-medium placeholder:text-gray-300 text-sm resize-none shadow-sm leading-relaxed"
             />
           </div>
 
-          <button
-            onClick={handleSend}
-            disabled={!title.trim() || !message.trim() || sending}
-            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-purple-600/10"
-          >
-            {sending ? 'Sending...' : 'Send Message'}
-          </button>
+          <div className="pt-4 flex items-center justify-end">
+            <button
+              onClick={handleSend}
+              disabled={!title.trim() || !message.trim() || sending}
+              className="flex items-center justify-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all font-bold text-sm disabled:opacity-50 shadow-md active:scale-95"
+            >
+              {sending ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Send Message</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

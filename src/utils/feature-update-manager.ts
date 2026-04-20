@@ -1,5 +1,4 @@
-﻿// Feature Update Manager - Like Instagram PWA
-// Handles feature rollouts and cache invalidation for new features
+// Feature rollout management
 
 interface FeatureUpdate {
   featureId: string;
@@ -23,25 +22,25 @@ class FeatureUpdateManager {
   private readonly VERSION_KEY = 'app-version-info';
   private readonly LAST_CHECK_KEY = 'last-feature-check';
 
-  // Current app version - update this when you add new features
+  // App version
   private readonly CURRENT_VERSION: AppVersion = {
     version: '3.1.0', // Increment this when adding new features
     buildTime: new Date().toISOString(),
     features: [
-      'video-calls', // New video call feature
+      'video-calls',
       'enhanced-chat',
       'improved-navigation',
       'viewport-fixes'
     ],
-    forceUpdate: false // Set to true to force all users to update
+    forceUpdate: false
   };
 
-  // Feature definitions - control which users see new features
+  // Feature configuration
   private readonly FEATURES: FeatureUpdate[] = [
     {
       featureId: 'video-calls',
       version: '3.1.0',
-      rolloutPercentage: 100, // 100% rollout for video calls
+      rolloutPercentage: 100,
       enabled: true,
       cacheKeys: ['chat-cache', 'media-cache', 'user-cache'],
       description: 'Video call functionality in chat'
@@ -79,7 +78,7 @@ class FeatureUpdateManager {
     return FeatureUpdateManager.instance;
   }
 
-  // Check for feature updates and handle cache invalidation
+  // Check for updates
   public async checkForFeatureUpdates(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
 
@@ -114,7 +113,7 @@ class FeatureUpdateManager {
     }
   }
 
-  // Handle feature update - clear relevant caches
+  // Update handler
   private async handleFeatureUpdate(): Promise<void> {
     try {
       const cacheKeysToClear = new Set<string>();
@@ -174,7 +173,7 @@ class FeatureUpdateManager {
 
       if (!feature.enabled) return false;
 
-      // Check rollout percentage (like Instagram does)
+      // Check rollout percentage
       const userId = this.getUserId();
       const userHash = this.hashUserId(userId);
       const rolloutThreshold = feature.rolloutPercentage / 100;
@@ -186,15 +185,15 @@ class FeatureUpdateManager {
     }
   }
 
-  // Get user ID for consistent feature rollout
+  // Get user identifier
   private getUserId(): string {
-    // Try to get from auth context or generate consistent ID
+    // Auth fallback
     const authUser = localStorage.getItem('userAuthenticated');
     if (authUser) {
       return authUser;
     }
 
-    // Generate consistent ID based on browser fingerprint
+    // Browser fingerprint fallback
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     ctx?.fillText('feature-rollout', 10, 10);
@@ -203,7 +202,7 @@ class FeatureUpdateManager {
     return btoa(fingerprint).slice(0, 16);
   }
 
-  // Hash user ID for consistent rollout
+  // Consistency hash
   private hashUserId(userId: string): number {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
@@ -214,14 +213,14 @@ class FeatureUpdateManager {
     return Math.abs(hash) / 2147483647; // Normalize to 0-1
   }
 
-  // Show update notification to user via notification system
+  // UI notification
   // DISABLED: Push notifications for feature updates are disabled
   private async showUpdateNotification(): Promise<void> {
     // Disabled - no longer broadcasting push notifications for feature updates
     return;
   }
 
-  // Force refresh for all users (emergency updates)
+  // Emergency refresh
   public forceRefresh(): void {
     if (typeof window === 'undefined') return;
 
@@ -239,7 +238,7 @@ class FeatureUpdateManager {
     window.location.reload();
   }
 
-  // Get current version info
+  // Metadata getters
   public getVersionInfo(): AppVersion {
     return { ...this.CURRENT_VERSION };
   }

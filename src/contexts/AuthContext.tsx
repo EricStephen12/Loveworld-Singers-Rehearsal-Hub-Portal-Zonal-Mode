@@ -8,10 +8,13 @@ import { SessionManager } from '@/lib/session-manager'
 
 
 import { updateUserPresence } from '@/lib/presence-service'
+import { UserProfile } from '@/types/supabase'
+import { FirebaseDatabaseService } from '@/lib/firebase-database'
 
 
 interface AuthContextType {
   user: User | null
+  profile: UserProfile | null
   loading: boolean
   signOut: () => Promise<void>
 }
@@ -19,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // ️ INSTANT SESSION ADOPTION (Prevents accidental logouts on first boot)
+  // Session sync
   if (typeof window !== 'undefined') {
     const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';
     const hasCookie = document.cookie.includes('lwsrh_is_logged_in=true');
@@ -33,9 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return auth.currentUser
   })
 
-  const [loading, setLoading] = useState(() => !auth.currentUser)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // ️ SESSION MIGRATION BRIDGE (Prevents accidental logouts on first load)
+  // Lifecycle
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hasUser = localStorage.getItem('lwsrh_has_user') === 'true';
@@ -48,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // GLOBAL PRESENCE TRACKING
+  // Presence
   useEffect(() => {
     if (!user?.uid) return
 
@@ -88,23 +92,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.uid])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
-      setLoading(false)
-
-      // Start Session Tracking (Kick-Out Logic)
+      
       if (firebaseUser) {
+        // Fetch profile
+        const userProfile = await FirebaseDatabaseService.getUserProfile(firebaseUser.uid)
+        setProfile(userProfile as UserProfile | null)
         SessionManager.startActivityTracking(firebaseUser.uid)
       } else {
-        // Clear all tracking and exemptions on logout
+        setProfile(null)
         SessionManager.clearSessionState()
       }
+      
+      setLoading(false)
 
-      // Update cache for instant next load
+      // Persistence
       if (typeof window !== 'undefined') {
         localStorage.setItem('lwsrh_has_user', firebaseUser ? 'true' : 'false')
         
-        //  Set cookie for Middleware route protection
+        // Auth cookie for middleware
         if (firebaseUser) {
           document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
         } else {
@@ -113,12 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    // Failsafe: If Firebase takes too long (e.g. network issues), stop loading
-    // This allows the app to proceed (likely to auth page) instead of hanging
+   
     const safetyTimeout = setTimeout(() => {
       setLoading((currentLoading) => {
         if (currentLoading) {
- console.warn('️ AuthContext: Firebase init timeout - forcing loading=false')
+ console.warn('AuthContext: Firebase init timeout - forcing loading=false')
           return false
         }
         return currentLoading
@@ -148,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut: handleSignOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut: handleSignOut }}>
       {children}
     </AuthContext.Provider>
   )

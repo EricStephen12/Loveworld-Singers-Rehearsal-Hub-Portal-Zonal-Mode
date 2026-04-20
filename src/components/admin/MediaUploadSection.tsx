@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -105,12 +105,10 @@ export default function MediaUploadSection() {
     finally { setIsLoading(false) }
   }
 
-  // Auto-select first category when loaded if type is empty
   useEffect(() => {
     if (categories.length > 0 && !videoForm.type) {
       setVideoForm(prev => ({ ...prev, type: categories[0].slug }))
     }
-    // Also update reset logic to use fresh categories
   }, [categories])
 
   const resetVideoForm = () => {
@@ -160,22 +158,18 @@ export default function MediaUploadSection() {
         videoId = await mediaVideosService.create(data, videoForm.notifyUsers)
       }
 
-      // Handle multi-playlist assignment (YouTube-style)
       const newPlaylistIds = videoForm.playlistIds
       const oldPlaylistIds = selectedVideo
         ? playlists.filter(p => p.videoIds.includes(selectedVideo.id)).map(p => p.id)
         : []
 
-      // Calculate diff
       const toAdd = newPlaylistIds.filter(id => !oldPlaylistIds.includes(id))
       const toRemove = oldPlaylistIds.filter(id => !newPlaylistIds.includes(id))
 
-      // Add to new playlists
       for (const pId of toAdd) {
         await addVideoToPlaylist(pId, videoId)
       }
 
-      // Remove from deselected playlists
       for (const pId of toRemove) {
         await removeVideoFromPlaylist(pId, videoId)
       }
@@ -198,7 +192,6 @@ export default function MediaUploadSection() {
   }
 
   const handleEditVideo = (video: MediaVideo) => {
-    // Find ALL playlists this video belongs to
     const videoPlaylistIds = playlists
       .filter(p => p.videoIds.includes(video.id))
       .map(p => p.id)
@@ -261,7 +254,7 @@ export default function MediaUploadSection() {
       showToast('success', 'Playlist deleted!')
       setDeleteConfirm(null)
       setSelectedPlaylist(null);
-      setView('playlists'); // Go back to playlists list
+      setView('playlists');
       loadData()
     } catch (e) {
  console.error(' Failed to delete playlist:', e)
@@ -343,7 +336,6 @@ export default function MediaUploadSection() {
         if (!err && res?.event === 'success') {
           if (type === 'video') {
             if (isBatch) {
-              // Extract filename as title
               const fileName = res.info.original_filename || 'New Video';
               const cleanTitle = fileName.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
               setBatchFiles(prev => [...prev, {
@@ -354,7 +346,6 @@ export default function MediaUploadSection() {
               if (view !== 'batch-upload') setView('batch-upload');
             } else {
               setVideoForm(p => ({ ...p, videoUrl: res.info.secure_url }));
-              // Generate auto thumbnail if not set
               if (!videoForm.thumbnail) {
                 const autoThumb = getCloudinaryThumbnailUrl(res.info.secure_url);
                 setVideoForm(p => ({ ...p, thumbnail: autoThumb }));
@@ -372,7 +363,6 @@ export default function MediaUploadSection() {
   const filteredPlaylists = playlists.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   const getPlaylistThumb = (p: AdminPlaylist) => p.thumbnail || (p.videoIds.length > 0 ? videos.find(v => v.id === p.videoIds[0])?.thumbnail : '') || ''
 
-  // Render toast notification
   const renderToast = () => {
     if (!toast) return null
     return (
@@ -383,7 +373,6 @@ export default function MediaUploadSection() {
     )
   }
 
-  // Render delete confirmation modal
   const renderDeleteModal = () => {
     if (!deleteConfirm) return null
     return (
@@ -431,8 +420,6 @@ export default function MediaUploadSection() {
     )
   }
 
-  // Videos List
-  // Render Helper: Sidebar
   const renderSidebar = () => {
     const items = [
       { id: 'videos', label: 'Content', icon: Film, count: videos.length },
@@ -442,7 +429,6 @@ export default function MediaUploadSection() {
 
     return (
       <>
-        {/* Mobile Backdrop */}
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] lg:hidden animate-in fade-in duration-300"
@@ -450,7 +436,6 @@ export default function MediaUploadSection() {
           />
         )}
 
-        {/* Sidebar Container */}
         <div className={`
         fixed inset-y-0 left-0 z-[100] lg:sticky lg:top-0 h-screen transition-all duration-300
         ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} 
@@ -465,7 +450,6 @@ export default function MediaUploadSection() {
           </button>
 
           <div className="py-8 h-full flex flex-col overflow-y-auto scrollbar-hide">
-            {/* Logo area */}
             <div className="flex items-center gap-3 mb-10 px-6 min-h-[40px]">
               <div
                 className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
@@ -530,7 +514,6 @@ export default function MediaUploadSection() {
     )
   }
 
-  // Render Helper: Videos List
   function renderVideosList() {
     const filtered = videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase()))
     return (
@@ -573,7 +556,6 @@ export default function MediaUploadSection() {
               onBlur={(e) => !searchQuery && e.currentTarget.parentElement?.querySelector('svg')?.removeAttribute('style')}
             />
           </div>
-          {/* View Toggle */}
           <div className="flex gap-1 bg-gray-50 rounded p-1">
             <button
               onClick={() => setViewMode('table')}
@@ -608,7 +590,6 @@ export default function MediaUploadSection() {
             <h3 className="text-xl font-bold text-slate-400">No videos found</h3>
           </div>
         ) : viewMode === 'table' ? (
-          // TABLE VIEW (YouTube Studio Style)
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
             {/* Table Header */}
             <div className="grid grid-cols-[40px_100px_1fr_100px_100px_100px_60px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
@@ -702,7 +683,6 @@ export default function MediaUploadSection() {
             })}
           </div>
         ) : (
-          // GRID VIEW (Original)
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
             {filtered.map(video => {
               const isSelected = selectedVideoIds.includes(video.id)
@@ -771,7 +751,6 @@ export default function MediaUploadSection() {
     )
   }
 
-  // Main Component Render
   return (
     <div className="h-full flex bg-[#f8fafc] overflow-hidden">
       {renderToast()}

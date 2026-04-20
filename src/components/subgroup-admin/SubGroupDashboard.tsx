@@ -5,129 +5,242 @@ import {
   Users, 
   Music, 
   Calendar, 
-  Clock,
-  Bell
+  Bell, 
+  ArrowRight, 
+  TrendingUp,
+  CheckCircle,
+  FileText,
+  ChevronRight,
+  Activity,
+  Clock
 } from 'lucide-react';
-import { SubGroup } from '@/lib/subgroup-service';
 import { SubGroupDatabaseService } from '@/lib/subgroup-database-service';
+import { useZone } from '@/hooks/useZone';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SubGroupDashboardProps {
-  subGroup: SubGroup;
-  onNavigate?: (section: string) => void;
+  subGroup: any;
+  onNavigate: (section: string) => void;
+}
+
+// Greeting logic
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDashboardProps) {
+  const { currentZone } = useZone();
+  const { profile } = useAuth();
   const [stats, setStats] = useState({
-    totalMembers: 0,
-    totalSongs: 0,
-    totalRehearsals: 0,
-    upcomingRehearsals: 0
+    memberCount: 0,
+    songCount: 0,
+    rehearsalCount: 0,
+    recentMembers: [] as any[]
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const themeColor = currentZone?.themeColor || '#9333ea';
+  const firstName = profile?.first_name || 'Admin';
 
   useEffect(() => {
-    loadStats();
-  }, [subGroup.id]);
+    const loadDashboardData = async () => {
+      if (!subGroup?.id) return;
+      try {
+        const [members, songs, rehearsals] = await Promise.all([
+          SubGroupDatabaseService.getSubGroupMembers(subGroup.id),
+          SubGroupDatabaseService.getSubGroupSongs(subGroup.id),
+          SubGroupDatabaseService.getSubGroupRehearsals(subGroup.id)
+        ]);
 
-  const loadStats = async () => {
-    setIsLoading(true);
-    try {
-      const statsData = await SubGroupDatabaseService.getSubGroupStats(subGroup.id);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setStats({
+          memberCount: members.length,
+          songCount: songs.length,
+          rehearsalCount: rehearsals.length,
+          recentMembers: members.slice(0, 5)
+        });
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const statCards = [
-    { 
-      label: 'Members', 
-      value: stats.totalMembers, 
-      icon: Users, 
-      color: 'bg-blue-100 text-blue-600' 
-    },
-    { 
-      label: 'Songs', 
-      value: stats.totalSongs, 
-      icon: Music, 
-      color: 'bg-purple-100 text-purple-600' 
-    },
-    { 
-      label: 'Rehearsals', 
-      value: stats.totalRehearsals, 
-      icon: Calendar, 
-      color: 'bg-green-100 text-green-600' 
-    },
-    { 
-      label: 'Upcoming', 
-      value: stats.upcomingRehearsals, 
-      icon: Clock, 
-      color: 'bg-orange-100 text-orange-600' 
-    },
-  ];
+    loadDashboardData();
+  }, [subGroup?.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 flex flex-col p-6 lg:p-10 space-y-12">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-1">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color} bg-opacity-10`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xl font-black text-slate-900 tracking-tight leading-none">
-                    {isLoading ? '...' : stat.value}
-                  </p>
-                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">{stat.label}</p>
-                </div>
-            </div>
-          );
-        })}
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Greeting Banner - Matching Main Admin */}
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+          {getGreeting()}, {firstName}
+        </h1>
+        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+          <span
+            className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: themeColor }}
+          />
+          {subGroup?.name}
+        </p>
       </div>
 
-      {/* Main Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button 
-          onClick={() => onNavigate?.('Pages')}
-          className="flex flex-col items-start gap-4 p-8 bg-white border border-slate-100 rounded-[2rem] hover:border-purple-600/20 transition-all text-left"
-        >
-          <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-purple-600 border border-slate-100">
-            <Calendar className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="block text-lg font-black text-slate-900 uppercase tracking-tight">Songs</span>
-          </div>
-        </button>
+      {/* Statistics - Matching Main Admin Style */}
+      <div>
+        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Overview</p>
+        <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:overflow-visible snap-x snap-mandatory scrollbar-hide">
+          <StatCard icon={Users} label="Members" value={stats.memberCount} color="blue" />
+          <StatCard icon={Music} label="Songs" value={stats.songCount} color="purple" themeColor={themeColor} />
+          <StatCard icon={Calendar} label="Setlists" value={stats.rehearsalCount} color="emerald" />
+          <StatCard icon={Activity} label="Status" value="Active" color="orange" />
+        </div>
+      </div>
 
-        <button 
-          onClick={() => onNavigate?.('Members')}
-          className="flex flex-col items-start gap-4 p-8 bg-white border border-slate-100 rounded-[2rem] hover:border-blue-600/20 transition-all text-left"
-        >
-          <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-blue-600 border border-slate-100">
-            <Users className="w-6 h-6" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Quick Actions */}
+        <div className="lg:col-span-8 space-y-6">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Actions</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ActionTile 
+              icon={Music} 
+              title="Songs" 
+              desc="Manage your song library" 
+              onClick={() => onNavigate('Songs')}
+              color="purple"
+              themeColor={themeColor}
+            />
+            <ActionTile 
+              icon={Users} 
+              title="Members" 
+              desc="Manage group personnel" 
+              onClick={() => onNavigate('Members')}
+              color="blue"
+            />
+            <ActionTile 
+              icon={Bell} 
+              title="Notifications" 
+              desc="Send messages to the team" 
+              onClick={() => onNavigate('Notifications')}
+              color="orange"
+            />
           </div>
-          <div>
-            <span className="block text-lg font-black text-slate-900 uppercase tracking-tight">Members</span>
-          </div>
-        </button>
+        </div>
 
-        <button 
-          onClick={() => onNavigate?.('Notifications')}
-          className="flex flex-col items-start gap-4 p-8 bg-white border border-slate-100 rounded-[2rem] hover:border-orange-600/20 transition-all text-left"
-        >
-          <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-orange-600 border border-slate-100">
-            <Bell className="w-6 h-6" />
+        {/* Recent Members - Matching Main Admin Style */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="flex items-center justify-between mb-2">
+             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Recent Members</p>
+             <button onClick={() => onNavigate('Members')} className="text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest">See All</button>
           </div>
-          <div>
-            <span className="block text-lg font-black text-slate-900 uppercase tracking-tight">Notifications</span>
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+             {stats.recentMembers.length === 0 ? (
+               <div className="p-10 text-center text-gray-400">
+                 <p className="text-sm font-medium">No members yet</p>
+               </div>
+             ) : (
+               stats.recentMembers.map((member) => (
+                 <div key={member.id} className="flex items-center gap-3.5 p-4 hover:bg-gray-50 transition-colors">
+                   <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center font-bold text-gray-500 text-sm shadow-sm">
+                     {(member.first_name || member.name || 'U').charAt(0).toUpperCase()}
+                   </div>
+                   <div className="min-w-0 flex-1">
+                     <p className="text-sm font-semibold text-gray-900 truncate">
+                       {member.first_name ? `${member.first_name} ${member.last_name || ''}` : member.name}
+                     </p>
+                     <p className="text-[11px] text-gray-400 truncate mt-0.5">{member.email}</p>
+                   </div>
+                   <Clock className="w-3.5 h-3.5 text-gray-300" />
+                 </div>
+               ))
+             )}
           </div>
-        </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, color, themeColor }: any) {
+  const colors: any = {
+    blue: 'border-l-blue-500',
+    purple: 'border-l-purple-500',
+    emerald: 'border-l-emerald-500',
+    orange: 'border-l-orange-500'
+  };
+
+  const iconBg: any = {
+    blue: 'bg-blue-50 text-blue-600',
+    purple: 'bg-purple-50 text-purple-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    orange: 'bg-orange-50 text-orange-600'
+  };
+
+  const borderStyle = color === 'purple' && themeColor 
+    ? { borderLeftWidth: '3px', borderLeftColor: themeColor } 
+    : {};
+
+  const iconStyle = color === 'purple' && themeColor 
+    ? { backgroundColor: `${themeColor}10`, color: themeColor } 
+    : {};
+
+  return (
+    <div 
+      className={`flex-shrink-0 w-[155px] lg:w-auto bg-white rounded-2xl p-4 border border-gray-100 shadow-sm transition-all hover:shadow-md snap-start ${!themeColor && colors[color]} ${!themeColor && 'border-l-[3px]'}`}
+      style={borderStyle}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div 
+          className={`w-10 h-10 rounded-xl flex items-center justify-center ${!themeColor && iconBg[color]}`}
+          style={iconStyle}
+        >
+          <Icon className="w-5 h-5" />
+        </div>
+        <TrendingUp className="w-4 h-4 text-green-500 opacity-50" />
+      </div>
+      <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
+    </div>
+  );
+}
+
+function ActionTile({ icon: Icon, title, desc, onClick, color, themeColor }: any) {
+  const iconBg: any = {
+    purple: 'bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white',
+    blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white',
+    orange: 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white',
+    emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
+  };
+
+  const iconStyle = color === 'purple' && themeColor 
+    ? { backgroundColor: `${themeColor}10`, color: themeColor } 
+    : {};
+
+  return (
+    <button 
+      onClick={onClick}
+      className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 hover:shadow-md transition-all text-left group active:scale-[0.98]"
+    >
+      <div 
+        className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-sm ${!themeColor && iconBg[color]}`}
+        style={iconStyle}
+      >
+        <Icon className="w-6 h-6" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
+        <p className="text-[11px] text-gray-500 mt-0.5 font-medium">{desc}</p>
+      </div>
+      <ChevronRight className="w-4 h-4 text-gray-300 ml-auto group-hover:translate-x-1 transition-transform" />
+    </button>
   );
 }

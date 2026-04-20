@@ -1,4 +1,4 @@
-﻿// Offline Data Manager for LWSRH
+// Offline data management
 export class OfflineManager {
   private static instance: OfflineManager;
   private isOnline: boolean = typeof window !== 'undefined' ? navigator.onLine : true;
@@ -69,15 +69,14 @@ export class OfflineManager {
     }
   }
 
-  // Cache data for offline use
+  // Caching
   public async cacheData(key: string, data: any): Promise<void> {
     // No caching - always fetch fresh data
     return;
   }
 
-  // Get cached data - DISABLED (no caching)
+  // Cache retrieval
   public getCachedData(key: string): any | null {
-    // No caching - always return null to force fresh data
     return null;
   }
 
@@ -139,7 +138,7 @@ export class OfflineManager {
     }
   }
 
-  // Sync pending updates when online
+  // Sync logic
   private async syncPendingUpdates(): Promise<void> {
     if (this.pendingUpdates.length === 0) return;
 
@@ -160,18 +159,17 @@ export class OfflineManager {
     }
   }
 
-  // Handle data sync from service worker
+  // Event handlers
   private handleDataSync(): void {
     // Refresh data from cache or trigger re-fetch
     // You can emit events or call callbacks here to update UI
   }
 
-  // Get connection status
+  // Metadata
   public getConnectionStatus(): boolean {
     return this.isOnline;
   }
 
-  // Get pending updates count
   public getPendingUpdatesCount(): number {
     return this.pendingUpdates.length;
   }
@@ -184,7 +182,6 @@ export class OfflineManager {
     }
   }
 
-  // Get cache statistics
   public getCacheStats(): {cachedItems: number, pendingUpdates: number, isOnline: boolean} {
     return {
       cachedItems: this.dataCache.size,
@@ -194,5 +191,5 @@ export class OfflineManager {
   }
 }
 
-// Export singleton instance
+// Singleton
 export const offlineManager = OfflineManager.getInstance();

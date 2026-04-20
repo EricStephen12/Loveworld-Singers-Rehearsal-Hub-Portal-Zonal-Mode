@@ -106,10 +106,10 @@ export function KaraokeView() {
   const ratingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastLineRef = useRef(-1);
 
-  // Waveform visualization bars
+  // UI state
   const [waveformBars, setWaveformBars] = useState([4, 6, 3, 8, 12, 6, 4, 2]);
 
-  // Initialize session when view opens
+  // Session initialization
   useEffect(() => {
     const initSession = async () => {
       if (user?.uid && currentSong?.id) {
@@ -122,7 +122,7 @@ export function KaraokeView() {
     initSession();
   }, [user?.uid, currentSong?.id]);
 
-  // Initialize pitch detection when mic is active
+  // Pitch detection
   useEffect(() => {
     if (isMicActive) {
       // Set up pitch detection callback
@@ -182,7 +182,7 @@ export function KaraokeView() {
     }
   }, [player.currentTime, songDuration, songLyrics]);
 
-  // Animate waveform while playing
+  // Waveform animation
   useEffect(() => {
     if (!player.isPlaying) return;
 
@@ -352,7 +352,7 @@ export function KaraokeView() {
       {/* Main Content Area */}
       <div className="relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
 
-        {/* The Stage: Lyrics & Feedback */}
+        {/* Stage */}
         <div className="flex-1 flex flex-col justify-center relative overflow-hidden px-4 md:px-6 lg:px-12 py-10">
 
           {/* No Song / Loading States */}
@@ -408,7 +408,7 @@ export function KaraokeView() {
                   {/* Current Line (Highlighted) */}
                   <div className="relative group text-center w-full px-4 md:px-12">
 
-                    {/* The Single Animated Text Node */}
+                    {/* Lyrics node */}
                     <h1
                       className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.3] text-center tracking-tight transition-all pb-2 break-words"
                       style={{
@@ -470,7 +470,7 @@ export function KaraokeView() {
           )}
         </div>
 
-        {/* Global Control Station - Compact Footer Design */}
+        {/* Footer */}
         <footer className="relative z-30 pb-6 md:pb-12 pt-4 px-4 md:px-6 w-full max-w-2xl mx-auto flex flex-col items-center mb-6 md:mb-0">
 
           <div className="w-full bg-[#1b1224]/90 backdrop-blur-3xl border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] flex flex-col gap-4 md:gap-6">
@@ -502,7 +502,7 @@ export function KaraokeView() {
               </div>
             </div>
 
-            {/* Tactical Control Layout - Sleek Design */}
+            {/* Controls */}
             <div className="flex items-center justify-between px-2 md:px-4 mt-2">
               <div className="flex items-center gap-2 md:gap-3">
                 <button
@@ -547,7 +547,7 @@ export function KaraokeView() {
                 </button>
               </div>
 
-              {/* Mic Toggle Switch Design */}
+              {/* Mic toggle */}
               <div className="flex items-center gap-2 md:gap-3">
                 <button
                   onClick={toggleMic}

@@ -102,8 +102,7 @@ function AuthPageContent() {
   const [isRecoveredAccount, setIsRecoveredAccount] = useState(false)
   const [recoveredEmail, setRecoveredEmail] = useState('')
 
-  // NO AUTH CHECK - Zustand auth store handles redirects
-  // This prevents loops completely
+  // Auth store handles redirects
 
   // Check for URL parameters on mount (error, recovery)
   useEffect(() => {
@@ -134,9 +133,8 @@ function AuthPageContent() {
     }
   }, [])
 
-  // ️ STRATEGIC STATE-DRIVEN REDIRECT
-  // Instead of a hard redirect or a timed delay, we watch the AuthContext.
-  // As soon as the context detects the user and the middleware cookie is set, we transition.
+  // Auth state observer
+  // Transition when user is detected and context is ready
   useEffect(() => {
     if (user && !loading) {
       // Check for returnUrl or default to /home
@@ -214,7 +212,7 @@ function AuthPageContent() {
           return
         }
 
-        // Prevent account creation when completely offline to avoid partial signups
+        // Offline check
         if (typeof window !== 'undefined' && window.navigator && window.navigator.onLine === false) {
           setError('You appear to be offline. Please connect to the internet before creating your account.')
           setIsLoading(false)
@@ -294,7 +292,7 @@ function AuthPageContent() {
       } else {
         setSuccess('Checking your account...')
 
-        // Support special name-based logins (The President, The Director, PST Daba/Bisola/Rita)
+        // Special name-based logins
         const rawIdentifier = formData.email.trim()
         const key = rawIdentifier.toLowerCase()
         const special = SPECIAL_LOGIN_MAP[key]

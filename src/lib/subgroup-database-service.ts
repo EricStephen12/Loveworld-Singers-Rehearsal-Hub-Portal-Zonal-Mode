@@ -18,7 +18,9 @@ import {
   arrayUnion,
   arrayRemove,
   Timestamp,
-  FirestoreError
+  FirestoreError,
+  limit,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase-setup';
 import { authedFetch } from '@/lib/authed-fetch'
@@ -727,10 +729,40 @@ export class SubGroupDatabaseService {
    */
   static async addMembers(
     subGroupId: string,
+    zoneId: string,
     memberIds: string[]
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const subGroupRef = doc(db, 'subgroups', subGroupId);
+      
+      // 1. Ensure all members are part of the zone_members collection
+      const zoneMembersRef = collection(db, 'zone_members');
+      
+      for (const memberId of memberIds) {
+        const q = query(zoneMembersRef, where('userId', '==', memberId), where('zoneId', '==', zoneId));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          // Member is not in the zone yet, add them
+          const profileRef = doc(db, 'profiles', memberId);
+          const profileSnap = await getDoc(profileRef);
+          const profileData = profileSnap.exists() ? profileSnap.data() : {};
+          
+          const newMemberId = `mem_${Date.now()}_${memberId}`;
+          await addDoc(zoneMembersRef, {
+            id: newMemberId,
+            zoneId,
+            userId: memberId,
+            userEmail: profileData.email || '',
+            userName: profileData.first_name ? `${profileData.first_name} ${profileData.last_name || ''}` : (profileData.display_name || 'User'),
+            role: 'member',
+            joinedAt: Timestamp.now(),
+            status: 'active'
+          });
+        }
+      }
+
+      // 2. Add to subgroup
       await updateDoc(subGroupRef, {
         memberIds: arrayUnion(...memberIds),
         updatedAt: Timestamp.now()
@@ -797,6 +829,48 @@ export class SubGroupDatabaseService {
       return members;
     } catch (error) {
  console.error('Error getting sub-group members:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search all profiles (Global Search)
+   */
+  static async searchProfiles(searchTerm: string): Promise<any[]> {
+    try {
+      const profilesRef = collection(db, 'profiles');
+      let q;
+      
+      const queryLower = (searchTerm || '').toLowerCase().trim();
+
+      // Mirroring the main admin's approach: fetch a substantial batch
+      if (!queryLower) {
+        q = query(profilesRef, limit(200));
+      } else if (queryLower.includes('@')) {
+        q = query(profilesRef, where('email', '==', queryLower), limit(20));
+      } else {
+        q = query(profilesRef, limit(500));
+      }
+
+      const snapshot = await getDocs(q);
+      const results = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Apply client-side filtering for more accuracy
+      if (queryLower && !queryLower.includes('@')) {
+        return results.filter((p: any) => {
+          const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+          const displayName = (p.display_name || '').toLowerCase();
+          const email = (p.email || '').toLowerCase();
+          return fullName.includes(queryLower) || displayName.includes(queryLower) || email.includes(queryLower);
+        }).slice(0, 25);
+      }
+
+      return results.slice(0, 25);
+    } catch (error) {
+      console.error('Error searching profiles:', error);
       return [];
     }
   }

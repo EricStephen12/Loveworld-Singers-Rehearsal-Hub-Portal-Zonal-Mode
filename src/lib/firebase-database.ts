@@ -1,4 +1,4 @@
-﻿import {
+import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   query, orderBy, limit, where, onSnapshot, startAfter,
   QueryDocumentSnapshot, DocumentData
@@ -7,7 +7,7 @@
 import { db } from './firebase-setup'
 
 export class FirebaseDatabaseService {
-  // Get all praise nights (pages) - optimized for millions of users
+  // Fetch praise nights
   static async getPraiseNights(limitCount = 10) {
     try {
       const q = query(
@@ -54,7 +54,7 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // Get a single song by ID - CRITICAL for SongDetailModal
+  // Fetch song by ID
   static async getSongById(songId: string) {
     try {
 
@@ -275,7 +275,7 @@ export class FirebaseDatabaseService {
   }
 
   // Generic methods for migration
-  // OPTIMIZED: Added optional limit parameter (default 500 to prevent massive reads)
+  // Fetch collection
   static async getCollection(collectionName: string, maxLimit: number = 500) {
     try {
       // Use limit to prevent fetching entire large collections
@@ -504,7 +504,7 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // OPTIMIZED: Batch fetch documents by IDs using 'in' operator (max 30 IDs per query)
+  // Batch fetch by field
   static async getCollectionWhereIn(collectionName: string, field: string, values: string[]) {
     try {
       if (values.length === 0) return []
@@ -532,7 +532,7 @@ export class FirebaseDatabaseService {
     }
   }
 
-  // OPTIMIZED: Batch fetch documents by document IDs (max 30 per batch)
+  // Batch fetch by IDs
   static async getDocumentsByIds(collectionName: string, docIds: string[]) {
     try {
       if (docIds.length === 0) return []
@@ -649,7 +649,7 @@ export class FirebaseDatabaseService {
 
   static async updateSong(songId: string | number, data: any) {
     try {
-      // SIMPLE: Just use the songId as-is (it's already the Firebase document ID)
+      // Update song by document ID
       const firebaseDocId = String(songId).trim();
 
       if (!firebaseDocId || firebaseDocId === '' || firebaseDocId === 'null' || firebaseDocId === 'undefined') {

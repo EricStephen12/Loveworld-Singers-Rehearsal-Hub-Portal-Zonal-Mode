@@ -93,7 +93,7 @@ interface PagesSectionProps {
 export default function PagesSection(props: PagesSectionProps) {
   const { theme } = useAdminTheme();
 
-  // Pagination state for pages list
+  // UI state
   const [pagesDisplayLimit, setPagesDisplayLimit] = useState(10);
   const [showCloneModal, setShowCloneModal] = useState(false);
 
@@ -161,7 +161,7 @@ export default function PagesSection(props: PagesSectionProps) {
     setShowPageCategoryOrderModal
   } = props;
 
-  // Get admin pages (same logic as original)
+  // Computed data
   const pages = useMemo(() => {
     if (loading) {
       return [];
@@ -181,7 +181,7 @@ export default function PagesSection(props: PagesSectionProps) {
     });
   }, [allPraiseNights, loading]);
 
-  // Filter pages by page category (when searchTerm matches a page category name)
+  // Computed data
   const filteredPages = useMemo(() => {
     // Reset pagination when filter changes
     setPagesDisplayLimit(10);
@@ -717,7 +717,7 @@ export default function PagesSection(props: PagesSectionProps) {
                     </table>
                   </div>
 
-                  {/* Songs Cards - Mobile Only - Instagram Style */}
+                  {/* Songs Cards - Mobile Only */}
                   <div className="lg:hidden flex-1 overflow-auto bg-white">
                     {/* Song count */}
                     <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">

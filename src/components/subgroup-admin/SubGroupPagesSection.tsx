@@ -16,10 +16,22 @@ import {
   X,
   CheckCircle2,
   Circle,
-  Download
+  Download,
+  Filter,
+  MoreVertical,
+  ChevronRight,
+  Save,
+  AlertCircle,
+  Mic,
+  Upload,
+  Check,
+  Globe,
+  Star,
+  RefreshCw
 } from "lucide-react";
 import { SubGroupDatabaseService, SubGroupSong, SubGroupRehearsal } from '@/lib/subgroup-database-service';
 import { useAuth } from '@/hooks/useAuth';
+import { useZone } from '@/hooks/useZone';
 import { Toast, ToastContainer } from '../Toast';
 import CustomLoader from '@/components/CustomLoader';
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service';
@@ -34,6 +46,7 @@ interface SubGroupPagesSectionProps {
 
 export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName }: SubGroupPagesSectionProps) {
   const { user } = useAuth();
+  const { currentZone } = useZone();
   
   // Tabs State
   const [rehearsals, setRehearsals] = useState<SubGroupRehearsal[]>([]);
@@ -60,6 +73,8 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showMediaOps, setShowMediaOps] = useState(false);
 
+  const themeColor = currentZone?.themeColor || '#9333ea';
+
   // Form State - Rehearsal
   const [rehearsalName, setRehearsalName] = useState('');
   const [rehearsalDate, setRehearsalDate] = useState('');
@@ -69,8 +84,12 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   // Form State - Song
   const [songTitle, setSongTitle] = useState('');
   const [songWriter, setSongWriter] = useState('');
+  const [songLeadSinger, setSongLeadSinger] = useState('');
+  const [songKey, setSongKey] = useState('');
+  const [songTempo, setSongTempo] = useState('');
   const [songCategory, setSongCategory] = useState('Praise');
   const [songLyrics, setSongLyrics] = useState('');
+  const [songSolfa, setSongSolfa] = useState('');
   
   // Form State - Media
   const [sopranoUrl, setSopranoUrl] = useState('');
@@ -88,6 +107,35 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   };
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Helper function to convert markdown-style formatting to HTML for display
+  const markdownToHtml = (text: string): string => {
+    if (!text) return '';
+    const paragraphs = text.split('\n\n');
+    const processedParagraphs = paragraphs
+      .filter(p => p.trim() !== '')
+      .map(paragraph => {
+        let processed = paragraph.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        processed = processed.replace(/\n/g, '<br>');
+        return `<div>${processed}</div>`;
+      });
+    return processedParagraphs.join('');
+  };
+
+  // Helper function to convert HTML to markdown-style text for editing
+  const htmlToMarkdown = (html: string): string => {
+    if (!html) return '';
+    return html
+      .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+      .replace(/<span[^>]*>(.*?)<\/span>/gi, '$1')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   };
 
   // 1. Subscribe to Rehearsals
@@ -222,9 +270,7 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         addToast({ type: 'success', message: 'Rehearsal created' });
       }
       
-      // Update metadata for real-time Hub refresh
       await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights');
-      
       setShowRehearsalModal(false);
     } catch (error) {
       addToast({ type: 'error', message: 'Operation failed' });
@@ -240,8 +286,6 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
       if (result.success) {
         addToast({ type: 'success', message: 'Rehearsal deleted' });
         if (selectedRehearsal?.id === id) setSelectedRehearsal(null);
-        
-        // Update metadata for real-time Hub refresh
         await FirebaseMetadataService.updateMetadata(zoneId, 'praise_nights');
       }
     } catch (error) {
@@ -254,8 +298,12 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
     setEditingSong(null);
     setSongTitle('');
     setSongWriter('');
+    setSongLeadSinger('');
+    setSongKey('');
+    setSongTempo('');
     setSongCategory('Praise');
     setSongLyrics('');
+    setSongSolfa('');
     setFullAudioUrl('');
     setSopranoUrl('');
     setAltoUrl('');
@@ -271,8 +319,12 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
     setEditingSong(song);
     setSongTitle(song.title);
     setSongWriter(song.writer || '');
+    setSongLeadSinger(song.leadSinger || '');
+    setSongKey(song.key || '');
+    setSongTempo(song.tempo || '');
     setSongCategory(song.category || 'Praise');
-    setSongLyrics(song.lyrics || '');
+    setSongLyrics(htmlToMarkdown(song.lyrics || ''));
+    setSongSolfa(htmlToMarkdown(song.solfa || ''));
     setFullAudioUrl(song.audioUrls?.full || '');
     setSopranoUrl(song.audioUrls?.soprano || '');
     setAltoUrl(song.audioUrls?.alto || '');
@@ -302,8 +354,12 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         await SubGroupDatabaseService.updateSong(editingSong.id, {
           title: songTitle,
           writer: songWriter,
+          leadSinger: songLeadSinger,
+          key: songKey,
+          tempo: songTempo,
           category: songCategory,
-          lyrics: songLyrics,
+          lyrics: markdownToHtml(songLyrics),
+          solfa: markdownToHtml(songSolfa),
           audioFile: fullAudioUrl,
           audioUrls: {
             full: fullAudioUrl,
@@ -316,16 +372,18 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         });
         addToast({ type: 'success', message: 'Song updated' });
         
-        // Refresh songs
         const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
         setAllSubGroupSongs(data);
-        addToast({ type: 'success', message: 'Song updated' });
       } else {
         const result = await SubGroupDatabaseService.createSong(subGroupId, zoneId, {
           title: songTitle,
           writer: songWriter,
+          leadSinger: songLeadSinger,
+          key: songKey,
+          tempo: songTempo,
           category: songCategory,
-          lyrics: songLyrics,
+          lyrics: markdownToHtml(songLyrics),
+          solfa: markdownToHtml(songSolfa),
           audioFile: fullAudioUrl,
           audioUrls: {
             full: fullAudioUrl,
@@ -342,7 +400,6 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
             await SubGroupDatabaseService.addSongToRehearsal(selectedRehearsal.id, result.id);
             addToast({ type: 'success', message: 'Song saved to setlist' });
           } else {
-            // Refresh main list
             const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
             setAllSubGroupSongs(data);
             addToast({ type: 'success', message: 'Song saved' });
@@ -413,148 +470,156 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
-        <CustomLoader message="Loading..." />
+      <div className="flex-1 flex items-center justify-center p-8 bg-white h-full">
+        <CustomLoader message="Syncing Hub..." />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-white">
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        {/* Sidebar List */}
-        <div className={`w-full lg:w-96 border-r border-slate-100 flex flex-col transition-all bg-slate-50/30 ${selectedRehearsal ? 'hidden lg:flex' : 'flex'}`}>
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-slate-900">Setlists</h2>
-              <button onClick={handleAddRehearsal} className="w-10 h-10 bg-purple-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/10 hover:bg-purple-700 transition-all active:scale-95">
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-600/10"
-              />
-            </div>
+    <div className="flex-1 flex flex-col lg:flex-row h-full min-h-0 bg-white">
+      {/* Rehearsals List - Standard Sidebar List style from /admin */}
+      <div className={`w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col h-full ${selectedRehearsal ? 'hidden lg:flex' : 'flex'}`}>
+        <div className="p-6 border-b border-slate-200 flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-900">Setlists</h2>
+            <button 
+              onClick={handleAddRehearsal} 
+              className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Set
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 pb-8 space-y-6">
-            {rehearsals.length === 0 ? (
-              <div className="text-center py-10">
-                <Calendar className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Events</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-3">
-                  {filteredRehearsals.map(r => (
-                    <RehearsalItem 
-                      key={r.id} r={r} 
-                      isSelected={selectedRehearsal?.id === r.id}
-                      onClick={() => setSelectedRehearsal(r)}
-                      onEdit={() => handleEditRehearsal(r)}
-                      onDelete={() => handleDeleteRehearsal(r.id)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-            
-            {/* View All Songs Link at bottom of sidebar */}
-            {selectedRehearsal && (
-              <div className="pt-4 border-t border-slate-100 px-4">
-                <button 
-                  onClick={() => setSelectedRehearsal(null)}
-                  className="w-full flex items-center gap-3 px-6 py-4 text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 rounded-2xl transition-all"
-                >
-                  <Music className="w-4 h-4" />
-                  All Songs
-                </button>
-              </div>
-            )}
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search setlists..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+            />
           </div>
         </div>
-
-        {/* Content Area */}
-        <div className={`flex-1 flex flex-col bg-white overflow-hidden ${!selectedRehearsal ? 'hidden lg:flex' : 'flex'}`}>
-          {selectedRehearsal ? (
-            <>
-              <div className="p-8 border-b border-slate-50">
-                <div className="flex items-center gap-4">
-                  <button onClick={() => setSelectedRehearsal(null)} className="lg:hidden p-2 -ml-2 text-slate-400"><ChevronLeft /></button>
-                  <div className="flex-1">
-                    <h1 className="text-3xl font-black text-slate-950 tracking-tight">{selectedRehearsal.name}</h1>
-                    <div className="flex items-center gap-4 mt-2 text-slate-400">
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase"><Calendar className="w-3.5 h-3.5" />{selectedRehearsal.date}</div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase"><MapPin className="w-3.5 h-3.5" />{selectedRehearsal.location || 'No Location'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setShowCloneModal(true)} className="flex items-center gap-2 px-6 py-3 bg-slate-50 text-slate-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200/50">
-                      <Download className="w-4 h-4" /> Import
-                    </button>
-                    <button onClick={handleAddSong} className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all">
-                      <Plus className="w-4 h-4" /> Add Song
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <SongTable 
-                songs={filteredSongs} 
-                loading={songsLoading}
-                onEdit={handleEditSong}
-                onDelete={handleDeleteSongFromRehearsal}
-                onToggleStatus={handleToggleStatus}
-                onToggleActive={handleToggleActive}
-              />
-            </>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          {rehearsals.length === 0 ? (
+            <div className="text-center py-10 px-4">
+              <p className="text-sm text-slate-400">No setlists created yet.</p>
+            </div>
           ) : (
-            <div className="flex-1 flex flex-col bg-slate-50/30 overflow-hidden">
-              <div className="p-10 bg-white border-b border-slate-100">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Songs</h1>
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">{allSubGroupSongs.length} Tracks</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative flex-1 md:w-80">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Search songs..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-purple-600/5"
-                      />
+            <div className="space-y-2">
+              {filteredRehearsals.map(r => (
+                <div 
+                  key={r.id} 
+                  onClick={() => setSelectedRehearsal(r)}
+                  className={`
+                    p-4 rounded-xl border cursor-pointer transition-all duration-200 group
+                    ${selectedRehearsal?.id === r.id 
+                      ? 'bg-purple-50 border-purple-200 shadow-sm' 
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                    }
+                  `}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <h3 className={`font-bold text-sm truncate ${selectedRehearsal?.id === r.id ? 'text-purple-700' : 'text-slate-900'}`}>{r.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-500 font-medium">{r.date}</span>
+                        {r.category === 'ongoing' && (
+                          <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[8px] font-bold uppercase">Live</span>
+                        )}
+                      </div>
                     </div>
-                    <button onClick={() => setShowCloneModal(true)} className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
-                      <Download className="w-4 h-4" /> Import
-                    </button>
-                    <button onClick={handleAddSong} className="flex items-center gap-2 px-8 py-4 bg-purple-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all">
-                      <Plus className="w-4 h-4" /> New Song
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={(e) => { e.stopPropagation(); handleEditRehearsal(r); }} className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-white rounded transition-colors"><Edit className="w-3.5 h-3.5" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteRehearsal(r.id); }} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-white rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <SongTable 
-                songs={filteredSongs} 
-                loading={libraryLoading}
-                onEdit={handleEditSong}
-                onDelete={handleDeleteSongFromLibrary}
-                onToggleStatus={handleToggleStatus}
-                onToggleActive={handleToggleActive}
-                isLibraryMode
-              />
+              ))}
             </div>
           )}
+          
+          {/* Removed Master Library button as requested */}
         </div>
       </div>
 
-      {/* Modals & Components */}
+      {/* Songs Content Area - Standard Admin Style */}
+      <div className={`flex-1 flex flex-col bg-white h-full ${!selectedRehearsal && 'hidden lg:flex'}`}>
+        {selectedRehearsal ? (
+          <>
+            {/* Page Header - Tighter & More Professional */}
+            <div className="p-4 sm:p-6 border-b border-slate-100 bg-white sticky top-0 z-10 shadow-sm">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start gap-4">
+                  <button 
+                    onClick={() => setSelectedRehearsal(null)} 
+                    className="p-2 -ml-1 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 truncate uppercase tracking-tight">{selectedRehearsal.name}</h1>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {selectedRehearsal.date}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {selectedRehearsal.location || 'Choir Hall'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 w-full">
+                  <button 
+                    onClick={() => setShowCloneModal(true)} 
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-100 text-slate-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-[0.98]"
+                  >
+                    <Download className="w-3.5 h-3.5 text-purple-600" /> Import
+                  </button>
+                  <button 
+                    onClick={handleAddSong} 
+                    className="flex-[1.5] flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg active:scale-[0.98]"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Song
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Songs List */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/20">
+               <SongTable 
+                 songs={filteredSongs} 
+                 loading={songsLoading}
+                 onEdit={handleEditSong}
+                 onDelete={handleDeleteSongFromRehearsal}
+                 onToggleStatus={handleToggleStatus}
+                 onToggleActive={handleToggleActive}
+                 themeColor={themeColor}
+               />
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+            <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
+              <Calendar className="w-12 h-12" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Select a Setlist</h2>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] max-w-xs">
+              Choose a setlist from the sidebar to manage songs or create a new one to get started.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       
       {showCloneModal && (
@@ -566,92 +631,179 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         />
       )}
 
-      {/* Rehearsal Modal */}
+      {/* Rehearsal Modal - Professional Clean Form */}
       {showRehearsalModal && (
         <Modal onClose={() => setShowRehearsalModal(false)} title={editingRehearsal ? 'Edit Setlist' : 'New Setlist'}>
             <div className="space-y-6">
-                <Input label="Event Name" value={rehearsalName} onChange={setRehearsalName} placeholder="e.g. Easter Praise Night" />
+                <Input label="Setlist Name" value={rehearsalName} onChange={setRehearsalName} placeholder="e.g. Sunday Service Preparation" />
                 <div className="grid grid-cols-2 gap-4">
                     <Input label="Date" value={rehearsalDate} onChange={setRehearsalDate} type="date" />
-                    <Input label="Location" value={rehearsalLocation} onChange={setRehearsalLocation} placeholder="Choir Hall" />
+                    <Input label="Location" value={rehearsalLocation} onChange={setRehearsalLocation} placeholder="e.g. Choir Hall" />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">Status / Category</label>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Archive Category</label>
                     <select 
                       value={rehearsalCategory} 
                       onChange={(e) => setRehearsalCategory(e.target.value as any)} 
-                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                     >
-                        <option value="ongoing">Ongoing (Live)</option>
-                        <option value="archive">Archive (Past)</option>
-                        <option value="pre-rehearsal">Pre-Rehearsal (Coming Soon)</option>
+                        <option value="ongoing">Ongoing (Live on Hub)</option>
+                        <option value="archive">Archive (Past History)</option>
+                        <option value="pre-rehearsal">Pre-Rehearsal (Internal Only)</option>
                     </select>
                 </div>
-                <button onClick={saveRehearsal} disabled={isProcessing || !rehearsalName} className="w-full py-4 bg-purple-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-600/20 hover:bg-purple-700 transition-all">
-                    {isProcessing ? 'Processing...' : 'Save Rehearsal'}
-                </button>
+                <div className="pt-4">
+                  <button 
+                    onClick={saveRehearsal} 
+                    disabled={isProcessing || !rehearsalName} 
+                    className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest shadow-lg hover:bg-purple-700 transition-all disabled:opacity-50"
+                  >
+                      {isProcessing ? 'Saving...' : 'Save Setlist'}
+                  </button>
+                </div>
             </div>
         </Modal>
       )}
 
-      {/* Song Modal */}
-      {showSongModal && (
-        <Modal onClose={() => setShowSongModal(false)} title={editingSong ? 'Edit Track' : 'Create New Track'}>
-            <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
-                <Input label="Song Title" value={songTitle} onChange={setSongTitle} placeholder="Awesome God" />
-                <div className="grid grid-cols-2 gap-4">
-                    <Input label="Writer" value={songWriter} onChange={setSongWriter} placeholder="Artist/Composer" />
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">Category</label>
-                        <select value={songCategory} onChange={(e) => setSongCategory(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none">
-                            <option>Praise</option>
-                            <option>Worship</option>
-                            <option>Special</option>
-                            <option>Hymn</option>
-                        </select>
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">Lyrics</label>
-                    <textarea value={songLyrics} onChange={(e) => setSongLyrics(e.target.value)} className="w-full p-6 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium min-h-[150px] focus:outline-none" placeholder="Paste lyrics here..." />
-                </div>
-                
-                <div className="border-t border-slate-100 pt-6 space-y-6">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FileText className="w-3.5 h-3.5 text-purple-600" />
-                            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Leader's Note</label>
-                        </div>
-                        <textarea 
-                            value={leaderNote} 
-                            onChange={(e) => setLeaderNote(e.target.value)} 
-                            className="w-full p-4 bg-purple-50/30 border border-purple-100 rounded-2xl text-sm font-medium min-h-[100px] focus:outline-none focus:ring-4 focus:ring-purple-600/5 focus:border-purple-200 transition-all" 
-                            placeholder="Add specific instructions for your subgroup..." 
-                        />
-                    </div>
-                    
-                    <Input label="Note Audio URL (Optional)" value={leaderAudioUrl} onChange={setLeaderAudioUrl} placeholder="https://storage.googleapis.com/..." />
 
-                    <button onClick={() => setShowMediaOps(!showMediaOps)} className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 block hover:text-purple-600 transition-colors">
-                        {showMediaOps ? '↑ Hide Technical Tracks' : '↓ Manage Vocal Parts'}
-                    </button>
-                    {showMediaOps && (
-                        <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                            <Input label="Full Audio/Instrumental URL" value={fullAudioUrl} onChange={setFullAudioUrl} placeholder="https://..." />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input label="Soprano" value={sopranoUrl} onChange={setSopranoUrl} placeholder="URL" />
-                                <Input label="Alto" value={altoUrl} onChange={setAltoUrl} placeholder="URL" />
-                                <Input label="Tenor" value={tenorUrl} onChange={setTenorUrl} placeholder="URL" />
-                                <Input label="Bass" value={bassUrl} onChange={setBassUrl} placeholder="URL" />
-                            </div>
-                        </div>
-                    )}
+      {/* Song Modal - Landscape Professional Layout */}
+      {showSongModal && (
+        <Modal 
+          onClose={() => setShowSongModal(false)} 
+          title={editingSong ? 'Edit Song' : 'Create Song'}
+          maxWidth="max-w-4xl"
+        >
+          <div className="flex flex-col lg:flex-row gap-8 max-h-[75vh] overflow-hidden">
+            {/* Left Column: Details & Audio */}
+            <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+              <section className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <Music className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Song Information</h3>
                 </div>
                 
-                <button onClick={saveSong} disabled={isProcessing || !songTitle} className="w-full py-5 bg-purple-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-purple-600/20 hover:bg-purple-700 transition-all">
-                    {isProcessing ? 'Saving...' : 'Save Song'}
-                </button>
+                <Input label="Song Title" value={songTitle} onChange={setSongTitle} placeholder="e.g. Holy Spirit" />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Writer / Artist" value={songWriter} onChange={setSongWriter} placeholder="Artist name" />
+                  <Input label="Lead Singer" value={songLeadSinger} onChange={setSongLeadSinger} placeholder="Singer name" />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                    <select value={songCategory} onChange={(e) => setSongCategory(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                      <option>Praise</option>
+                      <option>Worship</option>
+                      <option>Special</option>
+                      <option>Hymn</option>
+                      <option>Theme Song</option>
+                    </select>
+                  </div>
+                  <Input label="Key" value={songKey} onChange={setSongKey} placeholder="e.g. C#" />
+                  <Input label="Tempo" value={songTempo} onChange={setSongTempo} placeholder="e.g. 120" />
+                </div>
+              </section>
+
+              <section className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Audio & Parts</h3>
+                </div>
+
+                <Input label="Main Instrumental / Full Audio" value={fullAudioUrl} onChange={setFullAudioUrl} placeholder="Direct URL to audio file" />
+
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                   <button 
+                    onClick={() => setShowMediaOps(!showMediaOps)} 
+                    className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-all"
+                  >
+                    <span>Vocal Part Assignments</span>
+                    {showMediaOps ? <ChevronLeft className="w-3 h-3 rotate-90" /> : <ChevronRight className="w-3 h-3" />}
+                  </button>
+                  
+                  {showMediaOps && (
+                    <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <Input label="Soprano" value={sopranoUrl} onChange={setSopranoUrl} />
+                      <Input label="Alto" value={altoUrl} onChange={setAltoUrl} />
+                      <Input label="Tenor" value={tenorUrl} onChange={setTenorUrl} />
+                      <Input label="Bass" value={bassUrl} onChange={setBassUrl} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vocal Instruction (Text)</label>
+                  <textarea 
+                    value={leaderNote} 
+                    onChange={(e) => setLeaderNote(e.target.value)} 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" 
+                    placeholder="e.g. Tenors start at the second verse..." 
+                  />
+                </div>
+                
+                <Input label="Audio Instruction Link" value={leaderAudioUrl} onChange={setLeaderAudioUrl} placeholder="Voice note link" />
+              </section>
             </div>
+
+            {/* Right Column: Lyrics & Solfa */}
+            <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Lyrics Structure</h3>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Supports **Bold**</span>
+                </div>
+                <textarea 
+                  value={songLyrics} 
+                  onChange={(e) => setSongLyrics(e.target.value)} 
+                  className="w-full p-5 bg-slate-50 border border-slate-200 rounded-[2rem] text-sm font-bold min-h-[280px] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono text-slate-700 leading-relaxed" 
+                  placeholder="Paste track lyrics here... Use **VERSE 1** for bold headings." 
+                />
+              </section>
+
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <Star className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Conductor's Guide (Solfa)</h3>
+                </div>
+                <textarea 
+                  value={songSolfa} 
+                  onChange={(e) => setSongSolfa(e.target.value)} 
+                  className="w-full p-5 bg-amber-50/30 border border-amber-100 rounded-[2rem] text-sm font-bold min-h-[150px] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all font-mono text-amber-900 leading-relaxed" 
+                  placeholder="Enter musical notation or guide instructions..." 
+                />
+              </section>
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div className="flex items-center justify-end gap-3 pt-8 border-t border-slate-50">
+            <button
+              onClick={() => setShowSongModal(false)}
+              className="px-8 py-3.5 text-xs font-black text-slate-500 hover:bg-slate-100 rounded-2xl transition-all uppercase tracking-widest"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={saveSong} 
+              disabled={isProcessing || !songTitle} 
+              className="px-10 py-3.5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95 flex items-center gap-2"
+            >
+              {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isProcessing ? 'Saving...' : 'Save Track Details'}
+            </button>
+          </div>
         </Modal>
       )}
     </div>
@@ -659,117 +811,138 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
 }
 
 // Sub-components
-function RehearsalItem({ r, isSelected, onClick, onEdit, onDelete }: { r: SubGroupRehearsal, isSelected: boolean, onClick: () => void, onEdit: () => void, onDelete: () => void }) {
-  return (
-    <div 
-      onClick={onClick}
-      className={`group p-6 rounded-[2rem] border transition-all cursor-pointer relative overflow-hidden ${isSelected ? 'bg-white border-purple-200 shadow-[0_10px_30px_rgba(147,51,234,0.06)] ring-1 ring-purple-100' : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'}`}
-    >
-      <div className="flex items-center justify-between relative z-10">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-             <h3 className={`font-black text-sm truncate ${isSelected ? 'text-purple-600' : 'text-slate-900'}`}>{r.name}</h3>
-             {r.category === 'ongoing' && (
-               <span className="px-2 py-0.5 bg-green-500 text-white rounded text-[8px] font-black uppercase tracking-widest pulse-ring">Live</span>
-             )}
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">{r.date} • {r.location || 'Hall'}</p>
-        </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-2 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-        </div>
-      </div>
-      {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600"></div>}
-    </div>
-  );
-}
-
-function SongTable({ songs, loading, onEdit, onDelete, onToggleStatus, onToggleActive, isLibraryMode }: { songs: SubGroupSong[], loading: boolean, onEdit: (s: SubGroupSong) => void, onDelete: (id: string) => void, onToggleStatus: (s: SubGroupSong) => void, onToggleActive: (s: SubGroupSong) => void, isLibraryMode?: boolean }) {
-  if (loading) return <div className="flex items-center justify-center h-64"><CustomLoader size="sm" /></div>;
-  if (songs.length === 0) return <EmptyState icon={<Music className="w-12 h-12" />} title="No Songs" desc="Start by creating or importing songs." />;
+function SongTable({ songs, loading, onEdit, onDelete, onToggleStatus, onToggleActive, isLibraryMode, themeColor }: any) {
+  if (loading) return <div className="flex flex-col items-center justify-center h-64 gap-3"><div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Repertoire...</p></div>;
+  if (songs.length === 0) return <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-100"><Music className="w-12 h-12 text-slate-200 mb-4" /><h3 className="text-lg font-bold text-slate-900 mb-1">No tracks found</h3><p className="text-xs text-slate-400 max-w-xs leading-relaxed">Add your first song to this setlist or import from the library.</p></div>;
 
   return (
-    <div className="p-8">
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50/50 border-b border-slate-100">
-            <tr>
-              <th className="py-5 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest">Track Detail</th>
-              <th className="py-5 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-              <th className="py-5 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-              {!isLibraryMode && <th className="py-5 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Active</th>}
-              <th className="py-5 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {songs.map(song => (
-              <tr key={song.id} className="group hover:bg-slate-50/50 transition-colors">
-                <td className="py-5 px-8">
-                  <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-purple-50 group-hover:text-purple-600 transition-all border border-slate-100/50">
-                      <Music className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-black text-slate-900 text-sm">{song.title}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">{song.writer || 'SubGroup Hub'}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-5 px-8">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-tight border border-blue-100/50">{song.category || 'Praise'}</span>
-                </td>
-                <td className="py-5 px-8">
-                    <div className="flex justify-center">
-                        <button onClick={() => onToggleStatus(song)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all active:scale-95 ${song.status === 'heard' ? 'bg-green-50 text-green-600 shadow-sm border border-green-100/50' : 'bg-slate-50 text-slate-400 border border-slate-200/50'}`}>
-                            {song.status === 'heard' ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                            {song.status === 'heard' ? 'Learned' : 'New'}
-                        </button>
-                    </div>
-                </td>
-                {!isLibraryMode && (
-                  <td className="py-5 px-8">
-                    <div className="flex justify-center">
-                        <button onClick={() => onToggleActive(song)} className={`w-12 h-6 rounded-full relative transition-all focus:outline-none ${song.isActive ? 'bg-purple-600' : 'bg-slate-200'}`}>
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${song.isActive ? 'left-7' : 'left-1'}`}></div>
-                        </button>
+    <div className="space-y-4">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Track</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                {!isLibraryMode && <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active</th>}
+                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {songs.map((song: any) => (
+                <tr key={song.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                        <Music className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 text-sm truncate">{song.title}</p>
+                        <p className="text-xs text-slate-400 truncate mt-0.5">{song.writer || 'Artist unknown'}</p>
+                      </div>
                     </div>
                   </td>
-                )}
-                <td className="py-5 px-8 text-right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <button onClick={() => onEdit(song)} className="p-3 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => onDelete(song.id)} className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                  <td className="px-6 py-4">
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight">
+                      {song.category || 'General'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => onToggleStatus(song)}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all ${song.status === 'heard' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
+                    >
+                      {song.status === 'heard' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                      {song.status === 'heard' ? 'Learned' : 'New'}
+                    </button>
+                  </td>
+                  {!isLibraryMode && (
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => onToggleActive(song)}
+                        className={`w-10 h-5 rounded-full relative transition-all ${song.isActive ? 'bg-purple-600' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${song.isActive ? 'left-5.5' : 'left-0.5'}`}></div>
+                      </button>
+                    </td>
+                  )}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => onEdit(song)} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => onDelete(song.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Mobile Card View - Professional & Tight */}
+      <div className="lg:hidden space-y-4">
+        {songs.map((song: any) => (
+          <div key={song.id} className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm space-y-5 transition-all active:scale-[0.99]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 flex-shrink-0 shadow-inner">
+                  <Music className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-black text-slate-900 text-[14px] leading-tight truncate uppercase tracking-tight">{song.title}</h3>
+                  <p className="text-[10px] font-bold text-slate-400 truncate uppercase tracking-wider mt-1">{song.writer || 'Unknown Artist'}</p>
+                </div>
+              </div>
+              <div className="flex gap-1.5">
+                <button onClick={() => onEdit(song)} className="p-2.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"><Edit className="w-4 h-4" /></button>
+                <button onClick={() => onDelete(song.id)} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+               <div className="flex items-center gap-2.5">
+                  <button 
+                    onClick={() => onToggleStatus(song)}
+                    className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${song.status === 'heard' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}
+                  >
+                    {song.status === 'heard' ? 'Learned' : 'New'}
+                  </button>
+                  <span className="px-2.5 py-1.5 bg-slate-50 text-slate-500 border border-slate-100 rounded-lg text-[9px] font-black uppercase tracking-widest">{song.category || 'General'}</span>
+               </div>
+               
+               {!isLibraryMode && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live</span>
+                    <button 
+                      onClick={() => onToggleActive(song)}
+                      className={`w-10 h-5.5 rounded-full relative transition-all shadow-inner ${song.isActive ? 'bg-purple-600' : 'bg-slate-200'}`}
+                    >
+                      <div className={`absolute top-0.75 w-4 h-4 rounded-full bg-white shadow-md transition-all ${song.isActive ? 'left-[1.25rem]' : 'left-0.75'}`}></div>
+                    </button>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+               )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-function EmptyState({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-slate-50/20">
-      <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-center text-slate-200 mb-8">{icon}</div>
-      <h3 className="text-xl font-black text-slate-900 mb-3">{title}</h3>
-      <p className="text-sm font-medium text-slate-400 max-w-xs mx-auto leading-relaxed">{desc}</p>
-    </div>
-  );
-}
-
-function Modal({ children, onClose, title }: { children: React.ReactNode, onClose: () => void, title: string }) {
+function Modal({ children, onClose, title, maxWidth = "max-w-xl" }: { children: React.ReactNode, onClose: () => void, title: string, maxWidth?: string }) {
     return (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center z-[100] p-6 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[3rem] w-full max-w-lg shadow-[0_20px_70px_rgba(0,0,0,0.15)] overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-300">
-                <div className="p-10 flex items-center justify-between border-b border-slate-50">
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
-                    <button onClick={onClose} className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-100 hover:text-slate-600 transition-all"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[130] p-0 sm:p-6 animate-in fade-in duration-300">
+            <div className={`bg-white rounded-none sm:rounded-[3rem] w-full ${maxWidth} shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col max-h-full sm:max-h-[90vh]`}>
+                <div className="p-6 sm:p-10 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0 z-[10]">
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1.5">Manage your track repertoire</p>
+                    </div>
+                    <button onClick={onClose} className="w-12 h-12 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900 rounded-2xl transition-all border border-transparent hover:border-slate-100"><X className="w-6 h-6" /></button>
                 </div>
-                <div className="p-10">{children}</div>
+                <div className="p-6 sm:p-10 overflow-y-auto custom-scrollbar flex-1 bg-white">{children}</div>
             </div>
         </div>
     );
@@ -778,13 +951,13 @@ function Modal({ children, onClose, title }: { children: React.ReactNode, onClos
 function Input({ label, value, onChange, placeholder, type = "text" }: { label: string, value: string, onChange: (v: string) => void, placeholder?: string, type?: string }) {
     return (
         <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1">{label}</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>
             <input
                 type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-purple-600/5 focus:border-purple-600 transition-all"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm"
             />
         </div>
     );

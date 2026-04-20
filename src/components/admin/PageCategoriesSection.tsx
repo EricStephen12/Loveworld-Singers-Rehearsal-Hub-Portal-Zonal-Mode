@@ -87,13 +87,13 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
     addToast
   } = props;
 
-  // Media library state
+  // UI state
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   
-  // Selected category to view pages
+  // UI state
   const [selectedCategory, setSelectedCategory] = useState<PageCategory | null>(null);
 
-  // Filter categories based on search term
+  // Computed data
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return pageCategories;
     
@@ -243,7 +243,7 @@ export default function PageCategoriesSection(props: PageCategoriesSectionProps)
             )}
           </div>
         ) : (
-          /* Categories List - Instagram Style */
+          /* Categories List */
           filteredCategories.length > 0 ? (
           <>
             {/* Mobile List View */}

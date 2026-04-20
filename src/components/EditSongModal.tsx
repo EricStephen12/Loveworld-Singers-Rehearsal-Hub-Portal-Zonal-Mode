@@ -1,6 +1,6 @@
  "use client";
 
-// Smart Auto-History System - Fixed icon imports
+// Song editor component
 import React, { useState, useEffect } from 'react';
 import { X, Save, Trash2, FolderOpen, Clock, Plus, History, Edit, Check, Mic } from 'lucide-react';
 import { PraiseNightSong, Comment, Category } from '../types/supabase';
@@ -44,13 +44,13 @@ export default function EditSongModal({
   const { theme } = useAdminTheme();
   const { currentZone } = useZone();
 
-  // Helper function to get current user info
+  // Auth helpers
   const getCurrentUserName = () => {
     // Implement based on your auth system - could be from context, localStorage, etc.
     return localStorage.getItem('userName') || 'Current User';
   };
 
-  // Theme-based CSS classes
+  // UI styles
   const inputClasses = `w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 ${theme.focusRing} ${theme.focusBorder} focus:shadow-xl ${theme.focusBg}`;
   const buttonClasses = `flex items-center gap-2 px-4 py-3 ${theme.primary} text-white ${theme.primaryHover} rounded-lg transition-colors text-sm font-medium`;
   const historyButtonClasses = `flex items-center gap-1 px-3 py-1.5 text-xs font-medium ${theme.text} ${theme.primaryLight} ${theme.bgHover} border ${theme.border} rounded-md transition-colors`;
@@ -100,7 +100,7 @@ export default function EditSongModal({
     return isHQGroup(currentZone?.id) ? "Pastor" : "Coordinator";
   };
 
-  // Smart change detection - track original values
+  // Change detection
   const [originalValues, setOriginalValues] = useState({
     lyrics: '',
     solfas: '',
@@ -118,7 +118,7 @@ export default function EditSongModal({
     notation: ''
   });
 
-  // Manual history creation state
+  // History state
   const [showHistoryForm, setShowHistoryForm] = useState(false);
   const [historyType, setHistoryType] = useState<'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'notation' | 'audio' | 'comments'>('song-details');
   const [historyTitle, setHistoryTitle] = useState('');
@@ -128,7 +128,7 @@ export default function EditSongModal({
   const [originalHistoryValues, setOriginalHistoryValues] = useState({ old_value: '', new_value: '' });
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(true);
 
-  // Manual history creation functions
+  // History logic
   const handleCreateHistory = (type: 'song-details' | 'personnel' | 'music-details' | 'lyrics' | 'solfas' | 'notation' | 'audio' | 'comments') => {
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
       window.dispatchEvent(new CustomEvent('showToast', {

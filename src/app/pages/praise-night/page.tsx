@@ -46,7 +46,7 @@ function PraiseNightPageContent() {
   const songParam = searchParams?.get('song');
   const { currentSong, isPlaying, setCurrentSong, play, isLoading, hasError, audioRef } = useAudio();
 
-  //  Song detail modal states (moved up to avoid TDZ errors)
+  // Modal states
   const [selectedSong, setSelectedSong] = useState<any>(null);
   const [isSongDetailOpen, setIsSongDetailOpen] = useState(false);
   const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(null);
@@ -54,7 +54,7 @@ function PraiseNightPageContent() {
   // Ref to track if song selection was initiated internally (to prevent URL sync bounce)
   const internalSongChangeRef = useRef<string | null>(null);
 
-  // Navigation State Restoration: Restore last category if missing from URL
+  // Navigation state restoration
   useEffect(() => {
     // Only restore if:
     // 1. Zone is initialized (prevents wrong zone data)
@@ -143,7 +143,7 @@ function PraiseNightPageContent() {
   const [pageCategories, setPageCategories] = useState<any[]>([]);
   const [loadingPageCategories, setLoadingPageCategories] = useState(true);
 
-  //  Global Archive Search states
+  // Archive search
   const [allArchiveSongs, setAllArchiveSongs] = useState<PraiseNightSong[]>([]);
   const [isGlobalSearchLoading, setIsGlobalSearchLoading] = useState(false);
   const [hasLoadedAllSongs, setHasLoadedAllSongs] = useState(false);
@@ -220,7 +220,7 @@ function PraiseNightPageContent() {
       );
     }
 
-    // CRITICAL: Exclusion logic for Zonal page - exclude subgroups
+    // Exclude subgroups
     return filtered.filter(pn => pn.scope !== 'subgroup');
   }, [allPraiseNights, categoryFilter, selectedPageCategory, loading, archiveSearchQuery]);
 
@@ -335,7 +335,7 @@ function PraiseNightPageContent() {
     */
   }, []); // Removed refreshData dependency naturally
 
-  // SECURITY: Enforce Pre-Rehearsal Access Control
+  // Pre-rehearsal access
   useEffect(() => {
     // Wait for zone and profile initialization before enforcing security
     if (!isInitialized || isProfileLoading) return;
@@ -353,7 +353,7 @@ function PraiseNightPageContent() {
     }
   }, [categoryFilter, currentZone, isZoneCoordinator, profile, router]);
 
-  // SECURITY: Enforce Archive Access Control
+  // Archive access
   useEffect(() => {
     // Wait for zone and profile initialization before enforcing security
     if (!isInitialized || isProfileLoading) return;
@@ -595,7 +595,7 @@ function PraiseNightPageContent() {
     }
   };
 
-  // Handle song card click - now JUST updates URL to trigger the sync effect
+  // Handle song click
   const handleSongClick = (song: any, index: number) => {
     // Track internal change to prevent URL sync bounce
     internalSongChangeRef.current = song.title;
@@ -1304,7 +1304,7 @@ function PraiseNightPageContent() {
                 }
                 showMenuButton={false}
                 rightImageSrc="/logo.png"
-                leftButtons={categoryFilter !== 'archive' && !pageParam && (
+                leftButtons={categoryFilter !== 'archive' && (
                   <button
                     aria-label="Switch Praise Night"
                     onClick={() => setShowDropdown(!showDropdown)}
@@ -1435,7 +1435,7 @@ function PraiseNightPageContent() {
         )}
 
         {/* Header-level Praise Night Dropdown */}
-        {showDropdown && categoryFilter !== 'archive' && !pageParam && (
+        {showDropdown && categoryFilter !== 'archive' && (
           <>
             <div
               className="fixed inset-0 bg-black/20 z-[75]"

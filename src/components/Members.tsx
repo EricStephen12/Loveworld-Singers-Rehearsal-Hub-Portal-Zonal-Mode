@@ -36,6 +36,8 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { HQMembersService } from '@/lib/hq-members-service';
 import { ZoneInvitationService } from '@/lib/zone-invitation-service';
 import { useZone } from '@/hooks/useZone';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { isHQAdminEmail } from '@/config/roles';
 import { isHQGroup } from '@/config/zones';
 import CustomLoader from './CustomLoader';
 import { authedFetch } from '@/lib/authed-fetch'
@@ -82,6 +84,7 @@ interface Member {
   zoneId?: string;
   zoneName?: string;
   can_access_pre_rehearsal?: boolean;
+  has_hq_access?: boolean;
 }
 
 export default function Members() {
@@ -114,7 +117,7 @@ export default function Members() {
     }, 3000);
   };
 
-  // Load all zones for HQ admin filter
+  // Zone loading
   useEffect(() => {
     const loadZones = async () => {
       if (currentZone && isHQGroup(currentZone.id)) {
@@ -129,7 +132,7 @@ export default function Members() {
     loadZones();
   }, [currentZone]);
 
-  // Load members from correct collection based on zone type
+  // Data loading
   const loadMembers = async (forceRefresh = false) => {
     if (!currentZone) {
       return;
@@ -208,7 +211,7 @@ export default function Members() {
       }
 
 
-      // OPTIMIZED: Batch fetch profiles instead of one-by-one (reduces N+1 reads)
+      // Batch retrieval
       // First, get unique user IDs and DEDUPLICATE members
       const seenUserIds = new Set<string>();
       const deduplicatedMemberships: any[] = [];
@@ -300,7 +303,7 @@ export default function Members() {
     }
   };
 
-  // Load members when zone or filter changes
+  // Lifecycle
   useEffect(() => {
     if (currentZone) {
       // For 'all' filter, wait for zones to be loaded first
@@ -312,7 +315,7 @@ export default function Members() {
     }
   }, [currentZone, filterZone, allZones]);
 
-  // Filter members based on search
+  // Search filter
   const filteredMembers = members.filter(member => {
     const matchesSearch =
       member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -324,7 +327,7 @@ export default function Members() {
     return matchesSearch;
   });
 
-  // Calculate member stats
+  // Statistics
   const memberStats = {
     total: members.length,
     active: members.filter(m => m.is_active).length,
@@ -370,7 +373,7 @@ export default function Members() {
     window.URL.revokeObjectURL(url);
   };
 
-  // Delete member handler
+  // Delete handler
   const handleDeleteMember = async (member: Member) => {
     if (!confirm(`Are you sure you want to delete ${member.first_name} ${member.last_name}? This will PERMANENTLY remove their account, profile, and all association with this platform. This action cannot be undone.`)) {
       return;
@@ -398,9 +401,7 @@ export default function Members() {
         throw new Error(result.error || 'Failed to delete user account');
       }
 
-      // 2. Remove from zone membership (cleanup)
-      // FIXED: Use removeUserFromZone to delete ALL membership records for this user in this zone
-      // This handles cases where duplicate membership records exist
+      // Membership cleanup
       if (member.zoneId) {
         await ZoneInvitationService.removeUserFromZone(member.id, member.zoneId);
       }
@@ -421,7 +422,7 @@ export default function Members() {
     }
   };
 
-  // Save changes to member profile
+  // Update handler
   const handleSaveMember = async () => {
     if (!selectedMember || !editForm) return;
 
@@ -480,7 +481,7 @@ export default function Members() {
 
   return (
     <div className="flex-1 flex flex-col min-h-full bg-white lg:bg-slate-50">
-      {/* Premium Header */}
+      {/* Header */}
       <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-5 lg:py-8 flex-shrink-0">
         <div className="flex items-start justify-between mb-6 lg:mb-8">
           <div>
@@ -506,7 +507,7 @@ export default function Members() {
           </div>
         </div>
 
-        {/* Modern Stats Pulse - Horizontal Scroll */}
+        {/* Stats */}
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
           <StatCard
             label="Total Members"
@@ -536,7 +537,7 @@ export default function Members() {
         </div>
       </div>
 
-      {/* Filters & Search Bar */}
+      {/* Filters */}
       <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-4 flex-shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           {/* Search */}
@@ -582,7 +583,7 @@ export default function Members() {
         </div>
       </div>
 
-      {/* Members List - Flowing naturally */}
+      {/* List */}
       <div className="flex-1 bg-slate-50/50">
         {/* Loading Overlay */}
         {loading && (
@@ -606,7 +607,7 @@ export default function Members() {
           </div>
         ) : (
           <div className="pb-24">
-            {/* Desktop Table - Clean & Flowing */}
+            {/* Desktop View */}
             <div className="hidden lg:block">
               <table className="w-full">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
@@ -722,7 +723,7 @@ export default function Members() {
               )}
             </div>
 
-            {/* Mobile Cards - Instagram Style - Clean & Flowing */}
+            {/* Mobile View */}
             <div className="lg:hidden">
               {/* Member count badge */}
               <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
@@ -804,7 +805,7 @@ export default function Members() {
         )}
       </div>
 
-      {/* Member Detail Modal - Full Profile View */}
+      {/* Profile Modal */}
       {selectedMember && (
         <MemberProfileModal 
           member={selectedMember} 
@@ -868,7 +869,7 @@ function StatCard({
   );
 }
 
-// Member Profile Modal Component (Slide-over)
+// Profile Modal Component
 function MemberProfileModal({
   member,
   onClose,
@@ -882,6 +883,7 @@ function MemberProfileModal({
   setSelectedMember: React.Dispatch<React.SetStateAction<Member | null>>;
   showToast: (message: string, type: 'success' | 'error') => void;
 }) {
+  const { user: currentUser } = useAuthContext();
   const [activeTab, setActiveTab] = useState<'info' | 'activity' | 'settings'>('info');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -981,7 +983,7 @@ function MemberProfileModal({
             </div>
           </div>
 
-          {/* User Hero Section */}
+          {/* Profile Overview */}
           <div className="p-8 pb-4 text-center border-b border-slate-50">
             <div className="relative inline-block mb-4">
               <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-100 overflow-hidden">
@@ -1128,6 +1130,35 @@ function MemberProfileModal({
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.can_access_pre_rehearsal ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
+
+                    {/* Restricted HQ Access Switch */}
+                    {isHQAdminEmail(currentUser?.email) && (
+                      <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Global HQ Access</p>
+                          <p className="text-xs text-slate-500">Grant full access to HQ programs & Master Library</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newState = !member.has_hq_access;
+                            try {
+                              await FirebaseDatabaseService.updateDocument('profiles', member.id, {
+                                has_hq_access: newState
+                              });
+                              const updated = { ...member, has_hq_access: newState };
+                              setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                              setSelectedMember(updated);
+                              showToast(` HQ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                            } catch (exp) {
+                              showToast(' Failed to change HQ access', 'error');
+                            }
+                          }}
+                          className={`w-11 h-6 rounded-full transition-all relative ${member.has_hq_access ? 'bg-purple-600' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.has_hq_access ? 'left-6' : 'left-1'}`} />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="pt-6 border-t border-slate-100">
                       <div className="flex items-center justify-between">

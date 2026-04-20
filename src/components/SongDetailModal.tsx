@@ -31,7 +31,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close 'More' menu when clicking outside
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
@@ -53,11 +53,10 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [categorySongs, setCategorySongs] = useState<PraiseNightSong[]>([]);
   
-  // Guard ref: blocks the "sync song on prop change" effect from overriding
-  // an intentional navigation (handleNext / handlePrevious / autoAdvance)
+  // Navigation lock
   const isNavigatingRef = useRef(false);
 
-  // Fullscreen state for lyrics, comments, and solfas
+  // Fullscreen state
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
   const [isFullscreenComments, setIsFullscreenComments] = useState(false);
   const [isFullscreenSolfas, setIsFullscreenSolfas] = useState(false);
@@ -1001,7 +1000,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 ></div>
               </div>
 
-              {/* Header with Album Art and Song Info - Sticky */}
+              {/* Sticky Header */}
               <div className="relative z-50 bg-white/80 backdrop-blur-xl border-b border-white/30 flex-shrink-0">
                 {/* Background layers wrapper with overflow hidden to contain the blur/scale */}
                 <div className="absolute inset-0 overflow-hidden z-0">
@@ -1151,7 +1150,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 </div>
               </div>
 
-              {/* Content Area - Scrollable */}
+              {/* Content Area */}
               <div className="flex-1 px-6 py-4 overflow-y-auto" style={{ paddingBottom: '180px' }}>
                 {activeTab === 'lyrics' && (
                   <div className="max-w-none">
@@ -1949,28 +1948,22 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                       e.preventDefault();
                       e.stopPropagation();
 
-                      // Pause all history audios first
+                      // Stop any active history playback
                       Object.keys(historyAudioRefs.current).forEach(id => {
                         if (historyAudioRefs.current[id]) {
                           historyAudioRefs.current[id]!.pause();
                         }
                       });
 
-                      // Direct test - bypass the context for debugging
                       if (audioRef.current) {
                         if (audioRef.current.paused) {
-                          audioRef.current.play().then(() => {
-                          }).catch(error => {
- console.error(' Direct play failed:', error);
-                          });
+                          audioRef.current.play().catch(error => console.error('Playback failed:', error));
                         } else {
                           audioRef.current.pause();
                         }
-                      } else {
- console.error(' No audioRef.current available');
                       }
 
-                      // Also call the context method
+                      // Sync with audio state
                       togglePlayPause();
                     }}
                     disabled={isLoading || hasError}

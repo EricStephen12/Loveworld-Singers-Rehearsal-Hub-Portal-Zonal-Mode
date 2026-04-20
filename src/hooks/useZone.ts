@@ -66,7 +66,7 @@ function clearZoneCache() {
 }
 
 export function useZone() {
-  const { user } = useAuthContext()
+  const { user, profile: authProfile } = useAuthContext()
 
   const [currentZone, setCurrentZone] = useState<Zone | null>(null)
   const [userZones, setUserZones] = useState<Zone[]>([])
@@ -162,6 +162,21 @@ export function useZone() {
           isHQMember: true
         }))
       ]
+
+      // Individual HQ Access
+      // Add main HQ zone if enabled in user profile
+      if (authProfile?.has_hq_access) {
+        // Add 'zone-001' (Main HQ) if not already present
+        if (!memberships.some((m: any) => m.zoneId === 'zone-001')) {
+          memberships.push({
+            userId,
+            zoneId: 'zone-001',
+            role: 'member',
+            isHQMember: true,
+            isSpecialAccess: true
+          })
+        }
+      }
 
       if (memberships.length === 0) {
         setCurrentZone(null)

@@ -1,20 +1,18 @@
-﻿// Performance optimization utilities
+// Performance optimization utilities
 
-// Dynamic imports for code splitting
+// Dynamic imports
 export const dynamicImport = {
-  // Lazy load heavy components
   MediaManager: () => import('@/components/MediaManager'),
   // AdminPanel: () => import('@/components/AdminPanel'), // Component doesn't exist
   SongDetailModal: () => import('@/components/SongDetailModal'),
   
-  // Lazy load pages
   AdminPage: () => import('@/app/admin/page'),
   CalendarPage: () => import('@/app/pages/calendar/page'),
 };
 
-// Image optimization utilities
+// Image optimization
 export const imageOptimization = {
-  // Generate optimized Cloudinary URLs
+  // Cloudinary helpers
   getOptimizedImageUrl: (url: string, options: {
     width?: number;
     height?: number;
@@ -43,15 +41,15 @@ export const imageOptimization = {
     return urlObj.toString();
   },
 
-  // Generate responsive image sizes
+  // Responsive sizing
   getResponsiveSizes: (breakpoints: number[] = [640, 768, 1024, 1280]) => {
     return breakpoints.map(bp => `(max-width: ${bp}px) ${bp}px`).join(', ') + ', 100vw';
   }
 };
 
-// Bundle optimization utilities
+// Bundle optimization
 export const bundleOptimization = {
-  // Preload critical resources
+  // Preloading
   preloadCriticalResources: () => {
     if (typeof window === 'undefined') return;
     
@@ -70,7 +68,7 @@ export const bundleOptimization = {
     });
   },
 
-  // Prefetch next likely resources
+  // Prefetching
   prefetchNextResources: (resources: string[]) => {
     if (typeof window === 'undefined') return;
     
@@ -83,11 +81,11 @@ export const bundleOptimization = {
   }
 };
 
-// Caching utilities
+// Caching
 export const caching = {
-  // Service Worker cache strategies
+  // Cache strategies
   cacheStrategies: {
-    // Cache first for static assets
+    // Cache first
     cacheFirst: (request: Request) => {
       return caches.match(request).then(response => {
         return response || fetch(request).then(fetchResponse => {
@@ -100,7 +98,7 @@ export const caching = {
       });
     },
 
-    // Network first for API calls
+    // Network first
     networkFirst: (request: Request) => {
       return fetch(request).then(response => {
         const responseClone = response.clone();
@@ -113,7 +111,7 @@ export const caching = {
       });
     },
 
-    // Stale while revalidate for dynamic content
+    // Revalidation
     staleWhileRevalidate: (request: Request) => {
       return caches.match(request).then(response => {
         const fetchPromise = fetch(request).then(fetchResponse => {
@@ -129,9 +127,9 @@ export const caching = {
   }
 };
 
-// Performance monitoring
+// Monitoring
 export const performanceMonitoring = {
-  // Measure Core Web Vitals
+  // Web vitals
   measureWebVitals: () => {
     if (typeof window === 'undefined') return;
 
@@ -160,7 +158,7 @@ export const performanceMonitoring = {
     }).observe({ entryTypes: ['layout-shift'] });
   },
 
-  // Measure custom metrics
+  // Custom metrics
   measureCustomMetric: (name: string, startTime: number) => {
     const endTime = performance.now();
     const duration = endTime - startTime;
@@ -168,9 +166,9 @@ export const performanceMonitoring = {
   }
 };
 
-// Memory optimization
+// Memory management
 export const memoryOptimization = {
-  // Clean up unused objects
+  // Cleanup
   cleanup: () => {
     if (typeof window === 'undefined') return;
     
@@ -183,7 +181,7 @@ export const memoryOptimization = {
     });
   },
 
-  // Optimize images in memory
+  // Image optimization
   optimizeImages: () => {
     if (typeof window === 'undefined') return;
     

@@ -27,7 +27,7 @@ import {
 import SpreadsheetEditor from './SpreadsheetEditor'
 import { SpreadsheetData } from '@/lib/schedule-service'
 
-// Icon map
+// UI constants
 const ICON_OPTIONS = [
     { name: 'Music', icon: Music },
     { name: 'Sparkles', icon: Sparkles },
@@ -58,21 +58,21 @@ interface ScheduleManagerSectionProps {
     allSongs: PraiseNightSong[]
 }
 
-// Main Component
+// Component
 export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManagerSectionProps) {
     const { currentZone, userRole } = useZone()
     const zoneId = currentZone?.id ?? null
 
     const canEdit = ['super_admin', 'hq_admin', 'zone_coordinator'].includes(userRole)
 
-    // View State: 'categories' | 'category-detail'
+    // UI state
     const [viewMode, setViewMode] = useState<'categories' | 'category-detail'>('categories')
     const [selectedCategory, setSelectedCategory] = useState<ScheduleCategory | null>(null)
 
     // Sub-Schedule State
     const [allPrograms, setAllPrograms] = useState<ScheduleProgram[]>([])
 
-    // Date State for Editor
+    // UI state
     const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0])
 
     const [categories, setCategories] = useState<ScheduleCategory[]>([])
@@ -101,7 +101,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
     })
     const [savingSong, setSavingSong] = useState(false)
 
-    // Quick Add State
+    // Quick Add
     const [quickAddInput, setQuickAddInput] = useState('')
     const [quickAddResults, setQuickAddResults] = useState<PraiseNightSong[]>([])
     const [showQuickAddResults, setShowQuickAddResults] = useState(false)
@@ -370,7 +370,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 }
             }
         } catch (err) {
- console.error(err)
+            console.error(err)
             showToast('Failed to save category', 'error')
         }
 
@@ -381,7 +381,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
 
     const deleteCat = async (id: string) => {
         if (!confirm('Delete this category? Songs inside will remain but the category will be hidden.')) return
-
+        
         const oldCats = [...categories]
         setCategories(prev => prev.filter(c => c.id !== id))
 
@@ -477,7 +477,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 }
             }
         } catch (err) {
- console.error(err)
+            console.error(err)
             showToast('Failed to save item', 'error')
         }
 
@@ -616,7 +616,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
         <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-6">
             {toast && <Toast message={toast.message} type={toast.type} />}
 
-            {/* ── View: Categories (Root) ────────────────────────────────────── */}
+            {/* Root View */}
             {viewMode === 'categories' && (
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -668,7 +668,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
                 </div>
             )}
 
-            {/* ── View: Category Detail (Editor + Sub-Schedules) ─────────────── */}
+            {/* Detail View */}
             {viewMode === 'category-detail' && selectedCategory && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                     <div className="flex items-center justify-between">
@@ -1045,7 +1045,7 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
             {
                 showSongForm && (
                     <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
+                        <div className="bg-white rounded-2xl w-full max-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
                             <h3 className="text-lg font-bold text-slate-800 mb-4">
                                 {editingSong ? 'Edit Item' : `Add ${songForm.type === 'activity' ? 'Activity' : songForm.type === 'title' ? 'Title' : 'Song'}`}
                             </h3>

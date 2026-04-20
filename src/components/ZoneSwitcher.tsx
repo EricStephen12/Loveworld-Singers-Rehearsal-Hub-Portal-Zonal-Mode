@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useZone } from '@/hooks/useZone'
@@ -63,7 +63,6 @@ export default function ZoneSwitcher() {
 
   return (
     <>
-      {/* Switching Overlay - Premium Indication */}
       {isSwitching && (
         <div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-4">

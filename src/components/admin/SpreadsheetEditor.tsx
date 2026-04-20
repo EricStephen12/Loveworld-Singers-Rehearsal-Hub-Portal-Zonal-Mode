@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
     Bold, Italic, AlignLeft, AlignCenter, AlignRight,
     Plus, Trash2, ChevronLeft, ChevronRight, Save,
-    RotateCcw
+    RotateCcw, PlusSquare
 } from 'lucide-react'
 import { GridCell, SpreadsheetData } from '@/lib/schedule-service'
 
@@ -39,7 +39,6 @@ export default function SpreadsheetEditor({
     const [spreadsheet, setSpreadsheet] = useState<SpreadsheetData>(initialData || DEFAULT_DATA)
     const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null)
     const [editingHeader, setEditingHeader] = useState<{ type: 'col' | 'row'; index: number } | null>(null)
-    const [history, setHistory] = useState<SpreadsheetData[]>([])
 
     // Column Resizing State
     const [resizingCol, setResizingCol] = useState<{ index: number; startX: number; startWidth: number } | null>(null);
@@ -62,7 +61,6 @@ export default function SpreadsheetEditor({
         const container = scrollContainerRef.current;
         if (container) {
             container.addEventListener('scroll', checkScroll);
-            // Check initially and on resize
             checkScroll();
             window.addEventListener('resize', checkScroll);
         }
@@ -78,7 +76,7 @@ export default function SpreadsheetEditor({
         const handleMouseMove = (e: MouseEvent) => {
             if (!resizingCol) return;
             const deltaX = e.clientX - resizingCol.startX;
-            const newWidth = Math.max(50, resizingCol.startWidth + deltaX); // Min width 50px
+            const newWidth = Math.max(50, resizingCol.startWidth + deltaX);
 
             const updatedColumns = [...spreadsheet.columns];
             updatedColumns[resizingCol.index] = { ...updatedColumns[resizingCol.index], width: newWidth };
@@ -89,7 +87,7 @@ export default function SpreadsheetEditor({
         const handleMouseUp = () => {
             if (resizingCol) {
                 setResizingCol(null);
-                onChange(spreadsheet); // Save changes when done dragging
+                onChange(spreadsheet);
             }
         };
 
@@ -107,8 +105,6 @@ export default function SpreadsheetEditor({
     useEffect(() => {
         if (initialData) {
             setSpreadsheet(initialData)
-        } else {
-            setSpreadsheet(DEFAULT_DATA)
         }
     }, [initialData])
 
@@ -153,11 +149,22 @@ export default function SpreadsheetEditor({
         onChange(updated)
     }
 
-    const addRow = () => {
-        const updated = {
-            ...spreadsheet,
-            rows: [...spreadsheet.rows, { height: 40 }]
-        }
+    const addRow = (index?: number) => {
+        const insertIdx = typeof index === 'number' ? index : spreadsheet.rows.length
+        const updatedRows = [...spreadsheet.rows]
+        updatedRows.splice(insertIdx, 0, { height: 40 })
+
+        const newData: Record<string, GridCell> = {}
+        Object.entries(spreadsheet.data).forEach(([key, cell]) => {
+            const [r, c] = key.split(':').map(Number)
+            if (r < insertIdx) {
+                newData[key] = cell
+            } else {
+                newData[`${r + 1}:${c}`] = cell
+            }
+        })
+
+        const updated = { ...spreadsheet, rows: updatedRows, data: newData }
         setSpreadsheet(updated)
         onChange(updated)
     }
@@ -167,7 +174,6 @@ export default function SpreadsheetEditor({
         const updatedRows = spreadsheet.rows.filter((_, i) => i !== index)
         const newData: Record<string, GridCell> = {}
 
-        // Re-map keys
         Object.entries(spreadsheet.data).forEach(([key, cell]) => {
             const [r, c] = key.split(':').map(Number)
             if (r < index) newData[key] = cell
@@ -175,15 +181,36 @@ export default function SpreadsheetEditor({
         })
 
         const updated = { ...spreadsheet, rows: updatedRows, data: newData }
+        
+        // Adjust selected cell
+        if (selectedCell && selectedCell.row >= index) {
+            if (selectedCell.row === index && index === spreadsheet.rows.length - 1) {
+                setSelectedCell({ ...selectedCell, row: index - 1 })
+            } else if (selectedCell.row > index) {
+                setSelectedCell({ ...selectedCell, row: selectedCell.row - 1 })
+            }
+        }
+
         setSpreadsheet(updated)
         onChange(updated)
     }
 
-    const addColumn = () => {
-        const updated = {
-            ...spreadsheet,
-            columns: [...spreadsheet.columns, { width: 150, label: 'New Col' }]
-        }
+    const addColumn = (index?: number) => {
+        const insertIdx = typeof index === 'number' ? index : spreadsheet.columns.length
+        const updatedCols = [...spreadsheet.columns]
+        updatedCols.splice(insertIdx, 0, { width: 150, label: 'New Col' })
+
+        const newData: Record<string, GridCell> = {}
+        Object.entries(spreadsheet.data).forEach(([key, cell]) => {
+            const [r, c] = key.split(':').map(Number)
+            if (c < insertIdx) {
+                newData[key] = cell
+            } else {
+                newData[`${r}:${c + 1}`] = cell
+            }
+        })
+
+        const updated = { ...spreadsheet, columns: updatedCols, data: newData }
         setSpreadsheet(updated)
         onChange(updated)
     }
@@ -200,6 +227,16 @@ export default function SpreadsheetEditor({
         })
 
         const updated = { ...spreadsheet, columns: updatedCols, data: newData }
+        
+        // Adjust selected cell
+        if (selectedCell && selectedCell.col >= index) {
+            if (selectedCell.col === index && index === spreadsheet.columns.length - 1) {
+                setSelectedCell({ ...selectedCell, col: index - 1 })
+            } else if (selectedCell.col > index) {
+                setSelectedCell({ ...selectedCell, col: selectedCell.col - 1 })
+            }
+        }
+
         setSpreadsheet(updated)
         onChange(updated)
     }
@@ -219,6 +256,36 @@ export default function SpreadsheetEditor({
         }
         setSpreadsheet(updated)
         onChange(updated)
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent, rIdx: number, cIdx: number) => {
+        if (e.key === 'Tab') {
+            e.preventDefault()
+            const nextCol = cIdx + (e.shiftKey ? -1 : 1)
+            if (nextCol >= 0 && nextCol < spreadsheet.columns.length) {
+                setSelectedCell({ row: rIdx, col: nextCol })
+            } else if (nextCol >= spreadsheet.columns.length && rIdx + 1 < spreadsheet.rows.length) {
+                setSelectedCell({ row: rIdx + 1, col: 0 })
+            } else if (nextCol < 0 && rIdx - 1 >= 0) {
+                setSelectedCell({ row: rIdx - 1, col: spreadsheet.columns.length - 1 })
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault()
+            if (rIdx + 1 < spreadsheet.rows.length) {
+                setSelectedCell({ row: rIdx + 1, col: cIdx })
+            } else {
+                addRow()
+                setSelectedCell({ row: rIdx + 1, col: cIdx })
+            }
+        } else if (e.key === 'ArrowUp' && rIdx > 0) {
+            setSelectedCell({ row: rIdx - 1, col: cIdx })
+        } else if (e.key === 'ArrowDown' && rIdx < spreadsheet.rows.length - 1) {
+            setSelectedCell({ row: rIdx + 1, col: cIdx })
+        } else if (e.key === 'ArrowLeft' && cIdx > 0 && (e.target as HTMLInputElement).selectionStart === 0) {
+            setSelectedCell({ row: rIdx, col: cIdx - 1 })
+        } else if (e.key === 'ArrowRight' && cIdx < spreadsheet.columns.length - 1 && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) {
+            setSelectedCell({ row: rIdx, col: cIdx + 1 })
+        }
     }
 
     return (
@@ -267,13 +334,13 @@ export default function SpreadsheetEditor({
 
                 <div className="flex gap-2">
                     <button
-                        onClick={addColumn}
+                        onClick={() => addColumn()}
                         className="flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100/80 border border-purple-200 px-3 py-1.5 rounded-xl hover:bg-purple-200 transition-all hover:shadow-sm"
                     >
                         <Plus className="w-3.5 h-3.5" /> Col
                     </button>
                     <button
-                        onClick={addRow}
+                        onClick={() => addRow()}
                         className="flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100/80 border border-purple-200 px-3 py-1.5 rounded-xl hover:bg-purple-200 transition-all hover:shadow-sm"
                     >
                         <Plus className="w-3.5 h-3.5" /> Row
@@ -295,12 +362,11 @@ export default function SpreadsheetEditor({
                 )}
             </div>
 
-            {/* Grid Area - Scrollable with fixed row/col headers */}
+            {/* Grid Area */}
             <div
                 ref={scrollContainerRef}
                 className="flex-1 w-full overflow-auto relative rounded-b-xl pb-4 bg-white"
             >
-                {/* Visual indicator that it's scrollable */}
                 {canScrollRight && (
                     <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-purple-900/10 to-transparent pointer-events-none z-30" />
                 )}
@@ -340,13 +406,13 @@ export default function SpreadsheetEditor({
                                             </div>
                                         )}
                                     </div>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); deleteColumn(cIdx); }}
-                                        className="absolute right-3 top-1 p-1 rounded-md bg-rose-100 text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-rose-200"
-                                        title="Delete Column"
-                                    >
-                                        <Trash2 className="w-3 h-3" />
-                                    </button>
+                                    
+                                    {/* Column Controls Overlay */}
+                                    <div className="absolute inset-x-0 -bottom-8 bg-white shadow-xl border border-purple-100 rounded-lg py-1 px-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all z-40 pointer-events-none group-hover:pointer-events-auto">
+                                        <button onClick={(e) => { e.stopPropagation(); addColumn(cIdx); }} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Insert Left"><PlusSquare className="w-3 h-3" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); deleteColumn(cIdx); }} className="p-1 hover:bg-rose-50 text-rose-600 rounded" title="Delete Column"><Trash2 className="w-3 h-3" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); addColumn(cIdx + 1); }} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Insert Right"><PlusSquare className="w-3 h-3" /></button>
+                                    </div>
 
                                     {/* Column Resizer Handle */}
                                     <div
@@ -385,12 +451,13 @@ export default function SpreadsheetEditor({
                                             {row.label && <span className="normal-case font-bold text-fuchsia-600 text-[9px] truncate max-w-[36px] mt-0.5">{row.label}</span>}
                                         </div>
                                     )}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); deleteRow(rIdx); }}
-                                        className="absolute left-0 bottom-0 p-1 rounded-md bg-rose-100 text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-rose-200"
-                                    >
-                                        <Trash2 className="w-3 h-3" />
-                                    </button>
+
+                                    {/* Row Controls Overlay */}
+                                    <div className="absolute top-0 bottom-0 -right-24 bg-white shadow-xl border border-purple-100 rounded-lg py-1 px-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-40 pointer-events-none group-hover:pointer-events-auto">
+                                        <button onClick={(e) => { e.stopPropagation(); addRow(rIdx); }} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Insert Above"><PlusSquare className="w-3 h-3" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); deleteRow(rIdx); }} className="p-1 hover:bg-rose-50 text-rose-600 rounded" title="Delete Row"><Trash2 className="w-3 h-3" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); addRow(rIdx + 1); }} className="p-1 hover:bg-purple-50 text-purple-600 rounded" title="Insert Below"><PlusSquare className="w-3 h-3" /></button>
+                                    </div>
                                 </td>
                                 {spreadsheet.columns.map((_, cIdx) => {
                                     const key = `${rIdx}:${cIdx}`
@@ -404,8 +471,11 @@ export default function SpreadsheetEditor({
                                             onClick={() => setSelectedCell({ row: rIdx, col: cIdx })}
                                         >
                                             <input
+                                                autoFocus={isSelected}
                                                 value={cell.value}
                                                 onChange={(e) => handleCellChange(rIdx, cIdx, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rIdx, cIdx)}
+                                                onFocus={() => setSelectedCell({ row: rIdx, col: cIdx })}
                                                 className={`w-full h-full min-h-[40px] px-3 py-2 text-sm bg-transparent outline-none border-none text-slate-700 placeholder:text-purple-300
                                                     ${cell.bold ? 'font-bold text-slate-900' : ''}
                                                     ${cell.italic ? 'italic' : ''}
@@ -422,7 +492,7 @@ export default function SpreadsheetEditor({
                 </table>
             </div>
 
-            {/* Footer / Info */}
+            {/* Footer */}
             <div className="px-4 py-3 bg-purple-50/80 border-t border-purple-100 flex justify-between items-center text-[10px] font-bold text-purple-600 uppercase tracking-widest backdrop-blur-md">
                 <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></span>

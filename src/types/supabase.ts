@@ -36,6 +36,8 @@ export interface UserProfile {
   // Permissions
   can_access_pre_rehearsal?: boolean;
   is_hq_member?: boolean;
+  has_hq_access?: boolean;
+  can_manage_subgroups?: boolean;
   // AudioLab / profile UI helpers (Firebase-style fields)
   avatar_url?: string | null;
   display_name?: string | null;
