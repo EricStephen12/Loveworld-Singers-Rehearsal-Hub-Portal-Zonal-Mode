@@ -260,6 +260,12 @@ export default function PagesSection(props: PagesSectionProps) {
         const matchesStatus = statusFilter === 'all' || song.status === statusFilter;
         const matchesCategory = categoryFilter === 'all' || song.category === categoryFilter;
         return matchesSearch && matchesStatus && matchesCategory;
+      })
+      .sort((a, b) => {
+        // Sort by creation date to maintain consistent numbering
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateA - dateB;
       });
   }, [allSongs, selectedPage, searchTerm, statusFilter, categoryFilter]);
 
@@ -629,6 +635,7 @@ export default function PagesSection(props: PagesSectionProps) {
                     <table className="w-full">
                       <thead className="bg-slate-50 sticky top-0 z-10">
                         <tr className="border-b border-slate-200">
+                          <th className="text-left py-3 px-4 font-medium text-slate-900 w-12">#</th>
                           <th className="text-left py-3 px-4 font-medium text-slate-900">Song</th>
                           <th className="text-left py-3 px-4 font-medium text-slate-900">Category</th>
                           <th className="text-left py-3 px-4 font-medium text-slate-900">Status</th>
@@ -646,6 +653,9 @@ export default function PagesSection(props: PagesSectionProps) {
                           .slice(startIndex, startIndex + itemsPerPage)
                           .map((song, index) => (
                             <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
+                              <td className="py-4 px-4 text-xs font-bold text-slate-400">
+                                {startIndex + index + 1}
+                              </td>
                               <td className="py-4 px-4">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-10 h-10 ${theme.primaryLight} rounded-lg flex items-center justify-center`}>
@@ -736,12 +746,17 @@ export default function PagesSection(props: PagesSectionProps) {
                               className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors"
                               onClick={() => handleEditSong(song)}
                             >
-                              {/* Song Icon */}
-                              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${song.status === 'heard'
-                                ? 'from-green-400 to-emerald-500'
-                                : 'from-purple-400 to-pink-500'
-                                } flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                                <Music className="w-6 h-6 text-white" />
+                              {/* Song Icon & Index */}
+                              <div className="relative">
+                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${song.status === 'heard'
+                                  ? 'from-green-400 to-emerald-500'
+                                  : 'from-purple-400 to-pink-500'
+                                  } flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                                  <Music className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="absolute -top-1 -left-1 w-5 h-5 bg-slate-900 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                  {startIndex + index + 1}
+                                </div>
                               </div>
 
                               {/* Song Info */}

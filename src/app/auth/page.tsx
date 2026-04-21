@@ -286,11 +286,20 @@ function AuthPageContent() {
             return
           }
 
-          setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
+        setSuccess(`Welcome to ${'zoneName' in joinResult ? joinResult.zoneName : 'your zone'}! Redirecting...`)
+
+        // Set session cookie immediately for Middleware
+        if (typeof window !== 'undefined') {
+          document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+          localStorage.setItem('lwsrh_has_user', 'true')
         }
 
-        // NO MANUAL REDIRECT HERE - The useEffect above will handle it as soon as 'user' updates
-      } else {
+        // Manual redirect accelerator
+        const urlParams = new URLSearchParams(window.location.search)
+        const returnUrl = urlParams.get('returnUrl')
+        router.push(returnUrl || '/home')
+      }
+    } else {
         setSuccess('Checking your account...')
 
         // Special name-based logins
@@ -315,9 +324,11 @@ function AuthPageContent() {
 
         setSuccess('Login successful! Welcome back!')
 
-        // Set persistence flags
+        // Set persistence flags and cookie for Middleware
         if (typeof window !== 'undefined') {
+          document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
           sessionStorage.setItem('justLoggedIn', 'true')
+          localStorage.setItem('lwsrh_has_user', 'true')
           const { AUTH_CACHE_KEY } = require('@/config/routes')
           localStorage.setItem(AUTH_CACHE_KEY, 'true')
         }
@@ -375,6 +386,8 @@ function AuthPageContent() {
 
 
       if (typeof window !== 'undefined') {
+        document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+        localStorage.setItem('lwsrh_has_user', 'true')
         localStorage.setItem('userAuthenticated', 'true')
         localStorage.setItem('hasCompletedProfile', 'true')
         localStorage.setItem('authProvider', 'kingschat')

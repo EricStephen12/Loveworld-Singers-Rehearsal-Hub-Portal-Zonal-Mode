@@ -962,6 +962,10 @@ function PraiseNightPageContent() {
 
 
     return matchesCategory && matchesStatus;
+  }).sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateA - dateB;
   });
 
   // Get counts for current category
