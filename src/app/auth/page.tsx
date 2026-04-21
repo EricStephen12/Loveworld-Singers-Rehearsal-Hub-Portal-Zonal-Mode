@@ -136,14 +136,15 @@ function AuthPageContent() {
   // Auth state observer
   // Transition when user is detected and context is ready
   useEffect(() => {
-    if (user && !loading) {
+    if (user) {
       // Check for returnUrl or default to /home
       const urlParams = new URLSearchParams(window.location.search)
       const returnUrl = urlParams.get('returnUrl')
       
+      // Use router.replace for a cleaner transition
       router.replace(returnUrl || '/home')
     }
-  }, [user, loading, router])
+  }, [user, router])
 
   // Validate zone code when user types
   const handleZoneCodeChange = async (code: string) => {
@@ -314,12 +315,17 @@ function AuthPageContent() {
 
         setSuccess('Login successful! Welcome back!')
 
-        // NO MANUAL REDIRECT HERE - The useEffect above will handle it as soon as 'user' updates
+        // Set persistence flags
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('justLoggedIn', 'true')
           const { AUTH_CACHE_KEY } = require('@/config/routes')
           localStorage.setItem(AUTH_CACHE_KEY, 'true')
         }
+
+        // Trigger manual redirect as a fallback/accelerator
+        const urlParams = new URLSearchParams(window.location.search)
+        const returnUrl = urlParams.get('returnUrl')
+        router.push(returnUrl || '/home')
       }
     } catch (error: any) {
  console.error('Auth error:', error)
@@ -378,7 +384,10 @@ function AuthPageContent() {
       setIsLoading(false)
       setIsCheckingAccount(false)
 
-      // The useEffect above will handle the actual router transition
+      // Manual redirect accelerator
+      const urlParams = new URLSearchParams(window.location.search)
+      const returnUrl = urlParams.get('returnUrl')
+      router.push(returnUrl || '/home')
     } catch (error: any) {
  console.error('Account selection error:', error)
       setError(sanitizeError('Failed to sign in with selected account. Please use email/password login.'))
