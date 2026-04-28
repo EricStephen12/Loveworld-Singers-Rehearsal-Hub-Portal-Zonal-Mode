@@ -1398,8 +1398,13 @@ function PraiseNightPageContent() {
                     handleSongClick={handleSongClick}
                   />
                 )}
+              </div>
+            )}
+
             {/* Add bottom padding to prevent content from being hidden behind sticky categories and safe areas */}
             <div className="h-20"></div> {/* Spacer for fixed bottom elements */}
+          </div>
+        </div>
         {/* End of Scrollable Content */}
 
 
@@ -1491,8 +1496,6 @@ function PraiseNightPageContent() {
           const matchingRealtimeData = realtimeSongData && realtimeSongData.id === selectedSong.id ? realtimeSongData : null;
           const latestSongData = matchingRealtimeData || finalSongData.find(s => s.id === selectedSong.id) || selectedSong;
 
-
-
           return (
             <SongDetailModal
               selectedSong={latestSongData}
@@ -1517,11 +1520,7 @@ function PraiseNightPageContent() {
             />
           );
         })()}
-      </div>
-    )}
-          </div>
-        </div>
-      </div>
+    </div>
     </div>
   );
 }

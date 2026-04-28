@@ -724,7 +724,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           background-repeat: repeat;
         }
       `}</style>
-      <div className="fixed inset-0 bg-white bg-music-doodle z-[100] flex flex-col">
+      <div className="fixed inset-0 bg-white bg-music-doodle z-[1000] flex flex-col">
         {/* Responsive Container */}
         <div className="mx-auto max-w-2xl w-full h-full flex flex-col">
 
@@ -766,7 +766,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               </div>
 
               {/* Sticky Header */}
-              <div className="relative z-50 bg-white/80 backdrop-blur-xl border-b border-white/30 flex-shrink-0">
+              <div className="relative z-[100] bg-white/80 backdrop-blur-xl border-b border-white/30 flex-shrink-0">
                 {/* Background layers wrapper with overflow hidden to contain the blur/scale */}
                 <div className="absolute inset-0 overflow-hidden z-0">
                   {/* Background Image with Blur */}

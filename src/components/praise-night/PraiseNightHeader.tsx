@@ -46,7 +46,7 @@ export const PraiseNightHeader: React.FC<PraiseNightHeaderProps> = ({
   searchInputRef
 }) => {
   return (
-    <div className="flex-shrink-0 w-full relative z-[60]">
+    <div className="flex-shrink-0 w-full relative z-40">
       <div className="relative bg-white/80 backdrop-blur-xl border-b border-gray-100/50 min-h-[60px] sm:min-h-[70px]">
         {/* Normal Header Content */}
         <div className={`transition-all duration-300 ease-out ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
