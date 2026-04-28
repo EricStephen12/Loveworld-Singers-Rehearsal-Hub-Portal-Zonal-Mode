@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Languages, Clipboard } from 'lucide-react';
@@ -403,11 +403,7 @@ export default function BasicTextEditor({
         contentEditable
         onInput={handleInput}
         onPaste={handlePaste}
-        className="min-h-[200px] max-h-[400px] overflow-y-auto p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        style={{
-          fontFamily: 'inherit',
-          lineHeight: '1.6',
-        }}
+        className="min-h-[200px] max-h-[400px] overflow-y-auto p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed font-[inherit]"
         data-placeholder={placeholder}
         suppressContentEditableWarning={true}
       />

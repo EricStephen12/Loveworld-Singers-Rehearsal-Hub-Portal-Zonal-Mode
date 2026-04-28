@@ -23,8 +23,8 @@ const formatLyricsForDisplay = (html: string): string => {
 
   // Convert HTML back to plain text format like the edit modal shows
   let text = html
-    // Convert </div><div> to double newlines (paragraph breaks)
-    .replace(/<\/div>\s*<div>/gi, '\n\n')
+    // Convert </div><div> to single newlines (normal line breaks)
+    .replace(/<\/div>\s*<div>/gi, '\n')
     // Convert <div> opening tags to nothing (start of content)
     .replace(/<div[^>]*>/gi, '')
     // Convert </div> closing tags to nothing
@@ -36,14 +36,14 @@ const formatLyricsForDisplay = (html: string): string => {
     .replace(/<\/b>/gi, '</b>')
     .replace(/<strong>/gi, '<b>')
     .replace(/<\/strong>/gi, '</b>')
-    // Remove any other HTML tags
+    // Remove any other HTML tags but keep content
     .replace(/<(?!b>|\/b>)[^>]*>/g, '')
     // Convert HTML entities
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
-    // Clean up excessive newlines
+    // Clean up excessive newlines (max 2 for paragraph breaks)
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
@@ -113,22 +113,24 @@ export function MasterSongDetailSheet({
         onClick={onClose}
       />
 
-      {/* Sheet - Full screen on mobile, bottom sheet on larger screens */}
-      <div className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:left-0 sm:right-0 z-[200] bg-white sm:rounded-t-3xl shadow-2xl animate-slide-up sm:max-h-[90vh] flex flex-col safe-area-inset-bottom">
-        {/* Handle - Only show on larger screens */}
-        <div className="hidden sm:flex justify-center pt-3 pb-2 shrink-0">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
+      {/* Sheet - Full screen on all screen sizes as requested */}
+      <div className="fixed inset-0 z-[200] bg-white shadow-2xl animate-slide-up flex flex-col safe-area-inset-bottom overflow-hidden">
+        {/* Close Button - Sticky/Fixed at top right */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-[210] w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-black/10 backdrop-blur-md text-slate-800 hover:bg-black/20 shadow-sm transition-colors flex items-center justify-center"
+        >
+          <X size={20} className="sm:w-4 sm:h-4" />
+        </button>
 
-        {/* Header with Close Button */}
-        <div className="px-4 sm:px-5 pt-3 sm:pt-0 pb-4 border-b border-gray-100 relative shrink-0">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 sm:-top-1 right-4 sm:right-5 z-10 w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-sm transition-colors flex items-center justify-center"
-          >
-            <X size={18} className="sm:w-4 sm:h-4" />
-          </button>
+        {/* Scrollable Container - The whole modal now scrolls */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          {/* Handle - Only show on larger screens */}
+          <div className="hidden sm:flex justify-center pt-3 pb-2">
+            <div className="w-10 h-1 bg-gray-300 rounded-full" />
+          </div>
+
+          <div className="px-4 sm:px-5 pt-3 sm:pt-0 pb-4 border-b border-gray-100 relative">
 
           <div className="relative overflow-hidden rounded-2xl">
             {/* Background image + soft overlay */}
@@ -287,8 +289,8 @@ export function MasterSongDetailSheet({
           </div>
 
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 bg-slate-50/80 min-h-0">
+        {/* Content Area */}
+        <div className="px-4 sm:px-5 py-4 bg-slate-50/80">
           {/* Audio Player */}
           {fullMixUrl && (
             <div className="bg-white rounded-2xl p-4 mb-4 border border-slate-100 shadow-sm">
@@ -334,16 +336,13 @@ export function MasterSongDetailSheet({
                   .lyrics-content {
                     white-space: pre-wrap;
                     word-wrap: break-word;
-                    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-                    font-size: 15px;
-                    line-height: 1.7;
+                    font-family: inherit;
+                    font-size: 16px;
+                    line-height: 1.6;
                   }
                   .lyrics-content b, .lyrics-content strong {
                     font-weight: 800;
                     color: #4a1d96;
-                    display: block;
-                    margin-bottom: 0px;
-                    margin-top: 8px;
                   }
                 `}</style>
                 <pre
@@ -388,6 +387,7 @@ export function MasterSongDetailSheet({
             )}
           </div>
         </div>
+      </div>
 
         {/* Footer Actions - Only show for non-HQ zones */}
         {!isHQ && (

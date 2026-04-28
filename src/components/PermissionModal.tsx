@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Bell, Mic, X, Shield, CheckCircle2 } from 'lucide-react'
@@ -92,6 +92,8 @@ export default function PermissionModal({
     }
   }, [isOpen])
 
+  const colorClass = type === 'notification' ? 'indigo' : 'violet';
+
   if (!isOpen) return null
 
   return (
@@ -111,15 +113,13 @@ export default function PermissionModal({
         >
           <X className="w-5 h-5 text-gray-400" />
         </button>
-
         {/* Success state */}
         {status === 'granted' ? (
           <div className="p-8 text-center">
             <div 
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ backgroundColor: `${config.color}15` }}
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-${colorClass}-500/15`}
             >
-              <CheckCircle2 className="w-8 h-8" style={{ color: config.color }} />
+              <CheckCircle2 className={`w-8 h-8 text-${colorClass}-600`} />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Permission Granted!</h3>
             <p className="text-gray-500">You're all set.</p>
@@ -129,10 +129,9 @@ export default function PermissionModal({
             {/* Header with icon */}
             <div className="pt-8 pb-4 px-6 text-center">
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: `${config.color}15` }}
+                className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-${colorClass}-500/15`}
               >
-                <Icon className="w-8 h-8" style={{ color: config.color }} />
+                <Icon className={`w-8 h-8 text-${colorClass}-600`} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{config.title}</h3>
               <p className="text-gray-500 text-sm">{config.description}</p>
@@ -151,8 +150,7 @@ export default function PermissionModal({
                   {config.benefits.map((benefit, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
                       <div 
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: config.color }}
+                        className={`w-1.5 h-1.5 rounded-full bg-${colorClass}-500`}
                       />
                       {benefit}
                     </li>
@@ -177,8 +175,7 @@ export default function PermissionModal({
               <button
                 onClick={requestPermission}
                 disabled={isRequesting}
-                className="w-full py-3 px-4 rounded-xl text-white font-medium transition-all active:scale-[0.98] disabled:opacity-70"
-                style={{ backgroundColor: config.color }}
+                className={`w-full py-3 px-4 rounded-xl text-white font-medium transition-all active:scale-[0.98] disabled:opacity-70 bg-${colorClass}-600 hover:bg-${colorClass}-700`}
               >
                 {isRequesting ? 'Requesting...' : config.buttonText}
               </button>

@@ -45,14 +45,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       <img 
         src="/logo.png" 
         alt="LoveWorld Praise Logo" 
-        className="object-contain animate-bounce"
-        style={{ 
-          width: '120px', 
-          height: '120px',
-          animationDuration: '2s',
-          animationIterationCount: 'infinite',
-          animationTimingFunction: 'ease-in-out'
-        }}
+        className="object-contain animate-bounce w-[120px] h-[120px]"
       />
     </div>
   )

@@ -97,8 +97,7 @@ export default function AuthScreen({ onComplete }: AuthScreenProps) {
             <img 
               src="/logo.png" 
               alt="LoveWorld Praise Logo" 
-              className="object-contain"
-              style={{ width: '120px', height: '120px' }}
+              className="object-contain w-[120px] h-[120px]"
             />
           </div>
           

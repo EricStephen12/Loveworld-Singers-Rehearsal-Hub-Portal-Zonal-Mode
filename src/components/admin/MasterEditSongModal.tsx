@@ -554,8 +554,7 @@ export function MasterEditSongModal({
                         src={audioUrls[key]}
                         controls
                         preload="none"
-                        className="h-8 w-full max-w-[140px]"
-                        style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}
+                        className="h-8 w-full max-w-[140px] scale-[0.85] origin-left"
                       />
                       <button
                         onClick={() => handleRemoveAudio(key)}

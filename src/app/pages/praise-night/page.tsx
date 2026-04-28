@@ -5,19 +5,26 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { sanitizeImageUrl } from '@/utils/image-utils';
 
-import { ChevronRight, ChevronLeft, Search, Clock, Music, User, BookOpen, Timer, Mic, ChevronDown, ChevronUp, Play, X, Users, Calendar, Heart, Sparkles, CheckCircle, Info, ArrowLeft, SkipForward, Piano, HandMetal, Volume2, Flag, Archive, RefreshCw } from "lucide-react";
+import { ChevronRight, Search, Clock, Music, Mic, ChevronDown, ChevronUp, Play, X, Users, Calendar, ArrowLeft, Flag, Archive, RefreshCw, BookOpen, Piano, HandMetal, Volume2, SkipForward, Heart, Sparkles } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SongDetailModal from "@/components/SongDetailModal";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import SharedDrawer from "@/components/SharedDrawer";
 import CustomLoader from "@/components/CustomLoader";
-import AudioWave from "@/components/AudioWave";
-import RehearsalScopeBadge from "@/components/RehearsalScopeBadge";
 import { PraiseNightSong, PraiseNight } from "@/types/supabase";
+import { ArchiveSearch } from "@/components/praise-night/ArchiveSearch";
+import { ArchiveCategoryGrid } from "@/components/praise-night/ArchiveCategoryGrid";
+import { ArchiveProgramList } from "@/components/praise-night/ArchiveProgramList";
+import { GlobalArchiveResults } from "@/components/praise-night/GlobalArchiveResults";
+import { PraiseNightHeader } from "@/components/praise-night/PraiseNightHeader";
+import { PraiseNightEmptyState } from "@/components/praise-night/PraiseNightEmptyState";
+import { PraiseNightBanner } from "@/components/praise-night/PraiseNightBanner";
+import { PraiseNightQuickActions } from "@/components/praise-night/PraiseNightQuickActions";
+import { PraiseNightStatusFilter } from "@/components/praise-night/PraiseNightStatusFilter";
+import { PraiseNightSongList } from "@/components/praise-night/PraiseNightSongList";
+import { PraiseNightCategoryBar } from "@/components/praise-night/PraiseNightCategoryBar";
+import { PraiseNightActiveWidget } from "@/components/praise-night/PraiseNightActiveWidget";
+import { PraiseNightSearchResults } from "@/components/praise-night/PraiseNightSearchResults";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
 
 import { useRealtimeSong } from "@/hooks/useRealtimeSong";
@@ -98,30 +105,6 @@ function PraiseNightPageContent() {
   // Get zone color for theming
   const zoneColor = currentZone?.themeColor || '#9333EA';
 
-  // Helper function to get color classes based on zone color
-  const getZoneColorClasses = (variant: 'solid' | 'light' | 'ring' | 'text' | 'hover' = 'solid') => {
-    const colorMap: Record<string, Record<string, string>> = {
-      '#10B981': { solid: 'bg-emerald-600', light: 'bg-emerald-100 text-emerald-700', ring: 'ring-emerald-400', text: 'text-emerald-600', hover: 'hover:bg-emerald-700' },
-      '#3B82F6': { solid: 'bg-blue-600', light: 'bg-blue-100 text-blue-700', ring: 'ring-blue-400', text: 'text-blue-600', hover: 'hover:bg-blue-700' },
-      '#F59E0B': { solid: 'bg-amber-600', light: 'bg-amber-100 text-amber-700', ring: 'ring-amber-400', text: 'text-amber-600', hover: 'hover:bg-amber-700' },
-      '#EF4444': { solid: 'bg-red-600', light: 'bg-red-100 text-red-700', ring: 'ring-red-400', text: 'text-red-600', hover: 'hover:bg-red-700' },
-      '#8B5CF6': { solid: 'bg-violet-600', light: 'bg-violet-100 text-violet-700', ring: 'ring-violet-400', text: 'text-violet-600', hover: 'hover:bg-violet-700' },
-      '#EC4899': { solid: 'bg-pink-600', light: 'bg-pink-100 text-pink-700', ring: 'ring-pink-400', text: 'text-pink-600', hover: 'hover:bg-pink-700' },
-      '#14B8A6': { solid: 'bg-teal-600', light: 'bg-teal-100 text-teal-700', ring: 'ring-teal-400', text: 'text-teal-600', hover: 'hover:bg-teal-700' },
-      '#6366F1': { solid: 'bg-indigo-600', light: 'bg-indigo-100 text-indigo-700', ring: 'ring-indigo-400', text: 'text-indigo-600', hover: 'hover:bg-indigo-700' },
-      '#F97316': { solid: 'bg-orange-600', light: 'bg-orange-100 text-orange-700', ring: 'ring-orange-400', text: 'text-orange-600', hover: 'hover:bg-orange-700' },
-      '#84CC16': { solid: 'bg-lime-600', light: 'bg-lime-100 text-lime-700', ring: 'ring-lime-400', text: 'text-lime-600', hover: 'hover:bg-lime-700' },
-      '#06B6D4': { solid: 'bg-cyan-600', light: 'bg-cyan-100 text-cyan-700', ring: 'ring-cyan-400', text: 'text-cyan-600', hover: 'hover:bg-cyan-700' },
-      '#A855F7': { solid: 'bg-purple-600', light: 'bg-purple-100 text-purple-700', ring: 'ring-purple-400', text: 'text-purple-600', hover: 'hover:bg-purple-700' },
-      '#22D3EE': { solid: 'bg-sky-600', light: 'bg-sky-100 text-sky-700', ring: 'ring-sky-400', text: 'text-sky-600', hover: 'hover:bg-sky-700' },
-      '#FB923C': { solid: 'bg-orange-500', light: 'bg-orange-100 text-orange-700', ring: 'ring-orange-400', text: 'text-orange-600', hover: 'hover:bg-orange-600' },
-      '#DC2626': { solid: 'bg-red-700', light: 'bg-red-100 text-red-800', ring: 'ring-red-500', text: 'text-red-700', hover: 'hover:bg-red-800' },
-      '#059669': { solid: 'bg-emerald-700', light: 'bg-emerald-100 text-emerald-800', ring: 'ring-emerald-500', text: 'text-emerald-700', hover: 'hover:bg-emerald-800' },
-      '#7C3AED': { solid: 'bg-violet-700', light: 'bg-violet-100 text-violet-800', ring: 'ring-violet-500', text: 'text-violet-700', hover: 'hover:bg-violet-800' },
-      '#9333EA': { solid: 'bg-purple-600', light: 'bg-purple-100 text-purple-700', ring: 'ring-purple-400', text: 'text-purple-600', hover: 'hover:bg-purple-700' },
-    };
-    return colorMap[zoneColor]?.[variant] || colorMap['#9333EA'][variant];
-  };
 
   // Use real-time zone-aware data for instant updates
   const { user, profile, isProfileLoading, signOut } = useAuth();
@@ -151,6 +134,11 @@ function PraiseNightPageContent() {
   // Load songs on demand like admin does
   const [allSongsFromFirebase, setAllSongsFromFirebase] = useState<PraiseNightSong[]>([]);
   const [songsLoading, setSongsLoading] = useState(false);
+  // Effect to clear search when category changes
+  useEffect(() => {
+    setArchiveSearchQuery('');
+  }, [selectedPageCategory]);
+
   const [showActiveMenu, setShowActiveMenu] = useState(false);
 
   // Load page categories (zone-aware) with caching
@@ -211,8 +199,8 @@ function PraiseNightPageContent() {
       filtered = filtered.filter(praiseNight => praiseNight.pageCategory === selectedPageCategory);
     }
 
-    // Filter by archive search query if viewing archive details
-    if (categoryFilter === 'archive' && archiveSearchQuery.trim() !== '' && selectedPageCategory) {
+    // Filter by archive search query if viewing archive details (Threshold: 2 chars)
+    if (categoryFilter === 'archive' && archiveSearchQuery.trim().length >= 2 && selectedPageCategory) {
       const query = archiveSearchQuery.toLowerCase();
       filtered = filtered.filter(praiseNight => 
         praiseNight.name?.toLowerCase().includes(query) || 
@@ -220,8 +208,14 @@ function PraiseNightPageContent() {
       );
     }
 
-    // Exclude subgroups
-    return filtered.filter(pn => pn.scope !== 'subgroup');
+    // Exclude subgroups and sort by creation date (newest first)
+    return filtered
+      .filter(pn => pn.scope !== 'subgroup')
+      .sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [allPraiseNights, categoryFilter, selectedPageCategory, loading, archiveSearchQuery]);
 
   // Deciding which praise nights to display
@@ -265,11 +259,21 @@ function PraiseNightPageContent() {
     }
 
     const query = archiveSearchQuery.toLowerCase().trim();
-    
-    // Filter allArchiveSongs:
-    // 1. Match the search query
-    // 2. Ensure the parent page is an "archive" page
-    return allArchiveSongs.filter(song => {
+
+    // 1. Find matching programs (pages)
+    const matchingPages = allPraiseNights.filter(page => {
+      if (page.category !== 'archive') return false;
+      const name = page.name?.toLowerCase() || '';
+      const date = page.date?.toLowerCase() || '';
+      const loc = page.location?.toLowerCase() || '';
+      return name.includes(query) || date.includes(query) || loc.includes(query);
+    }).map(page => ({
+      ...page,
+      type: 'page' as const
+    }));
+
+    // 2. Filter allArchiveSongs matching the search query
+    const matchingSongs = allArchiveSongs.filter(song => {
       // Basic text matching
       const matchesQuery = 
         song.title?.toLowerCase().includes(query) ||
@@ -288,11 +292,15 @@ function PraiseNightPageContent() {
       const parentPage = allPraiseNights.find(p => p.id === song.praiseNightId);
       return {
         ...song,
+        type: 'song' as const,
         parentPageName: parentPage?.name || 'Unknown Session',
         parentPageDate: parentPage?.date || ''
       };
     });
-  }, [archiveSearchQuery, allArchiveSongs, allPraiseNights, categoryFilter, pageParam]);
+
+    // Combine results (programs first, then songs)
+    return [...matchingPages, ...matchingSongs];
+  }, [allPraiseNights, allArchiveSongs, categoryFilter, pageParam, archiveSearchQuery]);
 
   // Preload data for instant access
   // No preloading needed - data loads fresh on each request
@@ -1066,78 +1074,11 @@ function PraiseNightPageContent() {
 
   // Show empty state when there's no data for the current category (but not when still loading)
   if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || filteredPraiseNights.length === 0)) {
-
     return (
-      <div
-        className="h-screen flex flex-col safe-area-bottom overflow-y-auto"
-        style={{
-          background: `linear-gradient(135deg, ${zoneColor}15, #ffffff)`,
-        }}
-      >
-        {/* Simple Header - Back button and title */}
-        <div className="flex-shrink-0 w-full">
-          <ScreenHeader
-            title={categoryFilter === 'ongoing' ? 'Ongoing Sessions' :
-              categoryFilter === 'archive' ? 'Archives' :
-                categoryFilter === 'pre-rehearsal' ? 'Pre-Rehearsal' : 'Praise Night'}
-            showBackButton={true}
-            backPath="/pages/rehearsals"
-            rightImageSrc="/logo.png"
-          />
-        </div>
-
-
-        {/* Empty State Content */}
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center max-w-sm mx-auto">
-            {/* Icon */}
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-              {categoryFilter === 'ongoing' ? (
-                <Clock className="w-10 h-10 text-purple-600" />
-              ) : categoryFilter === 'archive' ? (
-                <Archive className="w-10 h-10 text-purple-600" />
-              ) : categoryFilter === 'pre-rehearsal' ? (
-                <Calendar className="w-10 h-10 text-purple-600" />
-              ) : (
-                <Music className="w-10 h-10 text-purple-600" />
-              )}
-            </div>
-
-            {/* Title */}
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              {categoryFilter === 'ongoing' ? 'No Ongoing Sessions' :
-                categoryFilter === 'archive' ? 'No Archived Sessions' :
-                  categoryFilter === 'pre-rehearsal' ? 'No Pre-Rehearsal Sessions' :
-                    'No Sessions Available'}
-            </h2>
-
-            {/* Description */}
-            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-              {categoryFilter === 'ongoing' ? 'Ongoing sessions will appear here when they are active and ready for rehearsal.' :
-                categoryFilter === 'archive' ? 'Archived sessions will appear here when they are completed and moved to archive.' :
-                  categoryFilter === 'pre-rehearsal' ? 'Pre-rehearsal sessions will appear here when they are scheduled for preparation.' :
-                    'Create your first session to get started with your praise and worship program.'}
-            </p>
-
-            {/* Back Button */}
-            <button
-              onClick={() => {
-
-              }}
-              className="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-              style={{
-                backgroundColor: zoneColor,
-                filter: 'brightness(0.95)',
-              }}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Rehearsals
-            </button>
-          </div>
-        </div>
-
-        {/* No SharedDrawer in empty state - just back button for navigation */}
-      </div>
+      <PraiseNightEmptyState 
+        categoryFilter={categoryFilter}
+        zoneColor={zoneColor}
+      />
     );
   }
 
@@ -1288,319 +1229,60 @@ function PraiseNightPageContent() {
       `}</style>
 
         {/* Fixed Header - Full Width */}
-        <div className="flex-shrink-0 w-full relative z-[60]">
-          <div className="relative bg-white/80 backdrop-blur-xl border-b border-gray-100/50 min-h-[60px] sm:min-h-[70px]">
-            {/* Normal Header Content */}
-            <div className={`transition-all duration-300 ease-out ${isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <ScreenHeader
-                title={categoryFilter === 'archive' ? (pageParam ? (currentPraiseNight?.name || 'Archive Page') : 'Archives') :
-                  categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0 ? 'Pre-Rehearsal' :
-                    (currentPraiseNight?.name || '')}
-                showBackButton={true}
-                backPath={categoryFilter === 'archive' && pageParam ? `/pages/praise-night?category=archive` : "/pages/rehearsals"}
-                onBackClick={
-                  categoryFilter === 'archive' && !pageParam && selectedPageCategory 
-                    ? () => {
-                        setSelectedPageCategory(null);
-                        setArchiveSearchQuery('');
-                      } 
-                    : undefined
-                }
-                showMenuButton={false}
-                rightImageSrc="/logo.png"
-                leftButtons={categoryFilter !== 'archive' && (
-                  <button
-                    aria-label="Switch Praise Night"
-                    onClick={() => setShowDropdown(!showDropdown)}
-                    className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95 transition border border-slate-200 touch-optimized"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                )}
-                rightButtons={(categoryFilter !== 'archive' || pageParam) && (
-                  <button
-                    onClick={() => setIsSearchOpen((v) => !v)}
-                    aria-label="Toggle search"
-                    className="p-2.5 rounded-full transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 active:scale-95 hover:bg-gray-100/70 active:bg-gray-200/90 touch-optimized"
-                    style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                  >
-                    <Search className="w-5 h-5 text-gray-600 transition-all duration-200" />
-                  </button>
-                )}
-                timer={currentPraiseNight && currentPraiseNight.countdown && categoryFilter !== 'archive' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
-                  <div className="flex items-center gap-0.5 text-xs">
-                    <span className="font-bold text-gray-700">{formatNumber(timeLeft.days)}d</span>
-                    <span className="text-gray-500 font-bold">:</span>
-                    <span className="font-bold text-gray-700">{formatNumber(timeLeft.hours)}h</span>
-                    <span className="text-gray-500 font-bold">:</span>
-                    <span className="font-bold text-gray-700">{formatNumber(timeLeft.minutes)}m</span>
-                    <span className="text-gray-500 font-bold">:</span>
-                    <span className="font-bold text-gray-700">{formatNumber(timeLeft.seconds)}s</span>
-                  </div>
-                )}
-              />
-            </div>
+        <PraiseNightHeader 
+          categoryFilter={categoryFilter}
+          pageParam={pageParam}
+          currentPraiseNight={currentPraiseNight}
+          selectedPageCategory={selectedPageCategory}
+          setSelectedPageCategory={setSelectedPageCategory}
+          archiveSearchQuery={archiveSearchQuery}
+          setArchiveSearchQuery={setArchiveSearchQuery}
+          showDropdown={showDropdown}
+          setShowDropdown={setShowDropdown}
+          isSearchOpen={isSearchOpen}
+          setIsSearchOpen={setIsSearchOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          timeLeft={timeLeft}
+          formatNumber={formatNumber}
+          displayedPraiseNights={displayedPraiseNights}
+          switchPraiseNight={switchPraiseNight}
+          loading={loading}
+          searchInputRef={searchInputRef}
+        />
 
-            {/* Header Search Overlay */}
-            <div className={`absolute inset-0 bg-white/95 backdrop-blur-xl transition-all duration-300 ease-out ${isSearchOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
-              }`}>
-              <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 h-full">
-                <div className="flex-1 relative">
-                  <input
-                    ref={searchInputRef}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    type="text"
-                    placeholder="Search songs, lyrics, solfas, writer, lead singer..."
-                    inputMode="search"
-                    aria-label="Search"
-                    className="w-full text-lg bg-transparent px-0 py-3 text-gray-800 placeholder-gray-400 border-0 outline-none appearance-none shadow-none ring-0 focus:outline-none focus:ring-0 focus:border-0 focus:shadow-none font-poppins-medium"
-                    style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                  />
-                  <div className="absolute left-0 right-0 bottom-0 h-px bg-gray-300/40" />
-                  <div className="absolute left-0 bottom-0 h-0.5 bg-purple-500 w-full shadow-sm"
-                    style={{ boxShadow: '0 0 8px rgba(147, 51, 234, 0.4)' }} />
-                </div>
-                <button
-                  onClick={() => {
-                    setIsSearchOpen(false)
-                    setSearchQuery('')
-                  }}
-                  aria-label="Close search"
-                  className="p-2.5 rounded-full transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0 active:scale-95 hover:bg-gray-100/70 active:bg-gray-200/90 ml-4"
-                  style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                >
-                  <X className="w-6 h-6 text-gray-700 transition-all duration-200" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Results Overlay */}
-        {isSearchOpen && (
-          <div className="fixed left-0 right-0 top-16 z-[65] bg-white border border-gray-200 shadow-lg max-h-96 overflow-y-auto">
-            <div className="mx-auto max-w-2xl lg:max-w-6xl xl:max-w-7xl px-4 py-2">
-              <div className="text-xs text-gray-500 mb-2 font-medium">
-                {searchQuery ? (
-                  `${typedSearchResults.length} result${typedSearchResults.length !== 1 ? 's' : ''} for "${searchQuery}"`
-                ) : (
-                  'Start typing to search songs, artists, or events...'
-                )}
-              </div>
-              {typedSearchResults.length > 0 ? (
-                <div className="space-y-1">
-                  {typedSearchResults.map((result) => (
-                    <button
-                      key={result.id}
-                      onClick={() => {
-                        if (result.type === 'song') {
-                          const song = finalSongData.find(s => s.title === result.title);
-                          if (song) {
-                            const songIndex = finalSongData.indexOf(song);
-                            handleSongClick(song, songIndex);
-                          }
-                        } else {
-                          setActiveCategory(result.category || '');
-                        }
-                        setIsSearchOpen(false);
-                        setSearchQuery('');
-                      }}
-                      className="w-full text-left block p-3 rounded-xl hover:bg-gray-100/70 active:bg-gray-200/90 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {result.type === 'song' ? (
-                              <Music className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                            ) : (
-                              <Flag className="w-4 h-4 text-green-600 flex-shrink-0" />
-                            )}
-                            <h4 className="font-medium text-gray-900 text-sm truncate group-hover:text-purple-700 transition-colors">
-                              {result.title}
-                            </h4>
-                          </div>
-                          {result.subtitle && <p className="text-xs text-purple-600 font-medium mb-0.5">{result.subtitle}</p>}
-                          {result.description && <p className="text-xs text-gray-500 truncate">{result.description}</p>}
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 ml-2" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-6 text-center">
-                  <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 font-medium">No results found</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Header-level Praise Night Dropdown */}
-        {showDropdown && categoryFilter !== 'archive' && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/20 z-[75]"
-              onClick={() => setShowDropdown(false)}
-            />
-            <div className="fixed right-3 left-3 sm:right-4 sm:left-auto top-16 sm:top-16 z-[80] w-auto sm:w-64 max-w-2xl mx-auto sm:mx-0 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden max-h-64 overflow-y-auto">
-              {loading ? (
-                <div className="px-3 sm:px-4 py-12 text-center">
-                  <RefreshCw className="w-8 h-8 text-slate-400 animate-spin mx-auto mb-2" />
-                  <div className="text-slate-500 text-sm font-medium">Loading sessions...</div>
-                </div>
-              ) : (
-                <div className="flex flex-col">
-                  {displayedPraiseNights.length > 0 ? (
-                    displayedPraiseNights.map((praiseNight) => (
-                      <button
-                        key={praiseNight.id}
-                        onClick={() => switchPraiseNight(praiseNight)}
-                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-slate-50 transition-colors ${praiseNight.id === currentPraiseNight?.id ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-500' : ''}`}
-                      >
-                        <div className="font-semibold text-sm sm:text-base mb-1">{praiseNight.name}</div>
-                        <div className="text-xs sm:text-sm text-slate-600">{praiseNight.location} • {praiseNight.date}</div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-12 text-center">
-                      <Music className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-slate-500 text-xs italic">No sessions available</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        <PraiseNightSearchResults 
+          isSearchOpen={isSearchOpen}
+          searchQuery={searchQuery}
+          typedSearchResults={typedSearchResults}
+          finalSongData={finalSongData}
+          handleSongClick={handleSongClick}
+          setActiveCategory={setActiveCategory}
+          setIsSearchOpen={setIsSearchOpen}
+          setSearchQuery={setSearchQuery}
+        />
 
         {/* Scrollable Content Container */}
         <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch">
-          <div className="w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-4 relative mobile-content-with-bottom-nav">
-            {/* Archive Cards Grid - Special layout for archive category */}
+          <div className="w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-4 relative mobile-content-with-bottom-nav">            {/* Archive Cards Grid - Special layout for archive category */}
             {categoryFilter === 'archive' && !pageParam ? (
               <div className="mb-6 px-1">
                 
                 {/* Archive Search & Breadcrumbs */}
-                {/* Archive Search & Breadcrumbs - Transparent Minimal Header */}
-                <div className="mb-6 sticky top-0 z-20 bg-transparent pt-2 pb-4 -mx-1 px-1">
-                  
-                  {/* Breadcrumbs Navigation */}
-                  <div className="mb-4 flex items-center gap-2 text-xs sm:text-sm max-w-full overflow-x-auto whitespace-nowrap scrollbar-hide py-1">
-                    <button 
-                      onClick={() => {
-                        setSelectedPageCategory(null);
-                        setArchiveSearchQuery('');
-                      }}
-                      className={`font-medium transition-colors flex items-center gap-1.5 shrink-0 ${!selectedPageCategory ? 'text-purple-600' : 'text-slate-500 hover:text-purple-600'}`}
-                    >
-                      <Archive className="w-4 h-4" />
-                      All Categories
-                    </button>
-                    {selectedPageCategory && (
-                      <>
-                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-900 truncate">{selectedPageCategory}</span>
-                      </>
-                    )}
-                  </div>
+                <ArchiveSearch 
+                  selectedPageCategory={selectedPageCategory}
+                  setSelectedPageCategory={setSelectedPageCategory}
+                  archiveSearchQuery={archiveSearchQuery}
+                  setArchiveSearchQuery={setArchiveSearchQuery}
+                />
 
-                  {/* Persistent Archive Search Bar */}
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Search className="h-4.5 w-4.5 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder={selectedPageCategory ? `Search inside ${selectedPageCategory}...` : "Search all archive categories..."}
-                      value={archiveSearchQuery}
-                      onChange={(e) => setArchiveSearchQuery(e.target.value)}
-                      className="block w-full pl-10 pr-10 py-3 border-b border-slate-200/50 bg-transparent rounded-none leading-5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-400 focus:ring-0 sm:text-sm transition-all duration-300"
-                    />
-                    {archiveSearchQuery && (
-                      <button
-                        onClick={() => setArchiveSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                      >
-                        <X className="h-4.5 w-4.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Global Archive Search Results */}
-                {archiveSearchQuery.trim().length >= 2 && !pageParam ? (
-                  <div className="mt-4 mb-8">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                      <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                        <Music className="w-5 h-5 text-purple-600" />
-                        {isGlobalSearchLoading ? 'Searching songs...' : `Search Results (${globalSearchResults.length})`}
-                      </h3>
-                      {isGlobalSearchLoading && (
-                        <RefreshCw className="w-4 h-4 text-purple-600 animate-spin" />
-                      )}
-                    </div>
-
-                    {isGlobalSearchLoading ? (
-                      <div className="space-y-3">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="h-20 bg-white/50 animate-pulse rounded-xl border border-slate-200"></div>
-                        ))}
-                      </div>
-                    ) : globalSearchResults.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-3">
-                        {globalSearchResults.map((song, index) => (
-                          <button
-                            key={`${song.id}-${index}`}
-                            onClick={() => handleSongClick(song, index)}
-                            className="w-full text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-purple-400 hover:shadow-md transition-all duration-200 group flex items-center justify-between"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Music className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                                <h4 className="font-bold text-slate-900 truncate group-hover:text-purple-700 transition-colors">
-                                  {song.title}
-                                </h4>
-                                {song.status && (
-                                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold uppercase tracking-wider ${
-                                    song.status === 'heard' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                                  }`}>
-                                    {song.status}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                                <span className="flex items-center gap-1 font-medium text-purple-600">
-                                  <Archive className="w-3 h-3" />
-                                  {(song as any).parentPageName}
-                                </span>
-                                {song.leadSinger && (
-                                  <span className="flex items-center gap-1">
-                                    <User className="w-3 h-3" />
-                                    {song.leadSinger}
-                                  </span>
-                                )}
-                                {song.key && (
-                                  <span className="font-bold text-slate-400">KEY: {song.key}</span>
-                                )}
-                              </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-10 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                        <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-600 font-medium">No songs found matching "{archiveSearchQuery}"</p>
-                        <p className="text-slate-400 text-sm mt-1">Try a different title, writer, or lyrics</p>
-                      </div>
-                    )}
-                    <div className="h-px bg-slate-200 my-8 mx-auto w-1/4 opacity-50"></div>
-                  </div>
-                ) : null}
+                <GlobalArchiveResults 
+                  archiveSearchQuery={archiveSearchQuery}
+                  isGlobalSearchLoading={isGlobalSearchLoading}
+                  globalSearchResults={globalSearchResults}
+                  pageCategories={pageCategories}
+                  handleSongClick={handleSongClick}
+                />
 
                 {/* Show skeleton while loading page categories */}
                 {loadingPageCategories && !selectedPageCategory && !archiveSearchQuery.trim() && (
@@ -1624,51 +1306,13 @@ function PraiseNightPageContent() {
                 )}
 
                 {/* Show page categories if in archive and no category selected AND categories exist */}
-                {!loadingPageCategories && categoryFilter === 'archive' && !selectedPageCategory && !archiveSearchQuery.trim() && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-slate-900">Browse by Category</h3>
-                      <span className="text-sm text-slate-500">{pageCategories.length} categories</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                      {pageCategories.filter(category => !archiveSearchQuery.trim() || category.name?.toLowerCase().includes(archiveSearchQuery.toLowerCase()) || category.description?.toLowerCase().includes(archiveSearchQuery.toLowerCase())).map((category) => {
-                        // Count pages in this category
-                        const pagesInCategory = allPraiseNights.filter(p => {
-                          const isArchive = p.category === 'archive';
-                          const matchesCategory = p.pageCategory === category.name;
-
-                          return isArchive && matchesCategory;
-                        });
-                        const pageCount = pagesInCategory.length;
-
-
-
-                        // Show all categories, even with 0 pages (for testing)
-                        return (
-                          <button
-                            key={category.id}
-                            onClick={() => {
-                              setSelectedPageCategory(category.name);
-                            }}
-                            className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-200 text-left"
-                          >
-                            {category.image && (
-                              <img
-                                src={category.image}
-                                alt={category.name}
-                                className="w-full h-40 object-cover rounded-lg mb-4"
-                              />
-                            )}
-                            <h4 className="text-lg font-semibold text-slate-900 mb-2">{category.name}</h4>
-                            <p className="text-sm text-slate-500 mb-3 line-clamp-2">{category.description}</p>
-                            <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                              {pageCount} {pageCount === 1 ? 'page' : 'pages'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                {!loadingPageCategories && !selectedPageCategory && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
+                  <ArchiveCategoryGrid 
+                    pageCategories={pageCategories}
+                    archiveSearchQuery={archiveSearchQuery}
+                    allPraiseNights={allPraiseNights}
+                    setSelectedPageCategory={setSelectedPageCategory}
+                  />
                 )}
 
                 {/* Back button removed in favor of breadcrumb navigation above */}
@@ -1689,60 +1333,21 @@ function PraiseNightPageContent() {
                   </div>
                 )}
 
-                {/* Show pages if: 1) category is selected, OR 2) no page categories exist (show all archived pages) */}
-                {!loading && !loadingPageCategories && (selectedPageCategory || pageCategories.length === 0) && filteredPraiseNights.length > 0 && !archiveSearchQuery.trim() ? (
-                  <div className="flex flex-col">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {displayedPraiseNights.map((praiseNight) => (
-                        <button
-                          key={praiseNight.id}
-                          onClick={() => {
-                            router.push(`/pages/praise-night?category=${categoryFilter || 'archive'}&page=${praiseNight.id}`);
-                          }}
-                          className={`group relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${currentPraiseNight?.id === praiseNight.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
-                        >
-                          {/* Banner Image */}
-                          <div className="aspect-[4/3] bg-gradient-to-br from-purple-500 to-pink-500 relative overflow-hidden">
-                            {praiseNight.bannerImage ? (
-                              <img
-                                src={praiseNight.bannerImage}
-                                alt={praiseNight.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">PN{praiseNight.id}</span>
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                          </div>
+                <ArchiveProgramList 
+                  loading={loading}
+                  loadingPageCategories={loadingPageCategories}
+                  selectedPageCategory={selectedPageCategory}
+                  pageCategories={pageCategories}
+                  filteredPraiseNights={filteredPraiseNights}
+                  displayedPraiseNights={displayedPraiseNights}
+                  currentPraiseNight={currentPraiseNight}
+                  categoryFilter={categoryFilter}
+                  archiveSearchQuery={archiveSearchQuery}
+                  setArchiveSearchQuery={setArchiveSearchQuery}
+                  setSelectedPageCategory={setSelectedPageCategory}
+                />
 
-                          {/* Page Info */}
-                          <div className="p-3">
-                            <h3 className="font-semibold text-sm text-gray-900 truncate">{praiseNight.name}</h3>
-                            <p className="text-xs text-gray-600 mt-1">{praiseNight.date}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{praiseNight.location}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : filteredPraiseNights.length === 0 && !loading && !archiveSearchQuery.trim() ? (
-                  <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                    <Music className="w-12 h-12 text-slate-300 mb-3" />
-                    <p className="text-slate-500 font-medium italic">
-                      No sessions found in this category
-                    </p>
-                  </div>
-                ) : selectedPageCategory ? (
-                  <div className="text-center py-12">
-                    <Archive className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No pages in this category</h3>
-                    <p className="text-slate-500">
-                      No archived pages have been assigned to "{selectedPageCategory}" yet
-                    </p>
-                  </div>
-                ) : !loadingPageCategories && pageCategories.length === 0 ? (
+                {!loadingPageCategories && pageCategories.length === 0 && (
                   <div className="text-center py-12">
                     <Archive className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <h3 className="text-lg font-medium text-slate-900 mb-2">No Page Categories</h3>
@@ -1753,287 +1358,46 @@ function PraiseNightPageContent() {
                       Create page categories in the Admin Panel → Page Categories section
                     </p>
                   </div>
-                ) : null}
+                )}
               </div>
             ) : (
               <div className="space-y-4">
                 {(categoryFilter !== 'archive' || !!pageParam) && currentPraiseNight && (
-                  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mb-2 sm:mb-3 max-w-md sm:max-w-lg mx-auto shadow-2xl shadow-black/20 ring-1 ring-black/5 breathe-animation">
-                    <div className="relative h-35 sm:h-43 md:h-51">
-                      <Image
-                        src={ecardSrc}
-                        alt="Praise Night E-card"
-                        fill
-                        unoptimized={true}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                        className="object-cover object-center"
-                        priority
-                        onError={(e) => {
-                          console.error('Image failed to load:', ecardSrc);
-                          e.currentTarget.src = "/Ecards/1000876785.png";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                    </div>
-                  </div>
+                  <PraiseNightBanner ecardSrc={ecardSrc} />
                 )}
 
-
-            {(categoryFilter !== 'archive' || !!pageParam) && currentPraiseNight && filteredPraiseNights.length > 0 && !(categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0) && (
-              <div className="mb-4 sm:mb-6">
-                <div
-                  className="-mx-3 px-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                  onScroll={(e) => {
-                    const target = e.target as HTMLDivElement;
-                    target.style.animationPlayState = 'paused';
-                    clearTimeout((target as any).scrollTimeout);
-                    (target as any).scrollTimeout = setTimeout(() => {
-                      target.style.animationPlayState = 'running';
-                    }, 2000);
-                  }}
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 animate-scroll">
-                    {/* First set of pills */}
-                    <button
-                      onClick={() => router.push('/pages/praise-night/schedule')}
-                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
-                    >
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">
-                        <Music className="w-3.5 h-3.5 text-purple-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Songs Schedule</span>
-                    </button>
-
-                    <button
-                      onClick={() => router.push('/pages/audiolab')}
-                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
-                    >
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">
-                        <Mic className="w-3.5 h-3.5 text-purple-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Audio Lab</span>
-                    </button>
-
-                    <button className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100">
-                        <Users className="w-3.5 h-3.5 text-amber-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Solfas</span>
-                    </button>
-
-                    <button className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100">
-                        <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Sheet Music</span>
-                    </button>
-
-                    {/* Duplicate set for seamless scrolling */}
-                    <button
-                      onClick={() => router.push('/pages/praise-night/schedule')}
-                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
-                    >
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">
-                        <Music className="w-3.5 h-3.5 text-purple-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Songs Schedule</span>
-                    </button>
-
-                    <button
-                      onClick={() => router.push('/pages/audiolab')}
-                      className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start"
-                    >
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100">
-                        <Mic className="w-3.5 h-3.5 text-purple-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Audio Lab</span>
-                    </button>
-
-                    <button className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100">
-                        <Users className="w-3.5 h-3.5 text-amber-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Solfas</span>
-                    </button>
-
-                    <button className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-50 active:scale-95 transition flex-shrink-0 snap-start">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100">
-                        <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium">Sheet Music</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Status Filter buttons/pills with category-specific count - Show for archive individual pages */}
-            {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
-              <div className="mb-4 sm:mb-6 px-4">
-                <div className="flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => setActiveFilter('heard')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 shadow-sm border whitespace-nowrap ${activeFilter === 'heard'
-                      ? 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
-                      }`}
-                  >
-                    Heard ({categoryHeardCount})
-                  </button>
-
-                  <div className="flex-1 text-center max-w-[55%] sm:max-w-none">
-                    {/* Mobile: show first 3 words then ... if too long */}
-                    <span className="block sm:hidden text-black text-xs font-medium truncate">
-                      {(() => {
-                        if (!activeCategory) return '';
-                        const words = activeCategory.split(' ').filter(Boolean);
-                        const firstThree = words.slice(0, 3).join(' ');
-                        return words.length > 3 ? `${firstThree}...` : firstThree;
-                      })()}
-                    </span>
-                    {/* Desktop / tablet: show full category */}
-                    <span className="hidden sm:inline text-black text-sm font-medium">
-                      {activeCategory}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setActiveFilter('unheard')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 shadow-sm border whitespace-nowrap ${activeFilter === 'unheard'
-                      ? 'bg-orange-100 hover:bg-orange-200 text-orange-800 border-orange-300'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
-                      }`}
-                  >
-                    Unheard ({categoryUnheardCount})
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Song Title Cards - Scrollable - Show for archive individual pages */}
-            {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
-              <div className="px-1 py-4 lg:max-h-none overflow-y-auto lg:overflow-visible">
-                {/* CRITICAL FIX: Show loading skeleton while fetching, not empty state */}
-                {songsLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="border-0 rounded-2xl p-3 lg:p-4 shadow-sm bg-white animate-pulse">
-                        <div className="flex items-center gap-3 lg:gap-4">
-                          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-slate-200"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                            <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-                          </div>
-                          <div className="w-12 h-6 bg-slate-200 rounded-full"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : filteredSongs.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                      <Music className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <div className="text-slate-500 text-sm mb-2 font-medium">
-                      {!currentPraiseNight && 'No praise night selected'}
-                      {currentPraiseNight && !activeCategory && 'No category selected'}
-                      {currentPraiseNight && activeCategory && categoryTotalCount === 0 && `No songs in ${activeCategory} category yet`}
-                      {currentPraiseNight && activeCategory && categoryTotalCount > 0 && activeFilter === 'heard' && categoryHeardCount === 0 && `No heard songs in ${activeCategory} yet`}
-                      {currentPraiseNight && activeCategory && categoryTotalCount > 0 && activeFilter === 'unheard' && categoryUnheardCount === 0 && `No unheard songs in ${activeCategory} yet`}
-                    </div>
-                    <div className="text-slate-400 text-xs">
-                      {!currentPraiseNight && 'Select a praise night from the dropdown above'}
-                      {currentPraiseNight && !activeCategory && 'Select a category from the bottom navigation'}
-                      {currentPraiseNight && activeCategory && categoryTotalCount === 0 && 'Songs will appear here when added to this category'}
-                      {currentPraiseNight && activeCategory && categoryTotalCount > 0 && activeFilter === 'heard' && categoryHeardCount === 0 && 'Songs will appear here when marked as heard'}
-                      {currentPraiseNight && activeCategory && categoryTotalCount > 0 && activeFilter === 'unheard' && categoryUnheardCount === 0 && 'Songs will appear here when marked as unheard'}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4">
-                    {filteredSongs.map((song, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          // Open modal without auto-play
-                          handleSongClick(song, index);
-                        }}
-                        className={`border-0 rounded-2xl p-3 lg:p-4 shadow-sm hover:shadow-lg transition-all duration-300 active:scale-[0.97] group mb-3 lg:mb-0 w-full cursor-pointer touch-optimized ${(song as any).isActive
-                          ? 'ring-4 ring-green-500 shadow-lg shadow-green-200/50 bg-white hover:bg-gray-50 animate-pulse-ring' // Admin marked as ACTIVE - blinking green border
-                          : (() => {
-                            const isActive = currentSong?.id === song.id;
-                            if (isActive) {
-
-                            }
-                            return isActive;
-                          })()
-                            ? 'ring-2 shadow-lg' // Playing - use zone color
-                            : 'bg-white hover:bg-gray-50 ring-1 ring-black/5'
-                          }`}
-                        style={(() => {
-                          const isActive = currentSong?.id === song.id;
-                          if (isActive) {
-                            return {
-                              backgroundColor: `${zoneColor}40`,
-                              borderColor: zoneColor,
-                              boxShadow: `0 0 0 2px ${zoneColor}, 0 10px 15px -3px ${zoneColor}30, 0 4px 6px -2px ${zoneColor}20`
-                            };
-                          }
-                          return {};
-                        })()}
-                      >
-                        {/* Song Header - Rehearsal Style */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 lg:gap-4">
-                            <div
-                              className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm"
-                              style={{ backgroundColor: `${zoneColor}20` }}
-                            >
-                              {currentSong?.id === song.id && isPlaying ? (
-                                <AudioWave className="h-6 w-6" />
-                              ) : (
-                                <span
-                                  className="text-sm lg:text-base font-semibold"
-                                  style={{ color: zoneColor }}
-                                >
-                                  {index + 1}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-medium text-slate-900 text-sm lg:text-base group-hover:text-black leading-tight">
-                                {song.title}
-                              </h3>
-                              <p className="text-xs lg:text-sm text-slate-500 mt-0.5 leading-tight font-bold">
-                                Singer: {song.leadSinger || 'Unknown'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {/* Rehearsal Count */}
-                            <div
-                              className="px-2 py-1 rounded-full"
-                              style={{ backgroundColor: `${zoneColor}20` }}
-                            >
-                              <span
-                                className="text-xs font-bold"
-                                style={{ color: zoneColor }}
-                              >
-                                x{song.rehearsalCount ?? 0}
-                              </span>
-                            </div>
-                            <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-                              <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 transition-all duration-200" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {(categoryFilter !== 'archive' || !!pageParam) && currentPraiseNight && filteredPraiseNights.length > 0 && !(categoryFilter === 'pre-rehearsal' && filteredPraiseNights.length === 0) && (
+                  <PraiseNightQuickActions />
                 )}
-              </div>
-            )}
 
+                {/* Status Filter buttons/pills with category-specific count - Show for archive individual pages */}
+                {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
+                  <PraiseNightStatusFilter 
+                    activeFilter={activeFilter}
+                    setActiveFilter={setActiveFilter}
+                    activeCategory={activeCategory}
+                    categoryHeardCount={categoryHeardCount}
+                    categoryUnheardCount={categoryUnheardCount}
+                  />
+                )}
+
+                {/* Song Title Cards - Scrollable - Show for archive individual pages */}
+                {currentPraiseNight && (categoryFilter !== 'archive' || pageParam) && (
+                  <PraiseNightSongList 
+                    songsLoading={songsLoading}
+                    filteredSongs={filteredSongs}
+                    currentSong={currentSong}
+                    isPlaying={isPlaying}
+                    activeCategory={activeCategory}
+                    categoryTotalCount={categoryTotalCount}
+                    categoryHeardCount={categoryHeardCount}
+                    categoryUnheardCount={categoryUnheardCount}
+                    activeFilter={activeFilter}
+                    zoneColor={zoneColor}
+                    currentPraiseNight={currentPraiseNight}
+                    handleSongClick={handleSongClick}
+                  />
+                )}
             {/* Add bottom padding to prevent content from being hidden behind sticky categories and safe areas */}
             <div className="h-20"></div> {/* Spacer for fixed bottom elements */}
         {/* End of Scrollable Content */}
@@ -2044,96 +1408,18 @@ function PraiseNightPageContent() {
         onClose={toggleMenu}
         title="Menu"
         items={menuItems}
-        key={`drawer-${categoryFilter}`
-        } // Force re-render when category changes
+        key={`drawer-${categoryFilter}`} // Force re-render when category changes
       />
 
-      {/* Category Bar for Individual Archive Pages with Horizontal Scroll */}
-      {
-        categoryFilter === 'archive' && pageParam && (
-          <div
-            className="bottom-bar-enhanced flex-shrink-0 z-[100] backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
-            style={{
-              background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
-            }}
-          >
-            <div className="w-full flex items-center px-3 sm:px-4 lg:px-6 py-4 gap-2">
-              {/* Category buttons with horizontal scroll */}
-              <div
-                className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-              >
-                <div className="flex gap-2 min-w-max px-1">
-                  {mainCategories.map((category, index) => {
-                    const hasActiveSong = finalSongData.some((song: any) => song.category === category && song.isActive);
-                    return (
-                      <button
-                        key={category}
-                        onClick={() => handleCategorySelect(category)}
-                        className={`flex-shrink-0 px-3 py-3 rounded-xl text-xs font-semibold transition-all duration-200 text-center whitespace-nowrap category-button ${hasActiveSong
-                          ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
-                          : activeCategory === category
-                            ? 'text-white shadow-md'
-                            : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200'
-                          }`}
-                        style={activeCategory === category && !hasActiveSong ? {
-                          backgroundColor: zoneColor,
-                          boxShadow: `0 4px 6px -1px ${zoneColor}40, 0 2px 4px -1px ${zoneColor}20`
-                        } : {}}
-                      >
-                        <span className="block leading-tight">{category}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Fixed Bottom Bar with Horizontal Scrolling Categories */}
-      {
-        filteredPraiseNights.length > 0 && categoryFilter !== 'archive' && (
-          <div
-            className="bottom-bar-enhanced flex-shrink-0 z-[100] backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
-            style={{
-              background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
-            }}
-          >
-            <div className="w-full flex items-center px-3 sm:px-4 lg:px-6 py-4 gap-2">
-              {/* Category buttons with horizontal scroll */}
-              <div
-                className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-              >
-                <div className="flex gap-2 min-w-max px-1">
-                  {mainCategories.map((category, index) => {
-                    const hasActiveSong = finalSongData.some((song: any) => song.category === category && song.isActive);
-                    return (
-                      <button
-                        key={category}
-                        onClick={() => handleCategorySelect(category)}
-                        className={`flex-shrink-0 px-3 py-3 rounded-xl text-xs font-semibold transition-all duration-200 text-center whitespace-nowrap category-button ${hasActiveSong
-                          ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
-                          : activeCategory === category
-                            ? 'text-white shadow-md'
-                            : 'bg-white/90 backdrop-blur-sm text-slate-900 font-bold hover:bg-white border border-gray-200'
-                          }`}
-                        style={activeCategory === category && !hasActiveSong ? {
-                          backgroundColor: zoneColor,
-                          boxShadow: `0 4px 6px -1px ${zoneColor}40, 0 2px 4px -1px ${zoneColor}20`
-                        } : {}}
-                      >
-                        <span className="block leading-tight">{category}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        )
-      }
+      <PraiseNightCategoryBar 
+        categoryFilter={categoryFilter}
+        pageParam={pageParam}
+        mainCategories={mainCategories}
+        activeCategory={activeCategory}
+        handleCategorySelect={handleCategorySelect}
+        finalSongData={finalSongData}
+        zoneColor={zoneColor}
+      />
 
       {/* Category Filter Drawer */}
       {
@@ -2189,97 +1475,13 @@ function PraiseNightPageContent() {
       }
 
       {/* Floating Active Song Widget */}
-      {(() => {
-        const activeSongs = finalSongData
-          .filter((song: any) => song.isActive)
-          .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
-        
-        if (activeSongs.length > 0 && !isSongDetailOpen) {
-          if (activeSongs.length === 1) {
-            // Single active song - works like before
-            const activeSongDisplay = activeSongs[0];
-            return (
-              <div 
-                className="fixed bottom-24 right-4 z-50 animate-bounce-in cursor-pointer touch-optimized group"
-                onClick={() => handleSongClick(activeSongDisplay, finalSongData.indexOf(activeSongDisplay))}
-              >
-                <div className="bg-white px-5 py-4 rounded-2xl shadow-2xl ring-2 ring-green-500 shadow-green-200/60 flex items-center gap-4 animate-pulse-ring max-w-[280px] sm:max-w-[320px]">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 shadow-sm">
-                    <AudioWave className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-bold text-green-600 uppercase tracking-widest mb-1 leading-none">Live Now</div>
-                    <div className="text-sm font-bold text-slate-900 truncate leading-tight">
-                      {activeSongDisplay.title}
-                    </div>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors flex-shrink-0">
-                    <Play className="w-4 h-4 text-green-600 ml-0.5" />
-                  </div>
-                </div>
-              </div>
-            );
-          } else {
-            // Multiple active songs - show menu
-            return (
-              <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end">
-                {/* Expanding Menu */}
-                {showActiveMenu && (
-                  <div className="mb-3 bg-white rounded-2xl shadow-2xl border border-green-100 overflow-hidden w-72 animate-slide-up">
-                    <div className="bg-green-50 px-4 py-3 border-b border-green-100 flex justify-between items-center">
-                      <span className="text-xs font-black text-green-700 uppercase tracking-wider">Live Rehearsal Sessions</span>
-                      <button onClick={() => setShowActiveMenu(false)} className="p-1.5 hover:bg-green-200 rounded-full transition-colors">
-                        <X className="w-4 h-4 text-green-700" />
-                      </button>
-                    </div>
-                    <div className="max-h-[50vh] overflow-y-auto">
-                      {activeSongs.map((song: any, i: number) => (
-                        <button
-                          key={song.id}
-                          className="w-full text-left px-4 py-3.5 hover:bg-green-50 border-b border-gray-50 last:border-0 flex items-center gap-3 transition-colors group"
-                          onClick={() => {
-                            setShowActiveMenu(false);
-                            handleSongClick(song, finalSongData.indexOf(song));
-                          }}
-                        >
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <span className="text-xs font-bold text-green-700">{i + 1}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-slate-900 truncate">{song.title}</div>
-                            <div className="text-[11px] text-slate-500 font-medium truncate">{song.category}</div>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-green-400 group-hover:translate-x-1 transition-transform" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Floating Button */}
-                <div 
-                  className="animate-bounce-in cursor-pointer touch-optimized group"
-                  onClick={() => setShowActiveMenu(!showActiveMenu)}
-                >
-                  <div className={`bg-white px-5 py-4 rounded-2xl shadow-2xl ring-2 ring-green-500 flex items-center gap-4 transition-all duration-300 ${!showActiveMenu ? 'animate-pulse-ring shadow-green-200/60' : 'bg-green-50'}`}>
-                    <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-lg ring-4 ring-green-100">
-                      <span className="text-white text-sm font-black">{activeSongs.length}</span>
-                    </div>
-                    <div className="flex-1 pr-2">
-                      <div className="text-[11px] font-bold text-green-600 uppercase tracking-widest mb-1 leading-none">Live Now</div>
-                      <div className="text-sm font-bold text-slate-900 whitespace-nowrap">
-                        Multiple Songs
-                      </div>
-                    </div>
-                    <ChevronUp className={`w-5 h-5 text-green-600 transition-transform duration-300 ${showActiveMenu ? 'rotate-180' : ''}`} />
-                  </div>
-                </div>
-              </div>
-            );
-          }
-        }
-        return null;
-      })()}
+      <PraiseNightActiveWidget 
+        finalSongData={finalSongData}
+        isSongDetailOpen={isSongDetailOpen}
+        showActiveMenu={showActiveMenu}
+        setShowActiveMenu={setShowActiveMenu}
+        handleSongClick={handleSongClick}
+      />
 
       {/* Song Detail Modal */}
       {

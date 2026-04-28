@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useRef } from 'react'
 import Link from 'next/link'
@@ -50,16 +50,14 @@ export default function SharedDrawer({ open, onClose, title = 'Menu', items, cus
       <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100/80">
         <button
           onClick={onClose}
-          className="text-xl font-outfit-semibold text-gray-900 hover:text-gray-700 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-0 focus:border-0"
-          style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+          className="text-xl font-outfit-semibold text-gray-900 hover:text-gray-700 active:scale-95 transition-all duration-200 focus:outline-none border-none shadow-none"
           aria-label="Close menu"
         >
           {title}
         </button>
         <button
           onClick={onClose}
-          className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-0 focus:border-0"
-          style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+          className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 rounded-full transition-all duration-200 active:scale-95 focus:outline-none border-none shadow-none"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />

@@ -58,7 +58,7 @@ export default function DesktopLayout({
 
       {/* Right Panel - Only show when needed */}
       {showRightPanel && rightPanel && (
-        <div className="hidden lg:block fixed right-0 top-0 w-120 h-full z-40 pl-4" style={{ width: '480px', minWidth: '480px' }}>
+        <div className="hidden lg:block fixed right-0 top-0 w-[480px] min-w-[480px] h-full z-40 pl-4">
           {rightPanel}
         </div>
       )}

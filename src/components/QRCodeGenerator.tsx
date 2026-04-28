@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
@@ -69,8 +69,7 @@ export default function QRCodeGenerator({ value, size = 200, className = '' }: Q
         ref={canvasRef}
         width={size}
         height={size}
-        className={className}
-        style={{ border: '1px solid #e5e7eb', borderRadius: '8px' }}
+        className={`${className} border border-gray-200 rounded-lg`}
       />
       {isGenerating && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">

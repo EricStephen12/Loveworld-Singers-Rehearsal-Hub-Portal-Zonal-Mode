@@ -189,6 +189,8 @@ export interface PraiseNight {
     seconds: number;
   };
   songs: PraiseNightSong[];
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface PraiseNightSong {
@@ -243,6 +245,7 @@ export interface HistoryEntry {
   created_by: string;
   date: string;
   version: string;
+  audioUrl?: string;
 }
 
 export interface Category {

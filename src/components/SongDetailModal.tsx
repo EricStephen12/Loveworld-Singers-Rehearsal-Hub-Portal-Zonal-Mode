@@ -2,17 +2,23 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, SkipBack, SkipForward, RotateCcw, Music2, ChevronDown, ChevronUp, Settings, Maximize2, Minimize2, RotateCw, Undo2, Redo2, RefreshCw, Loader2, MoreVertical } from "lucide-react";
+import { ChevronLeft, BookOpen, Music, Users, Clock, Play, Pause, Music2, ChevronDown, ChevronUp, RefreshCw, Loader2, MoreVertical } from "lucide-react";
 import { PraiseNightSong, HistoryEntry } from "@/types/supabase";
 import { useAudio } from "@/contexts/AudioContext";
 import { useZone } from "@/hooks/useZone";
 import { isHQGroup } from "@/config/zones";
 import { FirebaseDatabaseService } from "@/lib/firebase-database";
-import { FirebaseCommentService } from "@/lib/firebase-comment-service";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
 import { useRealtimeSongData } from "@/hooks/useRealtimeSongData";
 import { NavigationManager } from "@/utils/navigation";
-import CommentAudioPlayer from "./CommentAudioPlayer";
+import { formatTime } from "@/utils/string-utils";
+
+// Modular Components
+import { SongLyrics } from "./song-detail/SongLyrics";
+import { SongSolfas } from "./song-detail/SongSolfas";
+import { SongComments } from "./song-detail/SongComments";
+import { SongHistory } from "./song-detail/SongHistory";
+import { SongAudioPlayer } from "./song-detail/SongAudioPlayer";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -88,33 +94,6 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   };
 
   // Helper to format comment text with bold and larger font for *text* or **text**
-  const formatCommentText = (text: string) => {
-    if (!text) return null;
-
-    // Clean up HTML tags and &nbsp;
-    const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-
-    // Pattern to match: **bold** or *bold*
-    // Using capturing groups to preserve the content for splitting
-    const parts = cleanText.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-
-    return parts.map((part, i) => {
-      const isAsteriskMatch = (part.startsWith('**') && part.endsWith('**')) || (part.startsWith('*') && part.endsWith('*'));
-
-      if (isAsteriskMatch) {
-        let content = part;
-        if (part.startsWith('**')) content = part.slice(2, -2);
-        else if (part.startsWith('*')) content = part.slice(1, -1);
-
-        return (
-          <span key={i} className="font-bold text-[1.1em] text-black leading-tight inline-block">
-            {content}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
 
   // Toggle fullscreen functions
   const toggleFullscreenLyrics = () => {
@@ -133,16 +112,6 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [historyAudioStates, setHistoryAudioStates] = useState<{ [key: string]: { isPlaying: boolean, currentTime: number, duration: number } }>({});
   const historyAudioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
   const [mainPlayerWasPlaying, setMainPlayerWasPlaying] = useState(false);
-
-  // Translation state
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translatedContent, setTranslatedContent] = useState<{ [key: string]: string }>({});
-  const [originalContent, setOriginalContent] = useState<{ [key: string]: string }>({});
-
-  // Text editor state
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingContent, setEditingContent] = useState('');
-  const [editingField, setEditingField] = useState<'lyrics' | 'solfas' | null>(null);
 
   // Collapsible history cards state
   const [expandedHistoryEntries, setExpandedHistoryEntries] = useState<Set<string>>(new Set());
@@ -470,10 +439,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // Use real-time comments hook (no cache)
   const {
-    comments: realtimeComments,
-    loading: isLoadingComments,
-    error: commentsError,
-    refreshComments
+    comments: realtimeComments
   } = useRealtimeComments({
     songId: currentSongData?.id?.toString() || null,
     enabled: isOpen && activeHistoryTab === 'comments'
@@ -481,10 +447,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
   // Use real-time song data hook (no cache)
   const {
-    songData: realtimeSongData,
-    loading: isLoadingSongData,
-    error: songDataError,
-    refreshSongData
+    songData: realtimeSongData
   } = useRealtimeSongData({
     songId: currentSongData?.id?.toString() || null,
     enabled: isOpen, // Always enabled when modal is open
@@ -583,93 +546,15 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     };
   }, [currentSongData?.id, isOpen]);
 
-  // Helper to check if rich text actually has visible content
-  const hasVisibleContent = (html?: string | null) => {
-    if (!html) return false;
-    const stripped = html.replace(/<[^>]*>?/gm, '').trim();
-    const noEntities = stripped.replace(/&nbsp;|\u200B/g, '').trim();
-    return noEntities !== '';
-  };
 
   // Get history data for the current song using local state (same as EditSongModal)
   const getHistoryData = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'metadata' | 'notation'): HistoryEntry[] => {
     return historyEntries.filter(entry => entry.type === type);
   };
 
-  // Get latest content (what's shown in main tabs) - uses real-time data
-  const getLatestContent = (type: 'lyrics' | 'solfas' | 'audio' | 'comments' | 'notation') => {
-    // Use real-time song data if available, otherwise fallback to selectedSong
-    const currentSong = realtimeSongData || selectedSong;
-    if (!currentSong) return null;
-
-    switch (type) {
-      case 'lyrics':
-        return currentSong.lyrics;
-      case 'solfas':
-        return currentSong.solfas;
-      case 'notation':
-        return currentSong.notation;
-      case 'audio':
-        return currentSong.audioFile;
-      case 'comments':
-        // Use real-time comments for latest content
-        const commentAuthor = getCommentLabel();
-        if (realtimeComments && realtimeComments.length > 0) {
-          return realtimeComments
-            .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-        }
-        // Fallback to current song comments
-        return currentSong.comments
-          .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-      default:
-        return null;
-    }
-  };
-
-  // Get older comments for history (all except the latest)
-  const getOlderComments = () => {
-    const commentAuthor = getCommentLabel();
-    // Use real-time comments if available
-    if (realtimeComments && realtimeComments.length > 0) {
-      const coordinatorComments = realtimeComments
-        .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      // Return all except the latest (which is shown in main tab)
-      return coordinatorComments.slice(1);
-    }
-
-    // Fallback to real-time song data or selectedSong comments
-    const currentSong = realtimeSongData || selectedSong;
-    if (!currentSong || !Array.isArray(currentSong.comments)) return [];
-
-    const coordinatorComments = currentSong.comments
-      .filter(comment => comment.author === commentAuthor || comment.author === 'Coordinator' || comment.author === 'Pastor')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    // Return all except the first one (which is the latest)
-    return coordinatorComments.slice(1);
-  };
-
-  // Get older solfas for history (all except the latest)
-  const getOlderSolfas = () => {
-    // Use real-time song data if available
-    const currentSong = realtimeSongData || currentSongData;
-    if (!currentSong?.solfas) return [];
-
-    // For now, we only have current solfas, but this function is ready for when we have multiple versions
-    // In the future, this would work like comments - showing previous versions
-    return [];
-  };
 
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+
 
   const [isDragging, setIsDragging] = useState(false);
   const [wasPlayingBeforeDrag, setWasPlayingBeforeDrag] = useState(false);
@@ -845,149 +730,29 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
 
           {/* Fullscreen Lyrics View */}
           {isFullscreenLyrics && activeTab === 'lyrics' ? (
-            <div className="fixed inset-0 bg-white bg-music-doodle z-[100] flex flex-col">
-              {/* Fullscreen Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={toggleFullscreenLyrics}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <Minimize2 className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
-                    <p className="text-sm text-gray-500">{currentSongData?.writer}</p>
-                  </div>
-                </div>
-
-                {/* Translation Button in Fullscreen */}
-
-              </div>
-
-              {/* Fullscreen Lyrics Content - Properly scrollable */}
-              <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
-                    {currentSongData?.lyrics ? (
-                      <div
-                        dangerouslySetInnerHTML={{ __html: currentSongData.lyrics }}
-                        className="prose prose-lg max-w-none"
-                        style={{ color: '#000000' }}
-                      />
-                    ) : (
-                      <div className="text-center py-12">
-                        <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">No lyrics available</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SongLyrics 
+              isFullscreen={true}
+              onToggleFullscreen={toggleFullscreenLyrics}
+              lyrics={currentSongData?.lyrics}
+              title={currentSongData?.title}
+              writer={currentSongData?.writer}
+            />
           ) : isFullscreenComments && activeTab === 'comments' ? (
-            <div className="fixed inset-0 bg-white bg-music-doodle z-[100] flex flex-col">
-              {/* Fullscreen Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={toggleFullscreenComments}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <Minimize2 className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
-                    <p className="text-sm text-gray-500">Comments</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fullscreen Comments Content - Properly scrollable */}
-              <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
-                    {(!displayedSongData?.comments || !Array.isArray(displayedSongData.comments) || displayedSongData.comments.length === 0) ? (
-                      <div className="text-center py-12">
-                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">No comments available</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
-                          <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
-                            <p className="text-black leading-relaxed mb-4 text-base whitespace-pre-wrap">{comment.text?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()}</p>
-
-                            {comment.audioUrl && (
-                              <div className="mb-4 max-w-md">
-                                <CommentAudioPlayer
-                                  src={comment.audioUrl}
-                                  accentColor={zoneColor}
-                                />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <span className="font-medium">{comment.author}</span>
-                              <span>•</span>
-                              <span>
-                                {new Date(comment.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SongComments 
+              isFullscreen={true}
+              onToggleFullscreen={toggleFullscreenComments}
+              comments={displayedSongData?.comments}
+              zoneColor={zoneColor}
+              commentLabel={getCommentLabel()}
+              title={currentSongData?.title}
+            />
           ) : isFullscreenSolfas && activeTab === 'solfas' ? (
-            <div className="fixed inset-0 bg-white bg-music-doodle z-[100] flex flex-col">
-              {/* Fullscreen Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={toggleFullscreenSolfas}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <Minimize2 className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <div>
-                    <h2 className="text-lg font-semibold text-black">{currentSongData?.title}</h2>
-                    <p className="text-sm text-gray-500">Conductor's Guide</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fullscreen Solfas Content - Properly scrollable */}
-              <div className="flex-1 overflow-y-auto -webkit-overflow-scrolling-touch p-6" style={{ height: 'calc(100vh - 80px)' }}>
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-black leading-relaxed space-y-6 text-base text-left font-poppins">
-                    {currentSongData?.solfas && currentSongData.solfas.trim() !== '' ? (
-                      <div
-                        dangerouslySetInnerHTML={{ __html: currentSongData.solfas }}
-                        className="prose prose-lg max-w-none"
-                        style={{
-                          fontFamily: 'monospace',
-                          fontStyle: 'italic'
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center py-12">
-                        <Music className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">No conductor's guide available</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SongSolfas 
+              isFullscreen={true}
+              onToggleFullscreen={toggleFullscreenSolfas}
+              solfas={currentSongData?.solfas}
+              title={currentSongData?.title}
+            />
           ) : (
             <>
               {/* Normal Modal Content */}
@@ -1153,871 +918,120 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               {/* Content Area */}
               <div className="flex-1 px-6 py-4 overflow-y-auto" style={{ paddingBottom: '180px' }}>
                 {activeTab === 'lyrics' && (
-                  <div className="max-w-none">
-                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {hasVisibleContent(displayedSongData?.lyrics) ? (
-                        <div
-                          dangerouslySetInnerHTML={{ __html: displayedSongData?.lyrics || '' }}
-                          dir="ltr"
-                          style={{
-                            lineHeight: '1.8',
-                            fontSize: '14px',
-                            textAlign: 'left',
-                            direction: 'ltr',
-                            color: '#000000'
-                          }}
-                        />
-                      ) : (
-                        <div className="text-center py-8">
-                          <div className="text-gray-500 text-sm mb-2">No Lyrics Available</div>
-                          <div className="text-gray-400 text-xs">Lyrics will be displayed here when available</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <SongLyrics 
+                    isFullscreen={false}
+                    onToggleFullscreen={toggleFullscreenLyrics}
+                    lyrics={displayedSongData?.lyrics}
+                  />
                 )}
 
                 {activeTab === 'solfas' && (
-                  <div className="max-w-none">
-                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {hasVisibleContent(displayedSongData?.solfas) ? (
-                        <div
-                          dangerouslySetInnerHTML={{ __html: displayedSongData?.solfas || '' }}
-                          dir="ltr"
-                          style={{
-                            lineHeight: '1.8',
-                            fontSize: '14px',
-                            fontFamily: 'monospace',
-                            fontStyle: 'italic',
-                            textAlign: 'left',
-                            direction: 'ltr',
-                            color: '#000000'
-                          }}
-                        />
-                      ) : (
-                        <div className="text-center py-8">
-                          <div className="text-gray-500 text-sm mb-2">No Conductor's Guide Available</div>
-                          <div className="text-gray-400 text-xs">Conductor's guide notation will be displayed here when available</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <SongSolfas 
+                    isFullscreen={false}
+                    onToggleFullscreen={toggleFullscreenSolfas}
+                    solfas={displayedSongData?.solfas}
+                  />
                 )}
 
                 {activeTab === 'notation' && (
-                  <div className="max-w-none">
-                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {hasVisibleContent(displayedSongData?.notation) ? (
-                        <div
-                          dangerouslySetInnerHTML={{ __html: displayedSongData?.notation || '' }}
-                          dir="ltr"
-                          style={{
-                            lineHeight: '1.8',
-                            fontSize: '14px',
-                            fontFamily: 'monospace',
-                            textAlign: 'left',
-                            direction: 'ltr',
-                            color: '#000000'
-                          }}
-                        />
-                      ) : (
-                        <div className="text-center py-8">
-                          <div className="text-gray-500 text-sm mb-2">No Solfa Notation Available</div>
-                          <div className="text-gray-400 text-xs">Solfas notation will be displayed here when available</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <SongSolfas 
+                    isFullscreen={false}
+                    onToggleFullscreen={toggleFullscreenSolfas}
+                    solfas={displayedSongData?.notation}
+                  />
                 )}
 
                 {activeTab === 'comments' && (
-                  <div className="max-w-none">
-                    <div className="text-black leading-relaxed space-y-6 text-sm text-left font-poppins">
-                      {(!displayedSongData?.comments || !Array.isArray(displayedSongData.comments) || displayedSongData.comments.length === 0) ? (
-                        <div className="text-center py-8">
-                          <div className="text-gray-500 text-sm mb-2">No Comments Available</div>
-                          <div className="text-gray-400 text-xs">Comments will be displayed here when available</div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {(Array.isArray(displayedSongData.comments) ? displayedSongData.comments : []).map((comment: any) => (
-                            <div key={comment.id} className="border-b border-slate-100 pb-4 last:border-b-0 group">
-                              <div className="text-slate-900 leading-relaxed mb-3 whitespace-pre-wrap text-sm">{formatCommentText(comment.text)}</div>
-
-                              {comment.audioUrl && (
-                                <div className="mb-3 max-w-md">
-                                  <CommentAudioPlayer
-                                    src={comment.audioUrl}
-                                    accentColor={zoneColor}
-                                  />
-                                </div>
-                              )}
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <span className="font-medium">{comment.author}</span>
-                                <span>•</span>
-                                <span>
-                                  {new Date(comment.date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <SongComments 
+                    isFullscreen={false}
+                    onToggleFullscreen={toggleFullscreenComments}
+                    comments={displayedSongData?.comments}
+                    zoneColor={zoneColor}
+                    commentLabel={getCommentLabel()}
+                  />
                 )}
-
-                {activeTab === 'history' && (
-                  <div className="space-y-4">
-                    {/* History Sub-categories */}
-                    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-                      <button
-                        onClick={() => setActiveHistoryTab('lyrics')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'lyrics'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'lyrics' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        Lyrics
-                      </button>
-                      <button
-                        onClick={() => setActiveHistoryTab('audio')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'audio'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'audio' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        Audio
-                      </button>
-                      <button
-                        onClick={() => setActiveHistoryTab('solfas')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'solfas'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'solfas' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        Conductor's Guide
-                      </button>
-                      <button
-                        onClick={() => setActiveHistoryTab('notation')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'notation'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'notation' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        Solfa Notation
-                      </button>
-                      <button
-                        onClick={() => setActiveHistoryTab('comments')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'comments'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'comments' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        {getCommentLabel()}'s Comments
-                      </button>
-                      <button
-                        onClick={() => setActiveHistoryTab('metadata')}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${activeHistoryTab === 'metadata'
-                          ? 'text-white shadow-md'
-                          : 'bg-white/70 backdrop-blur-sm text-slate-700 hover:bg-white/90 hover:shadow-sm border border-slate-200/50'
-                          }`}
-                        style={activeHistoryTab === 'metadata' ? { backgroundColor: zoneColor } : {}}
-                      >
-                        Song Details
-                      </button>
-                    </div>
-
-                    {/* History Content */}
-                    <div className="min-h-[200px]">
-                      {activeHistoryTab === 'lyrics' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading lyrics history...</p>
-                            </div>
-                          ) : getHistoryData('lyrics').length === 0 ? (
-                            <div className="text-center py-8">
-                              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Lyrics History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('lyrics').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <BookOpen className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {activeHistoryTab === 'audio' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading audio history...</p>
-                            </div>
-                          ) : getHistoryData('audio').length === 0 ? (
-                            <div className="text-center py-8">
-                              <Music className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Audio History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('audio').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <Music className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div className="flex items-center gap-3">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleHistoryAudioPlayPause(entry.id);
-                                              }}
-                                              className="w-10 h-10 rounded-full text-white transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
-                                              style={{
-                                                backgroundColor: zoneColor
-                                              }}
-                                              onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
-                                              }}
-                                              onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = zoneColor;
-                                              }}
-                                            >
-                                              {historyAudioStates[entry.id]?.isPlaying ? (
-                                                <Pause className="w-5 h-5" />
-                                              ) : (
-                                                <Play className="w-5 h-5 ml-0.5" />
-                                              )}
-                                            </button>
-                                            <div className="flex-1">
-                                              <div className="text-sm font-medium text-slate-800">Previous Audio Version</div>
-                                              <div className="text-xs text-slate-500 mt-2 bg-slate-100 px-2 py-1 rounded-full inline-block">
-                                                {formatTime(historyAudioStates[entry.id]?.currentTime || 0)} / {formatTime(historyAudioStates[entry.id]?.duration || 0)}
-                                              </div>
-                                            </div>
-                                          </div>
-                                            <audio
-                                              ref={el => {
-                                                if (el) historyAudioRefs.current[entry.id] = el;
-                                              }}
-                                              src={entry.new_value}
-                                              onTimeUpdate={() => handleHistoryAudioTimeUpdate(entry.id)}
-                                              onLoadedMetadata={() => handleHistoryAudioLoadedMetadata(entry.id)}
-                                              onEnded={() => handleHistoryAudioEnded(entry.id)}
-                                              preload="none"
-                                            />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {activeHistoryTab === 'solfas' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading conductor's guide history...</p>
-                            </div>
-                          ) : getHistoryData('solfas').length === 0 ? (
-                            <div className="text-center py-8">
-                              <Music className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Conductor's Guide History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('solfas').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <Music className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {activeHistoryTab === 'notation' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading notation history...</p>
-                            </div>
-                          ) : getHistoryData('notation').length === 0 ? (
-                            <div className="text-center py-8">
-                              <Music2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Notation History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('notation').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <Music2 className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} style={{ color: '#000000' }} />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {activeHistoryTab === 'comments' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading comments history...</p>
-                            </div>
-                          ) : getHistoryData('comments').length === 0 ? (
-                            <div className="text-center py-8">
-                              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Comments History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('comments').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <Users className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {activeHistoryTab === 'metadata' && (
-                        <div className="space-y-4">
-                          {isLoadingHistory ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                              <p className="text-gray-500 text-sm">Loading song details history...</p>
-                            </div>
-                          ) : getHistoryData('metadata').length === 0 ? (
-                            <div className="text-center py-8">
-                              <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <p className="text-gray-500 text-sm font-medium">No Song Details History</p>
-                              <p className="text-gray-400 text-xs mt-1">Changes will appear here</p>
-                              <button
-                                onClick={() => loadHistoryEntries()}
-                                className="mt-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-                                title="Refresh history"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {getHistoryData('metadata').map((entry) => {
-                                const isExpanded = expandedHistoryEntries.has(entry.id);
-                                return (
-                                  <div key={entry.id} className="bg-white/70 backdrop-blur-sm rounded-lg border border-slate-200/50 overflow-hidden">
-                                    <div
-                                      className="p-4 cursor-pointer hover:bg-white/80 transition-colors"
-                                      onClick={() => toggleHistoryEntry(entry.id)}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <div
-                                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                          style={{
-                                            background: `linear-gradient(to right, ${zoneColor}, ${darkenColor(zoneColor, 10)})`
-                                          }}
-                                        >
-                                          <Settings className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                              {entry.type}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                              {formatDateTime(entry.date).date} at {formatDateTime(entry.date).time}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-900">{entry.title}</h4>
-                                            {isExpanded ? (
-                                              <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            ) : (
-                                              <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {isExpanded && (
-                                      <div className="px-4 pb-4">
-                                        <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                                          <div className="whitespace-pre-wrap">{formatCommentText(entry.new_value)}</div>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                          {activeTab === 'history' && (
+                  <SongHistory 
+                    activeHistoryTab={activeHistoryTab}
+                    setActiveHistoryTab={setActiveHistoryTab}
+                    isLoadingHistory={isLoadingHistory}
+                    historyEntries={historyEntries}
+                    loadHistoryEntries={loadHistoryEntries}
+                    expandedHistoryEntries={expandedHistoryEntries}
+                    toggleHistoryEntry={toggleHistoryEntry}
+                    zoneColor={zoneColor}
+                    darkenColor={darkenColor}
+                    formatDateTime={formatDateTime}
+                    formatTime={formatTime}
+                    getCommentLabel={getCommentLabel}
+                    historyAudioStates={historyAudioStates}
+                    handleHistoryAudioPlayPause={handleHistoryAudioPlayPause}
+                    historyAudioRefs={historyAudioRefs}
+                    handleHistoryAudioTimeUpdate={handleHistoryAudioTimeUpdate}
+                    handleHistoryAudioLoadedMetadata={handleHistoryAudioLoadedMetadata}
+                    handleHistoryAudioEnded={handleHistoryAudioEnded}
+                  />
                 )}
               </div>
 
 
-              {/* Floating Fullscreen Button - Positioned close to the player */}
+              {/* Floating Fullscreen Buttons */}
               {activeTab === 'lyrics' && !isFullscreenLyrics && (
-                <button
-                  onClick={toggleFullscreenLyrics}
-                  className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
-                  style={{
-                    backgroundColor: zoneColor
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = zoneColor;
-                  }}
-                  title="Fullscreen Lyrics"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                <SongLyrics 
+                  isFullscreen={false}
+                  onToggleFullscreen={toggleFullscreenLyrics}
+                  showFloatingButtonOnly={true}
+                  zoneColor={zoneColor}
+                  darkenColor={darkenColor}
+                />
               )}
 
               {activeTab === 'comments' && !isFullscreenComments && (
-                <button
-                  onClick={toggleFullscreenComments}
-                  className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
-                  style={{
-                    backgroundColor: zoneColor
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = zoneColor;
-                  }}
-                  title="Fullscreen Comments"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                <SongComments 
+                  isFullscreen={false}
+                  onToggleFullscreen={toggleFullscreenComments}
+                  showFloatingButtonOnly={true}
+                  zoneColor={zoneColor}
+                  darkenColor={darkenColor}
+                />
               )}
 
               {activeTab === 'solfas' && !isFullscreenSolfas && (
-                <button
-                  onClick={toggleFullscreenSolfas}
-                  className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
-                  style={{
-                    backgroundColor: zoneColor
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = zoneColor;
-                  }}
-                  title="Fullscreen Conductor's Guide"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                <SongSolfas 
+                  isFullscreen={false}
+                  onToggleFullscreen={toggleFullscreenSolfas}
+                  showFloatingButtonOnly={true}
+                  zoneColor={zoneColor}
+                  darkenColor={darkenColor}
+                />
               )}
 
-              {/* Compact Music Player - Fixed at Bottom */}
-              <div className="fixed bottom-0 left-0 right-0 px-6 modal-bottom-safe bg-white border-t border-gray-100 z-[100]">
-
-                {/* Progress Bar */}
-                <div className="mb-2">
-                  <div
-                    className="progress-bar w-full h-1 bg-gray-300 rounded-full relative cursor-pointer hover:h-1.5 transition-all duration-200 select-none touch-optimized"
-                    onClick={handleProgressClick}
-                    onMouseDown={handleProgressMouseDown}
-                    onMouseMove={handleProgressMouseMove}
-                    onMouseUp={handleProgressMouseUp}
-                  >
-                    <div
-                      className="h-full bg-gray-600 rounded-full relative transition-all duration-200"
-                      style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-                    >
-                      <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 rounded-full transition-all duration-200 ${isDragging ? 'w-4 h-4 bg-blue-600' : 'w-3 h-3 bg-gray-600 hover:w-4 hover:h-4'
-                        }`}></div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-gray-600 text-xs">{formatTime(currentTime)}</span>
-                    <span className="text-gray-600 text-xs">{formatTime(duration)}</span>
-                  </div>
-                </div>
-
-                {/* Main Controls */}
-                <div className="flex items-center justify-evenly px-2">
-                  {/* Repeat Button */}
-                  <button
-                    onClick={toggleRepeat}
-                    className={`w-5 h-5 flex items-center justify-center transition-colors ${isRepeating ? 'text-blue-600' : 'text-gray-600 hover:text-gray-800'
-                      }`}
-                  >
-                    <RotateCcw className={`w-3.5 h-3.5 ${isRepeating ? 'fill-current' : ''}`} />
-                  </button>
-
-                  {/* Previous Track */}
-                  <button
-                    onClick={handlePrevious}
-                    className="w-5 h-5 flex items-center justify-center hover:text-gray-800 transition-colors"
-                  >
-                    <SkipBack className="w-4 h-4 text-gray-600 fill-gray-600" />
-                  </button>
-
-                  {/* 10 Second Backward */}
-                  <button
-                    onClick={skipBackward10}
-                    className="relative w-4 h-4 flex items-center justify-center hover:text-gray-800 transition-colors"
-                    title="Skip backward 10 seconds"
-                  >
-                    <RotateCcw className="w-3 h-3 text-gray-600" />
-                    <span className="absolute text-[4px] text-gray-600 font-bold leading-none top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">10</span>
-                  </button>
-
-                  {/* Center Play/Pause Button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-
-                      // Stop any active history playback
-                      Object.keys(historyAudioRefs.current).forEach(id => {
-                        if (historyAudioRefs.current[id]) {
-                          historyAudioRefs.current[id]!.pause();
-                        }
-                      });
-
-                      if (audioRef.current) {
-                        if (audioRef.current.paused) {
-                          audioRef.current.play().catch(error => console.error('Playback failed:', error));
-                        } else {
-                          audioRef.current.pause();
-                        }
-                      }
-
-                      // Sync with audio state
-                      togglePlayPause();
-                    }}
-                    disabled={isLoading || hasError}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-sm ${hasError
-                      ? 'bg-red-500 cursor-not-allowed'
-                      : isLoading
-                        ? 'bg-gray-400 cursor-wait'
-                        : 'bg-gray-600'
-                      }`}
-                  >
-                    {isLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : hasError ? (
-                      <div className="w-4 h-4 text-white text-xs">!</div>
-                    ) : isPlaying ? (
-                      <Pause className="w-4 h-4 text-white" />
-                    ) : (
-                      <Play className="w-4 h-4 text-white ml-0.5" />
-                    )}
-                  </button>
-
-                  {/* 10 Second Forward */}
-                  <button
-                    onClick={skipForward10}
-                    className="relative w-4 h-4 flex items-center justify-center hover:text-gray-800 transition-colors"
-                    title="Skip forward 10 seconds"
-                  >
-                    <RotateCw className="w-3 h-3 text-gray-600" />
-                    <span className="absolute text-[4px] text-gray-600 font-bold leading-none top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">10</span>
-                  </button>
-
-                  {/* Next Track */}
-                  <button
-                    onClick={handleNext}
-                    className="w-5 h-5 flex items-center justify-center hover:text-gray-800 transition-colors"
-                  >
-                    <SkipForward className="w-4 h-4 text-gray-600 fill-gray-600" />
-                  </button>
-
-                  {/* Music Page Button */}
-                  <button
-                    onClick={handleMusicPage}
-                    disabled={isNavigatingToAudioLab}
-                    className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
-                  >
-                    {isNavigatingToAudioLab ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Music2 className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-
-              </div>
+              <SongAudioPlayer 
+                currentTime={currentTime}
+                duration={duration}
+                formatTime={formatTime}
+                isDragging={isDragging}
+                handleProgressClick={handleProgressClick}
+                handleProgressMouseDown={handleProgressMouseDown}
+                handleProgressMouseMove={handleProgressMouseMove}
+                handleProgressMouseUp={handleProgressMouseUp}
+                isRepeating={isRepeating}
+                toggleRepeat={toggleRepeat}
+                handlePrevious={handlePrevious}
+                skipBackward10={skipBackward10}
+                togglePlayPause={togglePlayPause}
+                isLoading={isLoading}
+                hasError={hasError}
+                isPlaying={isPlaying}
+                skipForward10={skipForward10}
+                handleNext={handleNext}
+                handleMusicPage={handleMusicPage}
+                isNavigatingToAudioLab={isNavigatingToAudioLab}
+                zoneColor={zoneColor}
+                darkenColor={darkenColor}
+                historyAudioRefs={historyAudioRefs}
+                setHistoryAudioStates={setHistoryAudioStates}
+              />
             </>
           )}
         </div>

@@ -61,7 +61,9 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
         minutes: (page as any).countdownMinutes || (page as any).countdown?.minutes || (page as any).countdownminutes || 0,
         seconds: (page as any).countdownSeconds || (page as any).countdown?.seconds || (page as any).countdownseconds || 0
       },
-      songs: []
+      songs: [],
+      createdAt: (page as any).createdAt || (page as any).created_at,
+      updatedAt: (page as any).updatedAt || (page as any).updated_at
     }))
   } catch (error) {
     console.error('Error fetching Firebase data:', error)

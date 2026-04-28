@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Info, AlertTriangle, XCircle, X } from 'lucide-react';
@@ -102,8 +102,7 @@ export default function RealtimeNotifications() {
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className={`flex items-center gap-3 p-4 rounded-lg border shadow-lg backdrop-blur-sm animate-in slide-in-from-right-full duration-300 ${getColors(notification.type)}`}
-          style={{ minWidth: '300px', maxWidth: '400px' }}
+          className={`flex items-center gap-3 p-4 rounded-lg border shadow-lg backdrop-blur-sm animate-in slide-in-from-right-full duration-300 min-w-[300px] max-w-[400px] ${getColors(notification.type)}`}
         >
           {getIcon(notification.type)}
           <div className="flex-1">
