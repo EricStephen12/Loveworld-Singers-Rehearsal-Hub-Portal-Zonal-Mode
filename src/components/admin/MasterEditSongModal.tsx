@@ -13,7 +13,7 @@ interface MasterEditSongModalProps {
   song?: MasterSong | null; // Optional - if null, we're creating a new song
   isOpen: boolean;
   onClose: () => void;
-  onSongUpdated: (updatedSong: MasterSong) => void;
+  onSongUpdated?: (updatedSong: MasterSong) => void;
   onSongCreated?: (newSong: MasterSong) => void;
   mode?: 'edit' | 'create';
 }
@@ -304,7 +304,7 @@ export function MasterEditSongModal({
             ...song,
             ...songData,
           };
-          onSongUpdated(updatedSong);
+          onSongUpdated?.(updatedSong);
 
           setTimeout(() => {
             onClose();

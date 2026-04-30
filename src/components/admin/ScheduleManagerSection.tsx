@@ -1,1186 +1,214 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import {
-    Plus, Trash2, Edit, Save, X, Music, Sparkles, Heart, User,
-    Calendar, ChevronDown, ChevronUp, Loader2, RefreshCw,
-    MessageSquare, FileText
-} from 'lucide-react'
-import { PraiseNight, PraiseNightSong } from '@/types/supabase'
-import {
-    ScheduleCategoryService,
-    ScheduleSongService,
-    ScheduleProgramService,
-    ScheduleCategory,
-    ScheduleSong,
-    ScheduleProgram,
-} from '@/lib/schedule-service'
-import { useZone } from '@/hooks/useZone'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import SpreadsheetEditor from './SpreadsheetEditor'
-import { SpreadsheetData } from '@/lib/schedule-service'
+import React from 'react';
+import { Loader2, ChevronDown, Plus, Edit } from 'lucide-react';
+import { PraiseNightSong } from '@/types/supabase';
+import { useScheduleManager } from '@/hooks/useScheduleManager';
 
-// UI constants
-const ICON_OPTIONS = [
-    { name: 'Music', icon: Music },
-    { name: 'Sparkles', icon: Sparkles },
-    { name: 'Heart', icon: Heart },
-    { name: 'User', icon: User },
-    { name: 'Calendar', icon: Calendar },
-]
+// Modularized Components
+import { ScheduleCategoryGrid } from './schedule/ScheduleCategoryGrid';
+import { ScheduleProgramEditor } from './schedule/ScheduleProgramEditor';
+import { ScheduleHistoryAccordion } from './schedule/ScheduleHistoryAccordion';
+import { ScheduleModals } from './schedule/ScheduleModals';
 
-const COLOR_OPTIONS = [
-    { label: 'Purple', color: 'bg-purple-100', iconColor: 'text-purple-600' },
-    { label: 'Indigo', color: 'bg-indigo-100', iconColor: 'text-indigo-600' },
-    { label: 'Pink', color: 'bg-pink-100', iconColor: 'text-pink-600' },
-    { label: 'Amber', color: 'bg-amber-100', iconColor: 'text-amber-600' },
-    { label: 'Emerald', color: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-    { label: 'Blue', color: 'bg-blue-100', iconColor: 'text-blue-600' },
-    { label: 'Rose', color: 'bg-rose-100', iconColor: 'text-rose-600' },
-]
-
-// Toast
+// Toast sub-component
 function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
-    return (
-        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all ${type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-            {message}
-        </div>
-    )
+  return (
+    <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all ${type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+      {message}
+    </div>
+  );
 }
+
 interface ScheduleManagerSectionProps {
-    allSongs: PraiseNightSong[]
+  allSongs?: PraiseNightSong[];
 }
 
-// Component
 export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManagerSectionProps) {
-    const { currentZone, userRole } = useZone()
-    const zoneId = currentZone?.id ?? null
+  const sm = useScheduleManager(allSongs);
+  const themeColor = sm.currentZone?.themeColor || '#9333ea';
 
-    const canEdit = ['super_admin', 'hq_admin', 'zone_coordinator'].includes(userRole)
-
-    // UI state
-    const [viewMode, setViewMode] = useState<'categories' | 'category-detail'>('categories')
-    const [selectedCategory, setSelectedCategory] = useState<ScheduleCategory | null>(null)
-
-    // Sub-Schedule State
-    const [allPrograms, setAllPrograms] = useState<ScheduleProgram[]>([])
-
-    // UI state
-    const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0])
-
-    const [categories, setCategories] = useState<ScheduleCategory[]>([])
-    const [songs, setSongs] = useState<Record<string, ScheduleSong[]>>({})
-    const [program, setProgram] = useState<ScheduleProgram | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-
-    // Category form
-    const [showCatForm, setShowCatForm] = useState(false)
-    const [editingCat, setEditingCat] = useState<ScheduleCategory | null>(null)
-    const [catForm, setCatForm] = useState({ label: '', description: '', icon: 'Music', color: 'bg-purple-100', iconColor: 'text-purple-600', parentId: null as string | null })
-    const [savingCat, setSavingCat] = useState(false)
-
-    // Song form
-    const [showSongForm, setShowSongForm] = useState<string | null>(null) // categoryId
-    const [editingSong, setEditingSong] = useState<ScheduleSong | null>(null)
-    const [songForm, setSongForm] = useState({
-        title: '',
-        writer: '',
-        leadSinger: '',
-        rehearsalCount: 1,
-        dateReceived: new Date().toISOString().split('T')[0],
-        type: 'song' as 'song' | 'activity' | 'title',
-        comment: ''
-    })
-    const [savingSong, setSavingSong] = useState(false)
-
-    // Quick Add
-    const [quickAddInput, setQuickAddInput] = useState('')
-    const [quickAddResults, setQuickAddResults] = useState<PraiseNightSong[]>([])
-    const [showQuickAddResults, setShowQuickAddResults] = useState(false)
-
-    // Program form
-    const [editingProgram, setEditingProgram] = useState(false)
-    const [programForm, setProgramForm] = useState({ program: '', date: '', time: '', dailyTarget: '' })
-    const [savingProgram, setSavingProgram] = useState(false)
-
-    // Spreadsheet State
-    const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData | undefined>(undefined)
-
-    // Accordion state
-    const [expandedDate, setExpandedDate] = useState<string | null>(null)
-    const [showNewScheduleModal, setShowNewScheduleModal] = useState(false)
-    const [newScheduleDate, setNewScheduleDate] = useState(new Date().toISOString().split('T')[0])
-
-    // Rename List Modal
-    const [showRenameListModal, setShowRenameListModal] = useState(false)
-    const [renameListValue, setRenameListValue] = useState('')
-
-    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-        setToast({ message, type })
-        setTimeout(() => setToast(null), 3000)
-    }
-
-    const loadData = useCallback(async () => {
-        setLoading(true)
-        const [cats, progs] = await Promise.all([
-            ScheduleCategoryService.getCategories(zoneId),
-            ScheduleProgramService.getAllPrograms(zoneId),
-        ])
-        setCategories(cats)
-        setAllPrograms(progs)
-        setLoading(false)
-    }, [zoneId])
-
-    const [editorLoading, setEditorLoading] = useState(false)
-
-    // Refs for Auto-Saving
-    const programFormRef = useRef(programForm)
-    const spreadsheetDataRef = useRef(spreadsheetData)
-    const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null)
-
-    useEffect(() => {
-        programFormRef.current = programForm
-    }, [programForm])
-
-    useEffect(() => {
-        spreadsheetDataRef.current = spreadsheetData
-    }, [spreadsheetData])
-
-    const loadEditorData = useCallback(async (dateId: string, categoryId?: string) => {
-        setEditorLoading(true)
-        const prog = await ScheduleProgramService.getProgram(zoneId, dateId, categoryId)
-        setProgram(prog)
-
-        if (prog) {
-            setProgramForm({
-                program: prog.program,
-                date: prog.date,
-                time: prog.time,
-                dailyTarget: prog.dailyTarget
-            })
-            setSpreadsheetData(prog.spreadsheetData)
-        } else {
-            setProgramForm({ program: '', date: dateId, time: '', dailyTarget: '' })
-            setSpreadsheetData(undefined)
-        }
-
-        // Auto-load daily songs
-        if (!categoryId) {
-            const daily = categories.find(c => c.label === 'Daily Schedule')
-            if (daily) {
-                const list = await ScheduleSongService.getSongs(daily.id, zoneId, dateId)
-                setSongs(prev => ({ ...prev, [daily.id]: list }))
-            }
-        }
-        setEditorLoading(false)
-    }, [zoneId, categories])
-
-    const loadSongs = useCallback(async (categoryId: string) => {
-        const isDaily = categories.find(c => c.id === categoryId)?.label === 'Daily Schedule'
-        if (isDaily) return // Daily songs handled by editor load
-
-        if (songs[categoryId]) return
-
-        const list = await ScheduleSongService.getSongs(categoryId, zoneId)
-        setSongs(prev => ({ ...prev, [categoryId]: list }))
-    }, [zoneId, songs, categories])
-
-    useEffect(() => { loadData() }, [loadData])
-
-    // Program CRUD
-
-    const saveProgram = async (grid?: SpreadsheetData, isAutoSave = false) => {
-        if (!isAutoSave) setSavingProgram(true)
-        const isDaily = selectedCategory?.label === 'Daily Schedule'
-
-        const currentForm = programFormRef.current
-        const currentGrid = grid || spreadsheetDataRef.current
-
-        const payload: any = {
-            ...currentForm,
-            zoneId,
-            updatedBy: 'admin'
-        }
-
-        const catId = isDaily ? undefined : selectedCategory?.id
-        if (catId) {
-            payload.categoryId = catId
-        }
-
-        if (currentGrid !== undefined && currentGrid !== null) {
-            payload.spreadsheetData = currentGrid
-        }
-
-        const oldDate = currentDate;
-        const newDate = currentForm.date;
-
-        if (oldDate !== newDate && !isAutoSave) {
-            // User changed the date. We need to move the program.
-
-            // 1. Check if a program already exists on newDate
-            const existing = await ScheduleProgramService.getProgram(zoneId, newDate, catId);
-            if (existing) {
-                if (!confirm(`A schedule already exists for ${newDate}. Overwrite it?`)) {
-                    setSavingProgram(false);
-                    return;
-                }
-            }
-
-            // 2. Save under new date
-            await ScheduleProgramService.updateProgram(payload, zoneId, newDate);
-
-            // 3. Delete old date
-            await ScheduleProgramService.deleteProgram(zoneId, oldDate, catId);
-
-            // 4. If Daily Schedule (or has songs on this date), move songs
-            if (!catId) {
-                // Find songs for the old date
-                const dailyCategory = categories.find(c => c.label === 'Daily Schedule');
-                if (dailyCategory) {
-                    const oldSongs = await ScheduleSongService.getSongs(dailyCategory.id, zoneId, oldDate);
-                    for (const s of oldSongs) {
-                        await ScheduleSongService.updateSong(s.id, { date: newDate });
-                    }
-                    // Update songs state to point to new date (simplest is to just reload songs next time)
-                    setSongs(prev => ({ ...prev, [dailyCategory.id]: prev[dailyCategory.id]?.map(song => ({ ...song, date: newDate })) || [] }));
-                }
-            }
-
-            setCurrentDate(newDate); // Update UI context to new date
-            if (expandedDate === oldDate) setExpandedDate(newDate); // Keep it expanded under new date
-            if (!isAutoSave) showToast('Program moved to new date!');
-        } else {
-            // Normal update under current date
-            await ScheduleProgramService.updateProgram(payload, zoneId, oldDate);
-            if (!isAutoSave) showToast('Program info saved!');
-        }
-
-        // Update local state
-        setProgram(prev => ({
-            ...(prev || {}),
-            ...payload,
-            updatedAt: new Date().toISOString(),
-            id: prev?.id || `temp_${newDate}`,
-            zoneId: zoneId
-        } as ScheduleProgram))
-
-        // Ensure history list updates
-        setAllPrograms(prev => prev.filter(p => p.id !== `temp_${oldDate}`).map(p => {
-            if (p.date === oldDate && p.categoryId === catId) {
-                return {
-                    ...p,
-                    ...payload,
-                    date: newDate,
-                    updatedAt: new Date().toISOString(),
-                }
-            }
-            return p
-        }))
-
-        if (!isAutoSave) {
-            setSavingProgram(false)
-            setEditingProgram(false)
-        }
-    }
-
-    const deleteProgramHandler = async (dateId: string, categoryId?: string) => {
-        if (!confirm('Are you sure you want to delete this specific schedule/list? This action cannot be undone.')) return;
-
-        setSavingProgram(true);
-        const success = await ScheduleProgramService.deleteProgram(zoneId, dateId, categoryId);
-
-        if (success) {
-            setAllPrograms(prev => prev.filter(p => !(p.date === dateId && p.categoryId === categoryId)));
-            showToast('Schedule deleted successfully');
-            setExpandedDate(null);
-            setCurrentDate('');
-        } else {
-            showToast('Failed to delete schedule', 'error');
-        }
-        setSavingProgram(false);
-    }
-
-    // Category CRUD
-
-    const openAddCat = (parentId: string | null = null) => {
-        setEditingCat(null)
-        setCatForm({ label: '', description: '', icon: 'Folder', color: 'bg-indigo-100', iconColor: 'text-indigo-600', parentId })
-        setShowCatForm(true)
-    }
-
-    const openEditCat = (cat: ScheduleCategory) => {
-        setEditingCat(cat)
-        setCatForm({ label: cat.label, description: cat.description, icon: cat.icon, color: cat.color, iconColor: cat.iconColor, parentId: cat.parentId || null })
-        setShowCatForm(true)
-    }
-
-    const saveCat = async (grid?: SpreadsheetData) => {
-        if (!catForm.label.trim()) return showToast('Label is required', 'error')
-        setSavingCat(true)
-
-        const payload: any = {
-            ...catForm,
-            parentId: catForm.parentId || null,
-        }
-
-        const gridData = grid || (editingCat?.spreadsheetData || selectedCategory?.spreadsheetData)
-        if (gridData !== undefined) {
-            payload.spreadsheetData = gridData
-        }
-
-        try {
-            if (editingCat) {
-                await ScheduleCategoryService.updateCategory(editingCat.id, payload)
-                // Update local state
-                setCategories(prev => prev.map(c => c.id === editingCat.id ? { ...c, ...payload } : c))
-                if (selectedCategory?.id === editingCat.id) {
-                    setSelectedCategory(prev => prev ? ({ ...prev, ...payload }) : null)
-                }
-                showToast('Category updated!')
-            } else {
-                const newId = await ScheduleCategoryService.addCategory({
-                    ...payload,
-                    zoneId,
-                    order: categories.length,
-                    isActive: true,
-                    createdBy: 'admin',
-                }, zoneId)
-
-                if (newId) {
-                    const newCat: ScheduleCategory = {
-                        id: newId,
-                        zoneId,
-                        ...payload,
-                        order: categories.length,
-                        isActive: true,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        createdBy: 'admin'
-                    } as ScheduleCategory
-                    setCategories(prev => [...prev, newCat])
-                    showToast('Category added!')
-                }
-            }
-        } catch (err) {
-            console.error(err)
-            showToast('Failed to save category', 'error')
-        }
-
-        setSavingCat(false)
-        setShowCatForm(false)
-        setEditingCat(null)
-    }
-
-    const deleteCat = async (id: string) => {
-        if (!confirm('Delete this category? Songs inside will remain but the category will be hidden.')) return
-        
-        const oldCats = [...categories]
-        setCategories(prev => prev.filter(c => c.id !== id))
-
-        const success = await ScheduleCategoryService.deleteCategory(id)
-        if (success) {
-            showToast('Category removed')
-        } else {
-            setCategories(oldCats) // Revert if failed
-            showToast('Failed to remove category', 'error')
-        }
-    }
-
-    // Song CRUD
-
-    const openAddSong = (categoryId: string, type: 'song' | 'activity' | 'title' = 'song') => {
-        setEditingSong(null)
-        setSongForm({
-            title: '',
-            writer: '',
-            leadSinger: '',
-            rehearsalCount: 1,
-            dateReceived: new Date().toISOString().split('T')[0],
-            type,
-            comment: ''
-        })
-        setShowSongForm(categoryId)
-    }
-
-    const openEditSong = (song: ScheduleSong) => {
-        setEditingSong(song)
-        setSongForm({
-            ...song,
-            type: song.type || 'song',
-            writer: song.writer || '',
-            leadSinger: song.leadSinger || '',
-            rehearsalCount: song.rehearsalCount,
-            dateReceived: song.dateReceived?.split('T')[0] || new Date().toISOString().split('T')[0],
-            comment: song.comment || ''
-        })
-        setShowSongForm(song.categoryId)
-    }
-
-    const saveSong = async (categoryId: string) => {
-        if (!songForm.title.trim()) return showToast('Title is required', 'error')
-        setSavingSong(true)
-
-        try {
-            if (editingSong) {
-                await ScheduleSongService.updateSong(editingSong.id, {
-                    ...songForm,
-                    dateReceived: new Date(songForm.dateReceived).toISOString(),
-                })
-
-                setSongs(prev => ({
-                    ...prev,
-                    [categoryId]: prev[categoryId].map(s => s.id === editingSong.id ? {
-                        ...s,
-                        ...songForm,
-                        dateReceived: new Date(songForm.dateReceived).toISOString()
-                    } : s)
-                }))
-
-                showToast('Item updated!')
-            } else {
-                const newId = await ScheduleSongService.addSong({
-                    ...songForm,
-                    categoryId,
-                    zoneId,
-                    order: (songs[categoryId]?.length || 0),
-                    dateReceived: new Date(songForm.dateReceived).toISOString(),
-                    createdBy: 'admin',
-                }, zoneId)
-
-                if (newId) {
-                    const newSong: ScheduleSong = {
-                        id: newId,
-                        categoryId,
-                        zoneId,
-                        ...songForm,
-                        order: (songs[categoryId]?.length || 0),
-                        dateReceived: new Date(songForm.dateReceived).toISOString(),
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        createdBy: 'admin'
-                    }
-
-                    setSongs(prev => ({
-                        ...prev,
-                        [categoryId]: [...(prev[categoryId] || []), newSong]
-                    }))
-
-                    showToast('Item added!')
-                }
-            }
-        } catch (err) {
-            console.error(err)
-            showToast('Failed to save item', 'error')
-        }
-
-        setSavingSong(false)
-        setShowSongForm(null)
-    }
-
-    const deleteSong = async (song: ScheduleSong) => {
-        if (!confirm(`Delete "${song.title}"?`)) return
-
-        const oldSongs = { ...songs }
-        setSongs(prev => ({
-            ...prev,
-            [song.categoryId]: prev[song.categoryId].filter(s => s.id !== song.id)
-        }))
-
-        const success = await ScheduleSongService.deleteSong(song.id)
-
-        if (success) {
-            showToast('Item deleted')
-        } else {
-            setSongs(oldSongs)
-            showToast('Failed to delete item', 'error')
-        }
-    }
-
-    // Daily Schedule Logic
-    const [dailyCategory, setDailyCategory] = useState<ScheduleCategory | null>(null)
-
-    useEffect(() => {
-        const daily = categories.find(c => c.label === 'Daily Schedule') || null
-        setDailyCategory(daily)
-    }, [categories])
-
-    // Render Helpers
-
-    const isDailyView = useMemo(() => {
-        if (!selectedCategory || !dailyCategory) return false;
-        let current: ScheduleCategory | undefined = selectedCategory;
-        while (current) {
-            if (current.id === dailyCategory.id) return true;
-            if (!current.parentId) break;
-            current = categories.find(c => c.id === current!.parentId);
-        }
-        return false;
-    }, [selectedCategory, dailyCategory, categories]);
-
-    const handleCategoryClick = async (cat: ScheduleCategory) => {
-        setSelectedCategory(cat)
-        setViewMode('category-detail')
-        await loadSongs(cat.id)
-    }
-
-    const handleCreateScheduleClick = () => {
-        setNewScheduleDate(isDailyView ? new Date().toISOString().split('T')[0] : '')
-        setShowNewScheduleModal(true)
-    }
-
-    const confirmCreateSchedule = async () => {
-        if (!newScheduleDate || !selectedCategory) return
-        const dateId = newScheduleDate
-        setShowNewScheduleModal(false)
-
-        setExpandedDate(dateId)
-        setCurrentDate(dateId)
-
-        const isDaily = selectedCategory.label === 'Daily Schedule'
-        const catId = isDaily ? undefined : selectedCategory.id
-
-        const newProgramPayload = {
-            zoneId,
-            program: '',
-            date: dateId,
-            time: '',
-            dailyTarget: '',
-            updatedBy: 'admin',
-        } as any
-
-        if (catId) {
-            newProgramPayload.categoryId = catId
-        }
-
-        // Only add to local state if it doesn't already exist
-        setAllPrograms(prev => {
-            const exists = prev.find(p => p.date === dateId && p.categoryId === catId)
-            if (exists) return prev
-
-            return [{
-                ...newProgramPayload,
-                id: `temp_${dateId}_${Date.now()}`,
-                updatedAt: new Date().toISOString(),
-            } as ScheduleProgram, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        })
-
-        // Auto-save the new program to DB immediately so it isn't lost on back/refresh
-        await ScheduleProgramService.updateProgram(newProgramPayload, zoneId, dateId)
-
-        loadEditorData(dateId, catId)
-    }
-
-    const handleEditSchedule = (prog: ScheduleProgram) => {
-        if (expandedDate === prog.date) {
-            setExpandedDate(null)
-            return
-        }
-        setExpandedDate(prog.date)
-        setCurrentDate(prog.date)
-        loadEditorData(prog.date, prog.categoryId)
-    }
-
-    const handleRenameList = async () => {
-        if (!renameListValue.trim() || renameListValue === program?.date) {
-            setShowRenameListModal(false)
-            return
-        }
-
-        const updatedForm = { ...programForm, date: renameListValue };
-        setProgramForm(updatedForm);
-        programFormRef.current = updatedForm;
-
-        await saveProgram(undefined, false);
-        setShowRenameListModal(false);
-    }
-
-    // Views
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
-            </div>
-        )
-    }
-
+  if (sm.loading) {
     return (
-        <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-6">
-            {toast && <Toast message={toast.message} type={toast.type} />}
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
-            {/* Root View */}
-            {viewMode === 'categories' && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800">Schedule Manager</h3>
-                            <p className="text-sm text-slate-500">Manage daily schedules and song lists</p>
-                        </div>
-                        {canEdit && (
-                            <button
-                                onClick={() => openAddCat()}
-                                className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-full transition-colors shadow-sm"
-                                style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                            >
-                                <Plus className="w-4 h-4" /> New Category
-                            </button>
-                        )}
-                    </div>
+  return (
+    <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
+      {sm.toast && <Toast message={sm.toast.message} type={sm.toast.type} />}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categories.filter(c => !c.parentId).map(cat => {
-                            const IconComp = ICON_OPTIONS.find(o => o.name === cat.icon)?.icon || Music
-                            return (
-                                <div
-                                    key={cat.id}
-                                    onClick={() => handleCategoryClick(cat)}
-                                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-200 transition-all cursor-pointer group"
-                                >
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className={`w-12 h-12 ${cat.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                            <IconComp className={`w-6 h-6 ${cat.iconColor}`} />
-                                        </div>
-                                        {canEdit && (
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={(e) => { e.stopPropagation(); openEditCat(cat) }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600">
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); deleteCat(cat.id) }} className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <h4 className="text-base font-bold text-slate-900 mb-1">{cat.label}</h4>
-                                    <p className="text-xs text-slate-500 line-clamp-2">{cat.description}</p>
-                                </div>
-                            )
-                        })}
-                    </div>
+      {/* Root Categories View */}
+      {sm.viewMode === 'categories' && (
+        <ScheduleCategoryGrid
+          categories={sm.categories}
+          canEdit={sm.canEdit}
+          themeColor={themeColor}
+          onCategoryClick={(cat) => {
+            sm.setSelectedCategory(cat);
+            sm.setViewMode('category-detail');
+            sm.loadSongs(cat.id);
+          }}
+          onAddCategory={() => {
+            sm.setEditingCat(null);
+            sm.setCatForm({ label: '', description: '', icon: 'Music', color: 'bg-purple-100', iconColor: 'text-purple-600', parentId: null });
+            sm.setShowCatForm(true);
+          }}
+          onEditCategory={(cat) => {
+            sm.setEditingCat(cat);
+            sm.setCatForm({ label: cat.label, description: cat.description, icon: cat.icon, color: cat.color, iconColor: cat.iconColor, parentId: cat.parentId || null });
+            sm.setShowCatForm(true);
+          }}
+          onDeleteCategory={sm.deleteCat}
+        />
+      )}
+
+      {/* Detail View (Accordion or Editor) */}
+      {sm.viewMode === 'category-detail' && sm.selectedCategory && (
+        <>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                <button
+                  onClick={() => {
+                    if (sm.expandedDate) {
+                      sm.setExpandedDate(null);
+                      sm.setCurrentDate('');
+                    } else if (sm.selectedCategory?.parentId) {
+                      const parent = sm.categories.find(c => c.id === sm.selectedCategory!.parentId);
+                      if (parent) sm.setSelectedCategory(parent);
+                    } else {
+                      sm.setViewMode('categories');
+                      sm.setSelectedCategory(null);
+                    }
+                  }}
+                  className="w-9 h-9 md:w-10 md:h-10 flex-shrink-0 rounded-full bg-white shadow-sm border border-slate-200 transition-all flex items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-90"
+                >
+                  <ChevronDown className="w-5 h-5 rotate-90" />
+                </button>
+                <div className="min-w-0">
+                  <h3 className="text-sm md:text-lg font-bold text-slate-800 flex items-center gap-2 truncate uppercase tracking-tight">
+                    {sm.expandedDate
+                      ? (sm.isDailyView ? (sm.program?.program || 'Schedule Editor') : (sm.program?.date || 'Mini Category Editor'))
+                      : sm.selectedCategory.label}
+                    {sm.expandedDate && !sm.isDailyView && sm.canEdit && (
+                      <button
+                        onClick={() => { sm.setRenameListValue(sm.program?.date || ''); sm.setShowRenameListModal(true); }}
+                        className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </h3>
+                  <p className="text-[10px] md:text-sm text-slate-500 truncate">
+                    {sm.expandedDate ? `Back to ${sm.selectedCategory.label}` : (sm.selectedCategory.description || (sm.isDailyView ? 'History of all created schedules' : ''))}
+                  </p>
                 </div>
-            )}
+              </div>
 
-            {/* Detail View */}
-            {viewMode === 'category-detail' && selectedCategory && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            {expandedDate ? (
-                                <button onClick={() => { setExpandedDate(null); setCurrentDate(''); }} className="p-2 rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all flex items-center justify-center text-slate-500 hover:text-indigo-600">
-                                    <ChevronDown className="w-5 h-5 rotate-90" />
-                                </button>
-                            ) : (
-                                <button onClick={() => {
-                                    if (selectedCategory.parentId) {
-                                        const parent = categories.find(c => c.id === selectedCategory.parentId);
-                                        if (parent) {
-                                            setSelectedCategory(parent);
-                                            return;
-                                        }
-                                    }
-                                    setViewMode('categories');
-                                    setSelectedCategory(null);
-                                }} className="p-2 rounded-full hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all flex items-center justify-center text-slate-500 hover:text-indigo-600">
-                                    <ChevronDown className="w-5 h-5 rotate-90" />
-                                </button>
-                            )}
-                            <div>
-                                {expandedDate ? (
-                                    <>
-                                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                            {isDailyView ? (program?.program || 'Schedule Editor') : (program?.date || 'Mini Category Editor')}
-                                            {!isDailyView && canEdit && (
-                                                <button
-                                                    onClick={() => { setRenameListValue(program?.date || ''); setShowRenameListModal(true); }}
-                                                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-colors"
-                                                    title="Rename List"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </h3>
-                                        <p className="text-sm text-slate-500">Back to {selectedCategory.label}</p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <h3 className="text-lg font-bold text-slate-800">{selectedCategory.label}</h3>
-                                        <p className="text-sm text-slate-500">{selectedCategory.description || (isDailyView ? 'History of all created schedules' : '')}</p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        {!expandedDate && (
-                            <div className="flex gap-2">
-                                {canEdit && (
-                                    <button onClick={() => openAddCat(selectedCategory.id)} className="flex items-center gap-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 px-4 py-2 rounded-full transition-colors shadow-sm cursor-pointer border border-slate-200">
-                                        <Plus className="w-4 h-4" /> New Folder
-                                    </button>
-                                )}
-                                <button onClick={handleCreateScheduleClick} className="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-full transition-colors shadow-sm cursor-pointer" style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}>
-                                    <Plus className="w-4 h-4" /> {isDailyView ? 'Create New Schedule' : 'Create New List'}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* New Schedule Modal */}
-                    {showNewScheduleModal && (
-                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4">
-                                    {isDailyView ? 'Select Date' : 'List Name'}
-                                </h3>
-                                <p className="text-sm text-slate-500 mb-6">
-                                    {isDailyView
-                                        ? 'Choose the date for the new program schedule.'
-                                        : 'Enter a title for this new list.'}
-                                </p>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        {isDailyView ? (
-                                            <input
-                                                type="date"
-                                                value={newScheduleDate}
-                                                onChange={e => setNewScheduleDate(e.target.value)}
-                                                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all font-medium text-slate-700"
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                placeholder="e.g. New Songs"
-                                                value={newScheduleDate}
-                                                onChange={e => setNewScheduleDate(e.target.value)}
-                                                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all font-medium text-slate-700"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3 mt-8">
-                                    <button onClick={() => setShowNewScheduleModal(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
-                                    <button
-                                        onClick={confirmCreateSchedule}
-                                        disabled={!newScheduleDate}
-                                        className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                                        style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                    >
-                                        Continue
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Rename List Modal */}
-                    {showRenameListModal && (
-                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                                <h3 className="text-lg font-bold text-slate-800 mb-4">Rename List</h3>
-                                <p className="text-sm text-slate-500 mb-6">Enter a new name for this list.</p>
-
-                                <div className="space-y-4">
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. New Songs"
-                                        value={renameListValue}
-                                        onChange={e => setRenameListValue(e.target.value)}
-                                        className="w-full border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all font-medium text-slate-700"
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 mt-8">
-                                    <button onClick={() => setShowRenameListModal(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
-                                    <button
-                                        onClick={handleRenameList}
-                                        disabled={savingProgram || !renameListValue.trim() || renameListValue === program?.date}
-                                        className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                                        style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                    >
-                                        {savingProgram ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Rename'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {!expandedDate ? (
-                        <div className="space-y-8">
-                            {/* Sub-Folders */}
-                            {categories.filter(c => c.parentId === selectedCategory.id).length > 0 && (
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Folders inside {selectedCategory.label}</h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {categories.filter(c => c.parentId === selectedCategory.id).map(cat => {
-                                            const IconComp = ICON_OPTIONS.find(o => o.name === cat.icon)?.icon || Music
-                                            return (
-                                                <div
-                                                    key={cat.id}
-                                                    onClick={() => handleCategoryClick(cat)}
-                                                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-200 transition-all cursor-pointer group"
-                                                >
-                                                    <div className="flex items-start justify-between mb-4">
-                                                        <div className={`w-12 h-12 ${cat.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                                            <IconComp className={`w-6 h-6 ${cat.iconColor}`} />
-                                                        </div>
-                                                        {canEdit && (
-                                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={(e) => { e.stopPropagation(); openEditCat(cat) }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600">
-                                                                    <Edit className="w-4 h-4" />
-                                                                </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); deleteCat(cat.id) }} className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600">
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <h4 className="text-base font-bold text-slate-900 mb-1">{cat.label}</h4>
-                                                    <p className="text-xs text-slate-500 line-clamp-2">{cat.description}</p>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Lists block - Only show if there are actual lists OR if there are no subfolders (so the page isn't totally blank) */}
-                            {(allPrograms.filter(p => isDailyView && selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).length > 0 || categories.filter(c => c.parentId === selectedCategory.id).length === 0) && (
-                                <div>
-                                    {categories.filter(c => c.parentId === selectedCategory.id).length > 0 && (
-                                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Lists in this folder</h4>
-                                    )}
-                                    <div className="space-y-4">
-                                        {allPrograms.filter(p => isDailyView && selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).length === 0 ? (
-                                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm text-center py-16">
-                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                    <Calendar className="w-8 h-8 text-slate-300" />
-                                                </div>
-                                                <h4 className="text-slate-900 font-medium mb-1">No lists found</h4>
-                                                <p className="text-sm text-slate-500">
-                                                    {isDailyView ? 'Create your first daily schedule to get started.' : 'Create a list or sub-folder using the buttons above.'}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            allPrograms.filter(p => isDailyView && selectedCategory.label === 'Daily Schedule' ? !p.categoryId || p.categoryId === dailyCategory?.id : p.categoryId === selectedCategory.id).map(prog => (
-                                                <div
-                                                    key={prog.id}
-                                                    onClick={() => handleEditSchedule(prog)}
-                                                    className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group animate-in fade-in zoom-in-95"
-                                                >
-                                                    <div className="flex items-center justify-between p-5">
-                                                        <div className="flex items-center gap-4">
-                                                            {isDailyView ? (
-                                                                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
-                                                                    <span className="text-[10px] font-bold uppercase tracking-wider">{new Date(prog.date + "T12:00:00").toLocaleDateString('en-US', { month: 'short' })}</span>
-                                                                    <span className="text-lg font-bold leading-none">{new Date(prog.date + "T12:00:00").getDate()}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex flex-col items-center justify-center text-indigo-700 border border-indigo-100 shadow-inner group-hover:bg-indigo-100 transition-colors">
-                                                                    <FileText className="w-6 h-6 text-indigo-500" />
-                                                                </div>
-                                                            )}
-                                                            <div>
-                                                                <h4 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors text-lg">
-                                                                    {isDailyView ? (prog.program || 'Untitled Program') : prog.date}
-                                                                </h4>
-                                                                {isDailyView && (
-                                                                    <p className="text-sm text-slate-500 line-clamp-1 mt-0.5">{prog.dailyTarget || 'No target set'}</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-4">
-                                                            {isDailyView && (
-                                                                <div className="text-right hidden sm:block mr-2">
-                                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Time</p>
-                                                                    <p className="text-sm font-medium text-slate-700">{prog.time || '—'}</p>
-                                                                </div>
-                                                            )}
-                                                            <div className="flex items-center gap-2">
-                                                                {canEdit && (
-                                                                    <button
-                                                                        onClick={(e) => { e.stopPropagation(); deleteProgramHandler(prog.date, prog.categoryId); }}
-                                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-rose-100 transition-colors"
-                                                                        title="Delete Schedule"
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4 text-slate-300 hover:text-rose-500 transition-colors" />
-                                                                    </button>
-                                                                )}
-                                                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors border border-transparent group-hover:border-indigo-100">
-                                                                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:-rotate-90 transition-all font-bold" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-right-4 overflow-hidden">
-                            {editorLoading ? (
-                                <div className="flex items-center justify-center py-32 bg-slate-50/50">
-                                    <div className="flex flex-col items-center gap-4">
-                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                                        <p className="text-sm font-medium text-slate-500">Loading {isDailyView ? 'schedule' : 'mini category'} data...</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className={`grid grid-cols-1 ${isDailyView ? 'md:grid-cols-3' : ''} divide-y md:divide-y-0 md:divide-x divide-slate-200/60`}>
-                                    {isDailyView && (
-                                        <div className="p-5 md:col-span-1 bg-slate-50/50 border-r border-slate-100">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Program Context</h4>
-                                                {canEdit && !editingProgram && (
-                                                    <div className="flex items-center gap-1">
-                                                        <button onClick={() => setEditingProgram(true)} className="p-1 rounded-full hover:bg-slate-200 text-slate-500 hover:text-indigo-600 transition-colors" title="Edit Program Details">
-                                                            <Edit className="w-4 h-4" />
-                                                        </button>
-                                                        <button onClick={() => deleteProgramHandler(currentDate, program?.categoryId)} className="p-1 rounded-full hover:bg-rose-100 text-slate-500 hover:text-rose-600 transition-colors" title="Delete This Schedule">
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {editingProgram ? (
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Program Name</label>
-                                                        <input
-                                                            type="text"
-                                                            value={programForm.program}
-                                                            onChange={e => setProgramForm(p => ({ ...p, program: e.target.value }))}
-                                                            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm"
-                                                            placeholder="e.g. Sunday Service"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Target / Goal</label>
-                                                        <textarea
-                                                            rows={3}
-                                                            value={programForm.dailyTarget}
-                                                            onChange={e => setProgramForm(p => ({ ...p, dailyTarget: e.target.value }))}
-                                                            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none bg-white shadow-sm"
-                                                            placeholder="Goal for today..."
-                                                        />
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Date</label>
-                                                            <input
-                                                                type="date"
-                                                                value={programForm.date}
-                                                                onChange={e => setProgramForm(p => ({ ...p, date: e.target.value }))}
-                                                                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1.5">Time</label>
-                                                            <input
-                                                                type="time"
-                                                                value={programForm.time}
-                                                                onChange={e => setProgramForm(p => ({ ...p, time: e.target.value }))}
-                                                                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2 pt-2">
-                                                        <button
-                                                            onClick={() => saveProgram()}
-                                                            disabled={savingProgram}
-                                                            className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-                                                        >
-                                                            {savingProgram ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Details
-                                                        </button>
-                                                        <button onClick={() => setEditingProgram(false)} className="px-4 py-2.5 rounded-xl bg-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-300 transition-colors">Cancel</button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-6">
-                                                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                                        <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1.5">Program</p>
-                                                        <p className="text-base font-bold text-indigo-900 leading-tight">{programForm.program || 'No program set'}</p>
-                                                    </div>
-                                                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                                        <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1.5">Target</p>
-                                                        <p className="text-sm font-medium text-slate-700 leading-relaxed">{programForm.dailyTarget || 'No target set.'}</p>
-                                                    </div>
-                                                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                                        <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1.5">Date & Time</p>
-                                                        <p className="text-sm font-medium text-slate-700">{programForm.date} • {programForm.time || 'No time set'}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    <div className={`p-0 ${isDailyView ? 'md:col-span-2' : ''} flex flex-col min-h-[500px] w-full bg-white`}>
-                                        <SpreadsheetEditor
-                                            initialData={spreadsheetData}
-                                            onChange={(data) => setSpreadsheetData(data)}
-                                            onSave={(data) => saveProgram(data)}
-                                            isSaving={savingProgram}
-                                            themeColor={currentZone?.themeColor === 'blue' ? '#2563EB' : currentZone?.themeColor === 'emerald' ? '#059669' : currentZone?.themeColor === 'rose' ? '#E11D48' : currentZone?.themeColor === 'amber' ? '#D97706' : '#9333ea'}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+              {/* Desktop Buttons */}
+              {!sm.expandedDate && (
+                <div className="hidden sm:flex items-center gap-2">
+                  {sm.canEdit && (
+                    <button 
+                      onClick={() => { sm.setEditingCat(null); sm.setCatForm({ ...sm.catForm, parentId: sm.selectedCategory?.id || null }); sm.setShowCatForm(true); }} 
+                      className="flex items-center justify-center gap-1.5 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 px-4 py-2 rounded-full transition-all shadow-sm border border-slate-200 uppercase tracking-wider"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> <span className="whitespace-nowrap">Folder</span>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => { sm.setNewScheduleDate(sm.isDailyView ? new Date().toISOString().split('T')[0] : ''); sm.setShowNewScheduleModal(true); }} 
+                    className="flex items-center justify-center gap-1.5 text-sm font-bold text-white px-5 py-2.5 rounded-full transition-all shadow-lg active:scale-95 uppercase tracking-wider" 
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> <span className="whitespace-nowrap">{sm.isDailyView ? 'New Schedule' : 'New List'}</span>
+                  </button>
                 </div>
+              )}
+            </div>
+
+            {/* Mobile Buttons - Staggered/Full width */}
+            {!sm.expandedDate && (
+              <div className="flex sm:hidden items-center gap-2 w-full">
+                {sm.canEdit && (
+                  <button 
+                    onClick={() => { sm.setEditingCat(null); sm.setCatForm({ ...sm.catForm, parentId: sm.selectedCategory?.id || null }); sm.setShowCatForm(true); }} 
+                    className="flex-1 flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-700 bg-white px-3 py-2.5 rounded-xl shadow-sm border border-slate-200 uppercase tracking-wider"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> <span>Folder</span>
+                  </button>
+                )}
+                <button 
+                  onClick={() => { sm.setNewScheduleDate(sm.isDailyView ? new Date().toISOString().split('T')[0] : ''); sm.setShowNewScheduleModal(true); }} 
+                  className="flex-[1.5] flex items-center justify-center gap-1.5 text-[10px] font-bold text-white px-3 py-2.5 rounded-xl shadow-lg uppercase tracking-wider" 
+                  style={{ backgroundColor: themeColor }}
+                >
+                  <Plus className="w-3.5 h-3.5" /> <span>{sm.isDailyView ? 'New Schedule' : 'New List'}</span>
+                </button>
+              </div>
             )}
+          </div>
 
-            {/* Song/Activity/Title Form Modal */}
-            {
-                showSongForm && (
-                    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl w-full max-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4">
-                                {editingSong ? 'Edit Item' : `Add ${songForm.type === 'activity' ? 'Activity' : songForm.type === 'title' ? 'Title' : 'Song'}`}
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                        {songForm.type === 'activity' ? 'Activity Name' : songForm.type === 'title' ? 'Title Text' : 'Title'}
-                                    </label>
-                                    <input
-                                        value={songForm.title}
-                                        onChange={e => setSongForm(p => ({ ...p, title: e.target.value }))}
-                                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-medium"
-                                        placeholder={songForm.type === 'activity' ? "e.g. Opening Prayer, Exhortation" : songForm.type === 'title' ? "e.g. Praise Segment" : "e.g. Way Maker"}
-                                        autoFocus
-                                    />
-                                </div>
+          {sm.expandedDate ? (
+            sm.editorLoading ? (
+              <div className="flex items-center justify-center py-20 bg-white rounded-3xl border border-slate-100"><Loader2 className="w-6 h-6 animate-spin text-purple-500" /></div>
+            ) : (
+              <ScheduleProgramEditor
+                program={sm.program}
+                programForm={sm.programForm}
+                setProgramForm={sm.setProgramForm}
+                spreadsheetData={sm.spreadsheetData}
+                setSpreadsheetData={sm.setSpreadsheetData}
+                canEdit={sm.canEdit}
+                isSaving={sm.savingProgram}
+                onSave={sm.saveProgram}
+                themeColor={themeColor}
+                isDailyView={sm.isDailyView}
+              />
+            )
+          ) : (
+            <ScheduleHistoryAccordion
+              programs={sm.allPrograms.filter(p => (sm.isDailyView ? !p.categoryId : p.categoryId === sm.selectedCategory?.id))}
+              expandedDate={sm.expandedDate}
+              onToggleExpand={async (prog) => {
+                sm.setExpandedDate(prog.date);
+                sm.setCurrentDate(prog.date);
+                sm.loadEditorData(prog.date, prog.categoryId);
+              }}
+              onDelete={sm.deleteProgramHandler}
+              canEdit={sm.canEdit}
+              themeColor={themeColor}
+              isDailyView={sm.isDailyView}
+            />
+          )}
+        </>
+      )}
 
-                                {songForm.type === 'title' ? null : songForm.type === 'song' ? (
-                                    <>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Writer</label>
-                                                <input value={songForm.writer} onChange={e => setSongForm(p => ({ ...p, writer: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="Song writer" />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Lead Singer</label>
-                                                <input value={songForm.leadSinger} onChange={e => setSongForm(p => ({ ...p, leadSinger: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="Lead singer" />
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Date Received</label>
-                                                <input type="date" value={songForm.dateReceived} onChange={e => setSongForm(p => ({ ...p, dateReceived: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Rehearsals</label>
-                                                <div className="flex items-center gap-3">
-                                                    <button onClick={() => setSongForm(p => ({ ...p, rehearsalCount: Math.max(0, p.rehearsalCount - 1) }))} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 text-slate-600 font-bold">-</button>
-                                                    <span className="flex-1 text-center font-bold text-lg text-slate-800">{songForm.rehearsalCount}</span>
-                                                    <button onClick={() => setSongForm(p => ({ ...p, rehearsalCount: p.rehearsalCount + 1 }))} className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center hover:bg-purple-200 text-purple-700 font-bold">+</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    // Activity Fields
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Note/Description (Optional)</label>
-                                        <input
-                                            value={songForm.writer || ''} // Reusing writer field
-                                            onChange={e => setSongForm(p => ({ ...p, writer: e.target.value }))}
-                                            className={`w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-${currentZone?.themeColor || 'purple'}-500/20 focus:border-${currentZone?.themeColor || 'purple'}-500 transition-all`}
-                                            placeholder="e.g. by Pastor Chris, or duration..."
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Common Fields: Comment */}
-                                {songForm.type !== 'title' && (
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Comment (Optional)</label>
-                                        <input
-                                            value={songForm.comment || ''}
-                                            onChange={e => setSongForm(p => ({ ...p, comment: e.target.value }))}
-                                            className={`w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-${currentZone?.themeColor || 'purple'}-500/20 focus:border-${currentZone?.themeColor || 'purple'}-500 transition-all`}
-                                            placeholder="e.g. Needs practice, or key change..."
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex gap-3 mt-6">
-                                <button onClick={() => setShowSongForm(null)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
-                                <button
-                                    onClick={() => saveSong(showSongForm!)}
-                                    disabled={savingSong}
-                                    className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                                    style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                >
-                                    {savingSong ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Category Form Modal (Global) */}
-            {
-                showCatForm && (
-                    <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4">{editingCat ? 'Edit Category' : 'New Category'}</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Label</label>
-                                    <input value={catForm.label} onChange={e => setCatForm(p => ({ ...p, label: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="e.g. Daily Schedule" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Description</label>
-                                    <input value={catForm.description} onChange={e => setCatForm(p => ({ ...p, description: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" placeholder="Brief description..." />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Icon</label>
-                                        <select value={catForm.icon} onChange={e => setCatForm(p => ({ ...p, icon: e.target.value }))} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                            {ICON_OPTIONS.map(o => <option key={o.name} value={o.name}>{o.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Color</label>
-                                        <select value={catForm.color} onChange={e => {
-                                            const opt = COLOR_OPTIONS.find(o => o.color === e.target.value)
-                                            setCatForm(p => ({ ...p, color: e.target.value, iconColor: opt?.iconColor || p.iconColor }))
-                                        }} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                            {COLOR_OPTIONS.map(o => <option key={o.color} value={o.color}>{o.label}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex gap-3 mt-6">
-                                <button onClick={() => setShowCatForm(false)} className="flex-1 py-2.5 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 transition-colors">Cancel</button>
-                                <button
-                                    onClick={() => saveCat()}
-                                    disabled={savingCat}
-                                    className="flex-1 py-2.5 rounded-xl text-white font-semibold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                                    style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
-                                >
-                                    {savingCat ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Category
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-        </div >
-    )
+      {/* Modals */}
+      <ScheduleModals
+        showCatForm={sm.showCatForm}
+        setShowCatForm={sm.setShowCatForm}
+        catForm={sm.catForm}
+        setCatForm={sm.setCatForm}
+        editingCat={sm.editingCat}
+        savingCat={sm.savingCat}
+        onSaveCat={sm.saveCat}
+        showNewScheduleModal={sm.showNewScheduleModal}
+        setShowNewScheduleModal={sm.setShowNewScheduleModal}
+        newScheduleDate={sm.newScheduleDate}
+        setNewScheduleDate={sm.setNewScheduleDate}
+        onConfirmNewSchedule={sm.confirmCreateSchedule}
+        isDailyView={sm.isDailyView}
+        showRenameListModal={sm.showRenameListModal}
+        setShowRenameListModal={sm.setShowRenameListModal}
+        renameListValue={sm.renameListValue}
+        setRenameListValue={sm.setRenameListValue}
+        onConfirmRename={sm.handleRenameList}
+        themeColor={themeColor}
+      />
+    </div>
+  );
 }

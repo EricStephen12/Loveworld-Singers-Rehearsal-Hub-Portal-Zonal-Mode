@@ -2,10 +2,9 @@
 
 import React, { useMemo, useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import { sanitizeImageUrl } from '@/utils/image-utils';
 
-import { ChevronRight, Search, Clock, Music, Mic, ChevronDown, ChevronUp, Play, X, Users, Calendar, ArrowLeft, Flag, Archive, RefreshCw, BookOpen, Piano, HandMetal, Volume2, SkipForward, Heart, Sparkles } from "lucide-react";
+import { Clock, Music,  Play, X, Archive, BookOpen, Piano, HandMetal, Volume2, SkipForward, Heart, Sparkles } from "lucide-react";
 
 import SongDetailModal from "@/components/SongDetailModal";
 import { ScreenHeader } from "@/components/ScreenHeader";
@@ -22,12 +21,14 @@ import { PraiseNightBanner } from "@/components/praise-night/PraiseNightBanner";
 import { PraiseNightQuickActions } from "@/components/praise-night/PraiseNightQuickActions";
 import { PraiseNightStatusFilter } from "@/components/praise-night/PraiseNightStatusFilter";
 import { PraiseNightSongList } from "@/components/praise-night/PraiseNightSongList";
+import { PraiseNightCategoryDrawer } from "@/components/praise-night/PraiseNightCategoryDrawer";
 import { PraiseNightCategoryBar } from "@/components/praise-night/PraiseNightCategoryBar";
 import { PraiseNightActiveWidget } from "@/components/praise-night/PraiseNightActiveWidget";
 import { PraiseNightSearchResults } from "@/components/praise-night/PraiseNightSearchResults";
 import { useRealtimeData } from "@/hooks/useRealtimeData";
 
 import { useRealtimeSong } from "@/hooks/useRealtimeSong";
+import { usePraiseNightSongsData } from "@/hooks/usePraiseNightSongsData";
 import { FirebaseMetadataService } from "@/lib/firebase-metadata-service";
 import { useZone } from '@/hooks/useZone';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
@@ -822,170 +823,27 @@ function PraiseNightPageContent() {
   // Debug logging for song data
 
 
-  // Song categories - get from Supabase data (supports both single and multiple categories)
-  const songCategories = useMemo(() => {
-    // Use finalSongData instead of currentPraiseNight.songs for more reliable data
-    const songsToUse = finalSongData.length > 0 ? finalSongData : (currentPraiseNight?.songs || []);
+  // Use custom hook for song data processing
+  const {
+    songCategories,
+    categoriesWithActiveSongs,
+    mainCategories,
+    filteredSongs,
+    categoryCounts
+  } = usePraiseNightSongsData({
+    finalSongData,
+    activeCategory,
+    activeFilter,
+    currentPraiseNight,
+    setActiveCategory
+  });
 
-    if (songsToUse.length === 0) {
-
-      return [];
-    }
-
-    // Collect categories from both single category and categories array
-    const allCategories: string[] = [];
-    songsToUse.forEach(song => {
-      if (song.categories && Array.isArray(song.categories)) {
-        // New multi-category songs
-        allCategories.push(...song.categories.filter(cat => cat && cat.trim()));
-      } else if (song.category && song.category.trim()) {
-        // Old single category songs
-        allCategories.push(song.category);
-      }
-    });
-
-    const uniqueCategories = [...new Set(allCategories)];
-
-
-    return uniqueCategories;
-  }, [finalSongData, currentPraiseNight?.songs]);
-
-  // Categories that currently have at least one active song
-  const categoriesWithActiveSongs = useMemo(() => {
-    const activeCategories = finalSongData
-      .filter((song: any) => song.isActive && song.category)
-      .map((song: any) => song.category);
-    return Array.from(new Set(activeCategories));
-  }, [finalSongData]);
-
-  // All categories in horizontal bar with auto-scroll (prioritize categories that have active songs)
-  const mainCategories = useMemo(() => {
-    const base = [...songCategories];
-    if (base.length === 0) return base;
-
-    const order = currentPraiseNight?.categoryOrder || [];
-
-    return base.sort((a, b) => {
-      // 1. Active categories ALWAYS first (highest priority)
-      const aActive = categoriesWithActiveSongs.includes(a);
-      const bActive = categoriesWithActiveSongs.includes(b);
-
-      if (aActive !== bActive) {
-        return aActive ? -1 : 1;
-      }
-
-      // 2. Manual order from categoryOrder (second priority)
-      const aOrderIndex = order.indexOf(a);
-      const bOrderIndex = order.indexOf(b);
-
-      const hasAOrder = aOrderIndex !== -1;
-      const hasBOrder = bOrderIndex !== -1;
-
-      if (hasAOrder && hasBOrder) {
-        return aOrderIndex - bOrderIndex;
-      } else if (hasAOrder) {
-        return -1; // Items in order list come before items not in it
-      } else if (hasBOrder) {
-        return 1;
-      }
-
-      // 3. Alphabetical (fallback)
-      return a.localeCompare(b);
-    });
-  }, [songCategories, categoriesWithActiveSongs, currentPraiseNight?.categoryOrder]);
+  const categoryHeardCount = categoryCounts.heard;
+  const categoryUnheardCount = categoryCounts.unheard;
+  const categoryTotalCount = categoryCounts.total;
 
   // No more FAB categories - all moved to main bar
   const otherCategories: string[] = [];
-
-
-
-  // Prefer auto-selecting a category that has active songs; otherwise fall back to first
-  useEffect(() => {
-    if (!activeCategory) {
-      const preferred = mainCategories.find((cat) => categoriesWithActiveSongs.includes(cat));
-      if (preferred) {
-        setActiveCategory(preferred);
-        return;
-      }
-      if (songCategories.length > 0) {
-        setActiveCategory(songCategories[0]);
-      }
-    } else if (!songCategories.includes(activeCategory)) {
-      // If current activeCategory no longer exists (page switched), reset with preference
-      const preferred = mainCategories.find((cat) => categoriesWithActiveSongs.includes(cat));
-      if (preferred) {
-        setActiveCategory(preferred);
-      } else if (songCategories.length > 0) {
-        setActiveCategory(songCategories[0]);
-      } else {
-        setActiveCategory('');
-      }
-    }
-  }, [activeCategory, mainCategories, categoriesWithActiveSongs, songCategories]);
-
-  // Fallback data if no centralized songs available
-  const fallbackSongData = [
-    // New Praise Songs
-    {
-      title: "Mighty God",
-      status: "heard",
-      category: "New Praise Songs",
-      singer: "Sarah Johnson",
-      lyrics: {
-        verse1: "Great is Thy faithfulness, O God my Father\nThere is no shadow of turning with Thee\nThou changest not, Thy compassions they fail not\nAs Thou hast been Thou forever wilt be",
-        chorus: "Great is Thy faithfulness\nGreat is Thy faithfulness\nMorning by morning new mercies I see\nAll I have needed Thy hand hath provided",
-        verse2: "Summer and winter, and springtime and harvest\nSun, moon and stars in their courses above\nJoin with all nature in manifold witness\nTo Thy great faithfulness, mercy and love",
-        bridge: "Pardon for sin and a peace that endureth\nThine own dear presence to cheer and to guide\nStrength for today and bright hope for tomorrow\nBlessings all mine, with ten thousand beside"
-      },
-      leadSinger: "Sarah Johnson",
-      writtenBy: "Pastor Chris Oyakhilome",
-      key: "G Major",
-      tempo: "72 BPM",
-      comments: "This song should be sung with deep reverence and heartfelt emotion. Allow the congregation to really feel the weight of God's amazing grace."
-    }
-  ];
-
-  // Update data when praise night changes
-  useEffect(() => {
-    // This will trigger a re-render when currentPraiseNight changes
-    // The getCurrentSongs() call will get the new data
-  }, [currentPraiseNight]);
-
-  // Helper function to check if song belongs to category (supports both single and multiple categories)
-  const songBelongsToCategory = (song: any, targetCategory: string) => {
-    // Check new categories array first
-    if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
-      return song.categories.some((cat: string) => cat.trim() === targetCategory.trim());
-    }
-    // Fallback to old single category
-    return (song.category || '').trim() === targetCategory.trim();
-  };
-
-  // Filter songs based on selected category and status
-  const filteredSongs = finalSongData.filter(song => {
-    const matchesCategory = songBelongsToCategory(song, activeCategory);
-    const matchesStatus = song.status === activeFilter;
-
-    // Debug logging
-
-
-    return matchesCategory && matchesStatus;
-  }).sort((a, b) => {
-    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return dateA - dateB;
-  });
-
-  // Get counts for current category
-  const categoryHeardCount = finalSongData.filter(song => {
-    return songBelongsToCategory(song, activeCategory) && song.status === 'heard';
-  }).length;
-
-  const categoryUnheardCount = finalSongData.filter(song => {
-    return songBelongsToCategory(song, activeCategory) && song.status === 'unheard';
-  }).length;
-
-  const categoryTotalCount = categoryHeardCount + categoryUnheardCount;
 
   const switchPraiseNight = (praiseNight: PraiseNight) => {
     if (praiseNight.scope === 'subgroup') {
@@ -1427,57 +1285,14 @@ function PraiseNightPageContent() {
       />
 
       {/* Category Filter Drawer */}
-      {
-        isCategoryDrawerOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
-              onClick={() => setIsCategoryDrawerOpen(false)}
-            />
-
-            {/* Drawer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 transform transition-transform duration-300 animate-slide-up modal-bottom-safe">
-              <div className="px-6 py-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Filter by Category</h3>
-                  <button
-                    onClick={() => setIsCategoryDrawerOpen(false)}
-                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-
-                {/* Total Songs Count */}
-                <div className="mb-4 p-3 bg-purple-50 rounded-xl border border-purple-200">
-                  <p className="text-sm text-purple-700 font-medium">{finalSongData.length} Total Scheduled Songs</p>
-                </div>
-
-                {/* Category Options */}
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {otherCategories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => handleCategorySelect(category)}
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${activeCategory === category
-                        ? 'bg-purple-100 border-2 border-purple-300 text-purple-800'
-                        : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent text-gray-700'
-                        }`}
-                    >
-                      <div className="font-medium text-slate-900 text-sm leading-tight">{category}</div>
-                      <div className="text-xs text-slate-500 mt-0.5 leading-tight">
-                        {finalSongData.filter(song => song.category === category).length} songs
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </>
-        )
-      }
+      <PraiseNightCategoryDrawer
+        isOpen={isCategoryDrawerOpen}
+        onClose={() => setIsCategoryDrawerOpen(false)}
+        otherCategories={otherCategories}
+        activeCategory={activeCategory}
+        handleCategorySelect={handleCategorySelect}
+        finalSongData={finalSongData}
+      />
 
       {/* Floating Active Song Widget */}
       <PraiseNightActiveWidget 

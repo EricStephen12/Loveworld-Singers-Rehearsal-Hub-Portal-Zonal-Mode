@@ -19,6 +19,8 @@ import { SongSolfas } from "./song-detail/SongSolfas";
 import { SongComments } from "./song-detail/SongComments";
 import { SongHistory } from "./song-detail/SongHistory";
 import { SongAudioPlayer } from "./song-detail/SongAudioPlayer";
+import { SongDetailHeader } from "./song-detail/SongDetailHeader";
+import { SongDetailTabsContent } from "./song-detail/SongDetailTabsContent";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -756,223 +758,45 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           ) : (
             <>
               {/* Normal Modal Content */}
+              <SongDetailHeader
+                onClose={onClose}
+                displayedSongData={displayedSongData}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isSubGroup={isSubGroup}
+                showMoreMenu={showMoreMenu}
+                setShowMoreMenu={setShowMoreMenu}
+                moreMenuRef={moreMenuRef}
+              />
 
-              {/* iOS Handle */}
-              <div className="flex justify-center pt-2 pb-1 flex-shrink-0">
-                <div
-                  onClick={onClose}
-                  className="w-8 h-0.5 bg-gray-400 rounded-full cursor-pointer touch-optimized"
-                ></div>
-              </div>
-
-              {/* Sticky Header */}
-              <div className="relative z-[100] bg-white/80 backdrop-blur-xl border-b border-white/30 flex-shrink-0">
-                {/* Background layers wrapper with overflow hidden to contain the blur/scale */}
-                <div className="absolute inset-0 overflow-hidden z-0">
-                  {/* Background Image with Blur */}
-                  <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                    style={{
-                      backgroundImage: `url('/images/DSC_6155_scaled.jpg')`,
-                      filter: 'blur(8px)',
-                      transform: 'scale(1.1)'
-                    }}
-                  />
-                  {/* Overlay for better text readability */}
-                  <div className="absolute inset-0 bg-black/40" />
-                </div>
-
-                {/* Content with relative positioning */}
-                <div className="relative z-10 px-6 py-4">
-                  {/* Back Button Row */}
-                  <div className="flex items-center mb-3">
-                    <button
-                      onClick={onClose}
-                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-
-
-                  {/* Main Header Row */}
-                  <div className="flex items-center space-x-4 mb-3">
-                    {/* Song Info - Center */}
-                    <div className="flex-1 min-w-0">
-                      <h1 className="text-white text-xl font-black text-center mb-4 font-poppins uppercase">{displayedSongData?.title}</h1>
-                      <div className="text-white text-sm space-y-1 font-poppins">
-                        <div className="border-b border-white/30 pb-1">
-                          <span className="font-semibold uppercase">LEAD SINGER:</span> {displayedSongData?.leadSinger ? displayedSongData.leadSinger.split(',')[0].trim() : 'Unknown'}
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                          <span><span className="font-semibold uppercase">WRITER:</span> {displayedSongData?.writer || ''}</span>
-                          <span className="font-bold">x{displayedSongData?.rehearsalCount ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                          <span><span className="font-semibold uppercase">CONDUCTOR:</span> {displayedSongData?.conductor || ''}</span>
-                          <span><span className="font-semibold uppercase">KEY:</span> {displayedSongData?.key || ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                          <span><span className="font-semibold uppercase">LEAD KEYBOARDIST:</span> {displayedSongData?.leadKeyboardist || ''}</span>
-                          <span><span className="font-semibold uppercase">TEMPO:</span> {displayedSongData?.tempo || ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center border-b border-white/30 pb-1 mb-1">
-                          <span><span className="font-semibold uppercase">DRUMMER:</span> {displayedSongData?.drummer || ''}</span>
-                          <span><span className="font-semibold uppercase">BASS GUITARIST:</span> {displayedSongData?.leadGuitarist || ''}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tab Navigation inside header */}
-                  <div className="flex justify-between sm:justify-center items-start sm:items-center sm:space-x-8 pt-2 w-full px-1 sm:px-0">
-                    <button
-                      onClick={() => setActiveTab('lyrics')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
-                    >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'lyrics'
-                        ? 'bg-white text-black'
-                        : 'text-white hover:bg-white/20'
-                        }`}>
-                        <BookOpen className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Lyrics</span>
-                    </button>
-                    {!isSubGroup && (
-                      <button
-                        onClick={() => setActiveTab('solfas')}
-                        className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
-                      >
-                        <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'solfas'
-                          ? 'bg-white text-black'
-                          : 'text-white hover:bg-white/20'
-                          }`}>
-                          <Music className="w-4 h-4" />
-                        </div>
-                        <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Conductor's Guide</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setActiveTab('comments')}
-                      className="flex flex-col items-center space-y-1 transition-all duration-200 text-white hover:text-white flex-1 sm:flex-none px-1"
-                    >
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${activeTab === 'comments'
-                        ? 'bg-white text-black'
-                        : 'text-white hover:bg-white/20'
-                        }`}>
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">Comments</span>
-                    </button>
-                    {/* History is now in the More menu */}
-
-                    {/* More Menu */}
-                    {!isSubGroup && (
-                      <div className="flex-1 sm:flex-none flex justify-center px-1" ref={moreMenuRef}>
-                        <div className="relative flex flex-col items-center w-full">
-                          <button
-                            onClick={() => setShowMoreMenu(!showMoreMenu)}
-                            className={`flex flex-col items-center space-y-1 w-full transition-all duration-200 text-white hover:text-white ${(activeTab === 'notation' || activeTab === 'history') ? 'scale-110' : ''}`}
-                          >
-                            <div className={`w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 ${(activeTab === 'notation' || activeTab === 'history')
-                              ? 'bg-white text-black'
-                              : 'text-white hover:bg-white/20'
-                              }`}>
-                              <MoreVertical className="w-4 h-4" />
-                            </div>
-                            <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">More</span>
-                          </button>
-
-                          {showMoreMenu && (
-                            <div className="absolute top-full mt-2 sm:mt-3 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto min-w-[200px] w-max bg-white rounded-xl shadow-2xl border border-slate-100 py-1.5 sm:py-2 z-[200] animate-in fade-in zoom-in duration-200 origin-top-right sm:origin-top">
-                              <button
-                                onClick={() => {
-                                  setActiveTab('notation');
-                                  setShowMoreMenu(false);
-                                }}
-                                className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'notation' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                              >
-                                <Music2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                                <span className="text-sm font-medium whitespace-nowrap">Solfa Notation</span>
-                              </button>
-                              
-                              <button
-                                onClick={() => {
-                                  setActiveTab('history');
-                                  setShowMoreMenu(false);
-                                }}
-                                className={`w-full px-4 py-3 flex items-center gap-3 transition-colors ${activeTab === 'history' ? 'bg-slate-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                              >
-                                <Clock className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                                <span className="text-sm font-medium whitespace-nowrap">History</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Area */}
-              <div className="flex-1 px-6 py-4 overflow-y-auto" style={{ paddingBottom: '180px' }}>
-                {activeTab === 'lyrics' && (
-                  <SongLyrics 
-                    isFullscreen={false}
-                    onToggleFullscreen={toggleFullscreenLyrics}
-                    lyrics={displayedSongData?.lyrics}
-                  />
-                )}
-
-                {activeTab === 'solfas' && (
-                  <SongSolfas 
-                    isFullscreen={false}
-                    onToggleFullscreen={toggleFullscreenSolfas}
-                    solfas={displayedSongData?.solfas}
-                  />
-                )}
-
-                {activeTab === 'notation' && (
-                  <SongSolfas 
-                    isFullscreen={false}
-                    onToggleFullscreen={toggleFullscreenSolfas}
-                    solfas={displayedSongData?.notation}
-                  />
-                )}
-
-                {activeTab === 'comments' && (
-                  <SongComments 
-                    isFullscreen={false}
-                    onToggleFullscreen={toggleFullscreenComments}
-                    comments={displayedSongData?.comments}
-                    zoneColor={zoneColor}
-                    commentLabel={getCommentLabel()}
-                  />
-                )}
-                          {activeTab === 'history' && (
-                  <SongHistory 
-                    activeHistoryTab={activeHistoryTab}
-                    setActiveHistoryTab={setActiveHistoryTab}
-                    isLoadingHistory={isLoadingHistory}
-                    historyEntries={historyEntries}
-                    loadHistoryEntries={loadHistoryEntries}
-                    expandedHistoryEntries={expandedHistoryEntries}
-                    toggleHistoryEntry={toggleHistoryEntry}
-                    zoneColor={zoneColor}
-                    darkenColor={darkenColor}
-                    formatDateTime={formatDateTime}
-                    formatTime={formatTime}
-                    getCommentLabel={getCommentLabel}
-                    historyAudioStates={historyAudioStates}
-                    handleHistoryAudioPlayPause={handleHistoryAudioPlayPause}
-                    historyAudioRefs={historyAudioRefs}
-                    handleHistoryAudioTimeUpdate={handleHistoryAudioTimeUpdate}
-                    handleHistoryAudioLoadedMetadata={handleHistoryAudioLoadedMetadata}
-                    handleHistoryAudioEnded={handleHistoryAudioEnded}
-                  />
-                )}
-              </div>
+              <SongDetailTabsContent
+                activeTab={activeTab}
+                displayedSongData={displayedSongData}
+                toggleFullscreenLyrics={toggleFullscreenLyrics}
+                toggleFullscreenSolfas={toggleFullscreenSolfas}
+                toggleFullscreenComments={toggleFullscreenComments}
+                zoneColor={zoneColor}
+                commentLabel={getCommentLabel()}
+                historyProps={{
+                  activeHistoryTab,
+                  setActiveHistoryTab,
+                  isLoadingHistory,
+                  historyEntries,
+                  loadHistoryEntries,
+                  expandedHistoryEntries,
+                  toggleHistoryEntry,
+                  darkenColor,
+                  formatDateTime,
+                  formatTime,
+                  getCommentLabel,
+                  historyAudioStates,
+                  handleHistoryAudioPlayPause,
+                  historyAudioRefs,
+                  handleHistoryAudioTimeUpdate,
+                  handleHistoryAudioLoadedMetadata,
+                  handleHistoryAudioEnded
+                }}
+              />
 
 
               {/* Floating Fullscreen Buttons */}

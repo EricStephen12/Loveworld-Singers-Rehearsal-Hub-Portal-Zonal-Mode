@@ -14,6 +14,7 @@ interface SpreadsheetEditorProps {
     onSave?: (data: SpreadsheetData) => void
     isSaving?: boolean
     themeColor?: string
+    readOnly?: boolean
 }
 
 const DEFAULT_COLUMNS = [
@@ -34,7 +35,8 @@ export default function SpreadsheetEditor({
     onChange,
     onSave,
     isSaving,
-    themeColor = '#9333ea'
+    themeColor = '#9333ea',
+    readOnly = false
 }: SpreadsheetEditorProps) {
     const [spreadsheet, setSpreadsheet] = useState<SpreadsheetData>(initialData || DEFAULT_DATA)
     const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null)
@@ -291,19 +293,19 @@ export default function SpreadsheetEditor({
     return (
         <div className="flex flex-col h-full bg-white/95 backdrop-blur-xl border border-purple-200/60 rounded-2xl overflow-hidden shadow-xl shadow-purple-900/5 ring-1 ring-purple-100">
             {/* Toolbar */}
-            <div className="p-3 bg-gradient-to-r from-purple-50/80 to-pink-50/80 border-b border-purple-100 flex items-center gap-3 flex-wrap backdrop-blur-md">
+            <div className="p-2 md:p-3 bg-gradient-to-r from-purple-50/80 to-pink-50/80 border-b border-purple-100 flex items-center gap-2 md:gap-3 flex-wrap backdrop-blur-md">
                 <div className="flex items-center gap-1 bg-white/60 shadow-sm border border-purple-100 p-1 rounded-xl">
                     <button
                         onClick={() => toggleStyle('bold')}
-                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.bold ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.bold ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
-                        <Bold className="w-4 h-4" />
+                        <Bold className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                     <button
                         onClick={() => toggleStyle('italic')}
-                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.italic ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.italic ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
-                        <Italic className="w-4 h-4" />
+                        <Italic className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                 </div>
 
@@ -312,21 +314,21 @@ export default function SpreadsheetEditor({
                 <div className="flex items-center gap-1 bg-white/60 shadow-sm border border-purple-100 p-1 rounded-xl">
                     <button
                         onClick={() => setAlignment('left')}
-                        className={`p-1.5 rounded-lg transition-all ${selectedCell && (spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'left' || !spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align) ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all ${selectedCell && (spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'left' || !spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align) ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
-                        <AlignLeft className="w-4 h-4" />
+                        <AlignLeft className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                     <button
                         onClick={() => setAlignment('center')}
-                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'center' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'center' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
-                        <AlignCenter className="w-4 h-4" />
+                        <AlignCenter className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                     <button
                         onClick={() => setAlignment('right')}
-                        className={`p-1.5 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'right' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all ${selectedCell && spreadsheet.data[`${selectedCell.row}:${selectedCell.col}`]?.align === 'right' ? 'bg-white shadow-sm text-purple-700 ring-1 ring-purple-200' : 'text-purple-600/70 hover:text-purple-700 hover:bg-white/50'}`}
                     >
-                        <AlignRight className="w-4 h-4" />
+                        <AlignRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                 </div>
 
@@ -353,11 +355,12 @@ export default function SpreadsheetEditor({
                     <button
                         onClick={() => onSave(spreadsheet)}
                         disabled={isSaving}
-                        className="flex items-center gap-2 text-xs font-bold text-white px-5 py-2.5 rounded-xl shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 text-xs font-bold text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all active:scale-95 disabled:opacity-50"
                         style={{ background: `linear-gradient(to right, ${themeColor}, #c026d3)` }}
                     >
-                        {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        Save Changes
+                        {isSaving ? <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" /> : <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+                        <span className="hidden xs:inline">Save Changes</span>
+                        <span className="xs:inline sm:hidden">Save</span>
                     </button>
                 )}
             </div>
@@ -482,6 +485,7 @@ export default function SpreadsheetEditor({
                                                     ${cell.align === 'center' ? 'text-center' : cell.align === 'right' ? 'text-right' : 'text-left'}
                                                 `}
                                                 placeholder=""
+                                                disabled={readOnly}
                                             />
                                         </td>
                                     )
