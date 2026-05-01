@@ -20,14 +20,14 @@ export const GlobalArchiveResults: React.FC<GlobalArchiveResultsProps> = ({
 }) => {
   const router = useRouter();
 
-  if (archiveSearchQuery.trim().length < 2) return null;
+  if (archiveSearchQuery.trim().length < 1) return null;
 
   return (
     <div className="mt-4 mb-8">
       <div className="flex items-center justify-between mb-4 px-1">
         <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <Music className="w-5 h-5 text-purple-600" />
-          {isGlobalSearchLoading ? 'Searching songs...' : `Search Results (${globalSearchResults.length})`}
+          {isGlobalSearchLoading ? 'Searching archive...' : `Search Results (${globalSearchResults.length})`}
         </h3>
         {isGlobalSearchLoading && (
           <RefreshCw className="w-4 h-4 text-purple-600 animate-spin" />
@@ -35,13 +35,13 @@ export const GlobalArchiveResults: React.FC<GlobalArchiveResultsProps> = ({
       </div>
 
       {isGlobalSearchLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-20 bg-white/50 animate-pulse rounded-xl border border-slate-200"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-32 bg-white/50 animate-pulse rounded-2xl border border-slate-100 shadow-sm"></div>
           ))}
         </div>
       ) : globalSearchResults.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {globalSearchResults.map((result: any, index) => (
             <button
               key={`${result.id}-${index}`}
@@ -52,43 +52,55 @@ export const GlobalArchiveResults: React.FC<GlobalArchiveResultsProps> = ({
                   handleSongClick(result, index);
                 }
               }}
-              className="w-full text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-purple-400 hover:shadow-md transition-all duration-200 group flex items-center justify-between"
+              className="w-full text-left bg-white border border-slate-100 rounded-2xl p-4 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[120px]"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {result.type === 'page' ? (
-                    <Calendar className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  ) : (
-                    <Music className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                  )}
-                  <h4 className="font-bold text-slate-900 truncate group-hover:text-purple-700 transition-colors">
-                    {result.type === 'page' ? result.name : result.title}
-                  </h4>
+              {/* Decorative background element */}
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                {result.type === 'page' ? (
+                  <Calendar className="w-16 h-16 text-slate-900" />
+                ) : (
+                  <Music className="w-16 h-16 text-slate-900" />
+                )}
+              </div>
+
+              <div className="relative z-10">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className={`p-2 rounded-xl flex-shrink-0 ${
+                    result.type === 'page' ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'
+                  }`}>
+                    {result.type === 'page' ? (
+                      <Calendar className="w-4 h-4" />
+                    ) : (
+                      <Music className="w-4 h-4" />
+                    )}
+                  </div>
                   {result.status && (
-                    <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 text-[9px] rounded-full font-black uppercase tracking-wider shadow-sm border border-black/5 ${
                       result.status === 'heard' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                     }`}>
                       {result.status}
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                  {result.type === 'song' && (
-                    <span className="flex items-center gap-1 font-medium text-purple-600">
-                      <Archive className="w-3 h-3" />
-                      {result.parentPageName}
-                    </span>
-                  )}
+
+                <h4 className="font-black text-slate-900 leading-snug mb-1 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                  {result.type === 'page' ? result.name : result.title}
+                </h4>
+
+                {result.type === 'song' && (
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-600 bg-purple-50/50 w-fit px-2 py-0.5 rounded-lg mb-3">
+                    <Archive className="w-3 h-3" />
+                    <span className="truncate max-w-[150px]">{result.parentPageName}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mt-2 pt-3 border-t border-slate-50 relative z-10">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   {result.date && (
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {result.date}
-                    </span>
-                  )}
-                  {result.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {result.location}
                     </span>
                   )}
                   {result.leadSinger && (
@@ -98,8 +110,10 @@ export const GlobalArchiveResults: React.FC<GlobalArchiveResultsProps> = ({
                     </span>
                   )}
                 </div>
+                <div className="w-6 h-6 bg-slate-50 rounded-lg flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
             </button>
           ))}
         </div>

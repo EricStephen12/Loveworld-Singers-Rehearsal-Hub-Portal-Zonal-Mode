@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -13,6 +13,11 @@ import {
 } from 'lucide-react';
 import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import CustomLoader from '@/components/CustomLoader';
+import EditSongModal from '../EditSongModal';
+import { SubGroupDatabaseService, SubGroupSong } from '@/lib/subgroup-database-service';
+import { Category, PraiseNight, PraiseNightSong } from '@/types/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { Toast, ToastContainer } from '../Toast';
 
 interface SubGroupSongsProps {
   subGroupId: string;
@@ -33,32 +38,52 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedForImport, setSelectedForImport] = useState<string[]>([]);
 
   // Create form state
-  const [newTitle, setNewTitle] = useState('');
-  const [newWriter, setNewWriter] = useState('');
-  const [newLyrics, setNewLyrics] = useState('');
   const [creating, setCreating] = useState(false);
+  const [editingSong, setEditingSong] = useState<SubGroupSong | null>(null);
+  const [showSongModal, setShowSongModal] = useState(false);
+  const [standardCategories, setStandardCategories] = useState<any[]>([]);
+  const [standardPrograms, setStandardPrograms] = useState<PraiseNight[]>([]);
+  const [toasts, setToasts] = useState<any[]>([]);
+  const { user } = useAuth();
+
+  const addToast = (toast: { type: 'success' | 'error' | 'info' | 'warning', message: string }) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+    setTimeout(() => removeToast(id), 5000);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   useEffect(() => {
     loadSongs();
+    loadStandardData();
   }, [subGroupId]);
+
+  const loadStandardData = async () => {
+    if (!zoneId) return;
+    try {
+      const [cats, progs] = await Promise.all([
+        ZoneDatabaseService.getCategoriesByZone(zoneId),
+        ZoneDatabaseService.getPraiseNightsByZone(zoneId, 100)
+      ]);
+      setStandardCategories(cats);
+      setStandardPrograms(progs as any);
+    } catch (error) {
+      console.error('Error loading standard modal data:', error);
+    }
+  };
 
   const loadSongs = async () => {
     setIsLoading(true);
     try {
-      const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
-      setSongs(data.map(s => ({
-        id: s.id,
-        title: s.title,
-        writer: s.writer,
-        category: s.category,
-        importedFrom: s.importedFrom
-      })));
+      setSongs(data as any);
     } catch (error) {
  console.error('Error loading songs:', error);
     } finally {
@@ -108,30 +133,82 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
     }
   };
 
-  const handleCreate = async () => {
-    if (!newTitle.trim()) return;
+  const toPraiseNightSong = (s: SubGroupSong): PraiseNightSong => {
 
+    return {
+      id: s.id,
+      firebaseId: s.id,
+      title: s.title,
+      status: s.status || 'unheard',
+      category: s.category || 'General',
+      categories: [s.category || 'General'],
+      praiseNightId: s.praiseNightId || 'subgroup-context',
+      isActive: s.isActive,
+      leadSinger: s.leadSinger,
+      writer: s.writer,
+      key: s.key,
+      tempo: s.tempo,
+      lyrics: s.lyrics || '',
+      solfas: s.solfa || '',
+      audioFile: s.audioFile || s.audioUrls?.full,
+      audioUrls: s.audioUrls as any,
+      comments: s.comments as any || [],
+      history: s.history || []
+    };
+  };
+
+  const fromPraiseNightSong = (ps: PraiseNightSong): Partial<SubGroupSong> => {
+
+    return {
+      title: ps.title,
+      status: ps.status,
+      category: ps.category,
+      leadSinger: ps.leadSinger,
+      writer: ps.writer,
+      key: ps.key,
+      tempo: ps.tempo,
+      lyrics: ps.lyrics || '',
+      solfa: ps.solfas || '',
+      audioFile: ps.audioFile,
+      audioUrls: ps.audioUrls as any,
+      comments: ps.comments as any || [],
+      history: ps.history
+    };
+  };
+
+  const handleModalUpdate = async (ps: PraiseNightSong) => {
+    if (!ps.title.trim() || !user) return;
     setCreating(true);
     try {
-      const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
-      const result = await SubGroupDatabaseService.createSong(
-        subGroupId,
-        zoneId,
-        { title: newTitle, writer: newWriter, lyrics: newLyrics },
-        'system');
-
-      if (result.success) {
-        setNewTitle('');
-        setNewWriter('');
-        setNewLyrics('');
-        setShowCreateModal(false);
-        loadSongs();
+      const updates = fromPraiseNightSong(ps);
+      
+      if (editingSong) {
+        await SubGroupDatabaseService.updateSong(editingSong.id, updates);
+        addToast({ type: 'success', message: 'Song updated' });
+      } else {
+        const result = await SubGroupDatabaseService.createSong(subGroupId, zoneId, updates, user.uid);
+        if (result.success) {
+          addToast({ type: 'success', message: 'Song created' });
+        }
       }
+      
+      setShowSongModal(false);
+      loadSongs();
     } catch (error) {
- console.error('Error creating song:', error);
+      addToast({ type: 'error', message: 'Failed to process song' });
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleEditSong = (song: any) => {
+    setEditingSong(song);
+    setShowSongModal(true);
+  };
+
+  const handleAddSong = () => {
+    setEditingSong(null);
+    setShowSongModal(true);
   };
 
   const toggleImportSelection = (songId: string) => {
@@ -172,7 +249,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
             <span className="hidden sm:inline">Import from Zone</span>
           </button>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleAddSong}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -207,7 +284,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
             </button>
             <span className="text-slate-300">or</span>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={handleAddSong}
               className="text-purple-600 hover:text-purple-700 font-medium"
             >
               Create your own →
@@ -220,6 +297,7 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
             {filteredSongs.map((song) => (
               <div
                 key={song.id}
+                onClick={() => handleEditSong(song)}
                 className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4">
@@ -336,91 +414,17 @@ export default function SubGroupSongs({ subGroupId, zoneId }: SubGroupSongsProps
         </div>
       )}
 
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md">
-            <div className="p-6 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <FileText className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Create Song</h2>
-                </div>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg"
-                >
-                  <X className="w-5 h-5 text-slate-500" />
-                </button>
-              </div>
-            </div>
+      {/* Standard Edit Modal */}
+      <EditSongModal 
+        isOpen={showSongModal}
+        onClose={() => setShowSongModal(false)}
+        song={editingSong ? toPraiseNightSong(editingSong as any) : null}
+        categories={standardCategories}
+        praiseNightCategories={standardPrograms as any}
+        onUpdate={handleModalUpdate}
+      />
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Song title"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Writer
-                </label>
-                <input
-                  type="text"
-                  value={newWriter}
-                  onChange={(e) => setNewWriter(e.target.value)}
-                  placeholder="Song writer"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Lyrics
-                </label>
-                <textarea
-                  value={newLyrics}
-                  onChange={(e) => setNewLyrics(e.target.value)}
-                  placeholder="Enter lyrics..."
-                  rows={5}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex gap-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={!newTitle.trim() || creating}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {creating ? (
-                  <>
-                    <CustomLoader size="sm" />
-                    <span>Creating...</span>
-                  </>
-                ) : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

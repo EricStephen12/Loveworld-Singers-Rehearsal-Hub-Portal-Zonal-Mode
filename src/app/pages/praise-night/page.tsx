@@ -233,7 +233,7 @@ function PraiseNightPageContent() {
       if (
         categoryFilter === 'archive' && 
         !pageParam && 
-        archiveSearchQuery.trim().length >= 2 && 
+        archiveSearchQuery.trim().length >= 1 && 
         !hasLoadedAllSongs && 
         currentZone?.id
       ) {
@@ -255,7 +255,7 @@ function PraiseNightPageContent() {
 
   // Compute global search results
   const globalSearchResults = useMemo(() => {
-    if (categoryFilter !== 'archive' || pageParam || archiveSearchQuery.trim().length < 2) {
+    if (categoryFilter !== 'archive' || pageParam || archiveSearchQuery.trim().length < 1) {
       return [];
     }
 
@@ -294,7 +294,7 @@ function PraiseNightPageContent() {
       return {
         ...song,
         type: 'song' as const,
-        parentPageName: parentPage?.name || 'Unknown Session',
+        parentPageName: parentPage?.name || 'Unknown Program',
         parentPageDate: parentPage?.date || ''
       };
     });
@@ -931,7 +931,10 @@ function PraiseNightPageContent() {
 
 
   // Show empty state when there's no data for the current category (but not when still loading)
-  if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || filteredPraiseNights.length === 0)) {
+  // SPECIAL CASE: Don't show global empty state if we are in 'archive' and have categories or search results
+  const isArchiveBrowsing = categoryFilter === 'archive' && !pageParam && (pageCategories.length > 0 || archiveSearchQuery.trim().length > 0);
+  
+  if (!loading && (!allPraiseNights || allPraiseNights.length === 0 || (filteredPraiseNights.length === 0 && !isArchiveBrowsing))) {
     return (
       <PraiseNightEmptyState 
         categoryFilter={categoryFilter}
@@ -1164,31 +1167,13 @@ function PraiseNightPageContent() {
                 )}
 
                 {/* Show page categories if in archive and no category selected AND categories exist */}
-                {!loadingPageCategories && !selectedPageCategory && pageCategories.length > 0 && filteredPraiseNights.length > 0 && (
+                {!loadingPageCategories && !selectedPageCategory && (pageCategories.length > 0 || archiveSearchQuery.trim().length > 0) && (
                   <ArchiveCategoryGrid 
                     pageCategories={pageCategories}
                     archiveSearchQuery={archiveSearchQuery}
                     allPraiseNights={allPraiseNights}
                     setSelectedPageCategory={setSelectedPageCategory}
                   />
-                )}
-
-                {/* Back button removed in favor of breadcrumb navigation above */}
-
-                {/* Show skeleton while loading pages */}
-                {loading && selectedPageCategory && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                        <div className="aspect-[4/3] bg-gray-200 animate-pulse"></div>
-                        <div className="p-3">
-                          <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                          <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse mb-1"></div>
-                          <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 )}
 
                 <ArchiveProgramList 

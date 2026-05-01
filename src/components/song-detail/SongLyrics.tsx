@@ -72,7 +72,7 @@ export const SongLyrics: React.FC<SongLyricsProps> = ({
               {lyrics ? (
                 <div
                   dangerouslySetInnerHTML={{ __html: lyrics }}
-                  className="prose prose-lg max-w-none text-black"
+                  className="prose prose-slate prose-lg max-w-none text-black whitespace-pre-wrap"
                 />
               ) : (
                 <div className="text-center py-12">
@@ -94,7 +94,7 @@ export const SongLyrics: React.FC<SongLyricsProps> = ({
           <div
             dangerouslySetInnerHTML={{ __html: lyrics || '' }}
             dir="ltr"
-            className="text-[14px] leading-[1.8] text-left ltr text-black"
+            className="prose prose-slate max-w-none text-[14px] leading-[1.8] text-left ltr text-black whitespace-pre-wrap"
           />
         ) : (
           <div className="text-center py-8">

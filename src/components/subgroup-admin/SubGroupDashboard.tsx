@@ -46,29 +46,54 @@ export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDash
   const firstName = profile?.first_name || 'Admin';
 
   useEffect(() => {
-    const loadDashboardData = async () => {
-      if (!subGroup?.id) return;
-      try {
-        const [members, songs, rehearsals] = await Promise.all([
-          SubGroupDatabaseService.getSubGroupMembers(subGroup.id),
-          SubGroupDatabaseService.getSubGroupSongs(subGroup.id),
-          SubGroupDatabaseService.getSubGroupRehearsals(subGroup.id)
-        ]);
+    if (!subGroup?.id) return;
 
-        setStats({
+    setLoading(true);
+
+    // Subscribe to members
+    let unsubscribeMembers = () => {};
+    const fetchMembers = async () => {
+      try {
+        const members = await SubGroupDatabaseService.getSubGroupMembers(subGroup.id);
+        setStats(prev => ({
+          ...prev,
           memberCount: members.length,
-          songCount: songs.length,
-          rehearsalCount: rehearsals.length,
           recentMembers: members.slice(0, 5)
-        });
+        }));
       } catch (error) {
-        console.error('Error loading dashboard stats:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching members:', error);
       }
     };
+    fetchMembers();
 
-    loadDashboardData();
+    // Subscribe to songs
+    const unsubscribeSongs = SubGroupDatabaseService.subscribeToSubGroupSongs(
+      subGroup.id,
+      (songs) => {
+        setStats(prev => ({ ...prev, songCount: songs.length }));
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error in song subscription:', error);
+        setLoading(false);
+      }
+    );
+
+    // Subscribe to rehearsals
+    const unsubscribeRehearsals = SubGroupDatabaseService.subscribeToRehearsals(
+      subGroup.id,
+      (rehearsals) => {
+        setStats(prev => ({ ...prev, rehearsalCount: rehearsals.length }));
+      },
+      (error) => {
+        console.error('Error in rehearsal subscription:', error);
+      }
+    );
+
+    return () => {
+      unsubscribeSongs();
+      unsubscribeRehearsals();
+    };
   }, [subGroup?.id]);
 
   if (loading) {

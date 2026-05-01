@@ -37,6 +37,10 @@ import CustomLoader from '@/components/CustomLoader';
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service';
 import { normalizeSearchString } from '@/utils/string-utils';
 import SubGroupCloneModal from './SubGroupCloneModal';
+import EditSongModal from '../EditSongModal';
+import { PraiseNightSong, Category, PraiseNight } from '@/types/supabase';
+import { ZoneDatabaseService } from '@/lib/zone-database-service';
+import { PraiseNightSongsService } from '@/lib/praise-night-songs-service';
 
 interface SubGroupPagesSectionProps {
   subGroupId: string;
@@ -71,7 +75,10 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [editingSong, setEditingSong] = useState<SubGroupSong | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showMediaOps, setShowMediaOps] = useState(false);
+  
+  // New standard modal state
+  const [standardCategories, setStandardCategories] = useState<any[]>([]);
+  const [standardPrograms, setStandardPrograms] = useState<PraiseNight[]>([]);
 
   const themeColor = currentZone?.themeColor || '#9333ea';
 
@@ -80,25 +87,6 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   const [rehearsalDate, setRehearsalDate] = useState('');
   const [rehearsalLocation, setRehearsalLocation] = useState('');
   const [rehearsalCategory, setRehearsalCategory] = useState<'ongoing' | 'archive' | 'pre-rehearsal'>('ongoing');
-
-  // Form State - Song
-  const [songTitle, setSongTitle] = useState('');
-  const [songWriter, setSongWriter] = useState('');
-  const [songLeadSinger, setSongLeadSinger] = useState('');
-  const [songKey, setSongKey] = useState('');
-  const [songTempo, setSongTempo] = useState('');
-  const [songCategory, setSongCategory] = useState('Praise');
-  const [songLyrics, setSongLyrics] = useState('');
-  const [songSolfa, setSongSolfa] = useState('');
-  
-  // Form State - Media
-  const [sopranoUrl, setSopranoUrl] = useState('');
-  const [altoUrl, setAltoUrl] = useState('');
-  const [tenorUrl, setTenorUrl] = useState('');
-  const [bassUrl, setBassUrl] = useState('');
-  const [fullAudioUrl, setFullAudioUrl] = useState('');
-  const [leaderNote, setLeaderNote] = useState('');
-  const [leaderAudioUrl, setLeaderAudioUrl] = useState('');
 
   // Toast Helpers
   const addToast = (toast: Omit<Toast, 'id'>) => {
@@ -109,33 +97,46 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Helper function to convert markdown-style formatting to HTML for display
-  const markdownToHtml = (text: string): string => {
-    if (!text) return '';
-    const paragraphs = text.split('\n\n');
-    const processedParagraphs = paragraphs
-      .filter(p => p.trim() !== '')
-      .map(paragraph => {
-        let processed = paragraph.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        processed = processed.replace(/\n/g, '<br>');
-        return `<div>${processed}</div>`;
-      });
-    return processedParagraphs.join('');
+  // Mapping Helpers
+  const toPraiseNightSong = (s: SubGroupSong): PraiseNightSong => {
+    return {
+      id: s.id,
+      firebaseId: s.id,
+      title: s.title,
+      status: s.status || 'unheard',
+      category: s.category || 'General',
+      categories: [s.category || 'General'],
+      praiseNightId: s.praiseNightId || 'subgroup-context',
+      isActive: s.isActive,
+      leadSinger: s.leadSinger,
+      writer: s.writer,
+      key: s.key,
+      tempo: s.tempo,
+      lyrics: s.lyrics || '',
+      solfas: s.solfa || '',
+      audioFile: s.audioFile || s.audioUrls?.full,
+      audioUrls: s.audioUrls as any,
+      comments: s.comments as any || [],
+      history: s.history || []
+    };
   };
 
-  // Helper function to convert HTML to markdown-style text for editing
-  const htmlToMarkdown = (html: string): string => {
-    if (!html) return '';
-    return html
-      .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-      .replace(/<span[^>]*>(.*?)<\/span>/gi, '$1')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/<[^>]*>/g, '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+  const fromPraiseNightSong = (ps: PraiseNightSong): Partial<SubGroupSong> => {
+    return {
+      title: ps.title,
+      status: ps.status,
+      category: ps.category,
+      leadSinger: ps.leadSinger,
+      writer: ps.writer,
+      key: ps.key,
+      tempo: ps.tempo,
+      lyrics: ps.lyrics || '',
+      solfa: ps.solfas || '',
+      audioFile: ps.audioFile,
+      audioUrls: ps.audioUrls as any,
+      comments: ps.comments as any || [],
+      history: ps.history
+    };
   };
 
   // 1. Subscribe to Rehearsals
@@ -205,6 +206,24 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
 
     loadSongs();
   }, [subGroupId]);
+
+  // 4. Load Standard Categories & Programs for Edit Modal
+  useEffect(() => {
+    const loadStandardData = async () => {
+      if (!zoneId) return;
+      try {
+        const [cats, progs] = await Promise.all([
+          ZoneDatabaseService.getCategoriesByZone(zoneId),
+          ZoneDatabaseService.getPraiseNightsByZone(zoneId, 100)
+        ]);
+        setStandardCategories(cats);
+        setStandardPrograms(progs as any);
+      } catch (error) {
+        console.error('Error loading standard modal data:', error);
+      }
+    };
+    loadStandardData();
+  }, [zoneId]);
 
   // Filters
   const filteredRehearsals = useMemo(() => {
@@ -294,121 +313,70 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   };
 
   // Handlers - Songs
+  const htmlToMarkdown = (html: string): string => {
+    if (!html) return '';
+    return html
+      .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+      .replace(/<span[^>]*>(.*?)<\/span>/gi, '$1')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
+
+  const markdownToHtml = (text: string): string => {
+    if (!text) return '';
+    const paragraphs = text.split('\n\n');
+    const processedParagraphs = paragraphs
+      .filter(p => p.trim() !== '')
+      .map(paragraph => {
+        let processed = paragraph.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        processed = processed.replace(/\n/g, '<br>');
+        return `<div>${processed}</div>`;
+      });
+    return processedParagraphs.join('');
+  };
+
   const handleAddSong = () => {
     setEditingSong(null);
-    setSongTitle('');
-    setSongWriter('');
-    setSongLeadSinger('');
-    setSongKey('');
-    setSongTempo('');
-    setSongCategory('Praise');
-    setSongLyrics('');
-    setSongSolfa('');
-    setFullAudioUrl('');
-    setSopranoUrl('');
-    setAltoUrl('');
-    setTenorUrl('');
-    setBassUrl('');
-    setLeaderNote('');
-    setLeaderAudioUrl('');
-    setShowMediaOps(false);
     setShowSongModal(true);
   };
 
   const handleEditSong = (song: SubGroupSong) => {
     setEditingSong(song);
-    setSongTitle(song.title);
-    setSongWriter(song.writer || '');
-    setSongLeadSinger(song.leadSinger || '');
-    setSongKey(song.key || '');
-    setSongTempo(song.tempo || '');
-    setSongCategory(song.category || 'Praise');
-    setSongLyrics(htmlToMarkdown(song.lyrics || ''));
-    setSongSolfa(htmlToMarkdown(song.solfa || ''));
-    setFullAudioUrl(song.audioUrls?.full || '');
-    setSopranoUrl(song.audioUrls?.soprano || '');
-    setAltoUrl(song.audioUrls?.alto || '');
-    setTenorUrl(song.audioUrls?.tenor || '');
-    setBassUrl(song.audioUrls?.bass || '');
-    setLeaderNote(song.comments && song.comments.length > 0 ? song.comments[0].text : '');
-    setLeaderAudioUrl(song.comments && song.comments.length > 0 ? song.comments[0].audioUrl || '' : '');
-    setShowMediaOps(false);
     setShowSongModal(true);
   };
 
-  const saveSong = async () => {
-    if (!songTitle.trim() || !user) return;
+  const handleModalUpdate = async (ps: PraiseNightSong) => {
+    if (!ps.title.trim() || !user) return;
     setIsProcessing(true);
     try {
-      const finalComments = (leaderNote && leaderNote.trim() !== '') || leaderAudioUrl ? [
-        {
-          id: `comment-${Date.now()}`,
-          text: leaderNote,
-          audioUrl: leaderAudioUrl,
-          date: new Date().toISOString(),
-          author: "Sub-Group Lead"
-        }
-      ] : [];
-
+      const updates = fromPraiseNightSong(ps);
+      
       if (editingSong) {
-        await SubGroupDatabaseService.updateSong(editingSong.id, {
-          title: songTitle,
-          writer: songWriter,
-          leadSinger: songLeadSinger,
-          key: songKey,
-          tempo: songTempo,
-          category: songCategory,
-          lyrics: markdownToHtml(songLyrics),
-          solfa: markdownToHtml(songSolfa),
-          audioFile: fullAudioUrl,
-          audioUrls: {
-            full: fullAudioUrl,
-            soprano: sopranoUrl,
-            alto: altoUrl,
-            tenor: tenorUrl,
-            bass: bassUrl
-          },
-          comments: finalComments
-        });
+        await SubGroupDatabaseService.updateSong(editingSong.id, updates);
         addToast({ type: 'success', message: 'Song updated' });
-        
-        const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
-        setAllSubGroupSongs(data);
       } else {
-        const result = await SubGroupDatabaseService.createSong(subGroupId, zoneId, {
-          title: songTitle,
-          writer: songWriter,
-          leadSinger: songLeadSinger,
-          key: songKey,
-          tempo: songTempo,
-          category: songCategory,
-          lyrics: markdownToHtml(songLyrics),
-          solfa: markdownToHtml(songSolfa),
-          audioFile: fullAudioUrl,
-          audioUrls: {
-            full: fullAudioUrl,
-            soprano: sopranoUrl,
-            alto: altoUrl,
-            tenor: tenorUrl,
-            bass: bassUrl
-          },
-          comments: finalComments
-        }, user.uid);
+        const result = await SubGroupDatabaseService.createSong(subGroupId, zoneId, updates, user.uid);
         
         if (result.success && result.id) {
           if (selectedRehearsal) {
             await SubGroupDatabaseService.addSongToRehearsal(selectedRehearsal.id, result.id);
             addToast({ type: 'success', message: 'Song saved to setlist' });
           } else {
-            const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
-            setAllSubGroupSongs(data);
             addToast({ type: 'success', message: 'Song saved' });
           }
         }
       }
+      
+      const data = await SubGroupDatabaseService.getSubGroupSongs(subGroupId);
+      setAllSubGroupSongs(data);
       setShowSongModal(false);
     } catch (error) {
-      addToast({ type: 'error', message: 'Failed' });
+      addToast({ type: 'error', message: 'Failed to process song update' });
     } finally {
       setIsProcessing(false);
     }
@@ -666,146 +634,15 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
       )}
 
 
-      {/* Song Modal - Landscape Professional Layout */}
-      {showSongModal && (
-        <Modal 
-          onClose={() => setShowSongModal(false)} 
-          title={editingSong ? 'Edit Song' : 'Create Song'}
-          maxWidth="max-w-4xl"
-        >
-          <div className="flex flex-col lg:flex-row gap-8 max-h-[75vh] overflow-hidden">
-            {/* Left Column: Details & Audio */}
-            <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <Music className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Song Information</h3>
-                </div>
-                
-                <Input label="Song Title" value={songTitle} onChange={setSongTitle} placeholder="e.g. Holy Spirit" />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <Input label="Writer / Artist" value={songWriter} onChange={setSongWriter} placeholder="Artist name" />
-                  <Input label="Lead Singer" value={songLeadSinger} onChange={setSongLeadSinger} placeholder="Singer name" />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
-                    <select value={songCategory} onChange={(e) => setSongCategory(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                      <option>Praise</option>
-                      <option>Worship</option>
-                      <option>Special</option>
-                      <option>Hymn</option>
-                      <option>Theme Song</option>
-                    </select>
-                  </div>
-                  <Input label="Key" value={songKey} onChange={setSongKey} placeholder="e.g. C#" />
-                  <Input label="Tempo" value={songTempo} onChange={setSongTempo} placeholder="e.g. 120" />
-                </div>
-              </section>
-
-              <section className="space-y-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <Mic className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Audio & Parts</h3>
-                </div>
-
-                <Input label="Main Instrumental / Full Audio" value={fullAudioUrl} onChange={setFullAudioUrl} placeholder="Direct URL to audio file" />
-
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                   <button 
-                    onClick={() => setShowMediaOps(!showMediaOps)} 
-                    className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-all"
-                  >
-                    <span>Vocal Part Assignments</span>
-                    {showMediaOps ? <ChevronLeft className="w-3 h-3 rotate-90" /> : <ChevronRight className="w-3 h-3" />}
-                  </button>
-                  
-                  {showMediaOps && (
-                    <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
-                      <Input label="Soprano" value={sopranoUrl} onChange={setSopranoUrl} />
-                      <Input label="Alto" value={altoUrl} onChange={setAltoUrl} />
-                      <Input label="Tenor" value={tenorUrl} onChange={setTenorUrl} />
-                      <Input label="Bass" value={bassUrl} onChange={setBassUrl} />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vocal Instruction (Text)</label>
-                  <textarea 
-                    value={leaderNote} 
-                    onChange={(e) => setLeaderNote(e.target.value)} 
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold min-h-[100px] focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" 
-                    placeholder="e.g. Tenors start at the second verse..." 
-                  />
-                </div>
-                
-                <Input label="Audio Instruction Link" value={leaderAudioUrl} onChange={setLeaderAudioUrl} placeholder="Voice note link" />
-              </section>
-            </div>
-
-            {/* Right Column: Lyrics & Solfa */}
-            <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
-              <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <FileText className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Lyrics Structure</h3>
-                  </div>
-                  <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Supports **Bold**</span>
-                </div>
-                <textarea 
-                  value={songLyrics} 
-                  onChange={(e) => setSongLyrics(e.target.value)} 
-                  className="w-full p-5 bg-slate-50 border border-slate-200 rounded-[2rem] text-sm font-bold min-h-[280px] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono text-slate-700 leading-relaxed" 
-                  placeholder="Paste track lyrics here... Use **VERSE 1** for bold headings." 
-                />
-              </section>
-
-              <section className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <Star className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Conductor's Guide (Solfa)</h3>
-                </div>
-                <textarea 
-                  value={songSolfa} 
-                  onChange={(e) => setSongSolfa(e.target.value)} 
-                  className="w-full p-5 bg-amber-50/30 border border-amber-100 rounded-[2rem] text-sm font-bold min-h-[150px] focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all font-mono text-amber-900 leading-relaxed" 
-                  placeholder="Enter musical notation or guide instructions..." 
-                />
-              </section>
-            </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="flex items-center justify-end gap-3 pt-8 border-t border-slate-50">
-            <button
-              onClick={() => setShowSongModal(false)}
-              className="px-8 py-3.5 text-xs font-black text-slate-500 hover:bg-slate-100 rounded-2xl transition-all uppercase tracking-widest"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={saveSong} 
-              disabled={isProcessing || !songTitle} 
-              className="px-10 py-3.5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95 flex items-center gap-2"
-            >
-              {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isProcessing ? 'Saving...' : 'Save Track Details'}
-            </button>
-          </div>
-        </Modal>
-      )}
+      {/* Professional Standard Edit Song Modal */}
+      <EditSongModal 
+        isOpen={showSongModal}
+        onClose={() => setShowSongModal(false)}
+        song={editingSong ? toPraiseNightSong(editingSong) : null}
+        categories={standardCategories}
+        praiseNightCategories={standardPrograms as any}
+        onUpdate={handleModalUpdate}
+      />
     </div>
   );
 }

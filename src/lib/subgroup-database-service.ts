@@ -93,15 +93,8 @@ export class SubGroupDatabaseService {
    */
   private static sanitizeLyrics(text: string): string {
     if (!text) return '';
-    return text
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<\/div>/gi, '\n')
-      .replace(/<div>/gi, '\n')
-      .replace(/<[^>]*>?/gm, '') // Strip remaining tags
-      .replace(/&nbsp;/g, ' ')
-      .replace(/\n\s*\n/g, '\n\n') // Normalize multiple newlines
-      .trim();
+    // Preserve HTML but trim whitespace
+    return text.trim();
   }
 
   // Songs
@@ -127,9 +120,39 @@ export class SubGroupDatabaseService {
         importedAt: doc.data().importedAt?.toDate()
       })) as SubGroupSong[];
     } catch (error) {
- console.error('Error getting sub-group songs:', error);
+      console.error('Error getting sub-group songs:', error);
       return [];
     }
+  }
+
+  /**
+   * Subscribe to sub-group songs in real-time
+   */
+  static subscribeToSubGroupSongs(
+    subGroupId: string,
+    onUpdate: (songs: SubGroupSong[]) => void,
+    onError?: (error: FirestoreError) => void
+  ) {
+    const songsRef = collection(db, 'subgroup_songs');
+    const q = query(
+      songsRef,
+      where('subGroupId', '==', subGroupId),
+      orderBy('title', 'asc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const songs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+        importedAt: doc.data().importedAt?.toDate()
+      })) as SubGroupSong[];
+      onUpdate(songs);
+    }, (error) => {
+      console.error('Sub-group songs subscription error:', error);
+      if (onError) onError(error);
+    });
   }
 
   /**

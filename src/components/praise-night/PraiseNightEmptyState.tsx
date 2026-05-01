@@ -48,18 +48,18 @@ export const PraiseNightEmptyState: React.FC<PraiseNightEmptyStateProps> = ({
 
           {/* Title */}
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {categoryFilter === 'ongoing' ? 'No Ongoing Sessions' :
-              categoryFilter === 'archive' ? 'No Archived Sessions' :
-                categoryFilter === 'pre-rehearsal' ? 'No Pre-Rehearsal Sessions' :
-                  'No Sessions Available'}
+            {categoryFilter === 'ongoing' ? 'No Ongoing Programs' :
+              categoryFilter === 'archive' ? 'No Archived Programs' :
+                categoryFilter === 'pre-rehearsal' ? 'No Pre-Rehearsal Programs' :
+                  'No Programs Available'}
           </h2>
 
           {/* Description */}
           <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-            {categoryFilter === 'ongoing' ? 'Ongoing sessions will appear here when they are active and ready for rehearsal.' :
-              categoryFilter === 'archive' ? 'Archived sessions will appear here when they are completed and moved to archive.' :
-                categoryFilter === 'pre-rehearsal' ? 'Pre-rehearsal sessions will appear here when they are scheduled for preparation.' :
-                  'Create your first session to get started with your praise and worship program.'}
+            {categoryFilter === 'ongoing' ? 'Ongoing programs will appear here when they are active and ready for rehearsal.' :
+              categoryFilter === 'archive' ? 'Archived programs will appear here when they are completed and moved to archive.' :
+                categoryFilter === 'pre-rehearsal' ? 'Pre-rehearsal programs will appear here when they are scheduled for preparation.' :
+                  'Create your first program to get started with your praise and worship program.'}
           </p>
 
           {/* Back Button */}

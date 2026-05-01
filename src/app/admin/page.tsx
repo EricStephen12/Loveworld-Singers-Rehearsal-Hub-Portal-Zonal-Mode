@@ -1776,7 +1776,7 @@ function AdminContent() {
           {activeSection === 'Media' && !isRestrictedAdmin && <MediaSection />}
           {activeSection === 'Video Manager' && isHQAdmin && !isRestrictedAdmin && <MediaUploadSection />}
           {activeSection === 'Master Library' && !isRestrictedAdmin && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
-          {activeSection === 'Sub-Groups' && !isRestrictedAdmin && <SubGroupsSection />}
+          {activeSection === 'Sub-Groups' && !isRestrictedAdmin && <SubGroupsSection addToast={addToast} />}
           {activeSection === 'Calendar' && !isRestrictedAdmin && <CalendarSection />}
           {activeSection === 'Notifications' && isHQAdmin && !isRestrictedAdmin && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}

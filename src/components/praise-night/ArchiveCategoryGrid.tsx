@@ -1,4 +1,4 @@
-import React from 'react';
+import { Archive, ChevronRight } from 'lucide-react';
 import { sanitizeImageUrl } from '@/utils/image-utils';
 import { PageCategory } from '@/types/supabase';
 
@@ -46,21 +46,36 @@ export const ArchiveCategoryGrid: React.FC<ArchiveCategoryGridProps> = ({
               onClick={() => {
                 setSelectedPageCategory(category.name);
               }}
-              className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-purple-400 hover:shadow-lg transition-all duration-200 text-left"
+              className="bg-white border border-slate-100 rounded-2xl p-5 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 text-left flex flex-col group relative overflow-hidden"
             >
+              {/* Decorative background element */}
+              <div className="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                <Archive className="w-24 h-24 text-slate-900" />
+              </div>
+
               {category.image && (
-                <img
-                  src={sanitizeImageUrl(category.image)}
-                  alt={category.name}
-                  className="w-full h-40 object-cover rounded-lg mb-4"
-                />
+                <div className="relative aspect-video mb-4 overflow-hidden rounded-xl border border-slate-100 flex-shrink-0">
+                  <img
+                    src={sanitizeImageUrl(category.image)}
+                    alt={category.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
               )}
-              <h4 className="text-lg font-semibold text-slate-900 mb-2">{category.name}</h4>
-              <p className="text-sm text-slate-500 mb-3 line-clamp-2">{category.description}</p>
-              <div className="mt-auto">
-                <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                  {pageCount} {pageCount === 1 ? 'page' : 'pages'}
-                </span>
+              
+              <div className="relative z-10 flex-1 flex flex-col">
+                <h4 className="text-base font-black text-slate-900 mb-1 group-hover:text-purple-700 transition-colors">{category.name}</h4>
+                <p className="text-[11px] font-medium text-slate-500 mb-4 line-clamp-2 leading-relaxed">{category.description}</p>
+                
+                <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
+                  <span className="inline-flex items-center px-2.5 py-1 bg-purple-50 text-purple-700 text-[10px] font-black uppercase tracking-wider rounded-lg border border-purple-100">
+                    {pageCount} {pageCount === 1 ? 'Program' : 'Programs'}
+                  </span>
+                  <div className="w-6 h-6 bg-slate-50 rounded-lg flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-all">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </div>
               </div>
             </button>
           );
