@@ -107,13 +107,13 @@ export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDash
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Greeting Banner - Matching Main Admin */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+      <div className="px-1">
+        <h1 className="text-xl lg:text-3xl font-bold text-gray-900 tracking-tight">
           {getGreeting()}, {firstName}
         </h1>
-        <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+        <p className="text-[12px] text-gray-500 mt-1 flex items-center gap-1.5">
           <span
-            className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+            className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: themeColor }}
           />
           {subGroup?.name}
@@ -121,9 +121,9 @@ export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDash
       </div>
 
       {/* Statistics - Matching Main Admin Style */}
-      <div>
-        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Overview</p>
-        <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:overflow-visible snap-x snap-mandatory scrollbar-hide">
+      <div className="px-1">
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Overview</p>
+        <div className="flex lg:grid lg:grid-cols-4 gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:overflow-visible snap-x snap-mandatory scrollbar-hide">
           <StatCard icon={Users} label="Members" value={stats.memberCount} color="blue" />
           <StatCard icon={Music} label="Songs" value={stats.songCount} color="purple" themeColor={themeColor} />
           <StatCard icon={Calendar} label="Setlists" value={stats.rehearsalCount} color="emerald" />
@@ -133,9 +133,9 @@ export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDash
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Quick Actions */}
-        <div className="lg:col-span-8 space-y-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Actions</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="lg:col-span-8 space-y-5 px-1">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Quick Actions</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <ActionTile 
               icon={Music} 
               title="Songs" 
@@ -161,16 +161,20 @@ export default function SubGroupDashboard({ subGroup, onNavigate }: SubGroupDash
           </div>
         </div>
 
-        {/* Recent Members - Matching Main Admin Style */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="flex items-center justify-between mb-2">
-             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Recent Members</p>
-             <button onClick={() => onNavigate('Members')} className="text-[11px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-widest">See All</button>
+        <div className="lg:col-span-4 space-y-5 px-1">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Recent Members</p>
+            <button 
+              onClick={() => onNavigate('Members')}
+              className="text-[10px] font-bold text-purple-600 uppercase tracking-widest hover:underline"
+            >
+              See All
+            </button>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
              {stats.recentMembers.length === 0 ? (
-               <div className="p-10 text-center text-gray-400">
-                 <p className="text-sm font-medium">No members yet</p>
+               <div className="p-8 text-center text-gray-400">
+                 <p className="text-[11px] font-black uppercase tracking-widest">No members yet</p>
                </div>
              ) : (
                stats.recentMembers.map((member) => (

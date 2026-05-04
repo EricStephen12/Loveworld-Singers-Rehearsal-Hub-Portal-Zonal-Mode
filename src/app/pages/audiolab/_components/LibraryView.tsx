@@ -109,12 +109,16 @@ export function LibraryView() {
       const rawList = state.libraryData.songs.map(toLegacySong);
       const uniqueList = getUniqueSongs(rawList) as Song[];
       setSongs(uniqueList);
-      setTotalCount(uniqueList.length);
+      setTotalCount(state.libraryData.totalCount || uniqueList.length);
       setLastVisibleDoc(state.libraryData.lastDoc);
       setHasMore(state.libraryData.hasMore);
       setIsLoading(false);
+    } else if (state.isLoading && songs.length === 0) {
+      setIsLoading(true);
+    } else if (!state.isLoading) {
+      setIsLoading(false);
     }
-  }, [state.libraryData.songs, state.libraryData.totalCount, state.libraryData.lastFetched, selectedProgramId, searchQuery, getUniqueSongs]);
+  }, [state.libraryData.songs, state.libraryData.totalCount, state.libraryData.lastFetched, state.isLoading, selectedProgramId, searchQuery, getUniqueSongs]);
 
   // Track highlighted song
   const [highlightedSongId, setHighlightedSongId] = useState<string | null>(null);
@@ -175,14 +179,13 @@ export function LibraryView() {
     isFetchingRef.current = true;
 
     try {
-      if (songs.length === 0 || isManualRefresh || (selectedProgramId !== 'all' && selectedProgramId !== 'playlists') || isPlaylistView) {
-        setIsLoading(true);
-      }
+      setIsLoading(true);
       setError(null);
       setCurrentPage(1);
       setPageStack([null]);
       setHasMore(false);
       setLastVisibleDoc(null);
+      setSongs([]); // Clear songs for new load
 
       let songsList: Song[] = [];
 
@@ -295,6 +298,40 @@ export function LibraryView() {
       loadSongs();
     }
   }, [selectedProgramId, metadataTimestamp, praiseNightPages.length, isPlaylistView, activePlaylist?.id, loadSongs]);
+
+  const loadMoreSongs = useCallback(async () => {
+    if (isLoadingMore || !hasMore || !!searchQuery || selectedProgramId !== 'all') return;
+    setIsLoadingMore(true);
+
+    try {
+      await loadLibraryData(currentZone?.id || '', ITEMS_PER_PAGE, false, '', lastVisibleDoc);
+    } catch (err) {
+      console.error('[LibraryView] Error loading more:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, searchQuery, selectedProgramId, loadLibraryData, currentZone?.id, lastVisibleDoc, ITEMS_PER_PAGE]);
+
+  // Setup Intersection Observer for Infinite Scroll
+  useEffect(() => {
+    const options = {
+      root: null,
+      rootMargin: '400px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+        loadMoreSongs();
+      }
+    }, options);
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isLoading, loadMoreSongs]);
 
   // Real-time Song Sync
   useEffect(() => {
@@ -521,11 +558,11 @@ export function LibraryView() {
           >
             <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
           </button>
-          <div className="flex flex-col gap-0.5 sm:gap-1 flex-1">
-            <h1 className="text-white text-2xl sm:text-[28px] font-bold leading-tight tracking-tight truncate">
+            <div className="flex flex-col gap-0.5 sm:gap-1 flex-1">
+            <h1 className="text-white text-xl sm:text-[28px] font-bold leading-tight tracking-tight truncate">
               {isPlaylistView && activePlaylist ? activePlaylist.title : 'Library'}
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm">
+            <p className="text-slate-400 text-[10px] sm:text-sm">
               {isPlaylistView && activePlaylist
                 ? activePlaylist.description || 'Your custom music set'
                 : 'Tap a song to access vocal parts'}
@@ -666,10 +703,18 @@ export function LibraryView() {
 
         {(selectedProgramId !== 'playlists' || isPlaylistView) && (
           <div className="flex-1 space-y-3 pb-24 overflow-y-auto">
-            {isLoading && songs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <CustomLoader message="" />
-                <p className="text-slate-300 font-bold">Brewing Master Library...</p>
+            {(isLoading || state.isLoading) && songs.length === 0 ? (
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-[#261933] rounded-xl border border-white/5 p-3 flex items-center gap-3 animate-pulse">
+                    <div className="w-10 h-10 rounded-lg bg-white/5" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-white/10 rounded-full w-3/4" />
+                      <div className="h-2 bg-white/5 rounded-full w-1/2" />
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-white/5" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -695,6 +740,7 @@ export function LibraryView() {
                           setIsAddToPlaylistOpen(true);
                         } : undefined}
                         isHighlighted={highlightedSongId === song.id}
+                        searchTerm={searchQuery}
                       />
                     </div>
                   );

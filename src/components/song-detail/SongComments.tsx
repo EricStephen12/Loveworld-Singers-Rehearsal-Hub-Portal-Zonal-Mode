@@ -72,7 +72,7 @@ export const SongComments: React.FC<SongCommentsProps> = ({
       <div className="space-y-6">
         {comments.map((comment) => (
           <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
-            <p className={`text-black leading-relaxed mb-4 ${isFull ? 'text-base' : 'text-sm'} whitespace-pre-wrap`}>
+            <p className={`text-black leading-relaxed mb-4 ${isFull ? 'text-base' : 'text-sm'}`}>
               {formatCommentText(comment.text)}
             </p>
 

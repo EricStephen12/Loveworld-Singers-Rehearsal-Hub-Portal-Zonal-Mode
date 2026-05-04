@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { QueryDocumentSnapshot, DocumentData, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase-setup';
 import { audioEngine } from '../_lib/audio-engine';
 import { toLegacySong, getSongsPaginated, getTotalSongCount } from '../_lib/song-service';
 import type {
@@ -14,20 +16,18 @@ import type {
   VocalPart,
   AudioUrls,
   PitchData,
-  Playlist
+  Playlist,
+  AudioLabRoom,
+  LiveSession
 } from '../_types';
 import * as playlistService from '../_lib/playlist-service';
 
 // STATE TYPES
 
 interface SessionState {
-  currentSession: {
-    id: string;
-    code: string;
-    title: string;
-    hostId: string;
-    classroomId?: string;
-  } | null;
+  currentRoom: AudioLabRoom | null;
+  activeSession: LiveSession | null;
+  isJoining: boolean;
 }
 
 interface AudioLabState {
@@ -61,25 +61,25 @@ interface AudioLabState {
 
   // Cache for Home View
   homeData: {
-    projects: any[];
-    featuredSongs: any[];
+    projects: any[]; // Project type needed here if available
+    featuredSongs: AudioLabSong[];
     lastFetched: number;
   };
 
   // Cache for Practice View
   practiceData: {
-    progress: any | null;
+    progress: any | null; // Progress type needed here if available
     weeklyStats: any | null;
-    featuredSongs: any[];
+    featuredSongs: AudioLabSong[];
     lastFetched: number;
   };
 
   // Cache for Library View
   libraryData: {
-    songs: any[];
+    songs: AudioLabSong[];
     totalCount: number;
     lastFetched: number;
-    lastDoc: any | null;
+    lastDoc: QueryDocumentSnapshot<DocumentData> | null;
     hasMore: boolean;
   };
   
@@ -116,13 +116,16 @@ type AudioLabAction =
   | { type: 'SET_RECORDING'; payload: boolean }
   | { type: 'SET_INPUT_LEVEL'; payload: number }
   | { type: 'SET_PITCH'; payload: PitchData | null }
-  | { type: 'SET_SESSION'; payload: SessionState['currentSession'] | any }
+  | { type: 'SET_ROOM'; payload: AudioLabRoom | null }
+  | { type: 'SET_ACTIVE_SESSION'; payload: LiveSession | null }
+  | { type: 'SET_SESSION_JOINING'; payload: boolean }
   | { type: 'CLEAR_SESSION' }
   | { type: 'SET_PROJECT'; payload: string | null }
   | { type: 'SET_BUFFER_LOADING'; payload: { isLoading: boolean; target?: string | null } }
-  | { type: 'SET_HOME_DATA'; payload: { projects: any[]; featuredSongs: any[] } }
-  | { type: 'SET_PRACTICE_DATA'; payload: { progress: any; weeklyStats: any; featuredSongs: any[] } }
-  | { type: 'SET_LIBRARY_DATA'; payload: { songs: any[]; totalCount: number; lastDoc: any; hasMore: boolean } }
+  | { type: 'SET_HOME_DATA'; payload: { projects: any[]; featuredSongs: AudioLabSong[] } }
+  | { type: 'SET_PRACTICE_DATA'; payload: { progress: any; weeklyStats: any; featuredSongs: AudioLabSong[] } }
+  | { type: 'SET_LIBRARY_DATA'; payload: { songs: AudioLabSong[]; totalCount: number; lastDoc: QueryDocumentSnapshot<DocumentData> | null; hasMore: boolean } }
+  | { type: 'APPEND_LIBRARY_DATA'; payload: { songs: AudioLabSong[]; lastDoc: QueryDocumentSnapshot<DocumentData> | null; hasMore: boolean } }
   | { type: 'SET_PLAYLISTS'; payload: Playlist[] }
   | { type: 'SET_ACTIVE_PLAYLIST'; payload: Playlist | null };
 
@@ -154,7 +157,9 @@ const initialState: AudioLabState = {
     weeklyProgress: 0,
   },
   session: {
-    currentSession: null,
+    currentRoom: null,
+    activeSession: null,
+    isJoining: false
   },
   currentProjectId: null,
   isAudioInitialized: false,
@@ -344,16 +349,32 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
     case 'SET_PITCH':
       return { ...state, currentPitch: action.payload };
 
-    case 'SET_SESSION':
+    case 'SET_ROOM':
       return {
         ...state,
-        session: { currentSession: action.payload }
+        session: { ...state.session, currentRoom: action.payload }
+      };
+
+    case 'SET_ACTIVE_SESSION':
+      return {
+        ...state,
+        session: { ...state.session, activeSession: action.payload }
+      };
+
+    case 'SET_SESSION_JOINING':
+      return {
+        ...state,
+        session: { ...state.session, isJoining: action.payload }
       };
 
     case 'CLEAR_SESSION':
       return {
         ...state,
-        session: { currentSession: null }
+        session: { 
+          currentRoom: null,
+          activeSession: null,
+          isJoining: false
+        }
       };
 
     case 'SET_PROJECT':
@@ -396,7 +417,21 @@ function audioLabReducer(state: AudioLabState, action: AudioLabAction): AudioLab
         libraryData: {
           ...action.payload,
           lastFetched: Date.now()
-        }
+        },
+        isLoading: false
+      };
+
+    case 'APPEND_LIBRARY_DATA':
+      return {
+        ...state,
+        libraryData: {
+          ...state.libraryData,
+          songs: [...state.libraryData.songs, ...action.payload.songs],
+          lastDoc: action.payload.lastDoc,
+          hasMore: action.payload.hasMore,
+          lastFetched: Date.now()
+        },
+        isLoading: false
       };
 
     case 'SET_PLAYLISTS':
@@ -440,15 +475,19 @@ interface AudioLabContextValue {
   startPitchDetection: () => void;
   stopPitchDetection: () => void;
   updatePracticeStats: (stats: Partial<PracticeStats>) => void;
-  setCurrentSession: (session: { id: string; code: string; title: string; hostId: string; classroomId?: string } | null) => void;
+  setRoom: (room: AudioLabRoom | null) => void;
+  setActiveSession: (session: LiveSession | null) => void;
   clearSession: () => void;
+  enterRoom: (roomId: string) => Promise<boolean>;
+  joinRoomByCode: (code: string) => Promise<boolean>;
+  startLiveSession: (roomId: string, title: string) => Promise<boolean>;
   setCurrentProject: (projectId: string | null) => void;
   openProject: (projectId: string) => void;
   formatTime: (seconds: number) => string;
   initializeAudio: () => Promise<boolean>;
   loadHomeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
   loadPracticeData: (userId: string, zoneId?: string, forceRefresh?: boolean) => Promise<void>;
-  loadLibraryData: (zoneId: string, limitCount: number, forceRefresh?: boolean, searchQuery?: string) => Promise<void>;
+  loadLibraryData: (zoneId: string, limitCount: number, forceRefresh?: boolean, searchQuery?: string, lastDoc?: QueryDocumentSnapshot<DocumentData> | null) => Promise<void>;
   loadPlaylists: (userId: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => void;
   createUserPlaylist: (title: string, description?: string, userId?: string, zoneId?: string) => Promise<string | null>;
@@ -491,16 +530,16 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_PROJECT', payload: projectParam });
     }
 
-    if (roomIdParam && (!state.session.currentSession || state.session.currentSession.id !== roomIdParam)) {
+    if (roomIdParam && (!state.session.currentRoom || state.session.currentRoom.id !== roomIdParam)) {
       // Auto-join room logic
     }
-  }, [searchParams, state.session.currentSession?.id]);
+  }, [searchParams, state.session.currentRoom?.id]);
 
   const updateUrl = useCallback((view: ViewType, projectId: string | null = null, roomId: string | null = null, songTitle: string | null = null) => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('view', view);
     if (projectId) params.set('project', projectId); else params.delete('project');
-    if (roomId || stateRef.current.session.currentSession?.id) params.set('roomId', roomId || stateRef.current.session.currentSession!.id); else params.delete('roomId');
+    if (roomId || stateRef.current.session.currentRoom?.id) params.set('roomId', roomId || stateRef.current.session.currentRoom!.id); else params.delete('roomId');
     if (songTitle || stateRef.current.player.currentSong?.title) params.set('song', songTitle || stateRef.current.player.currentSong!.title); else params.delete('song');
     const newUrl = `/pages/audiolab?${params.toString()}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
@@ -543,13 +582,13 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
 
   const setView = useCallback((view: ViewType) => {
     dispatch({ type: 'SET_VIEW', payload: view });
-    updateUrl(view, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, stateRef.current.player.currentSong?.title);
+    updateUrl(view, stateRef.current.currentProjectId, stateRef.current.session.currentRoom?.id, stateRef.current.player.currentSong?.title);
   }, [updateUrl]);
 
   const goBack = useCallback(() => {
     dispatch({ type: 'GO_BACK' });
     setTimeout(() => {
-      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, stateRef.current.player.currentSong?.title);
+      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentRoom?.id, stateRef.current.player.currentSong?.title);
     }, 0);
   }, [updateUrl]);
 
@@ -560,7 +599,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
       const legacySong: Song = 'audioUrls' in song && song.audioUrls ? toLegacySong(song as AudioLabSong) : song as Song;
       dispatch({ type: 'PLAY_SONG', payload: legacySong });
       dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: true, target: 'full' } });
-      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentSession?.id, legacySong.title);
+      updateUrl(stateRef.current.currentView, stateRef.current.currentProjectId, stateRef.current.session.currentRoom?.id, legacySong.title);
       const audioUrls: AudioUrls = legacySong.audioUrls || { full: legacySong.audioUrl };
       const loaded = await audioEngine.loadSongParts(audioUrls);
       dispatch({ type: 'SET_BUFFER_LOADING', payload: { isLoading: false } });
@@ -614,8 +653,71 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   const stopPitchDetection = useCallback(() => { audioEngine.stopPitchDetection(); dispatch({ type: 'SET_PITCH', payload: null }); }, []);
 
   const updatePracticeStats = useCallback((stats: Partial<PracticeStats>) => dispatch({ type: 'UPDATE_PRACTICE_STATS', payload: stats }), []);
-  const setCurrentSession = useCallback((session: any) => dispatch({ type: 'SET_SESSION', payload: session }), []);
+  
+  const setRoom = useCallback((room: AudioLabRoom | null) => dispatch({ type: 'SET_ROOM', payload: room }), []);
+  const setActiveSession = useCallback((session: LiveSession | null) => dispatch({ type: 'SET_ACTIVE_SESSION', payload: session }), []);
   const clearSession = useCallback(() => dispatch({ type: 'CLEAR_SESSION' }), []);
+
+  const enterRoom = useCallback(async (roomId: string): Promise<boolean> => {
+    try {
+      const { getRoom, getSession, activateSession } = await import('../_lib/session-service');
+      const room = await getRoom(roomId);
+      if (room) {
+        setRoom(room);
+        
+        // CONFERENCE LOGIC: Check for active session
+        if (room.activeSessionId) {
+          const session = await getSession(room.activeSessionId);
+          if (session && session.status === 'active') {
+            setActiveSession(session);
+            setView('live-session'); // Go straight to video/audio
+            return true;
+          }
+        }
+
+        // If I am the host, auto-start a session if none active
+        if (room.hostId === stateRef.current.homeData.projects[0]?.ownerId || true) { // Fallback for host check
+           const result = await activateSession(roomId, room.hostId, room.title);
+           if (result.success && result.session) {
+             setActiveSession(result.session);
+             setView('live-session');
+             return true;
+           }
+        }
+
+        setView('collab-chat'); // Fallback to chat if session fails
+        return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  }, [setRoom, setView, setActiveSession]);
+
+  const joinRoomByCode = useCallback(async (code: string): Promise<boolean> => {
+    try {
+      const { getRoomByCode } = await import('../_lib/session-service');
+      const room = await getRoomByCode(code);
+      if (room) {
+        setRoom(room);
+        setView('collab');
+        return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  }, [setRoom, setView]);
+
+  const startLiveSession = useCallback(async (roomId: string, title: string): Promise<boolean> => {
+    try {
+      const { activateSession } = await import('../_lib/session-service');
+      const result = await activateSession(roomId, stateRef.current.session.currentRoom?.hostId || '', title);
+      if (result.success && result.session) {
+        setActiveSession(result.session);
+        setView('live-session');
+        return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  }, [setActiveSession, setView]);
+
   const setCurrentProject = useCallback((projectId: string | null) => dispatch({ type: 'SET_PROJECT', payload: projectId }), []);
   const openProject = useCallback((projectId: string) => {
     dispatch({ type: 'SET_PROJECT', payload: projectId });
@@ -658,65 +760,121 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
     } catch (error) { console.error('Error loading practice data:', error); }
   }, []);
 
-  const loadLibraryData = useCallback(async (zoneId: string, limitCount: number, forceRefresh: boolean = false, searchQuery: string = '') => {
+  const loadLibraryData = useCallback(async (zoneId: string, limitCount: number, forceRefresh: boolean = false, searchQuery: string = '', lastDocParam: QueryDocumentSnapshot<DocumentData> | null = null) => {
     const now = Date.now();
     const { lastFetched, songs } = stateRef.current.libraryData;
     
-    // If no search query, use cache unless forced
-    if (!searchQuery && !forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) return;
+    // If no search query and no lastDoc, use cache unless forced
+    if (!searchQuery && !lastDocParam && !forceRefresh && (now - lastFetched < HOME_CACHE_TTL) && songs.length > 0) return;
     
-    try {
-      let masterSongs: any[] = [];
-      let masterTotal = 0;
+      try {
+        if (!lastDocParam) dispatch({ type: 'SET_LOADING', payload: true });
+        
+        let masterSongs: AudioLabSong[] = [];
+        let masterTotal = stateRef.current.libraryData.totalCount;
+        let lastVisible: QueryDocumentSnapshot<DocumentData> | null = null;
 
-      if (searchQuery) {
-        // Use deep search for queries
-        const { searchSongsDeep } = await import('../_lib/song-service');
-        masterSongs = await searchSongsDeep(searchQuery, zoneId);
-        masterTotal = masterSongs.length;
-      } else {
-        // Regular paginated fetch
-        const [paginatedResult, totalCountObj] = await Promise.all([
-          getSongsPaginated(null, limitCount || 100), // Increased default limit
-          getTotalSongCount()
-        ]);
-        masterSongs = paginatedResult.songs;
-        masterTotal = totalCountObj || 0;
-      }
+        if (searchQuery) {
+          // Use deep search for queries
+          const { searchSongsDeep } = await import('../_lib/song-service');
+          masterSongs = await searchSongsDeep(searchQuery, zoneId);
+          masterTotal = masterSongs.length;
+        } else {
+          // Regular paginated fetch
+          const [paginatedResult, totalCountObj] = await Promise.all([
+            getSongsPaginated(lastDocParam, limitCount || 100),
+            lastDocParam ? Promise.resolve(masterTotal) : getTotalSongCount()
+          ]);
+          masterSongs = paginatedResult.songs;
+          masterTotal = totalCountObj || 0;
+          lastVisible = paginatedResult.lastDoc;
+        }
 
-      // Handle Praise Night integration if not already included in searchSongsDeep or for regular lists
-      // (searchSongsDeep actually includes PN songs already, so we only do this for non-search)
-      if (zoneId && !searchQuery) {
+      // Handle Praise Night integration (Only include 'ongoing' category songs)
+      // Only merge PN songs on the first page or when searching
+      if (zoneId && !lastDocParam) {
         try {
             const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
-            const pnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
-            const mappedPNSongs = pnSongs.map((pnSong: any) => ({
-              id: pnSong.id, title: pnSong.title || 'Untitled', artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
-              duration: 300, audioUrls: { full: pnSong.audioFile || '', ...(pnSong.audioUrls || {}) },
-              availableParts: Object.keys({ full: pnSong.audioFile || '', ...(pnSong.audioUrls || {}) }).filter(k => !!({ full: pnSong.audioFile || '', ...(pnSong.audioUrls || {}) } as any)[k]),
-              genre: pnSong.category || 'Praise Night', key: pnSong.key || '', tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
-              albumArt: '', lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics : [], zoneId, isHQSong: false, createdAt: new Date(), updatedAt: new Date(), createdBy: 'system'
-            }));
-
-            // Filter out duplicates if any
-            const existingIds = new Set(masterSongs.map(s => s.id));
-            const newSongs = mappedPNSongs.filter(s => !existingIds.has(s.id));
+            const { ZoneDatabaseService } = await import('@/lib/zone-database-service');
             
-            masterSongs = [...masterSongs, ...newSongs];
-            masterTotal += newSongs.length;
-        } catch(e) {}
+            // 1. Get all Praise Night programs for this zone
+            const pnsResult = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 100);
+            // 2. Identify IDs of 'ongoing' programs
+            const ongoingPnIds = new Set(pnsResult.filter((p: any) => p.category === 'ongoing').map((p: any) => p.id));
+            
+            if (ongoingPnIds.size > 0) {
+              const pnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
+              // 3. Filter for songs belonging to ongoing programs
+              const filteredPnSongs = pnSongs.filter((s: any) => ongoingPnIds.has(s.praiseNightId));
+              
+              const mappedPNSongs: AudioLabSong[] = filteredPnSongs.map((pnSong: any) => {
+                const audioUrls = { full: pnSong.audioFile || '', ...(pnSong.audioUrls || {}) };
+                return {
+                  id: pnSong.id, 
+                  title: pnSong.title || 'Untitled', 
+                  artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
+                  duration: 300, 
+                  audioUrls,
+                  availableParts: Object.keys(audioUrls).filter(k => !!(audioUrls as any)[k]),
+                  genre: pnSong.category || 'Praise Night', 
+                  key: pnSong.key || '', 
+                  tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
+                  albumArt: '', 
+                  lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics : [], 
+                  zoneId, 
+                  isHQSong: false, 
+                  createdAt: new Date(), 
+                  updatedAt: new Date(), 
+                  createdBy: 'system'
+                };
+              });
+
+              // If we are searching, we need to filter these PN songs locally
+              let searchPnSongs = mappedPNSongs;
+              if (searchQuery) {
+                const queryTerm = searchQuery.toLowerCase().trim();
+                searchPnSongs = mappedPNSongs.filter(s => 
+                  s.title.toLowerCase().includes(queryTerm) || 
+                  s.artist.toLowerCase().includes(queryTerm)
+                );
+              }
+
+              // Filter out duplicates (sanity check)
+              const existingIds = new Set(masterSongs.map(s => s.id));
+              const newSongs = searchPnSongs.filter(s => !existingIds.has(s.id));
+              
+              masterSongs = [...masterSongs, ...newSongs];
+              masterTotal = searchQuery ? masterSongs.length : (masterTotal + newSongs.length);
+            }
+        } catch(e) {
+          console.error('[AudioLabContext] Error merging ongoing PN songs:', e);
+        }
       }
       
-      dispatch({ 
-        type: 'SET_LIBRARY_DATA', 
-        payload: { 
-          songs: masterSongs, 
-          totalCount: masterTotal, 
-          lastDoc: searchQuery ? null : (masterSongs[masterSongs.length-1] || null), 
-          hasMore: !searchQuery && masterSongs.length >= (limitCount || 100) 
-        } 
-      });
-    } catch (error) { console.error('Error loading library data:', error); }
+      if (lastDocParam) {
+        dispatch({
+          type: 'APPEND_LIBRARY_DATA',
+          payload: {
+            songs: masterSongs,
+            lastDoc: lastVisible,
+            hasMore: masterSongs.length >= (limitCount || 100)
+          }
+        });
+      } else {
+        dispatch({ 
+          type: 'SET_LIBRARY_DATA', 
+          payload: { 
+            songs: masterSongs, 
+            totalCount: masterTotal, 
+            lastDoc: searchQuery ? null : lastVisible, 
+            hasMore: !searchQuery && masterSongs.length >= (limitCount || 100) 
+          } 
+        });
+      }
+    } catch (error) { 
+      console.error('Error loading library data:', error);
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
   }, []);
 
   const loadPlaylists = useCallback(async (userId: string) => {
@@ -773,7 +931,7 @@ export function AudioLabProvider({ children }: { children: React.ReactNode }) {
   }, [loadPlaylists]);
 
   const value: AudioLabContextValue = {
-    state, setView, goBack, playSong, togglePlay, pause, seek, setVolume, toggleMute, toggleShuffle, toggleRepeat, hidePlayer, showFullScreenPlayer, hideFullScreenPlayer, switchPart, getAvailableParts, startRecording, stopRecording, startPitchDetection, stopPitchDetection, updatePracticeStats, setCurrentSession, clearSession, setCurrentProject, openProject, formatTime, initializeAudio, loadHomeData, loadPracticeData, loadLibraryData, loadPlaylists, openPlaylist, createUserPlaylist, deleteUserPlaylist, addSongToUserPlaylist, removeSongFromUserPlaylist,
+    state, setView, goBack, playSong, togglePlay, pause, seek, setVolume, toggleMute, toggleShuffle, toggleRepeat, hidePlayer, showFullScreenPlayer, hideFullScreenPlayer, switchPart, getAvailableParts, startRecording, stopRecording, startPitchDetection, stopPitchDetection, updatePracticeStats, setRoom, setActiveSession, clearSession, enterRoom, joinRoomByCode, startLiveSession, setCurrentProject, openProject, formatTime, initializeAudio, loadHomeData, loadPracticeData, loadLibraryData, loadPlaylists, openPlaylist, createUserPlaylist, deleteUserPlaylist, addSongToUserPlaylist, removeSongFromUserPlaylist,
   };
 
   return <AudioLabContext.Provider value={value}>{children}</AudioLabContext.Provider>;

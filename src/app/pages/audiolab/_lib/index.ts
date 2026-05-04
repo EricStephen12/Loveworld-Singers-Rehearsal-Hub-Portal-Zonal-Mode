@@ -7,15 +7,21 @@ export * from './song-service';
 export * from './project-service';
 export * from './practice-service';
 export { 
-  createSession,
-  endSession,
-  getActiveSessions,
-  getMessages,
+  createRoom,
+  getRoom,
+  getRoomByCode,
+  getUserRooms,
+  deleteRoom,
+  activateSession,
   joinSession,
   leaveSession,
-  sendMessage,
-  subscribeToMessages,
+  endSession,
   subscribeToSession,
+  sendMessage,
+  getMessages,
+  subscribeToMessages,
+  deleteMessage,
   toggleMute,
-  deleteMessage
+  toggleCamera,
+  getSession
 } from './session-service';

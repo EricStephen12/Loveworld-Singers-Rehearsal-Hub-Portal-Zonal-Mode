@@ -59,10 +59,10 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
     <div className="flex-1 min-h-0 space-y-6 animate-in fade-in duration-700 max-w-3xl">
       {/* Banner */}
       {sent && (
-        <div className="p-4 bg-green-500 rounded-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300 shadow-md">
+        <div className="p-3 bg-green-500 rounded-2xl flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300 shadow-md">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-white" />
-            <p className="text-sm font-semibold text-white">Message sent to all members.</p>
+            <CheckCircle2 className="w-4 h-4 text-white" />
+            <p className="text-xs font-semibold text-white">Message sent to all members.</p>
           </div>
           <button onClick={() => setSent(false)} className="p-1 text-white/80 hover:text-white transition-colors">
             <X className="w-4 h-4" />
@@ -72,16 +72,16 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
 
       {/* Message Composer - Matching Admin Style */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-10 shadow-sm relative overflow-hidden">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm"
             style={{ backgroundColor: themeColor }}
           >
-            <Bell className="w-6 h-6" />
+            <Bell className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Notifications</h2>
-            <p className="text-xs text-gray-400 font-medium mt-0.5">Send a message to your group members</p>
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Notifications</h2>
+            <p className="text-[10px] text-gray-400 font-medium mt-0.5">Send a message to your group members</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Rehearsal Update"
-              className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-semibold placeholder:text-gray-300 text-sm shadow-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-semibold placeholder:text-gray-300 text-xs shadow-sm"
             />
           </div>
 
@@ -104,15 +104,15 @@ export default function SubGroupNotifications({ subGroupId }: SubGroupNotificati
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your message here..."
               rows={6}
-              className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-medium placeholder:text-gray-300 text-sm resize-none shadow-sm leading-relaxed"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900 font-medium placeholder:text-gray-300 text-xs resize-none shadow-sm leading-relaxed"
             />
           </div>
 
-          <div className="pt-4 flex items-center justify-end">
+          <div className="pt-2 flex items-center justify-end">
             <button
               onClick={handleSend}
               disabled={!title.trim() || !message.trim() || sending}
-              className="flex items-center justify-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all font-bold text-sm disabled:opacity-50 shadow-md active:scale-95"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all font-black text-xs disabled:opacity-50 shadow-md active:scale-95 uppercase tracking-widest"
             >
               {sending ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

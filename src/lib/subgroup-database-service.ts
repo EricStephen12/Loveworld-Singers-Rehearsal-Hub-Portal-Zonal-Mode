@@ -862,36 +862,41 @@ export class SubGroupDatabaseService {
   static async searchProfiles(searchTerm: string): Promise<any[]> {
     try {
       const profilesRef = collection(db, 'profiles');
-      let q;
-      
       const queryLower = (searchTerm || '').toLowerCase().trim();
 
-      // Mirroring the main admin's approach: fetch a substantial batch
-      if (!queryLower) {
-        q = query(profilesRef, limit(200));
-      } else if (queryLower.includes('@')) {
-        q = query(profilesRef, where('email', '==', queryLower), limit(20));
-      } else {
-        q = query(profilesRef, limit(500));
+      // If it's an email search, we can do a direct Firestore query
+      if (queryLower.includes('@')) {
+        const q = query(profilesRef, where('email', '==', queryLower), limit(50));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : (data.display_name || data.name || 'Unknown User')
+          };
+        });
       }
 
-      const snapshot = await getDocs(q);
-      const results = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      // For general search, we fetch a large batch (like the admin does) and filter client-side
+      // This is the most reliable way to "search all" without complex indexing
+      const allProfiles = await this.getAllProfilesBatch(2500);
+      
+      if (!queryLower) return allProfiles;
 
-      // Apply client-side filtering for more accuracy
-      if (queryLower && !queryLower.includes('@')) {
-        return results.filter((p: any) => {
-          const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
-          const displayName = (p.display_name || '').toLowerCase();
-          const email = (p.email || '').toLowerCase();
-          return fullName.includes(queryLower) || displayName.includes(queryLower) || email.includes(queryLower);
-        }).slice(0, 25);
-      }
+      return allProfiles.filter((p: any) => {
+        const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+        const displayName = (p.display_name || '').toLowerCase();
+        const email = (p.email || '').toLowerCase();
+        const designation = (p.designation || '').toLowerCase();
+        const administration = (p.administration || '').toLowerCase();
 
-      return results.slice(0, 25);
+        return fullName.includes(queryLower) || 
+               displayName.includes(queryLower) || 
+               email.includes(queryLower) ||
+               designation.includes(queryLower) ||
+               administration.includes(queryLower);
+      });
     } catch (error) {
       console.error('Error searching profiles:', error);
       return [];
@@ -1300,6 +1305,28 @@ export class SubGroupDatabaseService {
       })) as SubGroupSong[];
     } catch (error) {
       console.error('Error getting songs by rehearsal ID:', error);
+      return [];
+    }
+  }
+  /**
+   * Batch fetch profiles in chunks to simulate a "search all" behavior
+   */
+  static async getAllProfilesBatch(limitCount = 2500): Promise<any[]> {
+    try {
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, limit(limitCount));
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : (data.display_name || data.name || 'Unknown User')
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching all profiles batch:', error);
       return [];
     }
   }

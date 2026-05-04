@@ -70,7 +70,7 @@ export const SongSolfas: React.FC<SongSolfasProps> = ({
               {solfas ? (
                 <div
                   dangerouslySetInnerHTML={{ __html: solfas }}
-                  className="text-[14px] leading-[1.8] text-left ltr text-black font-mono italic whitespace-pre-wrap"
+                  className="text-[14px] leading-[1.8] text-left ltr text-black font-mono italic"
                 />
               ) : (
                 <div className="text-center py-12">

@@ -448,14 +448,14 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
     <div className="flex-1 flex flex-col lg:flex-row h-full min-h-0 bg-white">
       {/* Rehearsals List - Standard Sidebar List style from /admin */}
       <div className={`w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col h-full ${selectedRehearsal ? 'hidden lg:flex' : 'flex'}`}>
-        <div className="p-6 border-b border-slate-200 flex-shrink-0">
+        <div className="p-4 sm:p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-slate-900">Setlists</h2>
+            <h2 className="text-lg font-bold text-slate-900">Setlists</h2>
             <button 
               onClick={handleAddRehearsal} 
-              className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
+              className="flex items-center gap-2 px-2.5 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium shadow-sm"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               Add Set
             </button>
           </div>
@@ -520,24 +520,24 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         {selectedRehearsal ? (
           <>
             {/* Page Header - Tighter & More Professional */}
-            <div className="p-4 sm:p-6 border-b border-slate-100 bg-white sticky top-0 z-10 shadow-sm">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-start gap-4">
+            <div className="p-4 sm:p-6 border-b border-slate-100 bg-white sticky top-0 z-10">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-2 sm:gap-4">
                   <button 
                     onClick={() => setSelectedRehearsal(null)} 
-                    className="p-2 -ml-1 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
+                    className="p-1.5 -ml-1 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
                   >
-                    <ChevronLeft className="w-6 h-6" />
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
                   <div className="min-w-0 flex-1">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 truncate uppercase tracking-tight">{selectedRehearsal.name}</h1>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <Calendar className="w-3.5 h-3.5" />
+                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 truncate uppercase tracking-tight leading-tight">{selectedRehearsal.name}</h1>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+                      <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <Calendar className="w-3 h-3" />
                         {selectedRehearsal.date}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <MapPin className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <MapPin className="w-3 h-3" />
                         {selectedRehearsal.location || 'Choir Hall'}
                       </div>
                     </div>
@@ -547,22 +547,22 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
                 <div className="flex items-center gap-2 w-full">
                   <button 
                     onClick={() => setShowCloneModal(true)} 
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-100 text-slate-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-[0.98]"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-[0.98]"
                   >
-                    <Download className="w-3.5 h-3.5 text-purple-600" /> Import
+                    <Download className="w-3 h-3 text-purple-600" /> Import
                   </button>
                   <button 
                     onClick={handleAddSong} 
-                    className="flex-[1.5] flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg active:scale-[0.98]"
+                    className="flex-[1.5] flex items-center justify-center gap-1.5 px-3 py-2.5 bg-purple-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all shadow-md active:scale-[0.98]"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add Song
+                    <Plus className="w-3 h-3" /> Add Song
                   </button>
                 </div>
               </div>
             </div>
             
             {/* Songs List */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/20">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-50/20">
                <SongTable 
                  songs={filteredSongs} 
                  loading={songsLoading}
@@ -719,22 +719,22 @@ function SongTable({ songs, loading, onEdit, onDelete, onToggleStatus, onToggleA
       </div>
 
       {/* Mobile Card View - Professional & Tight */}
-      <div className="lg:hidden space-y-4">
+      <div className="lg:hidden space-y-3">
         {songs.map((song: any) => (
-          <div key={song.id} className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm space-y-5 transition-all active:scale-[0.99]">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 flex-shrink-0 shadow-inner">
-                  <Music className="w-5 h-5" />
+          <div key={song.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-4 transition-all active:scale-[0.99]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 flex-shrink-0 shadow-inner">
+                  <Music className="w-4.5 h-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-black text-slate-900 text-[14px] leading-tight truncate uppercase tracking-tight">{song.title}</h3>
-                  <p className="text-[10px] font-bold text-slate-400 truncate uppercase tracking-wider mt-1">{song.writer || 'Unknown Artist'}</p>
+                  <h3 className="font-black text-slate-900 text-[13px] leading-tight truncate uppercase tracking-tight">{song.title}</h3>
+                  <p className="text-[9px] font-bold text-slate-400 truncate uppercase tracking-wider mt-0.5">{song.writer || 'Unknown Artist'}</p>
                 </div>
               </div>
-              <div className="flex gap-1.5">
-                <button onClick={() => onEdit(song)} className="p-2.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"><Edit className="w-4 h-4" /></button>
-                <button onClick={() => onDelete(song.id)} className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><Trash2 className="w-4 h-4" /></button>
+              <div className="flex gap-1">
+                <button onClick={() => onEdit(song)} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"><Edit className="w-3.5 h-3.5" /></button>
+                <button onClick={() => onDelete(song.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
             </div>
 

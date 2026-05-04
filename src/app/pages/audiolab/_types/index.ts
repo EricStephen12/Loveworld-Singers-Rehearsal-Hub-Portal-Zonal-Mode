@@ -157,6 +157,22 @@ export interface AudioLabProject {
 
 // LIVE SESSION TYPES (Real-time Collaboration)
 
+export interface AudioLabRoom {
+  id: string;
+  code: string;         // Permanent 6-digit join code
+  title: string;
+  hostId: string;
+  hostName: string;
+  hostAvatar?: string | null;
+  settings: {
+    isPrivate: boolean;
+    allowGuestMic: boolean;
+    allowGuestVideo: boolean;
+  };
+  activeSessionId?: string | null; // Currently active session if any
+  createdAt: number;
+}
+
 export interface Participant {
   id: string;
   name: string;
@@ -166,6 +182,7 @@ export interface Participant {
   isMuted: boolean;
   isCameraOn: boolean;
   joinedAt: number;     // timestamp
+  networkQuality?: 'good' | 'fair' | 'poor';
 }
 
 export interface PlaybackState {
@@ -177,14 +194,10 @@ export interface PlaybackState {
 
 export interface LiveSession {
   id: string;
-  code: string;         // 6-digit join code
-
-  // Host info
+  roomId: string;       // Link to the permanent room
   hostId: string;
-  hostName: string;
-
+  
   // Session details
-  projectId?: string;
   songId?: string;
   title: string;
 

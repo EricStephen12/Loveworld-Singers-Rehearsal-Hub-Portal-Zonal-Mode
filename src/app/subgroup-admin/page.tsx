@@ -128,10 +128,10 @@ export default function SubGroupAdminPage() {
       <div className="h-[100dvh] bg-white lg:bg-slate-50/30 flex overflow-hidden font-sans antialiased">
         {/* Sidebar - Neater & More Professional */}
         <aside className={`
-          fixed lg:relative inset-y-0 left-0 z-[40]
+          fixed lg:relative inset-y-0 left-0 z-[50]
           w-[280px] bg-white border-r border-slate-200/50
           transform transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
           ${sidebarCollapsed ? 'lg:w-[80px]' : 'lg:w-[280px]'}
           flex flex-col h-full
         `}>
@@ -170,7 +170,7 @@ export default function SubGroupAdminPage() {
                 <select
                   value={selectedSubGroup || ''}
                   onChange={(e) => setSelectedSubGroup(e.target.value)}
-                  className="w-full pl-9 pr-8 py-3 bg-slate-50/80 border border-slate-100 rounded-xl text-[11px] font-black text-slate-900 appearance-none focus:outline-none focus:border-purple-600 focus:bg-white transition-all cursor-pointer uppercase tracking-wider"
+                  className="w-full pl-9 pr-8 py-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black text-slate-900 appearance-none focus:outline-none focus:border-purple-600 focus:bg-white transition-all cursor-pointer uppercase tracking-wider"
                 >
                   {coordinatedSubGroups.map(sg => (
                     <option key={sg.id} value={sg.id}>{sg.name}</option>
@@ -209,10 +209,10 @@ export default function SubGroupAdminPage() {
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
+        {/* Mobile Overlay - Subtle */}
         {sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] lg:hidden animate-in fade-in duration-300"
+            className="fixed inset-0 bg-slate-900/10 z-[45] lg:hidden animate-in fade-in duration-300"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -220,34 +220,34 @@ export default function SubGroupAdminPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
           {/* Header - NEATER & UNIFIED */}
-          <header className="h-[80px] bg-white border-b border-slate-200/50 px-6 flex items-center justify-between sticky top-0 z-[40] flex-shrink-0">
-            <div className="flex items-center gap-5 min-w-0">
+          <header className="h-[70px] bg-white border-b border-slate-200/50 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-[40] flex-shrink-0">
+            <div className="flex items-center gap-3 sm:gap-5 min-w-0">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2.5 -ml-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                className="lg:hidden p-2 -ml-1 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5.5 h-5.5" />
               </button>
               
               {/* Unified Breadcrumb/Title */}
-              <div className="flex items-center gap-2.5 text-sm font-bold text-slate-900">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-900">
                  <span className="text-slate-400 hidden sm:inline-flex items-center">
                    Hub <ChevronRight className="w-3.5 h-3.5 mx-2 text-slate-300" />
                  </span>
                  <span className="text-slate-400 hidden md:inline-flex items-center">
                    {currentSubGroup?.name} <ChevronRight className="w-3.5 h-3.5 mx-2 text-slate-300" />
                  </span>
-                 <span className="text-slate-900 tracking-tight">{activeSection === 'Dashboard' ? 'Overview' : activeSection}</span>
+                 <span className="text-slate-900 tracking-tight truncate max-w-[120px] sm:max-w-none">{activeSection === 'Dashboard' ? 'Overview' : activeSection}</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
                <div className="hidden sm:flex flex-col items-end">
-                  <span className="text-[13px] font-bold text-slate-900 leading-none">{profile?.first_name} {profile?.last_name}</span>
-                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Lead</span>
+                  <span className="text-[12px] font-bold text-slate-900 leading-none">{profile?.first_name} {profile?.last_name}</span>
+                  <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">Lead</span>
                </div>
                <div 
-                 className="w-10 h-10 rounded-full bg-slate-50 border-2 border-white ring-1 ring-slate-100 flex items-center justify-center font-black text-slate-500 shadow-sm transition-transform hover:scale-105"
+                 className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-500 text-xs shadow-sm"
                >
                  {profile?.first_name?.charAt(0)}
                </div>
@@ -256,7 +256,7 @@ export default function SubGroupAdminPage() {
 
           {/* Content Body */}
           <main className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
-            <div className="p-6 sm:p-8 lg:p-10 max-w-[1400px] mx-auto min-h-full">
+            <div className="p-4 sm:p-8 lg:p-10 max-w-[1400px] mx-auto min-h-full">
               {(activeSection === 'Dashboard') && currentSubGroup && (
                 <SubGroupDashboard 
                   subGroup={currentSubGroup} 

@@ -311,25 +311,25 @@ export function KaraokeView() {
       </div>
 
       {/* Header - Glassmorphism */}
-      <header className="relative z-20 flex items-center justify-between px-6 py-4 md:px-10 md:py-8 border-b border-white/5 backdrop-blur-md bg-white/[0.02]">
+      <header className="relative z-20 flex items-center justify-between px-4 py-3 md:px-10 md:py-8 border-b border-white/5 backdrop-blur-md bg-white/[0.02]">
         <button
           onClick={handleClose}
-          className="group flex size-11 items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-white/20 active:scale-95"
+          className="group flex size-9 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-white/20 active:scale-95"
         >
           {/* Modern down-chevron instead of X */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-pink-400 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-pink-400 transition-colors">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </button>
 
-        <div className="flex flex-col items-center flex-1 mx-4 max-w-full">
-          <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-pink-500 mb-1 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">
+        <div className="flex flex-col items-center flex-1 mx-2 max-w-full">
+          <span className="text-[8px] md:text-xs font-black uppercase tracking-[0.2em] text-pink-500 mb-0.5 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">
             Karaoke Live
           </span>
-          <h2 className="text-xl md:text-2xl font-black leading-none tracking-tight text-center truncate w-full max-w-[200px] md:max-w-xl text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/70">
+          <h2 className="text-sm md:text-2xl font-black leading-none tracking-tight text-center truncate w-full max-w-[160px] md:max-w-xl text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/70">
             {songTitle}
           </h2>
-          <p className="text-white/40 text-[10px] md:text-xs font-bold tracking-widest uppercase mt-1">{songArtist}</p>
+          <p className="text-white/40 text-[8px] md:text-xs font-bold tracking-widest uppercase mt-0.5">{songArtist}</p>
         </div>
 
         <button
@@ -342,10 +342,10 @@ export function KaraokeView() {
               });
             }
           }}
-          className="flex size-11 items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-white/20 active:scale-95"
+          className="flex size-9 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-white/20 active:scale-95"
           title="Search Library"
         >
-          <Search size={22} className="text-white/80 transition-colors" />
+          <Search size={18} className="text-white/80 transition-colors" />
         </button>
       </header>
 
@@ -353,7 +353,7 @@ export function KaraokeView() {
       <div className="relative z-10 flex-1 flex flex-col min-h-0 overflow-hidden">
 
         {/* Stage */}
-        <div className="flex-1 flex flex-col justify-center relative overflow-hidden px-4 md:px-6 lg:px-12 py-10">
+        <div className="flex-1 flex flex-col justify-center relative overflow-hidden px-4 md:px-6 lg:px-12 py-4 md:py-10">
 
           {/* No Song / Loading States */}
           {!hasSong ? (

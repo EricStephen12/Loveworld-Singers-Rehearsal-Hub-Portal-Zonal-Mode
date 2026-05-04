@@ -9,7 +9,12 @@ export async function updateUserPresence(userId: string, status: 'online' | 'off
       status, 
       lastSeen: serverTimestamp() 
     }, { merge: true })
-  } catch (err) {
+  } catch (err: any) {
+    // If we get a permission error, it's likely the rules aren't set for the new presence collection
+    if (err?.code === 'permission-denied') {
+      // Fail silently to avoid console spam in production
+      return;
+    }
     console.error('[PresenceService] update error:', err)
   }
 }

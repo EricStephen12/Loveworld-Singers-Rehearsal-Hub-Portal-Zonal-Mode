@@ -89,9 +89,9 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
     };
   }, []);
 
-  const currentSession = state.session?.currentSession;
-  const sessionId = currentSession?.id;
-  const isHost = user?.uid === currentSession?.hostId;
+  const activeSession = state.session?.activeSession;
+  const sessionId = activeSession?.id;
+  const isHost = user?.uid === activeSession?.hostId;
 
   // Auto-scroll
   const scrollToBottom = useCallback(() => {
@@ -242,14 +242,14 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
     if (!confirmConfig || !sessionId || !user?.uid) return;
 
     if (confirmConfig.type === 'delete-message') {
-      await deleteMessage(sessionId, confirmConfig.item, user.uid);
+      await deleteMessage(sessionId, confirmConfig.item);
       setMessages(prev => prev.filter(m => m.id !== confirmConfig.item));
     } else if (confirmConfig.type === 'end-session') {
-      await endSession(sessionId);
+      await endSession(sessionId, state.session.currentRoom?.id || '');
       clearSession?.();
       setView('collab');
     } else if (confirmConfig.type === 'leave-session') {
-      await leaveSession(sessionId, user.uid, fullName);
+      await leaveSession(sessionId, user.uid);
       clearSession?.();
       setView('collab');
     }
@@ -260,8 +260,8 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
 
   // Copy session code
   const copyCode = () => {
-    if (currentSession?.code) {
-      navigator.clipboard.writeText(currentSession.code);
+    if (state.session.currentRoom?.code) {
+      navigator.clipboard.writeText(state.session.currentRoom.code);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     }

@@ -22,7 +22,9 @@ import {
   serverTimestamp,
   QueryDocumentSnapshot,
   DocumentData,
-  getCountFromServer
+  getCountFromServer,
+  startAt,
+  endAt
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 import type {
@@ -183,73 +185,19 @@ export async function searchSongsDeep(searchTerm: string, zoneId?: string): Prom
   try {
     if (!searchTerm || searchTerm.trim().length < 2) return [];
 
-    // Helper for normalization
-    const normalizeText = (text: string) => {
-      return text
-        .toLowerCase()
-        .replace(/[^\w\s]/g, '') // Remove punctuation
-        .replace(/\s+/g, ' ')    // Normalize spaces
-        .trim();
-    };
-
-    const queryTerm = normalizeText(searchTerm);
-
-    // 1. Fetch Master Library songs (cached)
+    const queryTerm = searchTerm.toLowerCase().trim();
+    
+    // Fetch all Master Library songs (cached)
     const masterSongs = await getSongs(undefined, 5000);
-
-    // 2. Fetch Praise Night songs if zoneId is provided
-    let pnSongs: AudioLabSong[] = [];
-    if (zoneId) {
-      try {
-        const { PraiseNightSongsService } = await import('@/lib/praise-night-songs-service');
-        const rawPnSongs = await PraiseNightSongsService.getAllSongs(zoneId);
-
-        // Map Praise Night songs to AudioLab format
-        pnSongs = rawPnSongs.map(pnSong => {
-          const mergedAudioUrls = {
-            full: pnSong.audioFile || '',
-            ...(pnSong.audioUrls || {})
-          };
-          
-          return {
-            id: pnSong.id as string,
-            title: pnSong.title || 'Untitled',
-            artist: pnSong.leadSinger || pnSong.writer || 'Praise Night',
-            duration: 300,
-            audioUrls: mergedAudioUrls,
-            availableParts: Object.keys(mergedAudioUrls).filter(k => !!(mergedAudioUrls as any)[k]) as VocalPart[],
-            genre: pnSong.category || 'Praise Night',
-            key: pnSong.key || '',
-            tempo: pnSong.tempo ? parseInt(pnSong.tempo) || 0 : 0,
-            albumArt: '',
-            lyrics: Array.isArray(pnSong.lyrics) ? pnSong.lyrics as LyricLine[] : typeof pnSong.lyrics === 'string' ? [{ time: 0, text: pnSong.lyrics }] : [],
-            zoneId: zoneId,
-            isHQSong: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            createdBy: 'system'
-          };
-        }) as AudioLabSong[];
-      } catch (e) {
- console.error('[SongService] Error fetching PN songs for search:', e);
-      }
-    }
-
-    // Combine both sources
-    const allCombined = [...masterSongs, ...pnSongs];
-
-    // Filter across all fields using normalized text
-    return allCombined.filter(song =>
-      normalizeText(song.title).includes(queryTerm) ||
-      normalizeText(song.artist).includes(queryTerm) ||
-      (song.genre && normalizeText(song.genre).includes(queryTerm)) ||
-      (song.lyrics && Array.isArray(song.lyrics) && song.lyrics.some(line => {
-        const textToSearch = typeof line === 'string' ? line : (line as any).text || '';
-        return normalizeText(textToSearch).includes(queryTerm);
-      }))
+    
+    // Filter locally for better flexibility (matches anywhere in title/artist/genre)
+    return masterSongs.filter(song => 
+      song.title.toLowerCase().includes(queryTerm) ||
+      song.artist.toLowerCase().includes(queryTerm) ||
+      (song.genre && song.genre.toLowerCase().includes(queryTerm))
     );
   } catch (error) {
- console.error('[SongService] Error performing deep search:', error);
+    console.error('[SongService] Error performing deep search:', error);
     return [];
   }
 }
@@ -266,7 +214,8 @@ export async function getTotalSongCount(): Promise<number> {
     }
 
     const masterSongsRef = collection(db, MASTER_SONGS_COLLECTION);
-    const snapshot = await getCountFromServer(masterSongsRef);
+    const q = query(masterSongsRef);
+    const snapshot = await getCountFromServer(q);
     const count = snapshot.data().count;
 
     // Update cache

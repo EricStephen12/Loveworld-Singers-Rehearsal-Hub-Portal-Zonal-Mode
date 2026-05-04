@@ -75,7 +75,7 @@ export function HomeView() {
         {/* Decorative Background Glow */}
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-violet-500/10 via-transparent to-transparent pointer-events-none z-0" />
 
-        <main className="relative z-10 flex flex-col gap-4 sm:gap-6 px-3 sm:px-4 pt-4 sm:pt-6">
+        <main className="relative z-10 flex flex-col gap-3 sm:gap-6 px-3 sm:px-4 pt-3 sm:pt-6">
           {/* Header Section */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -86,15 +86,15 @@ export function HomeView() {
                   router.push('/home');
                 }
               }}
-              className="text-violet-500 flex size-9 sm:size-10 items-center justify-center rounded-full bg-violet-500/10 hover:bg-violet-500/20 transition-colors touch-manipulation"
+              className="text-violet-500 flex size-9 items-center justify-center rounded-full bg-violet-500/10 hover:bg-violet-500/20 transition-colors touch-manipulation"
               title="Go Back"
             >
-              <ArrowLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
+              <ArrowLeft size={18} className="sm:w-[22px] sm:h-[22px]" />
             </button>
 
             <div className="flex-1 text-center">
-              <h1 className="text-white text-lg sm:text-xl font-bold">AudioLab</h1>
-              <p className="text-slate-400 text-[10px] sm:text-xs">Your creative recording space</p>
+              <h1 className="text-white text-base sm:text-xl font-bold">AudioLab</h1>
+              <p className="text-slate-400 text-[9px] sm:text-xs">Your creative recording space</p>
             </div>
 
             {recentProject ? (
@@ -150,17 +150,17 @@ export function HomeView() {
             {/* Main CTA - Create Project */}
             <button
               onClick={handleCreateProject}
-              className="w-full max-w-sm p-4 sm:p-6 rounded-2xl bg-violet-500 hover:bg-violet-600 transition-all shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98] group touch-manipulation"
+              className="w-full max-w-sm p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.01] active:scale-[0.98] group touch-manipulation border border-white/10"
             >
               <div className="flex flex-col items-center gap-2 sm:gap-3">
-                <div className="size-14 sm:size-16 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                  <Mic size={28} className="sm:w-8 sm:h-8 text-white" />
+                <div className="size-12 sm:size-16 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <Mic size={24} className="sm:w-8 sm:h-8 text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-lg sm:text-xl font-bold text-white">
+                  <p className="text-base sm:text-xl font-bold text-white">
                     Start Recording
                   </p>
-                  <p className="text-white/70 text-xs sm:text-sm mt-1">
+                  <p className="text-white/70 text-[10px] sm:text-sm mt-0.5">
                     Create in under a minute
                   </p>
                 </div>

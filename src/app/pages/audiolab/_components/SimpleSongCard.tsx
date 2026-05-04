@@ -17,6 +17,7 @@ export interface SimpleSongCardProps {
     onAdd?: () => void;
     onRemove?: () => void;
     isHighlighted?: boolean;
+    searchTerm?: string;
 }
 
 
@@ -33,6 +34,7 @@ export function SimpleSongCard({
     onAdd,
     onRemove,
     isHighlighted = false,
+    searchTerm = '',
 }: SimpleSongCardProps) {
 
     const availableParts = song.availableParts || ['full'];
@@ -56,6 +58,20 @@ export function SimpleSongCard({
     };
 
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    const HighlightedText = ({ text, highlight }: { text: string; highlight: string }) => {
+        if (!highlight.trim()) return <>{text}</>;
+        const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+        return (
+            <>
+                {parts.map((part, i) => (
+                    part.toLowerCase() === highlight.toLowerCase() 
+                        ? <span key={i} className="text-violet-400 font-bold underline decoration-violet-500/30 underline-offset-2">{part}</span> 
+                        : part
+                ))}
+            </>
+        );
+    };
 
     return (
         <div 
@@ -117,7 +133,7 @@ export function SimpleSongCard({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                         <h3 className={`font-medium text-sm truncate ${isPlaying ? 'text-violet-200' : 'text-white'}`}>
-                            {song.title}
+                            <HighlightedText text={song.title} highlight={searchTerm} />
                         </h3>
                         {!hasAudio && (
                             <span className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-slate-800 text-[8px] font-bold text-slate-400 uppercase tracking-tighter border border-white/5">
@@ -126,7 +142,7 @@ export function SimpleSongCard({
                         )}
                     </div>
                     <p className="text-xs text-slate-200 truncate font-medium">
-                        {song.artist || 'Unknown artist'}
+                        <HighlightedText text={song.artist || 'Unknown artist'} highlight={searchTerm} />
                         {song.key && ` • ${song.key}`}
                     </p>
                 </div>

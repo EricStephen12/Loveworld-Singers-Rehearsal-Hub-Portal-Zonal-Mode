@@ -172,6 +172,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   const [isSearching, setIsSearching] = useState(false);
   const [adding, setAdding] = useState(false);
   const [selectedForAdd, setSelectedForAdd] = useState<string[]>([]);
+  const [displayLimit, setDisplayLimit] = useState(50);
   
   // Profile Detail Modal
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -219,7 +220,13 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   const handleSearchChange = async (val: string) => {
     setAddSearchTerm(val);
     if (isGlobalSearch) {
+      if (val.trim().length === 0) {
+        loadGlobalPreview();
+        return;
+      }
+      
       setIsSearching(true);
+      setDisplayLimit(50); // Reset limit on new search
       try {
         const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
         const results = await SubGroupDatabaseService.searchProfiles(val);
@@ -235,6 +242,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
 
   const loadGlobalPreview = async () => {
     setIsSearching(true);
+    setDisplayLimit(50); // Reset limit on preview
     try {
       const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       // Use getAllUsers as a robust fallback for the global preview if empty search is failing
@@ -246,7 +254,7 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
       }
 
       const subgroupMemberIds = members.map(m => m.id);
-      setGlobalResults(results.filter(r => !subgroupMemberIds.includes(r.id)).slice(0, 50));
+      setGlobalResults(results.filter(r => !subgroupMemberIds.includes(r.id)));
     } catch (error) {
       console.error('Global preview error:', error);
     } finally {
@@ -356,31 +364,31 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   }
 
   return (
-    <div className="flex-1 min-h-0 space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="flex-1 min-h-0 space-y-6 animate-in fade-in duration-500 pb-10">
       
       {/* Admin Stats Header */}
-      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
         <StatCard
-          label="Total Personnel"
+          label="Total"
           value={stats.total}
           icon={<Users className="w-5 h-5" />}
           color="purple"
         />
         <StatCard
-          label="Active Now"
+          label="Active"
           value={stats.active}
           icon={<Zap className="w-5 h-5" />}
           color="green"
           pulse
         />
         <StatCard
-          label="Coordinators"
+          label="Leads"
           value={stats.coordinators}
           icon={<ShieldCheck className="w-5 h-5" />}
           color="blue"
         />
         <StatCard
-          label="Added Today"
+          label="Today"
           value={stats.new}
           icon={<TrendingUp className="w-5 h-5" />}
           color="orange"
@@ -388,22 +396,22 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
       </div>
 
       {/* Search & Actions Bar - Dashboard Style */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md group">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-purple-600 transition-colors" />
           <input
             type="text"
-            placeholder="Search personnel by name or email..."
+            placeholder="Search personnel..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-purple-600/10 focus:border-purple-600/30 transition-all shadow-sm"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-xl text-[13px] font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-purple-600/10 focus:border-purple-600/30 transition-all shadow-sm"
           />
         </div>
         <button
           onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all font-black text-sm shadow-xl shadow-slate-200 active:scale-95"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-black text-xs shadow-xl shadow-slate-200 active:scale-95"
         >
-          <UserPlus className="w-5 h-5" />
+          <UserPlus className="w-4.5 h-4.5" />
           <span>Add Personnel</span>
         </button>
       </div>
@@ -498,10 +506,10 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
               <div 
                 key={member.id} 
                 onClick={() => setSelectedMember(member)}
-                className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between gap-4 transition-all active:scale-[0.98]"
+                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-14 h-14 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-white rounded-2xl flex items-center justify-center text-slate-500 font-black text-xl flex-shrink-0 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-100 rounded-xl flex items-center justify-center text-slate-500 font-black text-lg flex-shrink-0 shadow-sm overflow-hidden">
                     {member.profile_image_url ? (
                       <img src={member.profile_image_url} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -509,8 +517,8 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-black text-slate-900 text-[15px] truncate">{member.name}</p>
-                    <p className="text-[11px] text-slate-400 font-bold truncate mt-0.5">{member.email}</p>
+                    <p className="font-black text-slate-900 text-[13px] truncate uppercase tracking-tight">{member.name}</p>
+                    <p className="text-[9px] text-slate-400 font-bold truncate mt-0.5">{member.email}</p>
                     <div className="flex items-center gap-1.5 mt-1.5">
                        <StatusBadge label={member.role || 'Member'} color="indigo" />
                     </div>
@@ -518,9 +526,9 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemoveMember(member.id); }}
-                  className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex-shrink-0"
+                  className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex-shrink-0"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))
@@ -599,9 +607,9 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
                   <p className="text-[11px] font-black uppercase tracking-[0.2em]">{isGlobalSearch && addSearchTerm.length < 1 ? 'Start typing to search globally' : 'No personnel found'}</p>
                 </div>
               ) : (
-                displayList.map((member) => {
-                  const displayName = member.profile?.first_name 
-                    ? `${member.profile.first_name} ${member.profile.last_name || ''}`
+                displayList.slice(0, displayLimit).map((member) => {
+                  const displayName = member.first_name 
+                    ? `${member.first_name} ${member.last_name || ''}`.trim()
                     : (member.userName || member.display_name || member.name || 'Unknown User');
                   const isSelected = selectedForAdd.includes(member.id);
                   
@@ -638,6 +646,18 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
                     </div>
                   );
                 })
+              )}
+
+              {isGlobalSearch && displayList.length > displayLimit && (
+                <div className="pt-4 pb-2">
+                   <button 
+                     onClick={() => setDisplayLimit(prev => prev + 50)}
+                     className="w-full py-4 bg-white border-2 border-slate-100 rounded-[2rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-purple-600 hover:text-purple-600 transition-all flex items-center justify-center gap-2"
+                   >
+                     <RefreshCw className="w-4 h-4" />
+                     Load More Personnel
+                   </button>
+                </div>
               )}
               {isSearching && (
                  <div className="flex flex-col items-center justify-center py-10 gap-3">

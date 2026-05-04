@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -104,21 +104,6 @@ export function PracticeView() {
     }
   };
 
-  const handleAcceptChallenge = async () => {
-    if (!user?.uid) return;
-
-    setChallengeAccepted(true);
-
-    // Start a vocal strength session for the challenge
-    try {
-      await startSession(user.uid, 'daily-challenge', 'strength');
-      // Navigate to a practice mode (vocal strength for sustain challenge)
-      setView('karaoke'); // For now, use karaoke as the practice interface
-    } catch (error) {
- console.error('[PracticeView] Error starting challenge:', error);
-      setChallengeAccepted(false);
-    }
-  };
 
   // Calculate progress from real data
   const weeklyProgress = progress
@@ -133,15 +118,7 @@ export function PracticeView() {
   const firstName = profile?.first_name || user?.displayName?.split(' ')[0] || 'Singer';
 
   return (
-    <>
-      <div className="relative pb-24">
-        {/* Coming Soon Toast */}
-        {comingSoonMode && (
-          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#261933] border border-white/10 px-4 py-2 rounded-full shadow-lg animate-bounce">
-            <p className="text-white text-sm font-medium">Coming soon!</p>
-          </div>
-        )}
-
+    <div className="relative pb-24">
         {/* Decorative Background Glow */}
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-violet-500/10 via-transparent to-transparent pointer-events-none z-0" />
 
@@ -158,7 +135,7 @@ export function PracticeView() {
               }}
               className="text-white/70 hover:text-white flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors touch-manipulation"
             >
-              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+              <ArrowLeft size={18} className="sm:w-6 sm:h-6" />
             </button>
             <div className="relative">
               <div
@@ -176,8 +153,8 @@ export function PracticeView() {
               <div className="absolute bottom-0 right-0 size-2.5 sm:size-3 bg-green-400 rounded-full border-2 border-[#191022]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-gray-400 text-[10px] sm:text-xs font-medium tracking-wide uppercase">Welcome Back</span>
-              <h2 className="text-white text-base sm:text-lg font-bold leading-tight">{firstName}</h2>
+              <span className="text-gray-400 text-[9px] sm:text-xs font-medium tracking-wide uppercase">Welcome Back</span>
+              <h2 className="text-white text-sm sm:text-lg font-bold leading-tight">{firstName}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -195,14 +172,14 @@ export function PracticeView() {
         <section className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 mt-2">
           <div className="bg-[#261933] border border-white/5 rounded-xl p-3 sm:p-5 md:p-6 shadow-lg flex items-center gap-3 sm:gap-6">
             {/* Circular Progress */}
-            <div className="relative size-20 sm:size-24 shrink-0 flex items-center justify-center">
+            <div className="relative size-16 sm:size-24 shrink-0 flex items-center justify-center">
               {/* Conic Gradient for Progress Ring */}
               <div
                 className="absolute inset-0 rounded-full"
                 style={{ background: `conic-gradient(#7f13ec ${weeklyProgress}%, #322144 0)` }}
               />
-              <div className="absolute inset-[5px] sm:inset-[6px] rounded-full bg-[#261933] flex flex-col items-center justify-center">
-                <span className="text-xl sm:text-2xl font-bold text-white leading-none">{weeklyProgress}%</span>
+              <div className="absolute inset-[4px] sm:inset-[6px] rounded-full bg-[#261933] flex flex-col items-center justify-center">
+                <span className="text-lg sm:text-2xl font-bold text-white leading-none">{weeklyProgress}%</span>
               </div>
             </div>
 
@@ -232,7 +209,6 @@ export function PracticeView() {
           </div>
         </section>
 
-        {/* Continue Practice - Last Played Song */}
 
 
         {/* Practice Modes Grid */}
@@ -283,8 +259,6 @@ export function PracticeView() {
           </div>
         </section>
 
-
-
         {/* Session Stats Footer */}
         <section className="relative z-10 px-4 mt-8 mb-6">
           <h2 className="text-white text-xl font-bold tracking-tight mb-4">Your Stats</h2>
@@ -317,7 +291,6 @@ export function PracticeView() {
           )}
         </section>
       </div>
-    </>
   );
 }
 

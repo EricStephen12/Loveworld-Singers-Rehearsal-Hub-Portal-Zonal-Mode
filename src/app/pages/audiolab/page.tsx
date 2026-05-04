@@ -34,7 +34,7 @@ function AudioLabContent() {
   const showBottomNav = !fullScreenViews.includes(currentView);
 
   // Check for active session to keep LiveSessionView mounted
-  const hasActiveSession = !!state.session.currentSession;
+  const hasActiveSession = !!state.session.activeSession;
 
   const renderView = () => {
     switch (currentView) {

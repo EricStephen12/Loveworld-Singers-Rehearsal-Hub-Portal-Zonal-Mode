@@ -96,6 +96,7 @@ export function StudioView() {
 
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [metronomeTempo, setMetronomeTempo] = useState(120);
+  const [tapTimes, setTapTimes] = useState<number[]>([]);
   const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const metronomeAudioRef = useRef<AudioContext | null>(null);
   const nextMetronomeNoteTime = useRef<number>(0);
@@ -522,6 +523,27 @@ export function StudioView() {
 
   const updateMetronomeTempo = (newTempo: number) => {
     setMetronomeTempo(newTempo);
+  };
+
+  const handleTapTempo = () => {
+    const now = Date.now();
+    const newTapTimes = [...tapTimes, now].slice(-4);
+    setTapTimes(newTapTimes);
+
+    if (newTapTimes.length >= 2) {
+      const intervals = [];
+      for (let i = 1; i < newTapTimes.length; i++) {
+        intervals.push(newTapTimes[i] - newTapTimes[i - 1]);
+      }
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const newBpm = Math.round(60000 / avgInterval);
+      if (newBpm >= 40 && newBpm <= 240) {
+        setMetronomeTempo(newBpm);
+      }
+    }
+
+    // Visual feedback
+    if (navigator.vibrate) navigator.vibrate(10);
   };
 
   const handleImportAudio = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1704,34 +1726,34 @@ export function StudioView() {
         <div className="flex items-center gap-1 sm:gap-2">
           <button
             onClick={handleBackClick}
-            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation border border-white/5"
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation border border-white/5"
           >
-            <ChevronLeft size={18} className="text-slate-200" />
+            <ChevronLeft size={16} className="text-slate-200" />
           </button>
         </div>
 
         {/* Central Glass Pill */}
         <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center min-w-0 max-w-[35%] xs:max-w-[40%] sm:max-w-md">
-          <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl flex flex-col items-center w-full">
-            <div className="flex items-center gap-1.5 min-w-0 max-w-full justify-center overflow-hidden">
-              <h1 className="text-xs sm:text-sm font-bold text-white truncate text-center max-w-[12ch] sm:max-w-[24ch] min-w-0">
+          <div className="px-2.5 py-1 sm:px-4 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl flex flex-col items-center w-full">
+            <div className="flex items-center gap-1 min-w-0 max-w-full justify-center overflow-hidden">
+              <h1 className="text-[10px] sm:text-sm font-bold text-white truncate text-center max-w-[12ch] sm:max-w-[24ch] min-w-0">
                 {currentProject?.name || 'Untitled Project'}
               </h1>
             </div>
             {/* Status Indicator within Pill */}
-            <div className="h-4 flex items-center">
+            <div className="h-3 flex items-center">
               {isRecording ? (
-                <span className="text-[9px] text-red-400 font-bold flex items-center gap-1 animate-pulse">
+                <span className="text-[8px] text-red-400 font-bold flex items-center gap-1 animate-pulse">
                   <span className="w-1 h-1 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
                   LIVE
                 </span>
               ) : isSaving ? (
-                <span className="text-[9px] text-blue-400 font-bold flex items-center gap-1">
-                  <div className="size-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-[8px] text-blue-400 font-bold flex items-center gap-1">
+                  <div className="size-1.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                   SAVING
                 </span>
               ) : (
-                <span className="text-[8px] sm:text-[9px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                <span className="text-[7px] sm:text-[9px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                   {lastSaved ? (
                     <>
                       <span className="hidden sm:inline">SAVED • </span>
@@ -1749,17 +1771,17 @@ export function StudioView() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-all disabled:opacity-50 touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-all disabled:opacity-50 touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
               title="Save Project"
             >
-              {isSaving ? <CustomLoader size="sm" className="!w-4 !h-4" /> : <Save size={16} />}
+              {isSaving ? <CustomLoader size="sm" className="!w-3 !h-3" /> : <Save size={14} />}
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full transition-all touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full transition-all touch-manipulation text-slate-400 hover:text-white hover:bg-white/5"
               title="Project Settings"
             >
-              <Settings size={16} />
+              <Settings size={14} />
             </button>
           </div>
         </div>
@@ -2178,6 +2200,15 @@ export function StudioView() {
                 >
                   <Timer size={14} className="sm:w-4 sm:h-4" />
                   <span className="text-xs sm:text-sm font-mono font-semibold">{metronomeTempo}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTapTempo();
+                  }}
+                  className={`px-2 py-1.5 sm:py-2 bg-white/5 text-[10px] sm:text-xs font-bold uppercase tracking-wider border-y border-white/10 hover:bg-white/10 active:bg-amber-500/20 active:text-amber-400 transition-all ${metronomeEnabled ? 'border-amber-500/30 border-y' : ''}`}
+                >
+                  Tap
                 </button>
                 {metronomeEnabled && (
                   <div className="flex">

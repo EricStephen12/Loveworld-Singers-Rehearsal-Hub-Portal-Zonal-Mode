@@ -46,8 +46,8 @@ export function BottomNav() {
     <nav
       className={`
         fixed bottom-0 w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl left-1/2 -translate-x-1/2
-        border-t border-white/5 pb-5 pt-3 px-6 
-        flex justify-around items-center z-[10]
+        border-t border-white/5 pb-4 pt-2 px-4 sm:px-6 
+        flex justify-around items-center z-[50]
         bg-[#191022]/95 backdrop-blur-xl
       `}
     >
