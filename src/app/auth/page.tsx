@@ -292,12 +292,12 @@ function AuthPageContent() {
         if (typeof window !== 'undefined') {
           document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
           localStorage.setItem('lwsrh_has_user', 'true')
+          
+          // FORCED INSTANT REDIRECT
+          const urlParams = new URLSearchParams(window.location.search)
+          const returnUrl = urlParams.get('returnUrl') || '/home'
+          window.location.href = returnUrl // Hard redirect for reliability
         }
-
-        // Manual redirect accelerator
-        const urlParams = new URLSearchParams(window.location.search)
-        const returnUrl = urlParams.get('returnUrl')
-        router.push(returnUrl || '/home')
       }
     } else {
         setSuccess('Checking your account...')
@@ -331,12 +331,12 @@ function AuthPageContent() {
           localStorage.setItem('lwsrh_has_user', 'true')
           const { AUTH_CACHE_KEY } = require('@/config/routes')
           localStorage.setItem(AUTH_CACHE_KEY, 'true')
+          
+          // FORCED INSTANT REDIRECT
+          const urlParams = new URLSearchParams(window.location.search)
+          const returnUrl = urlParams.get('returnUrl') || '/home'
+          window.location.href = returnUrl // Hard redirect for reliability
         }
-
-        // Trigger manual redirect as a fallback/accelerator
-        const urlParams = new URLSearchParams(window.location.search)
-        const returnUrl = urlParams.get('returnUrl')
-        router.push(returnUrl || '/home')
       }
     } catch (error: any) {
  console.error('Auth error:', error)

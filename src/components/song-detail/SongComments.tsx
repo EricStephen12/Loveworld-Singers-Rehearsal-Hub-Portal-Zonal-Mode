@@ -34,11 +34,8 @@ export const SongComments: React.FC<SongCommentsProps> = ({
   const formatCommentText = (text: string) => {
     if (!text) return null;
 
-    // Clean up HTML tags and &nbsp;
-    const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-
     // Pattern to match: **bold** or *bold*
-    const parts = cleanText.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
 
     return parts.map((part, i) => {
       const isAsteriskMatch = (part.startsWith('**') && part.endsWith('**')) || (part.startsWith('*') && part.endsWith('*'));
@@ -49,12 +46,12 @@ export const SongComments: React.FC<SongCommentsProps> = ({
         else if (part.startsWith('*')) content = part.slice(1, -1);
 
         return (
-          <span key={i} className="font-bold text-[1.1em] text-black leading-tight inline-block">
-            {content}
-          </span>
+          <span key={i} className="font-bold text-[1.1em] text-black leading-tight inline-block" dangerouslySetInnerHTML={{ __html: content }} />
         );
       }
-      return part;
+      
+      // Render the segment as HTML to handle <br> and &nbsp;
+      return <span key={i} dangerouslySetInnerHTML={{ __html: part }} />;
     });
   };
 
@@ -72,9 +69,9 @@ export const SongComments: React.FC<SongCommentsProps> = ({
       <div className="space-y-6">
         {comments.map((comment) => (
           <div key={comment.id} className="border-b border-gray-100 pb-6 last:border-b-0">
-            <p className={`text-black leading-relaxed mb-4 ${isFull ? 'text-base' : 'text-sm'}`}>
+            <div className={`text-black leading-relaxed mb-4 ${isFull ? 'text-base' : 'text-sm'}`}>
               {formatCommentText(comment.text)}
-            </p>
+            </div>
 
             {comment.audioUrl && (
               <div className="mb-4 max-w-md">
@@ -85,7 +82,11 @@ export const SongComments: React.FC<SongCommentsProps> = ({
               </div>
             )}
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="font-medium text-purple-600">{commentLabel}: {comment.author}</span>
+              <span className="font-medium text-purple-600">
+                {comment.author.toLowerCase().includes(commentLabel.toLowerCase()) 
+                  ? comment.author 
+                  : `${commentLabel}: ${comment.author}`}
+              </span>
               <span>•</span>
               <span>
                 {new Date(comment.date).toLocaleDateString('en-US', {

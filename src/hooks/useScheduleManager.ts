@@ -127,17 +127,24 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
     }
   }, [zoneId, songs, categories]);
 
-  const saveProgram = async (grid?: SpreadsheetData, isAutoSave = false) => {
+  const saveProgram = async (grid?: SpreadsheetData | React.MouseEvent, isAutoSave = false) => {
+    // Prevent event objects from being treated as data
+    const actualGridInput = (grid && typeof grid === 'object' && 'nativeEvent' in grid) ? undefined : grid as SpreadsheetData;
+
     if (!zoneId) return;
     if (!isAutoSave) setSavingProgram(true);
     const isDaily = selectedCategory?.label === 'Daily Schedule';
     const currentForm = programFormRef.current;
-    const currentGrid = grid || spreadsheetDataRef.current;
+    
+    // Ensure we don't save an event object to spreadsheetData
+    const currentGrid = actualGridInput || spreadsheetDataRef.current;
     const catId = isDaily ? undefined : selectedCategory?.id;
 
     const payload: any = { ...currentForm, zoneId: currentZone?.id, updatedBy: 'admin' };
     if (catId) payload.categoryId = catId;
-    if (currentGrid !== undefined && currentGrid !== null) payload.spreadsheetData = currentGrid;
+    if (currentGrid !== undefined && currentGrid !== null && !('nativeEvent' in (currentGrid as any))) {
+      payload.spreadsheetData = currentGrid;
+    }
 
     const oldDate = currentDate;
     const newDate = currentForm.date;
@@ -193,12 +200,19 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
     }
   };
 
-  const saveCat = async (grid?: SpreadsheetData) => {
+  const saveCat = async (grid?: SpreadsheetData | React.MouseEvent) => {
+    // Prevent event objects from being treated as data
+    const actualGrid = (grid && typeof grid === 'object' && 'nativeEvent' in grid) ? undefined : grid as SpreadsheetData;
+    
     if (!zoneId || !catForm.label.trim()) return showToast('Label is required', 'error');
     setSavingCat(true);
     const payload: any = { ...catForm, parentId: catForm.parentId || null };
-    const gridData = grid || (editingCat?.spreadsheetData || selectedCategory?.spreadsheetData);
-    if (gridData !== undefined) payload.spreadsheetData = gridData;
+    
+    // Ensure we don't save an event object to spreadsheetData
+    const gridData = actualGrid || (editingCat?.spreadsheetData || selectedCategory?.spreadsheetData);
+    if (gridData !== undefined && gridData !== null && !('nativeEvent' in (gridData as any))) {
+      payload.spreadsheetData = gridData;
+    }
 
     try {
       if (editingCat) {
@@ -299,16 +313,21 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
   };
 
   const isDailyView = useMemo(() => {
-    const dailyCategory = categories.find(c => c.label === 'Daily Schedule');
-    if (!selectedCategory || !dailyCategory) return false;
+    // If it has no category, it's a global/daily schedule
+    if (selectedCategory?.id === 'daily-schedule' || (program && !program.categoryId)) return true;
+    
+    const dailyCategory = categories.find(c => c.label === 'Daily Schedule' || c.id === 'daily-schedule');
+    if (!selectedCategory) return !program?.categoryId; // Default to true if no category and no program, or if global program
+    if (dailyCategory && selectedCategory.id === dailyCategory.id) return true;
+    
     let current: ScheduleCategory | undefined = selectedCategory;
     while (current) {
-      if (current.id === dailyCategory.id) return true;
+      if (current.id === dailyCategory?.id || current.label === 'Daily Schedule') return true;
       if (!current.parentId) break;
       current = categories.find(c => c.id === current!.parentId);
     }
     return false;
-  }, [selectedCategory, categories]);
+  }, [selectedCategory, categories, program]);
 
   return {
     // UI State

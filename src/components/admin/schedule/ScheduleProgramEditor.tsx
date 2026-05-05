@@ -35,54 +35,51 @@ export const ScheduleProgramEditor: React.FC<ScheduleProgramEditorProps> = ({
       {/* Program Info Form */}
       <div className="p-6 border-b border-slate-100 bg-slate-50/50">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          {isDailyView && (
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Program Name</label>
-              <input
-                type="text"
-                value={programForm.program}
-                onChange={e => setProgramForm({ ...programForm, program: e.target.value })}
-                placeholder="e.g. Sunday Service"
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
-                disabled={!canEdit}
-              />
-            </div>
-          )}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{isDailyView ? 'Date' : 'List Title'}</label>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Program Name</label>
             <input
-              type={isDailyView ? "date" : "text"}
-              value={programForm.date}
+              type="text"
+              value={programForm.program || programForm.date || ''}
+              onChange={e => setProgramForm({ ...programForm, program: e.target.value })}
+              placeholder="e.g. Sunday Service"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
+              disabled={!canEdit}
+            />
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Scheduled Date</label>
+            <input
+              type="date"
+              value={programForm.date || ''}
               onChange={e => setProgramForm({ ...programForm, date: e.target.value })}
               className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
               disabled={!canEdit}
             />
           </div>
-          {isDailyView && (
-            <>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Call Time</label>
-                <input
-                  type="time"
-                  value={programForm.time}
-                  onChange={e => setProgramForm({ ...programForm, time: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
-                  disabled={!canEdit}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Target</label>
-                <input
-                  type="text"
-                  value={programForm.dailyTarget}
-                  onChange={e => setProgramForm({ ...programForm, dailyTarget: e.target.value })}
-                  placeholder="e.g. 50 Songs"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
-                  disabled={!canEdit}
-                />
-              </div>
-            </>
-          )}
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Call Time</label>
+            <input
+              type="time"
+              value={programForm.time || ''}
+              onChange={e => setProgramForm({ ...programForm, time: e.target.value })}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
+              disabled={!canEdit}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Daily Target</label>
+            <input
+              type="text"
+              value={programForm.dailyTarget || ''}
+              onChange={e => setProgramForm({ ...programForm, dailyTarget: e.target.value })}
+              placeholder="e.g. 50 Songs"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium"
+              disabled={!canEdit}
+            />
+          </div>
         </div>
         {canEdit && (
           <div className="mt-6 flex justify-end">
