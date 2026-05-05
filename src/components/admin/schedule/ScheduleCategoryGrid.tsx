@@ -20,6 +20,7 @@ interface ScheduleCategoryGridProps {
   onAddCategory: () => void;
   onEditCategory: (cat: ScheduleCategory) => void;
   onDeleteCategory: (id: string) => void;
+  parentId?: string | null; // Added filter
 }
 
 export const ScheduleCategoryGrid: React.FC<ScheduleCategoryGridProps> = ({
@@ -29,30 +30,42 @@ export const ScheduleCategoryGrid: React.FC<ScheduleCategoryGridProps> = ({
   onCategoryClick,
   onAddCategory,
   onEditCategory,
-  onDeleteCategory
+  onDeleteCategory,
+  parentId = null // Default to root
 }) => {
-  const rootCategories = categories.filter(c => !c.parentId);
+  const filteredCategories = categories.filter(c => (c.parentId || null) === parentId);
+
+  if (filteredCategories.length === 0 && parentId) return null; // Don't show grid if empty and inside a folder
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800">Schedule Manager</h3>
-          <p className="text-sm text-slate-500">Manage daily schedules and song lists</p>
+      {!parentId && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Schedule Manager</h3>
+            <p className="text-sm text-slate-500">Manage daily schedules and song lists</p>
+          </div>
+          {canEdit && (
+            <button
+              onClick={onAddCategory}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-medium text-white px-5 py-2.5 rounded-full transition-colors shadow-sm"
+              style={{ backgroundColor: themeColor }}
+            >
+              <Plus className="w-4 h-4" /> New Category
+            </button>
+          )}
         </div>
-        {canEdit && (
-          <button
-            onClick={onAddCategory}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-medium text-white px-5 py-2.5 rounded-full transition-colors shadow-sm"
-            style={{ backgroundColor: themeColor }}
-          >
-            <Plus className="w-4 h-4" /> New Category
-          </button>
-        )}
-      </div>
+      )}
+
+      {parentId && filteredCategories.length > 0 && (
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-1 h-4 rounded-full bg-indigo-500" />
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sub-Folders</h4>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {rootCategories.map(cat => {
+        {filteredCategories.map(cat => {
           const IconComp = ICON_OPTIONS.find(o => o.name === cat.icon)?.icon || Music;
           return (
             <div

@@ -283,23 +283,38 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
 
   const confirmCreateSchedule = async () => {
     if (!zoneId || !newScheduleDate || !selectedCategory) return;
-    const dateId = newScheduleDate;
     setShowNewScheduleModal(false);
-    setExpandedDate(dateId);
-    setCurrentDate(dateId);
 
     const isDaily = selectedCategory.label === 'Daily Schedule';
     const catId = isDaily ? undefined : selectedCategory.id;
 
-    const newProgramPayload: any = { zoneId, program: '', date: dateId, time: '', dailyTarget: '', updatedBy: 'admin' };
+    // For non-daily lists, use the input as the title (program name)
+    // and use a timestamp-based ID for the unique 'date' field
+    const programName = isDaily ? '' : newScheduleDate;
+    const dateId = isDaily ? newScheduleDate : `list_${Date.now()}`;
+
+    const newProgramPayload: any = { 
+      zoneId, 
+      program: programName, 
+      date: dateId, 
+      time: '', 
+      dailyTarget: '', 
+      updatedBy: 'admin' 
+    };
+    
     if (catId) newProgramPayload.categoryId = catId;
 
     setAllPrograms(prev => {
       if (prev.find(p => p.date === dateId && p.categoryId === catId)) return prev;
-      return [{ ...newProgramPayload, id: `temp_${dateId}_${Date.now()}`, updatedAt: new Date().toISOString() } as ScheduleProgram, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return [{ ...newProgramPayload, id: `temp_${dateId}_${Date.now()}`, updatedAt: new Date().toISOString() } as ScheduleProgram, ...prev].sort((a, b) => {
+        if (isDaily) return new Date(b.date).getTime() - new Date(a.date).getTime();
+        return b.updatedAt.localeCompare(a.updatedAt);
+      });
     });
 
     await ScheduleProgramService.updateProgram(newProgramPayload, currentZone.id, dateId);
+    setExpandedDate(dateId);
+    setCurrentDate(dateId);
     loadEditorData(dateId, catId);
   };
 

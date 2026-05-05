@@ -152,7 +152,25 @@ export default function ScheduleManagerSection({ allSongs = [] }: ScheduleManage
             )}
           </div>
 
-          {sm.expandedDate ? (
+            <ScheduleCategoryGrid
+              categories={sm.categories}
+              canEdit={sm.canEdit}
+              themeColor={themeColor}
+              onCategoryClick={(cat) => {
+                sm.setSelectedCategory(cat);
+                sm.loadSongs(cat.id);
+              }}
+              onAddCategory={() => {}}
+              onEditCategory={(cat) => {
+                sm.setEditingCat(cat);
+                sm.setCatForm({ label: cat.label, description: cat.description, icon: cat.icon, color: cat.color, iconColor: cat.iconColor, parentId: cat.parentId || null });
+                sm.setShowCatForm(true);
+              }}
+              onDeleteCategory={sm.deleteCat}
+              parentId={sm.selectedCategory.id}
+            />
+
+            {sm.expandedDate ? (
             sm.editorLoading ? (
               <div className="flex items-center justify-center py-20 bg-white rounded-3xl border border-slate-100"><Loader2 className="w-6 h-6 animate-spin text-purple-500" /></div>
             ) : (
