@@ -499,15 +499,27 @@ function AuthPageContent() {
 
 
         // Check for existing profiles with this KingsChat ID
-        const { FirebaseAuthService } = await import('@/lib/firebase-auth')
         const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
-
-        const existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
+        
+        let existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
           'profiles',
           'kingschat_id',
           '==',
           kingschatUserId
         )
+
+        // Secondary check: If no profile found by KC ID, try finding by email
+        if ((!existingProfiles || existingProfiles.length === 0) && kingschatEmail) {
+           const profilesByEmail = await FirebaseDatabaseService.getCollectionWhere(
+             'profiles',
+             'email',
+             '==',
+             kingschatEmail.toLowerCase()
+           )
+           if (profilesByEmail && profilesByEmail.length > 0) {
+             existingProfiles = profilesByEmail
+           }
+        }
 
         // If multiple accounts found, show account selector modal
         if (existingProfiles && existingProfiles.length > 1) {
@@ -523,17 +535,24 @@ function AuthPageContent() {
         if (existingProfiles && existingProfiles.length === 1) {
           const existingProfile = existingProfiles[0] as any
 
+          // Auto-link KC ID if it wasn't linked but email matched
+          if (!existingProfile.kingschat_id && kingschatUserId) {
+            await FirebaseDatabaseService.updateUserProfile(existingProfile.id, {
+              kingschat_id: kingschatUserId
+            })
+          }
+
           // Show password prompt for this account
           setSelectedAccount(existingProfile)
           setShowPasswordPrompt(true)
           setAccountPassword('')
           setIsLoading(false)
           setIsCheckingAccount(false)
+          setSuccess('Account found! Please enter your password.')
           return
         }
 
-        // No existing profile - this is a new user, send to signup form
-
+        // No existing profile found - this is actually a new user
         if (typeof window !== 'undefined') {
           localStorage.setItem('kingschatUserId', kingschatUserId)
           localStorage.setItem('kingschatAuthPending', 'true')
@@ -541,7 +560,7 @@ function AuthPageContent() {
 
         setIsLoading(false)
         setIsCheckingAccount(false)
-        setIsLogin(false) // Switch to signup mode
+        setIsLogin(false) // Switch to signup mode for NEW users only
         setSuccess('Please complete signup with your KingsChat account')
 
         // Pre-fill KingsChat ID in the form
