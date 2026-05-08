@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Lyrics Service for AudioLab
  * Handles fetching, syncing, and storing lyrics for songs
  */
@@ -24,10 +24,15 @@ export async function generateSyncedLyrics(
   existingLyrics?: string
 ): Promise<SyncLyricsResponse> {
   try {
+    // Get current user's ID token for authentication
+    const { auth } = await import('@/lib/firebase-setup');
+    const token = await auth.currentUser?.getIdToken();
+
     const response = await fetch('/api/lyrics-sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
       body: JSON.stringify({ audioUrl, songId, existingLyrics }),
     });

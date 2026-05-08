@@ -161,12 +161,19 @@ export default function KaraokeConfigSection() {
 
         setIsSyncing(true);
         try {
+            // Get current user's ID token for authentication
+            const { auth } = await import('@/lib/firebase-setup');
+            const token = await auth.currentUser?.getIdToken();
+
             // Strip existing timestamps to get clean text if any, or use existing lrcText
             const cleanText = lrcText.replace(/\[\d{2}:\d{2}(?:\.\d{2,3})?\]/g, '').trim();
             
             const response = await fetch('/api/lyrics-sync', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     audioUrl,
                     songId: selectedSong.id,
