@@ -15,6 +15,7 @@ import { db } from './firebase-setup'
 import { PraiseNightSong } from '@/types/supabase'
 import { isHQGroup } from '@/config/zones'
 import { FirebaseMetadataService } from './firebase-metadata-service'
+import { BackendAPI } from './api-client'
 
 function getCollectionName(zoneId?: string): string {
   return (zoneId && isHQGroup(zoneId)) ? 'praise_night_songs' : 'zone_songs'
@@ -25,89 +26,63 @@ export class PraiseNightSongsService {
   static async getSongsByPraiseNight(praiseNightId: string, zoneId?: string): Promise<PraiseNightSong[]> {
     try {
       const collectionName = getCollectionName(zoneId)
-      const songsRef = collection(db, collectionName)
-
-      let q = query(songsRef, where('praiseNightId', '==', praiseNightId))
-      let snapshot = await getDocs(q)
-
+      const response = await BackendAPI.generic.list(collectionName, 2000, 'praiseNightId', praiseNightId, '==');
+      
       // Try alternative field names for HQ groups
-      if (snapshot.empty && zoneId && isHQGroup(zoneId)) {
-        q = query(songsRef, where('praisenightid', '==', praiseNightId))
-        snapshot = await getDocs(q)
-
-        if (snapshot.empty) {
-          q = query(songsRef, where('praisenight_id', '==', praiseNightId))
-          snapshot = await getDocs(q)
-        }
-
-        if (snapshot.empty) {
-          q = query(songsRef, where('pageId', '==', praiseNightId))
-          snapshot = await getDocs(q)
-        }
+      if ((!response.data || response.data.length === 0) && zoneId && isHQGroup(zoneId)) {
+        const altResponse = await BackendAPI.generic.list(collectionName, 2000, 'praisenightid', praiseNightId, '==');
+        if (altResponse.data && altResponse.data.length > 0) return altResponse.data;
       }
 
-      return snapshot.docs.map(doc => {
-        const data = doc.data()
-        return {
-          ...data,
-          id: doc.id,
-          rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
-        }
-      }) as unknown as PraiseNightSong[]
+      return (response.data || []).map((doc: any) => ({
+        ...doc,
+        createdAt: doc.createdAt ? (typeof doc.createdAt === 'string' ? doc.createdAt : new Date().toISOString()) : new Date().toISOString(),
+        updatedAt: doc.updatedAt ? (typeof doc.updatedAt === 'string' ? doc.updatedAt : new Date().toISOString()) : new Date().toISOString()
+      })) as unknown as PraiseNightSong[];
     } catch (error) {
- console.error('Error getting songs:', error)
-      return []
+      console.error('Error getting songs:', error);
+      return [];
     }
   }
 
   static async getAllSongs(zoneId?: string): Promise<PraiseNightSong[]> {
     try {
       const collectionName = getCollectionName(zoneId)
-      const songsRef = collection(db, collectionName)
+      let response;
+      
+      if (zoneId && !isHQGroup(zoneId)) {
+        response = await BackendAPI.generic.list(collectionName, 5000, 'zoneId', zoneId, '==');
+      } else {
+        response = await BackendAPI.generic.list(collectionName, 5000);
+      }
 
-      const q = (zoneId && !isHQGroup(zoneId))
-        ? query(songsRef, where('zoneId', '==', zoneId))
-        : query(songsRef)
-
-      const snapshot = await getDocs(q)
-
-      return snapshot.docs.map(doc => {
-        const data = doc.data()
-        return {
-          ...data,
-          id: doc.id,
-          rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
-        }
-      }) as unknown as PraiseNightSong[]
+      return (response.data || []).map((doc: any) => ({
+        ...doc,
+        createdAt: doc.createdAt ? (typeof doc.createdAt === 'string' ? doc.createdAt : new Date().toISOString()) : new Date().toISOString(),
+        updatedAt: doc.updatedAt ? (typeof doc.updatedAt === 'string' ? doc.updatedAt : new Date().toISOString()) : new Date().toISOString()
+      })) as unknown as PraiseNightSong[];
     } catch (error) {
- console.error('Error getting all songs:', error)
-      return []
+      console.error('Error getting all songs:', error);
+      return [];
     }
   }
 
   static async getSongById(songId: string, zoneId?: string): Promise<PraiseNightSong | null> {
     try {
       const collectionName = getCollectionName(zoneId)
-      const songRef = doc(db, collectionName, songId)
-      const songDoc = await getDoc(songRef)
+      const response = await BackendAPI.generic.get(collectionName, songId);
+      
+      if (!response.data) return null;
 
-      if (!songDoc.exists()) return null
-
-      const data = songDoc.data()
+      const doc = response.data;
       return {
-        ...data,
-        id: songDoc.id,
-        rehearsalCount: data.rehearsalCount ?? data.rehearsalcount ?? 0,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
-      } as unknown as PraiseNightSong
+        ...doc,
+        createdAt: doc.createdAt ? (typeof doc.createdAt === 'string' ? doc.createdAt : new Date().toISOString()) : new Date().toISOString(),
+        updatedAt: doc.updatedAt ? (typeof doc.updatedAt === 'string' ? doc.updatedAt : new Date().toISOString()) : new Date().toISOString()
+      } as unknown as PraiseNightSong;
     } catch (error) {
- console.error('Error getting song:', error)
-      return null
+      console.error('Error getting song:', error);
+      return null;
     }
   }
 

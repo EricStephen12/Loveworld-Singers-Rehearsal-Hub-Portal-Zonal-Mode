@@ -197,11 +197,12 @@ export function useZone() {
       const targetMembership = memberships.find((m: any) => m.zoneId === targetZone?.id)
 
       let role: UserRole = 'zone_member'
-      if (targetMembership?.role === 'coordinator') {
+      if (isHQAdminEmail(email)) {
+        role = 'hq_admin'
+      } else if (targetMembership?.role === 'coordinator') {
         role = 'zone_coordinator'
       } else if (targetZone && isHQGroup(targetZone.id)) {
-        // Elevate HQ members to admins if they are in the special list
-        role = isHQAdminEmail(email) ? 'hq_admin' : 'hq_member'
+        role = 'hq_member'
       }
 
       setCurrentZone(targetZone || null)
@@ -251,11 +252,12 @@ export function useZone() {
     }
 
     let role: UserRole = 'zone_member'
-    if (membership?.role === 'coordinator') {
+    if (isHQAdminEmail(user.email)) {
+      role = 'hq_admin'
+    } else if (membership?.role === 'coordinator') {
       role = 'zone_coordinator'
     } else if (membership?.isHQMember || isHQGroup(zoneId)) {
-      // Elevate HQ members to admins if they are in the special list
-      role = isHQAdminEmail(user.email) ? 'hq_admin' : 'hq_member'
+      role = 'hq_member'
     }
 
     setCurrentZoneMembership(membership)

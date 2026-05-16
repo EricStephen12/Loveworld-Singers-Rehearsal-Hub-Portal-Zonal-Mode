@@ -1,6 +1,6 @@
-﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
+import { parseProgramDate } from '@/utils/date-parser'
 
 interface ServerTimeResponse {
   serverTime: string
@@ -17,12 +17,14 @@ interface CountdownData {
 
 interface UseServerCountdownProps {
   targetDate?: Date
+  targetDateString?: string
   countdownData?: CountdownData
   praiseNightId?: string | number
 }
 
 export function useServerCountdown({ 
   targetDate, 
+  targetDateString,
   countdownData, 
   praiseNightId 
 }: UseServerCountdownProps) {
@@ -33,6 +35,40 @@ export function useServerCountdown({
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const targetDateRef = useRef<Date | null>(null)
   const serverTimeOffsetRef = useRef<number>(0)
+
+  // Helper to parse various date formats
+  const parseDateString = useCallback((dateStr: string | undefined): Date | null => {
+    if (!dateStr) return null;
+    try {
+      // 1. Clean ordinal suffixes (24th -> 24) and handle case
+      let cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/i, '$1').trim();
+      
+      // 2. If it lacks a year (e.g., "SUNDAY, 24TH MAY"), append current or next year
+      if (!/\d{4}/.test(cleaned)) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        
+        // Try with current year
+        const dateWithCurrentYear = new Date(`${cleaned} ${currentYear}`);
+        
+        if (!isNaN(dateWithCurrentYear.getTime())) {
+          // If the date is in the past by more than a month, it might be for NEXT year
+          // (e.g., it's Dec 2025 and date is "Jan 5th")
+          if (dateWithCurrentYear.getTime() < now.getTime() - (30 * 24 * 60 * 60 * 1000)) {
+            return new Date(`${cleaned} ${currentYear + 1}`);
+          }
+          return dateWithCurrentYear;
+        }
+      }
+
+      const date = new Date(cleaned);
+      if (!isNaN(date.getTime())) return date;
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
 
   // Serialize countdownData for stable dependency comparison
   const countdownKey = useMemo(() => {
@@ -58,8 +94,7 @@ export function useServerCountdown({
       serverTimeOffsetRef.current = offset
       return serverTime
     } catch (err) {
- console.error('Error fetching server time:', err)
-      setError('Failed to sync with server time')
+      // Handle silently - fallback to client time is acceptable for countdowns
       setServerTimeOffset(0)
       serverTimeOffsetRef.current = 0
       return new Date()
@@ -103,9 +138,19 @@ export function useServerCountdown({
         const serverTime = await fetchServerTime()
         let target: Date | null = null
 
-        if (targetDate) {
+        // 1. Prioritize targetDateString (Program Date)
+        const parsedProgramDate = parseProgramDate(targetDateString);
+        if (parsedProgramDate && parsedProgramDate.getTime() > serverTime.getTime()) {
+          target = parsedProgramDate;
+        } 
+        
+        // 2. Fallback to provided targetDate Date object
+        if (!target && targetDate) {
           target = targetDate
-        } else if (countdownData && (countdownData.days > 0 || countdownData.hours > 0 || countdownData.minutes > 0 || countdownData.seconds > 0)) {
+        } 
+        
+        // 3. Fallback to relative countdownData from Admin
+        if (!target && countdownData && (countdownData.days > 0 || countdownData.hours > 0 || countdownData.minutes > 0 || countdownData.seconds > 0)) {
           let storedTargetDate: string | null = null
 
           if (praiseNightId) {
@@ -113,14 +158,21 @@ export function useServerCountdown({
               const countdownDoc = await FirebaseDatabaseService.getDocument('countdowns', praiseNightId.toString())
               if (countdownDoc && (countdownDoc as any).targetDate) {
                 storedTargetDate = (countdownDoc as any).targetDate
+                const storedKey = (countdownDoc as any).countdownKey
+                
+                // If the countdown key has changed, force a recalculation
+                if (storedKey && storedKey !== countdownKey) {
+                  storedTargetDate = null; 
+                }
               }
             } catch (error) {
+              console.error('[Countdown] Failed to fetch stored targetDate:', error);
             }
           }
 
           if (storedTargetDate) {
             target = new Date(storedTargetDate)
-                        if (target.getTime() <= serverTime.getTime()) {
+            if (target.getTime() <= serverTime.getTime()) {
               // Recalculate target from countdownData
               const totalMs =
                 (countdownData.days * 24 * 60 * 60 * 1000) +
@@ -130,15 +182,16 @@ export function useServerCountdown({
 
               target = new Date(serverTime.getTime() + totalMs)
               
-                            if (praiseNightId) {
+              if (praiseNightId) {
                 try {
                   await FirebaseDatabaseService.updateDocument('countdowns', praiseNightId.toString(), {
                     targetDate: target.toISOString(),
+                    countdownKey: countdownKey,
                     updatedAt: new Date(),
                     praiseNightId: praiseNightId
                   })
                 } catch (error) {
- console.error('Failed to update target date:', error)
+                  console.error('[Countdown] Failed to update target date:', error)
                 }
               }
             }
@@ -153,18 +206,28 @@ export function useServerCountdown({
 
             if (praiseNightId) {
               try {
-                await FirebaseDatabaseService.createDocument('countdowns', praiseNightId.toString(), {
-                  targetDate: target.toISOString(),
-                  createdAt: new Date(),
-                  praiseNightId: praiseNightId
-                })
+                const docExists = await FirebaseDatabaseService.getDocument('countdowns', praiseNightId.toString());
+                if (docExists) {
+                  await FirebaseDatabaseService.updateDocument('countdowns', praiseNightId.toString(), {
+                    targetDate: target.toISOString(),
+                    countdownKey: countdownKey,
+                    updatedAt: new Date(),
+                    praiseNightId: praiseNightId
+                  })
+                } else {
+                  await FirebaseDatabaseService.createDocument('countdowns', praiseNightId.toString(), {
+                    targetDate: target.toISOString(),
+                    countdownKey: countdownKey,
+                    createdAt: new Date(),
+                    praiseNightId: praiseNightId
+                  })
+                }
               } catch (error) {
- console.error('Failed to store target date:', error)
+                console.error('[Countdown] Failed to store target date:', error)
               }
             }
           }
-        } else {
-        }
+        } 
         
         if (!target) {
           setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
@@ -177,7 +240,7 @@ export function useServerCountdown({
         
         intervalRef.current = setInterval(calculateTimeLeft, 1000)
       } catch (err) {
- console.error('Error initializing countdown:', err)
+        console.error('[Countdown] Initialization failed:', err);
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setIsLoading(false)
@@ -192,7 +255,7 @@ export function useServerCountdown({
         intervalRef.current = null
       }
     }
-  }, [praiseNightId, targetDate, countdownKey, calculateTimeLeft])
+  }, [praiseNightId, targetDate, targetDateString, countdownKey, calculateTimeLeft])
 
   // Sync with server every 30 seconds
   useEffect(() => {

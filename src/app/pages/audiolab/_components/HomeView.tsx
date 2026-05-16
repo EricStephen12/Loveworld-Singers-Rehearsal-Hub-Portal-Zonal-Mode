@@ -79,13 +79,7 @@ export function HomeView() {
           {/* Header Section */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
-              onClick={() => {
-                if (window.history.length > 1) {
-                  router.back();
-                } else {
-                  router.push('/home');
-                }
-              }}
+              onClick={() => router.push('/home')}
               className="text-violet-500 flex size-9 items-center justify-center rounded-full bg-violet-500/10 hover:bg-violet-500/20 transition-colors touch-manipulation"
               title="Go Back"
             >

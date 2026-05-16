@@ -305,7 +305,7 @@ function AdminContent() {
         const categories = await ZoneDatabaseService.getCategories(currentZone.id);
 
         // Map categories to include both Firebase ID and Supabase ID
-        const mappedCategories = categories.map(category => ({
+        const mappedCategories = categories.map((category: any) => ({
           ...category,
           firebaseId: category.id, // Firebase document ID (string)
           id: category.id, // Keep Firebase ID as primary ID

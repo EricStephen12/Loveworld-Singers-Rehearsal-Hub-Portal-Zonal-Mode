@@ -754,6 +754,9 @@ function AuthPageContent() {
     }
   }
 
+  // If user is already authenticated, don't render anything while redirecting
+  if (user) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
       {/* Dark Header Section */}

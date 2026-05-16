@@ -113,7 +113,23 @@ export function useAdminData(): AdminData {
       }
 
       // Background Fetch / Initial Fetch
-      const freshPages = await fetchAdminData(currentZoneId)
+      let freshPages: PraiseNight[] = []
+      try {
+        freshPages = await fetchAdminData(currentZoneId)
+      } catch (err) {
+        console.warn('Admin: Backend unreachable or returned error, falling back to empty state:', err)
+        // Only set error if we don't even have cached data
+        if (!adminDataCache) {
+          // If it's a network error, maybe it's just slow or offline
+          const errorMsg = err instanceof Error ? err.message : 'Failed to load data'
+          if (errorMsg.includes('fetch') || errorMsg.includes('NetworkError')) {
+             console.warn('Network connectivity issue with backend');
+          } else {
+             setError(errorMsg)
+          }
+        }
+        freshPages = adminDataCache?.pages || []
+      }
 
       adminDataCache = {
         pages: freshPages,
@@ -124,7 +140,7 @@ export function useAdminData(): AdminData {
 
       setPages(freshPages)
     } catch (err) {
- console.error('Admin: Failed to load data:', err)
+      console.error('Admin: Critical failure in loadData:', err)
       setError(err instanceof Error ? err.message : 'Failed to load data')
     } finally {
       setLoading(false)

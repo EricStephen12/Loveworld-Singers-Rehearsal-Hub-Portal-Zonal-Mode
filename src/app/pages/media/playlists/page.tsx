@@ -45,6 +45,22 @@ export default function PlaylistsPage() {
   const [viewMode, setViewMode] = useState<'all' | 'shorts'>('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
+  // Mobile Sidebar Auto-Close
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false)
+      } else {
+        setSidebarOpen(true)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    handleResize()
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   useEffect(() => {
     if (user?.uid) {
       initAndLoad(user.uid)
@@ -128,7 +144,8 @@ export default function PlaylistsPage() {
 
   return (
     <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30 font-sans">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950">
+      {/* 1. Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800/80 shadow-md">
         <YouTubeHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -139,17 +156,18 @@ export default function PlaylistsPage() {
         />
       </div>
 
+      {/* 2. Main Body Container starting below Header (pt-16) */}
       <div className="flex flex-1 pt-16 overflow-hidden relative">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] lg:hidden"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] lg:hidden animate-in fade-in duration-200"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Sidebar Container */}
-        <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
+        <div className={`fixed lg:relative top-16 lg:top-0 left-0 h-[calc(100vh-64px)] z-[110] transition-all duration-300 bg-slate-950 border-r border-slate-800/80 flex flex-col ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
           <YouTubeSidebar
             sidebarOpen={sidebarOpen}
             viewMode={viewMode}
@@ -161,239 +179,133 @@ export default function PlaylistsPage() {
           />
         </div>
 
-        <main className="flex-1 max-w-[2100px] mx-auto px-6 pt-6 pb-24 overflow-y-auto bg-slate-950 custom-scrollbar">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">Your Playlists</h1>
-              <p className="text-slate-400 text-sm mt-1 font-medium">Curated music and rehearsal libraries</p>
-            </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2.5 px-6 h-11 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-[14px] font-bold shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 active:scale-95 w-fit"
-            >
-              <Plus className="w-5 h-5" />
-              New Playlist
-            </button>
-          </div>
-
-          {/* Search and Sort Bar */}
-          <div className="flex flex-col md:flex-row items-center gap-3 mb-10">
-            <div className="relative flex-1 w-full group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search your playlists..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-12 bg-slate-900/50 border border-slate-800 rounded-2xl pl-12 pr-12 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all shadow-inner"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-800 rounded-xl text-slate-500 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="relative w-full md:w-auto" ref={sortMenuRef}>
-              <button
-                onClick={() => setShowSortMenu(!showSortMenu)}
-                className="w-full md:w-auto flex items-center justify-between gap-3 px-5 h-12 bg-slate-900/50 border border-slate-800 rounded-2xl text-sm font-bold text-slate-300 hover:bg-slate-800 transition-colors active:scale-95"
-              >
-                <div className="flex items-center gap-2.5">
-                  <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
-                  <span>Sort by: {sortBy === 'date' ? 'Recently Updated' : sortBy === 'name' ? 'A-Z' : 'Video Count'}</span>
-                </div>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showSortMenu ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showSortMenu && (
-                <div className="absolute right-0 top-[56px] w-full md:w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                  <button
-                    onClick={() => { setSortBy('date'); setShowSortMenu(false); }}
-                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'date' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-                  >
-                    Recently Updated
-                    {sortBy === 'date' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
-                  </button>
-                  <button
-                    onClick={() => { setSortBy('name'); setShowSortMenu(false); }}
-                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'name' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-                  >
-                    Alphabetical (A-Z)
-                    {sortBy === 'name' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
-                  </button>
-                  <button
-                    onClick={() => { setSortBy('count'); setShowSortMenu(false); }}
-                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-bold transition-colors ${sortBy === 'count' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-                  >
-                    Video Count
-                    {sortBy === 'count' && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-5 gap-y-12">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="space-y-4">
-                  <div className="aspect-video bg-slate-900 rounded-2xl animate-pulse border border-white/5" />
-                  <div className="h-5 bg-slate-900 rounded-lg w-3/4 animate-pulse" />
-                  <div className="h-4 bg-slate-900 rounded-lg w-1/2 animate-pulse" />
-                </div>
-              ))}
-            </div>
-          ) : hasNoResults ? (
-            <div className="flex flex-col items-center justify-center py-32 text-center bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-800">
-              <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-white/5">
-                <Search className="w-10 h-10 text-slate-800" />
+        {/* Main Content Container */}
+        <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-[#0B0F19]">
+          <main className="flex-1 max-w-[2100px] w-full mx-auto px-6 lg:px-12 pt-8 pb-28 overflow-y-auto bg-[#0B0F19] custom-scrollbar">
+            {/* Ultra-Clean Minimalist Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-white/[0.05]">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">Playlists</h1>
               </div>
-              <h3 className="text-xl font-bold text-slate-100">No matches found</h3>
-              <p className="text-slate-500 mt-2 font-medium">Try searching for a different keyword</p>
-              <button
-                onClick={() => setSearchQuery('')}
-                className="mt-8 px-8 h-12 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-bold transition-all border border-white/5 active:scale-95"
-              >
-                Clear Search
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-16">
-              {/* System Playlists */}
-              {systemPlaylists.length > 0 && (
-                <section className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">Essentials</h2>
-                    <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-500">{systemPlaylists.length}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-5 gap-y-12">
-                    {systemPlaylists
-                      .map(playlist => (
-                      <button
-                        key={playlist.id}
-                        onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
-                        className="group flex flex-col gap-4 text-left"
-                      >
-                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-white/5 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-indigo-500/10">
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                            {playlist.systemType === 'liked'
-                              ? <ThumbsUp className="w-14 h-14 text-indigo-500/20 group-hover:text-indigo-500/40 transition-colors" />
-                              : <Clock className="w-14 h-14 text-indigo-500/20 group-hover:text-indigo-500/40 transition-colors" />}
-                          </div>
-                          <div className="absolute bottom-2.5 right-2.5 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-2 border border-white/10 shadow-lg">
-                            <ListVideo className="w-4 h-4 text-indigo-400" />
-                            <span className="text-slate-100">{playlist.videoIds.length} VIDEOS</span>
-                          </div>
-                          <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 scale-90 group-hover:scale-100 transition-transform duration-300">
-                                <Play className="w-6 h-6 fill-white text-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="px-1">
-                          <h3 className="font-bold text-[16px] text-slate-100 line-clamp-2 group-hover:text-indigo-300 transition-colors">{playlist.name}</h3>
-                          <p className="text-[13px] text-slate-400 font-medium mt-0.5">Playlist • Updated recently</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
 
-              {/* Custom Playlists */}
-              <section className="space-y-6 pt-8 border-t border-slate-800/60">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-[12px] font-black px-1 text-slate-500 uppercase tracking-[0.25em]">My Playlists</h2>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-white/5 text-[10px] font-bold text-slate-500">{customPlaylists.length}</span>
+              <div className="flex flex-wrap items-center gap-3.5">
+                {/* Minimalist search */}
+                <div className="relative w-full sm:w-72 group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-12 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-indigo-500/50 focus:bg-white/[0.06] rounded-2xl pl-11 pr-10 text-sm text-white placeholder:text-slate-500 focus:outline-none transition-all"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                      <X className="w-4.5 h-4.5" />
+                    </button>
+                  )}
                 </div>
-                {customPlaylists.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-5 gap-y-12">
-                    {customPlaylists
-                      .map(playlist => (
-                      <div key={playlist.id} className="group flex flex-col gap-4 relative">
-                        <div
-                          onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
-                          className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-white/5 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-indigo-500/10 cursor-pointer"
-                        >
-                          {playlist.thumbnail ? (
-                            <img src={playlist.thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                              <ListVideo className="w-14 h-14 text-slate-700/50 group-hover:text-slate-700transition-colors" />
-                            </div>
-                          )}
-                          <div className="absolute bottom-2.5 right-2.5 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-2 border border-white/10 shadow-lg">
-                            <ListVideo className="w-4 h-4 text-indigo-400" />
-                            <span className="text-slate-100">{playlist.videoIds.length} VIDEOS</span>
-                          </div>
-                          <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 scale-90 group-hover:scale-100 transition-transform duration-300">
-                                <Play className="w-6 h-6 fill-white text-white" />
-                            </div>
-                          </div>
+
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-6 h-12 bg-white hover:bg-slate-100 text-slate-950 rounded-2xl text-sm font-extrabold shadow-xl hover:shadow-white/10 transition-all active:scale-95 hover:scale-105"
+                >
+                  <Plus className="w-5 h-5 stroke-[2.5]" />
+                  New Playlist
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="space-y-4 animate-pulse">
+                    <div className="aspect-video bg-white/[0.03] rounded-2xl border border-white/[0.05]" />
+                    <div className="h-4 bg-white/[0.03] rounded-lg w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : hasNoResults ? (
+              <div className="flex flex-col items-center justify-center py-32 text-center bg-white/[0.02] rounded-[32px] border border-dashed border-white/[0.08]">
+                <Search className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="text-xl font-bold text-slate-200">No playlists found</h3>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                {customPlaylists.map(playlist => (
+                  <div key={playlist.id} className="group flex flex-col gap-4 relative bg-white/[0.02] hover:bg-white/[0.04] p-4 rounded-[28px] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/5">
+                    <div
+                      onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
+                      className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-md cursor-pointer flex-shrink-0"
+                    >
+                      {playlist.thumbnail ? (
+                        <img src={playlist.thumbnail} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
+                          <ListVideo className="w-12 h-12 text-slate-800 group-hover:text-slate-700 transition-colors" />
                         </div>
-
-                        <div className="flex gap-2 px-1">
-                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}>
-                            <h3 className="font-bold text-[16px] text-slate-100 line-clamp-2 group-hover:text-indigo-300 transition-colors">{playlist.name}</h3>
-                            <p className="text-[13px] text-slate-400 mt-1 flex items-center gap-2 font-medium">
-                              {playlist.isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                              <span>Playlist</span>
-                            </p>
-                          </div>
-
-                          <div className="relative">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === playlist.id ? null : playlist.id) }}
-                              className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-100 transition-all flex items-center justify-center border border-white/5 active:scale-90"
-                            >
-                              <MoreVertical className="w-5 h-5" />
-                            </button>
-                            {menuOpen === playlist.id && (
-                              <>
-                                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
-                                <div className="absolute right-0 top-11 bg-slate-900 rounded-2xl shadow-2xl z-20 py-1.5 min-w-[180px] border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                  <button
-                                    onClick={() => {
-                                      setPlaylistToDelete(playlist.id)
-                                      setShowDeleteModal(true)
-                                    }}
-                                    className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-red-500/10 text-red-400 text-sm font-bold transition-colors"
-                                  >
-                                    <Trash2 className="w-4.5 h-4.5" />
-                                    Delete Playlist
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
+                      )}
+                      <div className="absolute bottom-2.5 right-2.5 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-white/10 shadow-xl text-slate-200">
+                        <ListVideo className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>{playlist.videoIds.length}</span>
+                      </div>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                        <div className="w-12 h-12 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-transform duration-300">
+                          <Play className="w-6 h-6 fill-slate-950 ml-1" />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-32 text-center bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-800">
-                    <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-white/5">
-                        <ListVideo className="w-10 h-10 text-slate-800" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-100">No playlists yet</h3>
-                    <p className="text-slate-500 mt-2 font-medium">Start organizing your rehearsal library today</p>
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="mt-8 px-8 h-12 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-bold transition-all border border-white/5 active:scale-95"
-                    >
-                      Create first playlist
-                    </button>
+
+                    <div className="flex items-center justify-between gap-3 px-1">
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}>
+                        <h3 className="font-bold text-base leading-snug text-slate-100 group-hover:text-indigo-300 transition-colors tracking-tight line-clamp-1">{playlist.name}</h3>
+                      </div>
+
+                      <div className="relative flex-shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === playlist.id ? null : playlist.id) }}
+                          className="p-2 hover:bg-white/[0.08] rounded-xl text-slate-500 hover:text-slate-200 transition-colors active:scale-95"
+                        >
+                          <MoreVertical className="w-4.5 h-4.5" />
+                        </button>
+                        {menuOpen === playlist.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
+                            <div className="absolute right-0 top-9 bg-[#131A2B] rounded-2xl shadow-2xl z-20 py-1.5 min-w-[180px] border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl">
+                              <button
+                                onClick={() => {
+                                  setPlaylistToDelete(playlist.id)
+                                  setShowDeleteModal(true)
+                                }}
+                                className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-red-500/10 text-red-400 text-xs font-bold transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Playlist
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </section>
-            </div>
-          )}
-        </main>
+                ))}
+              </div>
+            )}
+
+            {!loading && customPlaylists.length === 0 && !hasNoResults && (
+              <div className="flex flex-col items-center justify-center py-32 text-center bg-white/[0.02] rounded-[32px] border border-dashed border-white/[0.08]">
+                <ListVideo className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="text-xl font-bold text-slate-200">No playlists yet</h3>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mt-6 px-8 h-12 bg-white hover:bg-slate-100 text-slate-950 rounded-full text-sm font-extrabold transition-all shadow-xl hover:shadow-white/10 active:scale-95 hover:scale-105"
+                >
+                  Create first playlist
+                </button>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
 
       <ConfirmationModal

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -7,6 +7,7 @@ import { collection, query, where, orderBy, limit, onSnapshot, getDocs } from 'f
 import { db } from '@/lib/firebase-setup'
 import { BirthdayService } from '@/app/pages/calendar/_lib/birthday-service'
 import { isHQGroup } from '@/config/zones'
+import { parseProgramDate } from '@/utils/date-parser'
 
 export function useUnreadNotifications() {
   const [unreadCount, setUnreadCount] = useState(0)
@@ -85,11 +86,42 @@ export function useUnreadNotifications() {
             }
           }
         })
- }, (err) => console.error('Zone listener error:', err))
+      }, (err) => console.error('Zone listener error:', err))
 
       unsubscribers.push(zoneUnsub)
-    } catch (e) {
-    }
+    } catch (e) { }
+
+    // Listen for user-specific notifications (subgroups, etc.)
+    try {
+      const userNotifsRef = collection(db, 'user_notifications')
+      
+      // Query 1: user_id
+      const q1 = query(userNotifsRef, where('user_id', '==', userId), where('is_read', '==', false), limit(20))
+      const unsub1 = onSnapshot(q1, (snapshot) => {
+        if (!snapshot.empty) setHasNewZoneMessage(true)
+      })
+      unsubscribers.push(unsub1)
+
+      // Query 2: target_user_id
+      const q2 = query(userNotifsRef, where('target_user_id', '==', userId), where('is_read', '==', false), limit(20))
+      const unsub2 = onSnapshot(q2, (snapshot) => {
+        if (!snapshot.empty) setHasNewZoneMessage(true)
+      })
+      unsubscribers.push(unsub2)
+    } catch (e) { }
+
+    // Listen for song notifications
+    try {
+      const songNotifsRef = collection(db, 'song_notifications')
+      const userEmail = user?.email || profile?.email
+      if (userEmail) {
+        const q = query(songNotifsRef, where('submittedByEmail', '==', userEmail), where('read', '==', false), limit(20))
+        const unsub = onSnapshot(q, (snapshot) => {
+          if (!snapshot.empty) setHasNewZoneMessage(true)
+        })
+        unsubscribers.push(unsub)
+      }
+    } catch (e) { }
 
     // Check for new media (videos uploaded in last 7 days)
     const checkNewMedia = async () => {
@@ -160,8 +192,8 @@ export function useUnreadNotifications() {
 
         snapshot.docs.forEach(doc => {
           const rehearsal = doc.data()
-          const eventDate = new Date(rehearsal.date || rehearsal.eventDate)
-          if (!isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
+          const eventDate = parseProgramDate(rehearsal.date || rehearsal.eventDate)
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
             currentEventIds.push(doc.id)
             if (!seenEvents.includes(doc.id)) {
               hasNewEvent = true
@@ -176,8 +208,8 @@ export function useUnreadNotifications() {
 
         upcomingSnapshot.docs.forEach(doc => {
           const event = doc.data()
-          const eventDate = new Date(event.date || event.eventDate)
-          if (!isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
+          const eventDate = parseProgramDate(event.date || event.eventDate)
+          if (eventDate && !isNaN(eventDate.getTime()) && eventDate >= now && eventDate <= nextWeek) {
             currentEventIds.push(doc.id)
             if (!seenEvents.includes(doc.id)) {
               hasNewEvent = true

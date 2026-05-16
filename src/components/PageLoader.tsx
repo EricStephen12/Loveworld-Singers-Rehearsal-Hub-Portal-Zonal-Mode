@@ -112,12 +112,13 @@ export function PageLoader({ children }: PageLoaderProps) {
       if (!isReady) {
  console.warn('⏱️ PageLoader timeout - resolving stuck state');
         if (!user && !isPublicPath) {
+          console.warn('[PageLoader] Redirecting to /auth due to timeout and no user.');
           router.replace('/auth');
         } else {
           setIsReady(true);
         }
       }
-    }, 800); // Super fast fallback
+    }, 30000); // 30s fallback for slow networks (e.g. Nigeria)
 
     return () => clearTimeout(timeout);
   }, [isReady, user, pathname, router]);
@@ -140,15 +141,28 @@ export function PageLoader({ children }: PageLoaderProps) {
   // HOWEVER, to avoid hydration mismatch, we MUST render the same as the server first.
   const hasAuthCache = mounted && typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
 
-  if (!mounted || (!isReady && !hasAuthCache)) {
+  if (!mounted || authLoading || !isReady) {
+    if (mounted) console.log(`[PageLoader] Showing loader. authLoading=${authLoading}, isReady=${isReady}`);
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />
-        <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Initializing...</p>
       </div>
     );
   }
 
+  // If we are on the auth page but we think the user might be logged in,
+  // we keep showing the loader until we are SURE. This prevents the login form flicker.
+  const isAuthPage = pathname === '/auth';
+  if (isAuthPage && hasAuthCache && !user) {
+    console.log(`[PageLoader] Anti-flicker active on /auth. hasAuthCache=${hasAuthCache}, user=${!!user}`);
+    return (
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+        <CustomLoader message="" />
+      </div>
+    );
+  }
+
+  console.log(`[PageLoader] Rendering children. Path=${pathname}, user=${!!user}`);
   return <>{children}</>;
 }
 

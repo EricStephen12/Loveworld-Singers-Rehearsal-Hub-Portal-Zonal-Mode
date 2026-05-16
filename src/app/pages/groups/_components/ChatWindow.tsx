@@ -5,7 +5,8 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Phone, PhoneOff, ArrowLeft, MoreVertical, Search, Check, 
-  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download, Pin, Video
+  MessageCircle, Loader2, ChevronDown, Info, Settings, Trash2, LogOut, X, Edit3, Download, Pin, Video,
+  Reply, Forward, Copy, Smile, BellOff, ImageIcon
 } from 'lucide-react'
 import { useCall } from '@/contexts/CallContext'
 import { useChatV2 } from '../_context/ChatContextV2'
@@ -13,6 +14,7 @@ import { MessageBubble } from './MessageBubble'
 import { ChatInput } from './ChatInput'
 import { useAuth } from '@/hooks/useAuth'
 import { SyncAvatar } from './SyncAvatar'
+import { MessageSearchSidebar } from './MessageSearchSidebar'
 import { ReactionType } from '../_lib/chat-service'
 
 interface ChatWindowProps {
@@ -58,6 +60,24 @@ export function ChatWindow({
   const [editingMessage, setEditingMessage] = useState<{ id: string; text: string } | null>(null)
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeActionMessage, setActiveActionMessage] = useState<any>(null)
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false)
+  
+  const onShowSettings = () => {
+    if (selectedChat?.type === 'group') onShowGroupSettings()
+    else onShowDirectChatSettings()
+  }
+
+  const formatLastSeen = (lastSeen: any) => {
+    if (!lastSeen) return ''
+    const date = new Date(lastSeen.seconds * 1000)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    if (diff < MINUTE_MS) return 'just now'
+    if (diff < HOUR_MS) return `${Math.floor(diff / MINUTE_MS)}m ago`
+    if (diff < DAY_MS) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleDateString()
+  }
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -127,16 +147,56 @@ export function ChatWindow({
     return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
   }
 
+  // Jump to reply logic
+  const jumpToMessage = (messageId: string) => {
+    const element = document.getElementById(`msg-${messageId}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      element.classList.add('animate-message-highlight')
+      setTimeout(() => element.classList.remove('animate-message-highlight'), 2000)
+    }
+  }
+
   if (!selectedChat) {
     return (
-      <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-gray-50/50">
-        <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-gray-200/50 mb-8 animate-bounce transition-all duration-1000">
-           <MessageCircle className="w-12 h-12 text-emerald-500" />
+      <div 
+        className="flex-1 hidden md:flex flex-col items-center justify-center bg-[#f8f9fa] relative overflow-hidden"
+      >
+        {/* Subtle Background Pattern / Glow */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] opacity-[0.05] pointer-events-none"
+          style={{ backgroundColor: primaryColor }}
+        />
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center max-w-md px-10 z-10"
+        >
+          <div 
+            className="w-[100px] h-[100px] rounded-full flex items-center justify-center mb-8 shadow-xl ring-4 ring-white"
+            style={{ backgroundColor: primaryColor }}
+          >
+             <MessageCircle className="w-12 h-12 text-white" />
+          </div>
+          <h2 className="text-[32px] font-black text-[#111b21] mb-3 text-center tracking-tight">Rehearsal Hub</h2>
+          <p className="text-[#667781] text-[15px] text-center leading-[24px] max-w-[360px] font-medium">
+            Connect with your team, share lyrics, and coordinate rehearsals in real-time. Select a conversation to start.
+          </p>
+          
+          <div className="mt-12 flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full border border-gray-200/50 shadow-sm transition-all hover:shadow-md cursor-default">
+             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }} />
+             <span className="text-[12px] text-gray-500 font-bold uppercase tracking-widest">Zone Connected</span>
+          </div>
+        </motion.div>
+
+        {/* Bottom Encryption Label */}
+        <div className="absolute bottom-10 left-0 right-0 flex items-center justify-center gap-2 text-gray-400">
+           <svg viewBox="0 0 10 12" width="10" height="12" className="fill-current">
+              <path d="M5.008 1.1c1.249 0 2.261 1.012 2.261 2.26v1.442H2.747V3.36c0-1.248 1.012-2.26 2.261-2.26zm3.334 3.702V3.36C8.342 1.507 6.837 0 5.008 0c-1.83 0-3.334 1.507-3.334 3.36v1.442H0v7.2h10v-7.2H8.342z"></path>
+           </svg>
+           <span className="text-[12px] font-medium">End-to-end encrypted for your zone</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Groups</h2>
-        <p className="text-gray-500 max-w-sm text-center leading-relaxed font-medium">
-          Select a conversation from the left to start messaging your team members.
-        </p>
       </div>
     )
   }
@@ -146,71 +206,57 @@ export function ChatWindow({
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden">
-      {/* Dynamic Header */}
-      <div className="flex-shrink-0 flex items-center justify-between p-3 md:p-4 border-b border-gray-100 bg-white/80 backdrop-blur-md z-20 min-w-0">
-        <div className="flex items-center gap-3 md:gap-4 overflow-hidden min-w-0">
+    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden h-[100dvh] md:h-full">
+      <div className="flex-shrink-0 flex items-center justify-between px-2 md:px-4 h-[64px] border-b border-[#e9edef] bg-white z-30 min-w-0 shadow-sm gap-2">
+        <div className="flex items-center gap-2 md:gap-3 overflow-hidden min-w-0 flex-1">
           <button 
             onClick={onBackToList}
-            className="md:hidden w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+            className="md:hidden w-10 h-10 flex-shrink-0 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all"
+            style={{ color: primaryColor }}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          
+          <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity min-w-0 flex-1" onClick={onShowSettings}>
+            <div className="relative flex-shrink-0">
               <SyncAvatar 
                 userId={selectedChat.type === 'direct' ? selectedChat.participants.find(id => id !== user?.uid) : undefined}
                 initialAvatar={getChatAvatar(selectedChat)}
                 fallbackName={getChatDisplayName(selectedChat)}
                 isGroup={selectedChat.type === 'group'}
-                bgColor={primaryColor}
-                size="w-10 h-10 md:w-12 md:h-12"
-                className="rounded-2xl shadow-sm ring-2 ring-white"
+                bgColor={selectedChat.type === 'group' ? '#00a884' : primaryColor}
+                size="w-[40px] h-[40px]"
+                className="rounded-full overflow-hidden"
               />
-              {/* Online dot — only show for direct chats when user is actually online */}
-              {selectedChat.type === 'direct' && (() => {
-                const otherId = selectedChat.participants.find(id => id !== user?.uid)
-                const presence = otherId ? userPresence[otherId] : null
-                const isOnline = presence?.status === 'online' && presence?.lastSeen && 
-                  (Date.now() - (presence.lastSeen.seconds * 1000)) < HEARTBEAT_THRESHOLD_MS // Only if seen within threshold
-                return isOnline ? (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
-                ) : null
-              })()}
             </div>
-            <div className="flex flex-col min-w-0 flex-1">
-               <h2 className="font-bold text-[15px] md:text-[17px] text-gray-900 truncate">
+            
+            <div className="flex flex-col min-w-0">
+               <h2 className="font-bold text-[17px] text-[#111b21] truncate leading-tight">
                  {getChatDisplayName(selectedChat)}
                </h2>
                <div className="flex items-center gap-1.5 min-h-[16px] overflow-hidden">
                   {typingUsers && typingUsers.length > 0 ? (
-                    <span className="text-[11px] text-emerald-600 font-bold animate-pulse truncate">
+                    <span className="text-[12.5px] font-bold animate-pulse truncate" style={{ color: primaryColor }}>
                       {typingUsers[0].userName.split(' ')[0]} is typing...
                     </span>
                   ) : (
-                    <div className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80 truncate">
+                    <div className="text-[12.5px] text-[#667781] truncate">
                       {selectedChat.type === 'group' ? (
                         `${selectedChat.participants.length} members`
                       ) : (() => {
                         const otherId = selectedChat.participants.find(id => id !== user?.uid)
                         const presence = otherId ? userPresence[otherId] : null
-                        if (presence?.status === 'online' && presence?.lastSeen) {
+                        if (presence?.status === 'online') {
                           // Only show "online" if lastSeen is within threshold (heartbeat window)
                           const lastSeenMs = presence.lastSeen.seconds * 1000
                           if (Date.now() - lastSeenMs < HEARTBEAT_THRESHOLD_MS) {
-                            return <span className="text-emerald-500 lowercase font-bold tracking-normal">online</span>
+                            return <span className="font-bold lowercase tracking-normal" style={{ color: primaryColor }}>online</span>
                           }
                         }
                         if (presence?.lastSeen) {
-                          const date = new Date(presence.lastSeen.seconds * 1000)
-                          const now = new Date()
-                          const diff = now.getTime() - date.getTime()
-                          if (diff < MINUTE_MS) return 'last seen just now'
-                          if (diff < HOUR_MS) return `last seen ${Math.floor(diff / MINUTE_MS)}m ago`
-                          if (diff < DAY_MS) return `last seen ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                          return `last seen ${date.toLocaleDateString()}`
+                          return `last seen ${formatLastSeen(presence.lastSeen)}`
                         }
-                        return 'Offline'
+                        return 'offline'
                       })()}
                     </div>
                   )}
@@ -219,76 +265,34 @@ export function ChatWindow({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+        <div className="flex items-center justify-end gap-1 md:gap-2 flex-shrink-0 ml-auto">
           <button 
             onClick={() => setShowSearch(!showSearch)}
-            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${showSearch ? 'bg-emerald-50 text-emerald-600' : 'text-[#54656f] hover:bg-gray-100'}`}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${showSearch ? 'bg-gray-100' : 'hover:bg-gray-100'}`}
+            style={{ color: showSearch ? primaryColor : '#54656f' }}
           >
             <Search className="w-5 h-5" />
           </button>
           <button 
-            onClick={() => {
-              if (selectedChat && user) {
-                const otherId = selectedChat.participants.find(id => id !== user.uid) || ''
-                startCall(
-                  selectedChat.id,
-                  otherId,
-                  user.displayName || 'User',
-                  getChatDisplayName(selectedChat),
-                  user.photoURL || undefined,
-                  undefined
-                )
-              }
-            }}
-            disabled={callState !== 'idle'}
-            className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50"
+            onClick={onShowSettings}
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all text-[#54656f]"
+            title="Group info"
           >
-            <Phone className="w-5 h-5" />
-          </button>
-          <button 
-            onClick={selectedChat.type === 'group' ? onShowGroupSettings : onShowDirectChatSettings}
-            className="w-10 h-10 flex items-center justify-center text-[#54656f] hover:bg-gray-100 rounded-xl transition-all"
-          >
-            <MoreVertical className="w-5 h-5" />
+            <Info className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="flex-shrink-0 overflow-hidden border-b border-gray-100"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2 px-4 py-2">
-              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search messages..."
-                className="flex-1 text-sm bg-transparent focus:outline-none text-gray-800 font-medium placeholder:text-gray-400"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            {searchQuery && (
-              <p className="text-[10px] text-gray-400 font-bold px-4 pb-2 uppercase tracking-widest">
-                {filteredMessages.length} result{filteredMessages.length !== 1 ? 's' : ''}
-              </p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Search Sidebar Integration */}
+      <MessageSearchSidebar 
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        messages={messages}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onJumpToMessage={jumpToMessage}
+        primaryColor={primaryColor}
+      />
 
       {/* Pinned Message Banner */}
       <AnimatePresence>
@@ -340,13 +344,13 @@ export function ChatWindow({
         style={{
           backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")',
           backgroundRepeat: 'repeat',
-          backgroundSize: '400px',
+          backgroundSize: '360px',
           backgroundPosition: 'center',
-          backgroundColor: '#efeae2', // Authentic WhatsApp background color
+          backgroundColor: '#efeae2',
         }}
       >
-        {/* Very subtle overlay to ensure text readability if needed, but authentic WA has no overlay */}
-        <div className="absolute inset-0 bg-[#efeae2]/10 pointer-events-none z-0" />
+        {/* Subtle texture overlay */}
+        <div className="absolute inset-0 bg-white/5 pointer-events-none z-0" />
         
         <div className="relative z-10 min-h-full flex flex-col justify-end">
         {isMessagesLoading ? (
@@ -359,35 +363,36 @@ export function ChatWindow({
             {Object.entries(groupedMessages).map(([date, msgs], groupIdx) => (
               <React.Fragment key={date}>
                 {/* Date Separator */}
-                <div className="flex justify-center my-6 first:mt-2">
-                  <div className="px-3 py-1 bg-white rounded-lg text-[12px] font-medium text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)]">
+                <div className="flex justify-center my-4 first:mt-2">
+                  <div className="px-3.5 py-1.5 bg-white rounded-lg text-[12.5px] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)] uppercase tracking-tight">
                     {formatGroupDate(date)}
                   </div>
                 </div>
 
                 {/* Messages in Group */}
                 {(() => {
-                  const activeMsgs = searchQuery ? filteredMessages : msgs;
+                  const activeMsgs = searchQuery 
+                    ? filteredMessages.filter(m => new Date(m.timestamp).toDateString() === date) 
+                    : msgs;
+                    
                   return activeMsgs.map((message, i) => {
                     const isFirstInBatch = i === 0 || activeMsgs[i-1].senderId !== message.senderId
-                    const isHighlighted = searchQuery ? message.text?.toLowerCase().includes(searchQuery.toLowerCase()) : true
-                    if (!isHighlighted) return null
+                    const isLastInBatch = i === activeMsgs.length - 1 || activeMsgs[i+1].senderId !== message.senderId
+                    
                     return (
                       <div key={message.id} id={`msg-${message.id}`}>
                         <MessageBubble 
                           message={message}
                           isOwn={message.senderId === user?.uid}
                           showAvatar={isFirstInBatch && selectedChat.type === 'group'}
-                          hasTail={isFirstInBatch}
+                          hasTail={isLastInBatch}
+                          isFirstInGroup={isFirstInBatch}
+                          isLastInGroup={isLastInBatch}
                           primaryColor={primaryColor}
                           onReply={(reply) => setReplyingTo({ id: reply.id, text: reply.text, senderName: reply.senderName })}
+                          onJumpToReply={(id) => jumpToMessage(id)}
                           onReaction={(id, reaction) => {
-                            if (reaction === '') {
-                              setReactingToMessageId(id)
-                            } else {
-                              toggleReaction(id, reaction)
-                              setReactingToMessageId(null)
-                            }
+                            toggleReaction(id, reaction)
                           }}
                           onDelete={deleteMessage}
                           onEdit={(id, text) => {
@@ -396,6 +401,8 @@ export function ChatWindow({
                           onImageClick={setSelectedImage}
                           onForward={onForward}
                           onPin={onPin}
+                          onMessageAction={(msg) => setActiveActionMessage(msg)}
+                          searchQuery={searchQuery}
                         />
                       </div>
                     )
@@ -417,46 +424,164 @@ export function ChatWindow({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: 20 }}
             onClick={() => scrollToBottom()}
-            className="absolute bottom-24 right-6 p-3 bg-white text-emerald-600 rounded-full shadow-2xl border border-gray-100 z-30 ring-4 ring-emerald-50"
+            className="absolute bottom-24 right-6 p-3 bg-white text-gray-600 rounded-full shadow-lg border border-gray-200 z-30 hover:bg-gray-50 transition-colors"
           >
             <ChevronDown className="w-6 h-6" />
+            {selectedChat && user?.uid && (selectedChat.unreadCount[user.uid] || 0) > 0 && (
+              <div 
+                className="absolute -top-1.5 -right-1 h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center text-[11px] text-white font-medium"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {selectedChat.unreadCount[user.uid]}
+              </div>
+            )}
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Reaction Picker — compact bottom sheet */}
+      {/* Message Actions Bottom Sheet */}
       <AnimatePresence>
-        {reactingToMessageId && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            className="absolute bottom-20 left-3 right-3 z-[40] bg-white border border-gray-100 shadow-xl rounded-2xl p-3"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">React</span>
-              <button 
-                onClick={() => setReactingToMessageId(null)}
-                className="p-0.5 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-3.5 h-3.5 text-gray-400" />
-              </button>
-            </div>
-            <div className="flex overflow-x-auto gap-1 pb-1 scrollbar-none">
-              {REACTIONS.map(reaction => (
+        {activeActionMessage && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-[100]"
+              onClick={() => setActiveActionMessage(null)}
+            />
+            {/* Bottom Sheet */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-[101] bg-white rounded-t-2xl shadow-2xl max-h-[70vh] overflow-hidden"
+            >
+              {/* Drag Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+              </div>
+
+              {/* Quick Reactions Row */}
+              <div className="px-5 py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between gap-2">
+                  {REACTIONS.slice(0, 8).map(reaction => (
+                    <button
+                      key={reaction}
+                      onClick={() => {
+                        toggleReaction(activeActionMessage.id, reaction)
+                        setActiveActionMessage(null)
+                      }}
+                      className="text-[28px] p-1.5 hover:scale-125 active:scale-90 transition-all rounded-xl hover:bg-gray-50"
+                    >
+                      {reaction}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      // Show all reactions — just expand
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <Smile className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Message Preview */}
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <p className="text-[13px] text-gray-500 truncate">
+                  {activeActionMessage.senderName}: {activeActionMessage.text || '(attachment)'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="py-2">
+                {/* Reply */}
                 <button
-                  key={reaction}
                   onClick={() => {
-                    toggleReaction(reactingToMessageId, reaction)
-                    setReactingToMessageId(null)
+                    setReplyingTo({ id: activeActionMessage.id, text: activeActionMessage.text, senderName: activeActionMessage.senderName })
+                    setActiveActionMessage(null)
                   }}
-                  className="text-2xl p-2 hover:scale-125 transition-all active:scale-90 rounded-lg hover:bg-gray-50 flex-shrink-0"
+                  className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
-                  {reaction}
+                  <Reply className="w-5 h-5 text-[#54656f]" />
+                  <span className="text-[16px] text-[#111b21]">Reply</span>
                 </button>
-              ))}
-            </div>
-          </motion.div>
+
+                {/* Forward */}
+                <button
+                  onClick={() => {
+                    onForward?.(activeActionMessage)
+                    setActiveActionMessage(null)
+                  }}
+                  className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <Forward className="w-5 h-5 text-[#54656f]" />
+                  <span className="text-[16px] text-[#111b21]">Forward</span>
+                </button>
+
+                {/* Copy (text only) */}
+                {activeActionMessage.type === 'text' && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(activeActionMessage.text || '')
+                      setActiveActionMessage(null)
+                    }}
+                    className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    <Copy className="w-5 h-5 text-[#54656f]" />
+                    <span className="text-[16px] text-[#111b21]">Copy</span>
+                  </button>
+                )}
+
+                {/* Pin */}
+                <button
+                  onClick={() => {
+                    onPin?.(activeActionMessage.pinnedInChat ? null : activeActionMessage.id)
+                    setActiveActionMessage(null)
+                  }}
+                  className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <Pin className={`w-5 h-5 ${activeActionMessage.pinnedInChat ? 'fill-[#54656f] text-[#54656f]' : 'text-[#54656f]'}`} />
+                  <span className="text-[16px] text-[#111b21]">{activeActionMessage.pinnedInChat ? 'Unpin' : 'Pin'}</span>
+                </button>
+
+                {/* Edit (own text only) */}
+                {activeActionMessage.senderId === user?.uid && activeActionMessage.type === 'text' && (
+                  <button
+                    onClick={() => {
+                      setEditingMessage({ id: activeActionMessage.id, text: activeActionMessage.text })
+                      setActiveActionMessage(null)
+                    }}
+                    className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    <Edit3 className="w-5 h-5 text-[#54656f]" />
+                    <span className="text-[16px] text-[#111b21]">Edit</span>
+                  </button>
+                )}
+
+                {/* Delete (own only) */}
+                {activeActionMessage.senderId === user?.uid && (
+                  <button
+                    onClick={() => {
+                      deleteMessage(activeActionMessage.id)
+                      setActiveActionMessage(null)
+                    }}
+                    className="w-full px-5 py-3.5 flex items-center gap-5 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <span className="text-[16px] text-red-500">Delete</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Bottom Safe Area */}
+              <div className="h-6" />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

@@ -23,6 +23,15 @@
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes message-highlight {
+  0% { background-color: rgba(16, 185, 129, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.animate-message-highlight {
+  animation: message-highlight 2s ease-out forwards;
+}
+
 /* 🟣 ACTIVE CATEGORY - Blinking Purple Badge */
 @keyframes pulse-badge {
 

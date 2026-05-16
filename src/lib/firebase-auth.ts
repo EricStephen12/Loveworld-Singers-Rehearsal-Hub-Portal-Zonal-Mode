@@ -3,9 +3,8 @@ import {
   onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider,
   deleteUser, setPersistence, browserLocalPersistence
 } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-
-import { auth, db } from './firebase-setup'
+import { auth } from './firebase-setup'
+import { FirebaseDatabaseService } from './firebase-database'
 import { SessionManager } from './session-manager'
 import { ErrorHandler } from './error-handler'
 import { SimplifiedAnalyticsService } from './simplified-analytics-service'
@@ -58,10 +57,10 @@ export class FirebaseAuthService {
       await setPersistence(auth, browserLocalPersistence)
       const result = await createUserWithEmailAndPassword(auth, email, password)
 
-      await setDoc(doc(db, 'profiles', result.user.uid), {
+      await FirebaseDatabaseService.updateDocument('profiles', result.user.uid, {
         ...userData,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
 
       // Track signup analytics
@@ -136,9 +135,7 @@ export class FirebaseAuthService {
 
   static async getUserProfile(userId: string) {
     try {
-      const docRef = doc(db, 'profiles', userId)
-      const docSnap = await getDoc(docRef)
-      return docSnap.exists() ? docSnap.data() : null
+      return await FirebaseDatabaseService.getDocument('profiles', userId)
     } catch (error) {
  console.error('Error getting user profile:', error)
       return null
@@ -176,7 +173,7 @@ export class FirebaseAuthService {
             updated_at: new Date().toISOString(),
             ...userData
           }
-          await setDoc(doc(db, 'profiles', result.user.uid), profileData)
+          await FirebaseDatabaseService.updateDocument('profiles', result.user.uid, profileData)
         }
 
         // Track signup analytics
@@ -308,7 +305,7 @@ export class FirebaseAuthService {
       if (!userProfile) {
         const displayName = result.user.displayName || ''
         const nameParts = displayName.split(' ')
-        await setDoc(doc(db, 'profiles', result.user.uid), {
+        await FirebaseDatabaseService.updateDocument('profiles', result.user.uid, {
           id: result.user.uid,
           first_name: nameParts[0] || '',
           last_name: nameParts.slice(1).join(' ') || '',

@@ -24,6 +24,7 @@ import { PermissionProvider } from '@/contexts/PermissionContext'
 import { disableConsoleLogs } from "@/utils/disable-logs"
 import AppBootstrap from '@/components/AppBootstrap'
 import { PageLoader } from '@/components/PageLoader'
+import { BackendOfflineIndicator } from '@/components/BackendOfflineIndicator'
 
 // FCM will be initialized in a client component instead
 
@@ -172,6 +173,7 @@ export default function RootLayout({
                             </main>
                             {/* Browser will handle its own install prompt; custom UI removed */}
                             <RealtimeNotifications />
+                            <BackendOfflineIndicator />
                             <PushNotificationListener />
                             <NotificationUrlHandler />
                             <CallOverlay />

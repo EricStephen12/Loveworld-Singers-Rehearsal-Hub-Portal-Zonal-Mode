@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 
 import { useAuth } from './useAuth'
 import { useZone } from './useZone'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
-import { db } from '@/lib/firebase-setup'
 import { SubGroupService, SubGroup, SubGroupRequest } from '@/lib/subgroup-service'
 
 export function useSubGroup() {
@@ -25,60 +23,14 @@ export function useSubGroup() {
     }
     
     setIsLoading(true)
+    refresh().finally(() => setIsLoading(false))
     
-    // Real-time listener for sub-groups (both as member and coordinator)
-    const qMember = query(
-      collection(db, 'subgroups'),
-      where('memberIds', 'array-contains', user.uid),
-      where('status', '==', 'active')
-    )
+    // Set up polling for real-time-like updates (every 30 seconds)
+    const interval = setInterval(() => {
+      refresh()
+    }, 30000)
     
-    const qCoordinator = query(
-      collection(db, 'subgroups'),
-      where('coordinatorId', '==', user.uid),
-      where('status', '==', 'active')
-    )
-    
-    const unsubscribeMember = onSnapshot(qMember, (snapshot) => {
-      updateGroups(snapshot, 'member')
-    })
-    
-    const unsubscribeCoordinator = onSnapshot(qCoordinator, (snapshot) => {
-      updateGroups(snapshot, 'coordinator')
-    })
-    
-    const groupsMap = new Map<string, SubGroup>()
-    
-    function updateGroups(snapshot: any, type: 'member' | 'coordinator') {
-      snapshot.docs.forEach((doc: any) => {
-        groupsMap.set(doc.id, {
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
-        } as SubGroup)
-      })
-      
-      const allGroups = Array.from(groupsMap.values())
-      const coordinated = allGroups.filter(sg => sg.coordinatorId === user!.uid)
-      
-      setCoordinatedSubGroups(coordinated)
-      setIsSubGroupCoordinator(coordinated.length > 0)
-      setMemberSubGroups(allGroups)
-      
-      // Also get requests (pending/rejected) specifically for the current zone
-      if (currentZone) {
-        // Since the initial query is for 'active', we need a separate way or broader query for requests
-        // But for performance, we'll stick to this for Hub visibility.
-        // If they need to see pending requests, that's usually in a different context.
-      }
-      
-      setIsLoading(false)
-    }
-    
-    return () => {
-      unsubscribeMember()
-      unsubscribeCoordinator()
-    }
+    return () => clearInterval(interval)
   }, [user?.uid, currentZone?.id])
   
   const requestSubGroup = useCallback(async (
@@ -112,7 +64,7 @@ export function useSubGroup() {
     const [isCoordinator, coordinated, memberOf] = await Promise.all([
       SubGroupService.isSubGroupCoordinator(user.uid),
       SubGroupService.getCoordinatedSubGroups(user.uid),
-      SubGroupService.getUserSubGroups(user.uid)
+      SubGroupService.getUserSubGroups(user.uid, currentZone?.id)
     ])
     
     setIsSubGroupCoordinator(isCoordinator)
@@ -138,7 +90,8 @@ export function useSubGroup() {
 
 export function useZoneSubGroups() {
   const { user, profile } = useAuth()
-  const { currentZone, isZoneCoordinator } = useZone()
+  const { currentZone, isZoneCoordinator, isSuperAdmin, userRole } = useZone()
+  const isAdmin = isSuperAdmin || isZoneCoordinator || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin'
   
   const [subGroups, setSubGroups] = useState<SubGroup[]>([])
   const [pendingCount, setPendingCount] = useState(0)
@@ -146,7 +99,7 @@ export function useZoneSubGroups() {
   
   useEffect(() => {
     const loadSubGroups = async () => {
-      if (!currentZone || !isZoneCoordinator) {
+      if (!currentZone || !isAdmin) {
         setIsLoading(false)
         return
       }
@@ -168,7 +121,7 @@ export function useZoneSubGroups() {
     }
     
     loadSubGroups()
-  }, [currentZone?.id, isZoneCoordinator])
+  }, [currentZone?.id, isAdmin])
   
   const approveSubGroup = useCallback(async (subGroupId: string) => {
     if (!user?.uid) return { success: false, error: 'Not authenticated' }

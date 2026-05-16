@@ -1,4 +1,4 @@
-﻿import { supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 
 export interface UploadResult {
   success: boolean;
@@ -42,7 +42,7 @@ export async function uploadProfileImage(
       };
     }
 
-    const publicUrl = uploadResult.url;
+    const publicUrl = uploadResult;
 
     return {
       success: true,

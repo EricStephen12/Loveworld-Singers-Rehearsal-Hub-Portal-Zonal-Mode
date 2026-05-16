@@ -92,10 +92,10 @@ export class PaymentRecordsService {
             await FirebaseDatabaseService.updateDocument('payment_records', paymentId, {
                 ...updates,
                 updatedAt: new Date()
-            })
+            } as any)
             return true
         } catch (error) {
- console.error('Error updating payment record:', error)
+            console.error('Error updating payment record:', error)
             return false
         }
     }
@@ -108,7 +108,7 @@ export class PaymentRecordsService {
             const record = await FirebaseDatabaseService.getDocument('payment_records', paymentId)
             return record as PaymentRecord | null
         } catch (error) {
- console.error('Error getting payment record:', error)
+            console.error('Error getting payment record:', error)
             return null
         }
     }
@@ -118,15 +118,12 @@ export class PaymentRecordsService {
      */
     static async getUserPaymentHistory(userId: string): Promise<PaymentRecord[]> {
         try {
-            const records = await FirebaseDatabaseService.getDocuments('payment_records', [
-                { field: 'userId', operator: '==', value: userId }
-            ])
+            const records = await FirebaseDatabaseService.getCollectionWhere('payment_records', 'userId', '==', userId)
 
-            return records
-                .map(r => r as PaymentRecord)
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            return (records as PaymentRecord[])
+                .sort((a: PaymentRecord, b: PaymentRecord) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         } catch (error) {
- console.error('Error getting payment history:', error)
+            console.error('Error getting payment history:', error)
             return []
         }
     }
@@ -141,30 +138,28 @@ export class PaymentRecordsService {
         endDate?: Date
     }): Promise<PaymentRecord[]> {
         try {
-            const conditions: any[] = []
+            const records = await FirebaseDatabaseService.getCollection('payment_records')
+
+            let filtered = (records as PaymentRecord[])
 
             if (filters?.status) {
-                conditions.push({ field: 'status', operator: '==', value: filters.status })
+                filtered = filtered.filter((r: PaymentRecord) => r.status === filters.status)
             }
             if (filters?.subscriptionType) {
-                conditions.push({ field: 'subscriptionType', operator: '==', value: filters.subscriptionType })
+                filtered = filtered.filter((r: PaymentRecord) => r.subscriptionType === filters.subscriptionType)
             }
 
-            const records = await FirebaseDatabaseService.getDocuments('payment_records', conditions)
-
-            let filtered = records.map(r => r as PaymentRecord)
-
-            // Client-side date filtering (Firestore date queries can be complex)
+            // Client-side date filtering
             if (filters?.startDate) {
-                filtered = filtered.filter(r => new Date(r.createdAt) >= filters.startDate!)
+                filtered = filtered.filter((r: PaymentRecord) => new Date(r.createdAt) >= filters.startDate!)
             }
             if (filters?.endDate) {
-                filtered = filtered.filter(r => new Date(r.createdAt) <= filters.endDate!)
+                filtered = filtered.filter((r: PaymentRecord) => new Date(r.createdAt) <= filters.endDate!)
             }
 
-            return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            return filtered.sort((a: PaymentRecord, b: PaymentRecord) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         } catch (error) {
- console.error('Error getting all payment records:', error)
+            console.error('Error getting all payment records:', error)
             return []
         }
     }
@@ -186,7 +181,7 @@ export class PaymentRecordsService {
             })
             return true
         } catch (error) {
- console.error('Error refunding payment:', error)
+            console.error('Error refunding payment:', error)
             return false
         }
     }
@@ -209,7 +204,7 @@ export class SubscriptionAuditService {
 
             await FirebaseDatabaseService.createDocument('subscription_audit_logs', logId, log)
         } catch (error) {
- console.error('Error logging subscription action:', error)
+            console.error('Error logging subscription action:', error)
         }
     }
 
@@ -218,15 +213,12 @@ export class SubscriptionAuditService {
      */
     static async getUserAuditHistory(userId: string): Promise<SubscriptionAuditLog[]> {
         try {
-            const logs = await FirebaseDatabaseService.getDocuments('subscription_audit_logs', [
-                { field: 'userId', operator: '==', value: userId }
-            ])
+            const logs = await FirebaseDatabaseService.getCollectionWhere('subscription_audit_logs', 'userId', '==', userId)
 
-            return logs
-                .map(l => l as SubscriptionAuditLog)
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            return (logs as SubscriptionAuditLog[])
+                .sort((a: SubscriptionAuditLog, b: SubscriptionAuditLog) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         } catch (error) {
- console.error('Error getting audit history:', error)
+            console.error('Error getting audit history:', error)
             return []
         }
     }
@@ -236,14 +228,13 @@ export class SubscriptionAuditService {
      */
     static async getAllAuditLogs(limit: number = 100): Promise<SubscriptionAuditLog[]> {
         try {
-            const logs = await FirebaseDatabaseService.getDocuments('subscription_audit_logs', [])
+            const logs = await FirebaseDatabaseService.getCollection('subscription_audit_logs')
 
-            return logs
-                .map(l => l as SubscriptionAuditLog)
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            return (logs as SubscriptionAuditLog[])
+                .sort((a: SubscriptionAuditLog, b: SubscriptionAuditLog) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
                 .slice(0, limit)
         } catch (error) {
- console.error('Error getting all audit logs:', error)
+            console.error('Error getting all audit logs:', error)
             return []
         }
     }

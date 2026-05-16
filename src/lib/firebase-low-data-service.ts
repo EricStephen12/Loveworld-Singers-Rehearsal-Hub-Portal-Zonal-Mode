@@ -136,7 +136,7 @@ class FirebaseLowDataService {
 
     // Only fetch if not cached or cache expired
     if (lowDataOptimizer.shouldFetch(cacheKey)) {
-      const data = await FirebaseDatabaseService.getCollectionWhere('comments', 'songId', songId, '==');
+      const data = await FirebaseDatabaseService.getCollectionWhere('comments', 'songId', '==', songId);
       
       // Cache update
       if (useCache) {

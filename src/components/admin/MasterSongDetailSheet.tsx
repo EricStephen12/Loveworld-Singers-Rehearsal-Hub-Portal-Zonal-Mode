@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Music, Play, Pause, Key, Clock, Mic, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MasterSong } from '@/lib/master-library-service';
@@ -15,6 +15,8 @@ interface MasterSongDetailSheetProps {
   onClose: () => void;
   canEdit?: boolean;
   onSongUpdated?: (updatedSong: MasterSong) => void;
+  songs?: MasterSong[];
+  onSongChange?: (song: MasterSong) => void;
 }
 
 // Helper function to convert HTML back to plain text for display (matching edit modal format)
@@ -54,19 +56,26 @@ export function MasterSongDetailSheet({
   song,
   isOpen,
   onClose,
+  songs,
+  onSongChange,
 }: MasterSongDetailSheetProps) {
   const router = useRouter();
   const { currentZone } = useZone();
   const { currentSong, isPlaying, currentTime, duration, setCurrentSong, togglePlayPause, setCurrentTime: seekTo } = useAudio();
+  const [currentSongData, setCurrentSongData] = useState<MasterSong>(song);
+  
+  useEffect(() => {
+    setCurrentSongData(song);
+  }, [song]);
 
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
-  const isCurrentSong = currentSong?.id === song.id;
+
 
   const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas'>('lyrics');
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Only use Full Mix audio in the detail sheet - other parts are for AudioLab
-  const fullMixUrl = song.audioUrls?.full || song.audioFile;
+
 
   const handlePlayPause = () => {
     if (!fullMixUrl) return;
@@ -99,11 +108,34 @@ export function MasterSongDetailSheet({
   const goToAudioLab = () => {
     setIsNavigating(true);
     // Navigate to AudioLab library with song title to auto-search
-    router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(song.title)}`);
+    router.push(`/pages/audiolab?view=library&program=ongoing&song=${encodeURIComponent(currentSongData.title)}`);
     onClose();
   };
 
+  const handleNext = () => {
+    if (!songs || songs.length === 0) return;
+    const currentIndex = songs.findIndex(s => s.id === currentSongData.id);
+    if (currentIndex !== -1 && currentIndex < songs.length - 1) {
+      const nextSong = songs[currentIndex + 1];
+      setCurrentSongData(nextSong);
+      if (onSongChange) onSongChange(nextSong);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (!songs || songs.length === 0) return;
+    const currentIndex = songs.findIndex(s => s.id === currentSongData.id);
+    if (currentIndex > 0) {
+      const prevSong = songs[currentIndex - 1];
+      setCurrentSongData(prevSong);
+      if (onSongChange) onSongChange(prevSong);
+    }
+  };
+
   if (!isOpen) return null;
+
+  const isCurrentSong = currentSong?.id === currentSongData.id;
+  const fullMixUrl = currentSongData.audioUrls?.full || currentSongData.audioFile;
 
   return (
     <>
@@ -151,108 +183,108 @@ export function MasterSongDetailSheet({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg sm:text-base font-semibold text-slate-900 line-clamp-2">
-                    {song.title}
+                    {currentSongData.title}
                   </h3>
                   <p className="text-sm sm:text-xs text-slate-600 truncate mt-0.5">
-                    {song.writer || 'Unknown writer'}
+                    {currentSongData.writer || 'Unknown writer'}
                   </p>
                 </div>
               </div>
 
               {/* Metadata rows */}
               <div className="mt-4 sm:mt-3 space-y-2 sm:space-y-1.5 text-sm sm:text-xs text-slate-700">
-                {song.leadSinger && (
+                {currentSongData.leadSinger && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Lead Singer
                     </span>
                     <span className="font-medium text-slate-900">
-                      {song.leadSinger}
+                      {currentSongData.leadSinger}
                     </span>
                   </div>
                 )}
-                {song.writer && (
+                {currentSongData.writer && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Writer
                     </span>
                     <span className="text-slate-900">
-                      {song.writer}
+                      {currentSongData.writer}
                     </span>
                   </div>
                 )}
-                {song.category && (
+                {currentSongData.category && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Category
                     </span>
                     <span className="text-slate-900">
-                      {song.category}
+                      {currentSongData.category}
                     </span>
                   </div>
                 )}
-                {(song.key || song.tempo) && (
+                {(currentSongData.key || currentSongData.tempo) && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Key / Tempo
                     </span>
                     <span className="flex items-center gap-2 text-slate-900">
-                      {song.key && (
+                      {currentSongData.key && (
                         <span className="inline-flex items-center gap-1">
                           <Key size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                          {song.key}
+                          {currentSongData.key}
                         </span>
                       )}
-                      {song.tempo && (
+                      {currentSongData.tempo && (
                         <span className="inline-flex items-center gap-1">
                           <Clock size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                          {song.tempo}
+                          {currentSongData.tempo}
                         </span>
                       )}
                     </span>
                   </div>
                 )}
-                {song.conductor && (
+                {currentSongData.conductor && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Conductor
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900 italic">
                       <Mic size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                      {song.conductor}
+                      {currentSongData.conductor}
                     </span>
                   </div>
                 )}
-                {song.leadKeyboardist && (
+                {currentSongData.leadKeyboardist && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Lead Keyboard
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900">
                       <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                      {song.leadKeyboardist}
+                      {currentSongData.leadKeyboardist}
                     </span>
                   </div>
                 )}
-                {song.bassGuitarist && (
+                {currentSongData.bassGuitarist && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Bass Guitar
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900">
                       <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                      {song.bassGuitarist}
+                      {currentSongData.bassGuitarist}
                     </span>
                   </div>
                 )}
-                {song.drummer && (
+                {currentSongData.drummer && (
                   <div className="flex justify-between border-b border-white/60 pb-1.5 sm:pb-1">
                     <span className="font-semibold uppercase tracking-wide text-[11px] sm:text-[10px] text-slate-600">
                       Drummer
                     </span>
                     <span className="flex items-center gap-1.5 text-slate-900">
                       <Music size={14} className="sm:w-3 sm:h-3 text-violet-500" />
-                      {song.drummer}
+                      {currentSongData.drummer}
                     </span>
                   </div>
                 )}
@@ -301,7 +333,26 @@ export function MasterSongDetailSheet({
                 >
                   {isCurrentSong && isPlaying ? <Pause size={20} className="sm:w-[18px] sm:h-[18px]" /> : <Play size={20} className="sm:w-[18px] sm:h-[18px] ml-0.5" />}
                 </button>
-                <span className="text-sm sm:text-xs text-slate-500 w-10 sm:w-9 text-right tabular-nums shrink-0">
+
+                {/* Skip Controls */}
+                <div className="flex items-center gap-1 ml-auto">
+                   <button
+                    onClick={handlePrevious}
+                    disabled={!songs || songs.findIndex(s => s.id === currentSongData.id) <= 0}
+                    className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 disabled:opacity-30 transition-all shrink-0"
+                  >
+                    <ChevronUp size={20} className="-rotate-90 sm:w-[18px] sm:h-[18px]" />
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    disabled={!songs || songs.findIndex(s => s.id === currentSongData.id) >= songs.length - 1}
+                    className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 disabled:opacity-30 transition-all shrink-0"
+                  >
+                    <ChevronDown size={20} className="-rotate-90 sm:w-[18px] sm:h-[18px]" />
+                  </button>
+                </div>
+
+                <span className="text-sm sm:text-xs text-slate-500 w-10 sm:w-9 text-right tabular-nums shrink-0 ml-2">
                   {formatTime(isCurrentSong ? currentTime : 0)}
                 </span>
                 <div className="flex-1 relative h-8 sm:h-6 flex items-center">
@@ -330,7 +381,7 @@ export function MasterSongDetailSheet({
 
           {/* Conditional Content based on activeTab */}
           <div className="mb-4">
-            {activeTab === 'lyrics' && song.lyrics && (
+            {activeTab === 'lyrics' && currentSongData.lyrics && (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-4 overflow-hidden">
                 <style>{`
                   .lyrics-content {
@@ -347,12 +398,12 @@ export function MasterSongDetailSheet({
                 `}</style>
                 <pre
                   className="lyrics-content text-slate-800 whitespace-pre-wrap font-mono"
-                  dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(song.lyrics) }}
+                  dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(currentSongData.lyrics) }}
                 />
               </div>
             )}
 
-            {activeTab === 'solfas' && song.solfa && (
+            {activeTab === 'solfas' && currentSongData.solfa && (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-4 overflow-hidden">
                 <style>{`
                   .solfa-content {
@@ -367,19 +418,19 @@ export function MasterSongDetailSheet({
                 `}</style>
                 <pre
                   className="solfa-content whitespace-pre-wrap font-mono"
-                  dangerouslySetInnerHTML={{ __html: song.solfa }}
+                  dangerouslySetInnerHTML={{ __html: currentSongData.solfa }}
                 />
               </div>
             )}
             
-            {activeTab === 'lyrics' && !song.lyrics && (
+            {activeTab === 'lyrics' && !currentSongData.lyrics && (
                <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
                   <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                   <p className="text-slate-500 font-medium">No lyrics available for this song.</p>
                </div>
             )}
             
-            {activeTab === 'solfas' && !song.solfa && (
+            {activeTab === 'solfas' && !currentSongData.solfa && (
                <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
                   <Music className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                   <p className="text-slate-500 font-medium">No conductor's guide available.</p>

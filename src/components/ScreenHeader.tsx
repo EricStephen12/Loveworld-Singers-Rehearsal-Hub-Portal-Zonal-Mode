@@ -104,10 +104,10 @@ export function ScreenHeader({
         </div>
 
         {/* Center Section - Branding & Identity */}
-        <div className="flex-1 flex flex-col items-center min-w-0">
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0 gap-0">
           <button
             onClick={onTitleClick}
-            className={`text-sm sm:text-base font-black tracking-tight ${textColor} transition-all duration-500 delay-100 truncate w-full text-center ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'} ${onTitleClick ? 'active:scale-95 hover:opacity-70' : 'cursor-default'}`}
+            className={`text-sm sm:text-base font-black tracking-tight leading-none ${textColor} transition-all duration-500 delay-100 truncate w-full text-center ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'} ${onTitleClick ? 'active:scale-95 hover:opacity-70' : 'cursor-default'}`}
             disabled={!onTitleClick}
           >
             {title}
@@ -118,7 +118,7 @@ export function ScreenHeader({
             </div>
           )}
           {timer && (
-            <div className={`mt-1 transition-all duration-500 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`transition-all duration-500 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               {timer}
             </div>
           )}

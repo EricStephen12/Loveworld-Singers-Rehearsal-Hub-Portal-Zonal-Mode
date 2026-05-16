@@ -66,12 +66,11 @@ export default function YouTubeSidebar({
     const userId = user?.uid
 
     const isMediaHome = pathname === '/pages/media' || pathname.includes('/player/')
-    const isPlaylists = pathname.includes('/playlists') && !pathname.includes('_liked')
     const isHistory = pathname.includes('/history')
     const isLiked = pathname.includes('_liked')
 
     return (
-        <aside className={`${sidebarOpen ? 'w-[240px] px-3' : 'w-[72px] px-1'} flex flex-col gap-1 py-4 overflow-y-auto scrollbar-hide transition-all duration-300 h-screen lg:h-[calc(100vh-64px)] fixed lg:sticky top-0 lg:top-16 bg-slate-950 border-r border-slate-800 z-[120]`}>
+        <aside className="flex-1 w-full flex flex-col gap-1 py-4 overflow-y-auto scrollbar-hide bg-slate-950 px-2 z-[120]">
             {/* Mobile Sidebar Header */}
             {sidebarOpen && (
                 <div className="flex lg:hidden items-center gap-4 px-2 mb-6 h-14 shrink-0 border-b border-slate-800 pb-2">
@@ -106,14 +105,6 @@ export default function YouTubeSidebar({
                     setViewMode('all');
                     setSelectedCategory('all');
                 }}
-                compact={!sidebarOpen}
-            />
-
-            <SidebarItem
-                icon={ListVideo}
-                label="Playlists"
-                active={isPlaylists}
-                onClick={() => router.push('/pages/media/playlists')}
                 compact={!sidebarOpen}
             />
 

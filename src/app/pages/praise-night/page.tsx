@@ -365,7 +365,8 @@ function PraiseNightPageContent() {
   const menuItems = getMenuItems(handleLogout, handleRefresh)
   const { timeLeft, isLoading: countdownLoading, error: countdownError } = useServerCountdown({
     countdownData: currentPraiseNight?.countdown,
-    praiseNightId: currentPraiseNight?.id
+    praiseNightId: currentPraiseNight?.id,
+    targetDateString: currentPraiseNight?.date
   })
   useEffect(() => {
   }, [currentPraiseNight, timeLeft, countdownLoading, countdownError, categoryFilter, filteredPraiseNights.length]);

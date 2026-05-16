@@ -48,7 +48,7 @@ export default function AllMinisteredSongsPage() {
       try {
         // Load ALL songs (up to 5000) and programs
         const [masterSongs, programList] = await Promise.all([
-          MasterLibraryService.getMasterSongs(5000, true),
+          MasterLibraryService.getMasterSongs(10000, true),
           MasterLibraryService.getMasterPrograms()
         ])
         setSongs(masterSongs)
@@ -621,6 +621,10 @@ export default function AllMinisteredSongsPage() {
           onClose={handleCloseSongDetail}
           canEdit={canEdit}
           onSongUpdated={handleSongUpdated}
+          songs={filteredSongs}
+          onSongChange={(newSong) => {
+            setSelectedSong(newSong);
+          }}
         />
       )}
     </div>

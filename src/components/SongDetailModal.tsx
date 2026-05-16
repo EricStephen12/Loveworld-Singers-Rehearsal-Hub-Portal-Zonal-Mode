@@ -9,7 +9,8 @@ import { useZone } from "@/hooks/useZone";
 import { isHQGroup } from "@/config/zones";
 import { FirebaseDatabaseService } from "@/lib/firebase-database";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
-import { useRealtimeSongData } from "@/hooks/useRealtimeSongData";
+import { useRealtimeSong } from "@/hooks/useRealtimeSong";
+import { useUltraFastSongHistory } from "@/hooks/useUltraFastSongHistory";
 import { NavigationManager } from "@/utils/navigation";
 import { formatTime } from "@/utils/string-utils";
 
@@ -131,10 +132,13 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     });
   };
 
-  // History state management (same as EditSongModal)
-  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
+  // History state management using hook
+  const { 
+    history: historyEntries, 
+    loading: isLoadingHistory, 
+    error: historyError, 
+    refreshHistory: loadHistoryEntries 
+  } = useUltraFastSongHistory(selectedSong?.id?.toString() || null);
 
   // Use global audio context
   const { currentSong, isPlaying, currentTime, duration, isLoading, hasError, togglePlayPause, audioRef, setCurrentSong, setCurrentTime: setCurrentTimeManual } = useAudio();
@@ -164,18 +168,20 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   useEffect(() => {
     if (selectedSong) {
       const songsInCategory = songs.filter(song => {
-        const matchesStatus = song.status === currentFilter;
+        // We ignore status filter for skipping within category to match "like before" behavior
+        // const matchesStatus = song.status === currentFilter;
         
         // Match category using the same logic as page.tsx
         let matchesCategory = false;
-        if (activeCategory) {
+        if (activeCategory && activeCategory.toLowerCase() !== 'ongoing' && activeCategory.toLowerCase() !== 'all') {
           if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
             matchesCategory = song.categories.some((cat: string) => cat.trim() === activeCategory.trim());
           } else {
             matchesCategory = (song.category || '').trim() === activeCategory.trim();
           }
         } else {
-          // If no activeCategory provided, fall back to matching selectedSong's own category
+          // If no specific activeCategory provided, fall back to matching selectedSong's own category
+          // This keeps skipping within the same category even in "Ongoing" view
           const targetCat = selectedSong.category || (selectedSong.categories && selectedSong.categories[0]);
           if (targetCat) {
             if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
@@ -188,7 +194,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           }
         }
         
-        return matchesStatus && matchesCategory;
+        return matchesCategory;
       });
       
       setCategorySongs(songsInCategory);
@@ -253,7 +259,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         setCurrentSong(prevSong, true);
       }
     } else if (audioRef.current && duration > 0) {
-      // If at first song or no songs, skip back 10 seconds
+      // If at first song or no songs, skip back 10 seconds (restored fallback)
       const newTime = Math.max(0, audioRef.current.currentTime - 10);
       setCurrentTimeManual(newTime);
     }
@@ -272,7 +278,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
         setCurrentSong(nextSong, true);
       }
     } else if (audioRef.current && duration > 0) {
-      // If at last song or no songs, skip forward 10 seconds
+      // If at last song or no songs, skip forward 10 seconds (restored fallback)
       const newTime = Math.min(duration, audioRef.current.currentTime + 10);
       setCurrentTimeManual(newTime);
     }
@@ -447,14 +453,14 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     enabled: isOpen && activeHistoryTab === 'comments'
   });
 
-  // Use real-time song data hook (no cache)
+  // Use real-time song hook (metadata-based, efficient)
   const {
-    songData: realtimeSongData
-  } = useRealtimeSongData({
-    songId: currentSongData?.id?.toString() || null,
-    enabled: isOpen, // Always enabled when modal is open
-    zoneId: currentZone?.id || null, // CRITICAL: read from same collection the admin writes to
-  });
+    song: realtimeSongData
+  } = useRealtimeSong(
+    currentZone?.id || undefined,
+    currentSongData?.praiseNightId || undefined,
+    currentSongData?.id?.toString() || undefined
+  );
 
   // Single source of truth for what the UI should display (realtime → fresh → initial)
   const displayedSongData = realtimeSongData || currentSongData;
@@ -478,75 +484,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
     };
   }, [showMoreMenu]);
 
-  // Load history entries for the current song (same as EditSongModal)
-  const loadHistoryEntries = async () => {
-    if (!currentSongData?.id) {
-      setHistoryEntries([]);
-      setIsLoadingHistory(false);
-      return;
-    }
-
-    try {
-      if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
- console.warn('️ Firebase not configured - history features will not work');
-        setHistoryEntries([]);
-        setIsLoadingHistory(false);
-        return;
-      }
-
-      setIsLoadingHistory(true);
-      setHistoryError(null);
-
-      const data = await FirebaseDatabaseService.getHistoryBySongId(currentSongData.id.toString());
-
-      // Transform Firebase data to match HistoryEntry interface
-      const transformedData: HistoryEntry[] = (data || []).map((entry: any) => ({
-        id: entry.id,
-        type: entry.type,
-        title: entry.title,
-        description: entry.description || '',
-        old_value: entry.old_value || '',
-        new_value: entry.new_value || '',
-        created_by: entry.created_by || '',
-        date: entry.created_at || entry.date || new Date().toISOString(),
-        version: entry.title || ''
-      }));
-
-      setHistoryEntries(transformedData);
-    } catch (error) {
- console.error('Error loading history entries:', error);
-      setHistoryError('Failed to load history');
-      setHistoryEntries([]);
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
-  // Load history when song changes (same as EditSongModal)
-  useEffect(() => {
-    if (currentSongData?.id && isOpen) {
-      loadHistoryEntries();
-    } else {
-      setHistoryEntries([]);
-    }
-  }, [currentSongData?.id, isOpen]);
-
-  // Listen for history updates from EditSongModal (same as EditSongModal pattern)
-  useEffect(() => {
-    const handleHistoryUpdate = () => {
-      // Add a small delay to ensure Firebase has processed the update
-      // This ensures we get the latest data, not cached data
-      setTimeout(() => {
-        loadHistoryEntries();
-      }, 300);
-    };
-
-    window.addEventListener('historyUpdated', handleHistoryUpdate);
-
-    return () => {
-      window.removeEventListener('historyUpdated', handleHistoryUpdate);
-    };
-  }, [currentSongData?.id, isOpen]);
+  // History updates are now handled in real-time by the useUltraFastSongHistory hook
+  // No need for manual loadHistoryEntries or historyUpdated listener here anymore.
 
 
   // Get history data for the current song using local state (same as EditSongModal)

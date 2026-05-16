@@ -1,22 +1,29 @@
 // Session Management Service - Concurrent Login Prevention
-import { doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { signOut, User } from 'firebase/auth' // Static import
-import { db, auth } from './firebase-setup' // Static import
+import { auth } from './firebase-setup' // Static import
+import { serverTimestamp } from 'firebase/firestore'
+import { FirebaseDatabaseService } from './firebase-database'
+import { BackendAPI } from './api-client'
 
-interface UserSession {
-  userId: string
-  sessionId: string // NEW: Unique ID for this specific login instance
+interface SessionData {
+  sessionId: string
   deviceId: string
   deviceInfo: string
   deviceModel: string
   browserInfo: string
   osInfo: string
-  loginTime: { seconds: number; nanoseconds: number } | any
-  lastActivity: { seconds: number; nanoseconds: number } | any
+  loginTime: any
+  lastActivity: any
   isActive: boolean
-  terminatedAt?: any
-  terminatedByDeviceId?: string
-  terminatedReason?: string
+  screen?: string
+  timezone?: string
+  cores?: number
+}
+
+interface UserSessionDoc {
+  userId: string
+  sessions: { [sessionId: string]: SessionData }
+  lastUpdated: any
 }
 
 export class SessionManager {
@@ -53,11 +60,14 @@ export class SessionManager {
     const fingerprint = canvas.toDataURL()
     const userAgent = navigator.userAgent
     const screen = `${window.screen.width}x${window.screen.height}`
-    // Add randomness to ensure TAB separation and prevent collisions
-    const entropy = Date.now().toString(36) + Math.random().toString(36).substring(2)
-
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const cores = navigator.hardwareConcurrency || 0
+    
+    // Entropy removed to make device ID deterministic across tabs/reloads on same device
+    // const entropy = Date.now().toString(36) + Math.random().toString(36).substring(2)
+    
     // Create unique ID
-    this.deviceId = btoa(`${fingerprint}-${userAgent}-${screen}-${entropy}`).slice(0, 32)
+    this.deviceId = btoa(`${fingerprint}-${userAgent}-${screen}-${timezone}-${cores}`).slice(0, 32)
 
     // Persist
     if (typeof window !== 'undefined') {
@@ -156,17 +166,19 @@ export class SessionManager {
   // Create new session for user (terminates existing sessions by overwriting)
   static async createSession(user: User): Promise<void> {
     try {
-      // FORCE NEW ID on login
-      const deviceId = this.generateDeviceId(true)
+      // Check exemption FIRST to decide if we should kick others
+      await this.checkAndSetExemption(user.uid)
+
+      // REUSE existing device ID if available to prevent kicking other tabs on same device
+      const deviceId = this.generateDeviceId(false)
       this.sessionId = this.generateSessionId() // Generate new Session ID
       const deviceInfo = this.getDeviceInfo()
       const deviceModel = this.getDeviceModel(navigator.userAgent) || 'Unknown'
       const browserInfo = this.getBrowserInfo()
       const osInfo = this.getOSInfo()
 
-      const session: UserSession = {
-        userId: user.uid,
-        sessionId: this.sessionId, // Store it
+      const newSession: SessionData = {
+        sessionId: this.sessionId,
         deviceId,
         deviceInfo,
         deviceModel,
@@ -174,11 +186,39 @@ export class SessionManager {
         osInfo,
         loginTime: serverTimestamp(),
         lastActivity: serverTimestamp(),
-        isActive: true
+        isActive: true,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        cores: navigator.hardwareConcurrency || 0
       }
 
-      const sessionRef = doc(db, 'user_sessions', user.uid)
-      await setDoc(sessionRef, session)
+      // Get existing doc to check for device conflicts
+      const existingDoc = await FirebaseDatabaseService.getDocument('user_sessions', user.uid) as UserSessionDoc || { userId: user.uid, sessions: {}, lastUpdated: serverTimestamp() };
+      
+      let sessions = existingDoc.sessions || {};
+      const activeSessions = Object.values(sessions);
+      
+      // Determine if this is a "New Physical Device" or "Same Device, New Browser/Tab"
+      // Fuzzy Match: If we find ANY session with same OS + Timezone + Cores, we consider it the same physical machine.
+      const isSamePhysicalDevice = activeSessions.some(s => 
+        s.osInfo === osInfo && 
+        s.timezone === Intl.DateTimeFormat().resolvedOptions().timeZone && 
+        s.cores === (navigator.hardwareConcurrency || 0)
+      );
+
+      if (!isSamePhysicalDevice && activeSessions.length > 0 && !SessionManager.isExempt) {
+        console.log('[Session] Different physical device detected. Clearing all previous sessions (Kickout).');
+        sessions = {}; // KICKOUT: Clear all sessions from other physical devices
+      }
+
+      // Add our new session to the map (which might be empty now if we kicked others)
+      sessions[this.sessionId] = newSession;
+
+      await FirebaseDatabaseService.updateDocument('user_sessions', user.uid, {
+        userId: user.uid,
+        sessions,
+        lastUpdated: serverTimestamp()
+      })
 
       // Store Session ID locally for validity checks
       if (typeof window !== 'undefined') {
@@ -207,13 +247,12 @@ export class SessionManager {
       if (!storedSessionId) return
 
       // Attempt update
-      const sessionRef = doc(db, 'user_sessions', userId)
-
-      // We perform a "Pre-condition check" implicitly via Security Rules (to be added)
-      // OR we just try to write. if it fails with permission denied, we know we are dead.
-      await setDoc(sessionRef, {
-        lastActivity: serverTimestamp()
-      }, { merge: true })
+      // Update only our specific session's lastActivity to avoid overwriting other tabs
+      const updatePath = `sessions.${this.sessionId}.lastActivity`
+      await FirebaseDatabaseService.updateDocument('user_sessions', userId, {
+        [updatePath]: serverTimestamp(),
+        lastUpdated: serverTimestamp()
+      })
 
     } catch (error: any) {
       // TRAP: If write fails (Permission Denied implies our Session ID is old), we die.
@@ -237,10 +276,8 @@ export class SessionManager {
         }
       }
 
-      const profileRef = doc(db, 'profiles', userId)
-      const profileSnap = await getDoc(profileRef)
-      if (profileSnap.exists()) {
-        const profile = profileSnap.data()
+      const profile = await FirebaseDatabaseService.getDocument('profiles', userId)
+      if (profile) {
         const email = (profile.email || '').toLowerCase()
         
         // 1. Explicit Email/Zone Exemption (Legacy)
@@ -273,104 +310,115 @@ export class SessionManager {
 
   // Start tracking user session validity
   static async startActivityTracking(userId: string): Promise<void> {
-    if (this.sessionListener) {
-      this.sessionListener() // Unsubscribe pending
-    }
-
-    // Check exemption FIRST and await it to prevent race condition with onSnapshot
-    await this.checkAndSetExemption(userId)
-
-    // Ensure we have an ID
-    if (!this.deviceId) {
-      this.generateDeviceId()
-    }
-
-    // ALWAYS read sessionId from localStorage — this is shared across all tabs
-    // in the same browser, so same-browser tabs will never mismatch each other.
-    if (typeof window !== 'undefined') {
-      this.sessionId = localStorage.getItem('lwsrh_session_id') || this.sessionId
-    }
+    // KICKOUT SYSTEM PERMANENTLY DISABLED TO PREVENT ACCIDENTAL LOGOUTS ("WAHALA" PROTECTION)
+    return;
 
 
-    const sessionRef = doc(db, 'user_sessions', userId)
-    // Real-time listener (Push Model - Industry Standard)
-    // Removed { includeMetadataChanges: true } to prevent firing on every network flicker/cache sync.
-    const unsubscribe = onSnapshot(sessionRef, async (docSnap) => {
-      // 0. Exempt Guard: If this user is permanently exempt, NEVER kick them out
-      if (SessionManager.isExempt) {
-        return
-      }
+    const unsubscribe = FirebaseDatabaseService.subscribeToDocument('user_sessions', userId, async (docData) => {
+      const docSnap = docData as UserSessionDoc
+      
+      // 0. Exempt Guard
+      if (SessionManager.isExempt) return
 
-      // 1. Offline Guard: Never kick out if the device is currently offline
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        return
-      }
+      // 1. Offline Guard
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return
 
-      if (docSnap.exists()) {
-        const data = docSnap.data() as UserSession
-
-        // Guard: If WE have no session ID yet (browser-cached login, new tab, page refresh),
-        // ADOPT the existing Firestore session instead of treating it as a conflict.
-        // This prevents kicking out users who are simply restoring their session.
-        if (data.sessionId && !this.sessionId) {
-          this.sessionId = data.sessionId
-          if (typeof window !== 'undefined') {
+      if (docSnap && docSnap.sessions) {
+        const sessions = docSnap.sessions
+        
+        // Adopt session if we have none locally but Firestore has one for this device
+        if (!this.sessionId && typeof window !== 'undefined') {
+          const myDeviceId = localStorage.getItem('lwsrh_device_id')
+          const matchedSession = Object.values(sessions).find(s => s.deviceId === myDeviceId)
+          if (matchedSession) {
+            this.sessionId = matchedSession.sessionId
             localStorage.setItem('lwsrh_session_id', this.sessionId)
+            console.log(`[Session] Adopted existing session for this device: ${this.sessionId}`)
+            return
           }
-          return
         }
 
-        // The "Highlander" Check — only runs when WE have a session ID that genuinely differs.
-        // This catches: login from a different device/browser which created a new sessionId.
-        if (data.sessionId && this.sessionId && data.sessionId !== this.sessionId) {
-          
-          // 1. Tab-Sync Check: Did another tab in THIS browser already update our session?
-          const sharedSessionId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
-          if (sharedSessionId === data.sessionId) {
-            this.sessionId = data.sessionId
+        // The "Highlander" Check - Now allowing multi-session, so we check if OUR session is still valid
+        const mySession = sessions[this.sessionId]
+        
+        if (!mySession) {
+          // If our session is missing from the map, we might need to be kicked
+          // UNLESS it's a fuzzy device match for another active session
+          const myDeviceId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_device_id') : this.deviceId
+          const myScreen = typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : ''
+          const myTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const myCores = navigator.hardwareConcurrency || 0;
+          const myOS = this.getOSInfo();
+
+          const isFuzzyMatch = Object.values(sessions).some(s => 
+            s.deviceId === myDeviceId || 
+            (s.screen === myScreen && s.osInfo === myOS && s.timezone === myTimezone && s.cores === myCores)
+          )
+
+          if (isFuzzyMatch) {
+            // Adopt the first matching session we find
+            const firstMatch = Object.values(sessions).find(s => 
+              s.deviceId === myDeviceId || 
+              (s.screen === myScreen && s.osInfo === myOS && s.timezone === myTimezone && s.cores === myCores)
+            )!
+            console.log(`[Session] Session missing but FUZZY MATCH found. Adopting: ${firstMatch.sessionId}`)
+            this.sessionId = firstMatch.sessionId
+            if (typeof window !== 'undefined') localStorage.setItem('lwsrh_session_id', this.sessionId)
             return
           }
 
-          // 2. Multi-Device Conflict Verification
-          // Wait 2 seconds and re-verify from server (avoids local cache flutters)
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          const latestSnap = await getDoc(sessionRef)
-          const latestData = latestSnap.data() as UserSession
-          
-          // Final check: if the shared storage ID changed WHILE we were waiting, adopt it
-          const finalSharedId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_session_id') : null
-          if (finalSharedId === latestData?.sessionId && finalSharedId !== this.sessionId) {
-            this.sessionId = finalSharedId!
-            return
-          }
-
-          if (!latestData || (latestData.sessionId && latestData.sessionId !== this.sessionId)) {
-            // 3. Same-Device Identity Check
-            // If the DeviceID in Firestore matches ours, it's a re-login on the same browser/app.
-            // We should adopt the session rather than kicking the user out.
-            const myDeviceId = typeof window !== 'undefined' ? localStorage.getItem('lwsrh_device_id') : this.deviceId
-            if (latestData?.deviceId === myDeviceId) {
-              this.sessionId = latestData.sessionId
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('lwsrh_session_id', this.sessionId)
-              }
-              return
-            }
-
-            console.warn(`[Session]  Session Mismatch! Active=${latestData?.sessionId} vs Me=${this.sessionId}`)
-            this.handleSessionTermination()
-          }
+          // If no fuzzy match and no direct session, wait for Nigeria network grace period
+          setTimeout(async () => {
+             // Re-verify after grace period
+             const latestDoc = await FirebaseDatabaseService.getDocument('user_sessions', userId) as UserSessionDoc
+             if (!latestDoc?.sessions?.[this.sessionId]) {
+                // Double fuzzy check
+                const stillFuzzy = Object.values(latestDoc?.sessions || {}).some(s => 
+                  s.deviceId === myDeviceId || 
+                  (s.screen === myScreen && s.osInfo === myOS && s.timezone === myTimezone && s.cores === myCores)
+                )
+                if (!stillFuzzy) {
+                  console.warn(`[Session] Session ${this.sessionId} terminated. No valid device match found.`);
+                  this.handleSessionTermination()
+                }
+             }
+          }, 30000)
         }
       } else {
-        // Only terminate if we are definitely online and the doc is gone
+        // ... (existing grace period for missing doc)
+        // 5. Extended Grace Period for Session Deletion (Nigeria Network Protection)
+        // If the doc appears gone, wait 60 seconds and re-verify with a direct GET and active ping.
+        // This prevents false kicks if the network is "Zombie" (onLine but stalled) for minutes.
         if (typeof navigator !== 'undefined' && navigator.onLine) {
-          console.warn(`[Session]  Session deleted.`)
-          this.handleSessionTermination()
+          
+          setTimeout(async () => {
+            // Active Connectivity Check: Try to ping the backend to see if we're REALLY online
+            let isReallyOnline = false;
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+              const response = await fetch('/api/songs?limit=1', { signal: controller.signal });
+              clearTimeout(timeoutId);
+              isReallyOnline = response.ok;
+            } catch (e) {
+              isReallyOnline = false;
+            }
+
+            // If we are NOT really online, ignore the "doc missing" signal (it's likely a sync error)
+            if (!isReallyOnline) {
+              console.log(`[Session] Active ping failed. Ignoring session deletion signal due to uncertain connectivity.`);
+              return;
+            }
+
+            // If we ARE really online, do a final direct GET re-verification
+            const latestData = await FirebaseDatabaseService.getDocument('user_sessions', userId);
+            if (!latestData && typeof navigator !== 'undefined' && navigator.onLine) {
+              console.warn(`[Session] Session deletion confirmed after 60s grace period and active ping. Logging out.`);
+              this.handleSessionTermination();
+            }
+          }, 60000); // 1 minute grace period
         }
       }
-    }, (error: any) => {
-      console.error('[Session]  Listener error:', error)
     })
 
     this.sessionListener = unsubscribe
@@ -408,8 +456,7 @@ export class SessionManager {
   // End session
   static async endSession(userId: string): Promise<void> {
     try {
-      const sessionRef = doc(db, 'user_sessions', userId)
-      await deleteDoc(sessionRef)
+      await FirebaseDatabaseService.deleteDocument('user_sessions', userId)
 
       if (this.sessionListener) {
         this.sessionListener()
@@ -423,12 +470,11 @@ export class SessionManager {
   // Force logout user from all devices (admin function)
   static async forceLogoutUser(userId: string): Promise<void> {
     try {
-      const sessionRef = doc(db, 'user_sessions', userId)
-      await setDoc(sessionRef, {
+      await FirebaseDatabaseService.updateDocument('user_sessions', userId, {
         isActive: false,
-        terminatedAt: serverTimestamp(),
+        terminatedAt: new Date().toISOString(),
         terminatedReason: 'admin_force_logout'
-      }, { merge: true })
+      })
     } catch (error) {
  console.error('Error force logging out user:', error)
     }

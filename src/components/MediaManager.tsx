@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -301,9 +301,9 @@ export default function MediaManager({
             // Save to zone-aware collection
             const result = await createCloudinaryMedia({
               name: file.name,
-              url: uploadResult.url,
-              publicId: uploadResult.publicId,
-              resourceType: uploadResult.resourceType as 'image' | 'video' | 'raw',
+              url: uploadResult,
+              publicId: uploadResult.split('/').pop()?.split('.')[0] || '',
+              resourceType: fileType === 'image' ? 'image' : (fileType === 'audio' || fileType === 'video' ? 'video' : 'raw'),
               type: fileType,
               size: file.size,
               folder: fileType,

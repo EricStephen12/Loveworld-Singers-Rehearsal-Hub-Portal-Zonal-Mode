@@ -474,21 +474,7 @@ export default function EditSongModal({
     if (song && song.id) {
       const hasChanges = songTitle !== originalValues.title || songCategory !== originalValues.category || songKey !== originalValues.key || songTempo !== originalValues.tempo || songLyrics !== originalValues.lyrics || songSolfas !== originalValues.solfas || songNotation !== originalValues.notation || finalAudioFile !== originalValues.audioFile || songLeadSinger !== originalValues.leadSinger || songWriter !== originalValues.writer || songConductor !== originalValues.conductor || songLeadKeyboardist !== originalValues.leadKeyboardist || songLeadGuitarist !== originalValues.leadGuitarist || songDrummer !== originalValues.drummer;
 
-      if (hasChanges) {
-        const historyEntry = {
-          song_id: song.id.toString(),
-          title: `Update - ${new Date().toLocaleDateString()}`,
-          description: 'Automatic history entry for changes made',
-          type: 'all-fields',
-          old_value: JSON.stringify(originalValues),
-          new_value: JSON.stringify(songData),
-          created_by: 'user',
-          created_at: new Date().toISOString()
-        };
-        try {
-          await FirebaseDatabaseService.createHistoryEntry(historyEntry);
-        } catch (error) { console.error('Error saving history entry:', error); }
-      }
+      // Automatic history disabled by user request
       onUpdate({ ...updatedSong, id: song.id, firebaseId: song.firebaseId } as PraiseNightSong);
     } else {
       onUpdate(updatedSong as PraiseNightSong);

@@ -56,6 +56,15 @@ export interface SubGroupRequest {
 
 export class SubGroupService {
   
+  private static parseTimestamp(ts: any): Date {
+    if (!ts) return new Date()
+    if (ts instanceof Date) return ts
+    if (typeof ts.toDate === 'function') return ts.toDate()
+    if (ts.seconds) return new Date(ts.seconds * 1000)
+    const d = new Date(ts)
+    return isNaN(d.getTime()) ? new Date() : d
+  }
+
   /**
    * Create a sub-group request (Member action)
    */
@@ -117,26 +126,27 @@ export class SubGroupService {
    */
   static async getZoneSubGroups(zoneId: string): Promise<SubGroup[]> {
     try {
+      let subGroups: any[] = []
+      if (zoneId === 'zone-boss') {
+        subGroups = await FirebaseDatabaseService.getCollection('subgroups', 500)
+      } else {
+        subGroups = await FirebaseDatabaseService.getCollectionWhere(
+          'subgroups',
+          'zoneId',
+          '==',
+          zoneId
+        )
+      }
       
-      const q = query(
-        collection(db, 'subgroups'),
-        where('zoneId', '==', zoneId),
-        orderBy('createdAt', 'desc')
-      )
-      
-      const snapshot = await getDocs(q)
-      const subGroups = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt),
-        approvedAt: doc.data().approvedAt?.toDate?.() || (doc.data().approvedAt ? new Date(doc.data().approvedAt) : undefined),
-        activatedAt: doc.data().activatedAt?.toDate?.() || (doc.data().activatedAt ? new Date(doc.data().activatedAt) : undefined),
-        rejectedAt: doc.data().rejectedAt?.toDate?.() || (doc.data().rejectedAt ? new Date(doc.data().rejectedAt) : undefined)
+      return subGroups.map((doc: any) => ({
+        ...doc,
+        createdAt: this.parseTimestamp(doc.createdAt),
+        approvedAt: doc.approvedAt ? this.parseTimestamp(doc.approvedAt) : undefined,
+        activatedAt: doc.activatedAt ? this.parseTimestamp(doc.activatedAt) : undefined,
+        rejectedAt: doc.rejectedAt ? this.parseTimestamp(doc.rejectedAt) : undefined
       })) as SubGroup[]
-      
-      return subGroups
     } catch (error) {
- console.error(' Error getting zone sub-groups:', error)
+      console.error(' Error getting zone sub-groups:', error)
       return []
     }
   }
@@ -159,20 +169,15 @@ export class SubGroupService {
    */
   static async getUserSubGroupRequests(zoneId: string, userId: string): Promise<SubGroup[]> {
     try {
-      const q = query(
-        collection(db, 'subgroups'),
-        where('zoneId', '==', zoneId),
-        where('coordinatorId', '==', userId)
-      )
+      const all = await FirebaseDatabaseService.getCollectionWhere('subgroups', 'zoneId', '==', zoneId)
+      const requests = all.filter((sg: any) => sg.coordinatorId === userId)
       
-      const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
+      return requests.map((doc: any) => ({
+        ...doc,
+        createdAt: this.parseTimestamp(doc.createdAt)
       })) as SubGroup[]
     } catch (error) {
- console.error(' Error getting user sub-group requests:', error)
+      console.error(' Error getting user sub-group requests:', error)
       return []
     }
   }
@@ -180,25 +185,23 @@ export class SubGroupService {
   /**
    * Get sub-groups where user is a member
    */
-  static async getUserSubGroups(userId: string): Promise<SubGroup[]> {
+  static async getUserSubGroups(userId: string, zoneId?: string): Promise<SubGroup[]> {
     try {
-      
-      const q = query(
-        collection(db, 'subgroups'),
-        where('memberIds', 'array-contains', userId),
-        where('status', '==', 'active')
+      const subGroups = await FirebaseDatabaseService.getCollectionWhere(
+        'subgroups',
+        'memberIds',
+        'array-contains',
+        userId
       )
       
-      const snapshot = await getDocs(q)
-      const subGroups = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
-      })) as SubGroup[]
-      
       return subGroups
+        .filter((sg: any) => sg.status === 'active' && (!zoneId || sg.zoneId === zoneId))
+        .map((doc: any) => ({
+          ...doc,
+          createdAt: this.parseTimestamp(doc.createdAt)
+        })) as SubGroup[]
     } catch (error) {
- console.error(' Error getting user sub-groups:', error)
+      console.error(' Error getting user sub-groups:', error)
       return []
     }
   }
@@ -208,20 +211,17 @@ export class SubGroupService {
    */
   static async getSubGroup(subGroupId: string): Promise<SubGroup | null> {
     try {
-      const docRef = doc(db, 'subgroups', subGroupId)
-      const docSnap = await getDoc(docRef)
+      const data = await FirebaseDatabaseService.getDocument('subgroups', subGroupId)
       
-      if (docSnap.exists()) {
-        const data = docSnap.data()
+      if (data) {
         return {
-          id: docSnap.id,
           ...data,
-          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt)
+          createdAt: this.parseTimestamp(data.createdAt)
         } as SubGroup
       }
       return null
     } catch (error) {
- console.error(' Error getting sub-group:', error)
+      console.error(' Error getting sub-group:', error)
       return null
     }
   }
@@ -336,16 +336,10 @@ export class SubGroupService {
    */
   static async isSubGroupCoordinator(userId: string): Promise<boolean> {
     try {
-      const q = query(
-        collection(db, 'subgroups'),
-        where('coordinatorId', '==', userId),
-        where('status', '==', 'active')
-      )
-      
-      const snapshot = await getDocs(q)
-      return !snapshot.empty
+      const coordinated = await this.getCoordinatedSubGroups(userId)
+      return coordinated.length > 0
     } catch (error) {
- console.error(' Error checking sub-group coordinator status:', error)
+      console.error(' Error checking sub-group coordinator status:', error)
       return false
     }
   }
@@ -355,20 +349,21 @@ export class SubGroupService {
    */
   static async getCoordinatedSubGroups(userId: string): Promise<SubGroup[]> {
     try {
-      const q = query(
-        collection(db, 'subgroups'),
-        where('coordinatorId', '==', userId),
-        where('status', '==', 'active')
+      const subGroups = await FirebaseDatabaseService.getCollectionWhere(
+        'subgroups',
+        'coordinatorId',
+        '==',
+        userId
       )
       
-      const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(doc.data().createdAt)
-      })) as SubGroup[]
+      return subGroups
+        .filter((sg: any) => sg.status === 'active')
+        .map((doc: any) => ({
+          ...doc,
+          createdAt: doc.createdAt ? new Date(doc.createdAt) : new Date()
+        })) as SubGroup[]
     } catch (error) {
- console.error(' Error getting coordinated sub-groups:', error)
+      console.error(' Error getting coordinated sub-groups:', error)
       return []
     }
   }

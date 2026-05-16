@@ -1,14 +1,12 @@
-import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore'
-import { db } from './firebase-setup'
+import { FirebaseDatabaseService } from './firebase-database'
 
 export async function updateUserPresence(userId: string, status: 'online' | 'offline'): Promise<void> {
   if (!userId) return
   try {
-    const ref = doc(db, 'presence', userId)
-    await setDoc(ref, { 
+    await FirebaseDatabaseService.updateDocument('presence', userId, { 
       status, 
-      lastSeen: serverTimestamp() 
-    }, { merge: true })
+      lastSeen: new Date().toISOString()
+    })
   } catch (err: any) {
     // If we get a permission error, it's likely the rules aren't set for the new presence collection
     if (err?.code === 'permission-denied') {
@@ -25,14 +23,12 @@ export function subscribeToUserPresence(userId: string, callback: (presence: { s
     return () => {}
   }
   
-  return onSnapshot(doc(db, 'presence', userId), (d) => {
-    if (d.exists()) {
-      callback(d.data() as any)
+  return FirebaseDatabaseService.subscribeToCollectionWhere('presence', 'id', '==', userId, (docs) => {
+    const d = docs[0]
+    if (d) {
+      callback(d as any)
     } else {
       callback({ status: 'offline', lastSeen: null })
     }
-  }, (err) => {
-    console.warn('[PresenceService] subscribe error:', err)
-    callback({ status: 'offline', lastSeen: null })
   })
 }

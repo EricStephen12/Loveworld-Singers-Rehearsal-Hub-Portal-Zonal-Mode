@@ -24,6 +24,22 @@ export default function HistoryPage() {
     const [showMobileSearch, setShowMobileSearch] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
 
+    // Mobile Sidebar Auto-Close
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 1024) {
+                setSidebarOpen(false)
+            } else {
+                setSidebarOpen(true)
+            }
+        }
+
+        window.addEventListener('resize', handleResize)
+        handleResize()
+
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
     useEffect(() => {
         if (user?.uid) {
             loadHistory()
@@ -123,8 +139,9 @@ export default function HistoryPage() {
     }
 
     return (
-        <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30">
-            <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950">
+        <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col selection:bg-indigo-500/30 font-sans">
+            {/* 1. Fixed Header */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800/80 shadow-md">
                 <YouTubeHeader
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
@@ -135,17 +152,18 @@ export default function HistoryPage() {
                 />
             </div>
 
+            {/* 2. Main Body Container starting below Header (pt-16) */}
             <div className="flex flex-1 pt-16 overflow-hidden relative">
                 {/* Mobile Sidebar Overlay */}
                 {sidebarOpen && (
                     <div
-                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] lg:hidden"
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] lg:hidden animate-in fade-in duration-200"
                         onClick={() => setSidebarOpen(false)}
                     />
                 )}
 
                 {/* Sidebar Container */}
-                <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
+                <div className={`fixed lg:relative top-16 lg:top-0 left-0 h-[calc(100vh-64px)] z-[110] transition-all duration-300 bg-slate-950 border-r border-slate-800/80 flex flex-col ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
                     <YouTubeSidebar
                         sidebarOpen={sidebarOpen}
                         viewMode={viewMode}
@@ -157,155 +175,147 @@ export default function HistoryPage() {
                     />
                 </div>
 
-                <main className="flex-1 max-w-[2100px] mx-auto px-6 pt-6 pb-24 overflow-y-auto custom-scrollbar bg-slate-950">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="flex items-center justify-between mb-10">
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/5">
-                                    <History className="w-6 h-6 text-indigo-400" />
-                                </div>
-                                Watch history
-                            </h1>
-                            {historyItems.length > 0 && (
-                                <button
-                                    onClick={clearHistory}
-                                    className="flex items-center gap-2.5 px-6 py-3 hover:bg-slate-800 rounded-2xl text-[13px] font-bold transition-all text-slate-400 hover:text-slate-100 border border-white/5 active:scale-95"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Clear History
-                                </button>
-                            )}
-                        </div>
-
-                        {loading ? (
-                            <div className="flex flex-col gap-6">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="flex gap-6 animate-pulse">
-                                        <div className="w-48 sm:w-72 aspect-video bg-slate-900 rounded-2xl border border-white/5" />
-                                        <div className="flex-1 space-y-3 py-2">
-                                            <div className="h-5 bg-slate-900 rounded-lg w-3/4" />
-                                            <div className="h-4 bg-slate-900 rounded-lg w-1/2" />
-                                            <div className="h-3 bg-slate-900 rounded-lg w-full mt-4" />
+                {/* Main Content Container */}
+                <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-[#0B0F19]">
+                    <main className="flex-1 max-w-[2100px] w-full mx-auto px-6 pt-8 pb-32 overflow-y-auto custom-scrollbar bg-[#0B0F19]">
+                        <div className="max-w-5xl mx-auto space-y-8">
+                            {/* Minimalist Title & Actions Bar (Responsive & Elegant) */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+                                <div>
+                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                                        <div className="w-11 h-11 rounded-2xl bg-white/[0.03] flex items-center justify-center border border-white/[0.08]">
+                                            <History className="w-5 h-5 text-indigo-400" />
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : historyItems.length === 0 ? (
-                            <div className="py-32 text-center bg-slate-900/20 rounded-[32px] border-2 border-dashed border-slate-800">
-                                <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-6 border border-white/5">
-                                    <Clock className="w-10 h-10 text-slate-800" />
+                                        <span>Watch history</span>
+                                    </h1>
+                                    <p className="text-xs text-slate-400 font-medium mt-1">{historyItems.length} {historyItems.length === 1 ? 'session' : 'sessions'} watched</p>
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-100">Your history is clear</h3>
-                                <p className="text-slate-500 mt-2 font-medium">Videos you watch will appear here.</p>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-6">
-                                {historyItems
-                                    .filter(item => 
-                                        item.media.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                        item.media.description?.toLowerCase().includes(searchQuery.toLowerCase())
-                                    )
-                                    .map((item) => {
-                                        // Use Cloudinary video frame transformation if possible, else fallback to thumbnail
-                                        const videoFrameUrl = getCloudinaryThumbnailUrl(item.media.videoUrl);
-                                        const thumbnailUrl = (item.media.videoUrl && item.media.videoUrl.includes('cloudinary.com')) 
-                                            ? videoFrameUrl 
-                                            : (item.media.thumbnail || videoFrameUrl);
 
-                                        return (
-                                            <div 
-                                                key={item.history.id} 
-                                                className="group flex gap-4 sm:gap-6 p-2 sm:p-3 rounded-[24px] hover:bg-slate-900/60 transition-all cursor-pointer border border-transparent hover:border-white/5 hover:shadow-2xl hover:shadow-indigo-500/5 active:scale-[0.99]" 
-                                                onClick={() => router.push(`/pages/media/player/${item.media.id}`)}
-                                            >
-                                                {/* Thumbnail Container - Compact */}
-                                                <div className="relative w-32 sm:w-48 lg:w-56 aspect-video bg-slate-900 rounded-[16px] overflow-hidden flex-shrink-0 shadow-lg border border-white/5 ring-1 ring-white/10">
-                                                    <img
-                                                        src={thumbnailUrl || '/movie/default-hero.jpeg'}
-                                                        alt={item.media.title}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                                        onError={(e) => {
-                                                            const fallback = '/movie/default-hero.jpeg';
-                                                            if (e.currentTarget.src !== fallback) {
-                                                                e.currentTarget.src = fallback;
-                                                            }
-                                                        }}
-                                                    />
-                                                    
-                                                    {/* Play Overlay */}
-                                                    <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                                                        <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-xl scale-90 group-hover:scale-100 transition-all duration-300">
-                                                            <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5" />
+                                {historyItems.length > 0 && (
+                                    <div className="flex items-center flex-shrink-0">
+                                        <button
+                                            onClick={clearHistory}
+                                            className="flex items-center justify-center gap-2 px-6 h-12 bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-slate-300 hover:text-white rounded-2xl text-sm font-bold transition-all active:scale-95 backdrop-blur-md shadow-xl"
+                                        >
+                                            <Trash2 className="w-4.5 h-4.5 text-red-400" />
+                                            <span>Clear History</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {loading ? (
+                                <div className="space-y-3">
+                                    {[...Array(5)].map((_, i) => (
+                                        <div key={i} className="h-20 bg-white/[0.02] rounded-2xl animate-pulse border border-white/[0.05]" />
+                                    ))}
+                                </div>
+                            ) : historyItems.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-32 text-center bg-white/[0.02] rounded-[32px] border border-dashed border-white/[0.08]">
+                                    <div className="w-12 h-12 rounded-full bg-white/[0.03] flex items-center justify-center mb-4 border border-white/[0.05]">
+                                        <Clock className="w-6 h-6 text-slate-600" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-200">Your history is clear</h3>
+                                    <p className="text-slate-500 text-sm mt-1 font-medium">Videos you watch will appear here</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {historyItems
+                                        .filter(item => 
+                                            item.media.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            item.media.description?.toLowerCase().includes(searchQuery.toLowerCase())
+                                        )
+                                        .map((item) => {
+                                            const videoFrameUrl = getCloudinaryThumbnailUrl(item.media.videoUrl);
+                                            const thumbnailUrl = (item.media.videoUrl && item.media.videoUrl.includes('cloudinary.com')) 
+                                                ? videoFrameUrl 
+                                                : (item.media.thumbnail || videoFrameUrl);
+
+                                            return (
+                                                <div 
+                                                    key={item.history.id} 
+                                                    className="group flex items-center gap-4 p-3.5 bg-white/[0.02] hover:bg-white/[0.05] rounded-2xl border border-white/[0.05] hover:border-white/[0.1] transition-all relative cursor-pointer shadow-sm hover:shadow-xl" 
+                                                    onClick={() => router.push(`/pages/media/player/${item.media.id}`)}
+                                                >
+                                                    {/* Thumbnail Container */}
+                                                    <div className="w-24 sm:w-32 aspect-video bg-slate-900/80 rounded-xl overflow-hidden flex-shrink-0 relative shadow-md border border-white/10 flex items-center justify-center">
+                                                        <img
+                                                            src={thumbnailUrl || '/movie/default-hero.jpeg'}
+                                                            alt={item.media.title}
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            onError={(e) => {
+                                                                const fallback = '/movie/default-hero.jpeg';
+                                                                if (e.currentTarget.src !== fallback) {
+                                                                    e.currentTarget.src = fallback;
+                                                                }
+                                                            }}
+                                                        />
+                                                        
+                                                        {/* Play Overlay */}
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                            <div className="w-10 h-10 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-2xl scale-90 group-hover:scale-100 transition-transform duration-300">
+                                                                <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-slate-950 border-b-[5px] border-b-transparent ml-0.5" />
+                                                            </div>
                                                         </div>
+
+                                                        {/* Progress Bar */}
+                                                        {item.history.progress > 0 && (
+                                                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-950/40 backdrop-blur-md">
+                                                                <div
+                                                                    className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)] rounded-r-full"
+                                                                    style={{ width: `${item.history.progress}%` }}
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Duration Badge */}
+                                                        {item.media.duration && (
+                                                            <div className="absolute bottom-1.5 right-1.5 bg-black/80 backdrop-blur-md text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/10 shadow-xl">
+                                                                {Math.floor(item.media.duration / 60)}:{String(Math.floor(item.media.duration % 60)).padStart(2, '0')}
+                                                            </div>
+                                                        )}
                                                     </div>
 
-                                                    {/* Progress Bar */}
-                                                    {item.history.progress > 0 && (
-                                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-950/40 backdrop-blur-md">
-                                                            <div
-                                                                className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)] rounded-r-full"
-                                                                style={{ width: `${item.history.progress}%` }}
-                                                            />
-                                                        </div>
-                                                    )}
-
-                                                    {/* Duration Badge */}
-                                                    {item.media.duration && (
-                                                        <div className="absolute bottom-1.5 right-1.5 bg-slate-950/90 backdrop-blur-md text-slate-100 text-[9px] font-black px-1.5 py-0.5 rounded-md border border-white/10 shadow-xl">
-                                                            {Math.floor(item.media.duration / 60)}:{String(Math.floor(item.media.duration % 60)).padStart(2, '0')}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Content Info */}
-                                                <div className="flex-1 py-0.5 min-w-0 flex flex-col justify-center">
-                                                    <div>
-                                                        <div className="flex justify-between items-start gap-2 mb-0.5">
-                                                            <h3 className="text-[13px] sm:text-[15px] font-black line-clamp-2 leading-tight text-slate-100 group-hover:text-indigo-300 transition-colors tracking-tight">
-                                                                {item.media.title}
-                                                            </h3>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    removeItem(item.history.id)
-                                                                }}
-                                                                className="p-1 hover:bg-red-500/10 rounded-full text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center border border-transparent hover:border-red-500/20 flex-shrink-0"
-                                                                title="Remove from history"
-                                                            >
-                                                                <X className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
+                                                    {/* Content Info */}
+                                                    <div className="flex-1 min-w-0 pr-4">
+                                                        <h4 className="font-bold text-base text-slate-100 group-hover:text-indigo-300 transition-colors tracking-tight line-clamp-2">
+                                                            {item.media.title}
+                                                        </h4>
                                                         
-                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
-                                                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
-                                                                {item.media.views?.toLocaleString()} views
-                                                            </span>
-                                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400">
-                                                                {item.history.lastWatched ? new Date(item.history.lastWatched).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recently'}
-                                                            </span>
-                                                        </div>
-
-                                                        <p className="text-[11px] sm:text-[12px] text-slate-500 line-clamp-1 sm:line-clamp-2 font-medium leading-relaxed max-w-xl">
-                                                            {item.media.description || 'No description available for this session.'}
+                                                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-2 font-medium">
+                                                            <span>Rehearsal Video</span>
+                                                            <span className="text-slate-600">•</span>
+                                                            <span>{item.history.lastWatched ? new Date(item.history.lastWatched).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recently'}</span>
+                                                            {item.history.progress > 0 && item.history.progress < 95 && (
+                                                                <>
+                                                                    <span className="text-slate-600">•</span>
+                                                                    <span className="text-indigo-400 font-semibold">{Math.round(item.history.progress)}% Watched</span>
+                                                                </>
+                                                            )}
                                                         </p>
                                                     </div>
 
-                                                    {/* Resume Indicator */}
-                                                    {item.history.progress > 0 && item.history.progress < 95 && (
-                                                        <div className="mt-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-400/80">
-                                                            <Clock className="w-2.5 h-2.5" />
-                                                            {Math.round(item.history.progress)}% Watched
-                                                        </div>
-                                                    )}
+                                                    {/* Remove Button */}
+                                                    <div className="relative flex-shrink-0">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                removeItem(item.history.id)
+                                                            }}
+                                                            className="p-2.5 hover:bg-white/[0.08] rounded-xl text-slate-500 hover:text-red-400 transition-colors active:scale-95"
+                                                            title="Remove from history"
+                                                        >
+                                                            <X className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
-                            </div>
-                        )}
-                    </div>
-                </main>
+                                            );
+                                        })}
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
             </div>
         </div>
     )

@@ -89,15 +89,29 @@ export const PraiseNightHeader: React.FC<PraiseNightHeaderProps> = ({
                 <Search className="w-5 h-5 text-gray-600 transition-all duration-200" />
               </button>
             )}
-            timer={currentPraiseNight && currentPraiseNight.countdown && categoryFilter !== 'archive' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
-              <div className="flex items-center gap-0.5 text-xs">
-                <span className="font-bold text-gray-700">{formatNumber(timeLeft.days)}d</span>
-                <span className="text-gray-500 font-bold">:</span>
-                <span className="font-bold text-gray-700">{formatNumber(timeLeft.hours)}h</span>
-                <span className="text-gray-500 font-bold">:</span>
-                <span className="font-bold text-gray-700">{formatNumber(timeLeft.minutes)}m</span>
-                <span className="text-gray-500 font-bold">:</span>
-                <span className="font-bold text-gray-700">{formatNumber(timeLeft.seconds)}s</span>
+            timer={currentPraiseNight && categoryFilter !== 'archive' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
+              <div className="flex items-center gap-0.5 mt-[-10px] px-2 py-0.5 bg-indigo-50/40 backdrop-blur-sm rounded-full border border-indigo-100/30 shadow-sm animate-in fade-in slide-in-from-top-1 duration-500">
+                <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px]">
+                  <div className="flex flex-col items-center min-w-[1.1rem]">
+                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.days)}</span>
+                    <span className="text-[6px] uppercase font-bold text-indigo-400">d</span>
+                  </div>
+                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
+                  <div className="flex flex-col items-center min-w-[1.1rem]">
+                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.hours)}</span>
+                    <span className="text-[6px] uppercase font-bold text-indigo-400">h</span>
+                  </div>
+                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
+                  <div className="flex flex-col items-center min-w-[1.1rem]">
+                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.minutes)}</span>
+                    <span className="text-[6px] uppercase font-bold text-indigo-400">m</span>
+                  </div>
+                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
+                  <div className="flex flex-col items-center min-w-[1.1rem]">
+                    <span className="font-extrabold text-purple-600 leading-none animate-pulse">{formatNumber(timeLeft.seconds)}</span>
+                    <span className="text-[6px] uppercase font-bold text-purple-400">s</span>
+                  </div>
+                </div>
               </div>
             )}
           />

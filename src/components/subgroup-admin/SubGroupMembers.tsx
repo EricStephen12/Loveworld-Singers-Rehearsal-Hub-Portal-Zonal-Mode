@@ -31,6 +31,7 @@ import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
 import CustomLoader from '@/components/CustomLoader';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
+import { SubGroupDatabaseService } from '@/lib/subgroup-database-service';
 
 interface SubGroupMembersProps {
   subGroupId: string;
@@ -228,10 +229,9 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
       setIsSearching(true);
       setDisplayLimit(50); // Reset limit on new search
       try {
-        const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
         const results = await SubGroupDatabaseService.searchProfiles(val);
         const subgroupMemberIds = members.map(m => m.id);
-        setGlobalResults(results.filter(r => !subgroupMemberIds.includes(r.id)));
+        setGlobalResults(results.filter((r: any) => !subgroupMemberIds.includes(r.id)));
       } catch (error) {
         console.error('Global search error:', error);
       } finally {
@@ -244,17 +244,9 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
     setIsSearching(true);
     setDisplayLimit(50); // Reset limit on preview
     try {
-      const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
-      // Use getAllUsers as a robust fallback for the global preview if empty search is failing
-      let results = await SubGroupDatabaseService.searchProfiles("");
-      
-      if (results.length === 0) {
-          // Fallback to the reliable getAllUsers method if the specific search fails
-          results = await FirebaseDatabaseService.getAllUsers();
-      }
-
+      const results = await SubGroupDatabaseService.searchProfiles("");
       const subgroupMemberIds = members.map(m => m.id);
-      setGlobalResults(results.filter(r => !subgroupMemberIds.includes(r.id)));
+      setGlobalResults(results.filter((r: any) => !subgroupMemberIds.includes(r.id)));
     } catch (error) {
       console.error('Global preview error:', error);
     } finally {
@@ -274,7 +266,6 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
     if (selectedForAdd.length === 0) return;
     setAdding(true);
     try {
-      const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const result = await SubGroupDatabaseService.addMembers(subGroupId, zoneId, selectedForAdd);
       if (result.success) {
         setSelectedForAdd([]);
@@ -291,7 +282,6 @@ export default function SubGroupMembers({ subGroupId, zoneId }: SubGroupMembersP
   const handleRemoveMember = async (memberId: string) => {
     if (!confirm('Remove from group?')) return;
     try {
-      const { SubGroupDatabaseService } = await import('@/lib/subgroup-database-service');
       const result = await SubGroupDatabaseService.removeMember(subGroupId, memberId);
       if (result.success) {
         loadMembers();

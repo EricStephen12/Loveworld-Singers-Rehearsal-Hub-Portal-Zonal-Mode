@@ -36,6 +36,21 @@ import {
   subscribeToTyping
 } from '../_lib/chat-service'
 import { subscribeToUserPresence, updateUserPresence } from '@/lib/presence-service'
+import { 
+  serverTimestamp,
+  increment,
+  arrayUnion,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase-setup'
 
 interface ChatContextType {
   // State
@@ -51,7 +66,7 @@ interface ChatContextType {
   // Actions
   selectChat: (chat: Chat | null) => void
   sendMessage: (text: string, replyTo?: { id: string; text: string; senderName: string }, media?: { type: 'image' | 'document'; url: string; name?: string; size?: number; mimeType?: string }) => Promise<boolean>
-  sendMediaMessage: (file: File) => Promise<boolean>
+  sendMediaMessage: (file: File, caption?: string) => Promise<boolean>
   sendVoiceMessage: (file: File, duration: number) => Promise<boolean>
   startDirectChat: (user: ChatUser) => Promise<string | null>
   createGroupChat: (name: string, members: ChatUser[]) => Promise<string | null>
@@ -81,6 +96,27 @@ interface ChatContextType {
   typingUsers: { userName: string, status: string }[]
   allTypingUsers: { [chatId: string]: { userName: string, status: string }[] }
   userPresence: { [userId: string]: { status: 'online' | 'offline'; lastSeen: any } }
+  
+  // Statuses
+  statuses: StatusUpdate[]
+  uploadStatus: (file: File, caption?: string) => Promise<boolean>
+  viewStatus: (statusId: string) => Promise<void>
+  deleteStatus: (statusId: string) => Promise<boolean>
+  toggleStatusLike: (statusId: string) => Promise<boolean>
+}
+
+export interface StatusUpdate {
+  id: string
+  userId: string
+  userName: string
+  userAvatar?: string
+  mediaUrl: string
+  type: 'image' | 'video' | 'audio'
+  timestamp: any
+  caption?: string
+  viewers: string[]
+  likes?: string[]
+  zoneId?: string
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -97,6 +133,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isMessagesLoading, setIsMessagesLoading] = useState(false)
   const [userPresence, setUserPresence] = useState<{ [userId: string]: { status: 'online' | 'offline'; lastSeen: any } }>({})
+  const [statuses, setStatuses] = useState<StatusUpdate[]>([])
 
   // Build current user object
   const currentUser: ChatUser | null = user && profile ? {
@@ -192,13 +229,25 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     }
 
     const unsubscribe = subscribeToMessages(selectedChat.id, (newMessages) => {
+      // Filter messages based on clearedAt timestamp for the current user
+      const clearTime = (user?.uid && selectedChat.clearedAt?.[user.uid]?.toMillis()) || 0
+      const visibleMessages = newMessages.filter(m => {
+        const msgTime = m.timestamp instanceof Date ? m.timestamp.getTime() : m.timestamp
+        return msgTime > (clearTime as number)
+      })
+
       // Inject pinning info
-      const enriched = newMessages.map(m => ({
+      const enriched = visibleMessages.map(m => ({
         ...m,
         pinnedInChat: selectedChat.pinnedMessageId === m.id
       }))
       setMessages(enriched)
       setIsMessagesLoading(false)
+
+      // Instantly mark as read when new messages arrive while chat is open
+      if (user?.uid && selectedChat.id) {
+        markChatAsRead(selectedChat.id, user.uid)
+      }
     })
 
     const unsubscribeTyping = subscribeToTyping(selectedChat.id, user?.uid || '', (users) => {
@@ -244,6 +293,32 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return () => unsubscribes.forEach(unsub => unsub())
   }, [user?.uid, chats.length]) // Only rebinding if user or chat count changes
 
+  // Subscribe to Statuses
+  useEffect(() => {
+    if (!user?.uid) return
+    const q = query(collection(db, 'statuses_v2'), orderBy('timestamp', 'desc'), limit(100))
+    const unsub = onSnapshot(q, (snap) => {
+      const now = Date.now()
+      const dayAgo = now - 24 * 60 * 60 * 1000
+      const activeStatuses = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as StatusUpdate))
+        .filter(s => {
+          const ts = s.timestamp?.toMillis() || now
+          return ts > dayAgo
+        })
+      setStatuses(activeStatuses)
+    }, (err) => {
+       console.error('[ChatContext] Status subscription error:', err)
+       // If index missing, fallback to no order
+       if (err.message.includes('index')) {
+          onSnapshot(collection(db, 'statuses_v2'), (s) => {
+             setStatuses(s.docs.map(d => ({ id: d.id, ...d.data() } as StatusUpdate)))
+          })
+       }
+    })
+    return () => unsub()
+  }, [user?.uid])
+
   // Actions
   const selectChat = useCallback((chat: Chat | null) => {
     setSelectedChat(chat)
@@ -262,7 +337,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
   }, [selectedChat, currentUser])
 
   // Upload file to Cloudinary and send as message
-  const sendMediaMessage = useCallback(async (file: File) => {
+  const sendMediaMessage = useCallback(async (file: File, caption?: string) => {
     if (!selectedChat || !currentUser) return false
 
     try {
@@ -296,16 +371,15 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       let finalUrl = data.secure_url
       
       // For documents, we want to force the browser to download the file instead of opening it inline.
-      // Cloudinary allows appending `fl_attachment` to the delivery URL to force the content-disposition header.
       if (!isImage && finalUrl.includes('/upload/')) {
          finalUrl = finalUrl.replace('/upload/', '/upload/fl_attachment/')
       }
 
-      // Send message with media
+      // Send message with media and optional caption
       return sendChatMessage(
         selectedChat.id,
         currentUser,
-        '', // Empty text, will be replaced with emoji
+        caption || '', // Use caption as the message text
         undefined,
         {
           type: mediaType,
@@ -531,6 +605,90 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return undefined
   }, [user?.uid])
 
+  const uploadStatus = useCallback(async (file: File, caption?: string) => {
+    if (!currentUser) return false
+    try {
+      const isImage = file.type.startsWith('image/')
+      const isVideo = file.type.startsWith('video/')
+      const isAudio = file.type.startsWith('audio/')
+      
+      // Cloudinary resource types: 'image', 'video' (for video/audio), 'raw'
+      let resourceType: 'image' | 'video' | 'raw' = 'raw'
+      if (isImage) resourceType = 'image'
+      else if (isVideo || isAudio) resourceType = 'video'
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'loveworld-singers')
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dvtjjt3js'
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+        { method: 'POST', body: formData }
+      )
+      if (!response.ok) throw new Error('Status upload failed')
+      const data = await response.json()
+
+      await addDoc(collection(db, 'statuses_v2'), {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userAvatar: currentUser.avatar,
+        mediaUrl: data.secure_url,
+        type: isImage ? 'image' : isVideo ? 'video' : 'audio',
+        timestamp: serverTimestamp(),
+        caption,
+        viewers: [],
+        likes: [],
+        zoneId: currentZone?.id
+      })
+      return true
+    } catch (e) {
+      console.error('[ChatContext] uploadStatus error:', e)
+      return false
+    }
+  }, [currentUser, currentZone])
+
+  const viewStatus = useCallback(async (statusId: string) => {
+    if (!user?.uid) return
+    try {
+      await updateDoc(doc(db, 'statuses_v2', statusId), {
+        viewers: arrayUnion(user.uid)
+      })
+    } catch (e) {}
+  }, [user?.uid])
+
+  const deleteStatus = useCallback(async (statusId: string) => {
+    if (!user?.uid) return false
+    try {
+      // Import deleteDoc from firebase/firestore if not already available
+      const { deleteDoc: fireDelete } = await import('firebase/firestore')
+      await fireDelete(doc(db, 'statuses_v2', statusId))
+      return true
+    } catch (e) {
+      console.error('[ChatContext] deleteStatus error:', e)
+      return false
+    }
+  }, [user?.uid])
+
+  const toggleStatusLike = useCallback(async (statusId: string) => {
+    if (!user?.uid) return false
+    try {
+      const { arrayRemove } = await import('firebase/firestore')
+      const statusRef = doc(db, 'statuses_v2', statusId)
+      const status = statuses.find(s => s.id === statusId)
+      if (!status) return false
+
+      const isLiked = status.likes?.includes(user.uid)
+      await updateDoc(statusRef, {
+        likes: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      })
+      return true
+    } catch (e) {
+      console.error('[ChatContext] toggleStatusLike error:', e)
+      return false
+    }
+  }, [user?.uid, statuses])
+
   return (
     <ChatContext.Provider value={{
       chats,
@@ -569,7 +727,12 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
       getChatDisplayName,
       getChatAvatar,
       allTypingUsers,
-      userPresence
+      userPresence,
+      statuses,
+      uploadStatus,
+      viewStatus,
+      deleteStatus,
+      toggleStatusLike
     }}>
       {children}
     </ChatContext.Provider>

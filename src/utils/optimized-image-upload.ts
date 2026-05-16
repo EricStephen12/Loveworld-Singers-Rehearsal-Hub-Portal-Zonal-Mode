@@ -1,4 +1,4 @@
-﻿import { supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 
 export interface UltraFastUploadResult {
   success: boolean;
@@ -140,7 +140,7 @@ export async function ultraFastUploadProfileImage(
       };
     }
     
-    const publicUrl = uploadResult.url;
+    const publicUrl = uploadResult;
     const uploadTime = Date.now() - startTime;
 
     onProgress?.({

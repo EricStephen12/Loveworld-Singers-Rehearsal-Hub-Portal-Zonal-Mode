@@ -1,15 +1,4 @@
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc,
-  collection,
-  getDocs,
-  increment,
-  query,
-  where
-} from 'firebase/firestore';
-import { db } from './firebase-setup';
+import { FirebaseDatabaseService } from './firebase-database';
 
 interface SimplifiedAnalyticsRecord {
   id: string;
@@ -26,8 +15,8 @@ interface SimplifiedAnalyticsRecord {
   browsers: { [browser: string]: number };
   featureEngagements: { [feature: string]: number };
   songMinistries: { [songId: string]: number };
-  updatedAt: Date;
-  createdAt: Date;
+  updatedAt: any;
+  createdAt: any;
 }
 
 export class SimplifiedAnalyticsService {
@@ -40,17 +29,15 @@ export class SimplifiedAnalyticsService {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
     
     const updateData = {
-      totalSignups: increment(count),
-      updatedAt: new Date()
+      totalSignups: ((await this.getMonthlySummary(year, month))?.totalSignups || 0) + count,
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      await updateDoc(docRef, updateData);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       const newRecord: SimplifiedAnalyticsRecord = {
@@ -68,10 +55,10 @@ export class SimplifiedAnalyticsService {
         browsers: {},
         featureEngagements: {},
         songMinistries: {},
-        updatedAt: new Date(),
-        createdAt: new Date()
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      await setDoc(docRef, newRecord);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, newRecord);
     }
   }
 
@@ -79,17 +66,15 @@ export class SimplifiedAnalyticsService {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
     
     const updateData = {
-      totalLogins: increment(count),
-      updatedAt: new Date()
+      totalLogins: ((await this.getMonthlySummary(year, month))?.totalLogins || 0) + count,
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      await updateDoc(docRef, updateData);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       const newRecord: SimplifiedAnalyticsRecord = {
@@ -107,10 +92,10 @@ export class SimplifiedAnalyticsService {
         browsers: {},
         featureEngagements: {},
         songMinistries: {},
-        updatedAt: new Date(),
-        createdAt: new Date()
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      await setDoc(docRef, newRecord);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, newRecord);
     }
   }
 
@@ -118,18 +103,17 @@ export class SimplifiedAnalyticsService {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
     
+    const current = await this.getMonthlySummary(year, month);
     const updateData: any = {
-      totalFeatureEngagements: increment(count),
-      [`featureEngagements.${featureName.replace(/\./g, '_')}`]: increment(count),
-      updatedAt: new Date()
+      totalFeatureEngagements: (current?.totalFeatureEngagements || 0) + count,
+      [`featureEngagements.${featureName.replace(/\./g, '_')}`]: (current?.featureEngagements?.[featureName.replace(/\./g, '_')] || 0) + count,
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      await updateDoc(docRef, updateData);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       const newRecord: SimplifiedAnalyticsRecord = {
@@ -147,10 +131,10 @@ export class SimplifiedAnalyticsService {
         browsers: {},
         featureEngagements: { [featureName.replace(/\./g, '_')]: count },
         songMinistries: {},
-        updatedAt: new Date(),
-        createdAt: new Date()
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      await setDoc(docRef, newRecord);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, newRecord);
     }
   }
 
@@ -158,18 +142,17 @@ export class SimplifiedAnalyticsService {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
     
+    const current = await this.getMonthlySummary(year, month);
     const updateData: any = {
-      totalSongMinistries: increment(count),
-      [`songMinistries.${songId.replace(/\./g, '_')}`]: increment(count),
-      updatedAt: new Date()
+      totalSongMinistries: (current?.totalSongMinistries || 0) + count,
+      [`songMinistries.${songId.replace(/\./g, '_')}`]: (current?.songMinistries?.[songId.replace(/\./g, '_')] || 0) + count,
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      await updateDoc(docRef, updateData);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       const newRecord: SimplifiedAnalyticsRecord = {
@@ -187,10 +170,10 @@ export class SimplifiedAnalyticsService {
         browsers: {},
         featureEngagements: {},
         songMinistries: { [songId.replace(/\./g, '_')]: count },
-        updatedAt: new Date(),
-        createdAt: new Date()
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      await setDoc(docRef, newRecord);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, newRecord);
     }
   }
 
@@ -200,22 +183,20 @@ export class SimplifiedAnalyticsService {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
     
-    // Sanitize keys for Firestore (replace dots and slashes)
     const safeCountry = country.replace(/[.\/]/g, '_');
     const safeCity = city ? city.replace(/[.\/]/g, '_') : 'Unknown';
-    
+
+    const current = await this.getMonthlySummary(year, month);
     const updateData: any = {
-      [`countries.${safeCountry}`]: increment(1),
-      [`cities.${safeCity}`]: increment(1),
-      updatedAt: new Date()
+      [`countries.${safeCountry}`]: (current?.countries?.[safeCountry] || 0) + 1,
+      [`cities.${safeCity}`]: (current?.cities?.[safeCity] || 0) + 1,
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      await updateDoc(docRef, updateData);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       const newRecord: SimplifiedAnalyticsRecord = {
@@ -233,10 +214,10 @@ export class SimplifiedAnalyticsService {
         browsers: {},
         featureEngagements: {},
         songMinistries: {},
-        updatedAt: new Date(),
-        createdAt: new Date()
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
-      await setDoc(docRef, newRecord);
+      await FirebaseDatabaseService.updateDocument('simplified_analytics', docId, newRecord);
     }
   }
 
@@ -272,12 +253,11 @@ export class SimplifiedAnalyticsService {
 
   static async getMonthlySummary(year: number, month: number): Promise<SimplifiedAnalyticsRecord | null> {
     const docId = this.getMonthlyDocId(year, month);
-    const docRef = doc(db, 'simplified_analytics', docId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await FirebaseDatabaseService.getDocument('simplified_analytics', docId);
     
-    if (!docSnap.exists()) return null;
+    if (!docSnap) return null;
     
-    const data = docSnap.data();
+    const data = docSnap;
     return {
       id: docId,
       year: data.year,
@@ -293,19 +273,18 @@ export class SimplifiedAnalyticsService {
       browsers: data.browsers || {},
       featureEngagements: data.featureEngagements || {},
       songMinistries: data.songMinistries || {},
-      updatedAt: data.updatedAt.toDate ? data.updatedAt.toDate() : data.updatedAt,
-      createdAt: data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt
+      updatedAt: data.updatedAt,
+      createdAt: data.createdAt
     };
   }
 
   static async getAllMonthlySummaries(): Promise<SimplifiedAnalyticsRecord[]> {
     try {
-      const snapshot = await getDocs(collection(db, 'simplified_analytics'));
+      const snapshot = await FirebaseDatabaseService.getCollection('simplified_analytics');
       
-      const records = snapshot.docs.map(doc => {
-        const data = doc.data();
+      const records = snapshot.map((data: any) => {
         return {
-          id: doc.id,
+          id: data.id,
           year: data.year,
           month: data.month,
           totalSignups: data.totalSignups || 0,
@@ -319,12 +298,12 @@ export class SimplifiedAnalyticsService {
           browsers: data.browsers || {},
           featureEngagements: data.featureEngagements || {},
           songMinistries: data.songMinistries || {},
-          updatedAt: data.updatedAt.toDate ? data.updatedAt.toDate() : data.updatedAt,
-          createdAt: data.createdAt.toDate ? data.createdAt.toDate() : data.createdAt
+          updatedAt: data.updatedAt,
+          createdAt: data.createdAt
         };
       });
       
-      return records.sort((a, b) => {
+      return records.sort((a: any, b: any) => {
         if (a.year !== b.year) return b.year - a.year;
         return b.month - a.month;
       });

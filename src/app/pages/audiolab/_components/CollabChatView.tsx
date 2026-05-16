@@ -171,14 +171,14 @@ export function CollabChatView({ onClose, className = '' }: CollabChatViewProps)
     try {
       const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
       const result = await uploadAudioToCloudinary(file);
-      if (result?.url) {
+      if (result) {
         await sendChatMessage(sessionId, {
           type: 'voice',
           content: 'Voice message',
           senderId: user.uid,
           senderName: fullName,
           ...(userAvatar && { senderAvatar: userAvatar }),
-          voiceUrl: result.url,
+          voiceUrl: result,
           voiceDuration: finalDuration
         });
       } else {

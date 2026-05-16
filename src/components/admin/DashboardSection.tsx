@@ -7,7 +7,7 @@ import {
   Users, Crown, Music, Calendar, TrendingUp,
   Link as LinkIcon, Copy, CheckCircle, CreditCard,
   Shield, BarChart3, Upload, QrCode, Sparkles,
-  ArrowRight, Clock
+  ArrowRight, Clock, FileText, List
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { ZoneInvitationService } from '@/lib/zone-invitation-service'
@@ -436,7 +436,7 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
           {/* Quick Actions */}
           <div>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Actions</p>
-            <div className="grid grid-cols-4 gap-2 lg:gap-3">
+            <div className="grid grid-cols-4 lg:grid-cols-5 gap-2 lg:gap-3">
               <Link
                 href="/subscription"
                 className="flex flex-col items-center gap-2 p-3 lg:p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.97] transition-all"
@@ -465,9 +465,19 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
                 className="flex flex-col items-center gap-2 p-3 lg:p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.97] transition-all"
               >
                 <div className="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-green-600" />
+                  <FileText className="w-5 h-5 text-green-600" />
                 </div>
                 <span className="text-[11px] font-semibold text-gray-600 text-center leading-tight">Pages</span>
+              </button>
+
+              <button
+                onClick={() => onSectionChange?.('Schedule Manager')}
+                className="flex flex-col items-center gap-2 p-3 lg:p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md active:scale-[0.97] transition-all"
+              >
+                <div className="w-11 h-11 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <List className="w-5 h-5 text-purple-600" />
+                </div>
+                <span className="text-[11px] font-semibold text-gray-600 text-center leading-tight">Schedule</span>
               </button>
 
               <Link

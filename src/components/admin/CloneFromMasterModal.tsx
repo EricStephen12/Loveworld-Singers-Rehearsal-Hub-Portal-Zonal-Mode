@@ -66,19 +66,24 @@ export default function CloneFromMasterModal({
       title: masterSong.title,
       status: 'unheard', // Default to unheard
       category: defaultCategory || masterSong.category || '',
+      categories: masterSong.categories || (masterSong.category ? [masterSong.category] : []),
       praiseNightId: praiseNightId,
       leadSinger: masterSong.leadSinger || '',
       writer: masterSong.writer || '',
-      conductor: '',
+      conductor: masterSong.conductor || '',
       key: masterSong.key || '',
       tempo: masterSong.tempo || '',
       lyrics: masterSong.lyrics || '',
       solfas: masterSong.solfa || '',
-      leadKeyboardist: '',
-      leadGuitarist: '',
-      drummer: '',
+      leadKeyboardist: masterSong.leadKeyboardist || '',
+      leadGuitarist: masterSong.bassGuitarist || '',
+      bassGuitarist: masterSong.bassGuitarist || '',
+      drummer: masterSong.drummer || '',
       comments: [],
       audioFile: masterSong.audioUrls?.full || masterSong.audioFile || '',
+      audioUrls: masterSong.audioUrls || {},
+      customParts: masterSong.customParts || [],
+      availableParts: masterSong.audioUrls ? Object.keys(masterSong.audioUrls).filter(k => masterSong.audioUrls[k]) : [],
       history: []
     };
 

@@ -1589,7 +1589,7 @@ function ProfilePage() {
                             <div>
                               <p className="text-xs font-bold text-gray-900">{record.event_name}</p>
                               <p className="text-[10px] text-gray-500">
-                                {new Date(record.check_in_time).toLocaleDateString()}
+                                {new Date(record.check_in_time || 0).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
@@ -1600,7 +1600,7 @@ function ProfilePage() {
                               {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                             </p>
                             <p className="text-[10px] text-gray-500">
-                              {new Date(record.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(record.check_in_time || 0).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                         </div>

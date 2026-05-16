@@ -17,6 +17,7 @@ interface AuthContextType {
   profile: UserProfile | null
   loading: boolean
   signOut: () => Promise<void>
+  backendOffline: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [backendOffline, setBackendOffline] = useState(false)
 
   // Lifecycle
   useEffect(() => {
@@ -95,17 +97,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       
-      if (firebaseUser) {
-        // Fetch profile
-        const userProfile = await FirebaseDatabaseService.getUserProfile(firebaseUser.uid)
-        setProfile(userProfile as UserProfile | null)
-        SessionManager.startActivityTracking(firebaseUser.uid)
-      } else {
-        setProfile(null)
-        SessionManager.clearSessionState()
+      try {
+        if (firebaseUser) {
+          // Fetch profile - This is now a HARD dependency on the backend
+          const userProfile = await FirebaseDatabaseService.getUserProfile(firebaseUser.uid)
+          setProfile(userProfile as UserProfile | null)
+          setBackendOffline(false)
+          SessionManager.startActivityTracking(firebaseUser.uid)
+        } else {
+          setProfile(null)
+          SessionManager.clearSessionState()
+        }
+      } catch (err) {
+        console.error('[AuthContext] Backend handshake failed:', err)
+        setBackendOffline(true)
+      } finally {
+        setLoading(false)
       }
-      
-      setLoading(false)
 
       // Persistence
       if (typeof window !== 'undefined') {
@@ -129,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return currentLoading
       })
-    }, 12000)
+    }, 30000) // 30s safety timeout for extremely slow networks
 
     return () => {
       unsubscribe()
@@ -154,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut: handleSignOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut: handleSignOut, backendOffline }}>
       {children}
     </AuthContext.Provider>
   )

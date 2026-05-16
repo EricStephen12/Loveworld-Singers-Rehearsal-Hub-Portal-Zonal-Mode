@@ -1,10 +1,10 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Bell, Users, Building2, Calendar,
   Mic, Gift, Image, RefreshCw, Music, MessageCircle,
- Clock, Trash2, AlertCircle,
+  Clock, Trash2, AlertCircle, ArrowRight
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ScreenHeader } from '@/components/ScreenHeader'
@@ -16,6 +16,7 @@ import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { isHQGroup } from '@/config/zones'
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
+import { parseProgramDate } from '@/utils/date-parser'
 
 // Notification types
 type NotificationType =
@@ -70,7 +71,8 @@ export default function NotificationsPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { currentZone, isLoading: zoneLoading } = useZone()
+  const { currentZone, isLoading: zoneLoading, isSuperAdmin, isZoneCoordinator, userRole } = useZone()
+  const isSongAdmin = isSuperAdmin || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin'
   const { markAsSeen } = useUnreadNotifications()
 
   const zoneColor = currentZone?.themeColor || '#9333EA'
@@ -146,10 +148,12 @@ export default function NotificationsPage() {
       // Run all queries in parallel
       const [
         richNotifsResult,
-        audiolabProjects,
-        calendarEvents,
-        mediaNotifs,
-        birthdays
+        userNotifsResult,
+        audiolabProjectsResult,
+        calendarEventsResult,
+        mediaNotifsResult,
+        songNotifsResult,
+        birthdaysResult
       ] = await Promise.allSettled([
         // 1. Unified rich notifications (Admin broadcasts)
         (async () => {
@@ -167,6 +171,43 @@ export default function NotificationsPage() {
               is_read: readMap.has(notif.id),
               read_at: readMap.get(notif.id) || undefined
             }))
+          } catch (e) {
+            return []
+          }
+        })(),
+
+        // 2. Sub-group and individual user notifications
+        (async () => {
+          try {
+            // Fetch from user_notifications (direct)
+            const q1 = query(collection(db, 'user_notifications'), where('user_id', '==', userId), orderBy('createdAt', 'desc'), limit(30))
+            const s1 = await getDocs(q1)
+            const notifs: any[] = s1.docs.map(d => ({ id: d.id, ...d.data() }))
+
+            // Also check for target_user_id (backend variation)
+            const q2 = query(collection(db, 'user_notifications'), where('target_user_id', '==', userId), limit(30))
+            const s2 = await getDocs(q2)
+            s2.docs.forEach(d => {
+              if (!notifs.find(n => n.id === d.id)) {
+                notifs.push({ id: d.id, ...d.data() })
+              }
+            })
+            
+            // Also check 'notifications' and 'zone_notifications' for target_user_id (backend variation)
+            const otherCols = ['notifications', 'zone_notifications']
+            await Promise.all(otherCols.map(async (col) => {
+              try {
+                const q = query(collection(db, col), where('target_user_id', '==', userId), limit(20))
+                const s = await getDocs(q)
+                s.docs.forEach(d => {
+                  if (!notifs.find(n => n.id === d.id)) {
+                    notifs.push({ id: d.id, ...d.data(), type: (d.data() as any).type || 'subgroup' })
+                  }
+                })
+              } catch { }
+            }))
+
+            return notifs
           } catch (e) {
             return []
           }
@@ -195,23 +236,18 @@ export default function NotificationsPage() {
 
           await Promise.all(collections.map(async (col) => {
             try {
-              // Query 1: Zone-specific events
               const q1 = query(collection(db, col), where('zoneId', '==', currentZone.id), limit(20))
               const s1 = await getDocs(q1)
               s1.docs.forEach(d => events.push({ id: d.id, collection: col, ...d.data() }))
 
-              // Query 2: Global events (only for certain collections or all)
               const q2 = query(collection(db, col), where('isGlobal', '==', true), limit(20))
               const s2 = await getDocs(q2)
               s2.docs.forEach(d => {
-                // De-duplicate if already added by zoneId query
                 if (!events.find(e => e.id === d.id)) {
                   events.push({ id: d.id, collection: col, ...d.data() })
                 }
               })
-            } catch (e) {
- console.error(`Error fetching from ${col}:`, e)
-            }
+            } catch { }
           }))
           return events
         })(),
@@ -237,29 +273,51 @@ export default function NotificationsPage() {
           return media
         })(),
 
-        // 5. Birthdays
-        BirthdayService.getTodayAndUpcomingBirthdays().catch(() => [])
+        // 6. Song notifications
+        (async () => {
+          try {
+            const q = query(collection(db, 'song_notifications'), where('submittedByEmail', '==', userEmail), limit(30))
+            const snapshot = await getDocs(q)
+            return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+          } catch { return [] }
+        })(),
+
+        // 7. Birthdays
+        BirthdayService.getTodayAndUpcomingBirthdays(currentZone.id).catch(() => [])
       ])
 
       const allNotifications: CombinedNotification[] = []
 
-      // Process unified rich notifications
+      // 1. Process rich notifications
       if (richNotifsResult.status === 'fulfilled') {
         (richNotifsResult.value as any[]).forEach(msg => {
           allNotifications.push({
             id: `rich-${msg.id}`, title: msg.title, message: msg.message,
-            sentBy: msg.sentBy || 'Admin', sentAt: msg.created_at || msg.sentAt,
+            sentBy: msg.sentBy || 'Admin', sentAt: msg.created_at || msg.sentAt || new Date().toISOString(),
             type: 'zone',
             is_read: msg.is_read
           })
         })
       }
 
+      // 2. Process user/subgroup notifications
+      if (userNotifsResult.status === 'fulfilled') {
+        (userNotifsResult.value as any[]).forEach(notif => {
+          allNotifications.push({
+            id: `subgroup-${notif.id}`,
+            title: notif.title || 'New Notification',
+            message: notif.message,
+            sentAt: notif.createdAt?.toDate?.()?.toISOString() || notif.created_at || new Date().toISOString(),
+            type: notif.type === 'zone' ? 'zone' : 'subgroup',
+            subGroupName: notif.subGroupName,
+            read: notif.read || notif.is_read
+          })
+        })
+      }
 
-
-      // Process audiolab projects
-      if (audiolabProjects.status === 'fulfilled') {
-        (audiolabProjects.value as any[]).forEach(project => {
+      // 3. Process audiolab projects
+      if (audiolabProjectsResult.status === 'fulfilled') {
+        (audiolabProjectsResult.value as any[]).forEach(project => {
           if (project.ownerId !== userId) {
             allNotifications.push({
               id: `audiolab-${project.id}`,
@@ -274,12 +332,13 @@ export default function NotificationsPage() {
         })
       }
 
-      // Process calendar events
-      if (calendarEvents.status === 'fulfilled') {
+      // 4. Process calendar events
+      if (calendarEventsResult.status === 'fulfilled') {
         const seenIds = new Set<string>()
-          ; (calendarEvents.value as any[]).forEach(event => {
-            const eventDate = new Date(event.date || event.eventDate || event.startDate)
-            if (isNaN(eventDate.getTime())) return
+          ; (calendarEventsResult.value as any[]).forEach(event => {
+            const dateStr = event.date || event.eventDate || event.startDate;
+            const eventDate = parseProgramDate(dateStr);
+            if (!eventDate || isNaN(eventDate.getTime())) return
             if (eventDate < now || eventDate > nextWeek) return
             if (seenIds.has(event.id)) return
             seenIds.add(event.id)
@@ -303,9 +362,11 @@ export default function NotificationsPage() {
           })
       }
 
-      // Process media notifications
-      if (mediaNotifs.status === 'fulfilled') {
-        (mediaNotifs.value as any[]).forEach(media => {
+
+
+      // 5. Process media notifications
+      if (mediaNotifsResult.status === 'fulfilled') {
+        (mediaNotifsResult.value as any[]).forEach(media => {
           const createdAt = media.createdAt?.toDate?.() || new Date()
           if (createdAt < lastWeek) return
 
@@ -333,11 +394,30 @@ export default function NotificationsPage() {
         })
       }
 
+      // 6. Process song notifications
+      if (songNotifsResult.status === 'fulfilled') {
+        const userNameUpper = (profile?.first_name || (profile as any)?.name || user?.displayName || '').toUpperCase();
+        (songNotifsResult.value as any[]).forEach(notif => {
+          // Filter out redundant notifications for the song author
+          if (notif.type === 'new_submission') return
+          if (typeof notif.message === 'string' && notif.message.startsWith('User replied')) return
+          if (userNameUpper && typeof notif.message === 'string' && notif.message.toUpperCase().startsWith(userNameUpper)) return
 
+          allNotifications.push({
+            id: `song-${notif.id}`,
+            title: notif.type === 'approved' ? 'Song Approved!' : notif.type === 'rejected' ? 'Song Update' : 'Song Notification',
+            message: notif.message || '',
+            sentAt: notif.timestamp?.toDate?.()?.toISOString() || notif.createdAt || new Date().toISOString(),
+            type: 'song',
+            songStatus: notif.type === 'approved' ? 'approved' : notif.type === 'rejected' ? 'rejected' : 'replied',
+            read: notif.read
+          })
+        })
+      }
 
-      // Process birthdays - use actual birthday date for sorting
-      if (birthdays.status === 'fulfilled') {
-        (birthdays.value as any[]).forEach(bday => {
+      // 7. Process birthdays
+      if (birthdaysResult.status === 'fulfilled') {
+        (birthdaysResult.value as any[]).forEach(bday => {
           const title = bday.isToday
             ? ` ${bday.first_name}'s Birthday Today!`
             : ` Upcoming Birthday`
@@ -345,7 +425,6 @@ export default function NotificationsPage() {
             ? `${bday.first_name} ${bday.last_name} is celebrating their birthday today!`
             : `${bday.first_name} ${bday.last_name}'s birthday is coming up`
 
-          // Calculate actual birthday date this year for proper sorting
           const bdayDate = new Date(bday.birthday)
           const thisYearBday = new Date(now.getFullYear(), bdayDate.getMonth(), bdayDate.getDate())
 
@@ -360,14 +439,10 @@ export default function NotificationsPage() {
         })
       }
 
-
-
       // Sort by date
       allNotifications.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
 
-      // Cache the results
       notificationCache.set(cacheKey, { data: allNotifications, timestamp: Date.now() })
-
       setNotifications(allNotifications)
     } catch (e) {
  console.error('Load error:', e)
@@ -484,6 +559,16 @@ export default function NotificationsPage() {
       case 'media':
         router.push('/pages/media')
         break
+      case 'song':
+        router.push(isSongAdmin ? '/pages/admin/submitted-songs' : '/pages/submit-song')
+        break
+      case 'chat':
+        router.push(notif.chatId ? `/pages/groups?conversation=${notif.chatId}` : '/pages/groups')
+        break
+      case 'subgroup':
+      case 'zone':
+        router.push('/pages/groups')
+        break
     }
   }
 
@@ -561,16 +646,17 @@ export default function NotificationsPage() {
               ))}
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="bg-white/50 backdrop-blur-xl rounded-[40px] p-20 text-center shadow-2xl shadow-gray-100/50 border border-white flex flex-col items-center">
-              <div className="w-24 h-24 bg-gradient-to-tr from-gray-50 to-white rounded-[32px] flex items-center justify-center mb-8 shadow-inner border border-gray-50">
-                <Bell className="w-10 h-10 text-gray-200" />
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in zoom-in duration-700">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 bg-indigo-100 rounded-full blur-3xl opacity-30 animate-pulse" />
+                <div className="relative w-32 h-32 bg-white rounded-[40px] shadow-2xl shadow-indigo-100/50 flex items-center justify-center border border-indigo-50/50 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  <Bell className="w-12 h-12 text-indigo-400" />
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 border-4 border-white">
+                    <span className="text-white text-[10px] font-black">0</span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">All Caught Up!</h3>
-              <p className="text-gray-500 text-base max-w-[240px] leading-relaxed">
-                {filter === 'all'
-                  ? "Your inbox is clean. We'll let you know when something new arrives."
-                  : `You don't have any ${filter} notifications at the moment.`}
-              </p>
+              <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Peace and Quiet</h3>
             </div>
           ) : (
             <div className="space-y-6">
@@ -584,63 +670,79 @@ export default function NotificationsPage() {
                     {notifs.map(notif => {
                       const Icon = getIcon(notif.type)
                       const iconBg = getIconBg(notif.type, notif.songStatus)
-                      const isClickable = ['audiolab', 'calendar', 'birthday', 'media', 'song', 'chat'].includes(notif.type)
-                      const isUnread = !notif.read && ['chat', 'song', 'subgroup'].includes(notif.type)
+                      const isClickable = ['audiolab', 'calendar', 'birthday', 'media', 'song', 'chat', 'subgroup', 'zone'].includes(notif.type)
+                      const isUnread = (notif.is_read === false || notif.read === false) && ['chat', 'song', 'subgroup', 'zone'].includes(notif.type)
                       const isDeleting = deletingId === notif.id
 
                       return (
                         <div key={notif.id} onClick={() => isClickable && handleClick(notif)}
-                          className={`bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-sm border transition-all relative group ${isClickable ? 'cursor-pointer hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98]' : ''
-                            } ${isUnread ? 'bg-indigo-50/50 border-indigo-100/50' : 'border-gray-100/50'} ${isDeleting ? 'opacity-50' : ''}`}
+                          className={`group relative bg-white/70 backdrop-blur-md rounded-[28px] p-4 sm:p-5 border transition-all duration-300 ${isClickable ? 'cursor-pointer hover:bg-white hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 active:scale-[0.98]' : ''
+                            } ${isUnread ? 'border-indigo-100 shadow-sm' : 'border-gray-100/50'} ${isDeleting ? 'opacity-50' : ''}`}
                         >
-                          {/* Unread indicator dot */}
+                          {/* Premium Unread Indicator */}
                           {isUnread && (
-                            <div className="absolute top-5 right-5 w-2 h-2 rounded-full bg-indigo-600 shadow-sm shadow-indigo-200" />
+                            <div className="absolute top-5 right-5 flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">New</span>
+                              <div className="w-2 h-2 rounded-full bg-indigo-600 shadow-lg shadow-indigo-200 animate-pulse" />
+                            </div>
                           )}
 
-                          {/* Delete button (only show on hover) */}
+                          {/* Delete Button */}
                           <button
                             onClick={(e) => handleDelete(notif, e)}
                             disabled={isDeleting}
-                            className="absolute bottom-5 right-5 p-2 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 opacity-40 hover:opacity-100 transition-all z-10 border border-gray-100"
+                            className="absolute bottom-4 right-4 p-2 rounded-xl bg-gray-50/50 text-gray-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 border border-gray-100/50"
                           >
-                            {isDeleting ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
+                            {isDeleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                           </button>
 
                           <div className="flex items-start gap-4">
-                            {notif.type === 'chat' && notif.senderAvatar ? (
-                              <div className="relative">
-                                <img src={notif.senderAvatar} alt="" className="w-14 h-14 rounded-2xl object-cover flex-shrink-0 shadow-sm border-2 border-white" />
-                                <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-lg shadow-sm border border-gray-50">
-                                  <MessageCircle className="w-3.5 h-3.5 text-indigo-600" />
+                            {/* Icon/Avatar Section */}
+                            <div className="relative shrink-0">
+                              {notif.type === 'chat' && notif.senderAvatar ? (
+                                <div className="relative">
+                                  <img src={notif.senderAvatar} alt="" className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white" />
+                                  <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-lg shadow-sm border border-gray-50">
+                                    <MessageCircle className="w-3.5 h-3.5 text-indigo-600" />
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border-2 border-white ${iconBg}`}>
-                                <Icon className="w-7 h-7" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
+                              ) : (
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md border-2 border-white transition-transform group-hover:scale-110 duration-500 ${iconBg}`}>
+                                  <Icon className="w-7 h-7" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content Section */}
+                            <div className="flex-1 min-w-0 pr-6">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 className={`font-bold text-gray-900 ${isUnread ? 'text-indigo-900' : ''}`}>{notif.title}</h3>
+                                <h3 className={`font-black text-gray-900 tracking-tight ${isUnread ? 'text-indigo-950' : ''}`}>{notif.title}</h3>
                                 {notif.type === 'subgroup' && notif.subGroupName && (
-                                  <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg" style={{ backgroundColor: `${zoneColor}15`, color: zoneColor }}>
+                                  <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100/50">
                                     {notif.subGroupName}
                                   </span>
                                 )}
-                                {notif.type === 'audiolab' && <span className="px-2.5 py-0.5 bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-wider rounded-lg">Studio</span>}
                               </div>
-                              <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">{notif.message}</p>
-                              <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest min-w-0">
-                                {notif.sentBy && notif.type !== 'chat' && <>
-                                  <span className="truncate max-w-[140px] sm:max-w-[250px]" title={notif.sentBy}>{notif.sentBy}</span>
-                                  <span className="flex-shrink-0">•</span>
-                                </>}
-                                <span className="flex-shrink-0">{formatDate(notif.sentAt)}</span>
+                              <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2 font-medium">
+                                {notif.message}
+                              </p>
+
+                              {/* Action Footer */}
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                  {notif.sentBy && notif.type !== 'chat' && (
+                                    <span className="truncate max-w-[120px]">{notif.sentBy}</span>
+                                  )}
+                                  {notif.sentBy && notif.type !== 'chat' && <span>•</span>}
+                                  <span className="whitespace-nowrap">{formatDate(notif.sentAt)}</span>
+                                </div>
+
+                                {isClickable && (
+                                  <div className="flex items-center gap-1.5 text-indigo-600 font-bold text-[11px] uppercase tracking-wider group-hover:translate-x-1 transition-transform duration-300">
+                                    <span>Open</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>

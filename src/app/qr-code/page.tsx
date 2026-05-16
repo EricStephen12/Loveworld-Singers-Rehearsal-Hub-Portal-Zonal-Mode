@@ -12,8 +12,10 @@ type ScanStatus = 'idle' | 'processing' | 'success' | 'failed'
 
 export default function QRScannerPage() {
   const { user } = useAuth()
-  const { isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading, currentZone } = useZone()
+  const { isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading, currentZone, userRole } = useZone()
   const router = useRouter()
+
+  const canAccessScanner = isSuperAdmin || isZoneCoordinator || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin'
 
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
   const [statusMessage, setStatusMessage] = useState<string>('')
@@ -28,12 +30,12 @@ export default function QRScannerPage() {
   // Auto-start camera when authorized
   useEffect(() => {
     if (!zoneLoading) {
-      if (isSuperAdmin || isZoneCoordinator) {
+      if (canAccessScanner) {
         startCamera()
       }
     }
     return () => stopCamera()
-  }, [zoneLoading, isSuperAdmin, isZoneCoordinator])
+  }, [zoneLoading, canAccessScanner])
 
   // Sync state to ref for the animation loop
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function QRScannerPage() {
 
   const stopCamera = () => {
     if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
+       cancelAnimationFrame(animationFrameRef.current)
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
@@ -181,7 +183,7 @@ export default function QRScannerPage() {
   }
 
   // Handle unauthorized state
-  if (!isSuperAdmin && !isZoneCoordinator) {
+  if (!canAccessScanner) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 p-6 text-center">
         <XCircle className="w-16 h-16 text-red-500 mb-4" />

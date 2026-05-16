@@ -43,6 +43,7 @@ const AdminMobileNav = React.memo(({
         return 'Members';
       case 'Notifications':
         return 'Notifications';
+      case 'Schedule Manager':
       case 'Media':
       case 'Media Upload':
       case 'Calendar':

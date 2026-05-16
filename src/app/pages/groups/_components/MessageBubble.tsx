@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3, Loader2, Forward, Pin } from 'lucide-react'
+import { Check, CheckCheck, Reply, Trash2, Smile, Download, FileText, Mic, Image as ImageIcon, MoreVertical, Edit3, Loader2, Forward, Pin, Copy, ChevronDown } from 'lucide-react'
 import { Message, ReactionType } from '../_lib/chat-service'
 import { useChatV2 } from '../_context/ChatContextV2'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,6 +13,8 @@ interface MessageBubbleProps {
   isOwn: boolean
   showAvatar?: boolean
   hasTail?: boolean
+  isFirstInGroup?: boolean
+  isLastInGroup?: boolean
   primaryColor: string
   onReply?: (message: Message) => void
   onReaction?: (messageId: string, reaction: ReactionType) => void
@@ -20,40 +22,35 @@ interface MessageBubbleProps {
   onEdit?: (messageId: string, currentText: string) => void
   onImageClick?: (url: string) => void
   onForward?: (message: Message) => void
-
   onPin?: (messageId: string | null) => void
+  onJumpToReply?: (messageId: string) => void
+  onMessageAction?: (message: Message) => void
+  searchQuery?: string
 }
 
-// Document Download Button component
 const DocumentDownloadButton = ({ attachment, primaryColor }: { attachment: NonNullable<Message['attachment']>, primaryColor: string }) => {
   const [isDownloading, setIsDownloading] = useState(false)
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
     if (isDownloading) return
-
     try {
       setIsDownloading(true)
       const response = await fetch(attachment.url)
       if (!response.ok) throw new Error('Network response was not ok')
-      
       const blob = await response.blob()
       const downloadUrl = window.URL.createObjectURL(blob)
-      
       const a = document.createElement('a')
       a.style.display = 'none'
       a.href = downloadUrl
       a.download = attachment.name || 'document'
       document.body.appendChild(a)
       a.click()
-      
       window.URL.revokeObjectURL(downloadUrl)
       document.body.removeChild(a)
     } catch (error) {
        console.error('Error downloading document:', error)
-       // Fallback to opening in new tab if blob download fails due to excessive CORS restrictions
        window.open(attachment.url, '_blank')
     } finally {
       setIsDownloading(false)
@@ -78,7 +75,6 @@ const DocumentDownloadButton = ({ attachment, primaryColor }: { attachment: NonN
           </span>
         </div>
       </div>
-      
       <div className="p-2 text-[#667781] opacity-60 group-hover:opacity-100 transition-opacity">
         {isDownloading ? (
           <Loader2 className="w-5 h-5 animate-spin" style={{ color: primaryColor }} />
@@ -90,16 +86,23 @@ const DocumentDownloadButton = ({ attachment, primaryColor }: { attachment: NonN
   )
 }
 
-// Voice Message Player component (Internal to Bubble)
 const VoiceMessagePlayer = ({ url, duration, isOwn, primaryColor }: { url: string, duration?: number, isOwn: boolean, primaryColor: string }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [playbackRate, setPlaybackRate] = useState(1)
   const audioRef = React.useRef<HTMLAudioElement>(null)
 
   const togglePlay = () => {
     if (!audioRef.current) return
     if (isPlaying) audioRef.current.pause()
     else audioRef.current.play()
+  }
+
+  const toggleSpeed = () => {
+    const rates = [1, 1.5, 2]
+    const nextRate = rates[(rates.indexOf(playbackRate) + 1) % rates.length]
+    setPlaybackRate(nextRate)
+    if (audioRef.current) audioRef.current.playbackRate = nextRate
   }
 
   const formatTime = (time: number) => {
@@ -116,7 +119,6 @@ const VoiceMessagePlayer = ({ url, duration, isOwn, primaryColor }: { url: strin
       >
         {isPlaying ? <div className="flex gap-1"><div className="w-1 h-3 bg-current rounded-full" /><div className="w-1 h-3 bg-current rounded-full" /></div> : <div className="ml-1 w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-current border-b-[5px] border-b-transparent" />}
       </button>
-
       <div className="flex-1 flex flex-col gap-0.5">
         <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden">
           <motion.div 
@@ -131,7 +133,14 @@ const VoiceMessagePlayer = ({ url, duration, isOwn, primaryColor }: { url: strin
           <Mic className={`w-3 h-3 ${isOwn ? 'text-white/60' : 'text-gray-400'}`} />
         </div>
       </div>
-
+      <button
+        onClick={toggleSpeed}
+        className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-colors ${
+          isOwn ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+        }`}
+      >
+        {playbackRate}x
+      </button>
       <audio
         ref={audioRef}
         src={url}
@@ -151,6 +160,8 @@ export function MessageBubble({
   isOwn,
   showAvatar,
   hasTail,
+  isFirstInGroup = true,
+  isLastInGroup = true,
   primaryColor,
   onReply,
   onReaction,
@@ -158,16 +169,42 @@ export function MessageBubble({
   onEdit,
   onImageClick,
   onForward,
-  onPin
+  onPin,
+  onJumpToReply,
+  onMessageAction,
+  searchQuery
 }: MessageBubbleProps) {
   const { user } = useAuth()
   const { toggleReaction } = useChatV2()
   const [showActions, setShowActions] = useState(false)
 
+  // Dynamic border radius based on position in message group (Telegram-style)
+  const getBubbleRadius = () => {
+    if (isOwn) {
+      if (isFirstInGroup && isLastInGroup) return 'rounded-2xl rounded-tr-md' // solo
+      if (isFirstInGroup) return 'rounded-2xl rounded-tr-md rounded-br-md' // first
+      if (isLastInGroup) return 'rounded-2xl rounded-tr-md' // last (with tail)
+      return 'rounded-2xl rounded-tr-md rounded-br-md' // middle
+    } else {
+      if (isFirstInGroup && isLastInGroup) return 'rounded-2xl rounded-tl-md'
+      if (isFirstInGroup) return 'rounded-2xl rounded-tl-md rounded-bl-md'
+      if (isLastInGroup) return 'rounded-2xl rounded-tl-md'
+      return 'rounded-2xl rounded-tl-md rounded-bl-md'
+    }
+  }
+
+  // Copy message text to clipboard
+  const handleCopy = () => {
+    if (message.text) {
+      navigator.clipboard.writeText(message.text)
+      setShowActions(false)
+    }
+  }
+
   if (message.type === 'system') {
     return (
-      <div className="flex justify-center my-4">
-        <div className="px-4 py-1.5 bg-gray-200/50 backdrop-blur-sm rounded-full text-[11px] font-bold text-gray-500 shadow-sm border border-gray-100 uppercase tracking-widest">
+      <div className="flex justify-center my-3">
+        <div className="px-3 py-1.5 bg-[#d1d7db]/40 backdrop-blur-sm rounded-lg text-[12.5px] text-[#54656f] shadow-sm border border-white/20 text-center max-w-[85%]">
           {message.text}
         </div>
       </div>
@@ -176,171 +213,97 @@ export function MessageBubble({
 
   const REACTIONS: ReactionType[] = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥', '👏', '💯', '✨']
 
-  // Helper for message time
   const formatTime = (date: Date | any) => {
     if (!date) return ''
     const d = date instanceof Date ? date : new Date(date)
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  // Tighter spacing for grouped messages (2px vs 8px)
+  const marginClass = isLastInGroup ? 'mb-2' : 'mb-[2px]'
+
   return (
-    <div className={`flex items-end gap-2 mb-2 group ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-      {/* Avatar (Left side only, if group) */}
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className={`flex items-end gap-2 ${marginClass} group ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}
+    >
       {!isOwn && showAvatar && (
         <SyncAvatar 
           userId={message.senderId}
           initialAvatar={message.senderAvatar}
           fallbackName={message.senderName}
           size="w-8 h-8"
-          className="rounded-xl border-2 border-white ring-1 ring-gray-100 mb-1"
+          className="rounded-full shadow-sm mb-1"
           textClassName="text-[10px]"
         />
       )}
       {!isOwn && !showAvatar && <div className="w-8" />}
 
-      {/* Message Content Wrapper */}
       <div className={`flex flex-col max-w-[85%] md:max-w-[70%] lg:max-w-[60%] min-w-0 ${isOwn ? 'items-end' : 'items-start'}`}>
         {!isOwn && showAvatar && (
-          <span className="text-[10px] font-bold text-gray-400 ml-1 mb-0.5 uppercase tracking-wider">{message.senderName}</span>
+          <span className="text-[12.5px] font-medium text-[#111b21] ml-1 mb-0.5 opacity-90">{message.senderName}</span>
         )}
 
         <div className="relative group/bubble">
-          {/* Actions Popover — hidden by default, shown on hover/tap */}
-          <div className={`absolute top-0 flex items-center gap-1 transition-all z-10 ${
-            isOwn ? 'right-full mr-2' : 'left-full ml-2'
-          } ${showActions ? 'opacity-100' : 'opacity-0 group-hover/bubble:opacity-100 group-active/bubble:opacity-100'}`}>
-            <div className="relative">
-              <button 
-                onClick={() => setShowActions(!showActions)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${showActions ? 'bg-gray-100 text-gray-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+          <div
+            onClick={() => onMessageAction?.(message)}
+            onContextMenu={(e) => { e.preventDefault(); onMessageAction?.(message) }}
+            className="cursor-pointer relative group/bubble"
+          >
+            {/* Actions Trigger (Chevron) - Desktop Only Hover */}
+            <div className={`absolute top-1 z-30 transition-opacity hidden md:flex ${
+              isOwn ? 'right-2' : 'left-2'
+            } opacity-0 group-hover/bubble:opacity-100`}>
+              <div 
+                className="p-1 rounded-full bg-black/5 backdrop-blur-sm shadow-sm hover:bg-black/10 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMessageAction?.(message);
+                }}
               >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              
-              <AnimatePresence>
-                {showActions && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                    className={`absolute bottom-full mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-1.5 min-w-[150px] z-50 ${
-                      isOwn ? 'right-0' : 'left-0'
-                    }`}
-                  >
-                    {/* React */}
-                    <button
-                      onClick={() => {
-                        onReaction?.(message.id, '' as any)
-                        setShowActions(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-orange-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-orange-500"
-                    >
-                      <Smile className="w-4 h-4" /> React
-                    </button>
-                    {/* Reply */}
-                    <button
-                      onClick={() => {
-                        onReply?.(message)
-                        setShowActions(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-emerald-600"
-                    >
-                      <Reply className="w-4 h-4" /> Reply
-                    </button>
-                    {/* Forward */}
-                    <button
-                      onClick={() => {
-                        onForward?.(message)
-                        setShowActions(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-emerald-600"
-                    >
-                      <Forward className="w-4 h-4" /> Forward
-                    </button>
-
-
-                    {/* Pin / Unpin */}
-                    <button
-                      onClick={() => {
-                        onPin?.(message.pinnedInChat ? null : message.id)
-                        setShowActions(false)
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-emerald-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-emerald-600"
-                    >
-                      <Pin className={`w-4 h-4 ${message.pinnedInChat ? 'fill-emerald-400 text-emerald-400' : ''}`} /> 
-                      {message.pinnedInChat ? 'Unpin' : 'Pin'}
-                    </button>
-                    {isOwn && (
-                      <>
-                        {/* Edit (only for text messages) */}
-                        {message.type === 'text' && (
-                          <button
-                            onClick={() => {
-                              onEdit?.(message.id, message.text)
-                              setShowActions(false)
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-blue-50 rounded-xl transition-colors text-sm font-bold text-gray-700 hover:text-blue-600"
-                          >
-                            <Edit3 className="w-4 h-4" /> Edit
-                          </button>
-                        )}
-                        {/* Delete */}
-                        <button
-                          onClick={() => {
-                            onDelete?.(message.id)
-                            setShowActions(false)
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-red-50 rounded-xl transition-colors text-sm font-bold text-red-500"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </button>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                <ChevronDown className={`w-3.5 h-3.5 ${isOwn ? 'text-white' : 'text-gray-500'}`} />
+              </div>
             </div>
-          </div>
-
-          {/* Actual Bubble Wrapper */}
           <div className="flex items-start">
-            {/* Left Tail (Received) - SVG path for WhatsApp style */}
             {!isOwn && hasTail && (
               <div className="flex-shrink-0 -mr-[1px] mt-0">
-                <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current">
-                  <path opacity="0.13" d="M1.533 3.118L8 12.114V1H2.812C1.042 1 .474 2.156 1.533 3.118z"></path>
+                <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current drop-shadow-sm">
                   <path d="M1.533 2.118L8 11.114V0H2.812C1.042 0 .474 1.156 1.533 2.118z"></path>
                 </svg>
               </div>
             )}
-            {!isOwn && !hasTail && <div className={showAvatar ? "w-0" : "w-0"} />}
+            {!isOwn && !hasTail && <div className="w-0" />}
 
-            {/* Bubble Body */}
             <div 
-              className={`relative shadow-[0_1px_0.5px_rgba(11,20,26,.13)] ${
-                isOwn 
-                  ? 'text-white rounded-lg' 
-                  : 'bg-white text-[#111b21] rounded-lg'
-              } ${isOwn && hasTail ? 'rounded-tr-none' : ''} ${!isOwn && hasTail ? 'rounded-tl-none' : ''}`}
-              style={isOwn ? { backgroundColor: primaryColor } : {}}
+              className={`relative shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all ${
+                isOwn ? '' : 'bg-white'
+              } ${getBubbleRadius()}`}
+              style={isOwn ? { 
+                backgroundColor: primaryColor,
+                color: '#ffffff'
+              } : { color: '#111b21' }}
             >
               <div className="px-2 pt-1.5 min-w-[80px] flex flex-col min-w-0">
-                {/* Reply Preview */}
                 {message.replyTo && (
-                  <div className="mb-1 p-1 bg-black/5 rounded cursor-pointer relative overflow-hidden flex flex-col">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#02a698] rounded-l" />
+                  <div 
+                    onClick={() => onJumpToReply?.(message.replyTo!.id)}
+                    className={`mb-1 p-1.5 rounded-lg cursor-pointer relative overflow-hidden flex flex-col transition-colors border-l-[4px] border-[#06d755] ${
+                      isOwn ? 'bg-black/5' : 'bg-[#f0f2f5]'
+                    }`}
+                  >
                     <div className="pl-2 pr-1">
-                      <div className="font-semibold text-xs text-[#02a698] leading-tight mb-0.5">
+                      <div className={`text-[12px] font-bold mb-1 line-clamp-1 ${isOwn ? 'text-white/90' : ''}`} style={!isOwn ? { color: primaryColor } : {}}>
                         {message.replyTo.senderName}
                       </div>
-                      <div className="text-xs text-gray-500 truncate leading-tight pr-1">
+                      <div className={`text-[12px] line-clamp-1 ${isOwn ? 'text-white/70' : 'text-gray-500'}`}>
                         {message.replyTo.text}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Media Rendering */}
                 {message.type === 'image' && message.imageUrl && (
                   <div className="mb-1 mt-0.5 -mx-1 rounded overflow-hidden">
                     <img 
@@ -370,28 +333,37 @@ export function MessageBubble({
                   />
                 )}
 
-                {/* Message Text with Inline Timestamp */}
-                <div className="relative flex flex-wrap items-end gap-x-2 gap-y-1 pb-1.5 min-w-0">
-                  <span className="text-[14.2px] leading-[19px] whitespace-pre-wrap break-words pl-1 flex-1 min-w-0">
-                    {message.text}
-                  </span>
-                  
-                  {/* Floating timestamp container filling bottom-right */}
-                  <div className="flex justify-end min-w-[50px] h-[15px] -mb-[2px] self-end">
-                    <div className={`flex items-center gap-[4px] ${isOwn ? 'text-white/80' : 'text-[#667781]'}`}>
-                      {message.pinnedInChat && <Pin className={`w-3 h-3 ${isOwn ? 'fill-white/40 text-transparent' : 'fill-gray-300 text-transparent'}`} />}
-                      
-                      <span className="text-[11px] font-medium mt-0.5 uppercase tracking-wide">
+                <div className="relative flex flex-col pb-1.5 min-w-0">
+                  {message.status === 'forwarded' && (
+                    <div className={`flex items-center gap-1 text-[12px] italic mb-1.5 ${isOwn ? 'text-white/70' : 'text-[#667781]'}`}>
+                      <Forward className="w-3 h-3" /> forwarded
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-end justify-between gap-x-2">
+                    <span className="text-[14.8px] leading-[20px] whitespace-pre-wrap break-words pl-1 min-w-0 flex-1">
+                      {searchQuery ? (() => {
+                        const parts = (message.text || '').split(new RegExp(`(${searchQuery})`, 'gi'))
+                        return parts.map((part, i) => 
+                          part.toLowerCase() === searchQuery.toLowerCase() ? (
+                            <span key={i} className="bg-yellow-200 text-black px-0.5 rounded-sm font-bold">{part}</span>
+                          ) : part
+                        )
+                      })() : message.text}
+                      {message.edited && <span className="text-[11px] text-[#8696a0] ml-1 italic">(edited)</span>}
+                    </span>
+                    
+                    <div className="flex items-center gap-[4px] h-[15px] self-end mb-[-2px] ml-auto">
+                      <span className={`text-[11px] leading-none ${isOwn ? 'text-white/70' : 'text-[#667781]'}`}>
                         {formatTime(message.timestamp)}
                       </span>
                       {isOwn && (
-                        <div className="flex items-center -mb-0.5 ml-0.5">
+                        <div className="flex items-center ml-0.5">
                           {message.status === 'read' ? (
-                            <CheckCheck className="w-[15px] h-[15px] text-[#53bdeb]" />
+                            <CheckCheck className="w-[16px] h-[16px] text-white" />
                           ) : message.status === 'delivered' ? (
-                             <CheckCheck className="w-[15px] h-[15px] opacity-70" />
+                             <CheckCheck className="w-[16px] h-[16px] text-white/60" />
                           ) : (
-                            <Check className="w-[14px] h-[14px] opacity-70" />
+                            <Check className="w-[15px] h-[15px] text-white/60" />
                           )}
                         </div>
                       )}
@@ -399,7 +371,6 @@ export function MessageBubble({
                   </div>
                 </div>
 
-                {/* Reactions Overlay */}
                 {message.reactions && Object.keys(message.reactions).length > 0 && (
                   <motion.div 
                     initial={{ scale: 0 }}
@@ -419,18 +390,17 @@ export function MessageBubble({
               </div>
             </div>
 
-            {/* Right Tail (Sent) - SVG path for WhatsApp style */}
             {isOwn && hasTail && (
               <div className="flex-shrink-0 -ml-[1px] mt-0">
-                <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current" style={{ color: primaryColor }}>
-                  <path opacity="0.13" d="M5.188 1H8v11.114l-6.467-8.996C.474 2.156 1.042 1 2.812 1h2.376z"></path>
+                <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current drop-shadow-sm" style={{ color: primaryColor }}>
                   <path d="M5.188 0H8v11.114l-6.467-8.996C.474 1.156 1.042 0 2.812 0h2.376z"></path>
                 </svg>
               </div>
             )}
           </div>
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

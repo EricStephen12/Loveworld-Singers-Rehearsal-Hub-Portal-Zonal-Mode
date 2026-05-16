@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Camera, X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 import { AttendanceService } from '@/lib/attendance-service'
 import { useAuth } from '@/hooks/useAuth'
+import jsQR from 'jsqr'
 
 interface QRCodeScannerProps {
   isOpen: boolean
@@ -103,7 +104,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
 
     const video = videoRef.current
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
     if (!ctx) return
 
@@ -128,12 +129,31 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
               }
             }
           }).catch(() => {
-            // BarcodeDetector failed, continue scanning
+            // BarcodeDetector failed, fallback to jsQR
+            fallbackToJsQR(ctx, canvas)
           })
+        } else {
+          // No BarcodeDetector, fallback to jsQR
+          fallbackToJsQR(ctx, canvas)
         }
       }
 
       animationFrameRef.current = requestAnimationFrame(detectQR)
+    }
+
+    const fallbackToJsQR = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+      if (cooldownRef.current) return
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      })
+
+      if (code && code.data && code.data !== lastScannedRef.current) {
+        lastScannedRef.current = code.data
+        cooldownRef.current = true
+        handleQRCodeDetected(code.data)
+      }
     }
 
     detectQR()

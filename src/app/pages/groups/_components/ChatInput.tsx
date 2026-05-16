@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Mic, Paperclip, Smile, X, Image as ImageIcon, FileText, Loader2, Trash2 } from 'lucide-react'
 import { useChatV2 } from '../_context/ChatContextV2'
+import { CustomFilePicker } from './CustomFilePicker'
 
 interface ChatInputProps {
   primaryColor: string
@@ -33,12 +34,15 @@ export function ChatInput({
   const [isSending, setIsSending] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false)
+  const [showFilePicker, setShowFilePicker] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [captionText, setCaptionText] = useState('')
   
   // Voice Recording State
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(30).fill(2))
   
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -137,14 +141,23 @@ export function ChatInput({
       return
     }
 
+    setPendingFile(file)
+    setShowFilePicker(false)
+  }
+
+  const handleFinalSend = async () => {
+    if (!pendingFile || isUploading) return
+
     setIsUploading(true)
-    setShowAttachmentMenu(false)
-    const success = await sendMediaMessage(file)
+    const success = await sendMediaMessage(pendingFile, captionText.trim() || undefined)
     setIsUploading(false)
     
-    if (!success) alert('Failed to upload file')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    if (imageInputRef.current) imageInputRef.current.value = ''
+    if (success) {
+      setPendingFile(null)
+      setCaptionText('')
+    } else {
+      alert('Failed to upload file')
+    }
   }
 
   // Voice Recording Logic
@@ -153,6 +166,25 @@ export function ChatInput({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const recorder = new MediaRecorder(stream)
       const chunks: Blob[] = []
+      
+      // Visualizer logic
+      const audioContext = new AudioContext()
+      const source = audioContext.createMediaStreamSource(stream)
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 64
+      source.connect(analyser)
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
+
+      const updateLevels = () => {
+        if (!isRecording) return
+        analyser.getByteFrequencyData(dataArray)
+        const avg = dataArray.reduce((a, b) => a + b) / dataArray.length
+        const level = Math.max(2, (avg / 255) * 20)
+        setAudioLevels(prev => [...prev.slice(1), level])
+        requestAnimationFrame(updateLevels)
+      }
+
+      updateLevels() // Start the visualizer
 
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
       recorder.onstop = async () => {
@@ -205,10 +237,10 @@ export function ChatInput({
             exit={{ height: 0, opacity: 0 }}
             className="mb-2 bg-[#f0f2f5] rounded-xl overflow-hidden shadow-sm"
           >
-            <div className="p-2 flex justify-between items-start bg-white/80 backdrop-blur">
-              <div className="min-w-0 flex-1 border-l-4 border-emerald-500 pl-3">
-                <div className="text-[13px] font-semibold text-emerald-600 mb-0.5 leading-tight">{replyingTo.senderName}</div>
-                <div className="text-[13px] text-gray-500 truncate leading-tight">{replyingTo.text}</div>
+            <div className="p-2.5 flex justify-between items-start bg-white rounded-lg">
+              <div className="min-w-0 flex-1 border-l-[3px] pl-3" style={{ borderColor: primaryColor }}>
+                <div className="text-[13px] font-medium mb-0.5 leading-tight" style={{ color: primaryColor }}>{replyingTo.senderName}</div>
+                <div className="text-[13px] text-[#667781] truncate leading-tight">{replyingTo.text}</div>
               </div>
               <button onClick={onCancelReply} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100/50">
                 <X className="w-[18px] h-[18px]" />
@@ -223,49 +255,34 @@ export function ChatInput({
         <div className="flex-1 relative flex items-center bg-white rounded-[24px] border border-transparent shadow-sm px-1 py-1 transition-all min-h-[48px] min-w-0">
           <button 
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="w-12 h-12 flex items-center justify-center text-[#54656f] hover:text-emerald-600 transition-colors ml-1"
+            className="w-12 h-12 flex items-center justify-center transition-colors ml-1"
+            style={{ color: showEmojiPicker ? primaryColor : '#54656f' }}
           >
             <Smile className="w-[26px] h-[26px]" />
           </button>
           
           <button 
-            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-            className={`w-12 h-12 flex items-center justify-center transition-colors ${showAttachmentMenu ? 'text-emerald-600' : 'text-[#54656f] hover:text-emerald-600'}`}
+            onClick={() => setShowFilePicker(true)}
+            className={`w-12 h-12 flex items-center justify-center transition-colors ${showFilePicker ? 'bg-gray-100' : 'hover:bg-gray-100'}`}
+            style={{ color: showFilePicker ? primaryColor : '#54656f' }}
           >
             <Paperclip className="w-[24px] h-[24px]" />
           </button>
 
-          <AnimatePresence>
-            {showAttachmentMenu && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute bottom-full left-12 mb-3 bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] p-2 min-w-[160px] z-50 overflow-hidden"
-              >
-                <div className="grid grid-cols-3 gap-4 p-4">
-                  <button 
-                    onClick={() => { imageInputRef.current?.click(); setShowAttachmentMenu(false); }}
-                    className="flex flex-col items-center gap-2 group"
-                  >
-                    <div className="w-[50px] h-[50px] rounded-full bg-gradient-to-b from-[#bf59cf] to-[#922ea1] flex items-center justify-center text-white shadow-sm group-hover:-translate-y-1 transition-transform">
-                      <ImageIcon className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs text-gray-700 font-medium tracking-tight">Photos</span>
-                  </button>
-                  <button 
-                    onClick={() => { fileInputRef.current?.click(); setShowAttachmentMenu(false); }}
-                    className="flex flex-col items-center gap-2 group"
-                  >
-                    <div className="w-[50px] h-[50px] rounded-full bg-gradient-to-b from-[#5157ae] to-[#5c6ce6] flex items-center justify-center text-white shadow-sm group-hover:-translate-y-1 transition-transform">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs text-gray-700 font-medium tracking-tight">Document</span>
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <CustomFilePicker 
+            isOpen={showFilePicker}
+            onClose={() => setShowFilePicker(false)}
+            onSelect={(file) => {
+              if (file.size > 10 * 1024 * 1024) {
+                alert('File too large (max 10MB)')
+                return
+              }
+              setPendingFile(file)
+              setShowFilePicker(false)
+            }}
+            primaryColor={primaryColor}
+            title="Attach File"
+          />
 
           <textarea
             ref={textareaRef}
@@ -280,14 +297,14 @@ export function ChatInput({
 
           {isUploading && (
             <div className="pr-3">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: primaryColor }} />
             </div>
           )}
         </div>
 
         {/* Send / Mic Button */}
         <div 
-          className="flex-shrink-0 rounded-full w-[48px] h-[48px] flex items-center justify-center shadow-sm"
+          className="flex-shrink-0 rounded-full w-[48px] h-[48px] flex items-center justify-center shadow-lg"
           style={{ backgroundColor: primaryColor }}
         >
           {messageText.trim() ? (
@@ -316,9 +333,92 @@ export function ChatInput({
         </div>
       </div>
 
-      {/* Hidden Inputs */}
-      <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={(e) => handleFileSelect(e, 'image')} />
-      <input type="file" hidden ref={fileInputRef} onChange={(e) => handleFileSelect(e, 'document')} />
+      {/* File Preview Modal - High Fidelity Overhaul */}
+      <AnimatePresence>
+        {pendingFile && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-[#0b141a]/95 backdrop-blur-md flex flex-col items-center justify-center"
+          >
+            {/* Header Actions */}
+            <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
+              <button 
+                onClick={() => { setPendingFile(null); setCaptionText(''); }}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all text-white shadow-lg backdrop-blur-sm"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div className="flex flex-col items-center">
+                 <p className="text-white font-bold text-sm uppercase tracking-widest">Preview Attachment</p>
+                 <p className="text-white/50 text-[11px] font-medium mt-1">{pendingFile.name}</p>
+              </div>
+              <div className="w-12" /> {/* Spacer */}
+            </div>
+
+            {/* Preview Content */}
+            <div className="flex-1 w-full max-w-4xl flex items-center justify-center p-4 md:p-12 overflow-hidden">
+               {pendingFile.type.startsWith('image/') ? (
+                 <motion.img 
+                   initial={{ scale: 0.9, opacity: 0 }}
+                   animate={{ scale: 1, opacity: 1 }}
+                   src={URL.createObjectURL(pendingFile)}
+                   className="max-w-full max-h-full object-contain rounded-2xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] border border-white/10"
+                 />
+               ) : (
+                 <div className="flex flex-col items-center gap-6 p-12 bg-white/5 rounded-[32px] border border-white/10 shadow-2xl backdrop-blur-xl">
+                    <div className="w-24 h-24 rounded-[28px] bg-white/10 flex items-center justify-center shadow-inner">
+                       <FileText className="w-12 h-12 text-white" />
+                    </div>
+                    <div className="text-center">
+                       <p className="text-xl font-bold text-white mb-1">{pendingFile.name}</p>
+                       <p className="text-sm text-white/40 font-medium">{(pendingFile.size / 1024 / 1024).toFixed(2)} MB • {pendingFile.type.split('/')[1]?.toUpperCase() || 'File'}</p>
+                    </div>
+                 </div>
+               )}
+            </div>
+
+            {/* Footer with Caption Input */}
+            <div className="w-full max-w-3xl px-6 pb-12">
+               <motion.div 
+                 initial={{ y: 20, opacity: 0 }}
+                 animate={{ y: 0, opacity: 1 }}
+                 className="bg-[#202c33] rounded-[28px] p-2 flex items-end gap-3 shadow-2xl border border-white/5"
+               >
+                  <textarea
+                    autoFocus
+                    rows={1}
+                    value={captionText}
+                    onChange={(e) => setCaptionText(e.target.value)}
+                    placeholder="Add a caption..."
+                    className="flex-1 bg-transparent py-4 px-4 text-[16px] text-[#e9edef] focus:outline-none resize-none max-h-[150px] scrollbar-none placeholder:text-[#8696a0]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleFinalSend();
+                      }
+                    }}
+                  />
+                  <button 
+                    onClick={handleFinalSend}
+                    disabled={isUploading}
+                    className="w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 mb-1 mr-1"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <Send className="w-6 h-6 text-white ml-1" />
+                    )}
+                  </button>
+               </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Removed Hidden Inputs - Using CustomFilePicker */}
 
       {/* Emoji Palette Overlay (Simple placeholder for now) */}
       <AnimatePresence>
@@ -353,7 +453,16 @@ export function ChatInput({
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-              <span className="font-bold tabular-nums">
+              <div className="flex items-end gap-[2px] h-6 px-1">
+                {audioLevels.map((level, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ height: level }}
+                    className="w-[3px] bg-white/80 rounded-full"
+                  />
+                ))}
+              </div>
+              <span className="font-bold tabular-nums min-w-[40px]">
                 {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
               </span>
             </div>

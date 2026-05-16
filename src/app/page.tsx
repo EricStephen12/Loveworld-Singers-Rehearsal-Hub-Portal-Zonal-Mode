@@ -65,7 +65,14 @@ export default function SplashPage() {
   const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
   const isRedirecting = (pathname === '/' && hasAuthCache);
 
-  if (isRedirecting) return null;
+  if (isRedirecting) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Resuming...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-4">

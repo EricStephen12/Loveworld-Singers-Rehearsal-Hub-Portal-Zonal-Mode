@@ -35,8 +35,6 @@ export default function MediaPage() {
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  const { adminPlaylists, isLoadingPlaylists } = useMedia()
-
   useEffect(() => {
     markMediaSeen()
   }, [markMediaSeen])
@@ -149,8 +147,9 @@ export default function MediaPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950">
+    <div className="h-screen overflow-hidden bg-slate-950 text-slate-200 flex flex-col font-sans">
+      {/* 1. Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950 border-b border-slate-800/80 shadow-md">
         <YouTubeHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -159,47 +158,20 @@ export default function MediaPage() {
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           userName={profile?.first_name || profile?.display_name || user?.email || undefined}
         />
-
-        {/* Category Chips - Offset by sidebar width */}
-        <div className={`px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-slate-800/60 transition-all duration-300 bg-slate-950 ${sidebarOpen ? 'ml-0 lg:ml-[240px]' : 'ml-0 lg:ml-[72px]'}`}>
-          <button
-            onClick={() => { setViewMode('all'); setSelectedCategory('all'); }}
-            className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-              }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setViewMode('playlists')}
-            className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${viewMode === 'playlists' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-              }`}
-          >
-            Playlists
-          </button>
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-4 h-[34px] rounded-lg text-[14px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.slug ? 'bg-slate-100 text-slate-900 shadow-sm' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-                }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <div className="flex flex-1 pt-24 overflow-hidden">
+      {/* 2. Main Body Container starting below Header (pt-16) */}
+      <div className="flex flex-1 pt-16 overflow-hidden relative">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden animate-in fade-in duration-200"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
-        {/* Sidebar */}
-        <div className={`fixed lg:relative top-0 left-0 h-screen lg:h-auto z-[110] transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
+        {/* Sidebar (Fixed on mobile, relative on desktop) */}
+        <div className={`fixed lg:relative top-16 lg:top-0 left-0 h-[calc(100vh-64px)] z-[110] transition-all duration-300 bg-slate-950 border-r border-slate-800/80 flex flex-col ${sidebarOpen ? 'translate-x-0 w-[240px]' : '-translate-x-full lg:translate-x-0 lg:w-[72px]'}`}>
           <YouTubeSidebar
             sidebarOpen={sidebarOpen}
             viewMode="all"
@@ -211,141 +183,114 @@ export default function MediaPage() {
           />
         </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-slate-950">
-          <div className="pt-4 sm:pt-6 pb-24 px-4 sm:px-6 lg:px-8 max-w-[2400px] mx-auto transition-all duration-300">
+        {/* Main Content Container */}
+        <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-950">
+          {/* Category Chips bar */}
+          <div className="flex-shrink-0 px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-slate-800/60 bg-slate-950/90 backdrop-blur-md z-40 shadow-sm">
+            <button
+              onClick={() => { setViewMode('all'); setSelectedCategory('all'); }}
+              className={`px-5 h-[36px] rounded-xl text-[14px] font-bold transition-all whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+            >
+              All Media
+            </button>
+            <button
+              onClick={() => router.push('/pages/media/history')}
+              className="px-5 h-[36px] rounded-xl text-[14px] font-bold transition-all whitespace-nowrap flex-shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Watch History
+            </button>
+            <button
+              onClick={() => user?.uid && router.push(`/pages/media/playlists/${user.uid}_liked`)}
+              className="px-5 h-[36px] rounded-xl text-[14px] font-bold transition-all whitespace-nowrap flex-shrink-0 bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Liked Videos
+            </button>
+            {categories.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => { setViewMode('all'); setSelectedCategory(cat.slug); }}
+                className={`px-5 h-[36px] rounded-xl text-[14px] font-bold transition-all whitespace-nowrap flex-shrink-0 ${viewMode === 'all' && selectedCategory === cat.slug ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Scrollable Grid Content */}
+          <main className="flex-1 overflow-y-auto bg-slate-950 px-4 sm:px-6 lg:px-8 py-6 max-w-[2400px] w-full mx-auto">
             {/* Live Stream Section - HQ ONLY */}
             {isHQGroup(currentZone?.id) && viewMode === 'all' && selectedCategory === 'all' && !searchQuery && (
               <div className="w-full max-w-[1280px] mx-auto mb-10 sm:mb-12">
                 <LiveStreamPlayer isPreview={true} zoneId={currentZone?.id} />
               </div>
             )}
-            {viewMode === 'playlists' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-5 gap-y-12">
-                {adminPlaylists.map((playlist) => (
-                  <div
-                    key={playlist.id}
-                    onClick={() => router.push(`/pages/media/playlists/${playlist.id}`)}
-                    className="cursor-pointer group flex flex-col"
-                  >
-                    <div className="relative w-full aspect-video rounded-[20px] sm:rounded-2xl overflow-hidden bg-slate-900 shadow-lg border border-white/5 mb-4">
-                      <img
-                        src={playlist.thumbnail || '/movie/default-hero.jpeg'}
-                        alt={playlist.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            
+            <div className="flex flex-col gap-16 sm:gap-20">
+              {/* Section 1: Recently Added */}
+              {filteredMedia.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-[18px] sm:text-[22px] lg:text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-3">
+                      Recently Added
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-5 gap-y-12 sm:gap-y-14">
+                    {filteredMedia.slice(0, 14).map((video) => (
+                      <MediaCard
+                        key={video.id}
+                        media={video}
+                        categoryMap={categoryMap}
                       />
-                      {/* Playlist Overlay */}
-                      <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-end justify-center px-4 transition-colors group-hover:bg-slate-900/40">
-                        <div className="bg-slate-900/90 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl flex flex-col items-center min-w-[65px] border border-white/10 shadow-xl">
-                          <span className="text-[15px] sm:text-[16px] font-black text-slate-100">{playlist.videoIds?.length || 0}</span>
-                          <ListVideo className="w-4 h-4 text-slate-400 mt-1" strokeWidth={2.5} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-1.5 pr-8 relative">
-                      <h3 className="text-slate-100 text-[15px] sm:text-[17px] font-bold line-clamp-2 leading-tight mb-1.5 group-hover:text-indigo-300 transition-colors tracking-tight">
-                        {playlist.name}
-                      </h3>
-                      <p className="text-[12px] sm:text-[13px] text-slate-500 font-bold uppercase tracking-wider">
-                        Official Library
-                      </p>
-                      
-                       <div className="absolute top-0 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                          }}
-                          className="p-2 hover:bg-slate-800 rounded-full text-slate-400 transition-colors"
-                        >
-                          <MoreVertical className="w-5 h-5 text-slate-400" />
-                        </button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </section>
+              )}
 
-                {isLoadingPlaylists && adminPlaylists.length === 0 && (
-                  <div className="col-span-full py-40 flex flex-col items-center justify-center">
-                    <div className="w-10 h-10 border-3 border-white/20 border-t-white rounded-full animate-spin mb-4" />
-                    <p className="text-[#aaa] text-base font-medium">Loading playlists...</p>
+              {/* Section 2: More to Explore */}
+              {filteredMedia.length > 14 && (
+                <section>
+                  <div className="flex items-center justify-between mb-8 pt-10 border-t border-slate-800/40">
+                    <h2 className="text-[18px] sm:text-[22px] lg:text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-3">
+                      More to Explore
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                    </h2>
                   </div>
-                )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-5 gap-y-12 sm:gap-y-14">
+                    {filteredMedia.slice(14).map((video) => (
+                      <MediaCard
+                        key={video.id}
+                        media={video}
+                        categoryMap={categoryMap}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
 
-                {!isLoadingPlaylists && adminPlaylists.length === 0 && (
-                  <div className="col-span-full py-40 text-center">
-                    <p className="text-[#aaa] text-xl font-bold">No playlists found</p>
-                    <p className="text-[#888] text-sm mt-2">Check back later for curated music playlists.</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-16 sm:gap-20">
-                {/* Section 1: Recently Added */}
-                {filteredMedia.length > 0 && (
-                  <section>
-                    <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-[18px] sm:text-[22px] lg:text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-3">
-                        Recently Added
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
-                      </h2>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-5 gap-y-12 sm:gap-y-14">
-                      {filteredMedia.slice(0, 14).map((video) => (
-                        <MediaCard
-                          key={video.id}
-                          media={video}
-                          categoryMap={categoryMap}
-                        />
+              {/* Loading State & Load More */}
+              {(isLoading || hasMore) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-12">
+                  {isLoading && (
+                    <>
+                      {[...Array(10)].map((_, i) => (
+                        <MediaCardSkeleton key={`skeleton-${i}`} />
                       ))}
+                    </>
+                  )}
+                  
+                  {hasMore && (
+                    <div id="load-more-sentinel" className="col-span-full h-32 flex items-center justify-center">
+                      {isLoadingMore && (
+                        <div className="w-12 h-12 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin shadow-lg shadow-indigo-500/10" />
+                      )}
                     </div>
-                  </section>
-                )}
-
-                {/* Section 2: More to Explore */}
-                {filteredMedia.length > 14 && (
-                  <section>
-                    <div className="flex items-center justify-between mb-8 pt-10 border-t border-slate-800/40">
-                      <h2 className="text-[18px] sm:text-[22px] lg:text-2xl font-extrabold text-slate-100 tracking-tight flex items-center gap-3">
-                        More to Explore
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
-                      </h2>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-5 gap-y-12 sm:gap-y-14">
-                      {filteredMedia.slice(14).map((video) => (
-                        <MediaCard
-                          key={video.id}
-                          media={video}
-                          categoryMap={categoryMap}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {/* Loading State & Load More */}
-                {(isLoading || hasMore) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-x-4 gap-y-12">
-                    {isLoading && (
-                      <>
-                        {[...Array(10)].map((_, i) => (
-                          <MediaCardSkeleton key={`skeleton-${i}`} />
-                        ))}
-                      </>
-                    )}
-                    
-                    {hasMore && (
-                      <div id="load-more-sentinel" className="col-span-full h-32 flex items-center justify-center">
-                        {isLoadingMore && (
-                          <div className="w-12 h-12 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin shadow-lg shadow-indigo-500/10" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </main>
+                  )}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   )

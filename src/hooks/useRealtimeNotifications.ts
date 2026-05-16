@@ -112,7 +112,7 @@ export function useRealtimeNotifications() {
       const updatedNotifications = notifs.map(notif => ({
         ...notif,
         is_read: readMap.has(notif.id),
-        read_at: readMap.get(notif.id) || undefined
+        read_at: typeof readMap.get(notif.id) === 'string' ? readMap.get(notif.id) as string : undefined
       }))
 
       setNotifications(updatedNotifications)

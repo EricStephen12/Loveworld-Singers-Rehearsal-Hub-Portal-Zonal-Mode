@@ -78,7 +78,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     setLoading(true);
     try {
       const [songs, statsData, internal, programList] = await Promise.all([
-        MasterLibraryService.getMasterSongs(5000, true),
+        MasterLibraryService.getMasterSongs(10000, true),
         MasterLibraryService.getMasterLibraryStats(),
         MasterLibraryService.getHQInternalSongs(1000),
         MasterLibraryService.getMasterPrograms()

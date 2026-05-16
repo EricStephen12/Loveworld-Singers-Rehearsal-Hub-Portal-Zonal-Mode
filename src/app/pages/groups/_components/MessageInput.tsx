@@ -65,11 +65,11 @@ export default function MessageInput() {
       const { uploadImageToCloudinary } = await import('@/lib/cloudinary-storage')
       const uploadResult = await uploadImageToCloudinary(file)
       
-      if (!uploadResult || !uploadResult.url) {
+      if (!uploadResult) {
         throw new Error('Failed to upload image')
       }
       
-      await sendMessage({ image: uploadResult.url })
+      await sendMessage({ image: uploadResult })
     } catch (error) {
  console.error('Error uploading image:', error)
       alert('Failed to upload image. Please try again.')
@@ -92,12 +92,12 @@ export default function MessageInput() {
       const { uploadToCloudinary } = await import('@/lib/cloudinary-storage')
       const uploadResult = await uploadToCloudinary(file)
       
-      if (!uploadResult || !uploadResult.url) {
+      if (!uploadResult) {
         throw new Error('Failed to upload file')
       }
       
       await sendMessage({ 
-        fileUrl: uploadResult.url, 
+        fileUrl: uploadResult, 
         fileName: file.name 
       })
     } catch (error) {

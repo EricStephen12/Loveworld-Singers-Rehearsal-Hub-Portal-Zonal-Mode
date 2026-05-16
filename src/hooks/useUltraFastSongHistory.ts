@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { HistoryEntry } from '@/types/supabase';
 import { offlineManager } from '@/utils/offlineManager';
@@ -208,8 +208,10 @@ export function useUltraFastSongHistory(songId: string | null) {
         }
       },
       (error) => {
- console.error('Error in real-time history listener:', error);
-        setError(error.message || 'Failed to listen for history updates');
+        // FAIL-SAFE: If real-time listener fails (e.g. Permission Denied), 
+        // fall back to the robust BackendAPI method
+        console.warn('[SongHistory] Real-time listener failed, falling back to BackendAPI:', error.code || error.message);
+        loadHistory();
         setLoading(false);
       }
     );
