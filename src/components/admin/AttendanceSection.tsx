@@ -38,12 +38,24 @@ export default function AttendanceSection() {
     setLoading(true)
     try {
       const records = await AttendanceService.getZoneAttendance(currentZone.id, isHQ, 200)
-      const filteredByDate = records.filter(r => {
+      let filteredByDate = records.filter(r => {
         if (!r.date_string && r.check_in_time) {
           return new Date(r.check_in_time).toLocaleDateString('en-CA') === selectedDate
         }
         return r.date_string === selectedDate
       })
+
+      // If no records match selectedDate (e.g. today has no check-ins yet), BUT there are records in the database,
+      // automatically select the date of the most recent record so the admin sees the latest attendance sheet instantly!
+      if (filteredByDate.length === 0 && records.length > 0) {
+        const mostRecent = records[0];
+        const recentDate = mostRecent.date_string || (mostRecent.check_in_time ? new Date(mostRecent.check_in_time).toLocaleDateString('en-CA') : selectedDate);
+        if (recentDate && recentDate !== selectedDate) {
+          setSelectedDate(recentDate);
+          filteredByDate = records.filter(r => r.date_string === recentDate || (r.check_in_time && new Date(r.check_in_time).toLocaleDateString('en-CA') === recentDate));
+        }
+      }
+
       setAttendanceRecords(filteredByDate)
     } catch (error) {
       console.error('Error loading attendance:', error)

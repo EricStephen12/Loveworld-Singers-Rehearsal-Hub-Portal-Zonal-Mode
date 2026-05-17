@@ -88,6 +88,7 @@ export const BackendAPI = {
     }),
     getByUser: (userId: string) => apiFetch(`/api/attendance?userId=${userId}`),
     getByRehearsal: (rehearsalId: string) => apiFetch(`/api/attendance?rehearsalId=${rehearsalId}`),
+    getAll: (zoneId?: string) => apiFetch(`/api/attendance${zoneId ? `?zoneId=${zoneId}` : ''}`),
   },
 
   // Announcements

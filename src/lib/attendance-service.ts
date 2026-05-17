@@ -22,6 +22,19 @@ export interface AttendanceRecord {
   zoneId?: string;
 }
 
+function parseTimestamp(ts: any): Date {
+  if (!ts) return new Date();
+  if (ts instanceof Date) return ts;
+  if (typeof ts === 'string' || typeof ts === 'number') {
+    const d = new Date(ts);
+    return !isNaN(d.getTime()) ? d : new Date();
+  }
+  if (typeof ts.toDate === 'function') return ts.toDate();
+  if (ts.seconds) return new Date(ts.seconds * 1000);
+  if (ts._seconds) return new Date(ts._seconds * 1000);
+  return new Date();
+}
+
 export class AttendanceService {
   // Check in user for attendance
   static async checkIn(userId: string, qrCode: string, eventName: string = 'Rehearsal', zoneId?: string) {
@@ -43,12 +56,19 @@ export class AttendanceService {
   static async getUserAttendance(userId: string, limitCount: number = 10): Promise<AttendanceRecord[]> {
     try {
       const response = await BackendAPI.attendance.getByUser(userId);
-      return (response.data || []).slice(0, limitCount).map((r: any) => ({
-        ...r,
-        timestamp: new Date(r.timestamp),
-        check_in_time: r.timestamp, // Map for legacy UI
-        user_name: r.userName // Map for legacy UI
-      }));
+      return (response.data || []).slice(0, limitCount).map((r: any) => {
+        const safeDate = parseTimestamp(r.timestamp || r.check_in_time || r.created_at);
+        const isoString = safeDate.toISOString();
+        return {
+          ...r,
+          timestamp: safeDate,
+          check_in_time: r.check_in_time ? parseTimestamp(r.check_in_time).toISOString() : isoString,
+          check_out_time: r.check_out_time ? parseTimestamp(r.check_out_time).toISOString() : undefined,
+          user_name: r.userName || r.user_name || 'Member',
+          event_name: r.eventName || r.event_name || 'Rehearsal',
+          date_string: safeDate.toLocaleDateString('en-CA')
+        };
+      });
     } catch (error) {
       console.error('Get attendance error:', error);
       return [];
@@ -58,16 +78,46 @@ export class AttendanceService {
   // Get zone attendance (Restored for Admin UI)
   static async getZoneAttendance(zoneId: string, _isHQ = false, limitCount = 200): Promise<AttendanceRecord[]> {
     try {
-      const response = await BackendAPI.generic.list('attendance', limitCount);
-      const all = response.data || [];
-      return all.filter((r: any) => r.zoneId === zoneId).map((r: any) => ({
-        ...r,
-        timestamp: new Date(r.timestamp),
-        check_in_time: r.timestamp,
-        user_name: r.userName,
-        event_name: r.eventName,
-        date_string: new Date(r.timestamp).toLocaleDateString('en-CA')
-      }));
+      let all: any[] = [];
+      let fromBackendEndpoint = false;
+      try {
+        const response = await BackendAPI.attendance.getAll(_isHQ ? undefined : zoneId);
+        all = response.data || [];
+        fromBackendEndpoint = true;
+      } catch (err) {
+        const response = await BackendAPI.generic.list('attendance', limitCount);
+        all = response.data || [];
+      }
+
+      // If fetched from the dedicated backend endpoint, it is already perfectly filtered by zoneId, zoneName, slug, or membership.
+      // If fallback generic list was used, perform robust client-side filtering.
+      let filtered = all;
+      if (!fromBackendEndpoint && !_isHQ && zoneId) {
+        const { ZONES } = await import('@/config/zones');
+        const targetZone = ZONES.find(z => z.id === zoneId);
+        const zoneName = targetZone?.name || '';
+        const zoneSlug = targetZone?.slug || '';
+        filtered = all.filter((r: any) => {
+          if (r.zoneId === zoneId) return true;
+          if (zoneName && r.zoneId === zoneName) return true;
+          if (zoneSlug && r.zoneId === zoneSlug) return true;
+          return false;
+        });
+      }
+
+      return filtered.map((r: any) => {
+        const safeDate = parseTimestamp(r.timestamp || r.check_in_time || r.created_at);
+        const isoString = safeDate.toISOString();
+        return {
+          ...r,
+          timestamp: safeDate,
+          check_in_time: r.check_in_time ? parseTimestamp(r.check_in_time).toISOString() : isoString,
+          check_out_time: r.check_out_time ? parseTimestamp(r.check_out_time).toISOString() : undefined,
+          user_name: r.userName || r.user_name || 'Member',
+          event_name: r.eventName || r.event_name || 'Rehearsal',
+          date_string: safeDate.toLocaleDateString('en-CA')
+        };
+      });
     } catch (error) {
       console.error('Get zone attendance error:', error);
       return [];
