@@ -1055,3 +1055,44 @@ a {
 /* ============================================ */
 /* END CHAT ANIMATIONS */
 /* ============================================ */
+
+/* ============================================ */
+/* VIRTUAL KEYBOARD ACTIVE FIXES (MOBILE WEB) */
+/* ============================================ */
+
+/* Automatically hide fixed bottom bars, floating navigation, and FABs when virtual keyboard is open on mobile */
+html.keyboard-open .bottom-tab-bar,
+html.keyboard-open .floating-category-bar,
+html.keyboard-open .mobile-bottom-nav,
+html.keyboard-open .fixed-bottom-tray,
+html.keyboard-open .bottom-bar-enhanced,
+html.keyboard-open .bottom-nav-safe,
+html.keyboard-open .bottom-input-safe,
+html.keyboard-open .fixed-bottom-safe,
+html.keyboard-open [style*="bottom: 0"],
+html.keyboard-open [style*="bottom:0"],
+html.keyboard-open .sticky.bottom-0,
+html.keyboard-open .fixed.bottom-0 {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure active chat input bars or modal inputs stay visible and are pushed up correctly */
+html.keyboard-open .chat-input-container,
+html.keyboard-open .modal-content-container,
+html.keyboard-open .force-keyboard-visible {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  bottom: auto !important;
+  z-index: 99999 !important;
+}
+
+/* Ensure body remains scrollable to reach focused input */
+html.keyboard-open body {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}

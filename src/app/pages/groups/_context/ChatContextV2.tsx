@@ -99,7 +99,7 @@ interface ChatContextType {
   
   // Statuses
   statuses: StatusUpdate[]
-  uploadStatus: (file: File, caption?: string) => Promise<boolean>
+  uploadStatus: (file: File, caption?: string, trimOptions?: { startTime: number; endTime: number }) => Promise<boolean>
   viewStatus: (statusId: string) => Promise<void>
   deleteStatus: (statusId: string) => Promise<boolean>
   toggleStatusLike: (statusId: string) => Promise<boolean>
@@ -605,35 +605,55 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     return undefined
   }, [user?.uid])
 
-  const uploadStatus = useCallback(async (file: File, caption?: string) => {
+  const uploadStatus = useCallback(async (file: File, caption?: string, trimOptions?: { startTime: number; endTime: number }) => {
     if (!currentUser) return false
     try {
       const isImage = file.type.startsWith('image/')
       const isVideo = file.type.startsWith('video/')
       const isAudio = file.type.startsWith('audio/')
       
-      // Cloudinary resource types: 'image', 'video' (for video/audio), 'raw'
-      let resourceType: 'image' | 'video' | 'raw' = 'raw'
-      if (isImage) resourceType = 'image'
-      else if (isVideo || isAudio) resourceType = 'video'
-      
       const formData = new FormData()
       formData.append('file', file)
       formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'loveworld-singers')
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dvtjjt3js'
 
-      const response = await fetch(
+      // For videos, try 'video' endpoint first. If preset restricts it, fallback to 'auto'.
+      let resourceType = isImage ? 'image' : isVideo || isAudio ? 'video' : 'auto'
+
+      let response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
         { method: 'POST', body: formData }
       )
-      if (!response.ok) throw new Error('Status upload failed')
+
+      if (!response.ok && (isVideo || isAudio)) {
+        console.warn('[ChatContext] Video upload failed with video endpoint, falling back to auto...')
+        response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+          { method: 'POST', body: formData }
+        )
+      }
+
+      if (!response.ok) {
+        const errText = await response.text()
+        console.error('[ChatContext] Status upload failed:', errText)
+        throw new Error('Status upload failed')
+      }
+
       const data = await response.json()
+      let finalUrl = data.secure_url
+
+      if (trimOptions && (isVideo || isAudio)) {
+        const { startTime, endTime } = trimOptions
+        if (finalUrl.includes('/upload/')) {
+          finalUrl = finalUrl.replace('/upload/', `/upload/so_${startTime.toFixed(2)},eo_${endTime.toFixed(2)}/`)
+        }
+      }
 
       await addDoc(collection(db, 'statuses_v2'), {
         userId: currentUser.id,
         userName: currentUser.name,
         userAvatar: currentUser.avatar,
-        mediaUrl: data.secure_url,
+        mediaUrl: finalUrl,
         type: isImage ? 'image' : isVideo ? 'video' : 'audio',
         timestamp: serverTimestamp(),
         caption,
