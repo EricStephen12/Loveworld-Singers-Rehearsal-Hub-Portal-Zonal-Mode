@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Camera, X, Loader2, Send, Eye, Trash2, Heart, Mic, Music } from 'lucide-react'
 import { useChatV2, StatusUpdate } from '../_context/ChatContextV2'
@@ -99,11 +100,9 @@ export function StatusRow({ primaryColor, isVerticalList = false }: StatusRowPro
     if (isDraggingHandle === 'start') {
       const next = Math.min(time, endTime - 1)
       setStartTime(next)
-      if (previewVideoRef.current) previewVideoRef.current.currentTime = next
     } else {
       const next = Math.max(time, startTime + 1)
       setEndTime(next)
-      if (previewVideoRef.current) previewVideoRef.current.currentTime = next
     }
   }
 
@@ -356,260 +355,278 @@ export function StatusRow({ primaryColor, isVerticalList = false }: StatusRowPro
         accept="image/*,video/*"
       />
 
-      <AnimatePresence>
-        {pendingFile && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] bg-black flex flex-col overflow-hidden select-none"
-          >
-             {/* Background Blurred Image/Video (Premium Immersive Feel) */}
-             <div 
-              className="absolute inset-0 opacity-40 blur-3xl scale-110 pointer-events-none bg-no-repeat bg-cover bg-center"
-              style={pendingFile.type.startsWith('image/') ? { backgroundImage: `url(${URL.createObjectURL(pendingFile)})` } : { backgroundColor: '#111b21' }}
-             />
+      {typeof document !== 'undefined' ? createPortal(
+        <AnimatePresence>
+          {pendingFile && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[999999] bg-black flex flex-col overflow-hidden select-none"
+            >
+               {/* Background Blurred Image/Video (Premium Immersive Feel) */}
+               <div 
+                className="absolute inset-0 opacity-40 blur-3xl scale-110 pointer-events-none bg-no-repeat bg-cover bg-center"
+                style={pendingFile.type.startsWith('image/') ? { backgroundImage: `url(${URL.createObjectURL(pendingFile)})` } : { backgroundColor: '#111b21' }}
+               />
 
-             {/* Top Control Bar */}
-             <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-50 bg-gradient-to-b from-black/80 via-black/30 to-transparent pt-8">
-               <button 
-                onClick={() => setPendingFile(null)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur-md transition-all active:scale-90 shadow-lg"
-               >
-                 <X className="w-6 h-6" />
-               </button>
-               
-               <div className="flex flex-col items-end">
-                  <span className="text-white font-black text-[15px] tracking-tight uppercase drop-shadow">Status Preview</span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-                    <span className="text-white/80 text-[11px] font-bold tracking-widest uppercase drop-shadow">Loveworld Singers</span>
-                  </div>
+               {/* Top Control Bar */}
+               <div className="relative p-6 flex items-center justify-between z-50 bg-gradient-to-b from-black/80 via-black/30 to-transparent pt-8 flex-shrink-0">
+                 <button 
+                  onClick={() => setPendingFile(null)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur-md transition-all active:scale-90 shadow-lg"
+                 >
+                   <X className="w-6 h-6" />
+                 </button>
+                 
+                 <div className="flex flex-col items-end">
+                    <span className="text-white font-black text-[15px] tracking-tight uppercase drop-shadow">Status Preview</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+                      <span className="text-white/80 text-[11px] font-bold tracking-widest uppercase drop-shadow">Loveworld Singers</span>
+                    </div>
+                 </div>
                </div>
-             </div>
 
-             {/* Immersive Media Content */}
-             <div className="flex-1 w-full relative flex flex-col items-center justify-center p-4 z-10 my-auto gap-6">
-               {pendingFile.type.startsWith('image/') ? (
-                 <motion.img 
-                  layoutId="status-media"
-                  src={URL.createObjectURL(pendingFile)} 
-                  className="max-w-full max-h-[82vh] object-contain shadow-[0_0_80px_rgba(0,0,0,0.6)] rounded-2xl border border-white/10" 
-                 />
-               ) : pendingFile.type.startsWith('video/') ? (
-                 <>
-                   <motion.video 
-                    ref={previewVideoRef}
+               {/* Immersive Media Content */}
+               <div className="flex-1 w-full relative flex flex-col items-center justify-center p-4 z-10 min-h-0 gap-4 overflow-hidden">
+                 {pendingFile.type.startsWith('image/') ? (
+                   <motion.img 
                     layoutId="status-media"
                     src={URL.createObjectURL(pendingFile)} 
-                    playsInline
-                    webkit-playsinline="true"
-                    controls={false}
-                    autoPlay
-                    muted
-                    onLoadedMetadata={() => {
-                      if (previewVideoRef.current) {
-                        const dur = previewVideoRef.current.duration || 30;
-                        setMaxDuration(dur);
-                        setEndTime(Math.min(dur, 30));
-                      }
-                    }}
-                    onTimeUpdate={() => {
-                      if (!previewVideoRef.current) return;
-                      if (previewVideoRef.current.currentTime >= endTime) {
-                        previewVideoRef.current.currentTime = startTime;
-                        previewVideoRef.current.play().catch(()=>{});
-                      } else if (previewVideoRef.current.currentTime < startTime) {
-                        previewVideoRef.current.currentTime = startTime;
-                      }
-                    }}
-                    className="max-w-full max-h-[58vh] object-contain shadow-[0_0_80px_rgba(0,0,0,0.6)] rounded-2xl border border-white/10" 
+                    className="max-w-full max-h-full object-contain shadow-[0_0_80px_rgba(0,0,0,0.6)] rounded-2xl border border-white/10" 
                    />
+                 ) : pendingFile.type.startsWith('video/') ? (
+                   <>
+                     <motion.video 
+                      ref={previewVideoRef}
+                      layoutId="status-media"
+                      src={URL.createObjectURL(pendingFile)} 
+                      playsInline
+                      webkit-playsinline="true"
+                      controls={false}
+                      autoPlay
+                      muted
+                      onLoadedMetadata={() => {
+                        if (previewVideoRef.current) {
+                          const dur = previewVideoRef.current.duration || 30;
+                          setMaxDuration(dur);
+                          setEndTime(Math.min(dur, 30));
+                        }
+                      }}
+                      onTimeUpdate={() => {
+                        if (!previewVideoRef.current || isDraggingHandle) return;
+                        if (previewVideoRef.current.currentTime >= endTime) {
+                          previewVideoRef.current.currentTime = startTime;
+                          previewVideoRef.current.play().catch(()=>{});
+                        } else if (previewVideoRef.current.currentTime < startTime) {
+                          previewVideoRef.current.currentTime = startTime;
+                        }
+                      }}
+                      className="max-w-full min-h-0 flex-1 object-contain shadow-[0_0_80px_rgba(0,0,0,0.6)] rounded-2xl border border-white/10" 
+                     />
 
-                   {/* Video Frame Filmstrip Trimmer UI */}
-                   <div 
-                     className="w-full max-w-lg bg-black/80 backdrop-blur-2xl p-6 rounded-3xl border border-white/15 shadow-2xl flex flex-col gap-4 z-50 my-2 select-none"
-                     onMouseMove={(e) => handleTrimmerMove(e.clientX)}
-                     onTouchMove={(e) => handleTrimmerMove(e.touches[0].clientX)}
-                     onMouseUp={() => setIsDraggingHandle(null)}
-                     onMouseLeave={() => setIsDraggingHandle(null)}
-                     onTouchEnd={() => setIsDraggingHandle(null)}
-                   >
-                      <div className="flex items-center justify-between text-white text-sm font-bold px-1">
-                         <div className="flex items-center gap-2">
-                            <span className="text-white font-black uppercase tracking-wider text-xs">Trim Video</span>
-                            <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border border-white/10">{(endTime - startTime).toFixed(1)}s selected</span>
-                         </div>
-                         <span className="text-white/60 text-xs font-bold font-mono">Total: {maxDuration.toFixed(1)}s</span>
-                      </div>
-
-                      {/* Filmstrip Track Container */}
-                      <div 
-                        ref={trimmerTrackRef}
-                        className="relative w-full h-16 bg-white/10 rounded-xl overflow-hidden border border-white/20 shadow-inner flex touch-none cursor-pointer"
-                      >
-                         {/* Extracted Frames / Shimmer */}
-                         {isExtracting || frames.length === 0 ? (
-                           <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
-                              <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Loading Frames...</span>
+                     {/* Video Frame Filmstrip Trimmer UI */}
+                     <div 
+                       className="w-full max-w-lg bg-black/80 backdrop-blur-2xl p-6 rounded-3xl border border-white/15 shadow-2xl flex flex-col gap-4 z-50 my-1 select-none flex-shrink-0"
+                       onMouseMove={(e) => handleTrimmerMove(e.clientX)}
+                       onTouchMove={(e) => handleTrimmerMove(e.touches[0].clientX)}
+                       onMouseUp={() => {
+                         setIsDraggingHandle(null);
+                         if (previewVideoRef.current) {
+                           previewVideoRef.current.currentTime = startTime;
+                           previewVideoRef.current.play().catch(()=>{});
+                         }
+                       }}
+                       onMouseLeave={() => setIsDraggingHandle(null)}
+                       onTouchEnd={() => {
+                         setIsDraggingHandle(null);
+                         if (previewVideoRef.current) {
+                           previewVideoRef.current.currentTime = startTime;
+                           previewVideoRef.current.play().catch(()=>{});
+                         }
+                       }}
+                     >
+                        <div className="flex items-center justify-between text-white text-sm font-bold px-1">
+                           <div className="flex items-center gap-2">
+                              <span className="text-white font-black uppercase tracking-wider text-xs">Trim Video</span>
+                              <span className="bg-white/20 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border border-white/10">{(endTime - startTime).toFixed(1)}s selected</span>
                            </div>
-                         ) : (
-                           <div className="w-full h-full flex items-center justify-between pointer-events-none overflow-hidden bg-black">
-                              {frames.map((frame, i) => (
-                                <img key={i} src={frame} className="h-full flex-1 object-cover border-r border-white/10 last:border-none" />
-                              ))}
+                           <span className="text-white/60 text-xs font-bold font-mono">Total: {maxDuration.toFixed(1)}s</span>
+                        </div>
+
+                        {/* Filmstrip Track Container */}
+                        <div 
+                          ref={trimmerTrackRef}
+                          className="relative w-full h-16 bg-white/10 rounded-xl overflow-hidden border border-white/20 shadow-inner flex touch-none cursor-pointer"
+                        >
+                           {/* Extracted Frames / Shimmer */}
+                           {isExtracting || frames.length === 0 ? (
+                             <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
+                                <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Loading Frames...</span>
+                             </div>
+                           ) : (
+                             <div className="w-full h-full flex items-center justify-between pointer-events-none overflow-hidden bg-black">
+                                {frames.map((frame, i) => (
+                                  <img key={i} src={frame} className="h-full flex-1 object-cover border-r border-white/10 last:border-none" />
+                                ))}
+                             </div>
+                           )}
+
+                           {/* Left Darkened Overlay (0 to startTime) */}
+                           <div 
+                             className="absolute top-0 bottom-0 left-0 bg-black/75 backdrop-blur-[2px] z-10 pointer-events-none transition-all duration-75"
+                             style={{ width: `${(startTime / maxDuration) * 100}%` }}
+                           />
+
+                           {/* Right Darkened Overlay (endTime to maxDuration) */}
+                           <div 
+                             className="absolute top-0 bottom-0 right-0 bg-black/75 backdrop-blur-[2px] z-10 pointer-events-none transition-all duration-75"
+                             style={{ width: `${(1 - endTime / maxDuration) * 100}%` }}
+                           />
+
+                           {/* Active Trimmer Frame Box */}
+                           <div 
+                             className="absolute top-0 bottom-0 border-[3px] z-20 flex items-center justify-between shadow-2xl transition-all duration-75 pointer-events-none"
+                             style={{ 
+                               borderColor: primaryColor,
+                               left: `${(startTime / maxDuration) * 100}%`,
+                               right: `${(1 - endTime / maxDuration) * 100}%` 
+                             }}
+                           >
+                              {/* Start Drag Handle */}
+                              <div 
+                                tabIndex={0}
+                                className="w-5 h-full flex items-center justify-center cursor-ew-resize hover:brightness-110 active:scale-x-125 transition-transform rounded-l-sm shadow-md pointer-events-auto focus:outline-none focus:ring-2 focus:ring-white"
+                                style={{ backgroundColor: primaryColor }}
+                                onMouseDown={(e) => { e.stopPropagation(); setIsDraggingHandle('start'); }}
+                                onTouchStart={(e) => { e.stopPropagation(); setIsDraggingHandle('start'); }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowLeft') {
+                                    setStartTime(s => {
+                                      const next = Math.max(0, s - 0.5);
+                                      if (previewVideoRef.current) previewVideoRef.current.currentTime = next;
+                                      return next;
+                                    });
+                                  } else if (e.key === 'ArrowRight') {
+                                    setStartTime(s => {
+                                      const next = Math.min(endTime - 1, s + 0.5);
+                                      if (previewVideoRef.current) previewVideoRef.current.currentTime = next;
+                                      return next;
+                                    });
+                                  }
+                                }}
+                              >
+                                 <div className="w-1 h-4 bg-white rounded-full pointer-events-none" />
+                              </div>
+
+                              {/* Playhead Indicator */}
+                              <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none overflow-hidden">
+                                 <div 
+                                   className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_8px_white] z-30"
+                                   style={{ 
+                                     left: `${((previewVideoRef.current?.currentTime || startTime) - startTime) / (endTime - startTime) * 100}%` 
+                                   }}
+                                 />
+                              </div>
+
+                              {/* End Drag Handle */}
+                              <div 
+                                tabIndex={0}
+                                className="w-5 h-full flex items-center justify-center cursor-ew-resize hover:brightness-110 active:scale-x-125 transition-transform rounded-r-sm shadow-md pointer-events-auto focus:outline-none focus:ring-2 focus:ring-white"
+                                style={{ backgroundColor: primaryColor }}
+                                onMouseDown={(e) => { e.stopPropagation(); setIsDraggingHandle('end'); }}
+                                onTouchStart={(e) => { e.stopPropagation(); setIsDraggingHandle('end'); }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowLeft') {
+                                    setEndTime(eVal => Math.max(startTime + 1, eVal - 0.5));
+                                  } else if (e.key === 'ArrowRight') {
+                                    setEndTime(eVal => Math.min(maxDuration, eVal + 0.5));
+                                  }
+                                }}
+                              >
+                                 <div className="w-1 h-4 bg-white rounded-full pointer-events-none" />
+                              </div>
                            </div>
-                         )}
+                        </div>
 
-                         {/* Left Darkened Overlay (0 to startTime) */}
-                         <div 
-                           className="absolute top-0 bottom-0 left-0 bg-black/75 backdrop-blur-[2px] z-10 pointer-events-none transition-all duration-75"
-                           style={{ width: `${(startTime / maxDuration) * 100}%` }}
-                         />
-
-                         {/* Right Darkened Overlay (endTime to maxDuration) */}
-                         <div 
-                           className="absolute top-0 bottom-0 right-0 bg-black/75 backdrop-blur-[2px] z-10 pointer-events-none transition-all duration-75"
-                           style={{ width: `${(1 - endTime / maxDuration) * 100}%` }}
-                         />
-
-                         {/* Active Trimmer Frame Box */}
-                         <div 
-                           className="absolute top-0 bottom-0 border-[3px] z-20 flex items-center justify-between shadow-2xl transition-all duration-75 pointer-events-none"
-                           style={{ 
-                             borderColor: primaryColor,
-                             left: `${(startTime / maxDuration) * 100}%`,
-                             right: `${(1 - endTime / maxDuration) * 100}%` 
-                           }}
-                         >
-                            {/* Start Drag Handle */}
-                            <div 
-                              tabIndex={0}
-                              className="w-5 h-full flex items-center justify-center cursor-ew-resize hover:brightness-110 active:scale-x-125 transition-transform rounded-l-sm shadow-md pointer-events-auto focus:outline-none focus:ring-2 focus:ring-white"
-                              style={{ backgroundColor: primaryColor }}
-                              onMouseDown={(e) => { e.stopPropagation(); setIsDraggingHandle('start'); }}
-                              onTouchStart={(e) => { e.stopPropagation(); setIsDraggingHandle('start'); }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'ArrowLeft') {
-                                  setStartTime(s => {
-                                    const next = Math.max(0, s - 0.5);
-                                    if (previewVideoRef.current) previewVideoRef.current.currentTime = next;
-                                    return next;
-                                  });
-                                } else if (e.key === 'ArrowRight') {
-                                  setStartTime(s => {
-                                    const next = Math.min(endTime - 1, s + 0.5);
-                                    if (previewVideoRef.current) previewVideoRef.current.currentTime = next;
-                                    return next;
-                                  });
-                                }
-                              }}
-                            >
-                               <div className="w-1 h-4 bg-white rounded-full pointer-events-none" />
-                            </div>
-
-                            {/* Playhead Indicator */}
-                            <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none overflow-hidden">
-                               <div 
-                                 className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_8px_white] z-30"
-                                 style={{ 
-                                   left: `${((previewVideoRef.current?.currentTime || startTime) - startTime) / (endTime - startTime) * 100}%` 
-                                 }}
-                               />
-                            </div>
-
-                            {/* End Drag Handle */}
-                            <div 
-                              tabIndex={0}
-                              className="w-5 h-full flex items-center justify-center cursor-ew-resize hover:brightness-110 active:scale-x-125 transition-transform rounded-r-sm shadow-md pointer-events-auto focus:outline-none focus:ring-2 focus:ring-white"
-                              style={{ backgroundColor: primaryColor }}
-                              onMouseDown={(e) => { e.stopPropagation(); setIsDraggingHandle('end'); }}
-                              onTouchStart={(e) => { e.stopPropagation(); setIsDraggingHandle('end'); }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'ArrowLeft') {
-                                  setEndTime(eVal => Math.max(startTime + 1, eVal - 0.5));
-                                } else if (e.key === 'ArrowRight') {
-                                  setEndTime(eVal => Math.min(maxDuration, eVal + 0.5));
-                                }
-                              }}
-                            >
-                               <div className="w-1 h-4 bg-white rounded-full pointer-events-none" />
-                            </div>
-                         </div>
-                      </div>
-
-                      {/* Precise Time Indicators & Instruction */}
-                      <div className="flex items-center justify-between text-white/80 text-xs px-1 pt-1 font-medium">
-                         <span className="text-white/60">Drag handles or use ← / → arrow keys to adjust</span>
-                         <span className="font-bold text-white font-mono">{startTime.toFixed(1)}s - {endTime.toFixed(1)}s</span>
-                      </div>
-                   </div>
-                 </>
-               ) : (
-                  <motion.div 
-                    layoutId="status-media"
-                    className="w-full max-w-sm aspect-square rounded-[40px] bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex flex-col items-center justify-center gap-6 shadow-2xl p-8 border border-white/20"
-                  >
-                     <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md animate-pulse shadow-inner">
-                        <Mic className="w-10 h-10 text-white" />
+                        {/* Precise Time Indicators & Instruction */}
+                        <div className="flex items-center justify-between text-white/80 text-xs px-1 pt-1 font-medium">
+                           <span className="text-white/60">Drag handles or use ← / → arrow keys to adjust</span>
+                           <span className="font-bold text-white font-mono">{startTime.toFixed(1)}s - {endTime.toFixed(1)}s</span>
+                        </div>
                      </div>
-                     <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden shadow-inner">
-                        <div className="h-full bg-white w-1/3 rounded-full shadow-lg" />
+                   </>
+                 ) : (
+                    <motion.div 
+                      layoutId="status-media"
+                      className="w-full max-w-sm aspect-square rounded-[40px] bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex flex-col items-center justify-center gap-6 shadow-2xl p-8 border border-white/20"
+                    >
+                       <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md animate-pulse shadow-inner">
+                          <Mic className="w-10 h-10 text-white" />
+                       </div>
+                       <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden shadow-inner">
+                          <div className="h-full bg-white w-1/3 rounded-full shadow-lg" />
+                       </div>
+                       <span className="text-white font-bold text-lg uppercase tracking-widest drop-shadow">Audio Status</span>
+                    </motion.div>
+                  )}
+               </div>
+
+               {/* Floating WhatsApp-style Caption Bar */}
+               <div className="relative p-6 pb-10 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-50 flex-shrink-0">
+                  <div className="max-w-xl mx-auto flex items-end gap-3">
+                     <div className="flex-1 relative group">
+                        <textarea 
+                          autoFocus
+                          rows={1}
+                          value={caption}
+                          onChange={(e) => {
+                            setCaption(e.target.value);
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                          }}
+                          placeholder="Add a caption..."
+                          className="w-full bg-[#202c33]/90 backdrop-blur-2xl text-white py-4 px-6 rounded-[28px] border border-white/15 focus:border-white/30 focus:outline-none placeholder:text-gray-400 text-[17px] resize-none max-h-[140px] transition-all shadow-2xl"
+                        />
                      </div>
-                     <span className="text-white font-bold text-lg uppercase tracking-widest drop-shadow">Audio Status</span>
-                  </motion.div>
-                )}
-             </div>
+                     
+                     <button 
+                      onClick={handleUpload}
+                      disabled={isUploading}
+                      className="w-[58px] h-[58px] rounded-full flex items-center justify-center text-white shadow-[0_8px_30px_rgba(16,185,129,0.5)] active:scale-90 transition-all disabled:opacity-50 disabled:scale-95 flex-shrink-0 hover:brightness-110 border border-white/20"
+                      style={{ backgroundColor: primaryColor }}
+                     >
+                       {isUploading ? (
+                         <Loader2 className="w-7 h-7 animate-spin" />
+                       ) : (
+                         <Send className="w-7 h-7 translate-x-0.5" fill="currentColor" />
+                       )}
+                     </button>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      ) : null}
 
-             {/* Floating WhatsApp-style Caption Bar */}
-             <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-50">
-                <div className="max-w-xl mx-auto flex items-end gap-3">
-                   <div className="flex-1 relative group">
-                      <textarea 
-                        autoFocus
-                        rows={1}
-                        value={caption}
-                        onChange={(e) => {
-                          setCaption(e.target.value);
-                          e.target.style.height = 'auto';
-                          e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
-                        placeholder="Add a caption..."
-                        className="w-full bg-[#202c33]/90 backdrop-blur-2xl text-white py-4 px-6 rounded-[28px] border border-white/15 focus:border-white/30 focus:outline-none placeholder:text-gray-400 text-[17px] resize-none max-h-[140px] transition-all shadow-2xl"
-                      />
-                   </div>
-                   
-                   <button 
-                    onClick={handleUpload}
-                    disabled={isUploading}
-                    className="w-[58px] h-[58px] rounded-full flex items-center justify-center text-white shadow-[0_8px_30px_rgba(16,185,129,0.5)] active:scale-90 transition-all disabled:opacity-50 disabled:scale-95 flex-shrink-0 hover:brightness-110 border border-white/20"
-                    style={{ backgroundColor: primaryColor }}
-                   >
-                     {isUploading ? (
-                       <Loader2 className="w-7 h-7 animate-spin" />
-                     ) : (
-                       <Send className="w-7 h-7 translate-x-0.5" fill="currentColor" />
-                     )}
-                   </button>
-                </div>
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedUserStatus && (
-          <StatusViewer 
-            userId={selectedUserStatus}
-            statuses={groupedStatuses[selectedUserStatus]}
-            onClose={() => setSelectedUserStatus(null)}
-            onView={viewStatus}
-            deleteStatus={deleteStatus}
-            toggleStatusLike={toggleStatusLike}
-            primaryColor={primaryColor}
-          />
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' ? createPortal(
+        <AnimatePresence>
+          {selectedUserStatus && (
+            <StatusViewer 
+              userId={selectedUserStatus}
+              statuses={groupedStatuses[selectedUserStatus]}
+              onClose={() => setSelectedUserStatus(null)}
+              onView={viewStatus}
+              deleteStatus={deleteStatus}
+              toggleStatusLike={toggleStatusLike}
+              primaryColor={primaryColor}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      ) : null}
     </div>
   );
 }
