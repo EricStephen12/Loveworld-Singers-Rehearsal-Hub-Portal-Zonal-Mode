@@ -228,13 +228,8 @@ function GroupsContent() {
   // Search users
   useEffect(() => {
     const search = async () => {
-      if (!searchTerm.trim()) {
-        setSearchResults([])
-        return
-      }
-
       setIsSearching(true)
-      const results = await searchUsers(searchTerm)
+      const results = await searchUsers(searchTerm.trim())
       setSearchResults(results)
       setIsSearching(false)
     }
@@ -246,13 +241,8 @@ function GroupsContent() {
   // Search users for group settings
   useEffect(() => {
     const search = async () => {
-      if (!groupSettingsSearchTerm.trim()) {
-        setGroupSettingsSearchResults([])
-        return
-      }
-
       setIsGroupSettingsSearching(true)
-      const results = await searchUsers(groupSettingsSearchTerm)
+      const results = await searchUsers(groupSettingsSearchTerm.trim())
       setGroupSettingsSearchResults(results)
       setIsGroupSettingsSearching(false)
     }

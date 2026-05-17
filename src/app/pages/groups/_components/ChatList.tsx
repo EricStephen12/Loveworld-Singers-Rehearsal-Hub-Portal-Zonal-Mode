@@ -64,7 +64,7 @@ export function ChatList({
   ]
 
   return (
-    <div className={`w-full md:w-80 lg:w-[380px] flex-shrink-0 bg-white border-r border-gray-200/80 flex flex-col h-[100dvh] md:h-full relative overflow-visible ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+    <div className={`w-full md:w-80 lg:w-[380px] flex-shrink-0 bg-white border-r border-gray-200/80 flex flex-col h-full relative overflow-visible ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
       {/* Header */}
       <div className="flex-shrink-0 bg-white z-50 px-4 pt-3 space-y-4 overflow-visible border-b border-gray-100 pb-1">
         {/* Top Action Row */}
@@ -91,6 +91,13 @@ export function ChatList({
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={onNewGroup}
+              className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all text-[#54656f]"
+              title="New Group"
+            >
+              <Users className="w-[20px] h-[20px]" />
+            </button>
             <button
               onClick={onNewChat}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-all text-[#54656f]"

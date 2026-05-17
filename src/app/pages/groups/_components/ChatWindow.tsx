@@ -206,7 +206,7 @@ export function ChatWindow({
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden h-[100dvh] md:h-full">
+    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden w-full h-full">
       <div className="flex-shrink-0 flex items-center justify-between px-2 md:px-4 h-[64px] border-b border-[#e9edef] bg-white z-30 min-w-0 shadow-sm gap-2">
         <div className="flex items-center gap-2 md:gap-3 overflow-hidden min-w-0 flex-1">
           <button 
