@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Camera, X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
 import { AttendanceService } from '@/lib/attendance-service'
 import { useAuth } from '@/hooks/useAuth'
+import { useZone } from '@/hooks/useZone'
 import jsQR from 'jsqr'
 
 interface QRCodeScannerProps {
@@ -27,6 +28,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
   const feedbackTimerRef = useRef<NodeJS.Timeout | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const { user } = useAuth()
+  const { currentZone } = useZone()
 
   // Auto-clear feedback after 3 seconds and resume scanning
   const showFeedback = useCallback((message: string, type: 'success' | 'error') => {
@@ -81,7 +83,7 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
         startQRDetection()
       }
     } catch (error) {
- console.error('Camera access error:', error)
+      console.error('Camera access error:', error)
       onError('Unable to access camera. Please check permissions.')
     }
   }
@@ -164,8 +166,20 @@ export default function QRCodeScanner({ isOpen, onClose, onSuccess, onError }: Q
     // DON'T stop camera — keep scanning continuously
 
     try {
-      const userId = user?.uid || 'unknown'
-      const result = await AttendanceService.checkIn(userId, qrCode)
+      let targetUserId = user?.uid || 'unknown'
+      if (qrCode.startsWith('LW-ATTEND-')) {
+        const parts = qrCode.split('-')
+        if (parts.length > 2) {
+          targetUserId = parts[2]
+        }
+      } else if (qrCode.startsWith('LW-MANUAL-')) {
+        const parts = qrCode.split('-')
+        if (parts.length > 2) {
+          targetUserId = parts[2]
+        }
+      }
+
+      const result = await AttendanceService.checkIn(targetUserId, qrCode, 'Rehearsal', currentZone?.id)
       
       if (result.success) {
         showFeedback(result.message, 'success')
