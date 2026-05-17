@@ -26,10 +26,10 @@ import { db } from '@/lib/firebase-setup'
 import CustomLoader from '@/components/CustomLoader'
 
 interface SubmittedSongsPageProps {
-  embedded?: boolean
+  embedded?: boolean;
 }
 
-export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsPageProps = { embedded: false }) {
+export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPageProps) {
   const router = useRouter()
   const { user, profile } = useAuth()
   const { theme } = useAdminTheme()
@@ -1123,3 +1123,6 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
   )
 }
 
+export default function SubmittedSongsPage({ params, searchParams }: { params?: any; searchParams?: any }) {
+  return <SubmittedSongsContent embedded={false} />;
+}

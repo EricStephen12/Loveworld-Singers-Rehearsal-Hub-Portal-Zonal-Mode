@@ -25,12 +25,8 @@ const formatLyricsForDisplay = (html: string): string => {
 
   // Convert HTML back to plain text format like the edit modal shows
   let text = html
-    // Convert </div><div> to single newlines (normal line breaks)
-    .replace(/<\/div>\s*<div>/gi, '\n')
-    // Convert <div> opening tags to nothing (start of content)
-    .replace(/<div[^>]*>/gi, '')
-    // Convert </div> closing tags to nothing
-    .replace(/<\/div>/gi, '')
+    // Convert <div>...</div> to content followed by double newlines for proper paragraph/stanza spacing
+    .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
     // Convert <br> to single newlines
     .replace(/<br\s*\/?>/gi, '\n')
     // Keep bold tags for display
@@ -418,7 +414,7 @@ export function MasterSongDetailSheet({
                 `}</style>
                 <pre
                   className="solfa-content whitespace-pre-wrap font-mono"
-                  dangerouslySetInnerHTML={{ __html: currentSongData.solfa }}
+                  dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(currentSongData.solfa) }}
                 />
               </div>
             )}

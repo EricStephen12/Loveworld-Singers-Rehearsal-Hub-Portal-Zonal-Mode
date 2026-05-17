@@ -3,7 +3,7 @@
  * This is the bridge between the Website UI and the new Standalone Backend API.
  */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${BACKEND_URL}${endpoint}`, {

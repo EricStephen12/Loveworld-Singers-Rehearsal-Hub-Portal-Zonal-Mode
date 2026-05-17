@@ -90,28 +90,11 @@ export const PraiseNightHeader: React.FC<PraiseNightHeaderProps> = ({
               </button>
             )}
             timer={currentPraiseNight && categoryFilter !== 'archive' && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
-              <div className="flex items-center gap-0.5 mt-[-10px] px-2 py-0.5 bg-indigo-50/40 backdrop-blur-sm rounded-full border border-indigo-100/30 shadow-sm animate-in fade-in slide-in-from-top-1 duration-500">
-                <div className="flex items-center gap-0.5 text-[9px] sm:text-[10px]">
-                  <div className="flex flex-col items-center min-w-[1.1rem]">
-                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.days)}</span>
-                    <span className="text-[6px] uppercase font-bold text-indigo-400">d</span>
-                  </div>
-                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
-                  <div className="flex flex-col items-center min-w-[1.1rem]">
-                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.hours)}</span>
-                    <span className="text-[6px] uppercase font-bold text-indigo-400">h</span>
-                  </div>
-                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
-                  <div className="flex flex-col items-center min-w-[1.1rem]">
-                    <span className="font-extrabold text-indigo-700 leading-none">{formatNumber(timeLeft.minutes)}</span>
-                    <span className="text-[6px] uppercase font-bold text-indigo-400">m</span>
-                  </div>
-                  <span className="text-indigo-200 font-bold mb-0.5">:</span>
-                  <div className="flex flex-col items-center min-w-[1.1rem]">
-                    <span className="font-extrabold text-purple-600 leading-none animate-pulse">{formatNumber(timeLeft.seconds)}</span>
-                    <span className="text-[6px] uppercase font-bold text-purple-400">s</span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-1.5 mt-[-10px] text-xs sm:text-sm font-bold text-indigo-950 tracking-tight animate-in fade-in duration-500">
+                <span>{formatNumber(timeLeft.days)}d</span>
+                <span>{formatNumber(timeLeft.hours)}h</span>
+                <span>{formatNumber(timeLeft.minutes)}m</span>
+                <span className="text-purple-600 animate-pulse">{formatNumber(timeLeft.seconds)}s</span>
               </div>
             )}
           />

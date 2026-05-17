@@ -9,6 +9,7 @@ import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
 import { useAuthContext } from '@/contexts/AuthContext'
+import CustomLoader from '@/components/CustomLoader'
 
 // Helper function to convert Firebase errors to user-friendly messages
 function sanitizeError(error: string): string {
@@ -754,8 +755,14 @@ function AuthPageContent() {
     }
   }
 
-  // If user is already authenticated, don't render anything while redirecting
-  if (user) return null;
+  // If user is already authenticated, show loader while redirecting instead of blank page
+  if (user) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+        <CustomLoader message="" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-y-auto">

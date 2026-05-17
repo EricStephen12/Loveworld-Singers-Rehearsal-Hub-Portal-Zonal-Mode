@@ -120,7 +120,7 @@ export class ZoneInvitationService {
   static getZoneSignupLink(invitationCode: string): string {
     const baseUrl = typeof window !== 'undefined'
       ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      : process.env.NEXT_PUBLIC_APP_URL || ''
 
     return `${baseUrl}/auth?zone=${invitationCode}`
   }

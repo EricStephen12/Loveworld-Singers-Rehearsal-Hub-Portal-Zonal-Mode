@@ -141,8 +141,24 @@ export function PageLoader({ children }: PageLoaderProps) {
   // HOWEVER, to avoid hydration mismatch, we MUST render the same as the server first.
   const hasAuthCache = mounted && typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
 
-  if (!mounted || authLoading || !isReady) {
-    if (mounted) console.log(`[PageLoader] Showing loader. authLoading=${authLoading}, isReady=${isReady}`);
+  const [hasSuccessfullyLoaded, setHasSuccessfullyLoaded] = useState(false);
+
+  const isPublicPath = checkIsPublicPath(pathname);
+  const isProtectedAndLoading = !isPublicPath && user && (zoneLoading || isProfileLoading);
+
+  // Once we successfully render children on a protected route, lock hasSuccessfullyLoaded to true
+  useEffect(() => {
+    if (!isPublicPath && user && !zoneLoading && !isProfileLoading && isReady) {
+      setHasSuccessfullyLoaded(true);
+    }
+  }, [isPublicPath, user, zoneLoading, isProfileLoading, isReady]);
+
+  // If we have already successfully loaded the protected page, NEVER show the full-screen loader again 
+  // for background re-fetches. This completely prevents the annoying loading spinner when switching tabs.
+  const shouldShowLoader = !mounted || authLoading || !isReady || (!hasSuccessfullyLoaded && isProtectedAndLoading);
+
+  if (shouldShowLoader) {
+    if (mounted) console.log(`[PageLoader] Showing loader. authLoading=${authLoading}, isReady=${isReady}, isProtectedAndLoading=${isProtectedAndLoading}, hasSuccessfullyLoaded=${hasSuccessfullyLoaded}`);
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />
@@ -153,7 +169,7 @@ export function PageLoader({ children }: PageLoaderProps) {
   // If we are on the auth page but we think the user might be logged in,
   // we keep showing the loader until we are SURE. This prevents the login form flicker.
   const isAuthPage = pathname === '/auth';
-  if (isAuthPage && hasAuthCache && !user) {
+  if (isAuthPage && ((hasAuthCache && !user) || user)) {
     console.log(`[PageLoader] Anti-flicker active on /auth. hasAuthCache=${hasAuthCache}, user=${!!user}`);
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
