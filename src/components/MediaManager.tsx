@@ -140,18 +140,24 @@ export default function MediaManager({
       }
 
       // Convert to component format
-      const convertedFiles: MediaFile[] = mediaFiles.map(dbFile => ({
-        id: dbFile.id,
-        name: dbFile.name,
-        url: dbFile.url,
-        type: dbFile.type,
-        size: dbFile.size,
-        folder: dbFile.folder || 'uncategorized',
-        uploadedAt: dbFile.createdAt,
-        storagePath: dbFile.publicId, // Store Cloudinary publicId
-        createdAt: new Date(dbFile.createdAt),
-        updatedAt: new Date(dbFile.updatedAt)
-      }));
+      const convertedFiles: MediaFile[] = mediaFiles.map(dbFile => {
+        let actualType = dbFile.type as 'image' | 'audio' | 'video' | 'document';
+        if (!actualType || actualType === 'document' || actualType as any === 'raw' || actualType as any === 'file') {
+          actualType = getFileType(dbFile.name || dbFile.url);
+        }
+        return {
+          id: dbFile.id,
+          name: dbFile.name,
+          url: dbFile.url,
+          type: actualType,
+          size: dbFile.size,
+          folder: dbFile.folder || 'uncategorized',
+          uploadedAt: dbFile.createdAt,
+          storagePath: dbFile.publicId, // Store Cloudinary publicId
+          createdAt: new Date(dbFile.createdAt),
+          updatedAt: new Date(dbFile.updatedAt)
+        };
+      });
 
       // Debug: Log file types breakdown
       const typeBreakdown = convertedFiles.reduce((acc, f) => {
@@ -189,18 +195,24 @@ export default function MediaManager({
       setHasMore(hasMoreCloudinaryMedia(currentZone?.id));
 
       if (moreFiles.length > 0) {
-        const convertedFiles: MediaFile[] = moreFiles.map(dbFile => ({
-          id: dbFile.id,
-          name: dbFile.name,
-          url: dbFile.url,
-          type: dbFile.type,
-          size: dbFile.size,
-          folder: dbFile.folder || 'uncategorized',
-          uploadedAt: dbFile.createdAt,
-          storagePath: dbFile.publicId,
-          createdAt: new Date(dbFile.createdAt),
-          updatedAt: new Date(dbFile.updatedAt)
-        }));
+        const convertedFiles: MediaFile[] = moreFiles.map(dbFile => {
+          let actualType = dbFile.type as 'image' | 'audio' | 'video' | 'document';
+          if (!actualType || actualType === 'document' || actualType as any === 'raw' || actualType as any === 'file') {
+            actualType = getFileType(dbFile.name || dbFile.url);
+          }
+          return {
+            id: dbFile.id,
+            name: dbFile.name,
+            url: dbFile.url,
+            type: actualType,
+            size: dbFile.size,
+            folder: dbFile.folder || 'uncategorized',
+            uploadedAt: dbFile.createdAt,
+            storagePath: dbFile.publicId,
+            createdAt: new Date(dbFile.createdAt),
+            updatedAt: new Date(dbFile.updatedAt)
+          };
+        });
 
         setFiles(prev => [...prev, ...convertedFiles]);
       }
@@ -558,18 +570,24 @@ export default function MediaManager({
     try {
       const results = await searchCloudinaryMedia(searchTerm, currentZone?.id, true);
 
-      const convertedResults: MediaFile[] = results.map(dbFile => ({
-        id: dbFile.id,
-        name: dbFile.name,
-        url: dbFile.url,
-        type: dbFile.type,
-        size: dbFile.size,
-        folder: dbFile.folder || 'uncategorized',
-        uploadedAt: dbFile.createdAt,
-        storagePath: dbFile.publicId,
-        createdAt: new Date(dbFile.createdAt),
-        updatedAt: new Date(dbFile.updatedAt)
-      }));
+      const convertedResults: MediaFile[] = results.map(dbFile => {
+        let actualType = dbFile.type as 'image' | 'audio' | 'video' | 'document';
+        if (!actualType || actualType === 'document' || actualType as any === 'raw' || actualType as any === 'file') {
+          actualType = getFileType(dbFile.name || dbFile.url);
+        }
+        return {
+          id: dbFile.id,
+          name: dbFile.name,
+          url: dbFile.url,
+          type: actualType,
+          size: dbFile.size,
+          folder: dbFile.folder || 'uncategorized',
+          uploadedAt: dbFile.createdAt,
+          storagePath: dbFile.publicId,
+          createdAt: new Date(dbFile.createdAt),
+          updatedAt: new Date(dbFile.updatedAt)
+        };
+      });
 
       setDeepSearchResults(convertedResults);
 

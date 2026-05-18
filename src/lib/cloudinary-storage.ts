@@ -61,10 +61,20 @@ export const deleteFromCloudinary = async (publicId: string, _resourceType?: str
   }
 };
 
-export const getFileType = (fileName: string): 'image' | 'audio' | 'video' | 'document' => {
-  const extension = fileName.split('.').pop()?.toLowerCase();
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) return 'image';
-  if (['mp3', 'wav', 'm4a', 'aac'].includes(extension || '')) return 'audio';
-  if (['mp4', 'mov', 'avi'].includes(extension || '')) return 'video';
+export const getFileType = (fileNameOrMime: string): 'image' | 'audio' | 'video' | 'document' => {
+  if (!fileNameOrMime) return 'document';
+  const str = fileNameOrMime.toLowerCase();
+  
+  // Check MIME types first
+  if (str.startsWith('image/')) return 'image';
+  if (str.startsWith('audio/')) return 'audio';
+  if (str.startsWith('video/')) return 'video';
+
+  // Check extensions
+  const extension = str.split('.').pop() || '';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(extension)) return 'image';
+  if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'wma', 'm4r', 'amr'].includes(extension)) return 'audio';
+  if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'mkv', 'webm'].includes(extension)) return 'video';
+  
   return 'document';
 };
