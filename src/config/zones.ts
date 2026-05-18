@@ -75,6 +75,116 @@ export const ZONES: Zone[] = [
   { id: 'zone-oftd', name: 'Office of the Director', slug: 'oftd-zone', region: 'Headquarters', invitationCode: 'ZONEOFTD', themeColor: '#9333EA' },
   { id: 'zone-national', name: 'Loveworld National Zonal Choir Representatives', slug: 'national-zone', region: 'Headquarters', invitationCode: 'ZONENAT', themeColor: '#9333EA' },
   { id: 'zone-international', name: 'Loveworld International Zonal Choir Representatives', slug: 'international-zone', region: 'Headquarters', invitationCode: 'ZONEINT', themeColor: '#9333EA' },
+  {
+    id: 'zone-sa-1',
+    name: 'SA-1 President Audit Zone',
+    slug: 'sa-1-president-audit',
+    region: 'Headquarters',
+    invitationCode: 'ZONESA1',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
+  {
+    id: 'zone-sa-2',
+    name: 'SA-2 President Audit Zone',
+    slug: 'sa-2-president-audit',
+    region: 'Headquarters',
+    invitationCode: 'ZONESA2',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
+  {
+    id: 'zone-sa-3',
+    name: 'SA-3 President Audit Zone',
+    slug: 'sa-3-president-audit',
+    region: 'Headquarters',
+    invitationCode: 'ZONESA3',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
+  {
+    id: 'zone-sa-4',
+    name: 'SA-4 President Audit Zone',
+    slug: 'sa-4-president-audit',
+    region: 'Headquarters',
+    invitationCode: 'ZONESA4',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
+  {
+    id: 'zone-sa-5',
+    name: 'SA-5 President Audit Zone',
+    slug: 'sa-5-president-audit',
+    region: 'Headquarters',
+    invitationCode: 'ZONESA5',
+    themeColor: '#9333EA',
+    streams: [
+      {
+        id: 'main',
+        name: 'Main Stream',
+        publicId: 'live_stream_789e522db80d47b2bfd6c156f9d52813_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_789e522db80d47b2bfd6c156f9d52813_hls&profile=cld-live-streaming'
+      },
+      {
+        id: 'secondary',
+        name: 'Rehearsal Stream',
+        publicId: 'live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls',
+        playerLink: 'https://player.cloudinary.com/embed/?cloud_name=dvtjjt3js&public_id=live_stream_c5b08d5ec84f49e0a25e511c575a4545_hls&profile=cld-live-streaming'
+      }
+    ]
+  },
 
 
   // South Africa
@@ -240,7 +350,8 @@ export const BOSS_ZONE_ID = 'zone-boss'
 // HQ groups - these use unfiltered Firebase data
 export const HQ_GROUP_IDS = [
   'zone-001', 'zone-002', 'zone-003', 'zone-004', 'zone-005',
-  'zone-orchestra', 'zone-president', 'zone-president-2', 'zone-director', 'zone-oftp', 'zone-oftd', 'zone-national', 'zone-international'
+  'zone-orchestra', 'zone-president', 'zone-president-2', 'zone-director', 'zone-oftp', 'zone-oftd', 'zone-national', 'zone-international',
+  'zone-sa-1', 'zone-sa-2', 'zone-sa-3', 'zone-sa-4', 'zone-sa-5'
 ]
 
 export function isHQGroup(zoneId: string | undefined): boolean {

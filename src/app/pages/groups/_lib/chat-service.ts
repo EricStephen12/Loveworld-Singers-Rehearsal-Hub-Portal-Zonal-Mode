@@ -154,8 +154,8 @@ export async function getUserInfo(userId: string): Promise<ChatUser | null> {
 }
 
 // Protected senior zones - members only visible to their own zone or boss users
-const SENIOR_ZONES = ['zone-president', 'zone-president-2', 'zone-director', 'zone-oftp']
-const SENIOR_TITLES = ['president', 'director', 'oftp']
+const SENIOR_ZONES = ['zone-president', 'zone-president-2', 'zone-director', 'zone-oftp', 'zone-sa-1', 'zone-sa-2', 'zone-sa-3', 'zone-sa-4', 'zone-sa-5']
+const SENIOR_TITLES = ['president', 'director', 'oftp', 'sa-1', 'sa-2', 'sa-3', 'sa-4', 'sa-5']
 
 /**
  * Check if a user is a senior/protected member

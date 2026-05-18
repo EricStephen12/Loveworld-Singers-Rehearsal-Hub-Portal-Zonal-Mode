@@ -231,7 +231,12 @@ function PraiseNightPageContent() {
         currentZone?.id === 'zone-president-2' ||
         currentZone?.id === 'zone-director' || 
         currentZone?.id === 'zone-oftp' ||
-        currentZone?.id === 'zone-oftd';
+        currentZone?.id === 'zone-oftd' ||
+        currentZone?.id === 'zone-sa-1' ||
+        currentZone?.id === 'zone-sa-2' ||
+        currentZone?.id === 'zone-sa-3' ||
+        currentZone?.id === 'zone-sa-4' ||
+        currentZone?.id === 'zone-sa-5';
       const isAdmin = 
         profile?.role === 'admin' || 
         profile?.role === 'boss' || 

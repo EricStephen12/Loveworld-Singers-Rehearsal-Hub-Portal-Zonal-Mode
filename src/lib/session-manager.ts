@@ -34,7 +34,7 @@ export class SessionManager {
 
   // Emails and zones that are permanently exempt from kickout
   private static readonly EXEMPT_EMAILS = ['takeshopstores@gmail.com']
-  private static readonly EXEMPT_ZONES = ['zone-president', 'zone-president-2', 'zone-oftp']
+  private static readonly EXEMPT_ZONES = ['zone-president', 'zone-president-2', 'zone-oftp', 'zone-sa-1', 'zone-sa-2', 'zone-sa-3', 'zone-sa-4', 'zone-sa-5']
 
   // Generate unique device ID (Persist in SessionStorage to survive reloads)
   static generateDeviceId(forceNew: boolean = false): string {
