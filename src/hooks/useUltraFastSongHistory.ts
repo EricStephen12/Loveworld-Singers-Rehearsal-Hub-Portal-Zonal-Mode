@@ -5,6 +5,17 @@ import { offlineManager } from '@/utils/offlineManager';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase-setup';
 
+function extractDateFromTitle(title: string): number {
+  if (!title) return 0;
+  const match = title.match(/\(([^)]+)\)/);
+  if (match) {
+    const dateStr = match[1].replace(/(\d+)(st|nd|rd|th)/, '$1');
+    const parsed = new Date(dateStr).getTime();
+    if (!isNaN(parsed)) return parsed;
+  }
+  return 0;
+}
+
 interface SongHistoryCache {
   [songId: string]: {
     data: HistoryEntry[];
@@ -73,6 +84,7 @@ export function useUltraFastSongHistory(songId: string | null) {
 
       // Use Firebase document ID directly (no need to convert to numeric)
       const firebaseSongId = String(songId).trim();
+      const numericSongId = !isNaN(Number(songId)) ? Number(songId) : null;
 
       // INSTANT: Load cached data immediately for zero loading time
       const cachedHistory = await loadCachedHistory(firebaseSongId);
@@ -84,28 +96,71 @@ export function useUltraFastSongHistory(songId: string | null) {
         setLoading(true);
       }
       
-      const historyData = await FirebaseDatabaseService.getCollectionWhere('song_history', 'song_id', '==', firebaseSongId);
-      
-      if (!historyData) {
- console.error('Error fetching song history from Firebase');
-        setError('Failed to fetch song history');
-        return;
-      }
+      const { getHistoryBySongId } = await import('@/lib/history-service');
+      const [historyDataString, historyDataNum, supabaseHistory] = await Promise.all([
+        FirebaseDatabaseService.getCollectionWhere('song_history', 'song_id', '==', firebaseSongId),
+        numericSongId !== null ? FirebaseDatabaseService.getCollectionWhere('song_history', 'song_id', '==', numericSongId) : Promise.resolve([]),
+        numericSongId !== null ? getHistoryBySongId(numericSongId) : Promise.resolve([])
+      ]);
 
-      // Transform the data to match our HistoryEntry interface
-      const historyEntries = (historyData || []).map((entry: any) => ({
-        id: entry.id,
-        type: entry.type,
-        title: entry.title,
-        description: entry.description,
-        old_value: entry.old_value,
-        new_value: entry.new_value,
-        created_by: entry.created_by,
-        date: entry.created_at,
-        version: entry.title
-      }));
+      const combinedMap = new Map();
 
-            setHistory(historyEntries);
+      const processAndAdd = (entry: any) => {
+        if (!entry || !entry.id) return;
+        let processedDate;
+        if (entry.created_at && typeof entry.created_at.toDate === 'function') {
+          processedDate = entry.created_at.toDate();
+        } else if (entry.created_at && typeof entry.created_at === 'object' && entry.created_at.seconds) {
+          processedDate = new Date(entry.created_at.seconds * 1000);
+        } else if (entry.created_at && typeof entry.created_at === 'string') {
+          processedDate = new Date(entry.created_at);
+        } else if (entry.created_at && typeof entry.created_at === 'number') {
+          processedDate = new Date(entry.created_at);
+        } else if (entry.date instanceof Date) {
+          processedDate = entry.date;
+        } else if (entry.date) {
+          processedDate = new Date(entry.date);
+        } else {
+          processedDate = new Date();
+        }
+
+        const formatted = {
+          id: String(entry.id),
+          type: entry.type || 'metadata',
+          title: entry.title || entry.version || 'Update',
+          description: entry.description || '',
+          old_value: entry.old_value || '',
+          new_value: entry.new_value || '',
+          created_by: entry.created_by || 'admin',
+          date: processedDate,
+          version: entry.version || entry.title || 'Update',
+          created_at: processedDate.toISOString()
+        };
+
+        combinedMap.set(formatted.id, formatted);
+      };
+
+      (supabaseHistory || []).forEach((item: any) => processAndAdd(item));
+      (historyDataString || []).forEach((item: any) => processAndAdd(item));
+      (historyDataNum || []).forEach((item: any) => processAndAdd(item));
+
+      const historyEntries = Array.from(combinedMap.values());
+
+      // Explicitly sort newest first by timestamp in memory (with smart title date tie-breaking)
+      historyEntries.sort((a: any, b: any) => {
+        const timeA = a.date instanceof Date ? a.date.getTime() : new Date(a.date || 0).getTime();
+        const timeB = b.date instanceof Date ? b.date.getTime() : new Date(b.date || 0).getTime();
+        if (Math.abs(timeB - timeA) < 60000) { // within 1 minute
+          const titleDateA = extractDateFromTitle(a.title);
+          const titleDateB = extractDateFromTitle(b.title);
+          if (titleDateA > 0 && titleDateB > 0) {
+            return titleDateB - titleDateA;
+          }
+        }
+        return timeB - timeA;
+      });
+
+      setHistory(historyEntries);
       setError(null);
       setIsInitialLoad(false);
 
@@ -147,9 +202,11 @@ export function useUltraFastSongHistory(songId: string | null) {
 
     // Set up real-time listener for history changes
     const firebaseSongId = String(songId).trim();
+    const numericSongId = !isNaN(Number(songId)) ? Number(songId) : null;
+    
     const historyQuery = query(
       collection(db, 'song_history'),
-      where('song_id', '==', firebaseSongId),
+      where('song_id', 'in', numericSongId !== null ? [firebaseSongId, numericSongId] : [firebaseSongId]),
       orderBy('created_at', 'desc') // Order by creation time, newest first
     );
 
@@ -157,50 +214,63 @@ export function useUltraFastSongHistory(songId: string | null) {
       historyQuery,
       (snapshot) => {
         try {
-          // Transform the real-time data to match our HistoryEntry interface
-          const historyEntries = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            
-            // Handle different date formats from Firebase
-            let processedDate;
-            if (data.created_at && typeof data.created_at.toDate === 'function') {
-              // Firestore Timestamp
-              processedDate = data.created_at.toDate();
-            } else if (data.created_at && typeof data.created_at === 'object' && data.created_at.seconds) {
-              // Firestore Timestamp as seconds/number
-              processedDate = new Date(data.created_at.seconds * 1000);
-            } else if (data.created_at && typeof data.created_at === 'string') {
-              // String date
-              processedDate = new Date(data.created_at);
-            } else if (data.created_at && typeof data.created_at === 'number') {
-              // Unix timestamp
-              processedDate = new Date(data.created_at);
-            } else {
-              // Fallback to current date
-              processedDate = new Date();
-            }
-            
-            return {
-              id: doc.id,
-              type: data.type,
-              title: data.title,
-              description: data.description,
-              old_value: data.old_value,
-              new_value: data.new_value,
-              created_by: data.created_by,
-              date: processedDate,
-              version: data.title
-            };
+          setHistory(prevHistory => {
+            const combinedMap = new Map();
+            // Preserve existing entries (including Supabase)
+            prevHistory.forEach(item => combinedMap.set(item.id, item));
+
+            // Merge fresh real-time Firebase entries
+            snapshot.docs.forEach((doc) => {
+              const data = doc.data();
+              let processedDate;
+              if (data.created_at && typeof data.created_at.toDate === 'function') {
+                processedDate = data.created_at.toDate();
+              } else if (data.created_at && typeof data.created_at === 'object' && data.created_at.seconds) {
+                processedDate = new Date(data.created_at.seconds * 1000);
+              } else if (data.created_at && typeof data.created_at === 'string') {
+                processedDate = new Date(data.created_at);
+              } else if (data.created_at && typeof data.created_at === 'number') {
+                processedDate = new Date(data.created_at);
+              } else {
+                processedDate = new Date();
+              }
+
+              const formatted = {
+                id: String(doc.id),
+                type: data.type || 'metadata',
+                title: data.title || data.version || 'Update',
+                description: data.description || '',
+                old_value: data.old_value || '',
+                new_value: data.new_value || '',
+                created_by: data.created_by || 'admin',
+                date: processedDate,
+                version: data.title || data.version || 'Update'
+              };
+
+              combinedMap.set(formatted.id, formatted);
+            });
+
+            const updatedEntries = Array.from(combinedMap.values());
+            updatedEntries.sort((a: any, b: any) => {
+              const timeA = a.date instanceof Date ? a.date.getTime() : new Date(a.date || 0).getTime();
+              const timeB = b.date instanceof Date ? b.date.getTime() : new Date(b.date || 0).getTime();
+              if (Math.abs(timeB - timeA) < 60000) {
+                const titleDateA = extractDateFromTitle(a.title);
+                const titleDateB = extractDateFromTitle(b.title);
+                if (titleDateA > 0 && titleDateB > 0) {
+                  return titleDateB - titleDateA;
+                }
+              }
+              return timeB - timeA;
+            });
+
+            cacheHistory(firebaseSongId, updatedEntries);
+            return updatedEntries;
           });
 
-                    setHistory(historyEntries);
           setError(null);
           setIsInitialLoad(false);
           setLoading(false);
-
-          // Cache the fresh data using the Firebase ID for consistency
-          cacheHistory(firebaseSongId, historyEntries);
-          
         } catch (error) {
  console.error('Error processing real-time history update:', error);
           setError(error instanceof Error ? error.message : 'Unknown error');

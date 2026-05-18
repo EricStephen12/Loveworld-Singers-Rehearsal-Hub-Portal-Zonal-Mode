@@ -83,6 +83,7 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                   <option value="music-details">Music Details</option>
                   <option value="lyrics">Lyrics</option>
                   <option value="solfas">Solfas</option>
+                  <option value="notation">Solfa Notation</option>
                   <option value="audio">Audio</option>
                   <option value="comments">Comments</option>
                 </select>
@@ -127,7 +128,8 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                       <div className="space-y-3">
                         {(() => {
                           try {
-                            const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
+                            const valToParse = originalHistoryValues.new_value || originalHistoryValues.old_value || '{}';
+                            const parsed = JSON.parse(valToParse);
                             if (typeof parsed !== 'object') return null;
 
                             const fields: { label: string; key: string }[] = [];
@@ -165,6 +167,7 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                                     const updated = { ...parsed, [field.key]: e.target.value };
                                     setOriginalHistoryValues({
                                       ...originalHistoryValues,
+                                      new_value: JSON.stringify(updated),
                                       old_value: JSON.stringify(updated)
                                     });
                                   }}
@@ -187,11 +190,10 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                           }
 
                           try {
-                            // Try to parse as JSON, otherwise return as string
-                            const parsed = JSON.parse(originalHistoryValues.old_value || '{}');
+                            const valToParse = originalHistoryValues.new_value || originalHistoryValues.old_value || '{}';
+                            const parsed = JSON.parse(valToParse);
 
-                            // For lyrics, solfas, comments - convert HTML to readable text
-                            const rawValue = typeof parsed === 'string' ? parsed : originalHistoryValues.old_value || '';
+                            const rawValue = typeof parsed === 'string' ? parsed : valToParse;
                             return rawValue
                               .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
                               .replace(/<br\s*\/?>/gi, '\n')
@@ -199,8 +201,7 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                               .replace(/<[^>]*>/g, '')
                               .trim();
                           } catch {
-                            // If parsing fails, convert HTML to readable text
-                            const rawValue = originalHistoryValues.old_value || '';
+                            const rawValue = originalHistoryValues.new_value || originalHistoryValues.old_value || '';
                             return rawValue
                               .replace(/<div[^>]*>(.*?)<\/div>/gi, '$1\n\n')
                               .replace(/<br\s*\/?>/gi, '\n')
@@ -210,14 +211,13 @@ export const EditSongHistoryModals: React.FC<EditSongHistoryModalsProps> = ({
                           }
                         })()}
                         onChange={(e) => {
-                          // For lyrics, solfas, comments - convert readable format back to HTML for saving
                           let convertedValue = e.target.value;
                           const paragraphs = convertedValue.split('\n\n');
                           convertedValue = paragraphs
                             .filter(p => p.trim() !== '')
                             .map(p => `<div>${p.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`)
                             .join('');
-                          setOriginalHistoryValues({ ...originalHistoryValues, old_value: convertedValue });
+                          setOriginalHistoryValues({ ...originalHistoryValues, new_value: convertedValue, old_value: convertedValue });
                         }}
                         className="w-full px-3 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                         rows={8}

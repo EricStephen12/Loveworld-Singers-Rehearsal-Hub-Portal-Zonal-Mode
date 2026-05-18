@@ -67,7 +67,61 @@ export class FirebaseDatabaseService {
   // --- HISTORY (Restored) ---
 
   static async getHistoryBySongId(songId: string) {
-    return await this.getCollectionWhere('song_history', 'song_id', '==', songId);
+    const firebaseSongId = String(songId).trim();
+    const numericSongId = !isNaN(Number(songId)) ? Number(songId) : null;
+    const { getHistoryBySongId: getSupabaseHistory } = await import('./history-service');
+
+    const [historyDataString, historyDataNum, supabaseHistory] = await Promise.all([
+      this.getCollectionWhere('song_history', 'song_id', '==', firebaseSongId),
+      numericSongId !== null ? this.getCollectionWhere('song_history', 'song_id', '==', numericSongId) : Promise.resolve([]),
+      numericSongId !== null ? getSupabaseHistory(numericSongId) : Promise.resolve([])
+    ]);
+
+    const combinedMap = new Map();
+
+    const processAndAdd = (entry: any) => {
+      if (!entry || !entry.id) return;
+      let processedDate;
+      if (entry.created_at && typeof entry.created_at.toDate === 'function') {
+        processedDate = entry.created_at.toDate();
+      } else if (entry.created_at && typeof entry.created_at === 'object' && entry.created_at.seconds) {
+        processedDate = new Date(entry.created_at.seconds * 1000);
+      } else if (entry.created_at && typeof entry.created_at === 'string') {
+        processedDate = new Date(entry.created_at);
+      } else if (entry.created_at && typeof entry.created_at === 'number') {
+        processedDate = new Date(entry.created_at);
+      } else if (entry.date instanceof Date) {
+        processedDate = entry.date;
+      } else if (entry.date) {
+        processedDate = new Date(entry.date);
+      } else {
+        processedDate = new Date();
+      }
+
+      const formatted = {
+        id: String(entry.id),
+        type: entry.type || 'metadata',
+        title: entry.title || entry.version || 'Update',
+        description: entry.description || '',
+        old_value: entry.old_value || '',
+        new_value: entry.new_value || '',
+        created_by: entry.created_by || 'admin',
+        date: processedDate,
+        version: entry.version || entry.title || 'Update',
+        created_at: processedDate.toISOString()
+      };
+
+      combinedMap.set(formatted.id, formatted);
+    };
+
+    (supabaseHistory || []).forEach((item: any) => processAndAdd(item));
+    (historyDataString || []).forEach((item: any) => processAndAdd(item));
+    (historyDataNum || []).forEach((item: any) => processAndAdd(item));
+
+    const historyEntries = Array.from(combinedMap.values());
+    historyEntries.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return historyEntries;
   }
 
   static async createHistoryEntry(data: any) {

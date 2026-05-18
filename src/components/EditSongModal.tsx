@@ -210,10 +210,10 @@ export default function EditSongModal({
       const currentHistoryEntryId = (window as any).currentHistoryEntryId;
 
       if (currentHistoryEntryId) {
-        const updateOldValue = originalHistoryValues.old_value;
         const existingEntries = await FirebaseDatabaseService.getHistoryBySongId(song.id.toString());
         const existingEntry = existingEntries.find((entry: any) => entry.id === currentHistoryEntryId);
-        const updateNewValue = (existingEntry as any)?.new_value || originalHistoryValues.new_value;
+        const updateOldValue = originalHistoryValues.old_value !== undefined ? originalHistoryValues.old_value : (existingEntry as any)?.old_value || '';
+        const updateNewValue = originalHistoryValues.new_value !== undefined ? originalHistoryValues.new_value : (existingEntry as any)?.new_value || '';
 
         const success = await FirebaseDatabaseService.updateHistoryEntry(currentHistoryEntryId, {
           song_id: song.id.toString(),

@@ -48,6 +48,18 @@ export const SongHistory: React.FC<SongHistoryProps> = ({
     if (type === 'audio') {
       return historyEntries.filter(entry => !!entry.audioUrl || entry.type === 'audio');
     }
+    if (type === 'metadata') {
+      return historyEntries.filter(entry => ['metadata', 'song-details', 'personnel', 'music-details'].includes(entry.type));
+    }
+    if (type === 'solfas') {
+      return historyEntries.filter(entry => ['solfas', 'solfa', "conductor's guide"].includes(entry.type?.toLowerCase()));
+    }
+    if (type === 'notation') {
+      return historyEntries.filter(entry => ['notation', 'solfa notation'].includes(entry.type?.toLowerCase()));
+    }
+    if (type === 'comments') {
+      return historyEntries.filter(entry => ['comments', 'comment', 'coordinator comments', 'pastor comments'].includes(entry.type?.toLowerCase()));
+    }
     return historyEntries.filter(entry => entry.type === type);
   };
 
@@ -76,6 +88,38 @@ export const SongHistory: React.FC<SongHistoryProps> = ({
   };
 
   const currentData = getHistoryData(activeHistoryTab);
+
+  const renderHistoryContent = (entry: HistoryEntry) => {
+    if (['song-details', 'personnel', 'music-details', 'metadata'].includes(entry.type)) {
+      try {
+        const newObj = JSON.parse(entry.new_value || '{}');
+        const oldObj = JSON.parse(entry.old_value || '{}');
+        
+        return (
+          <div className="space-y-2 text-xs text-slate-700">
+            {Object.keys(newObj).map((key) => {
+              const val = newObj[key];
+              const oldVal = oldObj[key];
+              return (
+                <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 bg-white rounded border border-slate-100 shadow-sm">
+                  <span className="font-semibold text-slate-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
+                  <div className="flex items-center gap-2 mt-1 sm:mt-0 overflow-hidden">
+                    {oldVal && oldVal !== val ? <span className="line-through text-red-500 truncate max-w-[150px]">{String(oldVal)}</span> : null}
+                    {oldVal && oldVal !== val ? <span className="text-slate-400">→</span> : null}
+                    <span className="font-medium text-green-600 truncate max-w-[200px]">{String(val || 'None')}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      } catch (e) {
+        return <div dangerouslySetInnerHTML={{ __html: entry.new_value || '' }} className="text-black text-sm whitespace-pre-wrap font-sans" />;
+      }
+    }
+
+    return <div dangerouslySetInnerHTML={{ __html: entry.new_value || '' }} className="text-black text-sm whitespace-pre-wrap font-sans" />;
+  };
 
   return (
     <div className="space-y-4">
@@ -201,7 +245,7 @@ export const SongHistory: React.FC<SongHistoryProps> = ({
                         </div>
                       ) : (
                         <div className="text-sm text-black bg-white/50 backdrop-blur-sm p-3 rounded border border-slate-200/50">
-                          <div dangerouslySetInnerHTML={{ __html: entry.new_value }} className="text-black" />
+                          {renderHistoryContent(entry)}
                         </div>
                       )}
                     </div>

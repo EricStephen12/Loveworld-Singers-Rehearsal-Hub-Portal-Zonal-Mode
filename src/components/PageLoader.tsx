@@ -52,10 +52,11 @@ export function PageLoader({ children }: PageLoaderProps) {
   // Main readiness effect
   useEffect(() => {
     const isPublicPath = checkIsPublicPath(pathname);
+    const hasCachedUser = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
 
     // 1. Initial Load Cleanup: If we are already ready, do nothing (unless path changed to a protected route while logged out)
     if (isReady && pathname === lastPathname.current) {
-      if (!authLoading && !user && !isPublicPath) {
+      if (!authLoading && !user && !hasCachedUser && !isPublicPath) {
         router.replace('/auth');
       }
       return;
@@ -63,7 +64,6 @@ export function PageLoader({ children }: PageLoaderProps) {
 
     // 2. Patience for Cached Users: If we have a cached user but Firebase is still loading, wait.
     // This prevents the "flash" of redirect on refresh.
-    const hasCachedUser = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
     if (authLoading && hasCachedUser && !isPublicPath) {
       // We know the user was logged in last time. Let's wait for Firebase.
       return;
@@ -85,7 +85,7 @@ export function PageLoader({ children }: PageLoaderProps) {
     }
 
     // 5. Case 2: Protected Path & No User - Redirect
-    if (!user && !authLoading) {
+    if (!user && !authLoading && !hasCachedUser) {
       router.replace('/auth');
       return;
     }

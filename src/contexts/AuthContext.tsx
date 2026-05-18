@@ -104,27 +104,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(userProfile as UserProfile | null)
           setBackendOffline(false)
           SessionManager.startActivityTracking(firebaseUser.uid)
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lwsrh_has_user', 'true')
+            document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+          }
         } else {
           setProfile(null)
-          SessionManager.clearSessionState()
+          if (typeof window !== 'undefined') {
+            const isExplicitLogout = localStorage.getItem('isLoggingOut') === 'true' || localStorage.getItem('logging_out') === 'true';
+            if (isExplicitLogout) {
+              SessionManager.clearSessionState()
+              localStorage.setItem('lwsrh_has_user', 'false')
+              document.cookie = "lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            }
+          }
         }
       } catch (err) {
         console.error('[AuthContext] Backend handshake failed:', err)
         setBackendOffline(true)
       } finally {
         setLoading(false)
-      }
-
-      // Persistence
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('lwsrh_has_user', firebaseUser ? 'true' : 'false')
-        
-        // Auth cookie for middleware
-        if (firebaseUser) {
-          document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
-        } else {
-          document.cookie = "lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-        }
       }
     })
 
@@ -147,11 +147,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('isLoggingOut', 'true')
+        localStorage.setItem('logging_out', 'true')
+      }
       await FirebaseAuthService.signOut()
 
       if (typeof window !== 'undefined') {
         localStorage.clear()
         sessionStorage.clear()
+        document.cookie = "lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
       }
 
       window.location.replace('/auth')
