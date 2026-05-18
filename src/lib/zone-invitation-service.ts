@@ -213,7 +213,7 @@ export class ZoneInvitationService {
         const members = await FirebaseDatabaseService.getCollectionWhere('zone_members', 'userId', '==', userId);
         const zoneMembers = members.filter((m: any) => m.zoneId === zoneId);
 
- console.log(`[ZoneInvitation] Found ${zoneMembers.length} records for user ${userId} in zone ${zoneId}`);
+        console.info(`[ZoneInvitation] Found ${zoneMembers.length} records for user ${userId} in zone ${zoneId}`);
 
         // 2. Delete each one
         let deletedCount = 0;

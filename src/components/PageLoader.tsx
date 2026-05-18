@@ -158,7 +158,6 @@ export function PageLoader({ children }: PageLoaderProps) {
   const shouldShowLoader = !mounted || authLoading || !isReady || (!hasSuccessfullyLoaded && isProtectedAndLoading);
 
   if (shouldShowLoader) {
-    if (mounted) console.log(`[PageLoader] Showing loader. authLoading=${authLoading}, isReady=${isReady}, isProtectedAndLoading=${isProtectedAndLoading}, hasSuccessfullyLoaded=${hasSuccessfullyLoaded}`);
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />
@@ -170,7 +169,6 @@ export function PageLoader({ children }: PageLoaderProps) {
   // we keep showing the loader until we are SURE. This prevents the login form flicker.
   const isAuthPage = pathname === '/auth';
   if (isAuthPage && ((hasAuthCache && !user) || user)) {
-    console.log(`[PageLoader] Anti-flicker active on /auth. hasAuthCache=${hasAuthCache}, user=${!!user}`);
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <CustomLoader message="" />
@@ -178,7 +176,6 @@ export function PageLoader({ children }: PageLoaderProps) {
     );
   }
 
-  console.log(`[PageLoader] Rendering children. Path=${pathname}, user=${!!user}`);
   return <>{children}</>;
 }
 

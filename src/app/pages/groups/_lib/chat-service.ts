@@ -878,7 +878,7 @@ async function sendChatNotification(recipientIds: string[], title: string, body:
     
     if (response.ok) {
       const data = await response.json()
-      console.log(`[ChatService] Notification sent successfully to ${data.sentCount} tokens for ${recipientIds.length} recipients.`)
+      console.info(`[ChatService] Notification sent successfully to ${data.sentCount} tokens for ${recipientIds.length} recipients.`)
     } else {
       const errorText = await response.text()
       console.error('[ChatService] Notification API error:', errorText)
