@@ -83,12 +83,17 @@ function AdminContent() {
     }
   }, [user, profile, currentZone]);
 
-  const isHQAdmin = Boolean(profile?.email && isHQAdminEmail(profile.email))
+  const userEmail = profile?.email?.toLowerCase() || '';
+  const isHQAdmin = Boolean(userEmail && isHQAdminEmail(userEmail))
 
-  const isRestrictedAdmin = profile?.email?.toLowerCase() === 'joykures@gmail.com'
+  const isJoyKures = userEmail === 'joykures@gmail.com';
+  const isUsman = userEmail === 'usmanrazaqj@gmail.com';
+  const isRestrictedAdmin = isJoyKures || isUsman;
+  
+  const allowedSections = isJoyKures ? ['Pages'] : isUsman ? ['Master Library', 'Karaoke Config'] : null;
 
   // UI state
-  const [activeSection, setActiveSection] = useState(isRestrictedAdmin ? 'Pages' : 'Dashboard');
+  const [activeSection, setActiveSection] = useState(isJoyKures ? 'Pages' : isUsman ? 'Master Library' : 'Dashboard');
   const [selectedPage, setSelectedPage] = useState<PraiseNight | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -1584,6 +1589,12 @@ function AdminContent() {
   // Get zone theme colors (use default if zone not loaded yet)
   const zoneTheme = getZoneTheme(currentZone?.themeColor || 'purple');
 
+  const canSeeSection = (sectionName: string) => {
+    if (!isRestrictedAdmin) return true;
+    if (allowedSections) return allowedSections.includes(sectionName);
+    return false;
+  };
+
   // Add PageCategoriesSection to the active sections
   return (
     <AdminThemeProvider>
@@ -1596,6 +1607,7 @@ function AdminContent() {
           setActiveSection={setActiveSection}
           isHQAdmin={isHQAdmin}
           isRestrictedAdmin={isRestrictedAdmin}
+          allowedSections={allowedSections}
           pendingSubGroupCount={pendingSubGroupCount}
         />
 
@@ -1608,12 +1620,12 @@ function AdminContent() {
             />
           )}
 
-          {activeSection === 'Dashboard' && !isRestrictedAdmin && <DashboardSection onSectionChange={setActiveSection} />}
-          {activeSection === 'Analytics' && isHQAdmin && !isRestrictedAdmin && <AnalyticsSection />}
-          {activeSection === 'Payments' && isHQAdmin && !isRestrictedAdmin && <PaymentDashboardSection />}
-          {activeSection === 'Attendance' && !isRestrictedAdmin && <AttendanceSection />}
+          {activeSection === 'Dashboard' && canSeeSection('Dashboard') && <DashboardSection onSectionChange={setActiveSection} />}
+          {activeSection === 'Analytics' && isHQAdmin && canSeeSection('Analytics') && <AnalyticsSection />}
+          {activeSection === 'Payments' && isHQAdmin && canSeeSection('Payments') && <PaymentDashboardSection />}
+          {activeSection === 'Attendance' && canSeeSection('Attendance') && <AttendanceSection />}
 
-          {activeSection === 'Pages' && (
+          {activeSection === 'Pages' && canSeeSection('Pages') && (
             <PagesSection
               allPraiseNights={allPraiseNights}
               loading={loading}
@@ -1693,7 +1705,7 @@ function AdminContent() {
             onUpdate={handleUpdatePageCategoryOrder}
           />
 
-          {activeSection === 'Categories' && !isRestrictedAdmin && (
+          {activeSection === 'Categories' && canSeeSection('Categories') && (
             <CategoriesSection
               allCategories={allCategories}
               allSongs={allSongs}
@@ -1728,7 +1740,7 @@ function AdminContent() {
             />
           )}
 
-          {activeSection === 'Page Categories' && !isRestrictedAdmin && (
+          {activeSection === 'Page Categories' && canSeeSection('Page Categories') && (
             <PageCategoriesSection
               pageCategories={pageCategories}
               pages={pages}
@@ -1767,22 +1779,22 @@ function AdminContent() {
             />
           )}
 
-          {activeSection === 'Submitted Songs' && !isRestrictedAdmin && (
+          {activeSection === 'Submitted Songs' && canSeeSection('Submitted Songs') && (
             <div className="h-full overflow-auto bg-gray-50">
               <SubmittedSongsPage embedded={true} />
             </div>
           )}
-          {activeSection === 'Members' && !isRestrictedAdmin && <MembersSection />}
-          {activeSection === 'Media' && !isRestrictedAdmin && <MediaSection />}
-          {activeSection === 'Video Manager' && isHQAdmin && !isRestrictedAdmin && <MediaUploadSection />}
-          {activeSection === 'Master Library' && !isRestrictedAdmin && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
-          {activeSection === 'Sub-Groups' && !isRestrictedAdmin && <SubGroupsSection addToast={addToast} />}
-          {activeSection === 'Calendar' && !isRestrictedAdmin && <CalendarSection />}
-          {activeSection === 'Notifications' && isHQAdmin && !isRestrictedAdmin && <SimpleNotificationsSection />}
-          {activeSection === 'Activity Logs' && !isRestrictedAdmin && <ActivityLogsPage />}
-          {activeSection === 'Support Chat' && isHQAdmin && !isRestrictedAdmin && <SupportChatSection />}
-          {activeSection === 'Schedule Manager' && !isRestrictedAdmin && <ScheduleManagerSection allSongs={allSongs} />}
-          {activeSection === 'Karaoke Config' && !isRestrictedAdmin && <KaraokeConfigSection />}
+          {activeSection === 'Members' && canSeeSection('Members') && <MembersSection />}
+          {activeSection === 'Media' && canSeeSection('Media') && <MediaSection />}
+          {activeSection === 'Video Manager' && isHQAdmin && canSeeSection('Video Manager') && <MediaUploadSection />}
+          {activeSection === 'Master Library' && canSeeSection('Master Library') && <MasterLibrarySection isHQAdmin={isHQAdmin} />}
+          {activeSection === 'Sub-Groups' && canSeeSection('Sub-Groups') && <SubGroupsSection addToast={addToast} />}
+          {activeSection === 'Calendar' && canSeeSection('Calendar') && <CalendarSection />}
+          {activeSection === 'Notifications' && isHQAdmin && canSeeSection('Notifications') && <SimpleNotificationsSection />}
+          {activeSection === 'Activity Logs' && canSeeSection('Activity Logs') && <ActivityLogsPage />}
+          {activeSection === 'Support Chat' && isHQAdmin && canSeeSection('Support Chat') && <SupportChatSection />}
+          {activeSection === 'Schedule Manager' && canSeeSection('Schedule Manager') && <ScheduleManagerSection allSongs={allSongs} />}
+          {activeSection === 'Karaoke Config' && canSeeSection('Karaoke Config') && <KaraokeConfigSection />}
         </div>
 
         {/* Modals */}
@@ -1873,6 +1885,7 @@ function AdminContent() {
           activeSection={activeSection}
           setActiveSection={setActiveSection}
           isRestrictedAdmin={isRestrictedAdmin}
+          allowedSections={allowedSections}
           onMenuOpen={() => setIsSidebarOpen(true)}
         />
 

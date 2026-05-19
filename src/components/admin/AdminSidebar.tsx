@@ -36,6 +36,7 @@ interface AdminSidebarProps {
   setActiveSection: (section: string) => void;
   isHQAdmin?: boolean;
   isRestrictedAdmin?: boolean;
+  allowedSections?: string[] | null;
   pendingSubGroupCount?: number;
 }
 
@@ -46,6 +47,7 @@ const AdminSidebar = React.memo(({
   setActiveSection,
   isHQAdmin = false,
   isRestrictedAdmin = false,
+  allowedSections = null,
   pendingSubGroupCount = 0
 }: AdminSidebarProps) => {
   const router = useRouter();
@@ -87,6 +89,9 @@ const AdminSidebar = React.memo(({
   // Filter items based on role
   const filterItems = (items: any[]) => items.filter(item => {
     if (isRestrictedAdmin) {
+      if (allowedSections) {
+        return allowedSections.includes(item.label);
+      }
       return item.label === 'Pages' || !item.restrictedAdminHidden;
     }
     if (item.hqOnly && !isHQAdmin) return false;

@@ -168,7 +168,8 @@ export default function KaraokeConfigSection() {
             // Strip existing timestamps to get clean text if any, or use existing lrcText
             const cleanText = lrcText.replace(/\[\d{2}:\d{2}(?:\.\d{2,3})?\]/g, '').trim();
             
-            const response = await fetch('/api/lyrics-sync', {
+            const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+            const response = await fetch(`${backendUrl}/api/lyrics-sync`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',

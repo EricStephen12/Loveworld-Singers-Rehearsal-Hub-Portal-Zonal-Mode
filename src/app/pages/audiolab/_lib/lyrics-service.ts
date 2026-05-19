@@ -28,7 +28,8 @@ export async function generateSyncedLyrics(
     const { auth } = await import('@/lib/firebase-setup');
     const token = await auth.currentUser?.getIdToken();
 
-    const response = await fetch('/api/lyrics-sync', {
+    const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+    const response = await fetch(`${backendUrl}/api/lyrics-sync`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

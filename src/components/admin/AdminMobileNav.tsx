@@ -14,6 +14,7 @@ interface AdminMobileNavProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   isRestrictedAdmin?: boolean;
+  allowedSections?: string[] | null;
   onMenuOpen: () => void;
 }
 
@@ -21,6 +22,7 @@ const AdminMobileNav = React.memo(({
   activeSection,
   setActiveSection,
   isRestrictedAdmin = false,
+  allowedSections = null,
   onMenuOpen
 }: AdminMobileNavProps) => {
   const { currentZone } = useZone();
@@ -50,6 +52,7 @@ const AdminMobileNav = React.memo(({
       case 'Activity Logs':
       case 'Support Chat':
       case 'Payments':
+      case 'Karaoke Config':
         return 'More';
       default:
         return 'Dashboard';
@@ -66,7 +69,15 @@ const AdminMobileNav = React.memo(({
     { icon: Menu, label: 'More', section: 'menu' },
   ].filter(item => {
     if (isRestrictedAdmin) {
-      return item.section === 'Pages' || item.section === 'menu';
+      if (item.section === 'menu') return true;
+      if (allowedSections) {
+        // Show the nav item if any of the allowed sections map to it
+        return allowedSections.some(allowedSection => {
+          const mappedNav = getSectionNavItem(allowedSection);
+          return mappedNav === item.section || (mappedNav === 'More' && item.section === 'menu');
+        });
+      }
+      return item.section === 'Pages';
     }
     return true;
   });
