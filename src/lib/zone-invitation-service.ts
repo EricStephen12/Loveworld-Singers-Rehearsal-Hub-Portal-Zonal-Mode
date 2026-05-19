@@ -2,7 +2,7 @@ import { FirebaseDatabaseService } from './firebase-database'
 import { HQMembersService } from './hq-members-service'
 import { HQInvitationService } from './hq-invitation-service'
 import { ZONES, getZoneByInvitationCode, isHQGroup, Zone } from '@/config/zones'
-import { UserProfile } from '@/types/supabase'
+
 
 export class ZoneInvitationService {
 
