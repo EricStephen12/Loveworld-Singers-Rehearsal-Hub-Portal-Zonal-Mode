@@ -40,16 +40,51 @@ export class ZoneDatabaseService {
     return await BackendAPI.songs.create({ ...songData, zoneId, praiseNightId });
   }
 
-  static async updatePraiseNight(praiseNightId: string, data: any, _zoneId?: string) {
-    return await BackendAPI.rehearsals.update(praiseNightId, data);
+  static async updatePraiseNight(praiseNightId: string, data: any, zoneId?: string) {
+    try {
+      const { isHQGroup } = await import('@/config/zones');
+      const isHQ = zoneId && isHQGroup(zoneId);
+      const collectionName = isHQ ? 'praise_nights' : 'zone_praise_nights';
+
+      // 1. Update the document directly
+      const updateData = { ...data, updatedAt: new Date().toISOString() };
+      const result = await BackendAPI.generic.update(collectionName, praiseNightId, updateData);
+
+      // 2. Trigger metadata update for realtime sync
+      if (zoneId && result.success) {
+        await BackendAPI.generic.update('sys_metadata', zoneId, { praise_nights: new Date().toISOString() }).catch(e => console.error(e));
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error updating praise night:', error);
+      return { success: false, error };
+    }
   }
 
   static async updateSong(songId: string, data: any) {
     return await BackendAPI.songs.update(songId, data);
   }
 
-  static async deletePraiseNight(praiseNightId: string, _zoneId?: string) {
-    return await BackendAPI.rehearsals.delete(praiseNightId);
+  static async deletePraiseNight(praiseNightId: string, zoneId?: string) {
+    try {
+      const { isHQGroup } = await import('@/config/zones');
+      const isHQ = zoneId && isHQGroup(zoneId);
+      const collectionName = isHQ ? 'praise_nights' : 'zone_praise_nights';
+
+      // 1. Delete the document directly
+      const result = await BackendAPI.generic.delete(collectionName, praiseNightId);
+
+      // 2. Trigger metadata update for realtime sync
+      if (zoneId && result.success) {
+        await BackendAPI.generic.update('sys_metadata', zoneId, { praise_nights: new Date().toISOString() }).catch(e => console.error(e));
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error deleting praise night:', error);
+      return { success: false, error };
+    }
   }
 
   static async deleteSong(songId: string) {

@@ -60,7 +60,7 @@ export const BackendAPI = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
-    delete: (id: string) => apiFetch(`/api/rehearsals/${id}`, {
+    delete: (id: string, zoneId?: string) => apiFetch(`/api/rehearsals/${id}${zoneId ? `?zoneId=${zoneId}` : ''}`, {
       method: 'DELETE',
     }),
   },
