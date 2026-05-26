@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabase-client';
+import { supabase } from './supabase-client';
 
 export interface SupportMessage {
   id: string;
@@ -60,7 +60,7 @@ export class SupabaseSupport {
       }
 
 
-      const mappedMessages = (data || []).map(msg => ({
+      const mappedMessages = (data || []).map((msg: any) => ({
         id: msg.id,
         userName: msg.user_name,
         userEmail: msg.user_email,
@@ -115,7 +115,7 @@ export class SupabaseSupport {
       }
 
 
-      const mappedMessages = (data || []).map(msg => ({
+      const mappedMessages = (data || []).map((msg: any) => ({
         id: msg.id,
         userName: msg.user_name,
         userEmail: msg.user_email,

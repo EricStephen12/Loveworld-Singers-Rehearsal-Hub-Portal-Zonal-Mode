@@ -42,22 +42,11 @@ export default function KaraokeConfigSection() {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            // 1. Load Master Library songs (HQ Published)
-            const masterSongsPromise = MasterLibraryService.getMasterSongs(5000, true);
-            
-            // 2. Load Zone/HQ internal songs
-            const zonalSongsPromise = PraiseNightSongsService.getAllSongs(currentZone?.id);
+            // Load Master Library songs (HQ Published)
+            const masterSongs = await MasterLibraryService.getMasterSongs(5000, true);
 
-            const [masterSongs, zonalSongs] = await Promise.all([
-                masterSongsPromise,
-                zonalSongsPromise
-            ]);
-
-            // Merge and deduplicate by title + artist/singer/writer to avoid near-duplicates
-            // Actually, keep them separate if IDs differ, but mark their source.
             const merged: any[] = [
-                ...masterSongs.map(s => ({ ...s, _source: 'Master' })),
-                ...zonalSongs.map(s => ({ ...s, _source: 'Zonal' }))
+                ...masterSongs.map(s => ({ ...s, _source: 'Master' }))
             ];
 
             // Sort by title
@@ -179,7 +168,7 @@ export default function KaraokeConfigSection() {
                     audioUrl,
                     songId: selectedSong.id,
                     existingLyrics: cleanText || "",
-                    provider: 'modal'
+                    provider: 'groq' // Switched from 'modal' to 'groq' to avoid Modal Backend Error
                 })
             });
 
@@ -192,6 +181,15 @@ export default function KaraokeConfigSection() {
             if (data.lrc) {
                 setLrcText(data.lrc);
                 showToast('success', 'Lyrics synced with AI perfectly!');
+            } else if (data.lyrics && Array.isArray(data.lyrics)) {
+                // Convert Groq lyrics array to LRC format
+                const lrcFormat = data.lyrics.map((l: any) => {
+                    const minutes = Math.floor(l.time / 60);
+                    const seconds = (l.time % 60).toFixed(2).padStart(5, '0');
+                    return `[${String(minutes).padStart(2, '0')}:${seconds}] ${l.text}`;
+                }).join('\n');
+                setLrcText(lrcFormat);
+                showToast('success', 'Lyrics synced with Groq AI perfectly!');
             } else {
                 throw new Error('AI returned no synced lyrics');
             }

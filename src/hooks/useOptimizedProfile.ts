@@ -98,7 +98,7 @@ export function useOptimizedProfile() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
-        async (payload) => {
+        async (payload: any) => {
           try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
