@@ -3,19 +3,25 @@
 import React from 'react';
 import {
   Film, Cloud, Plus, Search, List, Grid3x3,
-  Edit2, Trash2, ListVideo, Tag, Check, Youtube
+  Edit2, Trash2, ListVideo, Tag, Check, Youtube,
+  Tv, Users, ArrowLeft, Video, Settings
 } from 'lucide-react';
 import { MediaVideo } from '@/lib/media-videos-service';
 import { AdminPlaylist } from '@/lib/admin-playlist-service';
 import { MediaCategory } from '@/lib/media-category-service';
+import { Channel } from '@/lib/channel-service';
 import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary';
 import CustomLoader from '@/components/CustomLoader';
 
 interface MediaContentListProps {
-  type: 'videos' | 'playlists' | 'categories';
+  type: 'channels' | 'channel-detail' | 'videos' | 'playlists' | 'categories';
   videos: MediaVideo[];
   playlists: AdminPlaylist[];
   categories: MediaCategory[];
+  channels: Channel[];
+  selectedChannel: Channel | null;
+  setSelectedChannel: (channel: Channel | null) => void;
+  setView: (view: any) => void;
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -30,6 +36,7 @@ interface MediaContentListProps {
   onBatchUpload?: () => void;
   onPlaylistClick?: (playlist: AdminPlaylist) => void;
   getPlaylistThumb: (p: AdminPlaylist) => string;
+  isHQAdmin?: boolean;
 }
 
 export const MediaContentList: React.FC<MediaContentListProps> = ({
@@ -37,6 +44,10 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
   videos,
   playlists,
   categories,
+  channels,
+  selectedChannel,
+  setSelectedChannel,
+  setView,
   isLoading,
   searchQuery,
   setSearchQuery,
@@ -50,18 +61,236 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
   onDelete,
   onBatchUpload,
   onPlaylistClick,
-  getPlaylistThumb
+  getPlaylistThumb,
+  isHQAdmin
 }) => {
   const filteredVideos = videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredPlaylists = playlists.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredChannels = channels.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
+  // Render Channels View
+  if (type === 'channels') {
+    return (
+      <div className="p-4 lg:p-8 animate-in fade-in duration-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Channels</h1>
+            <p className="text-xs md:text-sm text-gray-500">Manage your YouTube-style broadcasting channels</p>
+          </div>
+          {isHQAdmin && (
+            <button
+              onClick={onAdd}
+              className="w-full sm:w-auto px-4 py-2 hover:opacity-90 text-white rounded font-medium transition-all flex items-center justify-center gap-2 shadow-sm text-sm"
+              style={{ backgroundColor: zoneColor }}
+            >
+              <Plus className="w-5 h-5" /> NEW CHANNEL
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white border border-gray-200 p-1 rounded-lg mb-6 shadow-sm">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search channels..."
+              className="w-full pl-10 pr-4 py-2 bg-transparent rounded-lg focus:outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center"><CustomLoader message="Loading channels..." /></div>
+        ) : filteredChannels.length === 0 ? (
+          <div className="text-center py-20 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <Tv className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-400">No channels found</h3>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredChannels.map(channel => (
+              <div
+                key={channel.id}
+                onClick={() => {
+                  setSelectedChannel(channel);
+                  setView('channel-detail');
+                }}
+                className="group bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col"
+              >
+                <div className="relative aspect-video bg-gray-100 overflow-hidden border-b border-gray-100">
+                  {channel.thumbnail ? (
+                    <img src={channel.thumbnail} alt={channel.name} className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-purple-50 text-purple-400">
+                      <Tv className="w-12 h-12" />
+                    </div>
+                  )}
+                  {channel.isHQOnly && (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded shadow-sm">HQ ONLY</span>
+                  )}
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-1 mb-1">{channel.name}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">{channel.description || 'No description'}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-50 text-[11px] font-semibold text-gray-400">
+                    <span className="flex items-center gap-1"><Video className="w-3.5 h-3.5" /> {channel.videoCount || 0} Videos</span>
+                    <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {channel.subscriberCount || 0} Subs</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Render Channel Detail View
+  if (type === 'channel-detail' && selectedChannel) {
+    const channelVideos = videos.filter(v => v.channelId === selectedChannel.id);
+    const filteredChanVideos = channelVideos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return (
+      <div className="p-4 lg:p-8 animate-in fade-in duration-700">
+        <button
+          onClick={() => {
+            setSelectedChannel(null);
+            setView('channels');
+          }}
+          className="flex items-center gap-2 text-gray-400 hover:text-purple-600 mb-6 group transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold uppercase tracking-widest text-[11px]">Back to Channels</span>
+        </button>
+
+        {/* Channel Banner / Header Card */}
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8 mb-8 flex flex-col md:flex-row gap-6 items-center">
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-150 shadow-inner">
+            {selectedChannel.thumbnail ? (
+              <img src={selectedChannel.thumbnail} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-purple-50 text-purple-400"><Tv className="w-12 h-12" /></div>
+            )}
+          </div>
+          <div className="flex-1 text-center md:text-left min-w-0">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
+              <h1 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{selectedChannel.name}</h1>
+              {selectedChannel.isHQOnly && (
+                <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded">HQ ONLY</span>
+              )}
+            </div>
+            <p className="text-sm text-gray-500 mb-4 max-w-xl leading-relaxed">{selectedChannel.description || 'No description provided for this channel.'}</p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-bold text-gray-400">
+              <span className="flex items-center gap-1.5"><Video className="w-4 h-4 text-purple-500" /> {selectedChannel.videoCount || 0} Videos</span>
+              <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-purple-500" /> {selectedChannel.subscriberCount || 0} Subscribers</span>
+            </div>
+          </div>
+          <div className="flex gap-2 self-stretch md:self-auto flex-col sm:flex-row md:flex-col justify-center">
+            <button
+              onClick={() => onEdit(selectedChannel)}
+              className="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+            >
+              <Settings className="w-4 h-4" /> EDIT PROFILE
+            </button>
+            <button
+              onClick={() => onDelete({ type: 'channel', id: selectedChannel.id, name: selectedChannel.name })}
+              className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" /> DELETE CHANNEL
+            </button>
+          </div>
+        </div>
+
+        {/* Video Upload Context */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Videos in Channel</h2>
+            <p className="text-xs text-gray-500">Add or manage uploads for this channel</p>
+          </div>
+          <button
+            onClick={onAdd}
+            className="w-full sm:w-auto px-4 py-2 hover:opacity-90 text-white rounded font-medium transition-all flex items-center justify-center gap-2 shadow-sm text-sm"
+            style={{ backgroundColor: zoneColor }}
+          >
+            <Plus className="w-5 h-5" /> POST VIDEO
+          </button>
+        </div>
+
+        {/* Channel Video Search / List */}
+        <div className="bg-white border border-gray-200 p-1 rounded-lg mb-6 shadow-sm">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search videos in this channel..."
+              className="w-full pl-10 pr-4 py-2 bg-transparent rounded-lg focus:outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center"><CustomLoader message="Loading videos..." /></div>
+        ) : filteredChanVideos.length === 0 ? (
+          <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+            <Film className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-400">No videos in this channel yet</h3>
+            <p className="text-xs text-gray-400 mt-1">Click "Post Video" to get started.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="grid grid-cols-[60px_1fr_60px] md:grid-cols-[100px_1fr_100px_100px_60px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <div>Video</div>
+              <div>Title</div>
+              <div className="hidden md:block">Visibility</div>
+              <div className="hidden md:block">Date</div>
+              <div className="text-right">Actions</div>
+            </div>
+            {filteredChanVideos.map(video => (
+              <div
+                key={video.id}
+                className="grid grid-cols-[60px_1fr_60px] md:grid-cols-[100px_1fr_100px_100px_60px] gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 items-center"
+              >
+                <div className="relative aspect-video rounded overflow-hidden border border-gray-200 bg-gray-100">
+                  <img
+                    src={video.thumbnail || getCloudinaryThumbnailUrl(video.videoUrl || '')}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.src = '/movie/default-hero.jpeg'; }}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">{video.title}</div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-wider truncate">{video.type}</div>
+                </div>
+                <div className="hidden md:block">
+                  <span className="px-2 py-0.5 text-[8px] font-bold uppercase rounded border bg-purple-50 text-purple-600 border-purple-100">Public</span>
+                </div>
+                <div className="hidden md:block text-[10px] text-gray-400">{video.createdAt ? new Date(video.createdAt).toLocaleDateString() : 'N/A'}</div>
+                <div className="flex items-center justify-end gap-1">
+                  <button onClick={() => onEdit(video)} className="p-2 hover:bg-gray-100 text-gray-400 rounded transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => onDelete({ type: 'video', id: video.id, name: video.title })} className="p-2 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Render Videos View
   if (type === 'videos') {
     return (
       <div className="p-4 lg:p-8 animate-in fade-in duration-700">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Channel content</h1>
-            <p className="text-xs md:text-sm text-gray-500">Manage your videos and collections</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">All Content</h1>
+            <p className="text-xs md:text-sm text-gray-500">Manage all uploaded videos across channels and collections</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -121,7 +350,7 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
           </div>
         ) : viewMode === 'table' ? (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-            <div className="grid grid-cols-[40px_60px_1fr_60px] md:grid-cols-[40px_100px_1fr_100px_100px_60px] lg:grid-cols-[40px_100px_1fr_100px_100px_100px_60px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            <div className="grid grid-cols-[40px_60px_1fr_60px] md:grid-cols-[40px_100px_1fr_100px_100px_60px] lg:grid-cols-[40px_100px_1fr_120px_100px_100px_100px_60px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -133,6 +362,7 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
               </div>
               <div>Video</div>
               <div>Title</div>
+              <div className="hidden lg:block">Channel</div>
               <div className="hidden md:block">Visibility</div>
               <div className="hidden lg:block">Collections</div>
               <div className="hidden md:block">Date</div>
@@ -144,7 +374,7 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
               return (
                 <div
                   key={video.id}
-                  className={`grid grid-cols-[40px_60px_1fr_60px] md:grid-cols-[40px_100px_1fr_100px_100px_60px] lg:grid-cols-[40px_100px_1fr_100px_100px_100px_60px] gap-3 px-4 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 items-center`}
+                  className={`grid grid-cols-[40px_60px_1fr_60px] md:grid-cols-[40px_100px_1fr_100px_100px_60px] lg:grid-cols-[40px_100px_1fr_120px_100px_100px_100px_60px] gap-3 px-4 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 items-center`}
                   style={isSelected ? { backgroundColor: `${zoneColor}08` } : {}}
                 >
                   <div>
@@ -169,6 +399,7 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
                     <div className="text-sm font-medium text-gray-900 truncate">{video.title}</div>
                     <div className="text-[10px] text-gray-400 uppercase tracking-wider truncate">{video.type}</div>
                   </div>
+                  <div className="hidden lg:block text-xs font-semibold text-purple-700 truncate">{video.channelName || 'No Channel'}</div>
                   <div className="hidden md:block">
                     <span className="px-2 py-0.5 text-[8px] font-bold uppercase rounded border" style={{ backgroundColor: `${zoneColor}10`, color: zoneColor, borderColor: `${zoneColor}20` }}>Public</span>
                   </div>
@@ -215,8 +446,11 @@ export const MediaContentList: React.FC<MediaContentListProps> = ({
                     )}
                   </div>
                   <div className="p-3 flex-1 flex flex-col">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[8px] font-bold uppercase tracking-wider rounded border border-gray-200">{video.type}</span>
+                      {video.channelName && (
+                        <span className="text-[10px] font-bold text-purple-600 truncate max-w-[100px]">{video.channelName}</span>
+                      )}
                     </div>
                     <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight mb-4">{video.title}</h3>
                     <div className="mt-auto flex items-center gap-2 pt-3 border-t border-gray-100">

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Film, ListVideo, Tag, Youtube, ChevronRight, ArrowLeft, Menu } from 'lucide-react';
+import { Film, ListVideo, Tag, Youtube, ChevronRight, ArrowLeft, Menu, Tv } from 'lucide-react';
 import { MediaView } from '@/hooks/useMediaUpload';
 
 interface MediaSidebarProps {
@@ -15,6 +15,7 @@ interface MediaSidebarProps {
   videoCount: number;
   playlistCount: number;
   categoryCount: number;
+  channelCount: number;
 }
 
 export const MediaSidebar: React.FC<MediaSidebarProps> = ({
@@ -27,9 +28,11 @@ export const MediaSidebar: React.FC<MediaSidebarProps> = ({
   zoneColor,
   videoCount,
   playlistCount,
-  categoryCount
+  categoryCount,
+  channelCount
 }) => {
   const items = [
+    { id: 'channels', label: 'Channels', icon: Tv, count: channelCount },
     { id: 'videos', label: 'Content', icon: Film, count: videoCount },
     { id: 'playlists', label: 'Playlists', icon: ListVideo, count: playlistCount },
     { id: 'categories', label: 'Categories', icon: Tag, count: categoryCount },
@@ -74,7 +77,10 @@ export const MediaSidebar: React.FC<MediaSidebarProps> = ({
 
           <nav className="space-y-1 flex-1">
             {items.map((item) => {
-              const isActive = view === item.id || (view === 'playlist-detail' && item.id === 'playlists');
+              const isActive = 
+                view === item.id || 
+                (view === 'playlist-detail' && item.id === 'playlists') ||
+                (item.id === 'channels' && (view === 'add-channel' || view === 'edit-channel' || view === 'channel-detail'));
               const isCollapsed = isSidebarCollapsed && !isMobileMenuOpen;
               return (
                 <button

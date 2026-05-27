@@ -8,6 +8,7 @@ import {
 import { MediaVideo } from '@/lib/media-videos-service';
 import { AdminPlaylist } from '@/lib/admin-playlist-service';
 import { MediaCategory } from '@/lib/media-category-service';
+import { Channel } from '@/lib/channel-service';
 
 interface MediaFormsProps {
   view: string;
@@ -18,17 +19,22 @@ interface MediaFormsProps {
   setPlaylistForm: (form: any) => void;
   categoryForm: any;
   setCategoryForm: (form: any) => void;
+  channelForm?: any;
+  setChannelForm?: (form: any) => void;
   selectedVideo: MediaVideo | null;
   selectedPlaylist: AdminPlaylist | null;
   selectedCategory: MediaCategory | null;
+  selectedChannel?: Channel | null;
   categories: MediaCategory[];
   playlists: AdminPlaylist[];
   videos: MediaVideo[];
+  channels?: Channel[];
   isSubmitting: boolean;
   zoneColor: string;
   onSaveVideo: () => void;
   onSavePlaylist: () => void;
   onSaveCategory: () => void;
+  onSaveChannel?: () => void;
   onVideoUrlChange: (url: string) => void;
   onOpenCloudinary: (type: 'video' | 'image', isBatch?: boolean) => void;
   onToggleVideoInPlaylist?: (videoId: string) => void;
@@ -49,17 +55,22 @@ export const MediaForms: React.FC<MediaFormsProps> = ({
   setPlaylistForm,
   categoryForm,
   setCategoryForm,
+  channelForm,
+  setChannelForm,
   selectedVideo,
   selectedPlaylist,
   selectedCategory,
+  selectedChannel,
   categories,
   playlists,
   videos,
+  channels,
   isSubmitting,
   zoneColor,
   onSaveVideo,
   onSavePlaylist,
   onSaveCategory,
+  onSaveChannel,
   onVideoUrlChange,
   onOpenCloudinary,
   onToggleVideoInPlaylist,
@@ -82,9 +93,9 @@ export const MediaForms: React.FC<MediaFormsProps> = ({
   if (view === 'add-video' || view === 'edit-video') {
     return (
       <div className="p-4 lg:p-8 animate-in fade-in duration-700">
-        <button onClick={() => setView('videos')} className="flex items-center gap-2 text-gray-400 mb-8 group transition-colors">
+        <button onClick={() => setView(videoForm.channelId ? 'channel-detail' : 'videos')} className="flex items-center gap-2 text-gray-400 mb-8 group transition-colors">
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold uppercase tracking-widest text-[11px]">Back to Content</span>
+          <span className="font-bold uppercase tracking-widest text-[11px]">Back</span>
         </button>
 
         <div className="flex items-center gap-6 mb-8">
@@ -147,23 +158,98 @@ export const MediaForms: React.FC<MediaFormsProps> = ({
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Collections</label>
-                <div className="bg-gray-50 border border-gray-200 rounded p-3 max-h-40 overflow-y-auto space-y-1">
-                  {playlists.map(playlist => (
-                    <label key={playlist.id} className="flex items-center gap-2 p-1 hover:bg-white rounded cursor-pointer transition-colors">
-                      <input type="checkbox" checked={videoForm.playlistIds.includes(playlist.id)} onChange={(e) => {
-                        const ids = e.target.checked ? [...videoForm.playlistIds, playlist.id] : videoForm.playlistIds.filter((id: string) => id !== playlist.id);
-                        setVideoForm({ ...videoForm, playlistIds: ids });
-                      }} className="w-3.5 h-3.5 rounded border-gray-300" style={{ accentColor: zoneColor }} />
-                      <span className="text-sm font-medium text-gray-700">{playlist.name}</span>
-                    </label>
-                  ))}
-                </div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Broadcasting Channel</label>
+                <select
+                  value={videoForm.channelId || ''}
+                  onChange={(e) => {
+                    const selId = e.target.value;
+                    const selChan = channels?.find(c => c.id === selId);
+                    setVideoForm({
+                      ...videoForm,
+                      channelId: selId || null,
+                      channelName: selChan ? selChan.name : null
+                    });
+                  }}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded focus:outline-none text-sm font-medium"
+                >
+                  <option value="">No Channel (Independent Content)</option>
+                  {channels?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Collections</label>
+              <div className="bg-gray-50 border border-gray-200 rounded p-3 max-h-40 overflow-y-auto space-y-1">
+                {playlists.map(playlist => (
+                  <label key={playlist.id} className="flex items-center gap-2 p-1 hover:bg-white rounded cursor-pointer transition-colors">
+                    <input type="checkbox" checked={videoForm.playlistIds.includes(playlist.id)} onChange={(e) => {
+                      const ids = e.target.checked ? [...videoForm.playlistIds, playlist.id] : videoForm.playlistIds.filter((id: string) => id !== playlist.id);
+                      setVideoForm({ ...videoForm, playlistIds: ids });
+                    }} className="w-3.5 h-3.5 rounded border-gray-300" style={{ accentColor: zoneColor }} />
+                    <span className="text-sm font-medium text-gray-700">{playlist.name}</span>
+                  </label>
+                ))}
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-              <button onClick={() => setView('videos')} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-bold transition-colors">CANCEL</button>
+              <button onClick={() => setView(videoForm.channelId ? 'channel-detail' : 'videos')} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-bold transition-colors">CANCEL</button>
               <button onClick={onSaveVideo} disabled={isSubmitting || !videoForm.title || !videoForm.videoUrl} className="px-6 py-2 text-white rounded text-sm font-bold shadow-sm transition-all disabled:opacity-50" style={{ backgroundColor: zoneColor }}>{isSubmitting ? 'SAVING...' : selectedVideo ? 'SAVE' : 'PUBLISH'}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'add-channel' || view === 'edit-channel') {
+    return (
+      <div className="p-4 lg:p-8 animate-in fade-in duration-700">
+        <button onClick={() => setView(selectedChannel ? 'channel-detail' : 'channels')} className="flex items-center gap-2 text-gray-400 mb-8 group transition-colors">
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold uppercase tracking-widest text-[11px]">Back</span>
+        </button>
+
+        <div className="flex items-center gap-6 mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">{selectedChannel ? 'Edit Channel Details' : 'Create Channel'}</h1>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Channel Logo / Thumbnail</label>
+              <div onClick={() => onOpenCloudinary('image')} className="relative aspect-video bg-gray-50 rounded border border-gray-200 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center group" style={{ borderColor: channelForm?.thumbnail ? zoneColor : undefined }}>
+                {channelForm?.thumbnail ? (
+                  <>
+                    <img src={channelForm.thumbnail} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="w-8 h-8 text-white" /></div>
+                  </>
+                ) : (
+                  <><Upload className="w-8 h-8 text-gray-300 mb-2" /><p className="text-xs font-medium text-gray-400">Upload Logo</p></>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Subscribers (Initial/Mock)</label>
+              <input type="number" value={channelForm?.subscriberCount || 0} onChange={(e) => setChannelForm?.({ ...channelForm, subscriberCount: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded focus:outline-none text-sm font-medium" />
+            </div>
+            <div className="flex items-center gap-2 p-1 rounded cursor-pointer transition-colors">
+              <input type="checkbox" checked={!!channelForm?.isHQOnly} onChange={(e) => setChannelForm?.({ ...channelForm, isHQOnly: e.target.checked })} className="w-4 h-4 rounded border-gray-300" style={{ accentColor: zoneColor }} id="isHQOnly" />
+              <label htmlFor="isHQOnly" className="text-sm font-bold text-gray-700 select-none cursor-pointer">HQ Only content</label>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Channel Name (required)</label>
+              <input type="text" value={channelForm?.name || ''} onChange={(e) => setChannelForm?.({ ...channelForm, name: e.target.value })} placeholder="e.g., Loveworld Music Ministry" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded focus:outline-none text-sm font-medium" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Description</label>
+              <textarea value={channelForm?.description || ''} onChange={(e) => setChannelForm?.({ ...channelForm, description: e.target.value })} placeholder="Describe what this channel is about..." rows={4} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded focus:outline-none text-sm font-medium resize-none" />
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <button onClick={() => setView(selectedChannel ? 'channel-detail' : 'channels')} className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-bold transition-colors">CANCEL</button>
+              <button onClick={onSaveChannel} disabled={isSubmitting || !channelForm?.name} className="px-6 py-2 text-white rounded text-sm font-bold shadow-sm transition-all disabled:opacity-50" style={{ backgroundColor: zoneColor }}>{isSubmitting ? 'SAVING...' : selectedChannel ? 'SAVE' : 'CREATE'}</button>
             </div>
           </div>
         </div>

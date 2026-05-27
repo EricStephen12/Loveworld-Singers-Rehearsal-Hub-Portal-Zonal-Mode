@@ -20,22 +20,47 @@ import {
   deleteCategory,
   MediaCategory
 } from '@/lib/media-category-service';
+import { channelService, Channel } from '@/lib/channel-service';
 import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtube';
 import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary';
+import { isHQAdminEmail } from '@/config/roles';
 
-export type MediaView = 'videos' | 'playlists' | 'categories' | 'add-video' | 'edit-video' | 'add-playlist' | 'edit-playlist' | 'playlist-detail' | 'add-category' | 'edit-category' | 'batch-upload';
+export type MediaView =
+  | 'channels'
+  | 'add-channel'
+  | 'edit-channel'
+  | 'channel-detail'
+  | 'videos'
+  | 'playlists'
+  | 'categories'
+  | 'add-video'
+  | 'edit-video'
+  | 'add-playlist'
+  | 'edit-playlist'
+  | 'playlist-detail'
+  | 'add-category'
+  | 'edit-category'
+  | 'batch-upload';
 
 export function useMediaUpload() {
   const { user, profile } = useAuth();
   const { currentZone } = useZone();
   const zoneColor = currentZone?.themeColor || '#9333EA';
 
+  const isHQAdmin = useMemo(() => {
+    return user?.email ? isHQAdminEmail(user.email) : false;
+  }, [user]);
+
   // UI State
-  const [view, setView] = useState<MediaView>('videos');
+  const [view, setView] = useState<MediaView>('channels');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'video' | 'playlist' | 'category'; id: string; name: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    type: 'video' | 'playlist' | 'category' | 'channel';
+    id: string;
+    name: string;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,26 +71,49 @@ export function useMediaUpload() {
   const [videos, setVideos] = useState<MediaVideo[]>([]);
   const [playlists, setPlaylists] = useState<AdminPlaylist[]>([]);
   const [categories, setCategories] = useState<MediaCategory[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<MediaVideo | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<AdminPlaylist | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<MediaCategory | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [batchFiles, setBatchFiles] = useState<{ url: string; title: string; public_id: string }[]>([]);
 
   // Form State
   const [videoForm, setVideoForm] = useState({
-    title: '', description: '', videoUrl: '', thumbnail: '',
-    type: '', featured: false, forHQ: true, isYouTube: true,
+    title: '',
+    description: '',
+    videoUrl: '',
+    thumbnail: '',
+    type: '',
+    featured: false,
+    forHQ: true,
+    isYouTube: true,
     playlistIds: [] as string[],
-    notifyUsers: false
+    notifyUsers: false,
+    channelId: '',
+    channelName: ''
   });
 
   const [playlistForm, setPlaylistForm] = useState({
-    name: '', description: '', isPublic: true, isFeatured: false, forHQ: true
+    name: '',
+    description: '',
+    isPublic: true,
+    isFeatured: false,
+    forHQ: true
   });
 
   const [categoryForm, setCategoryForm] = useState({
-    name: '', description: ''
+    name: '',
+    description: ''
+  });
+
+  const [channelForm, setChannelForm] = useState({
+    name: '',
+    description: '',
+    thumbnail: '',
+    isHQOnly: false,
+    allowedZones: [] as string[]
   });
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
@@ -76,14 +124,16 @@ export function useMediaUpload() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [v, p, c] = await Promise.all([
-        mediaVideosService.getAll(50),
+      const [v, p, c, ch] = await Promise.all([
+        mediaVideosService.getAll(100),
         getAdminPlaylists(),
-        getCategories()
+        getCategories(),
+        channelService.getAllChannels()
       ]);
       setVideos(v);
       setPlaylists(p);
       setCategories(c);
+      setChannels(ch);
     } catch (e) {
       console.error(e);
       showToast('error', 'Failed to load data');
@@ -105,12 +155,21 @@ export function useMediaUpload() {
   // Form Helpers
   const resetVideoForm = useCallback(() => {
     setVideoForm({
-      title: '', description: '', videoUrl: '', thumbnail: '',
-      type: categories[0]?.slug || '', featured: false, forHQ: true, isYouTube: true,
-      playlistIds: [], notifyUsers: false
+      title: '',
+      description: '',
+      videoUrl: '',
+      thumbnail: '',
+      type: categories[0]?.slug || '',
+      featured: false,
+      forHQ: true,
+      isYouTube: true,
+      playlistIds: [],
+      notifyUsers: false,
+      channelId: selectedChannel?.id || '',
+      channelName: selectedChannel?.name || ''
     });
     setSelectedVideo(null);
-  }, [categories]);
+  }, [categories, selectedChannel]);
 
   const resetPlaylistForm = useCallback(() => {
     setPlaylistForm({ name: '', description: '', isPublic: true, isFeatured: false, forHQ: true });
@@ -120,6 +179,11 @@ export function useMediaUpload() {
   const resetCategoryForm = useCallback(() => {
     setCategoryForm({ name: '', description: '' });
     setSelectedCategory(null);
+  }, []);
+
+  const resetChannelForm = useCallback(() => {
+    setChannelForm({ name: '', description: '', thumbnail: '', isHQOnly: false, allowedZones: [] });
+    setSelectedChannel(null);
   }, []);
 
   const handleVideoUrlChange = useCallback((url: string) => {
@@ -141,21 +205,47 @@ export function useMediaUpload() {
     }
     setIsSubmitting(true);
     try {
+      const selectedChan = channels.find(c => c.id === videoForm.channelId);
       const data: any = {
-        title: videoForm.title.trim(), description: videoForm.description.trim(),
-        thumbnail: videoForm.thumbnail, isYouTube: videoForm.isYouTube,
-        type: videoForm.type, featured: videoForm.featured, forHQ: videoForm.forHQ,
-        createdBy: user?.uid || 'admin', createdByName: profile?.first_name || 'Admin',
+        title: videoForm.title.trim(),
+        description: videoForm.description.trim(),
+        thumbnail: videoForm.thumbnail,
+        isYouTube: videoForm.isYouTube,
+        type: videoForm.type,
+        featured: videoForm.featured,
+        forHQ: videoForm.forHQ,
+        channelId: videoForm.channelId || '',
+        channelName: selectedChan ? selectedChan.name : '',
+        createdBy: user?.uid || 'admin',
+        createdByName: profile?.first_name || 'Admin',
       };
-      if (videoForm.isYouTube) { data.youtubeUrl = videoForm.videoUrl; data.videoUrl = ''; }
-      else { data.videoUrl = videoForm.videoUrl; data.youtubeUrl = ''; }
+      if (videoForm.isYouTube) {
+        data.youtubeUrl = videoForm.videoUrl;
+        data.videoUrl = '';
+      } else {
+        data.videoUrl = videoForm.videoUrl;
+        data.youtubeUrl = '';
+      }
 
       let videoId = '';
       if (selectedVideo) {
         await mediaVideosService.update(selectedVideo.id, data);
         videoId = selectedVideo.id;
+
+        // Manage channel counts if changed
+        if (selectedVideo.channelId !== videoForm.channelId) {
+          if (selectedVideo.channelId) {
+            await channelService.decrementVideoCount(selectedVideo.channelId);
+          }
+          if (videoForm.channelId) {
+            await channelService.incrementVideoCount(videoForm.channelId);
+          }
+        }
       } else {
         videoId = await mediaVideosService.create(data, videoForm.notifyUsers);
+        if (videoForm.channelId) {
+          await channelService.incrementVideoCount(videoForm.channelId);
+        }
       }
 
       // Update Playlists
@@ -172,7 +262,11 @@ export function useMediaUpload() {
 
       showToast('success', selectedVideo ? 'Video updated!' : 'Video added and published!');
       resetVideoForm();
-      setView('videos');
+      if (selectedChannel) {
+        setView('channel-detail');
+      } else {
+        setView('videos');
+      }
       loadData();
     } catch (e: any) {
       showToast('error', e?.message || 'Failed to save');
@@ -199,11 +293,18 @@ export function useMediaUpload() {
 
     setSelectedVideo(video);
     setVideoForm({
-      title: video.title, description: video.description || '',
-      videoUrl: video.youtubeUrl || video.videoUrl || '', thumbnail: video.thumbnail,
-      type: video.type, featured: video.featured, forHQ: video.forHQ !== false, isYouTube: video.isYouTube,
+      title: video.title,
+      description: video.description || '',
+      videoUrl: video.youtubeUrl || video.videoUrl || '',
+      thumbnail: video.thumbnail,
+      type: video.type,
+      featured: video.featured,
+      forHQ: video.forHQ !== false,
+      isYouTube: video.isYouTube,
       playlistIds: videoPlaylistIds,
-      notifyUsers: false
+      notifyUsers: false,
+      channelId: video.channelId || '',
+      channelName: video.channelName || ''
     });
     setView('edit-video');
   }, [playlists]);
@@ -303,6 +404,66 @@ export function useMediaUpload() {
     }
   };
 
+  const handleSaveChannel = async () => {
+    if (!channelForm.name.trim()) {
+      showToast('error', 'Enter a channel name');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const data = {
+        name: channelForm.name.trim(),
+        description: channelForm.description.trim(),
+        thumbnail: channelForm.thumbnail || '',
+        ownerId: user?.uid || 'admin',
+        ownerName: profile?.first_name || 'Admin',
+        ownerEmail: user?.email || '',
+        isHQOnly: channelForm.isHQOnly,
+        allowedZones: channelForm.allowedZones
+      };
+
+      if (selectedChannel) {
+        await channelService.updateChannel(selectedChannel.id, data);
+        showToast('success', 'Channel updated!');
+      } else {
+        await channelService.createChannel(data);
+        showToast('success', 'Channel created!');
+      }
+      resetChannelForm();
+      setView('channels');
+      loadData();
+    } catch (e) {
+      showToast('error', 'Failed to save channel');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditChannel = useCallback((channel: Channel) => {
+    setSelectedChannel(channel);
+    setChannelForm({
+      name: channel.name,
+      description: channel.description,
+      thumbnail: channel.thumbnail,
+      isHQOnly: !!channel.isHQOnly,
+      allowedZones: channel.allowedZones || []
+    });
+    setView('edit-channel');
+  }, []);
+
+  const handleDeleteChannel = async (id: string) => {
+    try {
+      await channelService.deleteChannel(id);
+      showToast('success', 'Channel deleted!');
+      setDeleteConfirm(null);
+      setSelectedChannel(null);
+      setView('channels');
+      loadData();
+    } catch (e) {
+      showToast('error', 'Failed to delete channel');
+    }
+  };
+
   const handleToggleVideoInPlaylist = async (videoId: string) => {
     if (!selectedPlaylist) return;
     try {
@@ -324,6 +485,7 @@ export function useMediaUpload() {
     if (batchFiles.length === 0) return;
     setIsSubmitting(true);
     try {
+      const selectedChan = channels.find(c => c.id === videoForm.channelId);
       const videosToCreate = batchFiles.map(file => {
         const autoThumb = getCloudinaryThumbnailUrl(file.url);
         return {
@@ -336,6 +498,8 @@ export function useMediaUpload() {
           featured: false,
           forHQ: videoForm.forHQ,
           hidden: false,
+          channelId: videoForm.channelId || '',
+          channelName: selectedChan ? selectedChan.name : '',
           createdBy: user?.uid || 'admin',
           createdByName: profile?.first_name || 'Admin',
           notifyUsers: videoForm.notifyUsers
@@ -343,9 +507,18 @@ export function useMediaUpload() {
       });
 
       await mediaVideosService.createBatch(videosToCreate);
+      if (videoForm.channelId) {
+        for (let i = 0; i < batchFiles.length; i++) {
+          await channelService.incrementVideoCount(videoForm.channelId);
+        }
+      }
       showToast('success', `Success! ${batchFiles.length} videos published.`);
       setBatchFiles([]);
-      setView('videos');
+      if (selectedChannel) {
+        setView('channel-detail');
+      } else {
+        setView('videos');
+      }
       loadData();
     } catch (e: any) {
       console.error(e);
@@ -363,6 +536,11 @@ export function useMediaUpload() {
   const filteredPlaylists = useMemo(() =>
     playlists.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())),
     [playlists, searchQuery]
+  );
+
+  const filteredChannels = useMemo(() =>
+    channels.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [channels, searchQuery]
   );
 
   const getPlaylistThumb = useCallback((p: AdminPlaylist) =>
@@ -383,25 +561,30 @@ export function useMediaUpload() {
     isBulkPlaylistOpen, setIsBulkPlaylistOpen,
     viewMode, setViewMode,
     zoneColor,
+    isHQAdmin,
 
     // Data State
     videos,
     playlists,
     categories,
+    channels,
     selectedVideo, setSelectedVideo,
     selectedPlaylist, setSelectedPlaylist,
     selectedCategory, setSelectedCategory,
+    selectedChannel, setSelectedChannel,
     selectedVideoIds, setSelectedVideoIds,
     batchFiles, setBatchFiles,
     filteredVideos,
     filteredPlaylists,
+    filteredChannels,
     getPlaylistThumb,
 
     // Form State
     videoForm, setVideoForm,
     playlistForm, setPlaylistForm,
     categoryForm, setCategoryForm,
-    resetVideoForm, resetPlaylistForm, resetCategoryForm,
+    channelForm, setChannelForm,
+    resetVideoForm, resetPlaylistForm, resetCategoryForm, resetChannelForm,
     handleVideoUrlChange,
 
     // Actions
@@ -414,6 +597,9 @@ export function useMediaUpload() {
     handleDeletePlaylist,
     handleSaveCategory,
     handleDeleteCategory,
+    handleSaveChannel,
+    handleDeleteChannel,
+    handleEditChannel,
     handleToggleVideoInPlaylist,
     handlePublishBatch
   };

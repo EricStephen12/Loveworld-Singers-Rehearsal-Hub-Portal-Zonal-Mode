@@ -1,4 +1,4 @@
-﻿import {
+import {
   collection,
   doc,
   getDoc,
@@ -38,6 +38,8 @@ export interface MediaVideo {
   updatedAt: Date
   createdBy?: string
   createdByName?: string
+  channelId?: string
+  channelName?: string
 }
 
 export type MediaVideoInput = Omit<MediaVideo, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'likes'>
@@ -225,7 +227,15 @@ class MediaVideosService {
 
   async delete(id: string): Promise<void> {
     const docRef = doc(db, COLLECTION, id)
+    const docSnap = await getDoc(docRef)
+    const videoData = docSnap.exists() ? docSnap.data() : null
+
     await deleteDoc(docRef)
+
+    if (videoData?.channelId) {
+      const { channelService } = await import('./channel-service')
+      await channelService.decrementVideoCount(videoData.channelId)
+    }
 
     // Clean up playlists to maintain accurate counts
     try {
@@ -244,7 +254,7 @@ class MediaVideosService {
 
       await Promise.all(updatePromises)
     } catch (err) {
- console.error('[MediaVideos] Error cleaning up playlists after video delete:', err)
+      console.error('[MediaVideos] Error cleaning up playlists after video delete:', err)
     }
   }
 
@@ -300,7 +310,9 @@ class MediaVideosService {
       createdAt: data.createdAt?.toDate?.() || new Date(),
       updatedAt: data.updatedAt?.toDate?.() || new Date(),
       createdBy: data.createdBy,
-      createdByName: data.createdByName
+      createdByName: data.createdByName,
+      channelId: data.channelId,
+      channelName: data.channelName
     }
   }
 }

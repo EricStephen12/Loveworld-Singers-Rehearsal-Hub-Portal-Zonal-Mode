@@ -4,7 +4,7 @@ import React from 'react';
 import { Trash2, X, ListVideo, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface MediaModalsProps {
-  deleteConfirm: { type: 'video' | 'playlist' | 'category'; id: string; name: string } | null;
+  deleteConfirm: { type: 'video' | 'playlist' | 'category' | 'channel'; id: string; name: string } | null;
   onCloseDelete: () => void;
   onConfirmDelete: (id: string) => void;
   toast: { type: 'success' | 'error'; message: string } | null;
