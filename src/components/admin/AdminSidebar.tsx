@@ -70,6 +70,7 @@ const AdminSidebar = React.memo(({
     { icon: FolderOpen, label: 'Page Categories', active: activeSection === 'Page Categories' },
     { icon: Upload, label: 'Submitted Songs', active: activeSection === 'Submitted Songs' },
     { icon: Library, label: 'Master Library', active: activeSection === 'Master Library', hqZoneOnly: true },
+
     { icon: List, label: 'Schedule Manager', active: activeSection === 'Schedule Manager' },
   ];
 

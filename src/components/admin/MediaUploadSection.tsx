@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { getCloudinaryThumbnailUrl } from '@/utils/cloudinary';
 
 // Modularized Components
 import { MediaSidebar } from './media/MediaSidebar';
@@ -38,7 +39,9 @@ export default function MediaUploadSection() {
             }]);
             mu.setView('batch-upload');
           } else if (type === 'video') {
-            mu.setVideoForm({ ...mu.videoForm, videoUrl: result.info.secure_url, isYouTube: false });
+            const videoUrl = result.info.secure_url;
+            const autoThumbnail = getCloudinaryThumbnailUrl(videoUrl);
+            mu.setVideoForm({ ...mu.videoForm, videoUrl, thumbnail: autoThumbnail, isYouTube: false });
           } else if (mu.view === 'add-channel' || mu.view === 'edit-channel') {
             mu.setChannelForm({ ...mu.channelForm, thumbnail: result.info.secure_url });
           } else {

@@ -59,6 +59,8 @@ export const MasterLibrarySongTable: React.FC<MasterLibrarySongTableProps> = ({
   programs,
   handleToggleSongInProgram
 }) => {
+  const [openDropdownId, setOpenDropdownId] = React.useState<string | null>(null);
+
   const toggleAll = () => {
     if (selectedSongIds.size === songs.length) {
       setSelectedSongIds(new Set());
@@ -137,35 +139,53 @@ export const MasterLibrarySongTable: React.FC<MasterLibrarySongTableProps> = ({
                     {canManage ? (
                       <>
                         {/* Programs Dropdown for Single Song */}
-                        <div className="relative group/prog">
+                        <div className="relative">
                           <button
-                            className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-violet-100 hover:text-violet-600 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(openDropdownId === song.id ? null : song.id);
+                            }}
+                            className={`p-2 rounded-lg transition-all ${openDropdownId === song.id ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-600'}`}
                             title="Add to Program"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
-                          <div className="absolute right-0 top-full mt-1 hidden group-hover/prog:block bg-white rounded-xl shadow-xl border border-slate-200 z-30 min-w-[180px] p-2">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 pb-2 border-b border-slate-100 mb-1">Add to Program</p>
-                            {programs.length === 0 ? (
-                              <p className="text-[10px] text-slate-400 px-2 py-2">No programs created</p>
-                            ) : (
-                              <div className="max-h-[200px] overflow-y-auto">
-                                {programs.map(p => {
-                                  const isIn = p.songIds?.includes(song.id);
-                                  return (
-                                    <button
-                                      key={p.id}
-                                      onClick={() => handleToggleSongInProgram(song.id, p.id)}
-                                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center justify-between ${isIn ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-50'}`}
-                                    >
-                                      <span className="truncate">{p.name}</span>
-                                      {isIn && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full" />}
-                                    </button>
-                                  );
-                                })}
+                          {openDropdownId === song.id && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-20" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(null);
+                                }} 
+                              />
+                              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 z-30 min-w-[180px] p-2">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 pb-2 border-b border-slate-100 mb-1">Add to Program</p>
+                                {programs.length === 0 ? (
+                                  <p className="text-[10px] text-slate-400 px-2 py-2">No programs created</p>
+                                ) : (
+                                  <div className="max-h-[200px] overflow-y-auto relative z-30">
+                                    {programs.map(p => {
+                                      const isIn = p.songIds?.includes(song.id);
+                                      return (
+                                        <button
+                                          key={p.id}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleSongInProgram(song.id, p.id);
+                                          }}
+                                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center justify-between ${isIn ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                                        >
+                                          <span className="truncate pr-2">{p.name}</span>
+                                          {isIn && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full flex-shrink-0" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </>
+                          )}
                         </div>
                         <button onClick={() => onEditClick(song)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-amber-100 hover:text-amber-600 transition-all" title="Edit">
                           <FileText className="w-4 h-4" />

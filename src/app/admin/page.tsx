@@ -45,6 +45,7 @@ const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), 
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
 const ScheduleManagerSection = dynamic(() => import('../../components/admin/ScheduleManagerSection'), { ssr: false });
+
 const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
 const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
