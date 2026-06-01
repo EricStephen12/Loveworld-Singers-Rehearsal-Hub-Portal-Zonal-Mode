@@ -1,5 +1,9 @@
 import { BackendAPI } from './api-client';
 
+// Strip trailing slashes to prevent double-slash URLs (e.g. host//api) 
+// which cause Vercel 308 redirects that break CORS
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+
 /**
  * SONG SUBMISSION SERVICE (WEBSITE CLIENT)
  * All submission workflows, approvals, and notifications are now handled by the Standalone Backend.
@@ -89,7 +93,7 @@ export async function getPendingSongs(zoneId?: string, _isHQGroup?: boolean) {
 }
 
 export async function approveSong(submissionId: string, reviewerId: string, reviewerName: string, reviewNotes?: string) {
-  return await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/submissions/${submissionId}/approve`, {
+  return await fetch(`${BACKEND_URL}/api/submissions/${submissionId}/approve`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reviewerId, reviewerName, reviewNotes })
@@ -97,7 +101,7 @@ export async function approveSong(submissionId: string, reviewerId: string, revi
 }
 
 export async function rejectSong(submissionId: string, reviewerId: string, reviewerName: string, reviewNotes: string) {
-  return await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/submissions/${submissionId}/reject`, {
+  return await fetch(`${BACKEND_URL}/api/submissions/${submissionId}/reject`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reviewerId, reviewerName, reviewNotes })
@@ -121,7 +125,7 @@ export async function updateUserSubmission(submissionId: string, userId: string,
 }
 
 export async function replyToSubmission(submissionId: string, adminName: string, message: string) {
-  return await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/submissions/${submissionId}/reply`, {
+  return await fetch(`${BACKEND_URL}/api/submissions/${submissionId}/reply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ adminName, message, sender: 'admin' })
@@ -129,7 +133,7 @@ export async function replyToSubmission(submissionId: string, adminName: string,
 }
 
 export async function userReplyToSubmission(submissionId: string, userId: string, message: string, userName?: string) {
-  return await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/submissions/${submissionId}/reply`, {
+  return await fetch(`${BACKEND_URL}/api/submissions/${submissionId}/reply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, userName, message, sender: 'user' })
