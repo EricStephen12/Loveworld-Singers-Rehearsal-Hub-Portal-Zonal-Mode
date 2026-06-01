@@ -24,6 +24,7 @@ import { isHQGroup } from '@/config/zones'
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 import CustomLoader from '@/components/CustomLoader'
+import { isHQAdminEmail } from '@/config/roles'
 
 interface SubmittedSongsPageProps {
   embedded?: boolean
@@ -31,9 +32,10 @@ interface SubmittedSongsPageProps {
 
 export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsPageProps = { embedded: false }) {
   const router = useRouter()
-  const { user, profile } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const { theme } = useAdminTheme()
-  const { currentZone, isSuperAdmin } = useZone()
+  const { currentZone, isSuperAdmin, isZoneCoordinator, isLoading: zoneLoading } = useZone()
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
   const [songs, setSongs] = useState<SongSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
@@ -66,6 +68,32 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
     setToast({ type, message })
     setTimeout(() => setToast(null), 3000)
   }
+
+  // Auth check
+  useEffect(() => {
+    if (embedded) return; // Parent handles auth
+
+    if (authLoading || !user || zoneLoading || !currentZone || hasCheckedAuth) return;
+
+    const isBlocked = Boolean(profile?.email && ['lliamzelvin@gmail.com'].includes(profile.email.toLowerCase()))
+    const isHQAdminCheck = Boolean(profile?.email && isHQAdminEmail(profile.email))
+
+    if (isBlocked) {
+      router.push('/home')
+      return
+    }
+
+    const checkAccess = () => {
+      if (!isZoneCoordinator && !isHQAdminCheck) {
+        router.push('/home')
+        return
+      }
+      setHasCheckedAuth(true)
+    }
+
+    const timer = setTimeout(checkAccess, 500)
+    return () => clearTimeout(timer)
+  }, [user, profile, authLoading, zoneLoading, currentZone, isZoneCoordinator, hasCheckedAuth, embedded, router])
 
   const isHQ = currentZone?.id ? isHQGroup(currentZone.id) : false
 
@@ -332,6 +360,14 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
       title: 'Delete Submission',
       message: `Delete the submission "${song.title}"? This cannot be undone.`
     })
+  }
+
+  if (!embedded && !hasCheckedAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <CustomLoader message="Verifying access..." />
+      </div>
+    )
   }
 
   return (

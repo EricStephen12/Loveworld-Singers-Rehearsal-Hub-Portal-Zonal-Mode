@@ -8,6 +8,7 @@ import {
   Tag,
   Users,
   Music,
+  Bot,
   ChevronRight,
   Bell,
   BarChart3,
@@ -61,6 +62,7 @@ const AdminSidebar = React.memo(({
   const mainItems = [
     { icon: Home, label: 'Dashboard', active: activeSection === 'Dashboard' },
     { icon: MessageCircle, label: 'Support Chat', active: activeSection === 'Support Chat', hqOnly: true, restrictedAdminHidden: true },
+    { icon: Bot, label: 'Lexicon Training', active: activeSection === 'Lexicon Training', hqOnly: true, restrictedAdminHidden: true },
     { icon: BarChart3, label: 'Analytics', active: activeSection === 'Analytics', hqZoneOnly: true },
   ];
 

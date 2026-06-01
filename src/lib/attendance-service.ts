@@ -39,6 +39,20 @@ export class AttendanceService {
   // Check in user for attendance
   static async checkIn(userId: string, qrCode: string, eventName: string = 'Rehearsal', zoneId?: string) {
     try {
+      // Validate QR code timestamp to prevent old screenshots
+      if (qrCode.startsWith('LW-ATTEND-')) {
+        const parts = qrCode.split('-');
+        if (parts.length >= 4) {
+          const qrTimestamp = parseInt(parts[3], 10);
+          const currentTimestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+          
+          // If the QR code is older than 10 seconds or from the future, reject it
+          if (currentTimestamp - qrTimestamp > 10 || currentTimestamp - qrTimestamp < -5) {
+            return { success: false, message: 'QR Code has expired. Please ask the member to show their active screen.' };
+          }
+        }
+      }
+
       const response = await BackendAPI.attendance.mark({
         userId,
         qrCode,
@@ -138,7 +152,7 @@ export class AttendanceService {
 
   // Generate QR code
   static generateAttendanceQR(userId: string): string {
-    const timestamp = Math.floor(Date.now() / 300000);
+    const timestamp = Math.floor(Date.now() / 1000);
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `LW-ATTEND-${userId}-${timestamp}-${randomCode}`;
   }

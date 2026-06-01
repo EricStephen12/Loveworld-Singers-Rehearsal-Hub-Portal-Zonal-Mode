@@ -48,6 +48,7 @@ const ScheduleManagerSection = dynamic(() => import('../../components/admin/Sche
 
 const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
 const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
+const LexiconAISection = dynamic(() => import('../../components/admin/LexiconAISection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -184,7 +185,7 @@ function AdminContent() {
       const validSections = [
         'Dashboard', 'Pages', 'Categories', 'Media', 'Library',
         'Members', 'Notifications', 'Sub-Groups', 'Analytics',
-        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat', 'Payments'
+        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat', 'Payments', 'Lexicon Training'
       ];
       if (validSections.includes(sectionParam)) {
         setActiveSection(sectionParam);
@@ -1625,6 +1626,7 @@ function AdminContent() {
           {activeSection === 'Analytics' && isHQAdmin && canSeeSection('Analytics') && <AnalyticsSection />}
           {activeSection === 'Payments' && isHQAdmin && canSeeSection('Payments') && <PaymentDashboardSection />}
           {activeSection === 'Attendance' && canSeeSection('Attendance') && <AttendanceSection />}
+          {activeSection === 'Lexicon Training' && canSeeSection('Lexicon Training') && <LexiconAISection />}
 
           {activeSection === 'Pages' && canSeeSection('Pages') && (
             <PagesSection

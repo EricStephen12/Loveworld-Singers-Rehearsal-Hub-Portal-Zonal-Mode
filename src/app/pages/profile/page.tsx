@@ -129,7 +129,7 @@ function ProfilePage() {
 
     generateQR()
 
-    // Update token every 5 minutes
+    // Update token every 5 seconds
     const tokenInterval = setInterval(generateQR, 5000)
 
     // Update countdown every second
