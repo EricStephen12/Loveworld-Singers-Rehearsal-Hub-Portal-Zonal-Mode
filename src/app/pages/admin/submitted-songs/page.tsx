@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Music, CheckCircle, XCircle, Clock, Eye, MessageSquare,
   User, Calendar, ArrowLeft, RefreshCw, FileText, Play, Pause, Trash2,
-  ChevronLeft, ChevronRight, MoreVertical, Edit, Search
+  ChevronLeft, ChevronRight, MoreVertical, Edit, Search, Download
 } from 'lucide-react'
 import {
   getAllSubmittedSongs,
@@ -362,6 +362,76 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
     })
   }
 
+  const getDownloadUrl = (url: string, fileName: string) => {
+    if (url.includes('cloudinary.com')) {
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        return `${parts[0]}/upload/fl_attachment:${sanitizedName}/${parts[1]}`;
+      }
+    }
+    return url;
+  };
+
+  const handleDownloadAudio = (song: SongSubmission) => {
+    if (!song.audioUrl) return;
+    showToast('success', `Downloading audio: ${song.title}`);
+    try {
+      const downloadUrl = getDownloadUrl(song.audioUrl, `${song.title}_audio`);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.target = '_blank';
+      a.download = `${song.title}_audio`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Download trigger error, fallback to new tab:', err);
+      window.open(song.audioUrl, '_blank');
+    }
+  };
+
+  const handleDownloadSongSheet = (song: SongSubmission) => {
+    showToast('success', `Downloading lyrics: ${song.title}`);
+    try {
+      const content = `TITLE: ${song.title}
+WRITER: ${song.writer || 'N/A'}
+CATEGORY: ${song.category || 'N/A'}
+KEY: ${song.key || 'N/A'}
+TEMPO: ${song.tempo || 'N/A'}
+SUBMITTED BY: ${song.submittedBy.userName} (${song.submittedBy.email})
+DATE SUBMITTED: ${new Date(song.createdAt).toLocaleString()}
+
+========================================
+LYRICS
+========================================
+${song.lyrics || ''}
+
+${song.solfas ? `========================================
+SOLFAS
+========================================
+${song.solfas}` : ''}
+
+${song.notes ? `========================================
+ADDITIONAL NOTES
+========================================
+${song.notes}` : ''}
+`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${song.title.replace(/[^a-zA-Z0-9.-]/g, '_')}_lyrics.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading lyrics sheet:', err);
+      showToast('error', 'Failed to download lyrics sheet');
+    }
+  };
+
   if (!embedded && !hasCheckedAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -694,6 +764,30 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                               <span className="font-medium lg:font-normal">Message / Reply</span>
                             </button>
 
+                            {song.audioUrl && (
+                              <button
+                                onClick={() => {
+                                  handleDownloadAudio(song)
+                                  setActiveActionMenuId(null)
+                                }}
+                                className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-purple-700 hover:bg-purple-50 flex items-center gap-3 lg:gap-2 active:bg-purple-100/50 transition-colors"
+                              >
+                                <Download className="w-5 h-5 lg:w-4 lg:h-4 text-purple-600" />
+                                <span className="font-medium lg:font-normal">Download Audio</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                handleDownloadSongSheet(song)
+                                setActiveActionMenuId(null)
+                              }}
+                              className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 lg:gap-2 active:bg-gray-100 transition-colors"
+                            >
+                              <FileText className="w-5 h-5 lg:w-4 lg:h-4 text-gray-400" />
+                              <span className="font-medium lg:font-normal">Download Details</span>
+                            </button>
+
                             {song.id && (
                               <div className="border-t border-gray-100 mt-1 pt-1">
                                 <button
@@ -702,7 +796,7 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                                     setActiveActionMenuId(null)
                                   }}
                                   className="w-full text-left px-5 py-4 lg:px-4 lg:py-2.5 text-[15px] lg:text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 lg:gap-2 active:bg-red-100/50 transition-colors"
-                                >
+                                  >
                                   <Trash2 className="w-5 h-5 lg:w-4 lg:h-4" />
                                   <span className="font-medium lg:font-normal">Delete Submission</span>
                                 </button>
@@ -737,21 +831,39 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
                   {/* Quick Preview & Audio */}
                   <div className="flex items-center gap-2">
                     {song.audioUrl ? (
-                      <button
-                        onClick={() => handleAudioPlay(song.id || '', song.audioUrl!)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors border ${playingAudioId === song.id
-                          ? 'bg-purple-100 text-purple-700 border-purple-200'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-purple-200 hover:text-purple-600'
-                          }`}
-                      >
-                        {playingAudioId === song.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                        {playingAudioId === song.id ? 'Playing' : 'Play Audio'}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleAudioPlay(song.id || '', song.audioUrl!)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors border ${playingAudioId === song.id
+                            ? 'bg-purple-100 text-purple-700 border-purple-200'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-purple-200 hover:text-purple-600'
+                            }`}
+                        >
+                          {playingAudioId === song.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          {playingAudioId === song.id ? 'Playing' : 'Play Audio'}
+                        </button>
+                        <button
+                          onClick={() => handleDownloadAudio(song)}
+                          className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
+                          title="Download Audio"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </>
                     ) : (
                       <div className="flex-1 py-2 text-center text-xs text-gray-400 bg-gray-50 rounded-lg border border-gray-100 border-dashed">
                         No audio
                       </div>
                     )}
+
+                    {/* Direct Download Details (.txt) button */}
+                    <button
+                      onClick={() => handleDownloadSongSheet(song)}
+                      className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center"
+                      title="Download Song Details (.txt)"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
 
                     <button
                       onClick={() => {
@@ -851,6 +963,32 @@ export default function SubmittedSongsPage({ embedded = false }: SubmittedSongsP
               </div>
 
               <div className="p-6 space-y-6">
+                {/* Downloads Bar */}
+                <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-3 flex flex-wrap gap-2 items-center justify-between">
+                  <div className="text-xs font-bold text-purple-950 flex items-center gap-1.5">
+                    <Music className="w-4 h-4 text-purple-600" />
+                    <span>Download Options</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {selectedSong.audioUrl && (
+                      <button
+                        onClick={() => handleDownloadAudio(selectedSong)}
+                        className="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-purple-100"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download Audio
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDownloadSongSheet(selectedSong)}
+                      className="py-2 px-4 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-gray-500" />
+                      Download Details (.txt)
+                    </button>
+                  </div>
+                </div>
+
                 {/* Song Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>

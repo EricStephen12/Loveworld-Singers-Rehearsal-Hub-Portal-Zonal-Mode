@@ -69,7 +69,7 @@ export const getFileType = (fileNameOrMime: string): 'image' | 'audio' | 'video'
   // Check extensions
   const extension = str.split('.').pop() || '';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(extension)) return 'image';
-  if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'wma', 'm4r', 'amr'].includes(extension)) return 'audio';
+  if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'wma', 'm4r', 'amr', '3gp', '3gpp'].includes(extension)) return 'audio';
   if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'mkv', 'webm'].includes(extension)) return 'video';
   
   return 'document';

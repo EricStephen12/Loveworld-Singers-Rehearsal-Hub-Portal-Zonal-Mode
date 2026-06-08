@@ -303,8 +303,8 @@ export default function MediaManager({
         const file = fileList[i];
         setUploadingFile(file.name);
 
-        // Determine file type
-        const fileType = getFileType(file.type);
+        // Determine file type using name (extension fallback) or type (mime fallback)
+        const fileType = getFileType(file.name || file.type);
 
         try {
           // Upload to Cloudinary with progress tracking
@@ -1019,10 +1019,15 @@ export default function MediaManager({
                     >
                       {file.name}
                     </h3>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-[8px] text-gray-400 font-medium">
+                    <div className="flex items-center justify-between mt-0.5 gap-1">
+                      <span className="text-[8px] text-gray-400 font-medium truncate">
                         {formatFileSize(file.size)}
                       </span>
+                      {file.uploadedAt && (
+                        <span className="text-[7px] text-purple-600/70 font-bold truncate" title={new Date(file.uploadedAt).toLocaleString()}>
+                          {new Date(file.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -1118,9 +1123,19 @@ export default function MediaManager({
                       <h3 className="text-xs font-bold text-gray-800 truncate" title={file.name}>
                         {file.name}
                       </h3>
-                      <span className="text-[10px] text-gray-400 font-medium">
-                        {formatFileSize(file.size)}
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {formatFileSize(file.size)}
+                        </span>
+                        {file.uploadedAt && (
+                          <>
+                            <span className="text-[10px] text-gray-300">•</span>
+                            <span className="text-[10px] text-purple-600/80 font-semibold" title={new Date(file.uploadedAt).toLocaleString()}>
+                              {new Date(file.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
