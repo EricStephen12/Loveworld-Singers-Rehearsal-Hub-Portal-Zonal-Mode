@@ -125,7 +125,7 @@ export function LibraryView() {
   const handledSongParamRef = useRef<string | null>(null);
 
   // Real-time data for "Ongoing" tab
-  const { pages: praiseNightPages, getCurrentSongs: getPraiseNightSongs } = useRealtimeData(currentZone?.id);
+  const { pages: praiseNightPages, getCurrentSongs: getPraiseNightSongs } = useRealtimeData(currentZone?.id, user?.uid);
   const [metadataTimestamp, setMetadataTimestamp] = useState(0);
 
   // Helper: Convert PraiseNightSong to AudioLabSong

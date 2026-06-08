@@ -8,10 +8,13 @@ import { mediaService } from '@/app/pages/media/_lib'
 import { CONTENT_TYPES } from '@/config/contentTypes'
 import { isYouTubeUrl, getYouTubeThumbnail } from '@/utils/youtube'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import { useZone } from '@/hooks/useZone'
+import { isHQGroup } from '@/config/zones'
 
 export default function AdminMediaUploadPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { currentZone } = useZone()
 
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -157,7 +160,8 @@ export default function AdminMediaUploadPage() {
         featured: formData.featured,
         views: 0,
         likes: 0,
-        isYouTube: sourceType === 'youtube'
+        isYouTube: sourceType === 'youtube',
+        forHQ: isHQGroup(currentZone?.id)
       })
 
       setUploadProgress(100)

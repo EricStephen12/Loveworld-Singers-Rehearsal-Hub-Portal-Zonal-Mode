@@ -33,7 +33,7 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
       }
     } else if (zoneId && userId) {
       const data = await SubGroupDatabaseService.getMemberRehearsals(zoneId, userId)
-      pages = data.combined
+      pages = data?.combined || []
     } else if (zoneId) {
       pages = await ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000)
     } else {

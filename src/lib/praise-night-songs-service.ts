@@ -28,8 +28,8 @@ export class PraiseNightSongsService {
       const collectionName = getCollectionName(zoneId)
       const response = await BackendAPI.generic.list(collectionName, 2000, 'praiseNightId', praiseNightId, '==');
       
-      // Try alternative field names for HQ groups
-      if ((!response.data || response.data.length === 0) && zoneId && isHQGroup(zoneId)) {
+      // Try alternative field names if no songs found (handles legacy/zonal data mismatches)
+      if (!response.data || response.data.length === 0) {
         const altResponse = await BackendAPI.generic.list(collectionName, 2000, 'praisenightid', praiseNightId, '==');
         if (altResponse.data && altResponse.data.length > 0) return altResponse.data;
       }

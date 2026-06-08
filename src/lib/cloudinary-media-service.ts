@@ -122,7 +122,7 @@ export async function getAllCloudinaryMedia(
     const mediaRef = collection(db, collectionName)
 
     const q = (zoneId && !isHQGroup(zoneId))
-      ? query(mediaRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'), firestoreLimit(limitCount))
+      ? query(mediaRef, where('zoneId', '==', zoneId), firestoreLimit(limitCount))
       : query(mediaRef, orderBy('createdAt', 'desc'), firestoreLimit(limitCount))
 
     const snapshot = await getDocs(q)
@@ -153,7 +153,7 @@ export async function loadMoreCloudinaryMedia(
     const mediaRef = collection(db, collectionName)
 
     const q = (zoneId && !isHQGroup(zoneId))
-      ? query(mediaRef, where('zoneId', '==', zoneId), orderBy('createdAt', 'desc'), startAfter(cached.lastDoc), firestoreLimit(limitCount))
+      ? query(mediaRef, where('zoneId', '==', zoneId), startAfter(cached.lastDoc), firestoreLimit(limitCount))
       : query(mediaRef, orderBy('createdAt', 'desc'), startAfter(cached.lastDoc), firestoreLimit(limitCount))
 
     const snapshot = await getDocs(q)
@@ -206,11 +206,12 @@ export async function getCloudinaryMediaByType(
     const mediaRef = collection(db, collectionName)
 
     const q = (zoneId && !isHQGroup(zoneId))
-      ? query(mediaRef, where('zoneId', '==', zoneId), where('type', '==', type), orderBy('createdAt', 'desc'), firestoreLimit(limitCount))
+      ? query(mediaRef, where('zoneId', '==', zoneId), where('type', '==', type), firestoreLimit(limitCount))
       : query(mediaRef, where('type', '==', type), orderBy('createdAt', 'desc'), firestoreLimit(limitCount))
 
     const snapshot = await getDocs(q)
     const files = snapshot.docs.map(mapDocToFile)
+    files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null
     typeMediaCache.set(cacheKey, { data: files, timestamp: Date.now(), lastDoc })
@@ -237,11 +238,12 @@ export async function loadMoreCloudinaryMediaByType(
     const mediaRef = collection(db, collectionName)
 
     const q = (zoneId && !isHQGroup(zoneId))
-      ? query(mediaRef, where('zoneId', '==', zoneId), where('type', '==', type), orderBy('createdAt', 'desc'), startAfter(cached.lastDoc), firestoreLimit(limitCount))
+      ? query(mediaRef, where('zoneId', '==', zoneId), where('type', '==', type), startAfter(cached.lastDoc), firestoreLimit(limitCount))
       : query(mediaRef, where('type', '==', type), orderBy('createdAt', 'desc'), startAfter(cached.lastDoc), firestoreLimit(limitCount))
 
     const snapshot = await getDocs(q)
     const files = snapshot.docs.map(mapDocToFile)
+    files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null
     typeMediaCache.set(cacheKey, { data: [...cached.data, ...files], timestamp: Date.now(), lastDoc })

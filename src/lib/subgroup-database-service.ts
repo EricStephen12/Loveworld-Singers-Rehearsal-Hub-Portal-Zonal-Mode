@@ -199,7 +199,7 @@ export class SubGroupDatabaseService {
       return await response.json();
     } catch (error) {
       console.warn('Subgroup: Failed to fetch member rehearsals:', error);
-      return []; // Return empty array on error to stop loading state
+      return { zoneRehearsals: [], subGroupRehearsals: [], combined: [] }; // Return empty structure on error to stop loading state without crashing
     }
   }
 

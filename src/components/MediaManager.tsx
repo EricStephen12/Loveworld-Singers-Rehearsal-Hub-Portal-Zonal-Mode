@@ -21,7 +21,8 @@ import {
   Check,
   CheckCircle,
   RefreshCw,
-  Settings
+  Settings,
+  MoreVertical
 } from 'lucide-react';
 import { uploadToCloudinary, deleteFromCloudinary, getFileType } from '@/lib/cloudinary-storage';
 import {
@@ -102,6 +103,9 @@ export default function MediaManager({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [expandedFileId, setExpandedFileId] = useState<string | null>(null);
+  const [fileToDelete, setFileToDelete] = useState<MediaFile | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Track which type we're filtering by for pagination
   const [currentFilterType, setCurrentFilterType] = useState<string | null>(null);
@@ -414,55 +418,92 @@ export default function MediaManager({
     }
   };
 
-  const handleFileDelete = async (file: MediaFile) => {
-    if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
-      try {
-        // Delete from Firebase first
-        const dbDeleteResult = await deleteCloudinaryMedia(file.id, currentZone?.id);
+  const getDownloadUrl = (url: string, fileName: string) => {
+    if (url.includes('cloudinary.com')) {
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        return `${parts[0]}/upload/fl_attachment:${sanitizedName}/${parts[1]}`;
+      }
+    }
+    return url;
+  };
 
-        if (dbDeleteResult.success) {
-          // Delete from Cloudinary using stored publicId
-          let cloudinaryDeleteSuccess = true;
-          if (file.storagePath) {
+  const handleDownload = (file: MediaFile) => {
+    addToast({
+      type: 'info',
+      message: `Downloading: ${file.name}`
+    });
+    try {
+      const downloadUrl = getDownloadUrl(file.url, file.name);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.target = '_blank';
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Download trigger error, fallback to new tab:', err);
+      window.open(file.url, '_blank');
+    }
+  };
 
-            // Determine resource type
-            let resourceType = 'image';
-            if (file.type === 'audio') resourceType = 'video'; // Cloudinary uses 'video' for audio
-            else if (file.type === 'video') resourceType = 'video';
-            else if (file.type === 'document') resourceType = 'raw';
+  const handleFileDeleteClick = (file: MediaFile) => {
+    setFileToDelete(file);
+    setShowDeleteModal(true);
+  };
 
-            cloudinaryDeleteSuccess = await deleteFromCloudinary(file.storagePath, resourceType);
-          } else {
-          }
+  const confirmDeleteFile = async () => {
+    if (!fileToDelete) return;
+    const file = fileToDelete;
+    try {
+      // Delete from Firebase first
+      const dbDeleteResult = await deleteCloudinaryMedia(file.id, currentZone?.id);
 
-          if (cloudinaryDeleteSuccess) {
-            // Refresh local data to remove deleted file
-            await loadFilesFromDatabase();
-            addToast({
-              type: 'success',
-              message: `File "${file.name}" deleted successfully!`
-            });
-          } else {
-            // If Cloudinary deletion fails, we should still remove from UI since DB is updated
-            await loadFilesFromDatabase();
-            addToast({
-              type: 'warning',
-              message: `File "${file.name}" removed from database but may still exist in cloud storage.`
-            });
-          }
-        } else {
+      if (dbDeleteResult.success) {
+        // Delete from Cloudinary using stored publicId
+        let cloudinaryDeleteSuccess = true;
+        if (file.storagePath) {
+          // Determine resource type
+          let resourceType = 'image';
+          if (file.type === 'audio') resourceType = 'video'; // Cloudinary uses 'video' for audio
+          else if (file.type === 'video') resourceType = 'video';
+          else if (file.type === 'document') resourceType = 'raw';
+
+          cloudinaryDeleteSuccess = await deleteFromCloudinary(file.storagePath, resourceType);
+        }
+
+        if (cloudinaryDeleteSuccess) {
+          // Refresh local data to remove deleted file
+          await loadFilesFromDatabase();
           addToast({
-            type: 'error',
-            message: `Failed to delete "${file.name}" from database`
+            type: 'success',
+            message: `File "${file.name}" deleted successfully!`
+          });
+        } else {
+          // If Cloudinary deletion fails, we should still remove from UI since DB is updated
+          await loadFilesFromDatabase();
+          addToast({
+            type: 'warning',
+            message: `File "${file.name}" removed from database but may still exist in cloud storage.`
           });
         }
-      } catch (error) {
- console.error('Delete error:', error);
+      } else {
         addToast({
           type: 'error',
-          message: 'Delete failed. Please try again.'
+          message: `Failed to delete "${file.name}" from database`
         });
       }
+    } catch (error) {
+      console.error('Delete error:', error);
+      addToast({
+        type: 'error',
+        message: 'Delete failed. Please try again.'
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setFileToDelete(null);
     }
   };
 
@@ -674,8 +715,19 @@ export default function MediaManager({
 
   const folders = ['all', ...Array.from(new Set(files.map(f => f.folder).filter(Boolean)))];
 
+  const activeMenuFile = useMemo(() => {
+    return files.find(f => f.id === activeMenuId) || null;
+  }, [files, activeMenuId]);
+
   return (
     <div className="h-full w-full flex flex-col bg-white relative overflow-hidden">
+      {/* Backdrop to close active dropdowns on click outside */}
+      {activeMenuId && (
+        <div
+          className="fixed inset-0 z-30 bg-transparent"
+          onClick={() => setActiveMenuId(null)}
+        />
+      )}
       {/* Loading Skeleton */}
       {loading && files.length === 0 && (
         <div className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-8">
@@ -901,90 +953,254 @@ export default function MediaManager({
               </div>
             )}
             {allFilteredFiles.map((file) => (
-              <div
-                key={file.id}
-                className={`group relative bg-white/80 backdrop-blur-sm border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-sm ${selectionMode ? 'cursor-pointer active:scale-95' : ''
-                  } ${selectedFile?.id === file.id
-                    ? `border-purple-500 ring-1 ring-purple-200 shadow-md`
-                    : 'border-gray-100 hover:border-purple-200'
-                  }`}
-                onClick={() => handleFileSelect(file)}
-                onDoubleClick={() => handleFileDoubleClick(file)}
-              >
-                {/* File Preview/Icon - Smaller on mobile */}
-                <div className="aspect-square bg-gray-50 flex items-center justify-center relative">
-                  {file.type === 'image' ? (
-                    <img
-                      src={file.url}
-                      alt={file.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className={`p-2 sm:p-3 rounded-full ${getFileTypeColor(file.type)} transform transition-transform duration-300 group-hover:scale-110`}>
-                      {getFileIcon(file.type)}
-                    </div>
-                  )}
+              viewMode === 'grid' ? (
+                <div
+                  key={file.id}
+                  className={`group relative bg-white/80 backdrop-blur-sm border rounded-lg transition-all duration-300 hover:shadow-sm ${
+                    activeMenuId === file.id ? 'z-30 border-purple-300 shadow-md scale-[1.01]' : 'z-10'
+                  } ${selectionMode ? 'cursor-pointer active:scale-95' : ''
+                    } ${selectedFile?.id === file.id
+                      ? `border-purple-500 ring-1 ring-purple-200 shadow-md`
+                      : 'border-gray-100 hover:border-purple-200'
+                    }`}
+                  onClick={() => handleFileSelect(file)}
+                  onDoubleClick={() => handleFileDoubleClick(file)}
+                >
+                  {/* File Preview/Icon - Smaller on mobile */}
+                  <div className="aspect-square bg-gray-50 flex items-center justify-center relative rounded-t-lg overflow-hidden">
+                    {file.type === 'image' ? (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className={`p-2 sm:p-3 rounded-full ${getFileTypeColor(file.type)} transform transition-transform duration-300 group-hover:scale-110`}>
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
 
-                  {/* Play button for audio files */}
-                  {file.type === 'audio' && (
-                    <button
+                    {/* Play button for audio files */}
+                    {file.type === 'audio' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAudioPlay(file);
+                        }}
+                        className="absolute top-1 left-1 p-1 text-purple-600 hover:text-purple-700 transition-colors"
+                        title={playingAudioId === file.id ? "Pause" : "Play"}
+                      >
+                        {playingAudioId === file.id ? (
+                          <Pause className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4 fill-purple-600" />
+                        )}
+                      </button>
+                    )}
+
+                    {/* Selection check mark */}
+                    {selectionMode && selectedFile?.id === file.id && (
+                      <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-0.5">
+                        <Check className="w-3 h-3" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* File Info - Balanced Compact */}
+                  <div className="p-1 sm:p-1.5 bg-white/30 rounded-b-lg">
+                    <h3
+                      className={`font-semibold text-[9px] sm:text-[10px] text-gray-800 leading-[1.1] break-words cursor-pointer ${expandedFileId === file.id ? '' : 'line-clamp-1'
+                        }`}
+                      title={file.name}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAudioPlay(file);
+                        setExpandedFileId(expandedFileId === file.id ? null : file.id);
                       }}
-                      className="absolute top-1 left-1 p-1.5 bg-black/50 rounded-full"
                     >
-                      {playingAudioId === file.id ? (
-                        <Pause className="w-3 h-3 text-white" />
-                      ) : (
-                        <Play className="w-4 h-4 text-white ml-0.5" />
+                      {file.name}
+                    </h3>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-[8px] text-gray-400 font-medium">
+                        {formatFileSize(file.size)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions - Only on hover for non-selection mode */}
+                  {!selectionMode && (
+                    <div className={`absolute top-1 right-1 z-20 transition-opacity ${
+                      activeMenuId === file.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(activeMenuId === file.id ? null : file.id);
+                        }}
+                        className="p-1 text-purple-600 hover:text-purple-700 transition-colors"
+                        title="Actions"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {activeMenuId === file.id && (
+                        /* Desktop Dropdown - only visible on md screen sizes and larger */
+                        <div className="hidden md:block absolute right-0 mt-1 w-28 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(null);
+                              handleDownload(file);
+                            }}
+                            className="w-full px-3 py-1.5 text-left text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors flex items-center gap-1.5"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(null);
+                              handleFileDeleteClick(file);
+                            }}
+                            className="w-full px-3 py-1.5 text-left text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       )}
-                    </button>
-                  )}
-
-                  {/* Selection check mark */}
-                  {selectionMode && selectedFile?.id === file.id && (
-                    <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-0.5">
-                      <Check className="w-3 h-3" />
                     </div>
                   )}
                 </div>
+              ) : (
+                <div
+                  key={file.id}
+                  className={`flex items-center justify-between p-2 bg-white/80 border rounded-lg hover:shadow-sm transition-all duration-300 ${
+                    activeMenuId === file.id ? 'z-30 border-purple-300 shadow-md bg-purple-50/10' : 'z-10'
+                  } ${
+                    selectionMode ? 'cursor-pointer active:scale-95' : ''
+                  } ${
+                    selectedFile?.id === file.id
+                      ? `border-purple-500 bg-purple-50/30 ring-1 ring-purple-100 shadow-sm`
+                      : 'border-gray-100 hover:border-purple-200'
+                  }`}
+                  onClick={() => handleFileSelect(file)}
+                  onDoubleClick={() => handleFileDoubleClick(file)}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Preview / Icon */}
+                    <div className="w-10 h-10 rounded bg-gray-50 flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                      {file.type === 'image' ? (
+                        <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className={`p-1.5 rounded-full ${getFileTypeColor(file.type)}`}>
+                          {getFileIcon(file.type)}
+                        </div>
+                      )}
+                      {file.type === 'audio' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAudioPlay(file);
+                          }}
+                          className="absolute inset-0 flex items-center justify-center bg-white/70 opacity-0 hover:opacity-100 transition-opacity"
+                        >
+                          {playingAudioId === file.id ? (
+                            <Pause className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            <Play className="w-4 h-4 text-purple-600 fill-purple-600" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    {/* Name & Size */}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xs font-bold text-gray-800 truncate" title={file.name}>
+                        {file.name}
+                      </h3>
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {formatFileSize(file.size)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 ml-4 relative">
+                    {file.type === 'audio' && playingAudioId !== file.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAudioPlay(file);
+                        }}
+                        className="p-1.5 text-purple-600 hover:text-purple-700 transition-colors"
+                        title="Play audio"
+                      >
+                        <Play className="w-4 h-4 fill-purple-600" />
+                      </button>
+                    )}
+                    {file.type === 'audio' && playingAudioId === file.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAudioPlay(file);
+                        }}
+                        className="p-1.5 text-purple-600 bg-purple-50 rounded-lg transition-colors"
+                        title="Pause audio"
+                      >
+                        <Pause className="w-4 h-4 animate-pulse" />
+                      </button>
+                    )}
+                    
+                    {!selectionMode && (
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId(activeMenuId === file.id ? null : file.id);
+                          }}
+                          className="p-1.5 text-purple-600 hover:text-purple-700 transition-colors"
+                          title="Actions"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
 
-                {/* File Info - Balanced Compact */}
-                <div className="p-1 sm:p-1.5 bg-white/30">
-                  <h3
-                    className={`font-semibold text-[9px] sm:text-[10px] text-gray-800 leading-[1.1] break-words cursor-pointer ${expandedFileId === file.id ? '' : 'line-clamp-1'
-                      }`}
-                    title={file.name}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedFileId(expandedFileId === file.id ? null : file.id);
-                    }}
-                  >
-                    {file.name}
-                  </h3>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-[8px] text-gray-400 font-medium">
-                      {formatFileSize(file.size)}
-                    </span>
+                        {activeMenuId === file.id && (
+                          /* Desktop Dropdown - only visible on md screen sizes and larger */
+                          <div className="hidden md:block absolute right-0 mt-1 w-28 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(null);
+                                handleDownload(file);
+                              }}
+                              className="w-full px-3 py-1.5 text-left text-xs font-semibold text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors flex items-center gap-1.5"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>Download</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(null);
+                                handleFileDeleteClick(file);
+                              }}
+                              className="w-full px-3 py-1.5 text-left text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1.5"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectionMode && selectedFile?.id === file.id && (
+                      <div className="bg-purple-500 text-white rounded-full p-0.5">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Actions - Only on hover for non-selection mode */}
-                {!selectionMode && (
-                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileDelete(file);
-                      }}
-                      className="p-1 bg-white rounded-full shadow-sm hover:bg-red-50"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-600" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              )
             ))}
 
             {/* Load More Button */}
@@ -1068,7 +1284,7 @@ export default function MediaManager({
         preload="metadata"
         crossOrigin="anonymous"
         onError={(e) => {
- console.error(' Audio element error:', e);
+          console.error(' Audio element error:', e);
           setPlayingAudioId(null);
           addToast({
             type: 'error',
@@ -1078,6 +1294,104 @@ export default function MediaManager({
         onLoadedData={() => {
         }}
       />
+
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteModal && fileToDelete && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden transform animate-in scale-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-950 mb-1">Delete Media File?</h3>
+              <p className="text-xs text-gray-500 leading-relaxed max-w-[280px] mx-auto">
+                Are you sure you want to delete <span className="font-semibold text-gray-800 break-all">"{fileToDelete.name}"</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setFileToDelete(null);
+                }}
+                className="flex-1 py-2.5 px-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-50 active:scale-95 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteFile}
+                className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm active:scale-95 shadow-lg shadow-red-100 hover:shadow-red-200 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Sheet Drawer for Actions */}
+      {activeMenuId && activeMenuFile && (
+        <div 
+          className="md:hidden fixed inset-0 z-[120] flex items-end justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveMenuId(null);
+          }}
+        >
+          <div 
+            className="w-full bg-white rounded-t-2xl shadow-xl overflow-hidden transform animate-in slide-in-from-bottom duration-250 pb-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle line */}
+            <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto my-3" />
+            
+            {/* File name header */}
+            <div className="px-4 pb-3 border-b border-gray-100">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">File Actions</p>
+              <p className="text-sm font-bold text-gray-800 truncate mt-1">{activeMenuFile.name}</p>
+            </div>
+
+            <div className="p-2 space-y-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuId(null);
+                  handleDownload(activeMenuFile);
+                }}
+                className="w-full px-4 py-3.5 text-left text-sm font-bold text-gray-700 active:bg-purple-50 hover:bg-purple-50 active:text-purple-600 rounded-xl transition-all flex items-center gap-3"
+              >
+                <Download className="w-5 h-5 text-purple-600" />
+                <span>Download File</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuId(null);
+                  handleFileDeleteClick(activeMenuFile);
+                }}
+                className="w-full px-4 py-3.5 text-left text-sm font-bold text-red-600 active:bg-red-50 hover:bg-red-50 rounded-xl transition-all flex items-center gap-3"
+              >
+                <Trash2 className="w-5 h-5 text-red-500" />
+                <span>Delete File</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuId(null);
+                }}
+                className="w-full px-4 py-3.5 text-center text-sm font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all mt-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
