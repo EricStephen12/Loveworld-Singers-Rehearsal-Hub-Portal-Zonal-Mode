@@ -43,9 +43,7 @@ export function BackendOfflineIndicator() {
             Refresh Page
           </button>
           
-          <p className="mt-4 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
-            System status: Sync Required
-          </p>
+        
         </div>
       </div>
     </div>

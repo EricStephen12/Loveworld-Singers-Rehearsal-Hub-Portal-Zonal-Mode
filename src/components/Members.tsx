@@ -85,6 +85,7 @@ interface Member {
   zoneName?: string;
   can_access_pre_rehearsal?: boolean;
   has_hq_access?: boolean;
+  canAnnotate?: boolean;
 }
 
 export default function Members() {
@@ -282,7 +283,8 @@ export default function Members() {
           role: membership.role || 'member',
           zoneId: membership.zoneId,
           zoneName: membership.zoneName,
-          can_access_pre_rehearsal: !!profile?.can_access_pre_rehearsal
+          can_access_pre_rehearsal: !!profile?.can_access_pre_rehearsal,
+          canAnnotate: !!profile?.canAnnotate
         };
       });
 
@@ -1128,6 +1130,32 @@ function MemberProfileModal({
                         className={`w-11 h-6 rounded-full transition-all relative ${member.can_access_pre_rehearsal ? 'bg-indigo-600' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.can_access_pre_rehearsal ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Live Annotation Access</p>
+                        <p className="text-xs text-slate-500">Allow member to use the Telestrator (Drawing Tool)</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const newState = !member.canAnnotate;
+                          try {
+                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
+                              canAnnotate: newState
+                            });
+                            const updated = { ...member, canAnnotate: newState };
+                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                            setSelectedMember(updated);
+                            showToast(` Annotation Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                          } catch (exp) {
+                            showToast(' Failed to change annotation access', 'error');
+                          }
+                        }}
+                        className={`w-11 h-6 rounded-full transition-all relative ${member.canAnnotate ? 'bg-orange-500' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canAnnotate ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
 
