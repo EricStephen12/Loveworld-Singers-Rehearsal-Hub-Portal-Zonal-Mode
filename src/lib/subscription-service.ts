@@ -1,10 +1,8 @@
 import { BackendAPI } from './api-client';
 
-/**
- * SUBSCRIPTION SERVICE (WEBSITE CLIENT)
- * All subscription verification is now handled by the Standalone Backend.
- * All logic for status checks and reconciliation is proxied.
- */
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+
+
 
 export interface ZoneSubscription {
   id: string;
@@ -34,7 +32,7 @@ export async function hasPremiumAccess(userId: string, zoneId?: string): Promise
 
 // Initialize payment
 export async function initializeIndividualSubscription(userId: string, zoneId: string, userEmail?: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/initialize`, {
+  const response = await fetch(`${BACKEND_URL}/api/subscriptions/initialize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, zoneId, userEmail, type: 'individual' })
@@ -43,7 +41,7 @@ export async function initializeIndividualSubscription(userId: string, zoneId: s
 }
 
 export async function initializeZoneSubscription(zoneId: string, memberCount: number, coordinatorId: string, coordinatorEmail?: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/initialize`, {
+  const response = await fetch(`${BACKEND_URL}/api/subscriptions/initialize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ zoneId, memberCount, coordinatorId, coordinatorEmail, type: 'zone' })
@@ -64,7 +62,7 @@ export async function getZoneSubscription(zoneId: string): Promise<ZoneSubscript
 
 // Reconciliation
 export async function syncPaymentStatus(userId: string, type: string, targetId: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/sync`, {
+  const response = await fetch(`${BACKEND_URL}/api/subscriptions/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, type, targetId })
@@ -75,7 +73,7 @@ export async function syncPaymentStatus(userId: string, type: string, targetId: 
 // Cancel subscription (Restored)
 export async function cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/cancel`, {
+    const response = await fetch(`${BACKEND_URL}/api/subscriptions/cancel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId })

@@ -1,6 +1,8 @@
 import { FirebaseDatabaseService } from './firebase-database';
 import { BackendAPI } from './api-client';
 
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+
 /**
  * SUBGROUP DATABASE SERVICE (WEBSITE CLIENT)
  * Compatibility proxy for subgroup-specific operations.
@@ -162,7 +164,7 @@ export class SubGroupDatabaseService {
 
   static async addMembers(subGroupId: string, zoneId: string, memberIds: string[], _userId?: string) {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subgroups/members`, {
+      const response = await fetch(`${BACKEND_URL}/api/subgroups/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subGroupId, zoneId, memberIds })
@@ -176,7 +178,7 @@ export class SubGroupDatabaseService {
 
   static async removeMember(subGroupId: string, userId: string) {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subgroups/members?subGroupId=${subGroupId}&userId=${userId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/subgroups/members?subGroupId=${subGroupId}&userId=${userId}`, {
         method: 'DELETE'
       });
       return await response.json();
@@ -194,7 +196,7 @@ export class SubGroupDatabaseService {
 
   static async getMemberRehearsals(zoneId: string, userId: string) {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subgroups/member-rehearsals?zoneId=${zoneId}&userId=${userId}`);
+      const response = await fetch(`${BACKEND_URL}/api/subgroups/member-rehearsals?zoneId=${zoneId}&userId=${userId}`);
       if (!response.ok) throw new Error('Failed to fetch rehearsals');
       return await response.json();
     } catch (error) {
@@ -220,7 +222,7 @@ export class SubGroupDatabaseService {
     const members = await this.getSubGroupMembers(subGroupId);
     const recipientIds = members.map((m: any) => m.userId);
     
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/send-notification`, {
+    await fetch(`${BACKEND_URL}/api/send-notification`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipientIds, title, body: message, data: { ...notificationData, subGroupId } })

@@ -1,10 +1,6 @@
 import { BackendAPI } from './api-client';
 
-/**
- * CLOUDINARY STORAGE SERVICE (WEBSITE CLIENT)
- * This is the master controller for all media uploads.
- * Signatures are requested from the backend for security.
- */
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'loveworld-singers';
 
@@ -49,7 +45,7 @@ export const uploadAudioToCloudinary = async (file: File, onProgress?: (p: numbe
 
 export const deleteFromCloudinary = async (publicId: string, _resourceType?: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/media/delete`, {
+    const response = await fetch(`${BACKEND_URL}/api/media/delete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ publicId })

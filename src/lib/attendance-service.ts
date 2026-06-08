@@ -1,9 +1,8 @@
 import { BackendAPI } from './api-client';
 
-/**
- * ATTENDANCE SERVICE (WEBSITE CLIENT)
- * All QR verification and logging is now handled by the Standalone Backend.
- */
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
+
+
 
 export interface AttendanceRecord {
   id: string;
@@ -141,7 +140,7 @@ export class AttendanceService {
   // Get attendance statistics
   static async getAttendanceStats(userId: string) {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/attendance/stats?userId=${userId}`);
+      const response = await fetch(`${BACKEND_URL}/api/attendance/stats?userId=${userId}`);
       const result = await response.json();
       return result.data || { total: 0, present: 0, late: 0, absent: 0, rate: 0 };
     } catch (error) {
