@@ -281,7 +281,7 @@ export function hasBossAccess(role: string | undefined, zoneId: string | undefin
 }
 
 export function bypassesFeatureGates(zoneId: string | undefined): boolean {
-  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID
+  return isHQGroup(zoneId) || zoneId === BOSS_ZONE_ID || zoneId === 'zone-088'
 }
 
 export function requiresSubscription(zoneId: string | undefined): boolean {
