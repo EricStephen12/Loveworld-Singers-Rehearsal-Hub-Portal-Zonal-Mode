@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AttendanceService, AttendanceRecord } from '@/lib/attendance-service'
 
-import { ArrowLeft, User, Users, Calendar, CheckCircle, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown, Scan, Clock } from 'lucide-react'
+import { ArrowLeft, User, Users, Calendar, CheckCircle, Check, Award, Edit, Camera, X, Loader2, AlertTriangle, Trash2, ChevronDown, MapPin, Phone, Mail, Shield, Briefcase, Music, LogOut, AlertCircle, Sparkles, Crown, Scan, Clock } from 'lucide-react'
 
 import { ScreenHeader } from '@/components/ScreenHeader'
 import SharedDrawer from '@/components/SharedDrawer'
@@ -40,7 +40,7 @@ const adjustColor = (color: string, amount: number) => {
 function ProfilePage() {
   const router = useRouter()
   const { user, signOut, profile: currentProfile, refreshProfile, isLoading } = useAuth()
-  const { userZones, currentZone, isSuperAdmin, isZoneCoordinator } = useZone()
+  const { userZones, currentZone, isSuperAdmin, isZoneCoordinator, switchZone } = useZone()
   const { isPremiumTier, isIndividualPremium, subscription, isExpiringSoon, daysRemaining } = useSubscription()
   const searchParams = useSearchParams()
   const activeTab = searchParams?.get('tab')
@@ -1053,7 +1053,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* My Zones Section - Collapsible */}
+          {/* My Zones Section - Collapsible with Switch */}
           <div className="px-4 mt-3">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
               <button
@@ -1083,39 +1083,107 @@ function ProfilePage() {
                 </div>
               </button>
 
-              <div className={`overflow-hidden transition-all duration-300 ${expandedSections.zones ? 'max-h-[1000px]' : 'max-h-0'}`}>
-                <div className="px-4 pb-4">
-                  {/* Current Zone */}
-                  {currentZone && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex items-center gap-3">
+              <div className={`overflow-hidden transition-all duration-300 ${expandedSections.zones ? 'max-h-[2000px]' : 'max-h-0'}`}>
+                <div className="px-4 pb-4 space-y-2">
+                  {userZones.length > 0 ? (
+                    userZones.map((zone) => {
+                      const isActive = currentZone?.id === zone.id
+                      return (
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black shadow-sm"
-                          style={{ backgroundColor: currentZone.themeColor }}
+                          key={zone.id}
+                          className={`p-3 rounded-xl border transition-all ${
+                            isActive
+                              ? 'border-gray-200 bg-gray-50 ring-1 ring-gray-200'
+                              : 'border-gray-100 bg-white hover:bg-gray-50'
+                          }`}
                         >
-                          {currentZone.name.charAt(0)}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black shadow-sm flex-shrink-0"
+                              style={{ backgroundColor: zone.themeColor }}
+                            >
+                              {zone.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-gray-900 truncate">{zone.name}</p>
+                              <p className="text-[10px] text-gray-500 font-medium uppercase">{zone.region}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {isActive ? (
+                                <span className="text-[9px] bg-gray-900 text-white px-2.5 py-1 rounded-full font-black uppercase tracking-tighter flex items-center gap-1">
+                                  <Check className="w-2.5 h-2.5" />
+                                  ACTIVE
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={async () => {
+                                    const success = await switchZone(zone.id)
+                                    if (success) {
+                                      try {
+                                        const keysToRemove: string[] = []
+                                        for (let i = 0; i < localStorage.length; i++) {
+                                          const key = localStorage.key(i)
+                                          if (key && !key.startsWith('lwsrh-user-zone-') && (
+                                            key.includes('praise-nights') ||
+                                            key.includes('songs-data') ||
+                                            key.includes('categories') ||
+                                            key.includes('calendar') ||
+                                            key.includes('notifications') ||
+                                            key.includes('members') ||
+                                            key.includes('rehearsal') ||
+                                            key.includes('media-cache')
+                                          )) {
+                                            keysToRemove.push(key)
+                                          }
+                                        }
+                                        keysToRemove.forEach(k => localStorage.removeItem(k))
+                                      } catch (e) {
+                                        console.error('Error clearing caches:', e)
+                                      }
+                                      setTimeout(() => {
+                                        window.location.reload()
+                                      }, 600)
+                                    }
+                                  }}
+                                  className="text-[9px] font-black uppercase tracking-tighter px-3 py-1 rounded-full border transition-all hover:scale-105 active:scale-95"
+                                  style={{
+                                    color: zone.themeColor,
+                                    borderColor: zone.themeColor + '40',
+                                    backgroundColor: zone.themeColor + '08'
+                                  }}
+                                >
+                                  Switch
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setZoneToLeave({ id: zone.id, name: zone.name })
+                                  setShowLeaveZoneDialog(true)
+                                }}
+                                className="text-[9px] text-red-400 hover:text-red-600 transition-colors p-1"
+                                title={`Leave ${zone.name}`}
+                              >
+                                <LogOut className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold text-gray-900">{currentZone.name}</p>
-                          <p className="text-[10px] text-gray-500 font-medium uppercase">{currentZone.region}</p>
-                        </div>
-                        <span className="text-[9px] bg-gray-900 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
-                          ACTIVE
-                        </span>
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <MapPin className="w-6 h-6 text-gray-400" />
                       </div>
-                      {/* Leave Zone Button */}
-                      {userZones.length > 0 && (
-                        <button
-                          onClick={() => {
-                            setZoneToLeave({ id: currentZone.id, name: currentZone.name })
-                            setShowLeaveZoneDialog(true)
-                          }}
-                          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-red-100 hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut className="w-3 h-3" />
-                          Leave Zone
-                        </button>
-                      )}
+                      <p className="text-sm text-gray-500 font-medium">No zones joined yet</p>
+                      <Link
+                        href="/pages/join-zone"
+                        className="inline-flex items-center gap-2 mt-3 px-4 py-2 text-sm font-bold text-white rounded-lg transition-all hover:opacity-90"
+                        style={{ backgroundColor: currentZone?.themeColor || '#9333ea' }}
+                      >
+                        <Users className="w-4 h-4" />
+                        Join a Zone
+                      </Link>
                     </div>
                   )}
                 </div>
