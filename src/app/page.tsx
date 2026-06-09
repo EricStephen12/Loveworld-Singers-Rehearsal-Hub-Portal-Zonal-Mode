@@ -15,11 +15,44 @@ export default function SplashPage() {
   const { user, loading } = useAuthContext()
   const [showFailsafe, setShowFailsafe] = useState(false)
 
+  const isMobileRedirect = typeof window !== 'undefined' && 
+    (window.location.search.includes('state=mobile-flow') || window.location.hash.includes('state=mobile-flow'));
+
   // Fail-safe: If stuck for 400ms, show manual entry
   useEffect(() => {
+    if (isMobileRedirect) return
     const timer = setTimeout(() => setShowFailsafe(true), 400)
     return () => clearTimeout(timer)
-  }, [])
+  }, [isMobileRedirect])
+
+  // KingsChat Mobile Redirect Flow
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const hash = window.location.hash
+    const search = window.location.search
+
+    // Look for state=mobile-flow in search or hash
+    const hasMobileState = search.includes('state=mobile-flow') || hash.includes('state=mobile-flow')
+    
+    if (hasMobileState && (hash.includes('access_token=') || search.includes('access_token='))) {
+      // Parse parameters from both hash and search to ensure we catch them
+      const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash)
+      const searchParams = new URLSearchParams(search.startsWith('?') ? search.substring(1) : search)
+      
+      const accessToken = hashParams.get('access_token') || searchParams.get('access_token') || hashParams.get('accessToken')
+      const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token') || hashParams.get('refreshToken')
+      const expiresIn = hashParams.get('expires_in') || searchParams.get('expires_in') || hashParams.get('expiresInMillis')
+
+      if (accessToken) {
+        // Construct the deep link to redirect back to the React Native app
+        const deepLinkUrl = `rehearsalhub://kingschat-callback?access_token=${accessToken}&refresh_token=${refreshToken || ''}&expires_in=${expiresIn || ''}`
+        
+        // Redirect the WebBrowser tab to trigger opening the mobile app
+        window.location.href = deepLinkUrl
+      }
+    }
+  }, [pathname])
 
   // IMMEDIATE Redirect Effect
   useEffect(() => {
@@ -60,6 +93,15 @@ export default function SplashPage() {
       return () => clearTimeout(timer)
     }
   }, [pathname, router])
+
+  if (isMobileRedirect) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#0c0c0e] flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Connecting back to app...</p>
+      </div>
+    );
+  }
 
   // Big Tech optimization: If we know we're redirecting, show NOTHING to prevent the "old loader" flicker
   const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
