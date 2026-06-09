@@ -15,15 +15,11 @@ export default function SplashPage() {
   const { user, loading } = useAuthContext()
   const [showFailsafe, setShowFailsafe] = useState(false)
 
-  const isMobileRedirect = typeof window !== 'undefined' && 
-    (window.location.search.includes('state=mobile-flow') || window.location.hash.includes('state=mobile-flow'));
-
   // Fail-safe: If stuck for 400ms, show manual entry
   useEffect(() => {
-    if (isMobileRedirect) return
     const timer = setTimeout(() => setShowFailsafe(true), 400)
     return () => clearTimeout(timer)
-  }, [isMobileRedirect])
+  }, [])
 
   // KingsChat Mobile Redirect Flow
   useEffect(() => {
@@ -93,15 +89,6 @@ export default function SplashPage() {
       return () => clearTimeout(timer)
     }
   }, [pathname, router])
-
-  if (isMobileRedirect) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-[#0c0c0e] flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Connecting back to app...</p>
-      </div>
-    );
-  }
 
   // Big Tech optimization: If we know we're redirecting, show NOTHING to prevent the "old loader" flicker
   const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';
