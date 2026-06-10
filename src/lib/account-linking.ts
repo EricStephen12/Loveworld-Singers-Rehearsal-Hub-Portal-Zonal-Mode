@@ -74,6 +74,7 @@ export class AccountLinkingService {
 
       await FirebaseDatabaseService.updateUserProfile(firebaseUid, {
         kingsChatId: profile.userId,
+        kingschat_id: profile.userId, // Save both casings to support old and new profiles
         kingsChatUsername: profile.username || '',
         kingsChatName: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
         kingsChatLinkedAt: new Date().toISOString()

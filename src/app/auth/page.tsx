@@ -520,6 +520,16 @@ function AuthPageContent() {
           kingschatUserId
         )
 
+        // Fallback: Check for camelCase kingsChatId (used by some legacy/linking code)
+        if (!existingProfiles || existingProfiles.length === 0) {
+          existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
+            'profiles',
+            'kingsChatId',
+            '==',
+            kingschatUserId
+          )
+        }
+
         // Secondary check: If no profile found by KC ID, try finding by email
         if ((!existingProfiles || existingProfiles.length === 0) && kingschatEmail) {
            const profilesByEmail = await FirebaseDatabaseService.getCollectionWhere(
@@ -547,10 +557,11 @@ function AuthPageContent() {
         if (existingProfiles && existingProfiles.length === 1) {
           const existingProfile = existingProfiles[0] as any
 
-          // Auto-link KC ID if it wasn't linked but email matched
-          if (!existingProfile.kingschat_id && kingschatUserId) {
+          // Auto-link KC ID if it wasn't linked but email matched (save both casings to be safe)
+          if ((!existingProfile.kingschat_id || !existingProfile.kingsChatId) && kingschatUserId) {
             await FirebaseDatabaseService.updateUserProfile(existingProfile.id, {
-              kingschat_id: kingschatUserId
+              kingschat_id: kingschatUserId,
+              kingsChatId: kingschatUserId
             })
           }
 
