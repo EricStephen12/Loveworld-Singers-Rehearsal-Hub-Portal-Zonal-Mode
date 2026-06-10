@@ -6,12 +6,13 @@ import path from 'path';
 const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || 'a1f444fa-ea50-47cf-ba2b-232d0b46d1f5';
 
 function logDebug(message: string) {
+  console.log(`[KINGSCHAT DEBUG] ${message}`);
   try {
     const logPath = path.join(process.cwd(), 'debug-callback.log');
     const time = new Date().toISOString();
     fs.appendFileSync(logPath, `[${time}] ${message}\n`);
   } catch (e) {
-    console.error('Failed to write debug log:', e);
+    // Silent catch for read-only environments
   }
 }
 
