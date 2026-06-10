@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server';
 import https from 'https';
+import fs from 'fs';
+import path from 'path';
 
 const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || 'a1f444fa-ea50-47cf-ba2b-232d0b46d1f5';
 
+function logDebug(message: string) {
+  try {
+    const logPath = path.join(process.cwd(), 'debug-callback.log');
+    const time = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${time}] ${message}\n`);
+  } catch (e) {
+    console.error('Failed to write debug log:', e);
+  }
+}
+
 async function exchangeCodeForTokens(code: string): Promise<any> {
+  logDebug(`Exchanging code for tokens: ${code}`);
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
       grant_type: 'code',
@@ -29,6 +42,8 @@ async function exchangeCodeForTokens(code: string): Promise<any> {
       });
 
       res.on('end', () => {
+        logDebug(`Token response status: ${res.statusCode}`);
+        logDebug(`Token response body: ${body}`);
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
           try {
             resolve(JSON.parse(body));
@@ -42,6 +57,7 @@ async function exchangeCodeForTokens(code: string): Promise<any> {
     });
 
     req.on('error', (err) => {
+      logDebug(`Token exchange connection error: ${err.message}`);
       reject(err);
     });
 
@@ -113,31 +129,57 @@ function generateResponseHtml(tokens: any, origin: string | null) {
 
 export async function POST(request: Request) {
   try {
+    logDebug(`POST request received at: ${request.url}`);
+    
+    // Log headers
+    const headersObj: any = {};
+    request.headers.forEach((val, key) => { headersObj[key] = val; });
+    logDebug(`POST headers: ${JSON.stringify(headersObj)}`);
+
+    // Log query params
     const { searchParams } = new URL(request.url);
-    let code = searchParams.get('code');
-    let origin = searchParams.get('origin');
+    const queryCode = searchParams.get('code');
+    const queryOrigin = searchParams.get('origin');
+    logDebug(`POST Query params - code: ${queryCode}, origin: ${queryOrigin}`);
+
+    // Try reading body for debugging
+    try {
+      const cloned = request.clone();
+      const bodyText = await cloned.text();
+      logDebug(`POST Body content: ${bodyText}`);
+    } catch (bodyErr: any) {
+      logDebug(`POST Body read failed: ${bodyErr.message}`);
+    }
+
+    let code = queryCode;
+    let origin = queryOrigin;
 
     if (!code) {
       try {
         const body = await request.json();
+        logDebug(`Parsed body JSON: ${JSON.stringify(body)}`);
         code = body?.code;
         origin = body?.origin;
-      } catch (e) {
-        // Ignored: Body already read or not JSON
+      } catch (e: any) {
+        logDebug(`Failed to parse body as JSON: ${e.message}`);
       }
     }
 
     if (!code) {
       try {
         const formData = await request.formData();
-        code = formData.get('code') as string;
-        origin = formData.get('origin') as string;
-      } catch (e) {
-        // Ignored: Body already read or not form-data
+        const fdCode = formData.get('code') as string;
+        const fdOrigin = formData.get('origin') as string;
+        logDebug(`Parsed body Form Data - code: ${fdCode}, origin: ${fdOrigin}`);
+        code = fdCode;
+        origin = fdOrigin;
+      } catch (e: any) {
+        logDebug(`Failed to parse body as Form Data: ${e.message}`);
       }
     }
 
     if (!code) {
+      logDebug('Error: Authorization code is missing');
       return new NextResponse('Authorization code is missing', { status: 400 });
     }
 
@@ -150,6 +192,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: any) {
+    logDebug(`POST handler main catch block: ${error.message}`);
     console.error('KingsChat POST Callback Error:', error);
     return new NextResponse(`Authentication Error: ${error.message}`, { status: 500 });
   }
@@ -157,11 +200,15 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    logDebug(`GET request received at: ${request.url}`);
+    
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const origin = searchParams.get('origin');
+    logDebug(`GET Query params - code: ${code}, origin: ${origin}`);
 
     if (!code) {
+      logDebug('Error: Authorization code is missing');
       return new NextResponse('Authorization code is missing', { status: 400 });
     }
 
@@ -174,6 +221,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
+    logDebug(`GET handler main catch block: ${error.message}`);
     console.error('KingsChat GET Callback Error:', error);
     return new NextResponse(`Authentication Error: ${error.message}`, { status: 500 });
   }
