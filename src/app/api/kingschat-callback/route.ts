@@ -143,39 +143,41 @@ export async function POST(request: Request) {
     const queryOrigin = searchParams.get('origin');
     logDebug(`POST Query params - code: ${queryCode}, origin: ${queryOrigin}`);
 
-    // Try reading body for debugging
-    try {
-      const cloned = request.clone();
-      const bodyText = await cloned.text();
-      logDebug(`POST Body content: ${bodyText}`);
-    } catch (bodyErr: any) {
-      logDebug(`POST Body read failed: ${bodyErr.message}`);
-    }
-
     let code = queryCode;
     let origin = queryOrigin;
 
     if (!code) {
       try {
-        const body = await request.json();
-        logDebug(`Parsed body JSON: ${JSON.stringify(body)}`);
-        code = body?.code;
-        origin = body?.origin;
-      } catch (e: any) {
-        logDebug(`Failed to parse body as JSON: ${e.message}`);
-      }
-    }
-
-    if (!code) {
-      try {
-        const formData = await request.formData();
-        const fdCode = formData.get('code') as string;
-        const fdOrigin = formData.get('origin') as string;
-        logDebug(`Parsed body Form Data - code: ${fdCode}, origin: ${fdOrigin}`);
-        code = fdCode;
-        origin = fdOrigin;
-      } catch (e: any) {
-        logDebug(`Failed to parse body as Form Data: ${e.message}`);
+        const bodyText = await request.text();
+        logDebug(`POST Body text: ${bodyText}`);
+        
+        if (bodyText) {
+          // Try parsing as JSON if it looks like JSON
+          if (bodyText.trim().startsWith('{')) {
+            try {
+              const body = JSON.parse(bodyText);
+              code = body?.code;
+              origin = body?.origin;
+              logDebug(`Parsed body as JSON - code: ${code}, origin: ${origin}`);
+            } catch (jsonErr: any) {
+              logDebug(`Failed to parse body as JSON: ${jsonErr.message}`);
+            }
+          }
+          
+          // If code still not found, try parsing as urlencoded form data
+          if (!code) {
+            try {
+              const params = new URLSearchParams(bodyText);
+              code = params.get('code');
+              origin = params.get('origin');
+              logDebug(`Parsed body as URLSearchParams - code: ${code}, origin: ${origin}`);
+            } catch (urlErr: any) {
+              logDebug(`Failed to parse body as URLSearchParams: ${urlErr.message}`);
+            }
+          }
+        }
+      } catch (readErr: any) {
+        logDebug(`Failed to read request body: ${readErr.message}`);
       }
     }
 
