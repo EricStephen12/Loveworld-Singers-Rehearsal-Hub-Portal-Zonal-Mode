@@ -15,6 +15,7 @@ interface KingsChatUserProfile {
   firstName?: string
   lastName?: string
   profilePicture?: string
+  username?: string
 }
 
 export class KingsChatAuthService {
@@ -243,7 +244,8 @@ export class KingsChatAuthService {
                 email: p.email || undefined,
                 firstName: p.name?.split(' ')[0] || '',
                 lastName: p.name?.split(' ').slice(1).join(' ') || '',
-                profilePicture: p.avatar || undefined
+                profilePicture: p.avatar || undefined,
+                username: p.username || undefined
               }
               if (typeof window !== 'undefined') {
                 localStorage.setItem('kingschat_user_profile', JSON.stringify(p))
@@ -268,7 +270,8 @@ export class KingsChatAuthService {
             email: payload.email || payload.emailAddress || payload.mail,
             firstName: payload.given_name || payload.firstName || payload.first_name || payload.givenName || payload.name?.split(' ')[0],
             lastName: payload.family_name || payload.lastName || payload.last_name || payload.familyName || payload.name?.split(' ').slice(1).join(' '),
-            profilePicture: payload.picture || payload.avatar || payload.profilePicture || payload.profile_picture || payload.photo
+            profilePicture: payload.picture || payload.avatar || payload.profilePicture || payload.profile_picture || payload.photo,
+            username: payload.username || payload.preferred_username || undefined
           }
           
           if (profile.userId) {

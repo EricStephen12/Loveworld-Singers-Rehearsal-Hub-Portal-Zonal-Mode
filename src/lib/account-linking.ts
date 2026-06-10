@@ -1,7 +1,8 @@
-﻿// Account Linking Service for LoveWorld Singers App
+// Account Linking Service for LoveWorld Singers App
 // Links KingsChat accounts with Firebase accounts
 
 import { FirebaseDatabaseService } from './firebase-database';
+import { KingsChatAuthService } from './kingschat-auth';
 
 export interface LinkedAccount {
   odooId: string;
@@ -64,29 +65,23 @@ export class AccountLinkingService {
     accessToken: string
   ): Promise<KingsChatLinkResult> {
     try {
-      // Fetch KingsChat user info using the access token
-      const response = await fetch('https://api.kingsch.at/v1/users/me', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+      // Fetch KingsChat user info using the V2 access token
+      const profile = await KingsChatAuthService.getUserProfile(accessToken);
 
-      if (!response.ok) {
-        return { success: false, error: 'Failed to fetch KingsChat user info' };
+      if (!profile || !profile.userId) {
+        return { success: false, error: 'Failed to fetch KingsChat user profile via V2 API' };
       }
 
-      const kingsChatUser = await response.json();
-
-            await FirebaseDatabaseService.updateUserProfile(firebaseUid, {
-        kingsChatId: kingsChatUser.id,
-        kingsChatUsername: kingsChatUser.username || '',
-        kingsChatName: kingsChatUser.name || kingsChatUser.displayName || '',
+      await FirebaseDatabaseService.updateUserProfile(firebaseUid, {
+        kingsChatId: profile.userId,
+        kingsChatUsername: profile.username || '',
+        kingsChatName: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
         kingsChatLinkedAt: new Date().toISOString()
       });
 
       return { success: true };
     } catch (error) {
- console.error('Error linking KingsChat to Firebase:', error);
+      console.error('Error linking KingsChat to Firebase:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to link KingsChat account' 

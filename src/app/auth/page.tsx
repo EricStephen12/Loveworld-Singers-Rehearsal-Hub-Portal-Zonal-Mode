@@ -439,14 +439,20 @@ function AuthPageContent() {
         return
       }
 
+      // Fetch user profile details from V2 API
+      const profile = await KingsChatAuthService.getUserProfile(authTokens.accessToken)
+      console.log('KingsChat fetched profile payload:', profile)
 
-      // Set the KingsChat ID in the form
+      // Set the KingsChat ID and profile details in the form
       setFormData(prev => ({
         ...prev,
-        kingschatId: kingschatUserId
+        kingschatId: kingschatUserId,
+        firstName: profile?.firstName || prev.firstName,
+        lastName: profile?.lastName || prev.lastName,
+        email: profile?.email || prev.email
       }))
 
-      setSuccess('KingsChat ID fetched successfully!')
+      setSuccess('KingsChat ID and profile fetched successfully!')
       setTimeout(() => setSuccess(''), 2000)
 
     } catch (error: any) {
@@ -559,15 +565,22 @@ function AuthPageContent() {
           localStorage.setItem('kingschatAuthPending', 'true')
         }
 
+        // Fetch user profile details from V2 API
+        const profile = await KingsChatAuthService.getUserProfile(authTokens.accessToken)
+        console.log('KingsChat fetched profile payload (new user):', profile)
+
         setIsLoading(false)
         setIsCheckingAccount(false)
         setIsLogin(false) // Switch to signup mode for NEW users only
         setSuccess('Please complete signup with your KingsChat account')
 
-        // Pre-fill KingsChat ID in the form
+        // Pre-fill KingsChat ID and profile details in the form
         setFormData(prev => ({
           ...prev,
-          kingschatId: kingschatUserId
+          kingschatId: kingschatUserId,
+          firstName: profile?.firstName || prev.firstName,
+          lastName: profile?.lastName || prev.lastName,
+          email: profile?.email || kingschatEmail || prev.email
         }))
 
         return
