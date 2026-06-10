@@ -224,40 +224,32 @@ export class KingsChatAuthService {
         }
       }
       
-      // Fetch from V2 API if API Key is configured
-      const apiKey = process.env.NEXT_PUBLIC_KINGSCHAT_API_KEY
-      if (apiKey) {
-        try {
-          const response = await fetch('https://connect.kingsch.at/developer/api/user/profile', {
-            headers: {
-              'api-key': apiKey,
-              'Authorization': `Bearer ${accessToken}`
-            }
-          })
+      // Fetch from local server-side proxy to bypass browser CORS preflight blocks
+      try {
+        const response = await fetch(`/api/kingschat-profile?accessToken=${encodeURIComponent(accessToken)}`)
 
-          if (response.ok) {
-            const data = await response.json()
-            if (data && data.profile) {
-              const p = data.profile
-              const profile: KingsChatUserProfile = {
-                userId: p.id,
-                email: p.email || undefined,
-                firstName: p.name?.split(' ')[0] || '',
-                lastName: p.name?.split(' ').slice(1).join(' ') || '',
-                profilePicture: p.avatar || undefined,
-                username: p.username || undefined
-              }
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('kingschat_user_profile', JSON.stringify(p))
-              }
-              return profile
+        if (response.ok) {
+          const data = await response.json()
+          if (data && data.profile) {
+            const p = data.profile
+            const profile: KingsChatUserProfile = {
+              userId: p.id,
+              email: p.email || undefined,
+              firstName: p.name?.split(' ')[0] || '',
+              lastName: p.name?.split(' ').slice(1).join(' ') || '',
+              profilePicture: p.avatar || undefined,
+              username: p.username || undefined
             }
-          } else {
-            console.error('Failed to fetch profile from KingsChat V2 API:', await response.text())
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('kingschat_user_profile', JSON.stringify(p))
+            }
+            return profile
           }
-        } catch (fetchErr) {
-          console.warn('Error fetching user profile via API, falling back:', fetchErr)
+        } else {
+          console.error('Failed to fetch profile from KingsChat V2 local proxy:', await response.text())
         }
+      } catch (fetchErr) {
+        console.warn('Error fetching user profile via local proxy, falling back:', fetchErr)
       }
 
       // Fallback: Decode JWT token
