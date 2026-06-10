@@ -1,26 +1,53 @@
 import { NextResponse } from 'next/server';
+import https from 'https';
 
-const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || '331c9eda-a130-4bb8-9a00-9231a817207d';
+const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || 'a1f444fa-ea50-47cf-ba2b-232d0b46d1f5';
 
-async function exchangeCodeForTokens(code: string) {
-  const tokenResponse = await fetch('https://connect.kingsch.at/developer/api/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+async function exchangeCodeForTokens(code: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
       grant_type: 'code',
       client_id: KINGSCHAT_CLIENT_ID,
       code: code,
-    }),
+    });
+
+    const options = {
+      hostname: 'connect.kingsch.at',
+      port: 443,
+      path: '/developer/api/oauth2/token',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+
+      res.on('end', () => {
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error(`Failed to parse token response JSON: ${body}`));
+          }
+        } else {
+          reject(new Error(`Token exchange failed with status ${res.statusCode}: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(data);
+    req.end();
   });
-
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    throw new Error(`Token exchange failed: ${errorText}`);
-  }
-
-  return await tokenResponse.json();
 }
 
 function generateResponseHtml(tokens: any, origin: string | null) {
@@ -86,19 +113,30 @@ function generateResponseHtml(tokens: any, origin: string | null) {
 
 export async function POST(request: Request) {
   try {
-    let body: any = {};
-    try {
-      body = await request.json();
-    } catch (e) {
-      // Handle URL-encoded form POST
-      const formData = await request.formData();
-      body = {
-        code: formData.get('code'),
-        origin: formData.get('origin'),
-      };
+    const { searchParams } = new URL(request.url);
+    let code = searchParams.get('code');
+    let origin = searchParams.get('origin');
+
+    if (!code) {
+      try {
+        const body = await request.json();
+        code = body?.code;
+        origin = body?.origin;
+      } catch (e) {
+        // Ignored: Body already read or not JSON
+      }
     }
 
-    const { code, origin } = body;
+    if (!code) {
+      try {
+        const formData = await request.formData();
+        code = formData.get('code') as string;
+        origin = formData.get('origin') as string;
+      } catch (e) {
+        // Ignored: Body already read or not form-data
+      }
+    }
+
     if (!code) {
       return new NextResponse('Authorization code is missing', { status: 400 });
     }
