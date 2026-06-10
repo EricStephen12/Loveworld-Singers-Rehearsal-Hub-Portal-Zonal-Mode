@@ -116,7 +116,7 @@ function generateResponseHtml(tokens: any, origin: string | null) {
               accessToken: "${access_token}",
               refreshToken: "${refresh_token}",
               expiresInMillis: ${expires_in_millis}
-            }, window.location.origin);
+            }, '*');
             window.close();
           } else {
             localStorage.setItem('kingschat_access_token', "${access_token}");

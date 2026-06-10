@@ -50,8 +50,13 @@ export class KingsChatAuthService {
 
       return new Promise((resolve) => {
         const handleMessage = (event: MessageEvent) => {
-          // Accept messages from our own origin
-          if (event.origin !== window.location.origin) return
+          // Accept messages from our own origin or the production portal origin
+          const allowedOrigins = [
+            window.location.origin,
+            'https://www.loveworldsingersrehearsalhubportal.org',
+            'https://loveworldsingersrehearsalhubportal.org'
+          ]
+          if (!allowedOrigins.includes(event.origin)) return
 
           if (event.data?.type === 'kingschat_auth_success') {
             const { accessToken, refreshToken, expiresInMillis } = event.data
