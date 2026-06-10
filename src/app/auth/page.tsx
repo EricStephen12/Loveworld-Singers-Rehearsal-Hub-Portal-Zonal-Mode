@@ -443,13 +443,18 @@ function AuthPageContent() {
       const profile = await KingsChatAuthService.getUserProfile(authTokens.accessToken)
       console.log('KingsChat fetched profile payload:', profile)
 
-      // Set the KingsChat ID and profile details in the form
+      // Generate a secure, random password for them
+      const generatedPassword = 'KC-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
+
+      // Set the KingsChat ID, profile details, and generated password in the form
       setFormData(prev => ({
         ...prev,
         kingschatId: kingschatUserId,
         firstName: profile?.firstName || prev.firstName,
         lastName: profile?.lastName || prev.lastName,
-        email: profile?.email || prev.email
+        email: profile?.email || prev.email,
+        password: prev.password || generatedPassword,
+        confirmPassword: prev.confirmPassword || generatedPassword
       }))
 
       setSuccess('KingsChat ID and profile fetched successfully!')
@@ -569,18 +574,23 @@ function AuthPageContent() {
         const profile = await KingsChatAuthService.getUserProfile(authTokens.accessToken)
         console.log('KingsChat fetched profile payload (new user):', profile)
 
+        // Generate a secure, random password for them
+        const generatedPassword = 'KC-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
+
         setIsLoading(false)
         setIsCheckingAccount(false)
         setIsLogin(false) // Switch to signup mode for NEW users only
         setSuccess('Please complete signup with your KingsChat account')
 
-        // Pre-fill KingsChat ID and profile details in the form
+        // Pre-fill KingsChat ID, profile details, and generated password in the form
         setFormData(prev => ({
           ...prev,
           kingschatId: kingschatUserId,
           firstName: profile?.firstName || prev.firstName,
           lastName: profile?.lastName || prev.lastName,
-          email: profile?.email || kingschatEmail || prev.email
+          email: profile?.email || kingschatEmail || prev.email,
+          password: prev.password || generatedPassword,
+          confirmPassword: prev.confirmPassword || generatedPassword
         }))
 
         return
