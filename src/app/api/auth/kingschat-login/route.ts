@@ -76,6 +76,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'KingsChat user ID mismatch or verification failed' }, { status: 401 })
     }
 
+    const verifiedEmail = profile?.profile?.email
+    const kingsChatProfile = {
+      kingschatId: verifiedKingschatId,
+      email: verifiedEmail || '',
+      firstName: profile?.profile?.name?.split(' ')[0] || '',
+      lastName: profile?.profile?.name?.split(' ').slice(1).join(' ') || '',
+      username: profile?.profile?.username || ''
+    }
+
     // 2. Query Firestore profiles collection to find the user
     const db = admin.firestore()
     let querySnapshot;
@@ -90,7 +99,7 @@ export async function POST(req: Request) {
           const data = d.data()
           return data.kingschat_id === kingschatUserId || 
                  data.kingsChatId === kingschatUserId || 
-                 (data.email && profile?.profile?.email && data.email.toLowerCase() === profile.profile.email.toLowerCase())
+                 (data.email && verifiedEmail && data.email.toLowerCase() === verifiedEmail.toLowerCase())
         })
 
         if (!doc) {
@@ -109,32 +118,62 @@ export async function POST(req: Request) {
         querySnapshot = { docs: [doc], empty: false } as any
       }
     } else {
-      // Check both kingschat_id and kingsChatId
-      querySnapshot = await db.collection('profiles').where('kingschat_id', '==', kingschatUserId).limit(1).get()
+      // Find all profiles linked to this KingsChat ID (check both casings)
+      let docs: admin.firestore.QueryDocumentSnapshot[] = []
       
-      if (querySnapshot.empty) {
-        querySnapshot = await db.collection('profiles').where('kingsChatId', '==', kingschatUserId).limit(1).get()
-      }
+      const resById1 = await db.collection('profiles').where('kingschat_id', '==', kingschatUserId).get()
+      const resById2 = await db.collection('profiles').where('kingsChatId', '==', kingschatUserId).get()
+      
+      resById1.forEach(d => docs.push(d))
+      resById2.forEach(d => {
+        if (!docs.some(existing => existing.id === d.id)) {
+          docs.push(d)
+        }
+      })
 
-      // If still not found by ID, try finding by email
-      if (querySnapshot.empty) {
-        const kingschatEmail = profile?.profile?.email
-        if (kingschatEmail) {
-          querySnapshot = await db.collection('profiles').where('email', '==', kingschatEmail.toLowerCase()).limit(1).get()
-          if (!querySnapshot.empty) {
-            // Auto link their account
-            const doc = querySnapshot.docs[0]
-            await doc.ref.update({
-              kingschat_id: kingschatUserId,
-              kingsChatId: kingschatUserId
-            })
-          }
+      // If still not found by ID, try finding by verified email
+      if (docs.length === 0 && verifiedEmail) {
+        const resByEmail = await db.collection('profiles').where('email', '==', verifiedEmail.toLowerCase()).get()
+        resByEmail.forEach(d => docs.push(d))
+        
+        // Auto-link found email profile(s)
+        for (const doc of docs) {
+          await doc.ref.update({
+            kingschat_id: kingschatUserId,
+            kingsChatId: kingschatUserId
+          })
         }
       }
+
+      // Format querySnapshot-like wrapper
+      querySnapshot = { docs, empty: docs.length === 0 } as any
+    }
+
+    // Handle multiple accounts
+    if (querySnapshot.docs.length > 1) {
+      const accountsList = querySnapshot.docs.map((doc: any) => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          email: data.email || '',
+          firstName: data.firstName || data.first_name || '',
+          lastName: data.lastName || data.last_name || '',
+          kingschatId: kingschatUserId
+        }
+      })
+      return NextResponse.json({
+        success: false,
+        code: 'MULTIPLE_ACCOUNTS',
+        accounts: accountsList
+      })
     }
 
     if (querySnapshot.empty) {
-      return NextResponse.json({ success: false, error: 'No account linked with this KingsChat ID' }, { status: 404 })
+      return NextResponse.json({
+        success: false,
+        code: 'NO_ACCOUNT',
+        profile: kingsChatProfile
+      })
     }
 
     const firebaseUid = querySnapshot.docs[0].id

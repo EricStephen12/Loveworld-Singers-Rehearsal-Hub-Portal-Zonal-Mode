@@ -563,42 +563,49 @@ function AuthPageContent() {
         }
 
 
-        // Check for existing profiles with this KingsChat ID
-        const { FirebaseDatabaseService } = await import('@/lib/firebase-database')
-        
-        let existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
-          'profiles',
-          'kingschat_id',
-          '==',
-          kingschatUserId
-        )
+        // 1. Call server-side kingschat-login API to handle Firestore checks securely.
+        // This avoids client-side permission restrictions (Firestore Security Rules).
+        const loginRes = await fetch('/api/auth/kingschat-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accessToken: authTokens.accessToken,
+            kingschatUserId: kingschatUserId
+          })
+        })
 
-        // Fallback: Check for camelCase kingsChatId (used by some legacy/linking code)
-        if (!existingProfiles || existingProfiles.length === 0) {
-          existingProfiles = await FirebaseDatabaseService.getCollectionWhere(
-            'profiles',
-            'kingsChatId',
-            '==',
-            kingschatUserId
-          )
+        const loginResult = await loginRes.json()
+
+        // 2. Handle the server response
+        if (loginResult.success && loginResult.customToken) {
+          // Success: Log in using Firebase custom token directly
+          const signInResult = await FirebaseAuthService.signInWithCustomToken(loginResult.customToken)
+
+          if (signInResult.error) {
+            throw new Error(signInResult.error)
+          }
+
+          if (typeof window !== 'undefined') {
+            document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+            localStorage.setItem('lwsrh_has_user', 'true')
+            localStorage.setItem('userAuthenticated', 'true')
+            localStorage.setItem('hasCompletedProfile', 'true')
+            localStorage.setItem('authProvider', 'kingschat')
+          }
+
+          setSuccess('Login successful!')
+          setIsLoading(false)
+          setIsCheckingAccount(false)
+
+          const urlParams = new URLSearchParams(window.location.search)
+          const returnUrl = urlParams.get('returnUrl')
+          router.push(returnUrl || '/home')
+          return
         }
 
-        // Secondary check: If no profile found by KC ID, try finding by email
-        if ((!existingProfiles || existingProfiles.length === 0) && kingschatEmail) {
-           const profilesByEmail = await FirebaseDatabaseService.getCollectionWhere(
-             'profiles',
-             'email',
-             '==',
-             kingschatEmail.toLowerCase()
-           )
-           if (profilesByEmail && profilesByEmail.length > 0) {
-             existingProfiles = profilesByEmail
-           }
-        }
-
-        // If multiple accounts found, show account selector modal
-        if (existingProfiles && existingProfiles.length > 1) {
-          setMultipleAccounts(existingProfiles)
+        // Case: Multiple accounts found linked to this KingsChat ID
+        if (loginResult.code === 'MULTIPLE_ACCOUNTS') {
+          setMultipleAccounts(loginResult.accounts)
           setPendingKingschatId(kingschatUserId)
           setPendingAccessToken(authTokens.accessToken)
           setShowAccountSelector(true)
@@ -607,94 +614,35 @@ function AuthPageContent() {
           return
         }
 
-        // If exactly one account found, log them in securely using Firebase custom token without asking for password
-        if (existingProfiles && existingProfiles.length === 1) {
-          const existingProfile = existingProfiles[0] as any
-
-          try {
-            const tokenRes = await fetch('/api/auth/kingschat-login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                accessToken: authTokens.accessToken,
-                kingschatUserId: kingschatUserId,
-                email: existingProfile.email
-              })
-            })
-
-            const tokenData = await tokenRes.json()
-
-            if (tokenData.success && tokenData.customToken) {
-              const signInResult = await FirebaseAuthService.signInWithCustomToken(tokenData.customToken)
-
-              if (signInResult.error) {
-                throw new Error(signInResult.error)
-              }
-
-              if (typeof window !== 'undefined') {
-                document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
-                localStorage.setItem('lwsrh_has_user', 'true')
-                localStorage.setItem('userAuthenticated', 'true')
-                localStorage.setItem('hasCompletedProfile', 'true')
-                localStorage.setItem('authProvider', 'kingschat')
-              }
-
-              setSuccess('Login successful!')
-              setIsLoading(false)
-              setIsCheckingAccount(false)
-
-              const urlParams = new URLSearchParams(window.location.search)
-              const returnUrl = urlParams.get('returnUrl')
-              router.push(returnUrl || '/home')
-              return
-            } else {
-              throw new Error(tokenData.error || 'Failed to generate secure login token')
-            }
-          } catch (tokenErr: any) {
-            console.error('KingsChat secure login error:', tokenErr)
-            // Fallback: Show password prompt if custom token login fails
-            setSelectedAccount(existingProfile)
-            setShowPasswordPrompt(true)
-            setAccountPassword('')
-            setIsLoading(false)
-            setIsCheckingAccount(false)
-            setError(sanitizeError(tokenErr.message || 'Secure login failed. Please enter your password.'))
-            return
+        // Case: No account found (New User)
+        if (loginResult.code === 'NO_ACCOUNT') {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('kingschatUserId', kingschatUserId)
+            localStorage.setItem('kingschatAuthPending', 'true')
           }
+
+          const profile = loginResult.profile
+          const generatedPassword = 'KC-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
+
+          setIsLoading(false)
+          setIsCheckingAccount(false)
+          setIsLogin(false) // Switch to signup mode for NEW users only
+          setSuccess('Please complete signup with your KingsChat account')
+
+          // Pre-fill KingsChat ID, profile details, and generated password in the form
+          setFormData(prev => ({
+            ...prev,
+            kingschatId: kingschatUserId,
+            firstName: profile?.firstName || prev.firstName,
+            lastName: profile?.lastName || prev.lastName,
+            email: profile?.email || kingschatEmail || prev.email,
+            password: prev.password || generatedPassword,
+            confirmPassword: prev.confirmPassword || generatedPassword
+          }))
+          return
         }
 
-        // No existing profile found - this is actually a new user
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('kingschatUserId', kingschatUserId)
-          localStorage.setItem('kingschatAuthPending', 'true')
-        }
-
-        // Fetch user profile details from V2 API
-        const profile = await KingsChatAuthService.getUserProfile(authTokens.accessToken)
-        console.log('KingsChat fetched profile payload (new user):', profile)
-
-        // Generate a secure, random password for them
-        const generatedPassword = 'KC-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase() + '!';
-
-        setIsLoading(false)
-        setIsCheckingAccount(false)
-        setIsLogin(false) // Switch to signup mode for NEW users only
-        setSuccess('Please complete signup with your KingsChat account')
-
-        // Pre-fill KingsChat ID, profile details, and generated password in the form
-        setFormData(prev => ({
-          ...prev,
-          kingschatId: kingschatUserId,
-          firstName: profile?.firstName || prev.firstName,
-          lastName: profile?.lastName || prev.lastName,
-          email: profile?.email || kingschatEmail || prev.email,
-          password: prev.password || generatedPassword,
-          confirmPassword: prev.confirmPassword || generatedPassword
-        }))
-
-        return
-
-        return
+        throw new Error(loginResult.error || 'Authentication failed')
       }
     } catch (error: any) {
  console.error('Social login error:', error)
