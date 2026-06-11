@@ -165,22 +165,33 @@ export async function POST(req: Request) {
 
     // Handle multiple accounts
     if (querySnapshot.docs.length > 1) {
-      const accountsList = querySnapshot.docs.map((doc: any) => {
-        const data = doc.data()
-        return {
-          id: doc.id,
-          email: data.email || '',
-          firstName: data.firstName || data.first_name || '',
-          lastName: data.lastName || data.last_name || '',
-          kingschatId: kingschatUserId
-        }
-      })
-      return NextResponse.json({
-        success: false,
-        code: 'MULTIPLE_ACCOUNTS',
-        accounts: accountsList,
-        kingschatUserId
-      })
+      let resolvedDoc = null;
+      if (verifiedEmail) {
+        const matchingDocs = querySnapshot.docs.filter((doc: any) => doc.data().email?.toLowerCase() === verifiedEmail.toLowerCase());
+        if (matchingDocs.length === 1) resolvedDoc = matchingDocs[0];
+      }
+
+      if (!resolvedDoc) {
+        const accountsList = querySnapshot.docs.map((doc: any) => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            email: data.email || '',
+            firstName: data.firstName || data.first_name || '',
+            lastName: data.lastName || data.last_name || '',
+            kingschatId: kingschatUserId
+          }
+        })
+        return NextResponse.json({
+          success: false,
+          code: 'MULTIPLE_ACCOUNTS',
+          accounts: accountsList,
+          kingschatUserId
+        })
+      }
+      
+      // Smartly resolved!
+      querySnapshot = { docs: [resolvedDoc], empty: false } as any;
     }
 
     if (querySnapshot.empty) {
