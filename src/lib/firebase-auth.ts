@@ -1,7 +1,8 @@
 import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
   onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider,
-  deleteUser, setPersistence, browserLocalPersistence
+  deleteUser, setPersistence, browserLocalPersistence,
+  signInWithCustomToken
 } from 'firebase/auth'
 import { auth } from './firebase-setup'
 import { FirebaseDatabaseService } from './firebase-database'
@@ -200,6 +201,37 @@ export class FirebaseAuthService {
 
   static async signInWithEmailAndPassword(email: string, password: string, rememberMe: boolean = true) {
     return this.signIn(email, password, rememberMe)
+  }
+
+  static async signInWithCustomToken(customToken: string) {
+    try {
+      await setPersistence(auth, browserLocalPersistence)
+      const result = await signInWithCustomToken(auth, customToken)
+
+      // Kick-Out Strategy: Always allow login, overwrite previous session
+      await SessionManager.createSession(result.user)
+
+      // Track login analytics
+      try {
+        await SimplifiedAnalyticsService.incrementLogins(1)
+        SimplifiedAnalyticsService.trackUserLocation()
+      } catch (analyticsError) {
+        console.error('Analytics tracking failed:', analyticsError)
+      }
+
+      if (typeof window !== 'undefined') {
+        const token = await result.user.getIdToken()
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('userEmail', result.user.email || '')
+        localStorage.setItem('userId', result.user.uid)
+        localStorage.setItem('lastLoginTime', Date.now().toString())
+      }
+
+      return { user: result.user, error: null }
+    } catch (error: any) {
+      const friendlyError = ErrorHandler.getErrorMessage(error, 'auth')
+      return { user: null, error: friendlyError, userFriendly: true }
+    }
   }
 
   static async autoLogin(): Promise<{ user: User | null, error: string | null }> {

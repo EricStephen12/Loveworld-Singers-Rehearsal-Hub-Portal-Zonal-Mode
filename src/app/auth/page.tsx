@@ -97,6 +97,7 @@ function AuthPageContent() {
   const [showAccountSelector, setShowAccountSelector] = useState(false)
   const [multipleAccounts, setMultipleAccounts] = useState<any[]>([])
   const [pendingKingschatId, setPendingKingschatId] = useState('')
+  const [pendingAccessToken, setPendingAccessToken] = useState('')
   const [selectedAccount, setSelectedAccount] = useState<any>(null)
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
   const [accountPassword, setAccountPassword] = useState('')
@@ -352,13 +353,65 @@ function AuthPageContent() {
     }
   }
 
-  const handleAccountSelection = (selectedProfile: any) => {
-    // Store selected account and show password prompt
+  const handleAccountSelection = async (selectedProfile: any) => {
     setSelectedAccount(selectedProfile)
     setShowAccountSelector(false)
-    setShowPasswordPrompt(true)
-    setAccountPassword('')
     setError('')
+
+    if (pendingAccessToken && pendingKingschatId) {
+      setIsLoading(true)
+      setIsCheckingAccount(true)
+      try {
+        const tokenRes = await fetch('/api/auth/kingschat-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accessToken: pendingAccessToken,
+            kingschatUserId: pendingKingschatId,
+            email: selectedProfile.email
+          })
+        })
+
+        const tokenData = await tokenRes.json()
+
+        if (tokenData.success && tokenData.customToken) {
+          const signInResult = await FirebaseAuthService.signInWithCustomToken(tokenData.customToken)
+
+          if (signInResult.error) {
+            throw new Error(signInResult.error)
+          }
+
+          if (typeof window !== 'undefined') {
+            document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+            localStorage.setItem('lwsrh_has_user', 'true')
+            localStorage.setItem('userAuthenticated', 'true')
+            localStorage.setItem('hasCompletedProfile', 'true')
+            localStorage.setItem('authProvider', 'kingschat')
+          }
+
+          setSuccess('Login successful!')
+          setIsLoading(false)
+          setIsCheckingAccount(false)
+
+          const urlParams = new URLSearchParams(window.location.search)
+          const returnUrl = urlParams.get('returnUrl')
+          router.push(returnUrl || '/home')
+          return
+        } else {
+          throw new Error(tokenData.error || 'Failed to generate secure login token')
+        }
+      } catch (tokenErr: any) {
+        console.error('KingsChat select account secure login error:', tokenErr)
+        setShowPasswordPrompt(true)
+        setAccountPassword('')
+        setIsLoading(false)
+        setIsCheckingAccount(false)
+        setError(sanitizeError(tokenErr.message || 'Secure login failed. Please enter your password.'))
+      }
+    } else {
+      setShowPasswordPrompt(true)
+      setAccountPassword('')
+    }
   }
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -547,32 +600,67 @@ function AuthPageContent() {
         if (existingProfiles && existingProfiles.length > 1) {
           setMultipleAccounts(existingProfiles)
           setPendingKingschatId(kingschatUserId)
+          setPendingAccessToken(authTokens.accessToken)
           setShowAccountSelector(true)
           setIsLoading(false)
           setIsCheckingAccount(false)
           return
         }
 
-        // If exactly one account found, prompt for password
+        // If exactly one account found, log them in securely using Firebase custom token without asking for password
         if (existingProfiles && existingProfiles.length === 1) {
           const existingProfile = existingProfiles[0] as any
 
-          // Auto-link KC ID if it wasn't linked but email matched (save both casings to be safe)
-          if ((!existingProfile.kingschat_id || !existingProfile.kingsChatId) && kingschatUserId) {
-            await FirebaseDatabaseService.updateUserProfile(existingProfile.id, {
-              kingschat_id: kingschatUserId,
-              kingsChatId: kingschatUserId
+          try {
+            const tokenRes = await fetch('/api/auth/kingschat-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                accessToken: authTokens.accessToken,
+                kingschatUserId: kingschatUserId,
+                email: existingProfile.email
+              })
             })
-          }
 
-          // Show password prompt for this account
-          setSelectedAccount(existingProfile)
-          setShowPasswordPrompt(true)
-          setAccountPassword('')
-          setIsLoading(false)
-          setIsCheckingAccount(false)
-          setSuccess('Account found! Please enter your password.')
-          return
+            const tokenData = await tokenRes.json()
+
+            if (tokenData.success && tokenData.customToken) {
+              const signInResult = await FirebaseAuthService.signInWithCustomToken(tokenData.customToken)
+
+              if (signInResult.error) {
+                throw new Error(signInResult.error)
+              }
+
+              if (typeof window !== 'undefined') {
+                document.cookie = "lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax"
+                localStorage.setItem('lwsrh_has_user', 'true')
+                localStorage.setItem('userAuthenticated', 'true')
+                localStorage.setItem('hasCompletedProfile', 'true')
+                localStorage.setItem('authProvider', 'kingschat')
+              }
+
+              setSuccess('Login successful!')
+              setIsLoading(false)
+              setIsCheckingAccount(false)
+
+              const urlParams = new URLSearchParams(window.location.search)
+              const returnUrl = urlParams.get('returnUrl')
+              router.push(returnUrl || '/home')
+              return
+            } else {
+              throw new Error(tokenData.error || 'Failed to generate secure login token')
+            }
+          } catch (tokenErr: any) {
+            console.error('KingsChat secure login error:', tokenErr)
+            // Fallback: Show password prompt if custom token login fails
+            setSelectedAccount(existingProfile)
+            setShowPasswordPrompt(true)
+            setAccountPassword('')
+            setIsLoading(false)
+            setIsCheckingAccount(false)
+            setError(sanitizeError(tokenErr.message || 'Secure login failed. Please enter your password.'))
+            return
+          }
         }
 
         // No existing profile found - this is actually a new user
