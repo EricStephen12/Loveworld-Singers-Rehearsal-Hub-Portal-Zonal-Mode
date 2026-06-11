@@ -7,9 +7,11 @@ const KINGSCHAT_API_KEY = process.env.KINGSCHAT_API_KEY || process.env.NEXT_PUBL
 // Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {
   try {
-    const privateKey = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PRIVATE_KEY
-      ? process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n')
-      : undefined
+    let privateKey = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PRIVATE_KEY
+    if (privateKey) {
+      // Remove wrapping quotes if they exist, and replace literal \n with real newlines
+      privateKey = privateKey.replace(/^"|"$/g, '').replace(/\\n/g, '\n')
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -19,6 +21,9 @@ if (!admin.apps.length) {
       }),
       databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
     })
+
+    // Force Firestore to use REST instead of gRPC to prevent Vercel hanging issues (44 second timeouts)
+    admin.firestore().settings({ preferRest: true })
   } catch (error) {
     console.error('Firebase Admin initialization error in KingsChat Login API:', error)
   }
@@ -30,6 +35,11 @@ export async function POST(req: Request) {
 
     if (!accessToken) {
       return NextResponse.json({ success: false, error: 'Access token is required' }, { status: 400 })
+    }
+
+    if (!process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PRIVATE_KEY) {
+      console.error('CRITICAL: Firebase Admin Private Key is missing in environment variables!');
+      return NextResponse.json({ success: false, error: 'Server configuration error: Missing Firebase Admin credentials in Vercel.' }, { status: 500 })
     }
 
     // 1. Verify access token with KingsChat profile API to prevent spoofing
