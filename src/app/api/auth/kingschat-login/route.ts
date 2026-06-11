@@ -26,10 +26,10 @@ if (!admin.apps.length) {
 
 export async function POST(req: Request) {
   try {
-    const { accessToken, kingschatUserId, email } = await req.json()
+    const { accessToken, kingschatUserId: clientKingschatUserId, email } = await req.json()
 
-    if (!accessToken || !kingschatUserId) {
-      return NextResponse.json({ success: false, error: 'Access token and KingsChat user ID are required' }, { status: 400 })
+    if (!accessToken) {
+      return NextResponse.json({ success: false, error: 'Access token is required' }, { status: 400 })
     }
 
     // 1. Verify access token with KingsChat profile API to prevent spoofing
@@ -72,9 +72,13 @@ export async function POST(req: Request) {
     })
 
     const verifiedKingschatId = profile?.profile?.id
-    if (!verifiedKingschatId || verifiedKingschatId !== kingschatUserId) {
-      return NextResponse.json({ success: false, error: 'KingsChat user ID mismatch or verification failed' }, { status: 401 })
+    console.log('[KingsChat Login] Verified profile:', JSON.stringify(profile?.profile, null, 2))
+    if (!verifiedKingschatId) {
+      return NextResponse.json({ success: false, error: 'Could not verify KingsChat identity' }, { status: 401 })
     }
+
+    // Use the verified ID from KingsChat API (more secure than trusting client)
+    const kingschatUserId = verifiedKingschatId
 
     const verifiedEmail = profile?.profile?.email
     const kingsChatProfile = {
@@ -164,7 +168,8 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: false,
         code: 'MULTIPLE_ACCOUNTS',
-        accounts: accountsList
+        accounts: accountsList,
+        kingschatUserId
       })
     }
 
@@ -172,7 +177,8 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: false,
         code: 'NO_ACCOUNT',
-        profile: kingsChatProfile
+        profile: kingsChatProfile,
+        kingschatUserId
       })
     }
 

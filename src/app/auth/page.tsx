@@ -549,28 +549,13 @@ function AuthPageContent() {
 
         setSuccess('KingsChat login successful! Setting up your account...')
 
-        // Extract KingsChat data from token
-        const { jwtDecode } = await import('jwt-decode')
-        const decoded: any = jwtDecode(authTokens.accessToken)
-        const kingschatUserId = decoded.userId || decoded.sub || decoded.id
-        const kingschatEmail = decoded.email || decoded.emailAddress
-
-        if (!kingschatUserId) {
-          setError('Could not extract user ID from KingsChat token')
-          setIsLoading(false)
-          setIsCheckingAccount(false)
-          return
-        }
-
-
-        // 1. Call server-side kingschat-login API to handle Firestore checks securely.
-        // This avoids client-side permission restrictions (Firestore Security Rules).
+        // Send the access token to the server API which verifies it with KingsChat
+        // and extracts the real user ID (KingsChat tokens are NOT JWTs)
         const loginRes = await fetch('/api/auth/kingschat-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            accessToken: authTokens.accessToken,
-            kingschatUserId: kingschatUserId
+            accessToken: authTokens.accessToken
           })
         })
 
@@ -606,7 +591,7 @@ function AuthPageContent() {
         // Case: Multiple accounts found linked to this KingsChat ID
         if (loginResult.code === 'MULTIPLE_ACCOUNTS') {
           setMultipleAccounts(loginResult.accounts)
-          setPendingKingschatId(kingschatUserId)
+          setPendingKingschatId(loginResult.kingschatUserId)
           setPendingAccessToken(authTokens.accessToken)
           setShowAccountSelector(true)
           setIsLoading(false)
@@ -617,7 +602,7 @@ function AuthPageContent() {
         // Case: No account found (New User)
         if (loginResult.code === 'NO_ACCOUNT') {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('kingschatUserId', kingschatUserId)
+            localStorage.setItem('kingschatUserId', loginResult.kingschatUserId)
             localStorage.setItem('kingschatAuthPending', 'true')
           }
 
@@ -632,10 +617,10 @@ function AuthPageContent() {
           // Pre-fill KingsChat ID, profile details, and generated password in the form
           setFormData(prev => ({
             ...prev,
-            kingschatId: kingschatUserId,
+            kingschatId: loginResult.kingschatUserId,
             firstName: profile?.firstName || prev.firstName,
             lastName: profile?.lastName || prev.lastName,
-            email: profile?.email || kingschatEmail || prev.email,
+            email: profile?.email || prev.email,
             password: prev.password || generatedPassword,
             confirmPassword: prev.confirmPassword || generatedPassword
           }))
