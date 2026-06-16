@@ -18,7 +18,10 @@ export default function QRScannerPage() {
   const canAccessScanner = isSuperAdmin || isZoneCoordinator || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin'
 
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
-  const [statusMessage, setStatusMessage] = useState<string>('')
+  const [statusMessage, setStatusMessage] = useState('')
+  const [eventName, setEventName] = useState('Rehearsal')
+  const [recentEvents, setRecentEvents] = useState<string[]>(['Rehearsal', 'Praise Night', 'Sunday Service'])
+  const [isTypingCustom, setIsTypingCustom] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -26,6 +29,24 @@ export default function QRScannerPage() {
   const animationFrameRef = useRef<number | null>(null)
   const lastScanTimeRef = useRef<number>(0)
   const statusRef = useRef<ScanStatus>('idle') // Ref for sync in anim frame
+
+  // Fetch recent event names for the zone to populate the dropdown
+  useEffect(() => {
+    if (!currentZone) return
+    const fetchRecentEvents = async () => {
+      try {
+        const records = await AttendanceService.getZoneAttendance(currentZone.id, false, 200)
+        const uniqueEvents = Array.from(new Set(records.map(r => r.event_name).filter(Boolean))) as string[]
+        if (uniqueEvents.length > 0) {
+          setRecentEvents(uniqueEvents)
+          if (!uniqueEvents.includes(eventName)) setEventName(uniqueEvents[0])
+        }
+      } catch (e) {
+        console.error('Failed to fetch recent events', e)
+      }
+    }
+    fetchRecentEvents()
+  }, [currentZone])
 
   // Auto-start camera when authorized
   useEffect(() => {
@@ -106,7 +127,7 @@ export default function QRScannerPage() {
     }
 
     animationFrameRef.current = requestAnimationFrame(detectQR)
-  }, [])
+  }, [eventName])
 
   const playBeep = (type: 'success' | 'error') => {
     try {
@@ -141,7 +162,7 @@ export default function QRScannerPage() {
     try {
       const adminId = user?.uid || 'anonymous-admin'
       // Pass the current zone ID so the record is linked to this zone
-      const result = await AttendanceService.checkIn(adminId, qrCode, 'Rehearsal', currentZone?.id)
+      const result = await AttendanceService.checkIn(adminId, qrCode, eventName || 'Rehearsal', currentZone?.id)
 
       if (result.success) {
         setScanStatus('success')
@@ -201,14 +222,69 @@ export default function QRScannerPage() {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col font-sans z-50 overflow-hidden">
-      {/* Back ButtonOverlay */}
-      <div className="absolute top-0 left-0 right-0 z-40 p-6 flex justify-between items-start">
+      {/* Back Button and Event Name Input Overlay */}
+      <div className="absolute top-0 left-0 right-0 z-40 p-6 flex items-start gap-4">
         <button
           onClick={handleBack}
-          className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active:scale-95 border border-white/10 shadow-xl"
+          className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center flex-shrink-0 active:scale-95 border border-white/10 shadow-xl"
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
+        <div className="flex-1 max-w-sm">
+          {!isTypingCustom ? (
+            <div className="relative">
+              <select
+                value={eventName}
+                onChange={(e) => {
+                  if (e.target.value === '___custom___') {
+                    setIsTypingCustom(true)
+                    setEventName('')
+                  } else {
+                    setEventName(e.target.value)
+                  }
+                }}
+                className="w-full bg-black/60 backdrop-blur-md text-white px-5 py-3 rounded-2xl border border-white/20 shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold appearance-none cursor-pointer"
+              >
+                {recentEvents.map(ev => (
+                  <option key={ev} value={ev} className="text-black bg-white">{ev}</option>
+                ))}
+                <option value="___custom___" className="text-purple-700 bg-purple-50 font-bold">
+                  + Add New Program Title...
+                </option>
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                autoFocus
+                value={eventName}
+                onChange={(e) => setEventName(e.target.value)}
+                placeholder="Type new program name..."
+                className="w-full bg-black/60 backdrop-blur-md text-white px-5 py-3 rounded-2xl border border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] focus:outline-none font-bold placeholder-white/50"
+              />
+              <button
+                onClick={() => {
+                  if (eventName.trim()) {
+                    setRecentEvents(prev => Array.from(new Set([eventName.trim(), ...prev])))
+                  } else {
+                    setEventName(recentEvents[0] || 'Rehearsal')
+                  }
+                  setIsTypingCustom(false)
+                }}
+                className="px-5 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-xl transition-colors active:scale-95"
+              >
+                Save
+              </button>
+            </div>
+          )}
+          <p className="text-white/60 text-xs font-medium mt-2 ml-1 drop-shadow-md">
+            All scanned members will be recorded under this event.
+          </p>
+        </div>
       </div>
 
       {/* Main Scanner Viewport */}

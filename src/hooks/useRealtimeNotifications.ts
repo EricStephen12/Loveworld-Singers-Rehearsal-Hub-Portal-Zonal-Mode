@@ -28,7 +28,7 @@ export interface NotificationData {
 }
 
 function getNotificationCollectionName(zoneId?: string): string {
-  return zoneId && isHQGroup(zoneId) ? 'notifications' : 'zone_notifications'
+  return 'notifications'
 }
 
 export function useRealtimeNotifications() {

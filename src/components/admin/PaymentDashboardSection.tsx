@@ -51,9 +51,9 @@ export default function PaymentDashboardSection() {
     const [actionLoading, setActionLoading] = useState(false);
 
     // Load subscriptions
-    const loadSubscriptions = async () => {
+    const loadSubscriptions = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent && subscriptions.length === 0) setLoading(true);
             const response = await authedFetch('/api/admin/subscriptions');
 
             if (response.ok) {
@@ -127,7 +127,7 @@ export default function PaymentDashboardSection() {
                 alert('Subscription revoked successfully');
                 setShowRevokeModal(false);
                 setActionReason('');
-                loadSubscriptions();
+                loadSubscriptions(true);
             } else {
                 alert('Failed to revoke subscription');
             }
@@ -165,7 +165,7 @@ export default function PaymentDashboardSection() {
                 setShowExtendModal(false);
                 setActionReason('');
                 setExtensionMonths(1);
-                loadSubscriptions();
+                loadSubscriptions(true);
             } else {
                 alert('Failed to extend subscription');
             }
@@ -202,7 +202,7 @@ export default function PaymentDashboardSection() {
                 alert('Refund processed successfully');
                 setShowRefundModal(false);
                 setActionReason('');
-                loadSubscriptions();
+                loadSubscriptions(true);
             } else {
                 alert('Failed to process refund');
             }
@@ -258,7 +258,7 @@ export default function PaymentDashboardSection() {
                             <p className="text-sm text-gray-600 mt-1">Manage all subscriptions and payments</p>
                         </div>
                         <button
-                            onClick={loadSubscriptions}
+                            onClick={() => loadSubscriptions(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors active:scale-95"
                         >
                             <RefreshCw className="w-4 h-4" />

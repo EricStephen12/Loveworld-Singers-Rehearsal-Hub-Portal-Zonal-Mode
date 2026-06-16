@@ -146,8 +146,8 @@ export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPagePr
     return () => unsubscribe()
   }, [currentZone?.id, isHQ])
 
-  const loadSongs = async () => {
-    setLoading(true)
+  const loadSongs = async (silent = false) => {
+    if (!silent && songs.length === 0) setLoading(true)
     try {
       // HQ is one unified entity - HQ manager sees ALL HQ submissions from ALL HQ zones
       // Regular zones see only their specific zone submissions
@@ -194,7 +194,7 @@ export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPagePr
       if (result.success) {
         showToast('success', 'Song approved and added to main collection!')
         setConfirmModal(null)
-        loadSongs()
+        loadSongs(true)
       } else {
         showToast('error', `Failed to approve song: ${result.error}`)
       }
@@ -236,7 +236,7 @@ export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPagePr
         setShowRejectModal(false)
         setRejectNotes('')
         setSelectedSong(null)
-        loadSongs()
+        loadSongs(true)
       } else {
         showToast('error', `Failed to reject song: ${result.error}`)
       }
@@ -261,7 +261,7 @@ export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPagePr
         setShowReplyModal(false)
         setReplyMessage('')
         setSelectedSong(null)
-        loadSongs()
+        loadSongs(true)
       } else {
         showToast('error', `Failed to send reply: ${result.error}`)
       }
@@ -314,7 +314,7 @@ export function SubmittedSongsContent({ embedded = false }: SubmittedSongsPagePr
       if (result.success) {
         showToast('success', 'Submission deleted')
         setConfirmModal(null)
-        loadSongs()
+        loadSongs(true)
       } else {
         showToast('error', `Failed to delete submission: ${result.error}`)
       }
@@ -485,7 +485,7 @@ ${song.notes}` : ''}
                 </div>
               </div>
               <button
-                onClick={loadSongs}
+                onClick={() => loadSongs(true)}
                 disabled={loading}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
               >
@@ -509,7 +509,7 @@ ${song.notes}` : ''}
               </div>
             </div>
             <button
-              onClick={loadSongs}
+              onClick={() => loadSongs(true)}
               disabled={loading}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >

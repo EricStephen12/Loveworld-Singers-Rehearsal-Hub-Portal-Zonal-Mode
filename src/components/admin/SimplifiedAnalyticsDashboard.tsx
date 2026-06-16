@@ -72,7 +72,7 @@ export default function SimplifiedAnalyticsDashboard() {
 
     if (result.success) {
       setNewMinistry({ songId: '', songTitle: '', programType: 'rehearsal', programDate: new Date().toISOString().split('T')[0], notes: '' });
-      loadAnalytics();
+      loadAnalytics(true);
       showToast('success', 'Song ministry recorded!');
     } else {
       showToast('error', `Error: ${result.error}`);
@@ -96,8 +96,8 @@ export default function SimplifiedAnalyticsDashboard() {
     }
   };
 
-  const loadAnalytics = async () => {
-    setLoading(true);
+  const loadAnalytics = async (silent = false) => {
+    if (!silent && records.length === 0) setLoading(true);
     try {
       const data = await SimplifiedAnalyticsService.getAllMonthlySummaries();
       setRecords(data);
@@ -110,7 +110,7 @@ export default function SimplifiedAnalyticsDashboard() {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadAnalytics();
+    loadAnalytics(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
 

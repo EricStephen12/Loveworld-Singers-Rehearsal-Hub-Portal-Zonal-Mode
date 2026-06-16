@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -177,68 +177,46 @@ export default function PushNotificationListener() {
     }
   }, [])
 
-  // Listen for new global admin messages
+  // Listen for new centralized notifications
   useEffect(() => {
     if (!currentZone?.id) return
 
-    const messagesRef = collection(db, 'admin_messages')
-    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
+    const notificationsRef = collection(db, 'notifications')
+    const q = query(notificationsRef, orderBy('created_at', 'desc'), limit(1))
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach(change => {
         if (change.type === 'added') {
           const data = change.doc.data()
-          const createdAt = data.createdAt?.toDate?.()?.getTime() || 0
+          const createdAt = new Date(data.created_at || data.createdAt || 0).getTime()
+          
           if (createdAt > lastNotifTime.current) {
-            showNotification(
-              data.title || 'New Announcement',
-              data.message?.substring(0, 100) || '',
-              `zone-${change.doc.id}`,
-              '/pages/notifications'
-            )
-            lastNotifTime.current = Date.now()
+            // Check if user is targeted
+            let isTargeted = false
+            const userId = user?.uid || profile?.id
+            
+            if (data.target_audience === 'all') isTargeted = true
+            else if (data.target_audience === 'individual' && data.target_user_id === userId) isTargeted = true
+            // Complex group filtering omitted here for simplicity; assuming FCM handles the rest
+            
+            if (isTargeted) {
+              showNotification(
+                data.title || 'New Notification',
+                data.message?.substring(0, 100) || '',
+                `notif-${change.doc.id}`,
+                data.action_url || '/pages/notifications'
+              )
+              lastNotifTime.current = Date.now()
+            }
           }
         }
       })
     }, (error) => {
- console.error('[Push] Error listening to admin_messages:', error)
+      console.error('[Push] Error listening to notifications:', error)
     })
+    
     return () => unsubscribe()
-  }, [currentZone?.id])
-
-  // Listen for new global calendar events
-  useEffect(() => {
-    if (!currentZone?.id) return
-
-    const eventsRef = collection(db, 'calendar_events')
-    // We listen for any new event, then filter for Global-only in the snapshot
-    const q = query(eventsRef, orderBy('createdAt', 'desc'), limit(1))
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === 'added') {
-          const data = change.doc.data()
-          const isGlobal = data.isGlobal === true
-          const createdAt = data.createdAt?.toDate?.()?.getTime() || 0
-
-          if (isGlobal && createdAt > lastNotifTime.current) {
-            showNotification(
-              data.title || 'New Global Event',
-              `New global event scheduled: ${data.title}`,
-              `event-${change.doc.id}`,
-              '/pages/calendar'
-            )
-            // No need to update lastNotifTime here as it's shared with admin_messages
-            // Actually, we should probably update it to prevent race conditions if multiple listeners trigger
-            lastNotifTime.current = Date.now()
-          }
-        }
-      })
-    }, (error) => {
- console.error('[Push] Error listening to calendar_events:', error)
-    })
-    return () => unsubscribe()
-  }, [currentZone?.id])
+  }, [currentZone?.id, user, profile])
 
   // Listen for new chat messages
   // NOTE: Notification triggering is handled by FCM (fcm-web.ts) to prevent duplicates.

@@ -263,13 +263,37 @@ export async function updateProject(
       if (project && project.collaborators.length > 0) {
         // Find all recipients (collaborators + owner, excluding the person making the change)
         const allParticipants = [project.ownerId, ...project.collaborators];
-        // We'd ideally need the current user's ID here, but since this is a service, 
-        // we might not have it unless passed. 
-        // For now, we'll send to all collaborators if it's the owner, or owner + other collaborators.
-        // The API /api/send-notification can handle 'excludeUserId' if we pass it, 
-        // but here we don't have the context easily without changing the signature.
-        // Let's assume most updates are worthwhile to notify about.
 
+        // 1. Save notification to central DB
+        try {
+          const notificationDoc = {
+            title: ' Project Updated',
+            message: `Project "${project.name}" has been updated.`,
+            type: 'info',
+            category: 'system',
+            priority: 'medium',
+            target_audience: 'individual',
+            target_user_id: 'group', // It's multi-user but we don't have a direct 'multi-user' audience type, could just use multiple documents
+            created_at: new Date().toISOString(),
+            is_read: false,
+            data: { projectId, type: 'project_update' }
+          };
+          
+          // Write a doc for each participant so they can see it in their notification center
+          const { doc: firestoreDoc, setDoc } = await import('firebase/firestore');
+          for (const participantId of allParticipants) {
+            const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            await setDoc(firestoreDoc(db, 'notifications', notificationId), {
+              ...notificationDoc,
+              target_audience: 'individual',
+              target_user_id: participantId
+            });
+          }
+        } catch (e) {
+          console.error('[ProjectService] Error saving notification to DB:', e);
+        }
+
+        // 2. Trigger FCM
         await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -358,6 +382,34 @@ export async function addTrack(
     try {
       const allParticipants = [project.ownerId, ...project.collaborators];
       if (allParticipants.length > 0) {
+        
+        // 1. Save notification to central DB
+        try {
+          const notificationDoc = {
+            title: ' New Track Added',
+            message: `A new track "${track.name}" was added to "${project.name}"`,
+            type: 'info',
+            category: 'system',
+            priority: 'medium',
+            target_audience: 'individual',
+            created_at: new Date().toISOString(),
+            is_read: false,
+            data: { projectId, trackId, type: 'track_added' }
+          };
+          
+          const { doc: firestoreDoc, setDoc } = await import('firebase/firestore');
+          for (const participantId of allParticipants) {
+            const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            await setDoc(firestoreDoc(db, 'notifications', notificationId), {
+              ...notificationDoc,
+              target_user_id: participantId
+            });
+          }
+        } catch (e) {
+          console.error('[ProjectService] Error saving notification to DB:', e);
+        }
+
+        // 2. Trigger push notification
         await authedFetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -524,7 +576,30 @@ export async function addCollaborator(
     });
 
 
-    // Send push notification to the invited user (non-blocking)
+    // 1. Save notification to central DB
+    try {
+      const notificationDoc = {
+        title: 'Studio Collaboration Invite',
+        message: inviterName
+          ? `${inviterName} invited you to collaborate on "${finalProjectName}"`
+          : `You've been invited to collaborate on "${finalProjectName}"`,
+        type: 'info',
+        category: 'system',
+        priority: 'high',
+        target_audience: 'individual',
+        target_user_id: userId,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        data: { projectId, projectName: finalProjectName }
+      };
+      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const { doc: firestoreDoc, setDoc } = await import('firebase/firestore');
+      await setDoc(firestoreDoc(db, 'notifications', notificationId), notificationDoc);
+    } catch (e) {
+      console.error('[ProjectService] Error saving notification to DB:', e);
+    }
+
+    // 2. Send push notification to the invited user (non-blocking)
     authedFetch('/api/send-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

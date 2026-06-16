@@ -141,8 +141,8 @@ export async function userReplyToSubmission(submissionId: string, userId: string
 }
 
 export async function getUnreadNotifications(_zoneId?: string, _isHQ?: boolean) {
-  const response = await BackendAPI.generic.list('song_notifications');
-  return (response.data || []).filter((n: any) => !n.read);
+  const response = await BackendAPI.generic.list('notifications');
+  return (response.data || []).filter((n: any) => !n.read && !n.is_read && n.category === 'song');
 }
 export async function deleteSubmissionAsAdmin(submissionId: string) {
   return await BackendAPI.generic.delete('submitted_songs', submissionId);

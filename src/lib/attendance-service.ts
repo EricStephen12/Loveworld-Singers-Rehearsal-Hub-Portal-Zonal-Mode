@@ -104,13 +104,13 @@ export class AttendanceService {
 
       // If fetched from the dedicated backend endpoint, it is already perfectly filtered by zoneId, zoneName, slug, or membership.
       // If fallback generic list was used, perform robust client-side filtering.
-      let filtered = all;
+      let filtered = all.filter((r: any) => !r.archived);
       if (!fromBackendEndpoint && !_isHQ && zoneId) {
         const { ZONES } = await import('@/config/zones');
         const targetZone = ZONES.find(z => z.id === zoneId);
         const zoneName = targetZone?.name || '';
         const zoneSlug = targetZone?.slug || '';
-        filtered = all.filter((r: any) => {
+        filtered = filtered.filter((r: any) => {
           if (r.zoneId === zoneId) return true;
           if (zoneName && r.zoneId === zoneName) return true;
           if (zoneSlug && r.zoneId === zoneSlug) return true;

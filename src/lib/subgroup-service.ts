@@ -467,14 +467,16 @@ export class SubGroupService {
     requesterName: string
   ): Promise<void> {
     try {
-      // Create notification in zone_notifications collection
-      await FirebaseDatabaseService.addDocument('zone_notifications', {
+      // Create notification in notifications collection
+      await FirebaseDatabaseService.addDocument('notifications', {
         zoneId,
-        type: 'subgroup_request',
+        target_audience: 'all', // Or possibly a group targeting coordinators, but let's stick to standard fields
+        category: 'admin',
+        type: 'info',
+        priority: 'medium',
         title: 'New Sub-Group Request',
         message: `${requesterName} has requested to create "${subGroupName}"`,
-        read: false,
-        createdAt: new Date()
+        created_at: new Date().toISOString()
       })
     } catch (error) {
  console.error(' Error notifying zone coordinator:', error)
@@ -491,14 +493,16 @@ export class SubGroupService {
     message: string
   ): Promise<void> {
     try {
-      await FirebaseDatabaseService.addDocument('user_notifications', {
-        userId,
-        type: `subgroup_${status}`,
+      await FirebaseDatabaseService.addDocument('notifications', {
+        target_user_id: userId,
+        target_audience: 'individual',
+        category: 'subgroup',
+        type: status === 'approved' ? 'success' : 'warning',
+        priority: 'high',
         title: status === 'approved' ? 'Sub-Group Approved!' : 'Sub-Group Request Update',
         message,
         subGroupName,
-        read: false,
-        createdAt: new Date()
+        created_at: new Date().toISOString()
       })
     } catch (error) {
  console.error(' Error notifying requester:', error)

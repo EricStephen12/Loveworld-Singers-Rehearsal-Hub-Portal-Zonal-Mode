@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Calendar, Plus, Edit2, Trash2, Search, Clock, MapPin, X, Eye, EyeOff, FolderOpen } from 'lucide-react'
@@ -51,9 +51,9 @@ export default function CalendarSection() {
     }
   }, [currentZone?.id])
 
-  const loadEvents = async () => {
+  const loadEvents = async (silent = false) => {
     if (!currentZone?.id) return
-    setLoading(true)
+    if (!silent && events.length === 0) setLoading(true)
     try {
       const allEvents = await UpcomingEventsService.getAllEvents(currentZone.id)
       setEvents(allEvents)
@@ -146,6 +146,29 @@ export default function CalendarSection() {
           const recipientIds = membersSnapshot.docs.map(doc => doc.data().userId).filter(Boolean)
 
           if (recipientIds.length > 0) {
+            // 1. Write to the central 'notifications' collection
+            try {
+              const notificationDoc = {
+                title: ` New ${eventData.type || 'Event'}`,
+                message: `"${eventData.title}" has been scheduled for ${moment(eventData.date).format('MMM Do, YYYY')}`,
+                type: 'info',
+                category: 'announcement',
+                priority: 'medium',
+                target_audience: 'all',
+                zoneId: currentZone?.id || '',
+                created_at: new Date().toISOString(),
+                is_read: false,
+                data: { eventId: (result as any)?.id || '', type: eventData.type }
+              };
+              
+              const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              const { doc, setDoc } = await import('firebase/firestore');
+              await setDoc(doc(db, 'notifications', notificationId), notificationDoc);
+            } catch (dbError) {
+              console.error('[CalendarUI] DB save error:', dbError);
+            }
+
+            // 2. Trigger Push Notification
             await authedFetch('/api/send-notification', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -167,7 +190,7 @@ export default function CalendarSection() {
 
       setShowModal(false)
       setEditingEvent(null)
-      await loadEvents()
+      await loadEvents(true)
     } catch (error) {
  console.error('Error saving event:', error)
       showToast('Failed to save event. Please try again.', 'error')
@@ -201,7 +224,7 @@ export default function CalendarSection() {
       showToast('Event deleted successfully!', 'success')
       setShowDeleteDialog(false)
       setEventToDelete(null)
-      loadEvents()
+      loadEvents(true)
     } catch (error) {
  console.error('Error deleting event:', error)
       showToast('Failed to delete event', 'error')
@@ -214,7 +237,7 @@ export default function CalendarSection() {
         showInCarousel: !event.showInCarousel
       }, currentZone!.id)
       showToast(event.showInCarousel ? 'Hidden from carousel' : 'Added to carousel', 'success')
-      loadEvents()
+      loadEvents(true)
     } catch (error) {
  console.error('Error toggling visibility:', error)
       showToast('Failed to update visibility', 'error')

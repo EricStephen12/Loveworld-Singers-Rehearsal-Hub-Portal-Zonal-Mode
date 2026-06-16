@@ -221,7 +221,29 @@ export class SubGroupDatabaseService {
 
     const members = await this.getSubGroupMembers(subGroupId);
     const recipientIds = members.map((m: any) => m.userId);
+
+    // 1. Write to the central 'notifications' collection
+    try {
+      const notificationDoc = {
+        title,
+        message,
+        type: 'info',
+        category: 'subgroup',
+        priority: 'medium',
+        target_audience: 'group',
+        target_group: subGroupId,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        data: notificationData || {}
+      };
+      
+      const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await FirebaseDatabaseService.createDocument('notifications', notificationId, notificationDoc);
+    } catch (e) {
+      console.error('Error saving subgroup notification to DB:', e);
+    }
     
+    // 2. Trigger FCM Push Notifications
     await fetch(`${BACKEND_URL}/api/send-notification`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

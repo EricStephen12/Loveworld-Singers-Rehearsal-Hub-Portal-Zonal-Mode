@@ -47,10 +47,10 @@ export default function ActivityLogsPage() {
     }
   }, [currentZone?.id, zoneLoading]);
 
-  const loadActivityLogs = async () => {
+  const loadActivityLogs = async (silent = false) => {
     if (!currentZone?.id) return;
     try {
-      setLoading(true);
+      if (!silent && logs.length === 0) setLoading(true);
       const hqZoneIds = [...HQ_GROUP_IDS, BOSS_ZONE_ID];
 
       let q;
@@ -163,7 +163,7 @@ export default function ActivityLogsPage() {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={loadActivityLogs}
+              onClick={() => loadActivityLogs(true)}
               className="p-2 bg-white border border-gray-100 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors active:scale-95 flex items-center gap-1.5 shadow-sm"
               title="Refresh"
             >

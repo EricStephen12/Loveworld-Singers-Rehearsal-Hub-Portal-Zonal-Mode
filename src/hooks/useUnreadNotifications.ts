@@ -70,57 +70,33 @@ export function useUnreadNotifications() {
     } catch (e) {
     }
 
-    // Listen for global admin messages
+    // Listen for new centralized notifications
     try {
-      const messagesRef = collection(db, 'admin_messages')
-      const messagesQuery = query(messagesRef, orderBy('createdAt', 'desc'), limit(1))
+      const notifsRef = collection(db, 'notifications')
+      const notifsQuery = query(notifsRef, orderBy('created_at', 'desc'), limit(20))
 
-      const zoneUnsub = onSnapshot(messagesQuery, (snapshot) => {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === 'added' || change.type === 'modified') {
-            const data = change.doc.data()
-            const createdAt = data.createdAt?.toDate?.()?.getTime() || 0
-
-            if (createdAt > lastZoneMessageTime.current) {
-              setHasNewZoneMessage(true)
+      const notifsUnsub = onSnapshot(notifsQuery, (snapshot) => {
+        let hasNew = false;
+        snapshot.docs.forEach(doc => {
+          const data = doc.data()
+          const createdAt = new Date(data.created_at || data.createdAt || 0).getTime()
+          
+          if (createdAt > lastZoneMessageTime.current) {
+            let isTargeted = false
+            if (data.target_audience === 'all') isTargeted = true
+            else if (data.target_audience === 'individual' && data.target_user_id === userId) isTargeted = true
+            
+            if (isTargeted) {
+              hasNew = true;
             }
           }
         })
-      }, (err) => console.error('Zone listener error:', err))
+        if (hasNew) {
+          setHasNewZoneMessage(true)
+        }
+      }, (err) => console.error('Notifications listener error:', err))
 
-      unsubscribers.push(zoneUnsub)
-    } catch (e) { }
-
-    // Listen for user-specific notifications (subgroups, etc.)
-    try {
-      const userNotifsRef = collection(db, 'user_notifications')
-      
-      // Query 1: user_id
-      const q1 = query(userNotifsRef, where('user_id', '==', userId), where('is_read', '==', false), limit(20))
-      const unsub1 = onSnapshot(q1, (snapshot) => {
-        if (!snapshot.empty) setHasNewZoneMessage(true)
-      })
-      unsubscribers.push(unsub1)
-
-      // Query 2: target_user_id
-      const q2 = query(userNotifsRef, where('target_user_id', '==', userId), where('is_read', '==', false), limit(20))
-      const unsub2 = onSnapshot(q2, (snapshot) => {
-        if (!snapshot.empty) setHasNewZoneMessage(true)
-      })
-      unsubscribers.push(unsub2)
-    } catch (e) { }
-
-    // Listen for song notifications
-    try {
-      const songNotifsRef = collection(db, 'song_notifications')
-      const userEmail = user?.email || profile?.email
-      if (userEmail) {
-        const q = query(songNotifsRef, where('submittedByEmail', '==', userEmail), where('read', '==', false), limit(20))
-        const unsub = onSnapshot(q, (snapshot) => {
-          if (!snapshot.empty) setHasNewZoneMessage(true)
-        })
-        unsubscribers.push(unsub)
-      }
+      unsubscribers.push(notifsUnsub)
     } catch (e) { }
 
     // Check for new media (videos uploaded in last 7 days)

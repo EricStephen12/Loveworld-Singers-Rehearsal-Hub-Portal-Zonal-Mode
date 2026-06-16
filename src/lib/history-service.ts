@@ -1,58 +1,52 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { collection, query, where, orderBy, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase-setup';
 import type { HistoryEntry } from '@/types/supabase';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // History Operations
 
-export async function getHistoryBySongId(songId: number): Promise<HistoryEntry[]> {
+export async function getHistoryBySongId(songId: string | number): Promise<HistoryEntry[]> {
     try {
+        const q = query(
+            collection(db, 'song_history'),
+            where('song_id', '==', String(songId)),
+            orderBy('created_at', 'desc')
+        );
 
-        const { data, error } = await supabase
-            .from('song_history')
-            .select('*')
-            .eq('song_id', songId)
-            .order('created_at', { ascending: false });
-
-        if (error) {
- console.error(' Supabase error fetching history:', error);
-            throw error;
-        }
-
-
-        const historyEntries = (data || []).map(entry => ({
-            id: entry.id,
-            type: entry.type,
-            title: entry.title,
-            description: entry.description,
-            old_value: entry.old_value,
-            new_value: entry.new_value,
-            created_by: entry.created_by,
-            date: entry.created_at,
-            version: entry.title // Use title as version since we don't have a separate version field
-        }));
+        const snap = await getDocs(q);
+        
+        const historyEntries = snap.docs.map(doc => {
+            const entry = doc.data();
+            return {
+                id: doc.id,
+                type: entry.type,
+                title: entry.title,
+                description: entry.description,
+                old_value: entry.old_value,
+                new_value: entry.new_value,
+                created_by: entry.created_by,
+                date: entry.created_at,
+                version: entry.title
+            } as HistoryEntry;
+        });
 
         return historyEntries;
     } catch (error) {
- console.error('Error fetching history:', error);
+        console.error('Error fetching history from Firebase:', error);
         return [];
     }
 }
 
 export async function createHistoryEntry(entry: any): Promise<boolean> {
     try {
-        const { error } = await supabase
-            .from('song_history')
-            .insert(entry);
-
-        if (error) throw error;
+        await addDoc(collection(db, 'song_history'), {
+            ...entry,
+            song_id: String(entry.song_id), // ensure string
+            created_at: entry.created_at || new Date().toISOString()
+        });
         return true;
     } catch (error) {
- console.error('Error creating history entry:', error);
+        console.error('Error creating history entry in Firebase:', error);
         return false;
     }
 }

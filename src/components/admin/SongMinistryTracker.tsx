@@ -44,8 +44,8 @@ export default function SongMinistryTracker() {
     loadAllData();
   }, []);
 
-  const loadAllData = async () => {
-    setLoading(true);
+  const loadAllData = async (silent = false) => {
+    if (!silent && monthlySummaries.length === 0) setLoading(true);
     try {
       const [allRecords, summaries] = await Promise.all([
         SongMinistryService.getMostMinisteredSongs(),
@@ -82,7 +82,7 @@ export default function SongMinistryTracker() {
         programDate: new Date().toISOString().split('T')[0],
         notes: ''
       });
-      loadAllData(); // Reload data after adding
+      loadAllData(true); // Reload silently after adding
     } else {
       showToast('error', result.error || 'Failed to add record');
     }

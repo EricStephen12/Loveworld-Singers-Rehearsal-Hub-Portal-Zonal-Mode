@@ -11,7 +11,7 @@ interface AdminData {
   pages: PraiseNight[]
   loading: boolean
   error: string | null
-  refreshData: () => Promise<void>
+  refreshData: (silent?: boolean) => Promise<void>
   getCurrentPage: (id: string) => PraiseNight | null
   getCurrentSongs: (pageId: string, forceRefresh?: boolean) => Promise<PraiseNightSong[]>
   setZoneId: (zoneId: string) => void
@@ -147,9 +147,9 @@ export function useAdminData(): AdminData {
     }
   }
 
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (silent = false) => {
     adminDataCache = null
-    setLoading(true)
+    if (!silent && pages.length === 0) setLoading(true)
     await loadData()
   }, [currentZoneId])
 

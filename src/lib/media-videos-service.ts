@@ -112,7 +112,29 @@ class MediaVideosService {
         return
       }
 
-      // Send in batches of 100 to avoid overwhelming the API
+      // 1. Write to the central 'notifications' collection
+      try {
+        const notificationDoc = {
+          title: ' New Video',
+          message: `New video uploaded: "${title}"`,
+          type: 'info',
+          category: 'announcement',
+          priority: 'medium',
+          target_audience: 'all',
+          zoneId: forHQ ? 'hq' : 'global',
+          created_at: new Date().toISOString(),
+          is_read: false,
+          data: { videoId }
+        };
+        
+        const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const { doc: firestoreDoc, setDoc } = await import('firebase/firestore');
+        await setDoc(firestoreDoc(db, 'notifications', notificationId), notificationDoc);
+      } catch (e) {
+        console.error('[MediaVideos] Error saving notification to DB:', e);
+      }
+
+      // 2. Send in batches of 100 to avoid overwhelming the API
       const batchSize = 100
       for (let i = 0; i < recipientIds.length; i += batchSize) {
         const batch = recipientIds.slice(i, i + batchSize)

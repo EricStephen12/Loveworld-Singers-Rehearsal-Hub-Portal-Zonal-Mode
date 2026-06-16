@@ -44,7 +44,7 @@ const PaymentDashboardSection = dynamic(() => import('../../components/admin/Pay
 const AdminModals = dynamic(() => import('../../components/admin/AdminModals'), { ssr: false });
 const CategoryOrderModal = dynamic(() => import('../../components/admin/CategoryOrderModal'), { ssr: false });
 const PageCategoryOrderModal = dynamic(() => import('../../components/admin/PageCategoryOrderModal'), { ssr: false });
-const ScheduleManagerSection = dynamic(() => import('../../components/admin/ScheduleManagerSection'), { ssr: false });
+const SchedulingBoardSection = dynamic(() => import('../../components/admin/SchedulingBoardSection'), { ssr: false });
 
 const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
 const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
@@ -561,7 +561,7 @@ function AdminContent() {
 
         setNewPageCategoryName('');
         setShowCategoryModal(false);
-        refreshData(); // Refresh all data to ensure UI is updated
+        refreshData(true); // Refresh all data to ensure UI is updated
 
         // Log admin action
         if (user && currentZone) {
@@ -646,7 +646,7 @@ function AdminContent() {
         setEditingCategory(null);
         setNewPageCategoryName('');
         setShowCategoryModal(false);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (user && currentZone) {
@@ -713,7 +713,7 @@ function AdminContent() {
 
         setShowDeleteCategoryDialog(false);
         setCategoryToDelete(null);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (user && currentZone) {
@@ -785,7 +785,7 @@ function AdminContent() {
         setNewPageCategoryDescription('');
         setNewPageCategoryImage('');
         setShowPageCategoryModal(false);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (user && currentZone) {
@@ -823,7 +823,7 @@ function AdminContent() {
         // Refresh categories
         const categories = await ZoneDatabaseService.getPageCategories(currentZone.id);
         setPageCategories(categories);
-        refreshData();
+        refreshData(true);
       } else {
         throw new Error('Failed to update order');
       }
@@ -847,7 +847,7 @@ function AdminContent() {
           type: 'success',
           message: 'Category order saved successfully'
         });
-        refreshData();
+        refreshData(true);
       } else {
         throw new Error('Failed to save order');
       }
@@ -910,7 +910,7 @@ function AdminContent() {
         setNewPageCategoryDescription('');
         setNewPageCategoryImage('');
         setShowPageCategoryModal(false);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (user && currentZone) {
@@ -965,7 +965,7 @@ function AdminContent() {
 
         setShowDeletePageCategoryDialog(false);
         setPageCategoryToDelete(null);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (user && currentZone) {
@@ -1063,7 +1063,7 @@ function AdminContent() {
         setNewPageBannerImage('');
         setNewPageBannerFile(null);
         setShowPageModal(false);
-        refreshData();
+        refreshData(true);
 
       } else {
         throw new Error('Failed to add page');
@@ -1165,7 +1165,7 @@ function AdminContent() {
         setNewPageBannerImage('');
         setNewPageBannerFile(null);
         setShowPageModal(false);
-        refreshData();
+        refreshData(true);
 
       } else {
         throw new Error('Failed to update page');
@@ -1206,7 +1206,7 @@ function AdminContent() {
         if (selectedPage?.id === pageToDelete.id) {
           setSelectedPage(null);
         }
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (currentAdmin) {
@@ -1255,7 +1255,7 @@ function AdminContent() {
           type: 'success',
           message: `Song marked as ${newStatus}`
         });
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (currentAdmin) {
@@ -1300,7 +1300,7 @@ function AdminContent() {
           type: 'success',
           message: newActiveStatus ? ` ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
         });
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (currentAdmin) {
@@ -1384,7 +1384,7 @@ function AdminContent() {
 
         // Add a small delay to ensure Firebase has processed the change
         setTimeout(() => {
-          refreshData();
+          refreshData(true);
         }, 500);
       } else {
         throw new Error('Failed to save song');
@@ -1417,7 +1417,7 @@ function AdminContent() {
 
         setShowDeleteSongDialog(false);
         setSongToDelete(null);
-        refreshData();
+        refreshData(true);
 
         // Log admin action
         if (currentAdmin) {
@@ -1534,7 +1534,7 @@ function AdminContent() {
           <p className="text-red-600 font-medium mb-2">Error loading admin data</p>
           <p className="text-slate-600 text-sm mb-4">{error}</p>
           <button
-            onClick={refreshData}
+            onClick={() => refreshData()}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             Retry
@@ -1796,7 +1796,7 @@ function AdminContent() {
           {activeSection === 'Notifications' && isHQAdmin && canSeeSection('Notifications') && <SimpleNotificationsSection />}
           {activeSection === 'Activity Logs' && canSeeSection('Activity Logs') && <ActivityLogsPage />}
           {activeSection === 'Support Chat' && isHQAdmin && canSeeSection('Support Chat') && <SupportChatSection />}
-          {activeSection === 'Schedule Manager' && canSeeSection('Schedule Manager') && <ScheduleManagerSection allSongs={allSongs} />}
+          {activeSection === 'Schedule Manager' && canSeeSection('Schedule Manager') && <SchedulingBoardSection />}
           {activeSection === 'Karaoke Config' && canSeeSection('Karaoke Config') && <KaraokeConfigSection />}
         </div>
 

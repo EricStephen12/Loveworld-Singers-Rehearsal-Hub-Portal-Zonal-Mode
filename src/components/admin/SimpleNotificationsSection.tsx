@@ -38,21 +38,22 @@ export default function SimpleNotificationsSection() {
 
   // Set up real-time listener for messages
   useEffect(() => {
-    const messagesRef = collection(db, 'admin_messages');
+    const messagesRef = collection(db, 'notifications');
 
-    const q = query(messagesRef, orderBy('createdAt', 'desc'));
+    const q = query(messagesRef, where('category', '==', 'admin'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.metadata.hasPendingWrites) {
-        const msgs = snapshot.docs.map((docSnap) => {
+        let msgs = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
           return {
             ...data,
             id: docSnap.id,
-            sentAt: data.sentAt || new Date().toISOString(),
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+            sentAt: data.sentAt || data.created_at || new Date().toISOString(),
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.created_at || new Date().toISOString()
           } as AdminMessage;
         });
+        msgs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setMessages(msgs);
         setLoading(false);
       }
