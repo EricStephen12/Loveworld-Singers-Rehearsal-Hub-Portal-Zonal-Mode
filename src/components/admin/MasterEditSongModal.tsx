@@ -91,6 +91,7 @@ export function MasterEditSongModal({
     category: song?.category || '',
     lyrics: htmlToMarkdown(song?.lyrics || ''),
     solfa: htmlToMarkdown(song?.solfa || ''),
+    imageUrl: song?.imageUrl || '',
   });
 
   // Initialize audio URLs with existing data or empty
@@ -139,6 +140,7 @@ export function MasterEditSongModal({
           category: song.category || '',
           lyrics: htmlToMarkdown(song.lyrics || ''),
           solfa: htmlToMarkdown(song.solfa || ''),
+          imageUrl: song.imageUrl || '',
         });
         const initial: Record<string, string> = {
           full: song.audioUrls?.full || song.audioFile || '',
@@ -169,6 +171,7 @@ export function MasterEditSongModal({
           category: '',
           lyrics: '',
           solfa: '',
+          imageUrl: '',
         });
         setAudioUrls({
           full: '',
@@ -199,7 +202,11 @@ export function MasterEditSongModal({
   };
 
   const handleMediaFileSelect = (file: { id: string; name: string; url: string; type: string }) => {
-    if (selectingPart && file.type === 'audio') {
+    if (selectingPart === 'image' && file.type === 'image') {
+      handleInputChange('imageUrl', file.url);
+      setShowMediaSelector(false);
+      setSelectingPart(null);
+    } else if (selectingPart && file.type === 'audio') {
       setAudioUrls(prev => ({ ...prev, [selectingPart]: file.url }));
       setShowMediaSelector(false);
       setSelectingPart(null);
@@ -265,6 +272,7 @@ export function MasterEditSongModal({
         audioUrls: allAudioUrls,
         audioFile: audioUrls.full,
         customParts: customParts,
+        imageUrl: formData.imageUrl,
       };
 
       if (isCreateMode) {
@@ -489,6 +497,40 @@ export function MasterEditSongModal({
             </div>
           </div>
 
+          {/* Song Artwork */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Song Artwork</h3>
+            <div className="flex items-center gap-4">
+              {formData.imageUrl ? (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-slate-200">
+                  <img src={formData.imageUrl} alt="Song Artwork" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => handleInputChange('imageUrl', '')}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center">
+                  <span className="text-xs text-slate-400">No Image</span>
+                </div>
+              )}
+              <div className="flex-1">
+                <button
+                  onClick={() => handleOpenMediaSelector('image')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <Upload size={16} />
+                  Select Image from Media
+                </button>
+                <p className="text-xs text-slate-500 mt-2">
+                  This image will be used as the song's artwork in the mobile app.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Audio Parts Upload */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -702,8 +744,8 @@ export function MasterEditSongModal({
           setSelectingPart(null);
         }}
         onFileSelect={handleMediaFileSelect}
-        allowedTypes={['audio']}
-        title={selectingPart ? `Select ${DEFAULT_AUDIO_PARTS.find(p => p.key === selectingPart)?.label || selectingPart} File` : 'Select Audio File'}
+        allowedTypes={selectingPart === 'image' ? ['image'] : ['audio']}
+        title={selectingPart === 'image' ? 'Select Song Artwork' : (selectingPart ? `Select ${DEFAULT_AUDIO_PARTS.find(p => p.key === selectingPart)?.label || selectingPart} File` : 'Select Media File')}
       />
     </>
   );

@@ -19,6 +19,9 @@ interface EditSongBasicInfoProps {
   inputClasses: string;
   handlePaste: (e: React.ClipboardEvent, currentValue: string, setValue: (value: string) => void) => void;
   handleCreateHistory: (type: any) => void;
+  songImageUrl: string;
+  setSongImageUrl: (value: string) => void;
+  handleOpenMediaSelectorForPart: (part: string) => void;
 }
 
 export const EditSongBasicInfo: React.FC<EditSongBasicInfoProps> = ({
@@ -35,7 +38,10 @@ export const EditSongBasicInfo: React.FC<EditSongBasicInfoProps> = ({
   praiseNightCategories,
   inputClasses,
   handlePaste,
-  handleCreateHistory
+  handleCreateHistory,
+  songImageUrl,
+  setSongImageUrl,
+  handleOpenMediaSelectorForPart
 }) => {
   return (
     <div className="bg-slate-50 rounded-lg p-4 sm:p-6">
@@ -128,6 +134,43 @@ export const EditSongBasicInfo: React.FC<EditSongBasicInfoProps> = ({
               <option key={praiseNight.id} value={praiseNight.name}>{praiseNight.name}</option>
             ))}
           </select>
+        </div>
+
+        {/* Song Artwork */}
+        <div className="pt-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Song Artwork
+          </label>
+          <div className="flex items-center gap-4">
+            {songImageUrl ? (
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden border-2 border-slate-200">
+                <img src={songImageUrl} alt="Song Artwork" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => setSongImageUrl('')}
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            ) : (
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg border-2 border-dashed border-slate-300 bg-white flex flex-col items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 mb-1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span className="text-xs text-slate-400">No Image</span>
+              </div>
+            )}
+            <div className="flex-1">
+              <button
+                onClick={() => handleOpenMediaSelectorForPart('image')}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Select Artwork
+              </button>
+              <p className="text-xs text-slate-500 mt-2 max-w-sm">
+                This image will be used as the song's cover art in the mobile app.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

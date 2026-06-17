@@ -80,6 +80,7 @@ export default function EditSongModal({
   const [songNotation, setSongNotation] = useState('');
   const [songAudioFile, setSongAudioFile] = useState('');
   const [audioFile, setAudioFile] = useState<MediaFile | null>(null);
+  const [songImageUrl, setSongImageUrl] = useState('');
   const [songLyrics, setSongLyrics] = useState('');
   const [coordinatorComment, setCoordinatorComment] = useState('');
   const [coordinatorAudioUrl, setCoordinatorAudioUrl] = useState('');
@@ -287,7 +288,9 @@ export default function EditSongModal({
 
   const handleMediaFileSelect = (mediaFile: any) => {
     let fixedUrl = mediaFile.url;
-    if (selectingPart === 'comment-audio') {
+    if (selectingPart === 'image') {
+      setSongImageUrl(fixedUrl);
+    } else if (selectingPart === 'comment-audio') {
       setCoordinatorAudioUrl(fixedUrl);
     } else if (selectingPart) {
       setAudioUrls(prev => ({ ...prev, [selectingPart]: fixedUrl }));
@@ -364,6 +367,7 @@ export default function EditSongModal({
       setSongLeadGuitarist(song.leadGuitarist || '');
       setSongDrummer(song.drummer || '');
       setSongAudioFile(song.audioFile || '');
+      setSongImageUrl(song.imageUrl || '');
       setAudioFile(null);
       setSongLyrics(song.lyrics || '');
       setSongSolfas(song.solfas || '');
@@ -413,6 +417,7 @@ export default function EditSongModal({
       setSongSolfas('');
       setSongNotation('');
       setSongAudioFile('');
+      setSongImageUrl('');
       setAudioFile(null);
       setSongLyrics('');
       setCoordinatorComment('');
@@ -465,6 +470,7 @@ export default function EditSongModal({
       ...(audioFile && { mediaId: parseInt(audioFile.id) }),
       audioUrls: audioUrls,
       customParts: customParts,
+      imageUrl: songImageUrl,
       availableParts: Object.keys(audioUrls).filter(k => audioUrls[k]),
       history: song?.history || []
     };
@@ -521,6 +527,9 @@ export default function EditSongModal({
                     inputClasses={inputClasses}
                     handlePaste={handlePaste}
                     handleCreateHistory={handleCreateHistory}
+                    songImageUrl={songImageUrl}
+                    setSongImageUrl={setSongImageUrl}
+                    handleOpenMediaSelectorForPart={handleOpenMediaSelectorForPart}
                   />
 
                   <EditSongMusicDetails
@@ -624,8 +633,8 @@ export default function EditSongModal({
         isOpen={showMediaManager}
         onClose={() => setShowMediaManager(false)}
         onFileSelect={handleMediaFileSelect}
-        allowedTypes={['audio']}
-        title="Select Audio File"
+        allowedTypes={selectingPart === 'image' ? ['image'] : ['audio']}
+        title={selectingPart === 'image' ? 'Select Song Artwork' : 'Select Audio File'}
       />
 
       <EditSongHistoryModals

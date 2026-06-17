@@ -17,6 +17,7 @@ export interface MasterSong {
   category?: string;
   categories?: string[];
   audioFile?: string;
+  imageUrl?: string;
   audioUrls?: any;
   importCount: number;
   publishedAt: Date;
