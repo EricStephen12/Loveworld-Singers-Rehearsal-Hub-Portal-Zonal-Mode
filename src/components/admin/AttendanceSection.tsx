@@ -653,7 +653,7 @@ export default function AttendanceSection() {
                             ) : (record.check_in_time && new Date(record.check_in_time).toDateString() === new Date().toDateString()) ? (
                               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-100 print:border-none print:bg-transparent print:px-0">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping print:hidden" />
-                                Active Rehearsal
+                                Active {record.event_name || 'Session'}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-xl border border-slate-200 print:border-none print:bg-transparent print:px-0">

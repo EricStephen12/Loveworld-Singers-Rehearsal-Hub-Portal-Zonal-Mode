@@ -29,6 +29,7 @@ export default function QRScannerPage() {
   const animationFrameRef = useRef<number | null>(null)
   const lastScanTimeRef = useRef<number>(0)
   const statusRef = useRef<ScanStatus>('idle') // Ref for sync in anim frame
+  const eventNameRef = useRef(eventName) // Always holds latest eventName for animation frame closure
 
   // Fetch recent event names for the zone to populate the dropdown
   useEffect(() => {
@@ -62,6 +63,11 @@ export default function QRScannerPage() {
   useEffect(() => {
     statusRef.current = scanStatus
   }, [scanStatus])
+
+  // Keep eventNameRef in sync with eventName state
+  useEffect(() => {
+    eventNameRef.current = eventName
+  }, [eventName])
 
   const startCamera = async () => {
     try {
@@ -162,7 +168,7 @@ export default function QRScannerPage() {
     try {
       const adminId = user?.uid || 'anonymous-admin'
       // Pass the current zone ID so the record is linked to this zone
-      const result = await AttendanceService.checkIn(adminId, qrCode, eventName || 'Rehearsal', currentZone?.id)
+      const result = await AttendanceService.checkIn(adminId, qrCode, eventNameRef.current || 'Rehearsal', currentZone?.id)
 
       if (result.success) {
         setScanStatus('success')
