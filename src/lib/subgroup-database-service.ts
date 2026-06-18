@@ -207,7 +207,15 @@ export class SubGroupDatabaseService {
 
   static subscribeToMemberRehearsals(zoneId: string, userId: string, onUpdate: (data: any) => void) {
     this.getMemberRehearsals(zoneId, userId)
-      .then(data => onUpdate(data))
+      .then(data => {
+        if (data && Array.isArray(data.combined)) {
+          onUpdate(data.combined);
+        } else if (data && Array.isArray(data.subGroupRehearsals)) {
+          onUpdate(data.subGroupRehearsals);
+        } else {
+          onUpdate(Array.isArray(data) ? data : []);
+        }
+      })
       .catch(() => onUpdate([])); // Ensure loading state is cleared even on failure
     return () => {}; // Polling or real-time stub
   }
