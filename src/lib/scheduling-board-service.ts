@@ -15,6 +15,10 @@ export interface SchedulingProgram {
   nameChanges: any[];
   dailySchedules: any[];
   submitters: any[]; 
+  weeks?: any[];
+  days?: any[];
+  currentWeekId?: string;
+  currentDayId?: string;
 }
 
 export const SchedulingBoardService = {
@@ -50,7 +54,9 @@ export const SchedulingBoardService = {
       invalidSongs: [],
       nameChanges: [],
       dailySchedules: [],
-      submitters: []
+      submitters: [],
+      weeks: [],
+      days: []
     };
     await setDoc(doc(db, 'schedule_programs', id), newProgram);
     return newProgram;
