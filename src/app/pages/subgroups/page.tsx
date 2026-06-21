@@ -53,7 +53,9 @@ function SubGroupHubPageContent() {
       currentZone.id, 
       user.uid, 
       (data) => {
-        setRehearsals(data);
+        // Filter out HQ/Zone rehearsals, ONLY show Subgroup rehearsals on the Subgroup Hub
+        const onlySubgroups = data.filter((r: any) => r.scope === 'subgroup' || r.subGroupId);
+        setRehearsals(onlySubgroups);
         setLoading(false);
       }
     );

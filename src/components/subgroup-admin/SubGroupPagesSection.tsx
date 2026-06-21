@@ -650,7 +650,7 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
         onClose={() => setShowSongModal(false)}
         song={editingSong ? toPraiseNightSong(editingSong) : null}
         categories={standardCategories}
-        praiseNightCategories={standardPrograms as any}
+        praiseNightCategories={rehearsals as any}
         onUpdate={handleModalUpdate}
       />
     </div>
