@@ -407,7 +407,17 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
 
   const handleToggleActive = async (song: SubGroupSong) => {
     try {
+      const newActiveStatus = !song.isActive;
       await SubGroupDatabaseService.toggleSongActive(song.id, !!song.isActive);
+
+      if (newActiveStatus) {
+        const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/+$/, '');
+        fetch(`${backendUrl}/api/songs/notify-active`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ songId: song.id, isActive: true })
+        }).catch(err => console.error('Failed to trigger subgroup background notification:', err));
+      }
     } catch (error) {
       addToast({ type: 'error', message: 'Toggle failed' });
     }

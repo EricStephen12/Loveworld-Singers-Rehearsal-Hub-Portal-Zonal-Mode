@@ -86,6 +86,7 @@ interface Member {
   can_access_pre_rehearsal?: boolean;
   has_hq_access?: boolean;
   canAnnotate?: boolean;
+  canSeeArchive?: boolean;
 }
 
 export default function Members() {
@@ -284,7 +285,8 @@ export default function Members() {
           zoneId: membership.zoneId,
           zoneName: membership.zoneName,
           can_access_pre_rehearsal: !!profile?.can_access_pre_rehearsal,
-          canAnnotate: !!profile?.canAnnotate
+          canAnnotate: !!profile?.canAnnotate,
+          canSeeArchive: !!profile?.canSeeArchive
         };
       });
 
@@ -1156,6 +1158,32 @@ function MemberProfileModal({
                         className={`w-11 h-6 rounded-full transition-all relative ${member.canAnnotate ? 'bg-orange-500' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canAnnotate ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Archive Visibility Access</p>
+                        <p className="text-xs text-slate-500">Allow member to see and access archived songs</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const newState = !member.canSeeArchive;
+                          try {
+                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
+                              canSeeArchive: newState
+                            });
+                            const updated = { ...member, canSeeArchive: newState };
+                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                            setSelectedMember(updated);
+                            showToast(` Archive Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                          } catch (exp) {
+                            showToast(' Failed to change archive access', 'error');
+                          }
+                        }}
+                        className={`w-11 h-6 rounded-full transition-all relative ${member.canSeeArchive ? 'bg-amber-500' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSeeArchive ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
 

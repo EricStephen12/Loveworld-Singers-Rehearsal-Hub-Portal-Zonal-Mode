@@ -1300,6 +1300,17 @@ function AdminContent() {
           type: 'success',
           message: newActiveStatus ? ` ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
         });
+
+        // Trigger remote push notifications for active song in background
+        if (newActiveStatus) {
+          const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/+$/, '');
+          fetch(`${backendUrl}/api/songs/notify-active`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ songId: song.id, isActive: true })
+          }).catch(err => console.error('Failed to trigger background notification:', err));
+        }
+
         refreshData(true);
 
         // Log admin action
