@@ -24,9 +24,9 @@ if (!admin.apps.length) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { action, email, storedKingschatId, verifiedKingschatId, newPassword } = body
+    const { action, email, storedKingschatId, verifiedKingschatId, newPassword, firstName, zoneCode } = body
 
-    if (action !== 'reset') {
+    if (action !== 'reset' && action !== 'security_reset') {
       return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 })
     }
 
@@ -34,8 +34,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Email and new password are required' }, { status: 400 })
     }
 
-    if (!storedKingschatId || !verifiedKingschatId || storedKingschatId !== verifiedKingschatId) {
-      return NextResponse.json({ success: false, error: 'KingsChat verification failed or mismatched' }, { status: 400 })
+    if (action === 'reset') {
+      if (!storedKingschatId || !verifiedKingschatId || storedKingschatId !== verifiedKingschatId) {
+        return NextResponse.json({ success: false, error: 'KingsChat verification failed or mismatched' }, { status: 400 })
+      }
+    } else if (action === 'security_reset') {
+      if (!firstName || !zoneCode) {
+        return NextResponse.json({ success: false, error: 'First name and zonal invitation code are required' }, { status: 400 })
+      }
+
+      // Query firestore to verify details
+      const db = admin.firestore()
+      const profilesRef = db.collection('profiles')
+      const snapshot = await profilesRef.where('email', '==', email.trim().toLowerCase()).get()
+
+      if (snapshot.empty) {
+        return NextResponse.json({ success: false, error: 'No account found with this email' }, { status: 404 })
+      }
+
+      const profileDoc = snapshot.docs[0]
+      const profileData = profileDoc.data()
+
+      const storedFirstName = (profileData.first_name || '').trim().toLowerCase()
+      const storedZoneCode = (profileData.zone_code || '').trim().toUpperCase()
+
+      if (storedFirstName !== firstName.trim().toLowerCase() || storedZoneCode !== zoneCode.trim().toUpperCase()) {
+        return NextResponse.json({ success: false, error: 'Verification failed. Name or Zonal Invitation Code is incorrect.' }, { status: 400 })
+      }
     }
 
     const auth = admin.auth()
