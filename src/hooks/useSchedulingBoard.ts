@@ -32,13 +32,21 @@ export function useSchedulingBoard() {
       snap.forEach((doc: any) => {
         fetched.push({ id: doc.id, ...doc.data() } as SchedulingProgram);
       });
-      fetched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      fetched.sort((a, b) => {
+        if (a.isCurrent) return -1;
+        if (b.isCurrent) return 1;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
       
       setPrograms(fetched);
       if (fetched.length > 0) {
         // Only set active if we don't have one, or the current one is no longer in the list
         setActiveProgramId(prev => {
-          if (!prev || !fetched.find(p => p.id === prev)) return fetched[0].id;
+          if (!prev || !fetched.find(p => p.id === prev)) {
+            const currentProg = fetched.find(p => p.isCurrent);
+            if (currentProg) return currentProg.id;
+            return fetched[fetched.length - 1].id;
+          }
           return prev;
         });
       } else {
@@ -83,6 +91,14 @@ export function useSchedulingBoard() {
     await SchedulingBoardService.updateProgram(activeProgramId, { name: newName });
   };
 
+  const setCurrentProgram = async (programId: string) => {
+    await Promise.all(
+      programs.map(p => 
+        SchedulingBoardService.updateProgram(p.id, { isCurrent: p.id === programId })
+      )
+    );
+  };
+
   return {
     loading,
     canEdit,
@@ -97,6 +113,7 @@ export function useSchedulingBoard() {
     toggleArchive,
     deleteActiveProgram,
     renameActiveProgram,
+    setCurrentProgram,
     currentZone
   };
 }

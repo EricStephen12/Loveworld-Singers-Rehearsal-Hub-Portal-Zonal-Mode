@@ -18,7 +18,7 @@ export default function SchedulingBoardSection() {
   const {
     loading, canEdit, viewHistory, setViewHistory,
     programs, activeProgramId, setActiveProgramId, activeProgram,
-    createProgram, updateProgramData, toggleArchive, deleteActiveProgram, renameActiveProgram, currentZone
+    createProgram, updateProgramData, toggleArchive, deleteActiveProgram, renameActiveProgram, setCurrentProgram, currentZone
   } = useSchedulingBoard();
 
   const [activeTab, setActiveTab] = useState('schedule');
@@ -562,9 +562,12 @@ export default function SchedulingBoardSection() {
               backgroundColor: activeProgramId === p.id ? themeColor : '#f1f5f9',
               color: activeProgramId === p.id ? '#ffffff' : '#475569'
             }}
-            className="px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-transform active:scale-95 shadow-sm"
+            className="px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-transform active:scale-95 shadow-sm flex items-center gap-2"
           >
-            {p.name}
+            <span>{p.name}</span>
+            {p.isCurrent && (
+              <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${activeProgramId === p.id ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}`}>Current</span>
+            )}
           </button>
         ))}
         {canEdit && !viewHistory && (
@@ -608,6 +611,16 @@ export default function SchedulingBoardSection() {
                     <button onClick={() => { setEditProgName(activeProgram.name); setShowEditProg(true); }} className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-purple-600 hover:bg-purple-50 transition-colors shadow-sm bg-white border border-slate-200">
                       <Edit2 className="w-4 h-4" />
                     </button>
+                  )}
+                  {!activeProgram.isCurrent && !viewHistory && (
+                    <button onClick={() => setCurrentProgram(activeProgram.id)} className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-amber-500 hover:bg-amber-50 transition-colors shadow-sm bg-white border border-slate-200" title="Mark as Current Program">
+                      <Star className="w-4 h-4" />
+                    </button>
+                  )}
+                  {activeProgram.isCurrent && !viewHistory && (
+                    <span className="px-4 py-2.5 rounded-xl text-amber-600 bg-amber-50 border border-amber-200 flex items-center justify-center" title="Current Program">
+                      <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    </span>
                   )}
                   <button onClick={toggleArchive} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-transform active:scale-95 shadow-sm ${viewHistory ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}>
                     {viewHistory ? 'Restore to Active' : 'Archive Program'}

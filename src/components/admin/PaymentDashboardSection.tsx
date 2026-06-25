@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Users, TrendingUp, Search, RefreshCw, Plus, Ban, X } from 'lucide-react';
+import { DollarSign, Users, TrendingUp, Search, RefreshCw, Plus, Ban, X, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CustomLoader from '@/components/CustomLoader';
-import { authedFetch } from '@/lib/authed-fetch'
+import { authedFetch } from '@/lib/authed-fetch';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase-setup';
 
 interface PaymentRecord {
     id: string;
@@ -49,6 +51,38 @@ export default function PaymentDashboardSection() {
     const [actionReason, setActionReason] = useState('');
     const [extensionMonths, setExtensionMonths] = useState(1);
     const [actionLoading, setActionLoading] = useState(false);
+
+    // Global settings for subscriptions
+    const [hqEnabled, setHqEnabled] = useState(true);
+    const [zonalEnabled, setZonalEnabled] = useState(true);
+    const [updatingConfig, setUpdatingConfig] = useState(false);
+
+    useEffect(() => {
+        const unsub = onSnapshot(doc(db, 'payment_settings', 'global'), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                if (data.hqEnabled !== undefined) setHqEnabled(data.hqEnabled);
+                if (data.zonalEnabled !== undefined) setZonalEnabled(data.zonalEnabled);
+            }
+        });
+        return () => unsub();
+    }, []);
+
+    const handleToggleSetting = async (key: 'hqEnabled' | 'zonalEnabled', currentValue: boolean) => {
+        setUpdatingConfig(true);
+        try {
+            const docRef = doc(db, 'payment_settings', 'global');
+            await setDoc(docRef, {
+                [key]: !currentValue,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        } catch (error) {
+            console.error('Error updating payment config:', error);
+            alert('Failed to update payment setting.');
+        } finally {
+            setUpdatingConfig(false);
+        }
+    };
 
     // Load subscriptions
     const loadSubscriptions = async (silent = false) => {

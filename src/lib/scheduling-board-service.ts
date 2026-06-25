@@ -19,6 +19,7 @@ export interface SchedulingProgram {
   days?: any[];
   currentWeekId?: string;
   currentDayId?: string;
+  isCurrent?: boolean;
 }
 
 export const SchedulingBoardService = {
