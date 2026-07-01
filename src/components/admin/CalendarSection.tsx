@@ -38,6 +38,7 @@ export default function CalendarSection() {
     description: '',
     location: '',
     date: '',
+    endDate: '',
     time: '',
     image: '',
     type: 'event' as UpcomingEvent['type'],
@@ -77,6 +78,7 @@ export default function CalendarSection() {
         description: event.description || '',
         location: event.location || '',
         date: event.date,
+        endDate: event.endDate || '',
         time: event.time || '',
         image: event.image || '',
         type: event.type,
@@ -90,6 +92,7 @@ export default function CalendarSection() {
         description: '',
         location: '',
         date: moment().format('YYYY-MM-DD'),
+        endDate: '',
         time: '',
         image: '',
         type: 'event',
@@ -117,6 +120,7 @@ export default function CalendarSection() {
       const eventData: any = {
         title: formData.title.trim(),
         date: formData.date,
+        endDate: formData.endDate || null,
         type: formData.type,
         showInCarousel: formData.showInCarousel,
         isGlobal: formData.isGlobal
@@ -157,6 +161,8 @@ export default function CalendarSection() {
                 target_audience: 'all',
                 zoneId: currentZone?.id || '',
                 created_at: new Date().toISOString(),
+                event_start_date: new Date(eventData.date).toISOString(),
+                event_end_date: eventData.endDate ? new Date(eventData.endDate).toISOString() : new Date(eventData.date).toISOString(),
                 is_read: false,
                 data: { eventId: (result as any)?.id || '', type: eventData.type }
               };
@@ -359,7 +365,11 @@ export default function CalendarSection() {
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{moment(event.date).format('MMM D')}{event.time ? ` • ${event.time}` : ''}</span>
+                        <span>
+                          {moment(event.date).format('MMM D')}
+                          {event.endDate && event.endDate !== event.date ? ` - ${moment(event.endDate).format('MMM D')}` : ''}
+                          {event.time ? ` • ${event.time}` : ''}
+                        </span>
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-1">
@@ -473,13 +483,30 @@ export default function CalendarSection() {
               </div>
 
               {/* Date & Time - Stack on mobile */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date *</label>
                   <input
                     type="date"
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    onChange={(e) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        date: e.target.value,
+                        // If end date is empty or before new start date, update it to match
+                        endDate: (!prev.endDate || prev.endDate < e.target.value) ? e.target.value : prev.endDate
+                      }))
+                    }}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    min={formData.date}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
                   />
                 </div>

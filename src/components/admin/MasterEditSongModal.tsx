@@ -91,6 +91,7 @@ export function MasterEditSongModal({
     category: song?.category || '',
     lyrics: htmlToMarkdown(song?.lyrics || ''),
     solfa: htmlToMarkdown(song?.solfa || ''),
+    history: htmlToMarkdown(song?.history || ''),
     imageUrl: song?.imageUrl || '',
   });
 
@@ -140,6 +141,7 @@ export function MasterEditSongModal({
           category: song.category || '',
           lyrics: htmlToMarkdown(song.lyrics || ''),
           solfa: htmlToMarkdown(song.solfa || ''),
+          history: htmlToMarkdown(song.history || ''),
           imageUrl: song.imageUrl || '',
         });
         const initial: Record<string, string> = {
@@ -171,6 +173,7 @@ export function MasterEditSongModal({
           category: '',
           lyrics: '',
           solfa: '',
+          history: '',
           imageUrl: '',
         });
         setAudioUrls({
@@ -269,6 +272,7 @@ export function MasterEditSongModal({
         category: formData.category.trim(),
         lyrics: markdownToHtml(formData.lyrics),
         solfa: markdownToHtml(formData.solfa),
+        history: markdownToHtml(formData.history),
         audioUrls: allAudioUrls,
         audioFile: audioUrls.full,
         customParts: customParts,
@@ -704,6 +708,23 @@ export function MasterEditSongModal({
             />
             <p className="text-xs text-slate-500">
                Enter the musical notation or guide instructions for the conductor.
+            </p>
+          </div>
+
+          {/* History */}
+          <div className="space-y-2 border-t border-slate-100 pt-5">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">Song History</label>
+            </div>
+            <textarea
+              value={formData.history}
+              onChange={(e) => handleInputChange('history', e.target.value)}
+              rows={6}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none font-mono text-slate-700"
+              placeholder="Enter song history... Use **text** for bold formatting"
+            />
+            <p className="text-xs text-slate-500">
+               Document the history or testimony behind this song.
             </p>
           </div>
         </div>

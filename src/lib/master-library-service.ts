@@ -10,6 +10,7 @@ export interface MasterSong {
   title: string;
   lyrics?: string;
   solfa?: string;
+  history?: string;
   key?: string;
   tempo?: string;
   writer?: string;

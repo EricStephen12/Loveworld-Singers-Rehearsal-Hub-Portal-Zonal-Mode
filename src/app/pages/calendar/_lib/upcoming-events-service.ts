@@ -7,6 +7,7 @@ export interface UpcomingEvent {
   title: string
   description?: string
   date: string
+  endDate?: string // Multi-day event end date
   time?: string
   location?: string
   image?: string // Ecard/banner image URL
@@ -141,6 +142,7 @@ export class UpcomingEventsService {
         updatedAt: new Date().toISOString()
       }
 
+      if (eventData.endDate) cleanedData.endDate = eventData.endDate
       if (eventData.description) cleanedData.description = eventData.description
       if (eventData.time) cleanedData.time = eventData.time
       if (eventData.location) cleanedData.location = eventData.location

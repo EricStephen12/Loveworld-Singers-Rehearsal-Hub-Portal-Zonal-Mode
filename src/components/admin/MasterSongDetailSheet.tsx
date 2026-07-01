@@ -65,9 +65,7 @@ export function MasterSongDetailSheet({
   }, [song]);
 
   const isHQ = currentZone ? isHQGroup(currentZone.id) : true;
-
-
-  const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas'>('lyrics');
+  const [activeTab, setActiveTab] = useState<'lyrics' | 'solfas' | 'history'>('lyrics');
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Only use Full Mix audio in the detail sheet - other parts are for AudioLab
@@ -313,6 +311,18 @@ export function MasterSongDetailSheet({
                 <Music className="w-3 h-3" />
                 <span className="text-[10px] font-bold uppercase tracking-tight">Conductor's Guide</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all duration-200 border ${
+                  activeTab === 'history'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200'
+                }`}
+              >
+                <Clock className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-tight">History</span>
+              </button>
             </div>
           </div>
 
@@ -418,6 +428,29 @@ export function MasterSongDetailSheet({
                 />
               </div>
             )}
+
+            {activeTab === 'history' && currentSongData.history && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-4 overflow-hidden">
+                <style>{`
+                  .history-content {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: inherit;
+                    font-size: 15px;
+                    line-height: 1.7;
+                    color: #334155;
+                  }
+                  .history-content b, .history-content strong {
+                    font-weight: 700;
+                    color: #1e293b;
+                  }
+                `}</style>
+                <pre
+                  className="history-content whitespace-pre-wrap font-sans"
+                  dangerouslySetInnerHTML={{ __html: formatLyricsForDisplay(currentSongData.history) }}
+                />
+              </div>
+            )}
             
             {activeTab === 'lyrics' && !currentSongData.lyrics && (
                <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
@@ -430,6 +463,13 @@ export function MasterSongDetailSheet({
                <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
                   <Music className="w-12 h-12 text-slate-200 mx-auto mb-3" />
                   <p className="text-slate-500 font-medium">No conductor's guide available.</p>
+               </div>
+            )}
+
+            {activeTab === 'history' && !currentSongData.history && (
+               <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+                  <Clock className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium">No history available.</p>
                </div>
             )}
           </div>

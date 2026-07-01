@@ -49,6 +49,7 @@ const SchedulingBoardSection = dynamic(() => import('../../components/admin/Sche
 const KaraokeConfigSection = dynamic(() => import('../../components/admin/KaraokeConfigSection'), { ssr: false });
 const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
 const LexiconAISection = dynamic(() => import('../../components/admin/LexiconAISection'), { ssr: false });
+const AppUpdatesSection = dynamic(() => import('../../components/admin/AppUpdatesSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -185,7 +186,7 @@ function AdminContent() {
       const validSections = [
         'Dashboard', 'Pages', 'Categories', 'Media', 'Library',
         'Members', 'Notifications', 'Sub-Groups', 'Analytics',
-        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat', 'Payments', 'Lexicon Training'
+        'Calendar', 'Activity Logs', 'Submitted Songs', 'Support Chat', 'Payments', 'Lexicon Training', 'App Updates'
       ];
       if (validSections.includes(sectionParam)) {
         setActiveSection(sectionParam);
@@ -1809,6 +1810,7 @@ function AdminContent() {
           {activeSection === 'Support Chat' && isHQAdmin && canSeeSection('Support Chat') && <SupportChatSection />}
           {activeSection === 'Schedule Manager' && canSeeSection('Schedule Manager') && <SchedulingBoardSection />}
           {activeSection === 'Karaoke Config' && canSeeSection('Karaoke Config') && <KaraokeConfigSection />}
+          {activeSection === 'App Updates' && isHQAdmin && canSeeSection('App Updates') && <AppUpdatesSection />}
         </div>
 
         {/* Modals */}
