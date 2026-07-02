@@ -625,11 +625,9 @@ export default function SchedulingBoardSection() {
                   <button onClick={toggleArchive} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-transform active:scale-95 shadow-sm ${viewHistory ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}>
                     {viewHistory ? 'Restore to Active' : 'Archive Program'}
                   </button>
-                  {viewHistory && (
-                    <button onClick={() => { if(confirm('Are you sure you want to PERMANENTLY delete this program?')) deleteActiveProgram(); }} className="px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors shadow-sm bg-white border border-red-100">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button onClick={() => { if(confirm('Are you sure you want to PERMANENTLY delete this program?')) deleteActiveProgram(); }} className="px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors shadow-sm bg-white border border-red-100">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
