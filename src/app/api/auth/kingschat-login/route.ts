@@ -43,43 +43,21 @@ export async function POST(req: Request) {
     }
 
     // 1. Verify access token with KingsChat profile API to prevent spoofing
-    const profile: any = await new Promise((resolve, reject) => {
-      const options = {
-        hostname: 'connect.kingsch.at',
-        path: '/developer/api/user/profile',
-        method: 'GET',
-        headers: {
-          'api-key': KINGSCHAT_API_KEY,
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/json'
-        }
+    const profileRes = await fetch('https://connect.kingsch.at/developer/api/user/profile', {
+      method: 'GET',
+      headers: {
+        'api-key': KINGSCHAT_API_KEY,
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json'
       }
-
-      const request = https.request(options, (res) => {
-        let responseData = ''
-        res.on('data', (chunk) => {
-          responseData += chunk
-        })
-
-        res.on('end', () => {
-          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              resolve(JSON.parse(responseData))
-            } catch (err) {
-              reject(new Error('Failed to parse profile response JSON'))
-            }
-          } else {
-            reject(new Error(`Failed to fetch profile: Status ${res.statusCode} - ${responseData}`))
-          }
-        })
-      })
-
-      request.on('error', (err) => {
-        reject(err)
-      })
-
-      request.end()
     })
+
+    if (!profileRes.ok) {
+      const errorText = await profileRes.text()
+      throw new Error(`Failed to fetch profile: Status ${profileRes.status} - ${errorText}`)
+    }
+
+    const profile: any = await profileRes.json()
 
     const verifiedKingschatId = profile?.profile?.id
     console.log('[KingsChat Login] Verified profile:', JSON.stringify(profile?.profile, null, 2))
@@ -135,8 +113,10 @@ export async function POST(req: Request) {
       // Find all profiles linked to this KingsChat ID (check both casings)
       let docs: admin.firestore.QueryDocumentSnapshot[] = []
       
-      const resById1 = await db.collection('profiles').where('kingschat_id', '==', kingschatUserId).get()
-      const resById2 = await db.collection('profiles').where('kingsChatId', '==', kingschatUserId).get()
+      const [resById1, resById2] = await Promise.all([
+        db.collection('profiles').where('kingschat_id', '==', kingschatUserId).get(),
+        db.collection('profiles').where('kingsChatId', '==', kingschatUserId).get()
+      ])
       
       resById1.forEach(d => docs.push(d))
       resById2.forEach(d => {

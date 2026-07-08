@@ -37,8 +37,7 @@ export function useRealtimeSongData({ songId, enabled = true, zoneId }: UseRealt
     if (!songId || !enabled) return
 
     fetchSongData()
-    const interval = setInterval(fetchSongData, 1000)
-    return () => clearInterval(interval)
+    // Removed 1-second interval polling to prevent DDOSing the backend API
   }, [songId, enabled, fetchSongData])
 
   return {

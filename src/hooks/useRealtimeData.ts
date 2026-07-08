@@ -5,7 +5,7 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { ZoneDatabaseService } from '@/lib/zone-database-service'
 import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { FirebaseMetadataService } from '@/lib/firebase-metadata-service'
-import { lowDataOptimizer } from '@/utils/low-data-optimizer'
+import { usePraiseNightStore } from '@/stores/praiseNightStore'
 import { isHQGroup } from '@/config/zones'
 import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
 import { sanitizeImageUrl } from '@/utils/image-utils'
@@ -78,11 +78,6 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
 
   useEffect(() => {
     if (!zoneId) {
-      // Active Purge: Ensure no stale global data is lurking in the 'undefined' cache slot
-      if (typeof lowDataOptimizer.remove === 'function') {
-        lowDataOptimizer.remove('praise-nights-data-undefined');
-        lowDataOptimizer.remove('praise-nights-data-null');
-      }
       setPages([])
       setLoading(false)
       return
@@ -91,22 +86,13 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
     let isMounted = true;
     const unsubscribes: (() => void)[] = [];
 
-    // Helper to fetch and update cache
     async function fetchAndCache(timestampOverride?: number) {
       try {
         const firebasePages = await fetchFirebaseData(zoneId!, userId)
         if (firebasePages && isMounted) {
           setPages(firebasePages)
-          const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
-          const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
-          const metadataKey = `praise-nights-metadata-time-${zoneId}-${userId || 'public'}`
-
-          lowDataOptimizer.set(cacheKey, firebasePages)
-          lowDataOptimizer.set(lastFetchKey, Date.now())
-
-          if (timestampOverride) {
-            lowDataOptimizer.set(metadataKey, timestampOverride)
-          }
+          const cacheKey = `${zoneId}-${userId || 'public'}`
+          usePraiseNightStore.getState().setPages(cacheKey, firebasePages, Date.now(), timestampOverride)
         }
       } catch (e) {
         console.error('Error in fetchAndCache:', e)
@@ -116,21 +102,19 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
     async function loadInitialData() {
       try {
         setError(null)
-        const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
-        const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
-
-        const cachedData = lowDataOptimizer.get(cacheKey)
-        const lastFetchTime = lowDataOptimizer.get(lastFetchKey)
+        const cacheKey = `${zoneId}-${userId || 'public'}`
+        
+        const cachedStore = usePraiseNightStore.getState().getCache(cacheKey)
         const now = Date.now()
         const CACHE_TTL = 30 * 1000 // Keep it strict for revalidation
 
-        // INSTANT RENDER FROM CACHE
-        if (cachedData && isMounted) {
-          setPages(cachedData)
+        // INSTANT RENDER FROM ZUSTAND CACHE
+        if (cachedStore && isMounted) {
+          setPages(cachedStore.pages)
           setLoading(false) // Show cache immediately, hide spinner
           
           // If cache is "Hot" (under 30s), we can skip the background fetch
-          if (now - (lastFetchTime || 0) < CACHE_TTL) {
+          if (now - cachedStore.lastFetchTime < CACHE_TTL) {
             return;
           }
         }
@@ -151,9 +135,9 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
     // 2. Subscribe to Page Metadata (The Magic)
 
     const unsubPraiseNights = FirebaseMetadataService.subscribeToMetadata(zoneId, 'praise_nights', async (serverTimestamp) => {
-      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`) || 0
+      const cacheKey = `${zoneId}-${userId || 'public'}`
+      const lastKnownTimestamp = usePraiseNightStore.getState().getCache(cacheKey)?.metadataTime || 0
       if (serverTimestamp > lastKnownTimestamp) {
-
         await fetchAndCache(serverTimestamp)
       }
     });
@@ -173,7 +157,8 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
 
     // 4. Subscribe to Songs Metadata (Ensures rehearsal counts and song updates are picked up)
     const unsubSongs = FirebaseMetadataService.subscribeToMetadata(zoneId, 'songs', async (serverTimestamp) => {
-      const lastKnownTimestamp = lowDataOptimizer.get(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`) || 0;
+      const cacheKey = `${zoneId}-${userId || 'public'}`
+      const lastKnownTimestamp = usePraiseNightStore.getState().getCache(cacheKey)?.metadataTime || 0
       if (serverTimestamp > lastKnownTimestamp) {
         await fetchAndCache(serverTimestamp);
       }
@@ -219,36 +204,22 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
     getCurrentSongs,
     refreshData: async () => {
       try {
-        setLoading(true)
         setError(null)
 
-        // Clear local cache timestamps to force a truly fresh check
-        if (zoneId) {
-          lowDataOptimizer.set(`praise-nights-metadata-time-${zoneId}-${userId || 'public'}`, 0);
-        }
+        const cacheKey = `${zoneId}-${userId || 'public'}`
+        // Clear metadata time to force fetch
+        usePraiseNightStore.getState().updateMetadataTime(cacheKey, 0);
 
-        const updatedPages = await fetchFirebaseData(zoneId, userId)
+        const updatedPages = await fetchFirebaseData(zoneId!, userId)
         setPages(updatedPages)
 
         if (zoneId) {
-          const cacheKey = `praise-nights-data-${zoneId}-${userId || 'public'}`
-          const lastFetchKey = `praise-nights-fetch-time-${zoneId}-${userId || 'public'}`
-
-          lowDataOptimizer.set(cacheKey, updatedPages)
-          lowDataOptimizer.set(lastFetchKey, Date.now()) // Reset timer
-
-          // Also update metadata timestamp to avoid double-fetch
-          // (Since we just fetched fresh data, we are conceptually "up to date")
-          // slightly risky if another user updated EXACTLY now, but acceptable for manual refresh
+          usePraiseNightStore.getState().setPages(cacheKey, updatedPages, Date.now(), Date.now());
           await FirebaseMetadataService.ensureMetadataExists(zoneId, 'praise_nights')
-          const metadataKey = `praise-nights-metadata-time-${zoneId}-${userId || 'public'}`
-          lowDataOptimizer.set(metadataKey, Date.now())
         }
       } catch (err) {
         console.error('Error refreshing data:', err)
         setError('Failed to refresh data')
-      } finally {
-        setLoading(false)
       }
     }
   }

@@ -210,35 +210,43 @@ export default function AttendanceSection() {
   const cumulativeData = useMemo(() => {
     if (viewMode !== 'cumulative') return []
     const eventDates: Record<string, Set<string>> = {}
-    const userEventCounts: Record<string, { user_name: string, event_name: string, count: number }> = {}
+    const userEventData: Record<string, { user_name: string, event_name: string, datesAttended: Set<string> }> = {}
+
+    // Normalize event names so variations like "Special Rehearsal" and "Rehearsal 2" group together
+    const normalizeEventName = (rawName?: string) => {
+      const name = (rawName || '').toLowerCase().trim();
+      if (name.includes('rehearsal')) return 'Rehearsal';
+      if (name.includes('praise night') || name.includes('pn')) return 'Praise Night';
+      if (name.includes('service')) return 'Service';
+      if (name.includes('concert')) return 'Concert';
+      // Fallback: Title Case to fix basic case inconsistencies (e.g. "meeting" -> "Meeting")
+      return name.replace(/\b\w/g, l => l.toUpperCase()) || 'Rehearsal';
+    };
 
     allRecords.forEach(r => {
-      // Only count present check-ins
-      if (r.status === 'absent') return;
-      
-      const eventName = r.event_name || 'Rehearsal'
+      const eventName = normalizeEventName(r.event_name)
       const date = r.date_string || (r.check_in_time ? new Date(r.check_in_time).toLocaleDateString('en-CA') : 'unknown')
       
+      // Track that this event happened on this date
       if (!eventDates[eventName]) eventDates[eventName] = new Set()
       eventDates[eventName].add(date)
 
+      // Initialize the user for this event even if absent
       const userKey = `${r.user_id || r.user_name}_${eventName}`
-      if (!userEventCounts[userKey]) {
-        userEventCounts[userKey] = { user_name: r.user_name || 'Unknown', event_name: eventName, count: 0 }
+      if (!userEventData[userKey]) {
+        userEventData[userKey] = { user_name: r.user_name || 'Unknown', event_name: eventName, datesAttended: new Set() }
       }
-      userEventCounts[userKey].count++
+      
+      // Only count present/late check-ins
+      if (r.status !== 'absent') {
+        userEventData[userKey].datesAttended.add(date)
+      }
     })
 
-    // Add absent counts to total possible dates logic
-    allRecords.forEach(r => {
-      const eventName = r.event_name || 'Rehearsal'
-      const date = r.date_string || (r.check_in_time ? new Date(r.check_in_time).toLocaleDateString('en-CA') : 'unknown')
-      if (!eventDates[eventName]) eventDates[eventName] = new Set()
-      eventDates[eventName].add(date)
-    })
-
-    return Object.values(userEventCounts).map(u => ({
-      ...u,
+    return Object.values(userEventData).map(u => ({
+      user_name: u.user_name,
+      event_name: u.event_name,
+      count: u.datesAttended.size,
       totalPossible: eventDates[u.event_name].size
     })).filter(u => 
       u.user_name.toLowerCase().includes(searchTerm.toLowerCase()) || 

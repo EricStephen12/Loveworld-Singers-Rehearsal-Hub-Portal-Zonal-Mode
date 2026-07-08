@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -8,12 +8,26 @@ import { NavigationManager } from '@/utils/navigation';
 import { SafeAreaUtils } from '@/utils/safe-area-utils';
 import { DeviceSafeArea } from '@/utils/device-safe-area';
 import { lowDataOptimizer } from '@/utils/low-data-optimizer';
+import { useAuthStore } from '@/stores/authStore';
+import { useZoneStore } from '@/stores/zoneStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 
+/**
+ * AppBootstrap — Runs once on client mount.
+ *
+ * Responsibilities:
+ * 1. Initialize all Zustand stores (auth, zone, notifications)
+ * 2. Wire up cross-store reactivity (zone loads when user is ready,
+ *    notifications start when user + zone are both ready)
+ * 3. Initialize misc utilities (viewport, navigation, service workers)
+ *
+ * This is the ONLY place store initialization happens — never in components.
+ */
 export default function AppBootstrap() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Track navigation changes to save session state
+    // ── Track navigation changes ──────────────────────────────────────────────
     useEffect(() => {
         if (pathname) {
             const fullPath = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
@@ -21,12 +35,75 @@ export default function AppBootstrap() {
         }
     }, [pathname, searchParams]);
 
+    // ── Initialize Auth Store (fires onAuthStateChanged) ─────────────────────
     useEffect(() => {
-        // Client-side only initializations
+        const { initialize } = useAuthStore.getState();
+        initialize();
+
+        return () => {
+            useAuthStore.getState().cleanup();
+        };
+    }, []);
+
+    // ── Wire Zone Store: load zones when user becomes available ───────────────
+    useEffect(() => {
+        const unsub = useAuthStore.subscribe(
+            (state) => ({ user: state.user, loading: state.loading }),
+            ({ user, loading }) => {
+                if (!loading && user?.uid && user?.email) {
+                    useZoneStore.getState().loadUserZones(user.uid, user.email);
+                } else if (!user) {
+                    useZoneStore.getState().clearZoneState();
+                }
+            },
+            { equalityFn: (a, b) => a.user?.uid === b.user?.uid && a.loading === b.loading }
+        );
+
+        // Handle the case where user is already logged in when this mounts
+        const { user, loading } = useAuthStore.getState();
+        if (!loading && user?.uid && user?.email) {
+            useZoneStore.getState().loadUserZones(user.uid, user.email);
+        }
+
+        return () => unsub();
+    }, []);
+
+    // ── Wire Notification Store: start listeners when user + zone are ready ───
+    useEffect(() => {
+        let lastKey = '';
+
+        const startListeners = () => {
+            const { user } = useAuthStore.getState();
+            const { currentZone } = useZoneStore.getState();
+
+            if (user?.uid && currentZone?.id) {
+                const key = `${user.uid}:${currentZone.id}`;
+                if (key !== lastKey) {
+                    lastKey = key;
+                    useNotificationStore.getState().initialize(user.uid, currentZone.id);
+                }
+            }
+        };
+
+        // Subscribe to both stores for changes
+        const unsubAuth = useAuthStore.subscribe(startListeners);
+        const unsubZone = useZoneStore.subscribe(startListeners);
+
+        // Fire immediately in case both are already ready
+        startListeners();
+
+        return () => {
+            unsubAuth();
+            unsubZone();
+            useNotificationStore.getState().cleanup();
+        };
+    }, []);
+
+    // ── Misc utilities ────────────────────────────────────────────────────────
+    useEffect(() => {
         PerformanceOptimizer.autoOptimize();
         ViewportHeightFix.init();
 
-        // Initialize navigation states (async but we don't block boot)
         (async () => {
             await NavigationManager.init();
             const { navigationStateManager } = await import('@/utils/navigation-state');
@@ -37,7 +114,6 @@ export default function AppBootstrap() {
         DeviceSafeArea.getInstance().init();
         lowDataOptimizer.init();
 
-        // Make utilities globally available for debugging
         if (typeof window !== 'undefined') {
             (window as any).ViewportHeightFix = ViewportHeightFix;
             (window as any).SafeAreaUtils = SafeAreaUtils;
@@ -45,25 +121,13 @@ export default function AppBootstrap() {
             (window as any).lowDataOptimizer = lowDataOptimizer;
         }
 
-        // Service Worker registration (moved from layout.tsx script)
         if ('serviceWorker' in navigator) {
-            // Register main service worker
             navigator.serviceWorker.register('/sw-optimized.js')
-                .then((registration) => {
-                })
-                .catch((error) => {
- console.warn('️ Service Worker registration failed:', error);
-                });
+                .catch((error) => console.warn('️ Service Worker registration failed:', error));
 
-            // Register Firebase Messaging Service Worker
             navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then((registration) => {
-                })
-                .catch((error) => {
- console.warn('️ Firebase Messaging SW registration failed:', error);
-                });
+                .catch((error) => console.warn('️ Firebase Messaging SW registration failed:', error));
         }
-
     }, []);
 
     return null;

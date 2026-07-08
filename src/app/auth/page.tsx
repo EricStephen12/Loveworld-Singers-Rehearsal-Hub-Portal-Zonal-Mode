@@ -8,7 +8,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { KingsChatAuthService } from '@/lib/kingschat-auth'
-import { useAuthContext } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import CustomLoader from '@/components/CustomLoader'
 
 // Helper function to convert Firebase errors to user-friendly messages
@@ -62,7 +62,7 @@ const SPECIAL_LOGIN_MAP: Record<string, { email: string }> = {
 
 function AuthPageContent() {
   const router = useRouter()
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)

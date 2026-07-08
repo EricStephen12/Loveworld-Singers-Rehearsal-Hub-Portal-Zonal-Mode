@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuthContext } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { NavigationManager } from '@/utils/navigation'
 import { AUTH_CACHE_KEY } from '@/config/routes'
 
@@ -12,7 +12,7 @@ import { AUTH_CACHE_KEY } from '@/config/routes'
 export default function SplashPage() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuth()
   const [showFailsafe, setShowFailsafe] = useState(false)
 
   // Fail-safe: If stuck for 400ms, show manual entry

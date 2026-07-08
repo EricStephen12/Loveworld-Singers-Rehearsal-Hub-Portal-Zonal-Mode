@@ -320,7 +320,13 @@ class FirebaseMediaService {
 
   async searchMedia(searchTerm: string): Promise<MediaItem[]> {
     try {
-      const snapshot = await getDocs(collection(db, this.mediaCollection))
+      // Prevent unbounded reads for massive collections
+      const q = query(
+        collection(db, this.mediaCollection), 
+        orderBy('createdAt', 'desc'), 
+        limit(500)
+      )
+      const snapshot = await getDocs(q)
       const allMedia = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -467,9 +473,7 @@ class FirebaseMediaService {
 
       if (mediaIds.length === 0) return []
 
-      const mediaPromises = mediaIds.map(id => this.getMediaById(id))
-      const media = await Promise.all(mediaPromises)
-      return media.filter(m => m !== null) as MediaItem[]
+      return await this.getMediaByIds(mediaIds)
     } catch (error) {
  console.error('Error fetching continue watching:', error)
       return []
@@ -528,9 +532,7 @@ class FirebaseMediaService {
 
       if (mediaIds.length === 0) return []
 
-      const mediaPromises = mediaIds.map(id => this.getMediaById(id))
-      const media = await Promise.all(mediaPromises)
-      return media.filter(m => m !== null) as MediaItem[]
+      return await this.getMediaByIds(mediaIds)
     } catch (error) {
  console.error('Error fetching favorites:', error)
       return []

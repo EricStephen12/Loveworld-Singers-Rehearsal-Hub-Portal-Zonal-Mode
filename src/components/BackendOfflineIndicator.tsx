@@ -1,11 +1,11 @@
 'use client'
 
 import React from 'react'
-import { useAuthContext } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { WifiOff, AlertCircle, RefreshCw } from 'lucide-react'
 
 export function BackendOfflineIndicator() {
-  const { backendOffline } = useAuthContext()
+  const { backendOffline } = useAuth()
 
   if (!backendOffline) return null
 

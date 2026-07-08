@@ -64,8 +64,27 @@ export const SchedulingBoardService = {
   },
 
   async updateProgram(id: string, updates: Partial<SchedulingProgram>): Promise<void> {
+    const cleanUndefined = (o: any): any => {
+      if (o === undefined) return null;
+      if (o === null) return null;
+      if (typeof o !== 'object') return o;
+      if (Array.isArray(o)) return o.map(i => i === undefined ? null : cleanUndefined(i));
+      const res: any = {};
+      for (const k in o) {
+        if (o[k] !== undefined) {
+          res[k] = cleanUndefined(o[k]);
+        }
+      }
+      return res;
+    };
+
     updates.updatedAt = new Date().toISOString();
-    await updateDoc(doc(db, 'schedule_programs', id), updates as any);
+    const cleanedUpdates = cleanUndefined(updates);
+    
+    // updateDoc doesn't like passing undefined directly, and cleanUndefined handles it by omitting or using null
+    // But cleanUndefined maps undefined inside arrays to null, which is safe for Firestore
+    // For top-level keys that were undefined, cleanUndefined just omits them, which is perfect for updateDoc
+    await updateDoc(doc(db, 'schedule_programs', id), cleanedUpdates);
   },
 
   async deleteProgram(id: string): Promise<void> {

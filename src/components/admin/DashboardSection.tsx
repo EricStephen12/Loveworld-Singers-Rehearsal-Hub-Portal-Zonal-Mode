@@ -167,8 +167,8 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
 
       let zoneMembers: any[] = [];
       if (isHQZone) {
-        const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members')
-        const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members')
+        const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members', 5000)
+        const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members', 10000)
         const combinedMembers = [...allHQMembers, ...allZoneMembers]
 
         const seenUserIds = new Set<string>();
@@ -201,20 +201,16 @@ export default function DashboardSection({ onSectionChange }: DashboardSectionPr
       let praiseNightsCount = 0;
 
       if (isHQZone) {
-        const allSongs = await FirebaseDatabaseService.getCollection('praise_night_songs', 1000)
-        songsCount = allSongs.length;
+        songsCount = await FirebaseDatabaseService.getCollectionCount('praise_night_songs');
         setTotalSongs(songsCount)
 
-        const allPraiseNights = await FirebaseDatabaseService.getCollection('praise_nights', 500)
-        praiseNightsCount = allPraiseNights.length;
+        praiseNightsCount = await FirebaseDatabaseService.getCollectionCount('praise_nights');
         setTotalPraiseNights(praiseNightsCount)
       } else {
-        const allSongs = await ZoneDatabaseService.getAllSongsByZone(currentZone.id)
-        songsCount = allSongs.length;
+        songsCount = await ZoneDatabaseService.getSongsCountByZone(currentZone.id);
         setTotalSongs(songsCount)
 
-        const allPraiseNights = await ZoneDatabaseService.getPraiseNightsByZone(currentZone.id, 1000)
-        praiseNightsCount = allPraiseNights.length;
+        praiseNightsCount = await ZoneDatabaseService.getPraiseNightsCountByZone(currentZone.id);
         setTotalPraiseNights(praiseNightsCount)
       }
 

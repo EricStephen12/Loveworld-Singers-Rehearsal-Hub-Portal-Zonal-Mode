@@ -152,47 +152,61 @@ export async function getAllPages(): Promise<PraiseNight[]> {
 
     const loadTime = performance.now() - startTime;
 
-    // Convert database pages to your PraiseNight format
+    // ── N+1 FIX: Batch-fetch ALL media audio URLs in ONE query ──────────────────
+    // Was: 1 Supabase query per song inside the loop (50 pages × 20 songs = 1000 queries)
+    // Now: 1 query for all media IDs, then O(1) Map lookup per song
+    const allMediaIds = (pagesWithSongs || []).flatMap((page: any) =>
+      (page.songs || []).filter((s: any) => s.mediaid).map((s: any) => s.mediaid)
+    );
+
+    // Build a mediaId → audioUrl Map from one batch query
+    const mediaAudioMap = new Map<number, string>();
+    if (allMediaIds.length > 0) {
+      const { data: mediaRows } = await supabase
+        .from('media')
+        .select('id, audio_url, url')
+        .in('id', allMediaIds);
+      if (mediaRows) {
+        for (const row of mediaRows) {
+          const audioUrl = row.audio_url || row.url;
+          if (audioUrl) mediaAudioMap.set(row.id, audioUrl);
+        }
+      }
+    }
+    // ────────────────────────────────────────────────────────────────
+
     const praiseNights: PraiseNight[] = [];
 
     for (const page of pagesWithSongs || []) {
-      // Process songs in parallel for this page
-      const songs = await Promise.all(
-        (page.songs || []).map(async (song: any) => {
-          // Get audio file from media table if mediaId exists
-          let audioFile = song.audiofile;
-          if (song.mediaid) {
-            const mediaAudioUrl = await getAudioFromMedia(song.mediaid);
-            if (mediaAudioUrl) {
-              audioFile = mediaAudioUrl;
-            }
-          }
+      // Process songs synchronously now (no async per song needed)
+      const songs = (page.songs || []).map((song: any) => {
+        // O(1) Map lookup instead of an async Supabase query
+        const audioFile = (song.mediaid && mediaAudioMap.get(song.mediaid)) || song.audiofile;
 
-          return {
-            id: song.id,
-            title: song.title,
-            status: song.status,
-            category: song.category,
-            leadSinger: song.leadsinger,
-            writer: song.writer,
-            conductor: song.conductor,
-            key: song.key,
-            tempo: song.tempo,
-            leadKeyboardist: song.leadkeyboardist,
-            leadGuitarist: song.leadguitarist,
-            drummer: song.drummer,
-            lyrics: song.lyrics,
-            solfas: song.solfas,
-            notation: song.notation,
-            rehearsalCount: song.rehearsalcount ?? 0,
-            audioFile: audioFile,
-            mediaId: song.mediaid,
-            praiseNightId: song.praisenightid,
-            comments: [], // Load comments on demand for better performance
-            history: []   // Load history on demand for better performance
-          };
-        })
-      );
+        return {
+          id: song.id,
+          title: song.title,
+          status: song.status,
+          category: song.category,
+          leadSinger: song.leadsinger,
+          writer: song.writer,
+          conductor: song.conductor,
+          key: song.key,
+          tempo: song.tempo,
+          leadKeyboardist: song.leadkeyboardist,
+          leadGuitarist: song.leadguitarist,
+          drummer: song.drummer,
+          lyrics: song.lyrics,
+          solfas: song.solfas,
+          notation: song.notation,
+          rehearsalCount: song.rehearsalcount ?? 0,
+          audioFile,
+          mediaId: song.mediaid,
+          praiseNightId: song.praisenightid,
+          comments: [],
+          history: []
+        };
+      });
 
       praiseNights.push({
         id: page.id,

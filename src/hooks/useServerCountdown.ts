@@ -257,11 +257,7 @@ export function useServerCountdown({
     }
   }, [praiseNightId, targetDate, targetDateString, countdownKey, calculateTimeLeft])
 
-  // Sync with server every 30 seconds
-  useEffect(() => {
-    const syncInterval = setInterval(fetchServerTime, 30000)
-    return () => clearInterval(syncInterval)
-  }, [])
+  // Removed 30-second sync interval to prevent backend DDOS. Initial sync is sufficient.
 
   return { timeLeft, isLoading, error, serverTimeOffset }
 }

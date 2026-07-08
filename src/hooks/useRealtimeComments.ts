@@ -43,8 +43,7 @@ export function useRealtimeComments({ songId, enabled = true }: UseRealtimeComme
     if (!songId || !enabled) return
 
     fetchComments()
-    const interval = setInterval(fetchComments, 1000)
-    return () => clearInterval(interval)
+    // Removed 1-second interval polling to prevent exhausting Firebase quotas
   }, [songId, enabled, fetchComments])
 
   return {

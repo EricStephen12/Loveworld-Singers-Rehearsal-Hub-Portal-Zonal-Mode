@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import { useZone } from '@/hooks/useZone'
+import { useAuthStore } from '@/stores/authStore'
+import { useZoneStore } from '@/stores/zoneStore'
 import { 
   FirebaseChatService, 
   Chat, 
@@ -63,8 +63,10 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const { user, profile } = useAuth()
-  const { currentZone } = useZone()
+  const user = useAuthStore((s) => s.user)
+  const profile = useAuthStore((s) => s.profile)
+  const currentZone = useZoneStore((s) => s.currentZone)
+  const userId = user?.uid || profile?.id || ''
   
   // Local state for all chat data (no Zustand caching)
   const [chats, setChats] = useState<Chat[]>([])
@@ -80,37 +82,31 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null)
   const [isUsersLoading, setIsUsersLoading] = useState(false)
 
-  // Initialize user in chat system with WhatsApp presence
+  // Initialize user in chat system
   useEffect(() => {
-    // Use profile (cached) to initialize immediately, don't wait for user
-    if (profile) {
-      const userId = user?.uid || profile.id
-      const chatUser: Partial<ChatUser> = {
-        id: userId,
-        email: profile.email || user?.email || '',
-        fullName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email || 'User',
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        zoneId: currentZone?.id,
-        zoneName: currentZone?.name
-      }
-      
-      // Only add profilePic if it exists (Firebase doesn't allow undefined)
-      const profileImageUrl = (profile as any).profile_image_url
-      if (profileImageUrl) {
-        chatUser.profilePic = profileImageUrl
-      }
-      
-      // Initialize WhatsApp-style presence
-      WhatsAppPresence.initializePresence(userId)
-      
-      FirebaseChatService.createOrUpdateUser(chatUser)
-      FirebaseChatService.updateUserStatus(userId, true)
+    if (!userId) return
+
+    const chatUser: Partial<ChatUser> = {
+      id: userId,
+      email: profile?.email || user?.email || '',
+      fullName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profile?.email || 'User',
+      firstName: profile?.first_name,
+      lastName: profile?.last_name,
+      zoneId: currentZone?.id,
+      zoneName: currentZone?.name
     }
-  }, [user, profile, currentZone])
+
+    const profileImageUrl = (profile as any)?.profile_image_url
+    if (profileImageUrl) chatUser.profilePic = profileImageUrl
+
+    WhatsAppPresence.initializePresence(userId)
+    FirebaseChatService.createOrUpdateUser(chatUser)
+    FirebaseChatService.updateUserStatus(userId, true)
+  // Only re-run when userId or zone changes — not on every profile field change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, currentZone?.id])
 
     useEffect(() => {
-    const userId = user?.uid || profile?.id
     if (!userId) return
 
     const handleFocus = () => {
@@ -138,32 +134,25 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       WhatsAppPresence.cleanup(userId)
       FirebaseChatService.updateUserStatus(userId, false)
     }
-  }, [user, profile])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // Subscribe to chats - SIMPLE like WhatsApp
   useEffect(() => {
-    // Just need user ID - that's it!
-    const userId = user?.uid || profile?.id
     if (!userId) {
-      setIsChatsLoading(false) // Don't show loading if no user
+      setIsChatsLoading(false)
       return
     }
     
     setIsChatsLoading(true)
-    
-    // Subscribe to Firebase - it handles ALL filtering
     const unsubscribe = FirebaseChatService.subscribeToChats(userId, (cleanChats) => {
-      
-      // NO FILTERING HERE - Firebase service already filtered everything
-      // Just use the clean data directly
       setChats(cleanChats)
       setIsChatsLoading(false)
     })
 
-    return () => {
-      unsubscribe()
-    }
-  }, [user?.uid, profile?.id]) // Only re-run when user changes
+    return () => { unsubscribe() }
+  // Stable userId string dep — not user/profile objects
+  }, [userId])
 
   // Subscribe to messages for selected chat - Fetch fresh from Firebase
   useEffect(() => {
@@ -193,17 +182,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Load friend requests - use cached profile.id for instant loading
   useEffect(() => {
-    // Use profile.id (cached) instead of user.uid (slow to load)
-    const userId = user?.uid || profile?.id
     if (!userId) return
-
     const loadFriendRequests = async () => {
       const requests = await FirebaseChatService.getFriendRequests(userId)
       setFriendRequests(requests)
     }
-
     loadFriendRequests()
-  }, [user, profile])
+  }, [userId])
 
   // Actions
   const sendMessage = useCallback(async (messageData: { 

@@ -11,7 +11,8 @@ import {
     updateDoc,
     increment,
     onSnapshot,
-    deleteDoc
+    deleteDoc,
+    limit
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase-setup'
 
@@ -70,7 +71,8 @@ class MediaCommentService {
             const q = query(
                 collection(db, this.commentsCollection),
                 where('mediaId', '==', mediaId),
-                orderBy('createdAt', 'desc')
+                orderBy('createdAt', 'desc'),
+                limit(100)
             )
             const snapshot = await getDocs(q)
             return snapshot.docs.map(doc => ({
@@ -88,7 +90,8 @@ class MediaCommentService {
         const q = query(
             collection(db, this.commentsCollection),
             where('mediaId', '==', mediaId),
-            orderBy('createdAt', 'desc')
+            orderBy('createdAt', 'desc'),
+            limit(100)
         )
 
         return onSnapshot(q, (snapshot) => {

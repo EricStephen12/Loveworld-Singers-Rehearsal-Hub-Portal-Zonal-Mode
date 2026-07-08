@@ -36,7 +36,7 @@ import { FirebaseDatabaseService } from '@/lib/firebase-database';
 import { HQMembersService } from '@/lib/hq-members-service';
 import { ZoneInvitationService } from '@/lib/zone-invitation-service';
 import { useZone } from '@/hooks/useZone';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { isHQAdminEmail } from '@/config/roles';
 import { isHQGroup } from '@/config/zones';
 import CustomLoader from './CustomLoader';
@@ -149,13 +149,24 @@ export default function Members() {
     // Check cache first (unless force refresh)
     if (!forceRefresh) {
       const cached = membersCache.get(cacheKey);
+      
+      // Always show stale data immediately if we have it
+      if (cached && cached.data.length > 0) {
+        setMembers(cached.data);
+      }
+      
+      // If cache is still fully valid, don't re-fetch at all
       if (isCacheValid(cached)) {
-        setMembers(cached!.data);
         return;
       }
-    }
 
-    setLoading(true);
+      // Only show the blocking loading spinner if we have NO data to show
+      if (!cached || cached.data.length === 0) {
+        setLoading(true);
+      }
+    } else {
+      setLoading(true);
+    }
     try {
 
       let zoneMemberships: any[] = [];
@@ -165,7 +176,7 @@ export default function Members() {
           // Load ALL members from BOTH hq_members AND zone_members collections
 
           // Load all HQ members
-          const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members');
+          const allHQMembers = await FirebaseDatabaseService.getCollection('hq_members', 5000);
           const hqMemberships = allHQMembers.map((member: any) => ({
             ...member,
             membershipId: member.id, // Capture unique doc ID
@@ -174,7 +185,7 @@ export default function Members() {
           }));
 
           // Load all zone members
-          const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members');
+          const allZoneMembers = await FirebaseDatabaseService.getCollection('zone_members', 10000);
           const zoneMembersList = allZoneMembers.map((member: any) => ({
             ...member,
             membershipId: member.id, // Capture unique doc ID
@@ -228,30 +239,16 @@ export default function Members() {
 
       const userIds = [...seenUserIds];
 
-      // Batch fetch profiles (max 30 at a time due to Firestore 'in' query limit)
+      // Fetch all required profiles in a single optimized request
       const profilesMap = new Map<string, any>();
-      const batchSize = 30;
-
-      for (let i = 0; i < userIds.length; i += batchSize) {
-        const batchIds = userIds.slice(i, i + batchSize);
-        try {
-          // Fetch profiles in batch - use documentId for ID-based queries
-          const profiles = await FirebaseDatabaseService.getDocumentsByIds('profiles', batchIds);
-          profiles.forEach((profile: any) => {
-            if (profile?.id) profilesMap.set(profile.id, profile);
-          });
-        } catch (error) {
-          // Fallback: fetch individually if batch fails
- console.warn('Batch fetch failed, falling back to individual fetches');
-          for (const userId of batchIds) {
-            try {
-              const profile = await FirebaseDatabaseService.getDocument('profiles', userId);
-              if (profile) profilesMap.set(userId, profile);
-            } catch (e) {
-              // Skip failed profiles
-            }
-          }
-        }
+      
+      try {
+        const profiles = await FirebaseDatabaseService.getDocumentsByIds('profiles', userIds);
+        profiles.forEach((profile: any) => {
+          if (profile?.id) profilesMap.set(profile.id, profile);
+        });
+      } catch (error) {
+        console.warn('Profile fetch failed:', error);
       }
 
       // Map deduplicated memberships to member data using cached profiles
@@ -885,17 +882,45 @@ function MemberProfileModal({
   onClose: () => void;
   setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
   setSelectedMember: React.Dispatch<React.SetStateAction<Member | null>>;
-  showToast: (message: string, type: 'success' | 'error') => void;
+  showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }) {
-  const { user: currentUser } = useAuthContext();
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'info' | 'activity' | 'settings'>('info');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Member>>({ ...member });
+  const [isChatAdmin, setIsChatAdmin] = useState(false);
+  const [chatLoading, setChatLoading] = useState(true);
 
   useEffect(() => {
     setEditForm({ ...member });
   }, [member]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkChatAdmin = async () => {
+      if (!member.zoneId) {
+        if (isMounted) setChatLoading(false);
+        return;
+      }
+      try {
+        const { db } = await import('@/lib/firebase-setup');
+        const { doc, getDoc } = await import('firebase/firestore');
+        const chatRef = doc(db, 'chats_v2', `group_zone_${member.zoneId}`);
+        const chatDoc = await getDoc(chatRef);
+        if (chatDoc.exists()) {
+          const admins = chatDoc.data().admins || [];
+          if (isMounted) setIsChatAdmin(admins.includes(member.id));
+        }
+      } catch (err) {
+        console.error('Error checking chat admin status', err);
+      } finally {
+        if (isMounted) setChatLoading(false);
+      }
+    };
+    checkChatAdmin();
+    return () => { isMounted = false; };
+  }, [member.zoneId, member.id]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -1186,6 +1211,50 @@ function MemberProfileModal({
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSeeArchive ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
+
+                    {/* Zone Chat Admin Switch */}
+                    {member.zoneId && (
+                      <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Zone Chat Admin</p>
+                          <p className="text-xs text-slate-500">Allow member to manage the zone group chat</p>
+                        </div>
+                        {chatLoading ? (
+                          <div className="w-11 h-6 flex items-center justify-center">
+                            <RefreshCw className="w-4 h-4 animate-spin text-slate-400" />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              const newState = !isChatAdmin;
+                              try {
+                                const { db } = await import('@/lib/firebase-setup');
+                                const { doc, getDoc, updateDoc } = await import('firebase/firestore');
+                                const chatRef = doc(db, 'chats_v2', `group_zone_${member.zoneId}`);
+                                const chatDoc = await getDoc(chatRef);
+                                if (chatDoc.exists()) {
+                                  const admins = chatDoc.data().admins || [];
+                                  const newAdmins = newState 
+                                    ? [...admins, member.id] 
+                                    : admins.filter((a: string) => a !== member.id);
+                                  await updateDoc(chatRef, { admins: newAdmins });
+                                  setIsChatAdmin(newState);
+                                  showToast(` Chat Admin ${newState ? 'granted' : 'revoked'} successfully`, 'success');
+                                } else {
+                                  showToast(' Zone group chat does not exist yet', 'warning');
+                                }
+                              } catch (exp) {
+                                console.error('Failed to update chat admin', exp);
+                                showToast(' Failed to change chat admin status', 'error');
+                              }
+                            }}
+                            className={`w-11 h-6 rounded-full transition-all relative ${isChatAdmin ? 'bg-blue-600' : 'bg-slate-200'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isChatAdmin ? 'left-6' : 'left-1'}`} />
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {/* Restricted HQ Access Switch */}
                     {isHQAdminEmail(currentUser?.email) && (

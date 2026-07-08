@@ -1,4 +1,4 @@
-﻿// Utility function for refreshing app data while preserving auth and zone state
+// Utility function for refreshing app data while preserving auth and zone state
 export const handleAppRefresh = async () => {
   try {
     
@@ -98,9 +98,13 @@ export const handleAppRefresh = async () => {
     try {
       // Dynamically import to avoid circular dependencies
       const { useZoneStore } = await import('@/stores/zoneStore');
+      const { useAuthStore } = await import('@/stores/authStore');
       
-      // Refresh zone data from server (without clearing state)
-      await useZoneStore.getState().refreshZones();
+      const { user } = useAuthStore.getState();
+      if (user?.uid && user?.email) {
+        // Refresh zone data from server (without clearing state)
+        await useZoneStore.getState().refreshZones(user.uid, user.email);
+      }
       
       // Remove loading indicator
       const loadingDiv = document.getElementById('refresh-loading-indicator');

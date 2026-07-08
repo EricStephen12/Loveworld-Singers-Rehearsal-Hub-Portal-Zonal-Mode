@@ -214,7 +214,12 @@ export default function NotificationsPage() {
 
     const messagesRef = collection(db, 'notifications')
 
-    let q = query(messagesRef, where('category', '==', 'admin'))
+    let q = query(
+      messagesRef, 
+      where('category', '==', 'admin'),
+      orderBy('created_at', 'desc'),
+      limit(1)
+    )
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.metadata.hasPendingWrites && snapshot.docChanges().length > 0) {

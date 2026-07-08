@@ -144,41 +144,7 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
     zoneName: currentZone?.name
   } : null
 
-  // Presence Management
-  useEffect(() => {
-    if (!user?.uid) return
-
-    const updateStatus = (status: 'online' | 'offline') => {
-      updateUserPresence(user.uid, status).catch(err => 
-        console.error('[ChatContext] Presence update failed:', err)
-      )
-    }
-
-    // Initial online status
-    updateStatus('online')
-
-    // Heartbeat to keep online status fresh (every 1 minute)
-    const heartbeat = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        updateStatus('online')
-      }
-    }, 60000)
-
-    // Handle focus/blur
-    const handleFocus = () => updateStatus('online')
-    const handleBlur = () => updateStatus('offline')
-
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('blur', handleBlur)
-    window.addEventListener('beforeunload', () => updateStatus('offline'))
-
-    return () => {
-      clearInterval(heartbeat)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('blur', handleBlur)
-      updateStatus('offline')
-    }
-  }, [user?.uid])
+  // Presence Management is handled globally by authStore
 
   // Subscribe to chats
   useEffect(() => {
@@ -311,7 +277,8 @@ export function ChatProviderV2({ children }: { children: React.ReactNode }) {
        console.error('[ChatContext] Status subscription error:', err)
        // If index missing, fallback to no order
        if (err.message.includes('index')) {
-          onSnapshot(collection(db, 'statuses_v2'), (s) => {
+          const fallbackQ = query(collection(db, 'statuses_v2'), limit(100));
+          onSnapshot(fallbackQ, (s) => {
              setStatuses(s.docs.map(d => ({ id: d.id, ...d.data() } as StatusUpdate)))
           })
        }

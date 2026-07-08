@@ -10,6 +10,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'x-internal-api-key': (process.env.NEXT_PUBLIC_INTERNAL_API_KEY || 'lwsrh_production_secure_api_key_2026_x9z2').trim(),
       ...options.headers,
     },
   });
@@ -25,7 +26,14 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
 export const BackendAPI = {
   // Songs
   songs: {
-    getAll: () => apiFetch('/api/songs'),
+    getAll: (limit?: number, cursor?: string, search?: string) => {
+      const q = new URLSearchParams();
+      if (limit) q.append('limit', limit.toString());
+      if (cursor) q.append('cursor', cursor);
+      if (search) q.append('search', search);
+      const qs = q.toString();
+      return apiFetch(`/api/songs${qs ? '?' + qs : ''}`);
+    },
     getById: (id: string) => apiFetch(`/api/songs/${id}`),
     create: (data: any) => apiFetch('/api/songs', {
       method: 'POST',

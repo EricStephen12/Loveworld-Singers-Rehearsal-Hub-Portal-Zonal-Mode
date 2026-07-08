@@ -4,7 +4,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
 import 'kingschat-web-sdk/dist/stylesheets/style.min.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+// AuthProvider replaced by useAuthStore (Zustand)
+// SubscriptionProvider replaced by useSubscriptionStore (Zustand)
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { ChatProvider } from '@/app/pages/groups/_context/ChatContext'
 import { MediaProvider } from '@/app/pages/media/_context/MediaContext'
@@ -155,40 +156,38 @@ export default function RootLayout({
           <AppBootstrap />
         </Suspense>
         <ErrorBoundary>
-          <AuthProvider>
+          {/* AuthProvider removed — auth state lives in useAuthStore (Zustand) */}
+          {/* SubscriptionProvider stays for now — will migrate in Phase 2 */}
+          <SubscriptionProvider>
             <CallProvider>
               <AudioProvider>
                 <MediaProvider>
-                  <SubscriptionProvider>
-                    <ChatProvider>
-                      <AnalyticsProvider>
-                        <PermissionProvider>
-                          <ActivityLogger>
-                            {/* FCM initialized in client components */}
-                            {/* <ScreenshotPrevention /> */}
-                            <main className="h-full w-full bg-gray-50">
-                              <PageLoader>
-                                {children}
-                              </PageLoader>
-                            </main>
-                            {/* Browser will handle its own install prompt; custom UI removed */}
-                            <RealtimeNotifications />
-                            <BackendOfflineIndicator />
-                            <PushNotificationListener />
-                            <NotificationUrlHandler />
-                            <CallOverlay />
-                            <OfflineIndicator />
-                            <FeatureUpdateChecker />
-                            <ForceUpdateButton />
-                          </ActivityLogger>
-                        </PermissionProvider>
-                      </AnalyticsProvider>
-                    </ChatProvider>
-                  </SubscriptionProvider>
+                  <ChatProvider>
+                    <AnalyticsProvider>
+                      <PermissionProvider>
+                        <ActivityLogger>
+                          {/* FCM initialized in client components */}
+                          <main className="h-full w-full bg-gray-50">
+                            <PageLoader>
+                              {children}
+                            </PageLoader>
+                          </main>
+                          <RealtimeNotifications />
+                          <BackendOfflineIndicator />
+                          <PushNotificationListener />
+                          <NotificationUrlHandler />
+                          <CallOverlay />
+                          <OfflineIndicator />
+                          <FeatureUpdateChecker />
+                          <ForceUpdateButton />
+                        </ActivityLogger>
+                      </PermissionProvider>
+                    </AnalyticsProvider>
+                  </ChatProvider>
                 </MediaProvider>
               </AudioProvider>
             </CallProvider>
-          </AuthProvider>
+          </SubscriptionProvider>
         </ErrorBoundary>
       </body>
     </html>

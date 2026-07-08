@@ -62,6 +62,7 @@ export function ChatWindow({
   const [searchQuery, setSearchQuery] = useState('')
   const [activeActionMessage, setActiveActionMessage] = useState<any>(null)
   const [showHeaderMenu, setShowHeaderMenu] = useState(false)
+  const [visibleMessageCount, setVisibleMessageCount] = useState(50)
   
   const onShowSettings = () => {
     if (selectedChat?.type === 'group') onShowGroupSettings()
@@ -124,10 +125,15 @@ export function ChatWindow({
     // Implement other actions if needed
   }
 
+  // DOM Limiting: Only render a visible subset of messages to prevent browser crashes
+  const displayMessages = searchQuery.trim() 
+    ? messages.filter(m => m.text?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages.slice(-visibleMessageCount)
+
   // Date Grouping Helper
   const groupMessagesByDate = () => {
-    const groups: { [key: string]: typeof messages } = {}
-    messages.forEach(msg => {
+    const groups: { [key: string]: typeof displayMessages } = {}
+    displayMessages.forEach(msg => {
       const date = new Date(msg.timestamp).toDateString()
       if (!groups[date]) groups[date] = []
       groups[date].push(msg)
@@ -206,8 +212,9 @@ export function ChatWindow({
   const groupedMessages = groupMessagesByDate()
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden w-full h-full">
-      <div className="flex-shrink-0 flex items-center justify-between px-2 md:px-4 h-[64px] border-b border-[#e9edef] bg-white z-30 min-w-0 shadow-sm gap-2">
+    <div className="flex-1 flex flex-col bg-white relative overflow-x-hidden w-full h-full font-sans">
+      {/* Premium Glassmorphic Header */}
+      <div className="flex-shrink-0 flex items-center justify-between px-2 md:px-5 h-[72px] bg-white/80 backdrop-blur-xl border-b border-gray-100 z-30 min-w-0 shadow-[0_4px_30px_rgba(0,0,0,0.03)] gap-2 sticky top-0">
         <div className="flex items-center gap-2 md:gap-3 overflow-hidden min-w-0 flex-1">
           <button 
             onClick={onBackToList}
@@ -335,22 +342,21 @@ export function ChatWindow({
         )}
       </AnimatePresence>
 
-      {/* Messages Scroll Area */}
+      {/* Messages Scroll Area - Premium Gradient Background */}
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
         id="chat-messages-container"
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200 relative"
-        style={{
-          backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '360px',
-          backgroundPosition: 'center',
-          backgroundColor: '#efeae2',
-        }}
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-2 scroll-smooth scrollbar-thin scrollbar-thumb-gray-200 relative bg-[#fafafa]"
       >
-        {/* Subtle texture overlay */}
-        <div className="absolute inset-0 bg-white/5 pointer-events-none z-0" />
+        {/* Subtle premium mesh background */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.03] z-0"
+          style={{
+            backgroundImage: `radial-gradient(at 40% 20%, ${primaryColor} 0px, transparent 50%), radial-gradient(at 80% 0%, ${primaryColor} 0px, transparent 50%), radial-gradient(at 0% 50%, ${primaryColor} 0px, transparent 50%)`,
+            backgroundSize: '100% 100%'
+          }}
+        />
         
         <div className="relative z-10 min-h-full flex flex-col justify-end">
         {isMessagesLoading ? (
@@ -360,11 +366,22 @@ export function ChatWindow({
           </div>
         ) : (
           <div className="flex flex-col justify-end flex-1">
+            {messages.length > visibleMessageCount && !searchQuery && (
+              <div className="flex justify-center my-6">
+                <button 
+                  onClick={() => setVisibleMessageCount(prev => prev + 50)}
+                  className="px-6 py-2.5 bg-white/80 backdrop-blur border border-gray-200 rounded-full text-sm font-bold text-gray-600 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Load previous messages
+                </button>
+              </div>
+            )}
+            
             {Object.entries(groupedMessages).map(([date, msgs], groupIdx) => (
               <React.Fragment key={date}>
                 {/* Date Separator */}
-                <div className="flex justify-center my-4 first:mt-2">
-                  <div className="px-3.5 py-1.5 bg-white rounded-lg text-[12.5px] text-[#54656f] shadow-[0_1px_0.5px_rgba(11,20,26,.13)] uppercase tracking-tight">
+                <div className="flex justify-center my-6 first:mt-2">
+                  <div className="px-4 py-1.5 bg-white/80 backdrop-blur-md rounded-full text-[12px] font-bold text-gray-500 shadow-sm border border-gray-100 uppercase tracking-widest">
                     {formatGroupDate(date)}
                   </div>
                 </div>

@@ -12,6 +12,7 @@ import {
   SpreadsheetData
 } from '@/lib/schedule-service';
 import { PraiseNightSong } from '@/types/supabase';
+import { useScheduleStore } from '@/stores/scheduleStore';
 
 export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
   const { currentZone, userRole } = useZone();
@@ -77,7 +78,24 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
 
   const loadData = useCallback(async () => {
     if (!zoneId) return;
-    setLoading(true);
+
+    const cacheKey = zoneId;
+    const cachedStore = useScheduleStore.getState().getCache(cacheKey);
+    const now = Date.now();
+    const CACHE_TTL = 30 * 1000;
+
+    if (cachedStore) {
+      setCategories(cachedStore.categories);
+      setAllPrograms(cachedStore.allPrograms);
+      setLoading(false);
+      
+      if (now - cachedStore.lastFetchTime < CACHE_TTL) {
+        return;
+      }
+    } else {
+      setLoading(true);
+    }
+
     try {
       const [cats, progs] = await Promise.all([
         ScheduleCategoryService.getCategories(zoneId),
@@ -85,6 +103,12 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
       ]);
       setCategories(cats);
       setAllPrograms(progs);
+      
+      useScheduleStore.getState().setCache(cacheKey, {
+        categories: cats,
+        allPrograms: progs,
+        lastFetchTime: Date.now()
+      });
     } catch (error) {
       console.error(error);
       showToast('Failed to load data', 'error');
@@ -168,7 +192,18 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
 
       const updatedProg = { ...(program || {}), ...payload, updatedAt: new Date().toISOString(), id: program?.id || `temp_${newDate}`, zoneId: currentZone?.id || '' } as ScheduleProgram;
       setProgram(updatedProg);
-      setAllPrograms(prev => prev.map(p => (p.date === oldDate && p.categoryId === catId) ? updatedProg : p));
+      setAllPrograms(prev => {
+        const newPrograms = prev.map(p => (p.date === oldDate && p.categoryId === catId) ? updatedProg : p);
+        // Update Zustand Cache
+        const cacheStore = useScheduleStore.getState().getCache(zoneId);
+        if (cacheStore) {
+          useScheduleStore.getState().setCache(zoneId, {
+            ...cacheStore,
+            allPrograms: newPrograms
+          });
+        }
+        return newPrograms;
+      });
     } catch (error) {
       console.error(error);
       if (!isAutoSave) showToast('Failed to save program', 'error');
@@ -217,14 +252,24 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
     try {
       if (editingCat) {
         await ScheduleCategoryService.updateCategory(editingCat.id, payload);
-        setCategories(prev => prev.map(c => c.id === editingCat.id ? { ...c, ...payload } : c));
+        setCategories(prev => {
+          const newCats = prev.map(c => c.id === editingCat.id ? { ...c, ...payload } : c);
+          const cacheStore = useScheduleStore.getState().getCache(zoneId);
+          if (cacheStore) useScheduleStore.getState().setCache(zoneId, { ...cacheStore, categories: newCats });
+          return newCats;
+        });
         if (selectedCategory?.id === editingCat.id) setSelectedCategory(prev => prev ? ({ ...prev, ...payload }) : null);
         showToast('Category updated!');
       } else {
         const newId = await ScheduleCategoryService.addCategory({ ...payload, zoneId, order: categories.length, isActive: true, createdBy: 'admin' }, zoneId);
         if (newId) {
           const newCat = { id: newId, zoneId, ...payload, order: categories.length, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), createdBy: 'admin' } as ScheduleCategory;
-          setCategories(prev => [...prev, newCat]);
+          setCategories(prev => {
+            const newCats = [...prev, newCat];
+            const cacheStore = useScheduleStore.getState().getCache(zoneId);
+            if (cacheStore) useScheduleStore.getState().setCache(zoneId, { ...cacheStore, categories: newCats });
+            return newCats;
+          });
           showToast('Category added!');
         }
       }
@@ -306,10 +351,13 @@ export function useScheduleManager(allSongs: PraiseNightSong[] = []) {
 
     setAllPrograms(prev => {
       if (prev.find(p => p.date === dateId && p.categoryId === catId)) return prev;
-      return [{ ...newProgramPayload, id: `temp_${dateId}_${Date.now()}`, updatedAt: new Date().toISOString() } as ScheduleProgram, ...prev].sort((a, b) => {
+      const newPrograms = [{ ...newProgramPayload, id: `temp_${dateId}_${Date.now()}`, updatedAt: new Date().toISOString() } as ScheduleProgram, ...prev].sort((a, b) => {
         if (isDaily) return new Date(b.date).getTime() - new Date(a.date).getTime();
         return b.updatedAt.localeCompare(a.updatedAt);
       });
+      const cacheStore = useScheduleStore.getState().getCache(zoneId);
+      if (cacheStore) useScheduleStore.getState().setCache(zoneId, { ...cacheStore, allPrograms: newPrograms });
+      return newPrograms;
     });
 
     await ScheduleProgramService.updateProgram(newProgramPayload, currentZone.id, dateId);

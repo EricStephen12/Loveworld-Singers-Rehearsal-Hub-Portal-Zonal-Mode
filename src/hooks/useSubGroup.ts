@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './useAuth'
 import { useZone } from './useZone'
 import { SubGroupService, SubGroup, SubGroupRequest } from '@/lib/subgroup-service'
+import { useSubGroupStore } from '@/stores/subGroupStore'
 
 export function useSubGroup() {
   const { user } = useAuth()
@@ -21,16 +22,28 @@ export function useSubGroup() {
       setIsLoading(false)
       return
     }
+    const cacheKey = user.uid;
+    const cachedStore = useSubGroupStore.getState().getUserCache(cacheKey);
+    const now = Date.now();
+    const CACHE_TTL = 30 * 1000;
+
+    if (cachedStore) {
+      setIsSubGroupCoordinator(cachedStore.isSubGroupCoordinator);
+      setCoordinatedSubGroups(cachedStore.coordinatedSubGroups);
+      setMemberSubGroups(cachedStore.memberSubGroups);
+      setUserRequests(cachedStore.userRequests);
+      setIsLoading(false);
+
+      if (now - cachedStore.lastFetchTime < CACHE_TTL) {
+        return;
+      }
+    } else {
+      setIsLoading(true);
+    }
     
-    setIsLoading(true)
     refresh().finally(() => setIsLoading(false))
     
-    // Set up polling for real-time-like updates (every 30 seconds)
-    const interval = setInterval(() => {
-      refresh()
-    }, 30000)
-    
-    return () => clearInterval(interval)
+    // Removed 30-second polling to prevent backend overload at scale
   }, [user?.uid, currentZone?.id])
   
   const requestSubGroup = useCallback(async (
@@ -71,10 +84,19 @@ export function useSubGroup() {
     setCoordinatedSubGroups(coordinated)
     setMemberSubGroups(memberOf)
     
+    let requests: SubGroup[] = [];
     if (currentZone) {
-      const requests = await SubGroupService.getUserSubGroupRequests(currentZone.id, user.uid)
+      requests = await SubGroupService.getUserSubGroupRequests(currentZone.id, user.uid)
       setUserRequests(requests)
     }
+
+    useSubGroupStore.getState().setUserCache(user.uid, {
+      isSubGroupCoordinator: isCoordinator,
+      coordinatedSubGroups: coordinated,
+      memberSubGroups: memberOf,
+      userRequests: requests,
+      lastFetchTime: Date.now()
+    });
   }, [user?.uid, currentZone])
   
   return {
@@ -103,8 +125,23 @@ export function useZoneSubGroups() {
         setIsLoading(false)
         return
       }
+      const cacheKey = currentZone.id;
+      const cachedStore = useSubGroupStore.getState().getZoneCache(cacheKey);
+      const now = Date.now();
+      const CACHE_TTL = 30 * 1000;
+
+      if (cachedStore) {
+        setSubGroups(cachedStore.subGroups);
+        setPendingCount(cachedStore.pendingCount);
+        setIsLoading(false);
+
+        if (now - cachedStore.lastFetchTime < CACHE_TTL) {
+          return;
+        }
+      } else {
+        setIsLoading(true);
+      }
       
-      setIsLoading(true)
       try {
         const [groups, count] = await Promise.all([
           SubGroupService.getZoneSubGroups(currentZone.id),
@@ -113,8 +150,14 @@ export function useZoneSubGroups() {
         
         setSubGroups(groups)
         setPendingCount(count)
+
+        useSubGroupStore.getState().setZoneCache(cacheKey, {
+          subGroups: groups,
+          pendingCount: count,
+          lastFetchTime: Date.now()
+        });
       } catch (error) {
- console.error('Error loading zone sub-groups:', error)
+        console.error('Error loading zone sub-groups:', error)
       } finally {
         setIsLoading(false)
       }

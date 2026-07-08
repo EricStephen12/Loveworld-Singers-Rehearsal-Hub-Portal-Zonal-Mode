@@ -1,15 +1,15 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-// Ultra-fast Supabase client with optimized settings
+// Ultra-fast Supabase client — singleton, not recreated per hook call
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
     realtime: {
       params: {
-        eventsPerSecond: 10, // High frequency updates
+        eventsPerSecond: 10,
       },
     },
     global: {
@@ -19,6 +19,11 @@ const supabase = createClient(
     },
   }
 );
+
+// ── Module-scope cache with size limit (prevents memory leak on long sessions) ──
+// Guard: only create on client side (SSR would share this across requests otherwise)
+const MAX_CACHE_SIZE = 200
+const globalCache = (typeof window !== 'undefined') ? new Map<string, CacheEntry>() : null
 
 interface UseUltraFastSupabaseOptions {
   table: string;
@@ -36,8 +41,6 @@ interface CacheEntry {
   expiresAt: number;
 }
 
-// Global cache for ultra-fast data access
-const globalCache = new Map<string, CacheEntry>();
 
 export const useSupabaseQuery = <T = any>({
   table,
@@ -62,20 +65,31 @@ export const useSupabaseQuery = <T = any>({
   }, [table, select, filters, orderBy, limit]);
 
     const isCacheValid = useCallback((cacheKey: string) => {
-    const entry = globalCache.get(cacheKey);
+    const cache = globalCache
+    if (!cache) return false // SSR guard
+    const entry = cache.get(cacheKey);
     if (!entry) return false;
     return Date.now() < entry.expiresAt;
   }, []);
 
     const getCachedData = useCallback((cacheKey: string) => {
-    const entry = globalCache.get(cacheKey);
+    const cache = globalCache
+    if (!cache) return null // SSR guard
+    const entry = cache.get(cacheKey);
     return entry ? entry.data : null;
   }, []);
 
-  // Set data in cache
+  // Set data in cache — with size limit
   const setCachedData = useCallback((cacheKey: string, data: any) => {
+    const cache = globalCache
+    if (!cache) return // SSR guard
     const now = Date.now();
-    globalCache.set(cacheKey, {
+    // Evict oldest entry when at capacity
+    if (cache.size >= MAX_CACHE_SIZE) {
+      const oldestKey = cache.keys().next().value
+      if (oldestKey) cache.delete(oldestKey)
+    }
+    cache.set(cacheKey, {
       data,
       timestamp: now,
       expiresAt: now + cacheTime,
@@ -153,43 +167,48 @@ export const useSupabaseQuery = <T = any>({
     }
   }, [table, select, filters, orderBy, limit, generateCacheKey, isCacheValid, getCachedData, setCachedData]);
 
-  // Real-time subscription setup
+  // Real-time subscription setup — channel name is per-query not just per-table
+  // (was: `${table}-changes` — all instances on same table shared ONE channel)
   const setupRealtimeSubscription = useCallback(() => {
     if (!enableRealtime || channelRef.current) return;
+    
+    // Unique channel name per query instance
+    const channelName = `${table}-${cacheKeyRef.current || Math.random().toString(36).slice(2)}`;
 
     const channel = supabase
-      .channel(`${table}-changes`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all changes
+          event: '*',
           schema: 'public',
           table: table,
         },
         (payload) => {
-          
-                    setData(currentData => {
+          setData(currentData => {
             const newData = [...currentData];
             
             switch (payload.eventType) {
               case 'INSERT':
                 newData.push(payload.new as T);
                 break;
-              case 'UPDATE':
+              case 'UPDATE': {
                 const updateIndex = newData.findIndex(item => (item as any).id === payload.new.id);
                 if (updateIndex !== -1) {
                   newData[updateIndex] = payload.new as T;
                 }
                 break;
-              case 'DELETE':
+              }
+              case 'DELETE': {
                 const deleteIndex = newData.findIndex(item => (item as any).id === payload.old.id);
                 if (deleteIndex !== -1) {
                   newData.splice(deleteIndex, 1);
                 }
                 break;
+              }
             }
             
-                        const cacheKey = cacheKeyRef.current;
+            const cacheKey = cacheKeyRef.current;
             if (cacheKey) {
               setCachedData(cacheKey, newData);
             }
@@ -198,13 +217,10 @@ export const useSupabaseQuery = <T = any>({
           });
           
           setIsRealtime(true);
-          
-          // Reset realtime indicator after 2 seconds
           setTimeout(() => setIsRealtime(false), 2000);
         }
       )
-      .subscribe((status) => {
-      });
+      .subscribe();
 
     channelRef.current = channel;
   }, [table, enableRealtime, setCachedData]);
@@ -291,6 +307,7 @@ export const useSupabaseQueryRecord = <T = any>(
 
 // Cache management utilities
 export const clearSupabaseCache = (pattern?: string) => {
+  if (!globalCache) return; // SSR guard
   if (pattern) {
     const regex = new RegExp(pattern);
     for (const key of globalCache.keys()) {
@@ -304,6 +321,7 @@ export const clearSupabaseCache = (pattern?: string) => {
 };
 
 export const getCacheStats = () => {
+  if (!globalCache) return { totalEntries: 0, validEntries: 0, expiredEntries: 0, memoryUsage: 0 };
   const now = Date.now();
   let validEntries = 0;
   let expiredEntries = 0;
@@ -323,3 +341,4 @@ export const getCacheStats = () => {
     memoryUsage: JSON.stringify(Array.from(globalCache.entries())).length,
   };
 };
+

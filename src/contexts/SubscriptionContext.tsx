@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
-import { useZone } from '@/hooks/useZone'
-import { useAuth } from '@/hooks/useAuth'
+import { useZoneStore } from '@/stores/zoneStore'
+import { useAuthStore } from '@/stores/authStore'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { SubscriptionTier, SubscriptionStatus, hasFeatureAccess, getMemberLimit, SubscriptionFeatures } from '@/config/subscriptions'
 import { isBoss } from '@/lib/user-role-utils'
@@ -41,19 +41,27 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
 const SUBSCRIPTION_CACHE_KEY = 'lwsrh-subscription-cache-v1'
+const SUBSCRIPTION_CACHE_TTL = 60 * 60 * 1000 // 1 hour — prevents stale premium showing after expiry
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const { currentZone, isLoading: isZoneLoading } = useZone()
-  const { user, profile } = useAuth()
+  const currentZone = useZoneStore((s) => s.currentZone)
+  const isZoneLoading = useZoneStore((s) => s.isLoading)
+  const user = useAuthStore((s) => s.user)
+  const profile = useAuthStore((s) => s.profile)
 
-  // Initialize from cache if possible
+  // Initialize from cache if possible — with strict TTL check
   const [subscription, setSubscription] = useState<Subscription | null>(() => {
     if (typeof window === 'undefined') return null
     try {
       const cached = localStorage.getItem(SUBSCRIPTION_CACHE_KEY)
       if (cached) {
         const parsed = JSON.parse(cached)
-        // Check if cache is fresh (e.g. < 1 hour) - simplistic check for now
+        // ── FIXED: actually check the TTL (was missing before) ──────────────
+        const cachedAt = parsed._cachedAt || 0
+        if (Date.now() - cachedAt > SUBSCRIPTION_CACHE_TTL) {
+          localStorage.removeItem(SUBSCRIPTION_CACHE_KEY)
+          return null // Cache expired — force fresh fetch
+        }
         return {
           ...parsed,
           startDate: new Date(parsed.startDate),
@@ -62,7 +70,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           updatedAt: new Date(parsed.updatedAt)
         }
       }
- } catch (e) { console.error('Cache parse error', e) }
+    } catch (e) { console.error('Cache parse error', e) }
     return null
   })
 
@@ -118,9 +126,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           updatedAt: individualData.updatedAt ? new Date(individualData.updatedAt.seconds * 1000) : new Date()
         }
 
-        // Save to state and cache
+        // Save to state and cache (with timestamp for TTL check)
         setSubscription(subData)
-        localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify(subData))
+        localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify({
+          ...subData,
+          _cachedAt: Date.now()
+        }))
 
         // Migration: If we found a legacy sub, move it to the global ID format for future 
         if (individualData.id !== individualId) {
@@ -149,11 +160,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }
 
-  // Load subscription when user changes or zone initializes
-  // Added: Re-run when zone finishes loading to check legacy fallbacks if needed
+  // Load subscription when user changes or zone is first initialized.
+  // ── FIXED: was firing twice per zone change because isZoneLoading went true→false
+  // Now only fires when zone is ready (isZoneLoading === false AND currentZone?.id changes)
+  const zoneReady = !isZoneLoading
   useEffect(() => {
-    loadSubscription()
-  }, [user?.uid, isZoneLoading, currentZone?.id])
+    if (user?.uid) loadSubscription()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, zoneReady ? currentZone?.id : undefined])
 
   // Refresh subscription
   const refreshSubscription = async () => {

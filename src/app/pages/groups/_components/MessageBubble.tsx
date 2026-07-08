@@ -178,18 +178,18 @@ export function MessageBubble({
   const { toggleReaction } = useChatV2()
   const [showActions, setShowActions] = useState(false)
 
-  // Dynamic border radius based on position in message group (Telegram-style)
+  // Modern rounded bubbles (iMessage style) without explicit SVG tails
   const getBubbleRadius = () => {
     if (isOwn) {
-      if (isFirstInGroup && isLastInGroup) return 'rounded-2xl rounded-tr-md' // solo
-      if (isFirstInGroup) return 'rounded-2xl rounded-tr-md rounded-br-md' // first
-      if (isLastInGroup) return 'rounded-2xl rounded-tr-md' // last (with tail)
-      return 'rounded-2xl rounded-tr-md rounded-br-md' // middle
+      if (isFirstInGroup && isLastInGroup) return 'rounded-[20px] rounded-br-[4px]'
+      if (isFirstInGroup) return 'rounded-[20px] rounded-br-[4px]'
+      if (isLastInGroup) return 'rounded-[20px] rounded-br-[20px]'
+      return 'rounded-[20px] rounded-br-[4px]'
     } else {
-      if (isFirstInGroup && isLastInGroup) return 'rounded-2xl rounded-tl-md'
-      if (isFirstInGroup) return 'rounded-2xl rounded-tl-md rounded-bl-md'
-      if (isLastInGroup) return 'rounded-2xl rounded-tl-md'
-      return 'rounded-2xl rounded-tl-md rounded-bl-md'
+      if (isFirstInGroup && isLastInGroup) return 'rounded-[20px] rounded-bl-[4px]'
+      if (isFirstInGroup) return 'rounded-[20px] rounded-bl-[4px]'
+      if (isLastInGroup) return 'rounded-[20px] rounded-bl-[20px]'
+      return 'rounded-[20px] rounded-bl-[4px]'
     }
   }
 
@@ -266,22 +266,13 @@ export function MessageBubble({
                 <ChevronDown className={`w-3.5 h-3.5 ${isOwn ? 'text-white' : 'text-gray-500'}`} />
               </div>
             </div>
-          <div className="flex items-start">
-            {!isOwn && hasTail && (
-              <div className="flex-shrink-0 -mr-[1px] mt-0">
-                <svg viewBox="0 0 8 13" width="8" height="13" className="text-white fill-current drop-shadow-sm">
-                  <path d="M1.533 2.118L8 11.114V0H2.812C1.042 0 .474 1.156 1.533 2.118z"></path>
-                </svg>
-              </div>
-            )}
-            {!isOwn && !hasTail && <div className="w-0" />}
-
+          <div className="flex items-end">
             <div 
-              className={`relative shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all ${
-                isOwn ? '' : 'bg-white'
+              className={`relative shadow-sm transition-all ${
+                isOwn ? '' : 'bg-white border border-gray-100/50'
               } ${getBubbleRadius()}`}
               style={isOwn ? { 
-                backgroundColor: primaryColor,
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
                 color: '#ffffff'
               } : { color: '#111b21' }}
             >
@@ -389,14 +380,6 @@ export function MessageBubble({
                 )}
               </div>
             </div>
-
-            {isOwn && hasTail && (
-              <div className="flex-shrink-0 -ml-[1px] mt-0">
-                <svg viewBox="0 0 8 13" width="8" height="13" className="fill-current drop-shadow-sm" style={{ color: primaryColor }}>
-                  <path d="M5.188 0H8v11.114l-6.467-8.996C.474 1.156 1.042 0 2.812 0h2.376z"></path>
-                </svg>
-              </div>
-            )}
           </div>
           </div>
         </div>

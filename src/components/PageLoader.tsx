@@ -159,8 +159,17 @@ export function PageLoader({ children }: PageLoaderProps) {
 
   if (shouldShowLoader) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
-        <CustomLoader message="" />
+      <div className="fixed inset-0 z-[9999] bg-slate-50/90 backdrop-blur-sm flex flex-col items-center justify-center">
+        {/* Subtle mesh pattern for premium feel */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-40 z-0"
+          style={{
+            backgroundImage: `radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%)`
+          }}
+        />
+        <div className="relative z-10">
+          <CustomLoader message="" />
+        </div>
       </div>
     );
   }
@@ -170,8 +179,16 @@ export function PageLoader({ children }: PageLoaderProps) {
   const isAuthPage = pathname === '/auth';
   if (isAuthPage && ((hasAuthCache && !user) || user)) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
-        <CustomLoader message="" />
+      <div className="fixed inset-0 z-[9999] bg-slate-50/90 backdrop-blur-sm flex flex-col items-center justify-center">
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-40 z-0"
+          style={{
+            backgroundImage: `radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%)`
+          }}
+        />
+        <div className="relative z-10">
+          <CustomLoader message="" />
+        </div>
       </div>
     );
   }

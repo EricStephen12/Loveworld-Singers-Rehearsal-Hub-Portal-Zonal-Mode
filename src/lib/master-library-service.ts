@@ -46,8 +46,15 @@ export interface MasterProgram {
 export class MasterLibraryService {
   // --- SONGS ---
   
-  static async getMasterSongs(_limitCount = 10000, _forceRefresh = false): Promise<MasterSong[]> {
-    const response = await BackendAPI.songs.getAll();
+  // Track cursor for pagination
+  static nextCursor: string | null = null;
+  static hasMore: boolean = true;
+
+  static async getMasterSongs(limitCount = 50, _forceRefresh = false): Promise<MasterSong[]> {
+    const response = await BackendAPI.songs.getAll(limitCount);
+    // Assuming backend returns { data: [...], nextCursor: '...' }
+    this.nextCursor = response.nextCursor || null;
+    this.hasMore = !!this.nextCursor || (response.data && response.data.length === limitCount);
     return response.data || [];
   }
 
@@ -56,12 +63,16 @@ export class MasterLibraryService {
     return response.data;
   }
 
-  static async loadMoreMasterSongs(_limitCount = 1000): Promise<MasterSong[]> {
-    return []; // Backend currently returns all
+  static async loadMoreMasterSongs(limitCount = 50): Promise<MasterSong[]> {
+    if (!this.hasMore) return [];
+    const response = await BackendAPI.songs.getAll(limitCount, this.nextCursor || undefined);
+    this.nextCursor = response.nextCursor || null;
+    this.hasMore = !!this.nextCursor || (response.data && response.data.length === limitCount);
+    return response.data || [];
   }
 
   static hasMoreMasterSongs(): boolean {
-    return false;
+    return this.hasMore;
   }
 
   // --- PROGRAMS ---
@@ -118,9 +129,9 @@ export class MasterLibraryService {
   }
 
   static async searchMasterSongs(searchTerm: string): Promise<MasterSong[]> {
-    const all = await this.getMasterSongs();
-    const term = searchTerm.toLowerCase();
-    return all.filter(s => s.title?.toLowerCase().includes(term));
+    // Server-side search
+    const response = await BackendAPI.songs.getAll(50, undefined, searchTerm);
+    return response.data || [];
   }
 
   // HQ Internal

@@ -6,6 +6,7 @@ import { ZoneDatabaseService } from '@/lib/zone-database-service';
 import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
 import { isHQGroup, isBossZone } from '@/config/zones';
+import { useMasterLibraryStore } from '@/stores/masterLibraryStore';
 
 export function useMasterLibrary(isHQAdmin: boolean = false) {
   const { currentZone } = useZone();
@@ -75,12 +76,31 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
   }, []);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    const zoneIdKey = currentZone?.id || 'public';
+    const CACHE_TTL = 30 * 1000; // 30 seconds
+    const now = Date.now();
+    const cachedStore = useMasterLibraryStore.getState().getCache(zoneIdKey);
+
+    // INSTANT RENDER FROM CACHE
+    if (cachedStore) {
+      setMasterSongs(cachedStore.songs);
+      setStats(cachedStore.stats);
+      setHqInternalSongs(cachedStore.internalSongs);
+      setPrograms(cachedStore.programs);
+      setLoading(false);
+
+      if (now - cachedStore.lastFetchTime < CACHE_TTL) {
+        return; // Cache is hot, skip background fetch
+      }
+    } else {
+      setLoading(true);
+    }
+
     try {
       const [songs, statsData, internal, programList] = await Promise.all([
-        MasterLibraryService.getMasterSongs(10000, true),
+        MasterLibraryService.getMasterSongs(50, true), // ── PAGINATION FIX: 50 instead of 10000
         MasterLibraryService.getMasterLibraryStats(),
-        MasterLibraryService.getHQInternalSongs(1000),
+        MasterLibraryService.getHQInternalSongs(100),
         MasterLibraryService.getMasterPrograms()
       ]);
 
@@ -95,6 +115,16 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
         const praiseNights = await ZoneDatabaseService.getPraiseNightsByZone(currentZone.id, 50);
         setZonePraiseNights(praiseNights);
       }
+
+      // Update Zustand Cache
+      useMasterLibraryStore.getState().setCache(zoneIdKey, {
+        songs,
+        stats: statsData,
+        internalSongs: internal,
+        programs: programList,
+        lastFetchTime: Date.now()
+      });
+
     } catch (error) {
       console.error('Error loading master library:', error);
       showToast('error', 'Failed to load Master Library');
@@ -106,6 +136,31 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Server-side search effect
+  useEffect(() => {
+    if (!searchTerm) {
+      if (masterSongs.length < 50) loadData(); // Reload default list if we were searching
+      return;
+    }
+    
+    const delayDebounceFn = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const searchResults = await MasterLibraryService.searchMasterSongs(searchTerm);
+        setMasterSongs(searchResults);
+        // Reset hasMore because we are showing search results
+        setHasMoreMasterSongs(false); 
+      } catch (err) {
+        console.error('Search failed', err);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   // Pagination & Filtering
   const filteredMasterSongs = useMemo(() => {
@@ -126,6 +181,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
       });
     }
 
+    // Server-side search handles searchTerm, so we only filter locally if something missed
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(song =>

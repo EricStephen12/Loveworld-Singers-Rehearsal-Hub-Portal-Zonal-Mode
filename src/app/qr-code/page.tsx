@@ -7,6 +7,7 @@ import { AttendanceService } from '@/lib/attendance-service'
 import { useAuth } from '@/hooks/useAuth'
 import { useZone } from '@/hooks/useZone'
 import jsQR from 'jsqr'
+import { useQRScannerStore } from '@/stores/qrScannerStore'
 
 type ScanStatus = 'idle' | 'processing' | 'success' | 'failed'
 
@@ -19,8 +20,10 @@ export default function QRScannerPage() {
 
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle')
   const [statusMessage, setStatusMessage] = useState('')
-  const [eventName, setEventName] = useState('Rehearsal')
-  const [recentEvents, setRecentEvents] = useState<string[]>(['Rehearsal', 'Praise Night', 'Sunday Service'])
+  
+  const { lastEventName, setLastEventName, customEvents, addCustomEvent } = useQRScannerStore()
+  const [eventName, setEventName] = useState(lastEventName || 'Rehearsal')
+  const [recentEvents, setRecentEvents] = useState<string[]>(Array.from(new Set(['Rehearsal', 'Praise Night', 'Sunday Service', ...customEvents])))
   const [isTypingCustom, setIsTypingCustom] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -67,7 +70,8 @@ export default function QRScannerPage() {
   // Keep eventNameRef in sync with eventName state
   useEffect(() => {
     eventNameRef.current = eventName
-  }, [eventName])
+    setLastEventName(eventName)
+  }, [eventName, setLastEventName])
 
   const startCamera = async () => {
     try {
@@ -275,7 +279,10 @@ export default function QRScannerPage() {
               <button
                 onClick={() => {
                   if (eventName.trim()) {
-                    setRecentEvents(prev => Array.from(new Set([eventName.trim(), ...prev])))
+                    const newEvent = eventName.trim();
+                    setRecentEvents(prev => Array.from(new Set([newEvent, ...prev])))
+                    addCustomEvent(newEvent)
+                    setEventName(newEvent)
                   } else {
                     setEventName(recentEvents[0] || 'Rehearsal')
                   }

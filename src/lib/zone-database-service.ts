@@ -32,6 +32,22 @@ export class ZoneDatabaseService {
     return response.data || [];
   }
 
+  static async getPraiseNightsCountByZone(zoneId: string) {
+    const isHQ = isHQGroup(zoneId);
+    if (isHQ) {
+      return await FirebaseDatabaseService.getCollectionCount('praise_nights');
+    }
+    return await FirebaseDatabaseService.getCollectionCountWhere('zone_praise_nights', 'zoneId', '==', zoneId);
+  }
+
+  static async getSongsCountByZone(zoneId: string) {
+    const isHQ = isHQGroup(zoneId);
+    if (isHQ) {
+      return await FirebaseDatabaseService.getCollectionCount('praise_night_songs');
+    }
+    return await FirebaseDatabaseService.getCollectionCountWhere('zone_songs', 'zoneId', '==', zoneId);
+  }
+
   static async createPraiseNight(zoneId: string, data: any) {
     return await BackendAPI.rehearsals.create({ ...data, zoneId });
   }

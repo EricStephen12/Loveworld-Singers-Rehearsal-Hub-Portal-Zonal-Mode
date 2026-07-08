@@ -42,12 +42,13 @@ export class AttendanceService {
       if (qrCode.startsWith('LW-ATTEND-')) {
         const parts = qrCode.split('-');
         if (parts.length >= 4) {
-          const qrTimestamp = parseInt(parts[3], 10);
+          // Timestamp is always the second to last part, regardless of hyphens in userId
+          const qrTimestamp = parseInt(parts[parts.length - 2], 10);
           const currentTimestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
           
-          // If the QR code is older than 10 seconds or from the future, reject it
-          if (currentTimestamp - qrTimestamp > 10 || currentTimestamp - qrTimestamp < -5) {
-            return { success: false, message: 'QR Code has expired. Please ask the member to show their active screen.' };
+          // Allow a 300-second (5 minutes) window (past and future) to account for significant device clock drift
+          if (!isNaN(qrTimestamp) && (currentTimestamp - qrTimestamp > 300 || currentTimestamp - qrTimestamp < -300)) {
+            return { success: false, message: 'QR Code has expired or invalid device time. Please ensure device time is set automatically.' };
           }
         }
       }

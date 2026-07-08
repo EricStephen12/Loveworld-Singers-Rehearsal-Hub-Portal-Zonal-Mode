@@ -6,7 +6,6 @@ import { Search, Plus, MessageCircle, Check, CheckCheck, ImageIcon, FileText, Mi
 import { useChatV2 } from '../_context/ChatContextV2'
 import { useAuth } from '@/hooks/useAuth'
 import { SyncAvatar } from './SyncAvatar'
-import { StatusRow } from './StatusRow'
 
 interface ChatListProps {
   searchTerm: string
@@ -55,13 +54,7 @@ export function ChatList({
   }
 
   const [filterType, setFilterType] = React.useState<'All' | 'Direct' | 'Groups'>('All')
-  const [activeTab, setActiveTab] = React.useState<'Chats' | 'Updates'>('Chats')
   const [showFilters, setShowFilters] = React.useState(true)
-
-  const TABS = [
-    { id: 'Chats', label: 'Chats', icon: MessageCircle },
-    { id: 'Updates', label: 'Updates', icon: LayoutGrid }
-  ]
 
   return (
     <div className={`w-full md:w-80 lg:w-[380px] flex-shrink-0 bg-white border-r border-gray-200/80 flex flex-col h-full relative overflow-visible ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
@@ -87,7 +80,7 @@ export function ChatList({
                 className="rounded-full"
               />
             </button>
-            <h1 className="text-[20px] font-bold text-[#111b21] flex-1 truncate">{activeTab}</h1>
+            <h1 className="text-[20px] font-bold text-[#111b21] flex-1 truncate">Chats</h1>
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0">
@@ -107,44 +100,11 @@ export function ChatList({
             </button>
           </div>
         </div>
-
-        {/* Tab Switcher - More Premium Design */}
-        <div className="flex items-center w-full border-t border-gray-100">
-           {TABS.map(tab => (
-             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className="flex-1 relative py-4 flex flex-col items-center gap-1 group transition-colors"
-             >
-                <div className="flex items-center justify-center gap-2.5">
-                   <tab.icon className={`w-[18px] h-[18px] transition-all ${activeTab === tab.id ? 'scale-110' : 'text-[#54656f] group-hover:text-gray-900 opacity-60'}`} style={activeTab === tab.id ? { color: primaryColor } : {}} />
-                   <span className={`text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === tab.id ? '' : 'text-[#54656f] group-hover:text-gray-900 opacity-60'}`} style={activeTab === tab.id ? { color: primaryColor } : {}}>
-                     {tab.label}
-                   </span>
-                </div>
-                {activeTab === tab.id && (
-                  <motion.div 
-                    layoutId="activeTabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full shadow-sm"
-                    style={{ backgroundColor: primaryColor }}
-                  />
-                )}
-             </button>
-           ))}
-        </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'Chats' ? (
-          <motion.div
-            key="chats-tab"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            className="flex-1 flex flex-col overflow-hidden"
-          >
-            {/* Search & Filters (Only for Chats) */}
-            <div className="px-4 py-3 space-y-3 bg-white border-b border-gray-50 shadow-sm">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Search & Filters */}
+        <div className="px-4 py-3 space-y-3 bg-white border-b border-gray-50 shadow-sm">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
@@ -305,22 +265,7 @@ export function ChatList({
                 </div>
               )}
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="updates-tab"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col bg-[#f0f2f5] overflow-y-auto"
-          >
-             
-             <div className="flex-1">
-                <StatusRow primaryColor={primaryColor} isVerticalList={true} />
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </div>
   )
 }

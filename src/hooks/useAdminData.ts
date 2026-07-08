@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+'use client';
 
+import { create } from 'zustand'
 import { PraiseNight, PraiseNightSong } from '@/types/supabase'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { ZoneDatabaseService } from '@/lib/zone-database-service'
@@ -7,22 +8,19 @@ import { PraiseNightSongsService } from '@/lib/praise-night-songs-service'
 import { isHQGroup } from '@/config/zones'
 import { sanitizeImageUrl } from '@/utils/image-utils'
 
-interface AdminData {
+interface AdminState {
   pages: PraiseNight[]
   loading: boolean
   error: string | null
+  currentZoneId?: string
+  songsCache: Record<string, PraiseNightSong[]>
+  lastFetchTime: number
+
   refreshData: (silent?: boolean) => Promise<void>
   getCurrentPage: (id: string) => PraiseNight | null
   getCurrentSongs: (pageId: string, forceRefresh?: boolean) => Promise<PraiseNightSong[]>
   setZoneId: (zoneId: string) => void
 }
-
-let adminDataCache: {
-  pages: PraiseNight[]
-  timestamp: number
-  songs: Map<string, PraiseNightSong[]>
-  zoneId?: string
-} | null = null
 
 const CACHE_DURATION = 30000
 
@@ -33,12 +31,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
 
     if (zoneId && isHQGroup(zoneId)) {
       pages = await FirebaseDatabaseService.getCollection('praise_nights')
-      // For HQ, we might need a different strategy if there are too many songs, 
-      // but for now let's assume fetching praise_night_songs collection (if it exists) or similar.
-      // Actually HQ might not need song counts in the main list or has different structure.
-      // Let's skip song count for HQ for now or handle it if critical.
     } else if (zoneId) {
-      // Parallel fetch for potential performance boost
       const [fetchedPages, fetchedSongs] = await Promise.all([
         ZoneDatabaseService.getPraiseNightsByZone(zoneId, 1000),
         ZoneDatabaseService.getAllSongsByZone(zoneId)
@@ -51,8 +44,6 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
 
     if (pages.length === 0) return []
 
-
-
     return pages.map((page) => ({
       id: page.id,
       firebaseId: page.id,
@@ -62,7 +53,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       category: (page as any).category || 'ongoing',
       pageCategory: (page as any).pageCategory || undefined,
       bannerImage: sanitizeImageUrl((page as any).bannerImage, 'banner'),
-      categoryOrder: (page as any).categoryOrder || [], // CRITICAL: Added for category reordering
+      categoryOrder: (page as any).categoryOrder || [],
       songCount: allZoneSongs.filter((s: any) => {
         const songPageId = s.praiseNightId || s.praisenightid || s.praisenight_id || s.pageId
         if (!songPageId) return false
@@ -77,7 +68,7 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       songs: []
     }))
   } catch (error) {
- console.error('Admin: Error fetching data:', error)
+    console.error('Admin: Error fetching data:', error)
     throw error
   }
 }
@@ -86,112 +77,72 @@ async function fetchPageSongs(pageId: string, zoneId?: string): Promise<PraiseNi
   try {
     return await PraiseNightSongsService.getSongsByPraiseNight(pageId, zoneId)
   } catch (error) {
- console.error(`Error fetching songs for page ${pageId}:`, error)
+    console.error(`Error fetching songs for page ${pageId}:`, error)
     return []
   }
 }
 
-export function useAdminData(): AdminData {
-  const [pages, setPages] = useState<PraiseNight[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [currentZoneId, setCurrentZoneId] = useState<string | undefined>(undefined)
+export const useAdminData = create<AdminState>((set, get) => ({
+  pages: [],
+  loading: true, // Start true so it shows loading immediately before zone mounts
+  error: null,
+  currentZoneId: undefined,
+  songsCache: {},
+  lastFetchTime: 0,
 
-  const loadData = async () => {
+  refreshData: async (silent = false) => {
+    const { currentZoneId, pages } = get()
+    
+    // Auto-return if we recently fetched (cache logic)
+    if (!silent && (Date.now() - get().lastFetchTime) < CACHE_DURATION && pages.length > 0) {
+      return;
+    }
+
+    if (!silent && pages.length === 0) set({ loading: true })
+
     try {
-      setError(null)
-
-      if (adminDataCache &&
-        adminDataCache.zoneId === currentZoneId) {
-        setPages(adminDataCache.pages)
-        setLoading(false)
-
-        // If the cache is still fresh within 30s, we can skip the background fetch
-        if ((Date.now() - adminDataCache.timestamp) < CACHE_DURATION) {
-          return
-        }
+      set({ error: null })
+      const freshPages = await fetchAdminData(currentZoneId)
+      set({ 
+        pages: freshPages, 
+        lastFetchTime: Date.now(),
+        error: null,
+        loading: false
+      })
+    } catch (err: any) {
+      console.warn('Admin: Backend unreachable or returned error:', err)
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load data'
+      if (get().pages.length === 0) {
+        set({ error: errorMsg, loading: false })
+      } else {
+        set({ loading: false }) // Keep existing pages if we have them
       }
-
-      // Background Fetch / Initial Fetch
-      let freshPages: PraiseNight[] = []
-      try {
-        freshPages = await fetchAdminData(currentZoneId)
-      } catch (err) {
-        console.warn('Admin: Backend unreachable or returned error, falling back to empty state:', err)
-        // Only set error if we don't even have cached data
-        if (!adminDataCache) {
-          // If it's a network error, maybe it's just slow or offline
-          const errorMsg = err instanceof Error ? err.message : 'Failed to load data'
-          if (errorMsg.includes('fetch') || errorMsg.includes('NetworkError')) {
-             console.warn('Network connectivity issue with backend');
-          } else {
-             setError(errorMsg)
-          }
-        }
-        freshPages = adminDataCache?.pages || []
-      }
-
-      adminDataCache = {
-        pages: freshPages,
-        timestamp: Date.now(),
-        songs: new Map(),
-        zoneId: currentZoneId
-      }
-
-      setPages(freshPages)
-    } catch (err) {
-      console.error('Admin: Critical failure in loadData:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load data')
-    } finally {
-      setLoading(false)
     }
-  }
+  },
 
-  const refreshData = useCallback(async (silent = false) => {
-    adminDataCache = null
-    if (!silent && pages.length === 0) setLoading(true)
-    await loadData()
-  }, [currentZoneId])
+  getCurrentPage: (id: string) => {
+    return get().pages.find(page => page.id === id) || null
+  },
 
-  const getCurrentPage = useCallback((id: string): PraiseNight | null => {
-    return pages.find(page => page.id === id) || null
-  }, [pages])
-
-  const getCurrentSongs = useCallback(async (pageId: string, forceRefresh = false): Promise<PraiseNightSong[]> => {
-    if (!forceRefresh && adminDataCache?.songs.has(pageId)) {
-      return adminDataCache.songs.get(pageId)!
-    }
-
-    if (forceRefresh && adminDataCache?.songs.has(pageId)) {
-      adminDataCache.songs.delete(pageId)
+  getCurrentSongs: async (pageId: string, forceRefresh = false) => {
+    const { songsCache, currentZoneId } = get()
+    
+    if (!forceRefresh && songsCache[pageId]) {
+      return songsCache[pageId]
     }
 
     const songs = await fetchPageSongs(pageId, currentZoneId)
-    if (adminDataCache) {
-      adminDataCache.songs.set(pageId, songs)
-    }
-
+    set((state) => ({
+      songsCache: { ...state.songsCache, [pageId]: songs }
+    }))
     return songs
-  }, [currentZoneId])
+  },
 
-  const setZoneId = useCallback((zoneId: string) => {
-    setCurrentZoneId(zoneId)
-    adminDataCache = null
-  }, [])
-
-  useEffect(() => {
-    if (currentZoneId) {
-      loadData()
+  setZoneId: (zoneId: string) => {
+    const { currentZoneId } = get()
+    if (currentZoneId !== zoneId) {
+      set({ currentZoneId: zoneId, pages: [], lastFetchTime: 0, songsCache: {}, loading: true })
+      get().refreshData()
     }
-  }, [currentZoneId])
-
-  return {
-    pages,
-    loading,
-    error,
-    refreshData,
-    getCurrentPage,
-    getCurrentSongs,
-    setZoneId
   }
-}
+}))

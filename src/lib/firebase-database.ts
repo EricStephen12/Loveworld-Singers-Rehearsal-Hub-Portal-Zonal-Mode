@@ -1,7 +1,7 @@
 import { BackendAPI } from './api-client';
 import { db } from './firebase-setup';
 import { 
-  collection, query, where, limit, orderBy, onSnapshot, doc 
+  collection, query, where, limit, orderBy, onSnapshot, doc, getCountFromServer 
 } from 'firebase/firestore';
 
 /**
@@ -169,13 +169,37 @@ export class FirebaseDatabaseService {
     return response.data || [];
   }
 
-  static async getCollectionWhere(collectionName: string, field: string, operator: string, value: any) {
-    const response = await BackendAPI.generic.list(collectionName, 500, field, value, operator);
+  static async getCollectionWhere(collectionName: string, field: string, operator: string, value: any, maxLimit = 10000) {
+    const response = await BackendAPI.generic.list(collectionName, maxLimit, field, value, operator);
     return response.data || [];
   }
 
   static async getDocumentsByIds(collectionName: string, ids: string[]) {
-    const all = await this.getCollection(collectionName);
-    return all.filter((item: any) => ids.includes(item.id));
+    // Optimization: Do one large fetch instead of N+1 individual requests
+    const all = await this.getCollection(collectionName, 10000);
+    const idSet = new Set(ids);
+    return all.filter((item: any) => idSet.has(item.id));
+  }
+
+  static async getCollectionCount(collectionName: string) {
+    try {
+      const coll = collection(db, collectionName);
+      const snapshot = await getCountFromServer(coll);
+      return snapshot.data().count;
+    } catch (e) {
+      console.warn(`Failed to count ${collectionName}`, e);
+      return 0;
+    }
+  }
+
+  static async getCollectionCountWhere(collectionName: string, field: string, operator: any, value: any) {
+    try {
+      const q = query(collection(db, collectionName), where(field, operator, value));
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (e) {
+      console.warn(`Failed to count ${collectionName} where ${field}`, e);
+      return 0;
+    }
   }
 }
