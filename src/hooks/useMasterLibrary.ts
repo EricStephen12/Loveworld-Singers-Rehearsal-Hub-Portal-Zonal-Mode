@@ -166,6 +166,11 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
   const filteredMasterSongs = useMemo(() => {
     let filtered = masterSongs;
 
+    // Security Filter: Hide HQ Only songs from non-HQ users
+    if (!canManage) {
+      filtered = filtered.filter(song => !song.isHQOnly);
+    }
+
     if (selectedProgramId) {
       const selectedProgram = programs.find(p => p.id === selectedProgramId);
       if (selectedProgram) {

@@ -149,36 +149,57 @@ export default function AttendanceSection() {
   }
 
   const handleExportCSV = () => {
-    if (attendanceRecords.length === 0) return
-    const headers = ['Member Name', 'Event Name', 'Date', 'Clock In', 'Clock Out', 'Status', 'Zone/HQ']
-    const csvData = attendanceRecords.map(record => {
-      const date = new Date(record.check_in_time || record.created_at || 0)
-      const clockIn = record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : '-'
-      const clockOut = record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'
-      return [
-        `"${record.user_name || 'Member'}"`,
-        `"${record.event_name || 'Rehearsal'}"`,
-        `"${date.toLocaleDateString()}"`,
-        `"${clockIn}"`,
-        `"${clockOut}"`,
-        `"${record.status}"`,
-        `"${isHQ ? 'HQ' : 'Zone'}"`
-      ].join(',')
-    })
-    const csvContent = [headers.join(','), ...csvData].join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `attendance_${selectedDate}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
-  const handlePrint = () => {
-    window.print()
+    if (viewMode === 'daily') {
+      if (filteredRecords.length === 0) return
+      const headers = ['Member Name', 'Event Name', 'Date', 'Clock In', 'Clock Out', 'Status', 'Zone/HQ']
+      const csvData = filteredRecords.map(record => {
+        const date = new Date(record.check_in_time || record.created_at || 0)
+        const clockIn = record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : '-'
+        const clockOut = record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : '-'
+        return [
+          `"${record.user_name || 'Member'}"`,
+          `"${record.event_name || 'Rehearsal'}"`,
+          `"${date.toLocaleDateString()}"`,
+          `"${clockIn}"`,
+          `"${clockOut}"`,
+          `"${record.status}"`,
+          `"${isHQ ? 'HQ' : 'Zone'}"`
+        ].join(',')
+      })
+      const csvContent = [headers.join(','), ...csvData].join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `attendance_daily_${selectedDate}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      if (cumulativeData.length === 0) return
+      const headers = ['Member Name', 'Event Name', 'Score', 'Total Possible', 'Rate (%)']
+      const csvData = cumulativeData.map(item => {
+        const rate = Math.round((item.count / item.totalPossible) * 100)
+        return [
+          `"${item.user_name}"`,
+          `"${item.event_name}"`,
+          `"${item.count}"`,
+          `"${item.totalPossible}"`,
+          `"${rate}%"`
+        ].join(',')
+      })
+      const csvContent = [headers.join(','), ...csvData].join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `attendance_cumulative_${new Date().toLocaleDateString('en-CA')}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 
   const handleArchiveRecords = async () => {
@@ -343,12 +364,12 @@ export default function AttendanceSection() {
                 </button>
 
                 <button
-                  onClick={handlePrint}
+                  onClick={handleExportCSV}
                   disabled={filteredRecords.length === 0}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-sm font-bold rounded-2xl border border-slate-200 shadow-sm transition-all active:scale-95 disabled:opacity-40"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-2xl shadow-sm transition-all active:scale-95 disabled:opacity-40"
                 >
-                  <Printer className="w-4 h-4 text-slate-500" />
-                  <span className="hidden sm:inline">Print</span>
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export CSV</span>
                 </button>
 
                 <button
@@ -368,7 +389,7 @@ export default function AttendanceSection() {
               <>
                 <button
                   onClick={handleExportCSV}
-                  disabled={attendanceRecords.length === 0}
+                  disabled={cumulativeData.length === 0}
                   className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-2xl shadow-sm transition-all active:scale-95 disabled:opacity-40"
                 >
                   <Download className="w-4 h-4" />

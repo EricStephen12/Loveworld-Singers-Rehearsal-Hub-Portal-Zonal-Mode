@@ -27,6 +27,7 @@ import {
   Mic,
   CalendarCheck,
   Smartphone,
+  MapPin,
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
@@ -89,6 +90,7 @@ const AdminSidebar = React.memo(({
     { icon: DollarSign, label: 'Payments', active: activeSection === 'Payments', hqZoneOnly: true },
     { icon: Activity, label: 'Activity Logs', active: activeSection === 'Activity Logs', hqZoneOnly: true },
     { icon: Smartphone, label: 'App Updates', active: activeSection === 'App Updates', hqOnly: true },
+    { icon: MapPin, label: 'Geofence Config', active: activeSection === 'Geofence Config' },
   ];
 
   // Filter items based on role

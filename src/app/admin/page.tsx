@@ -50,6 +50,7 @@ const KaraokeConfigSection = dynamic(() => import('../../components/admin/Karaok
 const AttendanceSection = dynamic(() => import('../../components/admin/AttendanceSection'), { ssr: false });
 const LexiconAISection = dynamic(() => import('../../components/admin/LexiconAISection'), { ssr: false });
 const AppUpdatesSection = dynamic(() => import('../../components/admin/AppUpdatesSection'), { ssr: false });
+const GeofenceConfigSection = dynamic(() => import('../../components/admin/GeofenceConfigSection'), { ssr: false });
 import { useZoneSubGroups } from '../../hooks/useSubGroup';
 
 function AdminContent() {
@@ -1639,6 +1640,7 @@ function AdminContent() {
           {activeSection === 'Payments' && isHQAdmin && canSeeSection('Payments') && <PaymentDashboardSection />}
           {activeSection === 'Attendance' && canSeeSection('Attendance') && <AttendanceSection />}
           {activeSection === 'Lexicon Training' && canSeeSection('Lexicon Training') && <LexiconAISection />}
+          {activeSection === 'Geofence Config' && <GeofenceConfigSection />}
 
           {activeSection === 'Pages' && canSeeSection('Pages') && (
             <PagesSection

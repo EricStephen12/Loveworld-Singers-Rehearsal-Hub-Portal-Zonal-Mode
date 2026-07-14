@@ -53,6 +53,7 @@ const AdminMobileNav = React.memo(({
       case 'Support Chat':
       case 'Payments':
       case 'Karaoke Config':
+      case 'Geofence Config':
         return 'More';
       default:
         return 'Dashboard';

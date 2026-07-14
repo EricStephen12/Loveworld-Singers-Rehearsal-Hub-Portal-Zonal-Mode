@@ -93,6 +93,7 @@ export function MasterEditSongModal({
     solfa: htmlToMarkdown(song?.solfa || ''),
     history: htmlToMarkdown(song?.history || ''),
     imageUrl: song?.imageUrl || '',
+    isHQOnly: song?.isHQOnly || false,
   });
 
   // Initialize audio URLs with existing data or empty
@@ -143,6 +144,7 @@ export function MasterEditSongModal({
           solfa: htmlToMarkdown(song.solfa || ''),
           history: htmlToMarkdown(song.history || ''),
           imageUrl: song.imageUrl || '',
+          isHQOnly: song.isHQOnly || false,
         });
         const initial: Record<string, string> = {
           full: song.audioUrls?.full || song.audioFile || '',
@@ -175,6 +177,7 @@ export function MasterEditSongModal({
           solfa: '',
           history: '',
           imageUrl: '',
+          isHQOnly: false,
         });
         setAudioUrls({
           full: '',
@@ -277,6 +280,7 @@ export function MasterEditSongModal({
         audioFile: audioUrls.full,
         customParts: customParts,
         imageUrl: formData.imageUrl,
+        isHQOnly: formData.isHQOnly,
       };
 
       if (isCreateMode) {
@@ -386,7 +390,19 @@ export function MasterEditSongModal({
 
           {/* Basic Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Song Details</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Song Details</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-slate-600">HQ Only (Hide from Zones)</span>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('isHQOnly', !formData.isHQOnly as any)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isHQOnly ? 'bg-purple-600' : 'bg-slate-200'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isHQOnly ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

@@ -1,4 +1,5 @@
 import { BackendAPI } from './api-client';
+import { isHQGroup } from '../config/zones';
 
 // Strip trailing slashes to prevent double-slash URLs (e.g. host//api) 
 // which cause Vercel 308 redirects that break CORS
@@ -79,7 +80,16 @@ export async function submitSong(songData: any) {
 export async function getAllSubmittedSongs(zoneId?: string, _isHQ?: boolean) {
   const response = await BackendAPI.generic.list('submitted_songs');
   const all = response.data || [];
-  return zoneId ? all.filter((s: any) => s.zoneId === zoneId) : all;
+  
+  if (_isHQ) {
+    // If HQ Admin, only show submissions from HQ zones
+    return all.filter((s: any) => isHQGroup(s.zoneId));
+  } else if (zoneId) {
+    // If regular admin, only show submissions from their specific zone
+    return all.filter((s: any) => s.zoneId === zoneId);
+  }
+  
+  return all;
 }
 
 export async function getSubmissionsByZone(zoneId: string, status?: string) {
@@ -87,8 +97,8 @@ export async function getSubmissionsByZone(zoneId: string, status?: string) {
   return status ? all.filter((s: any) => s.status === status) : all;
 }
 
-export async function getPendingSongs(zoneId?: string, _isHQGroup?: boolean) {
-  const all = await getAllSubmittedSongs(zoneId);
+export async function getPendingSongs(zoneId?: string, _isHQ?: boolean) {
+  const all = await getAllSubmittedSongs(zoneId, _isHQ);
   return all.filter((s: any) => s.status === 'pending');
 }
 

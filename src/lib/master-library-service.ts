@@ -29,6 +29,7 @@ export interface MasterSong {
   bassGuitarist?: string;
   drummer?: string;
   customParts?: string[];
+  isHQOnly?: boolean;
 }
 
 export interface MasterProgram {

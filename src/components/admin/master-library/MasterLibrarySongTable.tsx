@@ -116,7 +116,12 @@ export const MasterLibrarySongTable: React.FC<MasterLibrarySongTableProps> = ({
                 )}
                 <td className="px-4 lg:px-6 py-4" onClick={() => onSongClick(song)}>
                   <div className="flex flex-col cursor-pointer">
-                    <span className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors line-clamp-1">{song.title}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors line-clamp-1">{song.title}</span>
+                      {song.isHQOnly && (
+                        <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black rounded uppercase tracking-wider whitespace-nowrap">HQ ONLY</span>
+                      )}
+                    </div>
                     <span className="text-xs text-slate-500 line-clamp-1">{song.writer || 'Unknown Writer'} • {song.leadSinger || 'Unknown Singer'}</span>
                     <div className="flex md:hidden mt-1">
                       <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase tracking-wider">{song.category || 'Other'}</span>
