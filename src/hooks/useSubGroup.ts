@@ -143,9 +143,12 @@ export function useZoneSubGroups() {
       }
       
       try {
+        const isGlobalAdmin = isSuperAdmin || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
+        const targetZoneId = isGlobalAdmin ? 'zone-boss' : currentZone.id;
+
         const [groups, count] = await Promise.all([
-          SubGroupService.getZoneSubGroups(currentZone.id),
-          SubGroupService.getPendingRequestCount(currentZone.id)
+          SubGroupService.getZoneSubGroups(targetZoneId),
+          SubGroupService.getPendingRequestCount(targetZoneId)
         ])
         
         setSubGroups(groups)
@@ -176,9 +179,12 @@ export function useZoneSubGroups() {
     const result = await SubGroupService.approveSubGroup(subGroupId, user.uid, approverName)
     
     if (result.success && currentZone) {
+      const isGlobalAdmin = isSuperAdmin || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
+      const targetZoneId = isGlobalAdmin ? 'zone-boss' : currentZone.id;
+
       const [groups, count] = await Promise.all([
-        SubGroupService.getZoneSubGroups(currentZone.id),
-        SubGroupService.getPendingRequestCount(currentZone.id)
+        SubGroupService.getZoneSubGroups(targetZoneId),
+        SubGroupService.getPendingRequestCount(targetZoneId)
       ])
       setSubGroups(groups)
       setPendingCount(count)
@@ -197,9 +203,12 @@ export function useZoneSubGroups() {
     const result = await SubGroupService.rejectSubGroup(subGroupId, user.uid, rejecterName, reason)
     
     if (result.success && currentZone) {
+      const isGlobalAdmin = isSuperAdmin || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
+      const targetZoneId = isGlobalAdmin ? 'zone-boss' : currentZone.id;
+
       const [groups, count] = await Promise.all([
-        SubGroupService.getZoneSubGroups(currentZone.id),
-        SubGroupService.getPendingRequestCount(currentZone.id)
+        SubGroupService.getZoneSubGroups(targetZoneId),
+        SubGroupService.getPendingRequestCount(targetZoneId)
       ])
       setSubGroups(groups)
       setPendingCount(count)
@@ -211,13 +220,16 @@ export function useZoneSubGroups() {
   const refresh = useCallback(async () => {
     if (!currentZone) return
     
+    const isGlobalAdmin = isSuperAdmin || userRole === 'hq_admin' || userRole === 'boss' || userRole === 'super_admin';
+    const targetZoneId = isGlobalAdmin ? 'zone-boss' : currentZone.id;
+
     const [groups, count] = await Promise.all([
-      SubGroupService.getZoneSubGroups(currentZone.id),
-      SubGroupService.getPendingRequestCount(currentZone.id)
+      SubGroupService.getZoneSubGroups(targetZoneId),
+      SubGroupService.getPendingRequestCount(targetZoneId)
     ])
     setSubGroups(groups)
     setPendingCount(count)
-  }, [currentZone])
+  }, [currentZone, isSuperAdmin, userRole])
   
   return {
     subGroups,

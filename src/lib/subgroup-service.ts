@@ -21,6 +21,8 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase-setup'
 
+import { isHQGroup } from '@/config/zones'
+
 // Sub-Group Types
 export type SubGroupType = 'church' | 'campus' | 'cell' | 'youth' | 'other'
 export type SubGroupStatus = 'pending' | 'active' | 'rejected'
