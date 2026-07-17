@@ -9,6 +9,7 @@ import {
   Calendar,
   UserCheck,
   UserX,
+  UserMinus,
   Edit,
   Trash2,
   X,
@@ -374,6 +375,45 @@ export default function Members() {
     window.URL.revokeObjectURL(url);
   };
 
+  // Remove from zone handler (keeps account intact)
+  const handleRemoveFromZone = async (member: Member) => {
+    const zoneId = member.zoneId || currentZone?.id;
+    const zoneName = member.zoneName || currentZone?.name || 'this zone';
+
+    if (!zoneId) {
+      showToast('Could not determine which zone to remove from', 'error');
+      return;
+    }
+
+    if (!confirm(`Remove ${member.first_name} ${member.last_name} from ${zoneName}?\n\nThis will only remove their membership from this zone. Their account, profile, and other zone memberships will remain intact.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await ZoneInvitationService.removeUserFromZone(member.id, zoneId);
+
+      if (!result.success) {
+        throw new Error('Failed to remove member from zone');
+      }
+
+      showToast(`${member.first_name} ${member.last_name} removed from ${zoneName}`, 'success');
+
+      // Invalidate cache and reload
+      if (currentZone) {
+        const cacheKey = getCacheKey(currentZone.id, filterZone);
+        membersCache.delete(cacheKey);
+      }
+      setSelectedMember(null);
+      loadMembers(true);
+    } catch (error: any) {
+      console.error('Error removing member from zone:', error);
+      showToast(`${error.message || 'Failed to remove member from zone'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Delete handler
   const handleDeleteMember = async (member: Member) => {
     if (!confirm(`Are you sure you want to delete ${member.first_name} ${member.last_name}? This will PERMANENTLY remove their account, profile, and all association with this platform. This action cannot be undone.`)) {
@@ -697,6 +737,13 @@ export default function Members() {
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleRemoveFromZone(member)}
+                            className="p-2 hover:bg-orange-50 text-slate-400 hover:text-orange-600 rounded-xl transition-all active:scale-95"
+                            title="Remove from Zone"
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteMember(member)}
                             className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all active:scale-95"
                             title="Delete Member"
@@ -781,9 +828,11 @@ export default function Members() {
                       )}
                     </div>
 
-                    {/* Arrow */}
-                    <div className="w-10 h-10 bg-slate-50 flex items-center justify-center rounded-full text-slate-300">
-                      <ChevronRight className="w-5 h-5 transition-transform group-active:translate-x-1" />
+                    {/* Quick Actions */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="w-9 h-9 bg-slate-50 flex items-center justify-center rounded-full text-slate-300">
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -814,6 +863,7 @@ export default function Members() {
           setMembers={setMembers}
           setSelectedMember={setSelectedMember}
           showToast={showToast}
+          onRemoveFromZone={handleRemoveFromZone}
         />
       )}
       {/* Old modal code removed */}
@@ -876,13 +926,15 @@ function MemberProfileModal({
   onClose,
   setMembers,
   setSelectedMember,
-  showToast
+  showToast,
+  onRemoveFromZone
 }: {
   member: Member;
   onClose: () => void;
   setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
   setSelectedMember: React.Dispatch<React.SetStateAction<Member | null>>;
   showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  onRemoveFromZone: (member: Member) => Promise<void>;
 }) {
   const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'info' | 'activity' | 'settings'>('info');
@@ -1292,6 +1344,24 @@ function MemberProfileModal({
                           <p className="text-xs text-slate-500">Enable or disable this member's entire account</p>
                         </div>
                         <StatusBadge label="Active" color="emerald" />
+                      </div>
+                    </div>
+
+                    {/* Remove from Zone */}
+                    <div className="pt-6 border-t border-slate-100">
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-rose-600">Remove from Zone</p>
+                          <p className="text-xs text-slate-500">Remove this member from {member.zoneName || 'this zone'} only. Their account and other zone memberships will remain intact.</p>
+                        </div>
+                        <button
+                          onClick={() => onRemoveFromZone(member)}
+                          disabled={loading}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm rounded-2xl transition-all active:scale-[0.98] border border-rose-200 disabled:opacity-50"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                          Remove from {member.zoneName || 'Zone'}
+                        </button>
                       </div>
                     </div>
                   </div>
