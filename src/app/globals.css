@@ -304,8 +304,8 @@ body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* Account for fixed bottom bar (typically 60-80px) + safe area */
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 100px);
+  /* Account for fixed bottom category bar (~84px) + safe area + extra buffer */
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 140px);
 }
 
 /* Small screen optimizations */
