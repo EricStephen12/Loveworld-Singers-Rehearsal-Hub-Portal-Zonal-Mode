@@ -1639,7 +1639,7 @@ function AdminContent() {
           {activeSection === 'Analytics' && isHQAdmin && canSeeSection('Analytics') && <AnalyticsSection />}
           {activeSection === 'Payments' && isHQAdmin && canSeeSection('Payments') && <PaymentDashboardSection />}
           {activeSection === 'Attendance' && canSeeSection('Attendance') && <AttendanceSection />}
-          {activeSection === 'Lexicon Training' && canSeeSection('Lexicon Training') && <LexiconAISection />}
+          {activeSection === 'Lexicon Training' && isHQAdmin && canSeeSection('Lexicon Training') && <LexiconAISection />}
           {activeSection === 'Geofence Config' && <GeofenceConfigSection />}
 
           {activeSection === 'Pages' && canSeeSection('Pages') && (
@@ -1811,7 +1811,7 @@ function AdminContent() {
           {activeSection === 'Activity Logs' && canSeeSection('Activity Logs') && <ActivityLogsPage />}
           {activeSection === 'Support Chat' && isHQAdmin && canSeeSection('Support Chat') && <SupportChatSection />}
           {activeSection === 'Schedule Manager' && canSeeSection('Schedule Manager') && <SchedulingBoardSection />}
-          {activeSection === 'Karaoke Config' && canSeeSection('Karaoke Config') && <KaraokeConfigSection />}
+          {activeSection === 'Karaoke Config' && isHQAdmin && canSeeSection('Karaoke Config') && <KaraokeConfigSection />}
           {activeSection === 'App Updates' && isHQAdmin && canSeeSection('App Updates') && <AppUpdatesSection />}
         </div>
 

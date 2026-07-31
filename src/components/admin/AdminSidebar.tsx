@@ -83,7 +83,7 @@ const AdminSidebar = React.memo(({
     { icon: CalendarCheck, label: 'Attendance', active: activeSection === 'Attendance' },
     { icon: User, label: 'Sub-Groups', active: activeSection === 'Sub-Groups', badge: pendingSubGroupCount },
     { icon: Music, label: 'Media', active: activeSection === 'Media' },
-    { icon: Mic, label: 'Karaoke Config', active: activeSection === 'Karaoke Config' },
+    { icon: Mic, label: 'Karaoke Config', active: activeSection === 'Karaoke Config', hqOnly: true },
     { icon: Upload, label: 'Video Manager', active: activeSection === 'Video Manager', hqZoneOnly: true },
     { icon: Calendar, label: 'Calendar', active: activeSection === 'Calendar', hqZoneOnly: true },
     { icon: Bell, label: 'Notifications', active: activeSection === 'Notifications', hqOnly: true },
