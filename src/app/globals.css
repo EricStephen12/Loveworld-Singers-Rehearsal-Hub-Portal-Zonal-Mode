@@ -155,16 +155,16 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  /* High z-index to ensure it's above all content */
   z-index: 100 !important;
-  /* Safe area for iPhone home indicator */
+  /* Safe area for iPhone home indicator - env() only works with viewport-fit=cover */
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  /* Ensure content is not cut off */
   min-height: 52px;
-  /* Better touch target */
   touch-action: manipulation;
-  /* Ensure pointer events work */
   pointer-events: auto;
+  /* Solid background so it covers content beneath it */
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* Device-specific enhancements */

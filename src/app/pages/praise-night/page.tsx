@@ -617,7 +617,7 @@ function PraiseNightPageContent() {
   if (loading || !isInitialized || isRestoring || (filteredPraiseNights.length === 0 && !currentPraiseNight && allPraiseNights.length === 0)) {
     return (
       <div
-        className="h-screen safe-area-bottom flex items-center justify-center"
+        className="h-screen flex items-center justify-center"
         style={{ background: `linear-gradient(135deg, ${zoneColor}12, #fdfbff)` }}
       >
         <CustomLoader />
@@ -626,7 +626,7 @@ function PraiseNightPageContent() {
   }
   return (
     <div
-      className="h-screen safe-area-bottom overflow-y-auto"
+      className="h-screen overflow-y-auto"
       style={{ background: `linear-gradient(135deg, ${zoneColor}12, #fdfbff)` }}
     >
       {/* Main Content with Apple-style reveal effect */}
@@ -879,7 +879,7 @@ function PraiseNightPageContent() {
               </div>
             )}
             {/* Spacer so last song isn't hidden behind the fixed category bar */}
-            <div className="h-24 sm:h-28"></div>
+            <div style={{ height: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}></div>
           </div>
         </div>
         {/* End of Scrollable Content */}
