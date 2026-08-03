@@ -15,7 +15,8 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { User, onAuthStateChanged } from 'firebase/auth'
-import { auth } from '@/lib/firebase-setup'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase-setup'
 import { FirebaseAuthService } from '@/lib/firebase-auth'
 import { FirebaseDatabaseService } from '@/lib/firebase-database'
 import { SessionManager } from '@/lib/session-manager'
@@ -290,12 +291,9 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // ── Real-time profile listener — picks up admin permission toggles instantly ──
-          // This means when an admin toggles a permission on a member's profile,
-          // the member's device updates immediately without needing to log out/in
           try {
-            const { doc: fsDoc, onSnapshot: fsOnSnapshot } = await import('firebase/firestore')
-            const profileRef = fsDoc(db, 'profiles', firebaseUser.uid)
-            const profileUnsub = fsOnSnapshot(profileRef, (snap) => {
+            const profileRef = doc(db, 'profiles', firebaseUser.uid)
+            const profileUnsub = onSnapshot(profileRef, (snap) => {
               if (snap.exists()) {
                 const freshProfile = { id: snap.id, ...snap.data() } as UserProfile
                 clearProfileCache()
