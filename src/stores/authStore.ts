@@ -201,6 +201,11 @@ export const useAuthStore = create<AuthState>()(
       const { _presenceInterval, _authUnsubscribe } = get()
       if (_presenceInterval) clearInterval(_presenceInterval)
       if (_authUnsubscribe) _authUnsubscribe()
+      // Cancel profile real-time listener
+      if (typeof window !== 'undefined' && (window as any).__lwsrh_profile_unsub) {
+        (window as any).__lwsrh_profile_unsub()
+        delete (window as any).__lwsrh_profile_unsub
+      }
       set({ _presenceInterval: null, _authUnsubscribe: null })
     },
 
@@ -282,6 +287,26 @@ export const useAuthStore = create<AuthState>()(
           if (typeof window !== 'undefined') {
             localStorage.setItem('lwsrh_has_user', 'true')
             setSessionCookie()
+          }
+
+          // ── Real-time profile listener — picks up admin permission toggles instantly ──
+          // This means when an admin toggles a permission on a member's profile,
+          // the member's device updates immediately without needing to log out/in
+          try {
+            const { doc: fsDoc, onSnapshot: fsOnSnapshot } = await import('firebase/firestore')
+            const profileRef = fsDoc(db, 'profiles', firebaseUser.uid)
+            const profileUnsub = fsOnSnapshot(profileRef, (snap) => {
+              if (snap.exists()) {
+                const freshProfile = { id: snap.id, ...snap.data() } as UserProfile
+                clearProfileCache()
+                setCachedProfile(firebaseUser.uid, freshProfile)
+                set({ profile: freshProfile })
+              }
+            })
+            // Store so cleanup() can cancel it
+            ;(window as any).__lwsrh_profile_unsub = profileUnsub
+          } catch (err) {
+            console.log('[AuthStore] Profile real-time listener failed (non-critical):', err)
           }
 
           // ── Presence: mark online + start heartbeat ───────────────────────

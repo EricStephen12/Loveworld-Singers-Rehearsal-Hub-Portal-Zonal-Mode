@@ -944,7 +944,7 @@ function MemberProfileModal({
   showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
   onRemoveFromZone: (member: Member) => Promise<void>;
 }) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'info' | 'activity' | 'settings'>('info');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -987,16 +987,36 @@ function MemberProfileModal({
     try {
       await FirebaseDatabaseService.updateDocument('profiles', member.id, editForm);
       const updatedMember = { ...member, ...editForm };
-      
       setMembers(prev => prev.map(m => m.id === member.id ? updatedMember : m));
       setSelectedMember(updatedMember);
       setIsEditing(false);
       showToast(' Member profile updated successfully', 'success');
+      // If editing own profile, refresh cache
+      if (currentUser?.uid === member.id) await refreshProfile();
     } catch (error) {
       console.error('Error updating member:', error);
       showToast(' Failed to update member profile', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper: toggle a boolean field and update local state + Firestore + profile cache
+  const toggleField = async (
+    field: keyof Member,
+    newValue: boolean,
+    successMsg: string
+  ) => {
+    try {
+      await FirebaseDatabaseService.updateDocument('profiles', member.id, { [field]: newValue });
+      const updated = { ...member, [field]: newValue };
+      setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+      setSelectedMember(updated);
+      showToast(successMsg, 'success');
+      // If toggling own profile, refresh auth cache so enforcement kicks in immediately
+      if (currentUser?.uid === member.id) await refreshProfile();
+    } catch {
+      showToast('Failed to update access', 'error');
     }
   };
 
@@ -1200,20 +1220,7 @@ function MemberProfileModal({
                         <p className="text-xs text-slate-500">Allow member to view practice materials early</p>
                       </div>
                       <button
-                        onClick={async () => {
-                          const newState = !member.can_access_pre_rehearsal;
-                          try {
-                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
-                              can_access_pre_rehearsal: newState
-                            });
-                            const updated = { ...member, can_access_pre_rehearsal: newState };
-                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                            setSelectedMember(updated);
-                            showToast(` Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                          } catch (exp) {
-                            showToast(' Failed to change access', 'error');
-                          }
-                        }}
+                        onClick={() => toggleField('can_access_pre_rehearsal', !member.can_access_pre_rehearsal, `Pre-Rehearsal Access ${!member.can_access_pre_rehearsal ? 'granted' : 'revoked'}`)}
                         className={`w-11 h-6 rounded-full transition-all relative ${member.can_access_pre_rehearsal ? 'bg-indigo-600' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.can_access_pre_rehearsal ? 'left-6' : 'left-1'}`} />
@@ -1226,20 +1233,7 @@ function MemberProfileModal({
                         <p className="text-xs text-slate-500">Allow member to use the Telestrator (Drawing Tool)</p>
                       </div>
                       <button
-                        onClick={async () => {
-                          const newState = !member.canAnnotate;
-                          try {
-                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
-                              canAnnotate: newState
-                            });
-                            const updated = { ...member, canAnnotate: newState };
-                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                            setSelectedMember(updated);
-                            showToast(` Annotation Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                          } catch (exp) {
-                            showToast(' Failed to change annotation access', 'error');
-                          }
-                        }}
+                        onClick={() => toggleField('canAnnotate', !member.canAnnotate, `Annotation Access ${!member.canAnnotate ? 'granted' : 'revoked'}`)}
                         className={`w-11 h-6 rounded-full transition-all relative ${member.canAnnotate ? 'bg-orange-500' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canAnnotate ? 'left-6' : 'left-1'}`} />
@@ -1252,20 +1246,7 @@ function MemberProfileModal({
                         <p className="text-xs text-slate-500">Allow member to see and access archived songs</p>
                       </div>
                       <button
-                        onClick={async () => {
-                          const newState = !member.canSeeArchive;
-                          try {
-                            await FirebaseDatabaseService.updateDocument('profiles', member.id, {
-                              canSeeArchive: newState
-                            });
-                            const updated = { ...member, canSeeArchive: newState };
-                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                            setSelectedMember(updated);
-                            showToast(` Archive Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                          } catch (exp) {
-                            showToast(' Failed to change archive access', 'error');
-                          }
-                        }}
+                        onClick={() => toggleField('canSeeArchive', !member.canSeeArchive, `Archive Access ${!member.canSeeArchive ? 'granted' : 'revoked'}`)}
                         className={`w-11 h-6 rounded-full transition-all relative ${member.canSeeArchive ? 'bg-amber-500' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSeeArchive ? 'left-6' : 'left-1'}`} />
@@ -1279,26 +1260,15 @@ function MemberProfileModal({
                         <p className="text-xs text-slate-500">Allow member to access active rehearsal sessions</p>
                       </div>
                       <button
-                        onClick={async () => {
-                          const current = member.canAccessOngoingRehearsals !== false
-                          const newState = !current;
-                          try {
-                            await FirebaseDatabaseService.updateDocument('profiles', member.id, { canAccessOngoingRehearsals: newState });
-                            const updated = { ...member, canAccessOngoingRehearsals: newState };
-                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                            setSelectedMember(updated);
-                            showToast(`Ongoing Rehearsals ${newState ? 'enabled' : 'disabled'}`, 'success');
-                          } catch { showToast('Failed to update access', 'error'); }
+                        onClick={() => {
+                          const current = member.canAccessOngoingRehearsals !== false;
+                          toggleField('canAccessOngoingRehearsals', !current, `Ongoing Rehearsals ${!current ? 'enabled' : 'disabled'}`);
                         }}
                         className={`w-11 h-6 rounded-full transition-all relative ${member.canAccessOngoingRehearsals !== false ? 'bg-emerald-600' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canAccessOngoingRehearsals !== false ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
-
-                    {/* AudioLab Toggle - removed, everyone has access */}
-
-                    {/* Media Toggle - removed, everyone has access */}
 
                     {/* Submit Song Toggle */}
                     <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
@@ -1307,24 +1277,15 @@ function MemberProfileModal({
                         <p className="text-xs text-slate-500">Allow member to submit songs for review</p>
                       </div>
                       <button
-                        onClick={async () => {
-                          const current = member.canSubmitSong !== false
-                          const newState = !current;
-                          try {
-                            await FirebaseDatabaseService.updateDocument('profiles', member.id, { canSubmitSong: newState });
-                            const updated = { ...member, canSubmitSong: newState };
-                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                            setSelectedMember(updated);
-                            showToast(`Submit Song ${newState ? 'enabled' : 'disabled'}`, 'success');
-                          } catch { showToast('Failed to update access', 'error'); }
+                        onClick={() => {
+                          const current = member.canSubmitSong !== false;
+                          toggleField('canSubmitSong', !current, `Submit Song ${!current ? 'enabled' : 'disabled'}`);
                         }}
                         className={`w-11 h-6 rounded-full transition-all relative ${member.canSubmitSong !== false ? 'bg-teal-600' : 'bg-slate-200'}`}
                       >
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSubmitSong !== false ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
-
-                    {/* Groups / Chat Toggle - removed, everyone has access */}
 
                     {/* Zone Chat Admin Switch */}
                     {member.zoneId && (
@@ -1378,20 +1339,7 @@ function MemberProfileModal({
                           <p className="text-xs text-slate-500">Grant full access to HQ programs & Master Library</p>
                         </div>
                         <button
-                          onClick={async () => {
-                            const newState = !member.has_hq_access;
-                            try {
-                              await FirebaseDatabaseService.updateDocument('profiles', member.id, {
-                                has_hq_access: newState
-                              });
-                              const updated = { ...member, has_hq_access: newState };
-                              setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-                              setSelectedMember(updated);
-                              showToast(` HQ Access ${newState ? 'granted' : 'revoked'} successfully`, 'success');
-                            } catch (exp) {
-                              showToast(' Failed to change HQ access', 'error');
-                            }
-                          }}
+                          onClick={() => toggleField('has_hq_access', !member.has_hq_access, `HQ Access ${!member.has_hq_access ? 'granted' : 'revoked'}`)}
                           className={`w-11 h-6 rounded-full transition-all relative ${member.has_hq_access ? 'bg-purple-600' : 'bg-slate-200'}`}
                         >
                           <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.has_hq_access ? 'left-6' : 'left-1'}`} />
