@@ -879,7 +879,7 @@ function PraiseNightPageContent() {
               </div>
             )}
             {/* Spacer so last song isn't hidden behind the fixed category bar */}
-            <div style={{ height: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}></div>
+            <div style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px) + 8px)' }}></div>
           </div>
         </div>
         {/* End of Scrollable Content */}

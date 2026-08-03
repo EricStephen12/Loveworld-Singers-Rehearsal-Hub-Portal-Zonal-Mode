@@ -149,25 +149,21 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--enhanced-safe-area-bottom, 24px));
 }
 
-/* Enhanced bottom bar with better device support */
+/* Enhanced bottom bar - kept for backwards compatibility */
 .bottom-bar-enhanced {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 100 !important;
-  /* Safe area for iPhone home indicator - env() only works with viewport-fit=cover */
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  min-height: 52px;
   touch-action: manipulation;
   pointer-events: auto;
-  /* Solid background so it covers content beneath it */
   background-color: rgba(255, 255, 255, 0.97) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Device-specific enhancements */
 .has-safe-area .bottom-bar-enhanced {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

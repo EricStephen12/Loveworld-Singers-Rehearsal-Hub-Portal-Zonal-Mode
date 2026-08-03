@@ -19,56 +19,99 @@ export const PraiseNightCategoryBar: React.FC<PraiseNightCategoryBarProps> = ({
   finalSongData,
   zoneColor
 }) => {
-  // Common render function for the category bar
   const renderCategoryButtons = (isArchivePage: boolean) => (
     <div
-      className="bottom-bar-enhanced flex-shrink-0 z-[100] backdrop-blur-md shadow-sm border-t border-gray-200/50 w-full"
       style={{
-        background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        // Safe area for iPhone home indicator — works on all Safari versions
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        background: 'rgba(255,255,255,0.97)',
+        borderTop: '1px solid rgba(0,0,0,0.08)',
+        boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
+        WebkitBackdropFilter: 'blur(12px)',
+        backdropFilter: 'blur(12px)',
       }}
     >
-      <div className="w-full flex items-center px-2 sm:px-4 lg:px-6 py-2 sm:py-3 gap-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
-        <div className="flex-1 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex gap-1.5 sm:gap-2 min-w-max px-1">
-            {mainCategories.map((category) => {
-              const hasActiveSong = finalSongData.some((song: any) => 
-                (isArchivePage ? song.category === category : song.category === category) && song.isActive
-              );
-              
-              return (
-                <button
-                  key={category}
-                  onClick={() => handleCategorySelect(category)}
-                  className={`flex-shrink-0 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 text-center whitespace-nowrap category-button touch-manipulation ${
-                    hasActiveSong
-                      ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
-                      : activeCategory === category
-                        ? 'text-white shadow-md'
-                        : isArchivePage 
-                          ? 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white border border-gray-200'
-                          : 'bg-white/90 backdrop-blur-sm text-slate-900 font-bold hover:bg-white border border-gray-200'
-                  }`}
-                  style={activeCategory === category && !hasActiveSong ? {
-                    backgroundColor: zoneColor,
-                    boxShadow: `0 4px 6px -1px ${zoneColor}40, 0 2px 4px -1px ${zoneColor}20`
-                  } : {}}
-                >
-                  <span className="block leading-tight">{category}</span>
-                </button>
-              );
-            })}
-          </div>
+      {/* Scroll container for buttons */}
+      <div
+        style={{
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch' as any,
+          scrollbarWidth: 'none' as any,
+          msOverflowStyle: 'none' as any,
+          padding: '8px 12px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            minWidth: 'max-content',
+          }}
+        >
+          {mainCategories.map((category) => {
+            const hasActiveSong = finalSongData.some(
+              (song: any) => song.category === category && song.isActive
+            );
+            const isActive = activeCategory === category;
+
+            let bgColor = 'rgba(255,255,255,0.9)';
+            let textColor = '#1e293b';
+            let border = '1px solid #e2e8f0';
+            let boxShadow = 'none';
+
+            if (hasActiveSong) {
+              bgColor = '#16a34a';
+              textColor = '#ffffff';
+              border = '2px solid #15803d';
+              boxShadow = '0 2px 8px rgba(22,163,74,0.4)';
+            } else if (isActive) {
+              bgColor = zoneColor;
+              textColor = '#ffffff';
+              border = `1px solid ${zoneColor}`;
+              boxShadow = `0 2px 8px ${zoneColor}50`;
+            }
+
+            return (
+              <button
+                key={category}
+                onClick={() => handleCategorySelect(category)}
+                style={{
+                  flexShrink: 0,
+                  padding: '7px 12px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  backgroundColor: bgColor,
+                  color: textColor,
+                  border,
+                  boxShadow,
+                  outline: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation',
+                  transition: 'all 0.15s ease',
+                  lineHeight: '1.2',
+                }}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 
-  // Archive Individual Page Category Bar
   if (categoryFilter === 'archive' && pageParam) {
     return renderCategoryButtons(true);
   }
 
-  // Regular (Ongoing/Pre-Rehearsal) Category Bar
   if (categoryFilter !== 'archive') {
     return renderCategoryButtons(false);
   }
