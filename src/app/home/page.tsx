@@ -248,7 +248,8 @@ function HomePageContent() {
       title: 'Submit Song',
       href: '/pages/submit-song',
       badge: null,
-      premium: true, // Premium feature (custom songs)
+      premium: true,
+      hidden: profile?.canSubmitSong === false && !isZoneCoordinator && !isBoss && !isHQAdmin,
     },
     {
       icon: Play,
@@ -563,28 +564,16 @@ function HomePageContent() {
               {/* Features Grid */}
               <div className="pb-4">
                 <div className="grid grid-cols-3 gap-2">
-                  {features.map((feature, index) => {
+                  {features.filter((f: any) => !f.hidden).map((feature, index) => {
                     const isPremiumFeature = feature.premium
-                    // Check specific feature access based on the feature
-                    let featureKey = 'audioLab' // default
-                    if (feature.title === 'Rehearsals') featureKey = 'rehearsals'
-                    if (feature.title === 'Submit Song') featureKey = 'customSongs'
-                    if (feature.title === 'Analytics') featureKey = 'analytics'
-
-                    const hasAccess = !isPremiumFeature || hasFeature(featureKey as any)
+                    // Payment gateway not ready — all features unlocked for now
+                    const hasAccess = true
                     const isExternal = (feature as any).external
 
                     const handleClick = (e: React.MouseEvent) => {
                       // Prevent navigation for placeholder links
                       if (feature.href === '#') {
                         e.preventDefault()
-                        return
-                      }
-
-                      // Handle premium features without access - redirect to subscription
-                      if (isPremiumFeature && !hasAccess) {
-                        e.preventDefault()
-                        router.push('/subscription')
                         return
                       }
                     }

@@ -27,9 +27,9 @@ export const PraiseNightCategoryBar: React.FC<PraiseNightCategoryBarProps> = ({
         background: `linear-gradient(to top, ${zoneColor}20, ${zoneColor}10, rgba(255, 255, 255, 0.2))`
       }}
     >
-      <div className="w-full flex items-center px-3 sm:px-4 lg:px-6 py-4 gap-2">
-        <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          <div className="flex gap-2 min-w-max px-1">
+      <div className="w-full flex items-center px-2 sm:px-4 lg:px-6 py-2 sm:py-3 gap-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-1.5 sm:gap-2 min-w-max px-1">
             {mainCategories.map((category) => {
               const hasActiveSong = finalSongData.some((song: any) => 
                 (isArchivePage ? song.category === category : song.category === category) && song.isActive
@@ -39,7 +39,7 @@ export const PraiseNightCategoryBar: React.FC<PraiseNightCategoryBarProps> = ({
                 <button
                   key={category}
                   onClick={() => handleCategorySelect(category)}
-                  className={`flex-shrink-0 px-3 py-3 rounded-xl text-xs font-semibold transition-all duration-200 text-center whitespace-nowrap category-button ${
+                  className={`flex-shrink-0 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 text-center whitespace-nowrap category-button touch-manipulation ${
                     hasActiveSong
                       ? 'bg-green-600 text-white border-2 border-green-700 shadow-md'
                       : activeCategory === category

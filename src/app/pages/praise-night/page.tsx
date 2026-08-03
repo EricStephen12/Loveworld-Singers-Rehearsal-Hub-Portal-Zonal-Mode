@@ -878,8 +878,8 @@ function PraiseNightPageContent() {
                 )}
               </div>
             )}
-            {/* Add bottom padding to prevent content from being hidden behind sticky categories and safe areas */}
-            <div className="h-40"></div> {/* Spacer for fixed bottom category bar (~100px) + safe area */}
+            {/* Spacer so last song isn't hidden behind the fixed category bar */}
+            <div className="h-24 sm:h-28"></div>
           </div>
         </div>
         {/* End of Scrollable Content */}

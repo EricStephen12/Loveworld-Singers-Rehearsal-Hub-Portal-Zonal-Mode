@@ -84,10 +84,17 @@ interface Member {
   role?: string;
   zoneId?: string;
   zoneName?: string;
+  // Feature access toggles
   can_access_pre_rehearsal?: boolean;
   has_hq_access?: boolean;
   canAnnotate?: boolean;
   canSeeArchive?: boolean;
+  canAccessOngoingRehearsals?: boolean;  // Ongoing Rehearsals
+  canAccessAudioLab?: boolean;           // AudioLab Studio
+  canAccessMedia?: boolean;             // Media page
+  canSubmitSong?: boolean;              // Submit Song
+  canAccessGroups?: boolean;            // Groups / Chat
+  canAccessSubgroups?: boolean;         // Sub-Groups
 }
 
 export default function Members() {
@@ -1264,6 +1271,60 @@ function MemberProfileModal({
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSeeArchive ? 'left-6' : 'left-1'}`} />
                       </button>
                     </div>
+
+                    {/* Ongoing Rehearsals Toggle */}
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Ongoing Rehearsals</p>
+                        <p className="text-xs text-slate-500">Allow member to access active rehearsal sessions</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const current = member.canAccessOngoingRehearsals !== false
+                          const newState = !current;
+                          try {
+                            await FirebaseDatabaseService.updateDocument('profiles', member.id, { canAccessOngoingRehearsals: newState });
+                            const updated = { ...member, canAccessOngoingRehearsals: newState };
+                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                            setSelectedMember(updated);
+                            showToast(`Ongoing Rehearsals ${newState ? 'enabled' : 'disabled'}`, 'success');
+                          } catch { showToast('Failed to update access', 'error'); }
+                        }}
+                        className={`w-11 h-6 rounded-full transition-all relative ${member.canAccessOngoingRehearsals !== false ? 'bg-emerald-600' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canAccessOngoingRehearsals !== false ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    {/* AudioLab Toggle - removed, everyone has access */}
+
+                    {/* Media Toggle - removed, everyone has access */}
+
+                    {/* Submit Song Toggle */}
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Submit Song</p>
+                        <p className="text-xs text-slate-500">Allow member to submit songs for review</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const current = member.canSubmitSong !== false
+                          const newState = !current;
+                          try {
+                            await FirebaseDatabaseService.updateDocument('profiles', member.id, { canSubmitSong: newState });
+                            const updated = { ...member, canSubmitSong: newState };
+                            setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
+                            setSelectedMember(updated);
+                            showToast(`Submit Song ${newState ? 'enabled' : 'disabled'}`, 'success');
+                          } catch { showToast('Failed to update access', 'error'); }
+                        }}
+                        className={`w-11 h-6 rounded-full transition-all relative ${member.canSubmitSong !== false ? 'bg-teal-600' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${member.canSubmitSong !== false ? 'left-6' : 'left-1'}`} />
+                      </button>
+                    </div>
+
+                    {/* Groups / Chat Toggle - removed, everyone has access */}
 
                     {/* Zone Chat Admin Switch */}
                     {member.zoneId && (

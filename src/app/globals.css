@@ -157,10 +157,10 @@ body {
   right: 0;
   /* High z-index to ensure it's above all content */
   z-index: 100 !important;
-  /* Use CSS custom properties for dynamic safe area */
-  padding-bottom: var(--enhanced-safe-area-bottom, 24px);
+  /* Safe area for iPhone home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   /* Ensure content is not cut off */
-  min-height: 60px;
+  min-height: 52px;
   /* Better touch target */
   touch-action: manipulation;
   /* Ensure pointer events work */
@@ -169,11 +169,11 @@ body {
 
 /* Device-specific enhancements */
 .has-safe-area .bottom-bar-enhanced {
-  padding-bottom: var(--enhanced-safe-area-bottom, 24px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .no-safe-area .bottom-bar-enhanced {
-  padding-bottom: 24px;
+  padding-bottom: 0px;
 }
 
 /* For content that needs extra bottom spacing on mobile */

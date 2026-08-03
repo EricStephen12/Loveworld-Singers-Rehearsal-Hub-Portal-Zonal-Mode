@@ -38,6 +38,15 @@ export interface UserProfile {
   is_hq_member?: boolean;
   has_hq_access?: boolean;
   can_manage_subgroups?: boolean;
+  // Feature access toggles (per-user, admin-controlled)
+  canAnnotate?: boolean;
+  canSeeArchive?: boolean;
+  canAccessOngoingRehearsals?: boolean;
+  canAccessAudioLab?: boolean;
+  canAccessMedia?: boolean;
+  canSubmitSong?: boolean;
+  canAccessGroups?: boolean;
+  canAccessSubgroups?: boolean;
   // AudioLab / profile UI helpers (Firebase-style fields)
   avatar_url?: string | null;
   display_name?: string | null;

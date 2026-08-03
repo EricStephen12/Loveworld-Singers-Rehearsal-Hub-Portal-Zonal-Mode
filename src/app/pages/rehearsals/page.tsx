@@ -183,7 +183,6 @@ export default function RehearsalsPage() {
         // Special logic for Pre-Rehearsals:
         // 1. Hide for HQ
         if (isHQ) return false;
-
         // 2. For other zones, visible IF coordinator OR granted access
         return isZoneCoordinator || profile?.can_access_pre_rehearsal === true;
       }
@@ -208,8 +207,22 @@ export default function RehearsalsPage() {
           userRole === 'super_admin' || 
           userRole === 'boss';
 
-        // Archive visibility: Admins, Zonal Coordinators, or Special Zones (President, Director, OFTP)
-        return isSpecialZone || isZoneCoordinator || isAdmin;
+        // Archive visibility: Admins, Zonal Coordinators, Special Zones, OR granted access
+        return isSpecialZone || isZoneCoordinator || isAdmin || profile?.canSeeArchive === true;
+      }
+
+      if (option.id === 'ongoing-rehearsals') {
+        // Coordinators and admins always have access
+        if (isZoneCoordinator || isHQ) return true;
+        const isAdmin = profile?.role === 'admin' || profile?.role === 'boss';
+        if (isAdmin) return true;
+        // For regular members: check the toggle (default true if not explicitly set to false)
+        return profile?.canAccessOngoingRehearsals !== false;
+      }
+
+      if (option.id === 'audiolab') {
+        // Everyone has access to AudioLab
+        return true;
       }
       
       return true;
