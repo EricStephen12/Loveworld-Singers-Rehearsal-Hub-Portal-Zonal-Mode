@@ -1001,24 +1001,39 @@ function MemberProfileModal({
     }
   };
 
-  // Helper: toggle a boolean field and update local state + Firestore + profile cache
+  // Helper: toggle a boolean field zone-specifically and update local + Firestore + profile cache
   const toggleField = async (
     field: keyof Member,
     newValue: boolean,
     successMsg: string
   ) => {
     try {
-      await FirebaseDatabaseService.updateDocument('profiles', member.id, { [field]: newValue });
-      const updated = { ...member, [field]: newValue };
-      setMembers(prev => prev.map(m => m.id === member.id ? updated : m));
-      setSelectedMember(updated);
-      showToast(successMsg, 'success');
-      // If toggling own profile, refresh auth cache so enforcement kicks in immediately
-      if (currentUser?.uid === member.id) await refreshProfile();
+      // Write zone-specific restriction: zoneRestrictions.{zoneId}.{field}
+      // This means toggling Mary in Zone A only affects her in Zone A, not Zone B or HQ
+      const updateData: Record<string, any> = {}
+
+      if (member.zoneId) {
+        // Zone-aware: store under zoneRestrictions.{zoneId}
+        updateData[`zoneRestrictions.${member.zoneId}.${String(field)}`] = newValue
+      } else {
+        // Fallback: no zone context, write globally
+        updateData[String(field)] = newValue
+      }
+
+      await FirebaseDatabaseService.updateDocument('profiles', member.id, updateData)
+
+      // Also update local member state so toggle reflects immediately
+      const updated = { ...member, [field]: newValue }
+      setMembers(prev => prev.map(m => m.id === member.id ? updated : m))
+      setSelectedMember(updated)
+      showToast(successMsg, 'success')
+
+      // If toggling own profile, refresh auth cache immediately
+      if (currentUser?.uid === member.id) await refreshProfile()
     } catch {
-      showToast('Failed to update access', 'error');
+      showToast('Failed to update access', 'error')
     }
-  };
+  }
 
   const handleDelete = async () => {
     if (!window.confirm(' Are you sure you want to delete this member? This action cannot be undone.')) return;

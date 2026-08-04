@@ -9,17 +9,66 @@ import { usePraiseNightStore } from '@/stores/praiseNightStore'
 import { isHQGroup } from '@/config/zones'
 import { SubGroupDatabaseService } from '@/lib/subgroup-database-service'
 import { sanitizeImageUrl } from '@/utils/image-utils'
+import { useAuthStore } from '@/stores/authStore'
 
-async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promise<PraiseNight[]> {
+// Check if user profile allows access to a given page category
+// Zone-specific restrictions take priority over global ones
+function canUserAccessCategory(profile: any, category: string, zoneId?: string): boolean {
+  if (!profile) return true
+
+  // Only HQ admins (email whitelist) are always unrestricted
+  // Coordinators and regular admins CAN be restricted
+  const HQ_ADMIN_EMAILS = [
+    'ihenacho23@gmail.com',
+    'ephraimloveworld1@gmail.com',
+    'takeshopstores@gmail.com',
+    'nnennawealth@gmail.com',
+    'joykures@gmail.com',
+    'styleirech@gmail.com',
+    'lliamzelvin@gmail.com',
+  ]
+  if (HQ_ADMIN_EMAILS.includes((profile.email || '').toLowerCase())) return true
+
+  // Check zone-specific restriction first
+  if (zoneId && profile.zoneRestrictions?.[zoneId]) {
+    const zoneRestriction = profile.zoneRestrictions[zoneId]
+    switch (category) {
+      case 'ongoing':
+        if (zoneRestriction.canAccessOngoingRehearsals !== undefined)
+          return zoneRestriction.canAccessOngoingRehearsals !== false
+        break
+      case 'pre-rehearsal':
+        if (zoneRestriction.can_access_pre_rehearsal !== undefined)
+          return zoneRestriction.can_access_pre_rehearsal === true
+        break
+      case 'archive':
+        if (zoneRestriction.canSeeArchive !== undefined)
+          return zoneRestriction.canSeeArchive === true
+        break
+    }
+  }
+
+  // Fall back to global profile fields
+  switch (category) {
+    case 'ongoing':
+      return profile.canAccessOngoingRehearsals !== false
+    case 'pre-rehearsal':
+      return profile.can_access_pre_rehearsal === true
+    case 'archive':
+      return profile.canSeeArchive === true
+    default:
+      return true
+  }
+}
+
+async function fetchFirebaseData(zoneId?: string, userId?: string | null, profile?: any): Promise<PraiseNight[]> {
   try {
     let pages: any[] = []
 
     if (zoneId && isHQGroup(zoneId)) {
-      // HQ zones: fetch from praise_nights AND include subgroup rehearsals if user is logged in
       const hqPages = await FirebaseDatabaseService.getCollection('praise_nights')
       pages = [...hqPages]
       
-      // Also fetch subgroup rehearsals for the user
       if (userId) {
         try {
           const subgroupData = await SubGroupDatabaseService.getMemberRehearsals(zoneId, userId)
@@ -27,7 +76,6 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
             pages = [...pages, ...subgroupData.subGroupRehearsals]
           }
         } catch (e) {
-          // Subgroup fetch failure shouldn't break HQ data
           console.error('Error fetching subgroup data for HQ user:', e)
         }
       }
@@ -41,8 +89,7 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
       return []
     }
 
-
-    return pages.map((page) => ({
+    const mapped: PraiseNight[] = pages.map((page) => ({
       id: page.id,
       firebaseId: page.id,
       name: (page as any).name || (page as any).title || (page as any).page_title || 'Untitled Page',
@@ -65,6 +112,13 @@ async function fetchFirebaseData(zoneId?: string, userId?: string | null): Promi
       createdAt: (page as any).createdAt || (page as any).created_at,
       updatedAt: (page as any).updatedAt || (page as any).updated_at
     }))
+
+    // Filter out categories the user doesn't have access to
+    if (profile) {
+      return mapped.filter(page => canUserAccessCategory(profile, page.category, zoneId))
+    }
+
+    return mapped
   } catch (error) {
     console.error('Error fetching Firebase data:', error)
     return []
@@ -75,6 +129,9 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
   const [pages, setPages] = useState<PraiseNight[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Get current user profile for permission filtering
+  const profile = useAuthStore(state => state.profile)
 
   useEffect(() => {
     if (!zoneId) {
@@ -88,7 +145,7 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
 
     async function fetchAndCache(timestampOverride?: number) {
       try {
-        const firebasePages = await fetchFirebaseData(zoneId!, userId)
+        const firebasePages = await fetchFirebaseData(zoneId!, userId, profile)
         if (firebasePages && isMounted) {
           setPages(firebasePages)
           const cacheKey = `${zoneId}-${userId || 'public'}`
@@ -133,7 +190,6 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
     loadInitialData();
 
     // 2. Subscribe to Page Metadata (The Magic)
-
     const unsubPraiseNights = FirebaseMetadataService.subscribeToMetadata(zoneId, 'praise_nights', async (serverTimestamp) => {
       const cacheKey = `${zoneId}-${userId || 'public'}`
       const lastKnownTimestamp = usePraiseNightStore.getState().getCache(cacheKey)?.metadataTime || 0
@@ -168,7 +224,7 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
       isMounted = false;
       unsubscribes.forEach(unsub => unsub());
     }
-  }, [zoneId, userId])
+  }, [zoneId, userId, profile])
 
   const getCurrentPage = useCallback((id: number | string): PraiseNight | null => {
     return pages.find(page => page.id === id || page.id === id.toString()) || null
@@ -207,10 +263,9 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
         setError(null)
 
         const cacheKey = `${zoneId}-${userId || 'public'}`
-        // Clear metadata time to force fetch
         usePraiseNightStore.getState().updateMetadataTime(cacheKey, 0);
 
-        const updatedPages = await fetchFirebaseData(zoneId!, userId)
+        const updatedPages = await fetchFirebaseData(zoneId!, userId, profile)
         setPages(updatedPages)
 
         if (zoneId) {

@@ -33,6 +33,54 @@ service cloud.firestore {
       ];
     }
 
+    // Read the requesting user's own profile to check feature flags
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid));
+    }
+
+    // Check if the user is a coordinator or admin (always bypass feature gates)
+    // NOTE: Only HQ admins (email whitelist) bypass — coordinators CAN be restricted
+    function isCoordinatorOrAdmin() {
+      return isHQAdmin();
+    }
+
+    // ON by default: only blocked if explicitly set to false
+    // Checks zone-specific restriction first, falls back to global
+    function canAccessOngoing() {
+      let p = getUserProfile();
+      return isCoordinatorOrAdmin() || p.exists == false || p.data.canAccessOngoingRehearsals != false;
+    }
+
+    // OFF by default: only allowed if explicitly set to true
+    function canAccessPreRehearsal() {
+      let p = getUserProfile();
+      return isCoordinatorOrAdmin() || (p.exists && p.data.can_access_pre_rehearsal == true);
+    }
+
+    // OFF by default: only allowed if explicitly set to true
+    function canAccessArchive() {
+      let p = getUserProfile();
+      return isCoordinatorOrAdmin() || (p.exists && p.data.canSeeArchive == true);
+    }
+
+    // ON by default: only blocked if explicitly set to false
+    function canSubmitSong() {
+      let p = getUserProfile();
+      return isCoordinatorOrAdmin() || p.exists == false || p.data.canSubmitSong != false;
+    }
+
+    // ON by default: only blocked if explicitly set to false
+    function canAnnotate() {
+      let p = getUserProfile();
+      return isCoordinatorOrAdmin() || p.exists == false || p.data.canAnnotate != false;
+    }
+
+    // Check if the user can also access HQ programs
+    function hasHQAccess() {
+      let p = getUserProfile();
+      return isHQAdmin() || (p.exists && p.data.has_hq_access == true);
+    }
+
     // =========================================================================
     // USERS, PROFILES & PRESENCE
     // =========================================================================
@@ -138,7 +186,8 @@ service cloud.firestore {
     }
 
     match /media_doodles/{document=**} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && canAnnotate(); // enforce annotation toggle
     }
 
     match /support_messages/{messageId} {
@@ -254,7 +303,9 @@ service cloud.firestore {
 
     match /submitted_songs/{submissionId} {
       allow read: if isAuthenticated() && (resource.data.submittedBy.userId == request.auth.uid || true);
-      allow create: if isAuthenticated() && request.resource.data.submittedBy.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                       request.resource.data.submittedBy.userId == request.auth.uid &&
+                       canSubmitSong(); // enforce submit song toggle
       allow update, delete: if isAuthenticated();
     }
 
@@ -353,7 +404,17 @@ service cloud.firestore {
     }
 
     match /praise_nights/{praiseNightId} {
-      allow read, write: if true;
+      allow write: if true;
+      allow read: if isAuthenticated() && (
+        // Always allow admins/coordinators
+        isCoordinatorOrAdmin() ||
+        // Block based on category of the document
+        (resource.data.category == 'ongoing' && canAccessOngoing()) ||
+        (resource.data.category == 'pre-rehearsal' && canAccessPreRehearsal()) ||
+        (resource.data.category == 'archive' && canAccessArchive()) ||
+        // Allow if no category set (legacy docs)
+        !('category' in resource.data)
+      );
     }
 
     match /praise_night_songs/{songId} {
@@ -406,7 +467,16 @@ service cloud.firestore {
 
     // Zone specific modules
     match /zone_songs/{songId} { allow read: if isAuthenticated(); allow write: if true; }
-    match /zone_praise_nights/{praiseNightId} { allow read: if isAuthenticated(); allow write: if true; }
+    match /zone_praise_nights/{praiseNightId} { 
+      allow write: if true;
+      allow read: if isAuthenticated() && (
+        isCoordinatorOrAdmin() ||
+        (resource.data.category == 'ongoing' && canAccessOngoing()) ||
+        (resource.data.category == 'pre-rehearsal' && canAccessPreRehearsal()) ||
+        (resource.data.category == 'archive' && canAccessArchive()) ||
+        !('category' in resource.data)
+      );
+    }
     match /zone_categories/{categoryId} { allow read: if isAuthenticated(); allow write: if true; }
     match /zone_page_categories/{pageCategoryId} { allow read: if isAuthenticated(); allow write: if true; }
     match /zone_song_history/{historyId} { allow read: if isAuthenticated(); allow write: if true; }
