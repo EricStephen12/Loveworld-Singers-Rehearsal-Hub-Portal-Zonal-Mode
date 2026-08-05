@@ -12,12 +12,10 @@ import { sanitizeImageUrl } from '@/utils/image-utils'
 import { useAuthStore } from '@/stores/authStore'
 
 // Check if user profile allows access to a given page category
-// Zone-specific restrictions take priority over global ones
 function canUserAccessCategory(profile: any, category: string, zoneId?: string): boolean {
   if (!profile) return true
 
   // Only HQ admins (email whitelist) are always unrestricted
-  // Coordinators and regular admins CAN be restricted
   const HQ_ADMIN_EMAILS = [
     'ihenacho23@gmail.com',
     'ephraimloveworld1@gmail.com',
@@ -29,26 +27,7 @@ function canUserAccessCategory(profile: any, category: string, zoneId?: string):
   ]
   if (HQ_ADMIN_EMAILS.includes((profile.email || '').toLowerCase())) return true
 
-  // Check zone-specific restriction first
-  if (zoneId && profile.zoneRestrictions?.[zoneId]) {
-    const zoneRestriction = profile.zoneRestrictions[zoneId]
-    switch (category) {
-      case 'ongoing':
-        if (zoneRestriction.canAccessOngoingRehearsals !== undefined)
-          return zoneRestriction.canAccessOngoingRehearsals !== false
-        break
-      case 'pre-rehearsal':
-        if (zoneRestriction.can_access_pre_rehearsal !== undefined)
-          return zoneRestriction.can_access_pre_rehearsal === true
-        break
-      case 'archive':
-        if (zoneRestriction.canSeeArchive !== undefined)
-          return zoneRestriction.canSeeArchive === true
-        break
-    }
-  }
-
-  // Fall back to global profile fields
+  // Check flat profile fields directly
   switch (category) {
     case 'ongoing':
       return profile.canAccessOngoingRehearsals !== false

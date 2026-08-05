@@ -289,9 +289,17 @@ export default function Members() {
           role: membership.role || 'member',
           zoneId: membership.zoneId,
           zoneName: membership.zoneName,
-          can_access_pre_rehearsal: !!profile?.can_access_pre_rehearsal,
-          canAnnotate: !!profile?.canAnnotate,
-          canSeeArchive: !!profile?.canSeeArchive
+          // Load all permission fields from profile (undefined = not set = use default)
+          can_access_pre_rehearsal: profile?.can_access_pre_rehearsal,
+          has_hq_access: profile?.has_hq_access,
+          canAnnotate: profile?.canAnnotate,
+          canSeeArchive: profile?.canSeeArchive,
+          canAccessOngoingRehearsals: profile?.canAccessOngoingRehearsals,
+          canAccessAudioLab: profile?.canAccessAudioLab,
+          canAccessMedia: profile?.canAccessMedia,
+          canSubmitSong: profile?.canSubmitSong,
+          canAccessGroups: profile?.canAccessGroups,
+          zoneRestrictions: profile?.zoneRestrictions,
         };
       });
 
@@ -464,6 +472,7 @@ export default function Members() {
         const cacheKey = getCacheKey(currentZone.id, filterZone);
         membersCache.delete(cacheKey);
       }
+      setSelectedMember(null);
       loadMembers(true); // Force reload the list
     } catch (error: any) {
  console.error('Error deleting member:', error);
@@ -868,8 +877,21 @@ export default function Members() {
         <MemberProfileModal 
           member={selectedMember} 
           onClose={() => setSelectedMember(null)}
-          setMembers={setMembers}
-          setSelectedMember={setSelectedMember}
+          onMemberUpdate={(updatedMember) => {
+            setSelectedMember(updatedMember);
+            setMembers(prev => prev.map(m => m.id === updatedMember.id ? updatedMember : m));
+            if (currentZone) {
+              const cacheKey = getCacheKey(currentZone.id, filterZone);
+              const cached = membersCache.get(cacheKey);
+              if (cached) {
+                const updatedData = cached.data.map(m => m.id === updatedMember.id ? updatedMember : m);
+                membersCache.set(cacheKey, { ...cached, data: updatedData });
+              }
+            }
+          }}
+          onDeleteMember={(m) => {
+            handleDeleteMember(m);
+          }}
           showToast={showToast}
           onRemoveFromZone={handleRemoveFromZone}
         />
@@ -928,19 +950,18 @@ function StatCard({
   );
 }
 
-// Profile Modal Component
 function MemberProfileModal({
   member,
   onClose,
-  setMembers,
-  setSelectedMember,
+  onMemberUpdate,
+  onDeleteMember,
   showToast,
   onRemoveFromZone
 }: {
   member: Member;
   onClose: () => void;
-  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
-  setSelectedMember: React.Dispatch<React.SetStateAction<Member | null>>;
+  onMemberUpdate: (updatedMember: Member) => void;
+  onDeleteMember: (member: Member) => void;
   showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
   onRemoveFromZone: (member: Member) => Promise<void>;
 }) {
@@ -987,8 +1008,7 @@ function MemberProfileModal({
     try {
       await FirebaseDatabaseService.updateDocument('profiles', member.id, editForm);
       const updatedMember = { ...member, ...editForm };
-      setMembers(prev => prev.map(m => m.id === member.id ? updatedMember : m));
-      setSelectedMember(updatedMember);
+      onMemberUpdate(updatedMember);
       setIsEditing(false);
       showToast(' Member profile updated successfully', 'success');
       // If editing own profile, refresh cache
@@ -1001,56 +1021,26 @@ function MemberProfileModal({
     }
   };
 
-  // Helper: toggle a boolean field zone-specifically and update local + Firestore + profile cache
+  // Helper: toggle a boolean field — same pattern as Zone Chat Admin which works
   const toggleField = async (
     field: keyof Member,
     newValue: boolean,
     successMsg: string
   ) => {
     try {
-      // Write zone-specific restriction: zoneRestrictions.{zoneId}.{field}
-      // This means toggling Mary in Zone A only affects her in Zone A, not Zone B or HQ
-      const updateData: Record<string, any> = {}
+      const { db } = await import('@/lib/firebase-setup')
+      const { doc, updateDoc } = await import('firebase/firestore')
+      await updateDoc(doc(db, 'profiles', member.id), { [String(field)]: newValue })
 
-      if (member.zoneId) {
-        // Zone-aware: store under zoneRestrictions.{zoneId}
-        updateData[`zoneRestrictions.${member.zoneId}.${String(field)}`] = newValue
-      } else {
-        // Fallback: no zone context, write globally
-        updateData[String(field)] = newValue
-      }
-
-      await FirebaseDatabaseService.updateDocument('profiles', member.id, updateData)
-
-      // Also update local member state so toggle reflects immediately
       const updated = { ...member, [field]: newValue }
-      setMembers(prev => prev.map(m => m.id === member.id ? updated : m))
-      setSelectedMember(updated)
+      onMemberUpdate(updated);
       showToast(successMsg, 'success')
-
-      // If toggling own profile, refresh auth cache immediately
-      if (currentUser?.uid === member.id) await refreshProfile()
-    } catch {
+    } catch (err) {
+      console.error('toggleField error:', err)
       showToast('Failed to update access', 'error')
     }
   }
 
-  const handleDelete = async () => {
-    if (!window.confirm(' Are you sure you want to delete this member? This action cannot be undone.')) return;
-    
-    setLoading(true);
-    try {
-      await FirebaseDatabaseService.deleteDocument('profiles', member.id);
-      setMembers(prev => prev.filter(m => m.id !== member.id));
-      onClose();
-      showToast(' Member deleted successfully', 'success');
-    } catch (error) {
-      console.error('Error deleting member:', error);
-      showToast(' Failed to delete member', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-[100] overflow-hidden">
@@ -1081,7 +1071,7 @@ function MemberProfileModal({
                     <Edit2 className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={() => onDeleteMember(member)}
                     className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                   >
                     <Trash2 className="w-5 h-5" />

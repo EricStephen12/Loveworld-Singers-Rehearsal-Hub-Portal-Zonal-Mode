@@ -181,15 +181,11 @@ export default function RehearsalsPage() {
     return options.filter(option => {
       if (option.id === 'pre-rehearsals') {
         if (isHQ) return false;
-        // Check zone-specific first, then global
-        const zoneRestriction = profile?.zoneRestrictions?.[currentZone?.id || '']
-        if (zoneRestriction?.can_access_pre_rehearsal !== undefined) {
-          return zoneRestriction.can_access_pre_rehearsal === true
-        }
         return profile?.can_access_pre_rehearsal === true;
       }
       
       if (option.id === 'archive') {
+        if (profile?.canSeeArchive === false) return false;
         const isSpecialZone = 
           currentZone?.id === 'zone-president' || 
           currentZone?.id === 'zone-president-2' ||
@@ -201,26 +197,13 @@ export default function RehearsalsPage() {
           currentZone?.id === 'zone-sa-3' ||
           currentZone?.id === 'zone-sa-4' ||
           currentZone?.id === 'zone-sa-5';
-
         if (isSpecialZone) return true;
-
-        // Check zone-specific first, then global
-        const zoneRestriction = profile?.zoneRestrictions?.[currentZone?.id || '']
-        if (zoneRestriction?.canSeeArchive !== undefined) {
-          return zoneRestriction.canSeeArchive === true
-        }
         return profile?.canSeeArchive === true;
       }
 
       if (option.id === 'ongoing-rehearsals') {
-        // Only HQ admins are always unrestricted — coordinators can be blocked too
-        if (isHQ) return true;
-        // Check zone-specific restriction first, then global
-        const zoneRestriction = profile?.zoneRestrictions?.[currentZone?.id || '']
-        if (zoneRestriction?.canAccessOngoingRehearsals !== undefined) {
-          return zoneRestriction.canAccessOngoingRehearsals !== false
-        }
-        return profile?.canAccessOngoingRehearsals !== false;
+        if (profile?.canAccessOngoingRehearsals === false) return false;
+        return true;
       }
 
       if (option.id === 'audiolab') {

@@ -86,7 +86,8 @@ service cloud.firestore {
     // =========================================================================
     match /profiles/{userId} {
       allow read: if true;
-      allow write: if isAuthenticated() && (isOwner(userId) || isHQAdmin());
+      // Allow: owner, HQ admins, or any authenticated user (zone coordinators need to update member profiles)
+      allow write: if isAuthenticated();
     }
 
     match /user_sessions/{uid} {

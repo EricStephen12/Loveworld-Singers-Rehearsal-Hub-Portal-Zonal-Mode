@@ -47,6 +47,9 @@ export interface UserProfile {
   canSubmitSong?: boolean;
   canAccessGroups?: boolean;
   canAccessSubgroups?: boolean;
+  // Zone-specific restrictions: zoneRestrictions[zoneId][fieldName] = true/false
+  // Takes priority over global flat fields above
+  zoneRestrictions?: Record<string, Record<string, boolean>>;
   // AudioLab / profile UI helpers (Firebase-style fields)
   avatar_url?: string | null;
   display_name?: string | null;
