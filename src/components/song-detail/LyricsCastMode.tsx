@@ -110,15 +110,11 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   }, []);
 
   useEffect(() => {
-    window.history.pushState(null, '', window.location.href);
-    const handlePopState = () => onClose();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    window.addEventListener('popstate', handlePopState);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose]);
