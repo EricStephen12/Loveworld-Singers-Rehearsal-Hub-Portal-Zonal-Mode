@@ -46,7 +46,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   title,
   writer,
   imageUrl,
-  zoneColor = '#9333EA',
+  zoneColor = '#4C068E',
   onClose,
 }) => {
   const [imgFailed, setImgFailed] = useState(false);
@@ -54,7 +54,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   const [fontSize, setFontSize] = useState(42);
   const [allWhite, setAllWhite] = useState(false);
   const [activePara, setActivePara] = useState<number>(-1);
-  const [customColor, setCustomColor] = useState<string | null>(null);
+  const [customColor, setCustomColor] = useState<string>('#4C068E');
   const MIN_FONT = 20;
   const MAX_FONT = 80;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -121,7 +121,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
 
   if (!mounted) return null;
 
-  const bg = customColor ?? zoneColor ?? '#9333EA';
+  const bg = customColor;
   const hasLyrics = lyrics && lyrics.trim().length > 0;
 
   const content = (
@@ -177,12 +177,12 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
             {/* Show current color as a circle swatch */}
             <div
               className="w-5 h-5 rounded-full border-2 border-white/60"
-              style={{ background: customColor || zoneColor }}
+              style={{ background: customColor }}
             />
             <input
               ref={colorInputRef}
               type="color"
-              defaultValue={zoneColor}
+              defaultValue={customColor}
               onChange={e => setCustomColor(e.target.value)}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               aria-hidden="true"
