@@ -16,7 +16,9 @@
     "type-check": "tsc --noEmit",
     "performance": "lighthouse http://localhost:3000 --output=html --output-path=./performance-report.html",
     "bundle-analyzer": "npx @next/bundle-analyzer",
-    "clear-cache": "node clear-cache.js"
+    "clear-cache": "node clear-cache.js",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
@@ -50,14 +52,21 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "26.6.5",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "5.0.4",
     "eslint": "^9",
     "eslint-config-next": "15.5.7",
+    "fast-check": "4.10.2",
+    "jsdom": "29.1.1",
     "kingschat-web-sdk": "^0.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "5.0.4"
   }
 }
