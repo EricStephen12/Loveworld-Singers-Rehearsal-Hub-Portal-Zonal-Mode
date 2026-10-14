@@ -125,7 +125,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
 
   if (!mounted) return null;
 
-  const bg = customColor ? deriveCastBackground(customColor) : deriveCastBackground(zoneColor);
+  const bg = customColor ?? zoneColor ?? '#9333EA';
   const hasLyrics = lyrics && lyrics.trim().length > 0;
 
   const content = (
