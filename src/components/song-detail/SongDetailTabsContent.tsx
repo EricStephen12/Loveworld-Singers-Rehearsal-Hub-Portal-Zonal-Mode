@@ -15,6 +15,7 @@ interface SongDetailTabsContentProps {
   toggleFullscreenComments: () => void;
   zoneColor: string;
   commentLabel: string;
+  onOpenCastMode?: () => void;
   historyProps: {
     activeHistoryTab: any;
     setActiveHistoryTab: (tab: any) => void;
@@ -44,6 +45,7 @@ export const SongDetailTabsContent: React.FC<SongDetailTabsContentProps> = ({
   toggleFullscreenComments,
   zoneColor,
   commentLabel,
+  onOpenCastMode,
   historyProps
 }) => {
   return (
@@ -53,6 +55,7 @@ export const SongDetailTabsContent: React.FC<SongDetailTabsContentProps> = ({
           isFullscreen={false}
           onToggleFullscreen={toggleFullscreenLyrics}
           lyrics={displayedSongData?.lyrics}
+          onOpenCastMode={onOpenCastMode}
         />
       )}
 

@@ -22,6 +22,7 @@ import { SongHistory } from "./song-detail/SongHistory";
 import { SongAudioPlayer } from "./song-detail/SongAudioPlayer";
 import { SongDetailHeader } from "./song-detail/SongDetailHeader";
 import { SongDetailTabsContent } from "./song-detail/SongDetailTabsContent";
+import { LyricsCastMode } from "./song-detail/LyricsCastMode";
 
 interface SongDetailModalProps {
   selectedSong: PraiseNightSong | null;
@@ -70,6 +71,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
   const [isFullscreenComments, setIsFullscreenComments] = useState(false);
   const [isFullscreenSolfas, setIsFullscreenSolfas] = useState(false);
   const [isNavigatingToAudioLab, setIsNavigatingToAudioLab] = useState(false);
+  const [isCastModeOpen, setIsCastModeOpen] = useState(false);
 
   // Get zone context to determine comment terminology
   const { currentZone } = useZone();
@@ -677,6 +679,8 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
               lyrics={currentSongData?.lyrics}
               title={currentSongData?.title}
               writer={currentSongData?.writer}
+              zoneColor={zoneColor}
+              onOpenCastMode={() => setIsCastModeOpen(true)}
             />
           ) : isFullscreenComments && activeTab === 'comments' ? (
             <SongComments 
@@ -716,6 +720,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                 toggleFullscreenComments={toggleFullscreenComments}
                 zoneColor={zoneColor}
                 commentLabel={getCommentLabel()}
+                onOpenCastMode={() => setIsCastModeOpen(true)}
                 historyProps={{
                   activeHistoryTab,
                   setActiveHistoryTab,
@@ -746,6 +751,7 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
                   showFloatingButtonOnly={true}
                   zoneColor={zoneColor}
                   darkenColor={darkenColor}
+                  onOpenCastMode={() => setIsCastModeOpen(true)}
                 />
               )}
 
@@ -799,6 +805,18 @@ export default function SongDetailModal({ selectedSong, isOpen, onClose, onSongC
           )}
         </div>
       </div>
+
+      {/* Cast Mode overlay */}
+      {isCastModeOpen && currentSongData && (
+        <LyricsCastMode
+          lyrics={currentSongData.lyrics}
+          title={currentSongData.title}
+          writer={currentSongData.writer}
+          imageUrl={currentSongData.imageUrl}
+          zoneColor={zoneColor}
+          onClose={() => setIsCastModeOpen(false)}
+        />
+      )}
     </>
   );
 }

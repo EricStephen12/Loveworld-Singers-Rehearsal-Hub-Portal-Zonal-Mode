@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Minimize2, Maximize2 } from 'lucide-react';
+import { BookOpen, Minimize2, Maximize2, Tv } from 'lucide-react';
 import { hasVisibleContent } from '@/utils/string-utils';
 
 interface SongLyricsProps {
@@ -11,6 +11,7 @@ interface SongLyricsProps {
   showFloatingButtonOnly?: boolean;
   zoneColor?: string;
   darkenColor?: (color: string, amount: number) => string;
+  onOpenCastMode?: () => void;
 }
 
 export const SongLyrics: React.FC<SongLyricsProps> = ({
@@ -22,27 +23,45 @@ export const SongLyrics: React.FC<SongLyricsProps> = ({
   showFloatingButtonOnly = false,
   zoneColor = '#9333EA',
   darkenColor,
+  onOpenCastMode,
 }) => {
   if (showFloatingButtonOnly) {
     return (
-      <button
-        onClick={onToggleFullscreen}
-        className="fixed bottom-28 right-3 sm:right-4 w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 z-[110] hover:scale-105 flex items-center justify-center"
-        style={{
-          backgroundColor: zoneColor
-        }}
-        onMouseEnter={(e) => {
-          if (darkenColor) {
-            e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = zoneColor;
-        }}
-        title="Fullscreen Lyrics"
-      >
-        <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      </button>
+      <div className="fixed bottom-28 right-3 sm:right-4 flex flex-col gap-2 z-[110]">
+        {/* Cast / TV Mode button */}
+        {onOpenCastMode && (
+          <button
+            onClick={onOpenCastMode}
+            className="w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+            style={{ backgroundColor: zoneColor }}
+            onMouseEnter={(e) => {
+              if (darkenColor) e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = zoneColor;
+            }}
+            title="Cast / TV Mode"
+            aria-label="Cast / TV Mode"
+          >
+            <Tv className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+        )}
+        {/* Fullscreen button */}
+        <button
+          onClick={onToggleFullscreen}
+          className="w-10 h-10 sm:w-11 sm:h-11 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+          style={{ backgroundColor: zoneColor }}
+          onMouseEnter={(e) => {
+            if (darkenColor) e.currentTarget.style.backgroundColor = darkenColor(zoneColor, 10);
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = zoneColor;
+          }}
+          title="Fullscreen Lyrics"
+        >
+          <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
+      </div>
     );
   }
 
@@ -63,6 +82,19 @@ export const SongLyrics: React.FC<SongLyricsProps> = ({
               <p className="text-sm text-gray-500">{writer}</p>
             </div>
           </div>
+          {/* Cast / TV Mode button in fullscreen header */}
+          {onOpenCastMode && (
+            <button
+              onClick={onOpenCastMode}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-white text-sm font-medium shadow transition-all duration-200 hover:scale-105"
+              style={{ backgroundColor: zoneColor }}
+              title="Cast / TV Mode"
+              aria-label="Cast / TV Mode"
+            >
+              <Tv className="w-4 h-4" />
+              <span className="hidden sm:inline">Cast Mode</span>
+            </button>
+          )}
         </div>
 
         {/* Fullscreen Lyrics Content */}
