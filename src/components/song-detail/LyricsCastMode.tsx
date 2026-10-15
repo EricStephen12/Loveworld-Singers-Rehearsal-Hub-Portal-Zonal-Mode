@@ -55,6 +55,10 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   const [allWhite, setAllWhite] = useState(false);
   const [activePara, setActivePara] = useState<number>(-1);
   const [customColor, setCustomColor] = useState<string>('#4C068E');
+  const [paraCount, setParaCount] = useState(0);
+  const [boldOnlyIndices, setBoldOnlyIndices] = useState<Set<number>>(new Set());
+  const paraRefsMap = useRef<HTMLElement[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const MIN_FONT = 20;
   const MAX_FONT = 80;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,9 +67,34 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
 
   useEffect(() => { setMounted(true); }, []);
 
+  // Parse lyrics into lines — only after mount so document is available
+  const lyricLines = React.useMemo(() => {
+    if (!mounted || !lyrics) return [];
+    try {
+      const div = document.createElement('div');
+      div.innerHTML = lyrics;
+      const paras = Array.from(div.querySelectorAll('p'));
+      const result: { text: string; isBold: boolean }[] = [];
+      paras.forEach(p => {
+        const text = (p.textContent || '').replace(/\u00a0/g, '').trim();
+        if (!text) return;
+        const isBold = Array.from(p.childNodes).every(node => {
+          if (node.nodeType === Node.TEXT_NODE) return (node.textContent || '').replace(/\u00a0/g, '').trim() === '';
+          if (node.nodeType === Node.ELEMENT_NODE) return ['B', 'STRONG'].includes((node as Element).tagName);
+          return true;
+        });
+        result.push({ text, isBold });
+      });
+      return result;
+    } catch { return []; }
+  }, [mounted, lyrics]);
+
   // After lyrics render, walk the DOM and make each <p> tappable
   // Also hide bold tags that only contain whitespace/nbsp (CSS :empty can't catch those)
   useEffect(() => {
+    if (!mounted) return;
+    // Small delay to ensure dangerouslySetInnerHTML has fully painted
+    const timer = setTimeout(() => {
     if (!lyricsRef.current) return;
     const paras = Array.from(lyricsRef.current.querySelectorAll('p'));
 
@@ -118,19 +147,37 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
 
     // Register click handlers only on visible paras
     const visibleParas = paras.filter(p => (p as HTMLElement).style.display !== 'none');
+    paraRefsMap.current = visibleParas.map(p => p as HTMLElement);
+
+    // Track which visible paras are bold-only (section labels)
+    const boldSet = new Set<number>();
+    visibleParas.forEach((p, i) => {
+      const isBoldOnly = Array.from(p.childNodes).every(node => {
+        if (node.nodeType === Node.TEXT_NODE) return (node.textContent || '').replace(/\u00a0/g, '').trim() === '';
+        if (node.nodeType === Node.ELEMENT_NODE) return ['B', 'STRONG'].includes((node as HTMLElement).tagName);
+        return true;
+      });
+      if (isBoldOnly) boldSet.add(i);
+    });
+    setBoldOnlyIndices(boldSet);
+    setParaCount(visibleParas.length);
     visibleParas.forEach((p, i) => {
       (p as HTMLElement).onclick = () => setActivePara(prev => prev === i ? -1 : i);
     });
 
+    }, 200); // end setTimeout
+
     return () => {
-      visibleParas.forEach(p => { (p as HTMLElement).onclick = null; });
+      clearTimeout(timer);
     };
   }, [mounted, lyrics]);
 
   // Apply highlight styles to paragraphs when activePara changes
   useEffect(() => {
     if (!lyricsRef.current) return;
-    const paras = Array.from(lyricsRef.current.querySelectorAll('p'));
+    const paras = Array.from(lyricsRef.current.querySelectorAll('p')).filter(
+      p => (p as HTMLElement).style.display !== 'none'
+    );
     paras.forEach((p, i) => {
       if (i === activePara) {
         (p as HTMLElement).style.background = 'rgba(255,255,255,0.2)';
@@ -180,8 +227,8 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/10"
-        style={{ maxHeight: 72 }}
+        className="flex items-center justify-between px-3 py-1.5 flex-shrink-0 border-b border-white/10"
+        style={{ maxHeight: 48 }}
       >
         <div className="flex items-center gap-3 min-w-0">
           {imageUrl && !imgFailed ? (
@@ -190,39 +237,75 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
               src={imageUrl}
               alt={title}
               width={48}
-              height={48}
+              height={36}
               className="rounded-lg object-cover flex-shrink-0"
-              style={{ width: 48, height: 48 }}
+              style={{ width: 36, height: 36 }}
               onError={() => setImgFailed(true)}
             />
           ) : (
-            <div className="flex items-center justify-center rounded-lg flex-shrink-0 bg-white/20" style={{ width: 48, height: 48 }}>
-              <Music className="w-6 h-6 text-white/80" />
+            <div className="flex items-center justify-center rounded-lg flex-shrink-0 bg-white/20" style={{ width: 36, height: 36 }}>
+              <Music className="w-4 h-4 text-white/80" />
             </div>
           )}
           <div className="min-w-0">
             {title && (
-              <p className="text-white font-semibold truncate" style={{ fontSize: 15, maxWidth: '45vw' }}>{title}</p>
+              <p className="text-white font-semibold truncate" style={{ fontSize: 13, maxWidth: '45vw' }}>{title}</p>
             )}
             {writer && (
-              <p className="text-white/70 truncate" style={{ fontSize: 12, maxWidth: '45vw' }}>{writer}</p>
+              <p className="text-white/70 truncate" style={{ fontSize: 11, maxWidth: '45vw' }}>{writer}</p>
             )}
           </div>
         </div>
 
+        {/* Dot Navigator in header — horizontal scroll */}
+        {lyricLines.length > 0 && (
+          <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide mx-2">
+            {lyricLines.map((line, i) => {
+              const isActive = activePara === i;
+              const isLabel = line.isBold;
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setActivePara(i);
+                    const el = paraRefsMap.current[i];
+                    if (el && scrollRef.current) {
+                      scrollRef.current.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
+                    }
+                  }}
+                  style={{
+                    width: isActive ? 12 : isLabel ? 9 : 7,
+                    height: isActive ? 12 : isLabel ? 9 : 7,
+                    minWidth: isActive ? 12 : isLabel ? 9 : 7,
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    background: isActive ? '#FFD700' : isLabel ? 'rgba(255,215,0,0.7)' : 'rgba(255,255,255,0.5)',
+                    boxShadow: isActive ? '0 0 6px #FFD700' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    outline: 'none',
+                    transition: 'all 0.15s',
+                  }}
+                  aria-label={`Line ${i + 1}`}
+                />
+              );
+            })}
+          </div>
+        )}
+
         {/* Controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {/* Color picker */}
           <button
             onClick={() => colorInputRef.current?.click()}
             aria-label="Change background color"
             title="Change background color"
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors overflow-hidden relative"
-            style={{ width: 40, height: 40 }}
+            style={{ width: 32, height: 32 }}
           >
-            {/* Show current color as a circle swatch */}
             <div
-              className="w-5 h-5 rounded-full border-2 border-white/60"
+              className="w-4 h-4 rounded-full border-2 border-white/60"
               style={{ background: customColor }}
             />
             <input
@@ -239,71 +322,68 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
             aria-label={allWhite ? 'Disable all white' : 'All text white'}
             className="flex items-center justify-center rounded-full transition-colors"
             style={{
-              width: 40, height: 40,
+              width: 32, height: 32,
               background: allWhite ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
               color: allWhite ? '#000' : '#fff',
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 700 }}>A</span>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>A</span>
           </button>
           <button
             onClick={() => setFontSize(s => Math.max(s - 4, MIN_FONT))}
             aria-label="Zoom out"
             disabled={fontSize <= MIN_FONT}
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-30"
-            style={{ width: 40, height: 40 }}
+            style={{ width: 32, height: 32 }}
           >
-            <ZoomOut className="w-4 h-4 text-white" />
+            <ZoomOut className="w-3.5 h-3.5 text-white" />
           </button>
           <button
             onClick={() => setFontSize(s => Math.min(s + 4, MAX_FONT))}
             aria-label="Zoom in"
             disabled={fontSize >= MAX_FONT}
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-30"
-            style={{ width: 40, height: 40 }}
+            style={{ width: 32, height: 32 }}
           >
-            <ZoomIn className="w-4 h-4 text-white" />
+            <ZoomIn className="w-3.5 h-3.5 text-white" />
           </button>
           <button
             onClick={onClose}
             aria-label="Exit Cast Mode"
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-            style={{ width: 44, height: 44 }}
+            style={{ width: 32, height: 32 }}
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-3.5 h-3.5 text-white" />
           </button>
         </div>
       </div>
 
-      {/* Lyrics — raw HTML, same as original view */}
-      <div
-        className="flex-1 overflow-y-auto px-8 py-6 scrollbar-hide"
-        style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
-      >
-        <div className="max-w-3xl mx-auto">
-          {hasLyrics ? (
-            <div
-              ref={lyricsRef}
-              dangerouslySetInnerHTML={{ __html: lyrics! }}
-              className="cast-lyrics max-w-none"
-              style={{ fontSize, lineHeight: 1.3 }}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 gap-4">
-              <Music className="w-16 h-16 text-white/40" />
-              <p className="text-white/60 text-center font-semibold" style={{ fontSize }}>
-                No lyrics available
-              </p>
-            </div>
-          )}
+      {/* Lyrics + Dot Navigator */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Lyrics scroll area */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-8 py-6 scrollbar-hide"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+        >
+          <div className="max-w-3xl mx-auto">
+            {hasLyrics ? (
+              <div
+                ref={lyricsRef}
+                dangerouslySetInnerHTML={{ __html: lyrics! }}
+                className="cast-lyrics max-w-none"
+                style={{ fontSize, lineHeight: 1.3 }}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <Music className="w-16 h-16 text-white/40" />
+                <p className="text-white/60 text-center font-semibold" style={{ fontSize }}>
+                  No lyrics available
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Bottom hint */}
-      <div className="flex-shrink-0 pb-3 flex justify-center">
-        <p className="text-white/30 text-xs">
-          Tap a line to highlight · scroll to navigate · zoom to resize
-        </p>
       </div>
 
       {/* Force all text white, keep original spacing */}
@@ -334,9 +414,11 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
           background: rgba(255, 255, 255, 0.18) !important;
           border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
           border-radius: 6px !important;
-          padding: 2px 8px !important;
+          padding: 0px 4px !important;
+          font-size: 0.75em !important;
+          line-height: 1 !important;
           display: inline !important;
-          vertical-align: baseline !important;
+          vertical-align: middle !important;
           box-decoration-break: clone !important;
           -webkit-box-decoration-break: clone !important;
         }
