@@ -64,20 +64,66 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   useEffect(() => { setMounted(true); }, []);
 
   // After lyrics render, walk the DOM and make each <p> tappable
+  // Also hide bold tags that only contain whitespace/nbsp (CSS :empty can't catch those)
   useEffect(() => {
     if (!lyricsRef.current) return;
     const paras = Array.from(lyricsRef.current.querySelectorAll('p'));
-    
-    paras.forEach((p, i) => {
-      (p as HTMLElement).style.cursor = 'pointer';
-      (p as HTMLElement).style.borderRadius = '6px';
-      (p as HTMLElement).style.padding = '2px 6px';
-      (p as HTMLElement).style.transition = 'background 0.15s, opacity 0.15s';
+
+    // First pass: hide empty bold/strong tags
+    const boldTags = Array.from(lyricsRef.current.querySelectorAll('b, strong'));
+    boldTags.forEach(el => {
+      const text = (el.textContent || '').replace(/\u00a0/g, '').trim();
+      if (!text) (el as HTMLElement).style.display = 'none';
+    });
+
+    // Second pass: process each <p> — hide empty ones, style the rest
+    paras.forEach(p => {
+      const text = (p.textContent || '').replace(/\u00a0/g, '').trim();
+      const onlyEmptyOrBr = Array.from(p.childNodes).every(node => {
+        if (node.nodeType === Node.TEXT_NODE) return (node.textContent || '').replace(/\u00a0/g, '').trim() === '';
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          return el.tagName === 'BR' || (el.style.display === 'none') || (el.textContent || '').replace(/\u00a0/g, '').trim() === '';
+        }
+        return true;
+      });
+      if (!text || onlyEmptyOrBr) {
+        (p as HTMLElement).style.display = 'none';
+        return;
+      }
+
+      // Check if paragraph is a bold-label-only line (VERSE, CHORUS, All: etc.)
+      const isBoldOnly = Array.from(p.childNodes).every(node => {
+        if (node.nodeType === Node.TEXT_NODE) return (node.textContent || '').replace(/\u00a0/g, '').trim() === '';
+        if (node.nodeType === Node.ELEMENT_NODE) return ['B', 'STRONG'].includes((node as HTMLElement).tagName);
+        return true;
+      });
+
+      if (isBoldOnly) {
+        // No wrapper styling — the <b> box already provides the visual container
+        (p as HTMLElement).style.cursor = 'default';
+        (p as HTMLElement).style.borderRadius = '0';
+        (p as HTMLElement).style.padding = '0';
+        (p as HTMLElement).style.marginTop = '10px';
+        (p as HTMLElement).style.marginBottom = '4px';
+        (p as HTMLElement).style.transition = 'none';
+      } else {
+        // Regular lyric lines get the tap highlight treatment
+        (p as HTMLElement).style.cursor = 'pointer';
+        (p as HTMLElement).style.borderRadius = '6px';
+        (p as HTMLElement).style.padding = '2px 6px';
+        (p as HTMLElement).style.transition = 'background 0.15s, opacity 0.15s';
+      }
+    });
+
+    // Register click handlers only on visible paras
+    const visibleParas = paras.filter(p => (p as HTMLElement).style.display !== 'none');
+    visibleParas.forEach((p, i) => {
       (p as HTMLElement).onclick = () => setActivePara(prev => prev === i ? -1 : i);
     });
 
     return () => {
-      paras.forEach(p => { (p as HTMLElement).onclick = null; });
+      visibleParas.forEach(p => { (p as HTMLElement).onclick = null; });
     };
   }, [mounted, lyrics]);
 
@@ -239,8 +285,8 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
             <div
               ref={lyricsRef}
               dangerouslySetInnerHTML={{ __html: lyrics! }}
-              className="cast-lyrics prose prose-slate prose-lg max-w-none"
-              style={{ fontSize, lineHeight: 1.7 }}
+              className="cast-lyrics max-w-none"
+              style={{ fontSize, lineHeight: 1.3 }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -265,8 +311,6 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
         .cast-lyrics,
         .cast-lyrics p,
         .cast-lyrics span,
-        .cast-lyrics strong,
-        .cast-lyrics b,
         .cast-lyrics em,
         .cast-lyrics h1,
         .cast-lyrics h2,
@@ -276,11 +320,41 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
           font-weight: 700 !important;
           background: transparent !important;
         }
-        .cast-lyrics p { margin-bottom: 0.4em !important; }
         .cast-lyrics h1, .cast-lyrics h2, .cast-lyrics h3, .cast-lyrics h4 {
           font-size: inherit !important;
           margin-top: 1.2em !important;
           margin-bottom: 0.3em !important;
+        }
+
+        /* Bold tags get a standout highlight box */
+        .cast-lyrics strong,
+        .cast-lyrics b {
+          color: #ffffff !important;
+          font-weight: 800 !important;
+          background: rgba(255, 255, 255, 0.18) !important;
+          border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+          border-radius: 6px !important;
+          padding: 2px 8px !important;
+          display: inline !important;
+          vertical-align: baseline !important;
+          box-decoration-break: clone !important;
+          -webkit-box-decoration-break: clone !important;
+        }
+        /* Paragraphs that only contain bold labels get breathing room between them */
+        .cast-lyrics p {
+          margin-bottom: 0.15em !important;
+          margin-top: 0 !important;
+        }
+        /* Give bold-label-only paragraphs extra top margin so boxes don't overlap */
+        .cast-lyrics p:has(> b:only-child),
+        .cast-lyrics p:has(> strong:only-child) {
+          margin-top: 0.5em !important;
+          margin-bottom: 0.25em !important;
+        }
+        /* Hide empty bold tags (no visible text, just whitespace/nbsp) */
+        .cast-lyrics strong:empty,
+        .cast-lyrics b:empty {
+          display: none !important;
         }
       `}</style>
     </div>
