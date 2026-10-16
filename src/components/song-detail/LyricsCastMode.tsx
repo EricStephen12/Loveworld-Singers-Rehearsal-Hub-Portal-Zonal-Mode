@@ -54,7 +54,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
   const [fontSize, setFontSize] = useState(42);
   const [allWhite, setAllWhite] = useState(false);
   const [activePara, setActivePara] = useState<number>(-1);
-  const [customColor, setCustomColor] = useState<string>('#4C068E');
+  const [customColor, setCustomColor] = useState<string>('#240046');
   const [paraCount, setParaCount] = useState(0);
   const [boldOnlyIndices, setBoldOnlyIndices] = useState<Set<number>>(new Set());
   const paraRefsMap = useRef<HTMLElement[]>([]);
@@ -225,10 +225,22 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
       className="fixed inset-0 z-[9999] flex flex-col outline-none overflow-hidden"
       style={{ background: bg }}
     >
+      {/* Music doodle overlay */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='250' height='250' viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M110 50c1.66 0 3-1.34 3-3V35c0-1.66-1.34-3-3-3s-3 1.34-3 3v12c0 1.66 1.34 3 3 3zM115.3 41c0 2.54-2.04 4.63-4.57 4.93V49h-1.46v-3.07a4.996 4.996 0 01-4.57-4.93h-1.48c0 3.19 2.39 5.8 5.48 6.4v3.13h-2.19c-.43 0-.78.35-.78.78s.35.78.78.78h5.83c.43 0 .78-.35.78-.78s-.35-.78-.78-.78h-2.19v-3.13c3.09-.6 5.48-3.21 5.48-6.4h-1.48z' transform='scale(1.2)'/%3E%3Cpath d='M50 20c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8h-4v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z' transform='scale(1.3) translate(15, 0)'/%3E%3Cpath d='M180 30l-10 2.45v10.55c-.5-.15-1-.24-1.5-.24-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-11.4l8-1.96V37.5c-.5-.15-1-.24-1.5-.24-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-11z' transform='scale(1.3)'/%3E%3Cpath d='M30 150c0 5 4 9 9 9s9-4 9-9c0-6-4.5-8-4.5-13 0-4 1.5-6 1.5-6h-12s1.5 2 1.5 6c0 5-4.5 7-4.5 13z' transform='scale(1.2) rotate(15, 39, 150)'/%3E%3Cpath d='M160 140h28v20h-28z M164 140v12h2v-12z M168 140v12h2v-12z M174 140v12h2v-12z M178 140v12h2v-12z' transform='scale(1.4) rotate(10, 174, 150)'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+        }}
+      />
       {/* Header */}
       <div
-        className="flex items-center justify-between px-3 py-1.5 flex-shrink-0 border-b border-white/10"
-        style={{ maxHeight: 48 }}
+        className="flex items-center justify-between px-2 py-0.5 flex-shrink-0 border-b border-white/10"
+        style={{ maxHeight: 36 }}
       >
         <div className="flex items-center gap-3 min-w-0">
           {imageUrl && !imgFailed ? (
@@ -239,27 +251,27 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
               width={48}
               height={36}
               className="rounded-lg object-cover flex-shrink-0"
-              style={{ width: 36, height: 36 }}
+              style={{ width: 26, height: 26 }}
               onError={() => setImgFailed(true)}
             />
           ) : (
-            <div className="flex items-center justify-center rounded-lg flex-shrink-0 bg-white/20" style={{ width: 36, height: 36 }}>
-              <Music className="w-4 h-4 text-white/80" />
+            <div className="flex items-center justify-center rounded-lg flex-shrink-0 bg-white/20" style={{ width: 26, height: 26 }}>
+              <Music className="w-3 h-3 text-white/80" />
             </div>
           )}
           <div className="min-w-0">
             {title && (
-              <p className="text-white font-semibold truncate" style={{ fontSize: 13, maxWidth: '45vw' }}>{title}</p>
+              <p className="text-white font-semibold truncate" style={{ fontSize: 11, maxWidth: '45vw' }}>{title}</p>
             )}
             {writer && (
-              <p className="text-white/70 truncate" style={{ fontSize: 11, maxWidth: '45vw' }}>{writer}</p>
+              <p className="text-white/70 truncate" style={{ fontSize: 10, maxWidth: '45vw' }}>{writer}</p>
             )}
           </div>
         </div>
 
         {/* Dot Navigator in header — horizontal scroll */}
         {lyricLines.length > 0 && (
-          <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide mx-2">
+          <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-hide mx-1">
             {lyricLines.map((line, i) => {
               const isActive = activePara === i;
               const isLabel = line.isBold;
@@ -295,17 +307,17 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
         )}
 
         {/* Controls */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {/* Color picker */}
           <button
             onClick={() => colorInputRef.current?.click()}
             aria-label="Change background color"
             title="Change background color"
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors overflow-hidden relative"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 22, height: 22 }}
           >
             <div
-              className="w-4 h-4 rounded-full border-2 border-white/60"
+              className="w-3 h-3 rounded-full border-2 border-white/60"
               style={{ background: customColor }}
             />
             <input
@@ -322,38 +334,38 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
             aria-label={allWhite ? 'Disable all white' : 'All text white'}
             className="flex items-center justify-center rounded-full transition-colors"
             style={{
-              width: 32, height: 32,
+              width: 22, height: 22,
               background: allWhite ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
               color: allWhite ? '#000' : '#fff',
             }}
           >
-            <span style={{ fontSize: 12, fontWeight: 700 }}>A</span>
+            <span style={{ fontSize: 9, fontWeight: 700 }}>A</span>
           </button>
           <button
             onClick={() => setFontSize(s => Math.max(s - 4, MIN_FONT))}
             aria-label="Zoom out"
             disabled={fontSize <= MIN_FONT}
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-30"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 22, height: 22 }}
           >
-            <ZoomOut className="w-3.5 h-3.5 text-white" />
+            <ZoomOut className="w-2.5 h-2.5 text-white" />
           </button>
           <button
             onClick={() => setFontSize(s => Math.min(s + 4, MAX_FONT))}
             aria-label="Zoom in"
             disabled={fontSize >= MAX_FONT}
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-30"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 22, height: 22 }}
           >
-            <ZoomIn className="w-3.5 h-3.5 text-white" />
+            <ZoomIn className="w-2.5 h-2.5 text-white" />
           </button>
           <button
             onClick={onClose}
             aria-label="Exit Cast Mode"
             className="flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-            style={{ width: 32, height: 32 }}
+            style={{ width: 22, height: 22 }}
           >
-            <X className="w-3.5 h-3.5 text-white" />
+            <X className="w-2.5 h-2.5 text-white" />
           </button>
         </div>
       </div>
@@ -386,7 +398,7 @@ export const LyricsCastMode: React.FC<LyricsCastModeProps> = ({
         </div>
       </div>
 
-      {/* Force all text white, keep original spacing */}
+      {/* Text styles */}
       <style>{`
         .cast-lyrics,
         .cast-lyrics p,
