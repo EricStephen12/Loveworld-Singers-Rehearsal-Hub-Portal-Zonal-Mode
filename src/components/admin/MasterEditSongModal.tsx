@@ -286,8 +286,12 @@ export function MasterEditSongModal({
         audioFile: audioUrls.full,
         customParts: customParts,
         imageUrl: formData.imageUrl,
-        isHQOnly: formData.isHQOnly,
-      };
+        isHQOnly: Boolean(formData.isHQOnly),
+        isHqOnly: Boolean(formData.isHQOnly),
+        isHidden: Boolean(formData.isHQOnly),
+        scope: formData.isHQOnly ? 'hq' : 'global',
+        status: formData.isHQOnly ? 'hq_only' : 'active',
+      } as any;
 
       if (isCreateMode) {
         // Create new song

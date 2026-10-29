@@ -205,8 +205,18 @@ export default function EditSongModal({
         return true;
       });
       setHistoryEntries(deduplicated);
-    } catch (err) {
-      console.error('Error fetching song history:', err);
+      if (!coordinatorComment && deduplicated.length > 0) {
+        const latestComment = deduplicated.find((e: any) => {
+          const t = (e.type || '').toLowerCase();
+          return t === 'comments' || t === 'comment' || t.includes('comment');
+        });
+        if (latestComment) {
+          const text = latestComment.new_value || latestComment.notes || latestComment.description || latestComment.title || '';
+          if (text && typeof text === 'string') {
+            setCoordinatorComment(text);
+          }
+        }
+      }
     } finally {
       setIsLoadingHistory(false);
     }
@@ -493,8 +503,9 @@ export default function EditSongModal({
             try { rawComments = JSON.parse(rawComments); } catch { rawComments = [{ text: rawComments }]; }
           }
           if (!rawComments || (Array.isArray(rawComments) && rawComments.length === 0)) {
-            if (s.notes || s.coordinatorComment) {
-              rawComments = [{ text: s.notes || s.coordinatorComment }];
+            const legacyNotes = (typeof s.history === 'string' && s.history.trim()) || s.coordinatorNotes || s.notes || s.coordinatorComment;
+            if (legacyNotes) {
+              rawComments = [{ text: legacyNotes }];
             }
           }
           const commentList = Array.isArray(rawComments) ? rawComments : (rawComments ? [rawComments] : []);
@@ -676,7 +687,7 @@ export default function EditSongModal({
       customParts: customParts,
       imageUrl: songImageUrl,
       availableParts: Object.keys(audioUrls).filter(k => audioUrls[k] && !k.startsWith('_')),
-      history: song?.history || []
+      history: historyEntries.length > 0 ? historyEntries : (song?.history || [])
     };
 
     let updatedSong = song ? { ...song, ...songData } : songData;
