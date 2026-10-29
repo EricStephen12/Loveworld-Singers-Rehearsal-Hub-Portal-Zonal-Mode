@@ -131,6 +131,7 @@ export const EditSongMusicDetails: React.FC<EditSongMusicDetailsProps> = ({
             </div>
             <audio
               controls
+              preload="none"
               className="w-full h-8"
               style={{ outline: 'none' }}
             >
@@ -171,7 +172,7 @@ export const EditSongMusicDetails: React.FC<EditSongMusicDetailsProps> = ({
                 controls
                 className="w-full h-8"
                 style={{ outline: 'none' }}
-                preload="metadata"
+                preload="none"
               >
                 <source src={songAudioFile} type="audio/mpeg" />
                 <source src={songAudioFile} type="audio/wav" />

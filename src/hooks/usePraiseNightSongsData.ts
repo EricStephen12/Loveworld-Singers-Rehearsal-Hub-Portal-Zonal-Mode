@@ -18,12 +18,30 @@ export const usePraiseNightSongsData = ({
   currentPraiseNight,
   setActiveCategory
 }: UsePraiseNightSongsDataProps) => {
+  // Helper function to extract all categories from a song (matching admin app)
+  const getSongAllCategories = (song: any): string[] => {
+    const result = new Set<string>();
+    if (song?.category && typeof song.category === 'string' && song.category.trim()) {
+      result.add(song.category.trim());
+    }
+    if (Array.isArray(song?.categories)) {
+      song.categories.forEach((c: any) => {
+        if (typeof c === 'string' && c.trim()) result.add(c.trim());
+      });
+    }
+    const rawCats = song?.audioUrls?._categories;
+    if (Array.isArray(rawCats)) {
+      rawCats.forEach((c: any) => {
+        if (typeof c === 'string' && c.trim()) result.add(c.trim());
+      });
+    }
+    return Array.from(result);
+  };
+
   // Helper function to check if song belongs to category
   const songBelongsToCategory = (song: any, targetCategory: string) => {
-    if (song.categories && Array.isArray(song.categories) && song.categories.length > 0) {
-      return song.categories.some((cat: string) => cat.trim() === targetCategory.trim());
-    }
-    return (song.category || '').trim() === targetCategory.trim();
+    const cats = getSongAllCategories(song);
+    return cats.some(c => c.trim().toLowerCase() === targetCategory.trim().toLowerCase());
   };
 
   // Song categories - get from Supabase data
@@ -31,16 +49,12 @@ export const usePraiseNightSongsData = ({
     const songsToUse = finalSongData.length > 0 ? finalSongData : (currentPraiseNight?.songs || []);
     if (songsToUse.length === 0) return [];
 
-    const allCategories: string[] = [];
+    const allCategories = new Set<string>();
     songsToUse.forEach((song: any) => {
-      if (song.categories && Array.isArray(song.categories)) {
-        allCategories.push(...song.categories.filter((cat: any) => cat && cat.trim()));
-      } else if (song.category && song.category.trim()) {
-        allCategories.push(song.category);
-      }
+      getSongAllCategories(song).forEach(cat => allCategories.add(cat));
     });
 
-    return [...new Set(allCategories)];
+    return Array.from(allCategories);
   }, [finalSongData, currentPraiseNight?.songs]);
 
   // Categories that currently have at least one active song
