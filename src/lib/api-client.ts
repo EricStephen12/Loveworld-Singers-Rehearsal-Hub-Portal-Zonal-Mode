@@ -177,9 +177,29 @@ interface CacheEntry {
   data: any;
   timestamp: number;
 }
+const MAX_API_CACHE_ENTRIES = 100;
+const MAX_ETAG_ENTRIES = 150;
 const apiGetCache = new Map<string, CacheEntry>();
 const etagStore = new Map<string, string>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes — safe because WebSocket handles real-time updates
+
+const inFlightRequests = new Map<string, Promise<any>>();
+
+function setApiCache(key: string, data: any) {
+  if (apiGetCache.size >= MAX_API_CACHE_ENTRIES) {
+    const oldestKey = apiGetCache.keys().next().value;
+    if (oldestKey) apiGetCache.delete(oldestKey);
+  }
+  apiGetCache.set(key, { data, timestamp: Date.now() });
+}
+
+function setEtag(key: string, etag: string) {
+  if (etagStore.size >= MAX_ETAG_ENTRIES) {
+    const oldestKey = etagStore.keys().next().value;
+    if (oldestKey) etagStore.delete(oldestKey);
+  }
+  etagStore.set(key, etag);
+}
 
 function shouldCacheEndpoint(endpoint: string): boolean {
   if (
@@ -221,12 +241,24 @@ export async function apiFetch<T = any>(
   const method = (options.method || 'GET').toUpperCase();
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-  if (method === 'GET' && shouldCacheEndpoint(cleanEndpoint)) {
-    const cached = apiGetCache.get(cleanEndpoint);
-    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
-      return cached.data as T;
+  if (method === 'GET') {
+    if (shouldCacheEndpoint(cleanEndpoint)) {
+      const cached = apiGetCache.get(cleanEndpoint);
+      if (cached) {
+        if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+          return cached.data as T;
+        } else {
+          apiGetCache.delete(cleanEndpoint);
+        }
+      }
+    }
+
+    if (!retried && inFlightRequests.has(cleanEndpoint)) {
+      return inFlightRequests.get(cleanEndpoint) as Promise<T>;
     }
   }
+
+  const execution = (async (): Promise<T> => {
 
   const headers = buildHeaders((options.headers as Record<string, string>) || {});
 
@@ -293,7 +325,7 @@ export async function apiFetch<T = any>(
 
   if (method === 'GET' && response.status === 200 && shouldCacheEndpoint(cleanEndpoint)) {
     const etag = response.headers.get('ETag');
-    if (etag) etagStore.set(cleanEndpoint, etag);
+    if (etag) setEtag(cleanEndpoint, etag);
   }
 
   const data = await response.json();
@@ -301,10 +333,20 @@ export async function apiFetch<T = any>(
   if (method !== 'GET') {
     apiGetCache.clear();
   } else if (shouldCacheEndpoint(cleanEndpoint)) {
-    apiGetCache.set(cleanEndpoint, { data, timestamp: Date.now() });
+    setApiCache(cleanEndpoint, data);
   }
 
   return data;
+  })();
+
+  if (method === 'GET' && !retried) {
+    inFlightRequests.set(cleanEndpoint, execution);
+    execution.finally(() => {
+      inFlightRequests.delete(cleanEndpoint);
+    });
+  }
+
+  return execution;
 }
 
 /** Multipart upload (files). Never set Content-Type; the browser adds the boundary. */

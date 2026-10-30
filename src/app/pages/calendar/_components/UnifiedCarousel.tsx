@@ -33,6 +33,7 @@ export default function UnifiedCarousel({ birthdays, events, themeColor }: Unifi
     if (carouselItems.length <= 1 || isPaused) return
 
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
       setCurrentIndex((prev) => (prev + 1) % carouselItems.length)
     }, 5000)
 

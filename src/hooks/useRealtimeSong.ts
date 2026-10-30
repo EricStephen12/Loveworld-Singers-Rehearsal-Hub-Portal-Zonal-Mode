@@ -83,6 +83,10 @@ export function useRealtimeSong(
 
   const [error, setError] = useState<string | null>(null)
   const isFetchingRef = useRef(false)
+  const initialSongRef = useRef(initialSong)
+  useEffect(() => {
+    initialSongRef.current = initialSong
+  })
 
   // Sync state whenever songId or initialSong changes
   useEffect(() => {
@@ -92,16 +96,17 @@ export function useRealtimeSong(
       return
     }
 
+    const currentInit = initialSongRef.current
     const stored = getStoredSong(songId)
     if (stored && hasLyricsContent(stored.lyrics)) {
-      setSong(prev => ({ ...(prev || {}), ...(initialSong || {}), ...stored }))
+      setSong(prev => ({ ...(prev || {}), ...(currentInit || {}), ...stored }))
       setLoading(false)
-    } else if (initialSong && hasLyricsContent(initialSong.lyrics)) {
-      setSong(initialSong)
+    } else if (currentInit && hasLyricsContent(currentInit.lyrics)) {
+      setSong(currentInit)
       setLoading(false)
-      persistSong(songId, initialSong)
+      persistSong(songId, currentInit)
     } else {
-      setSong(prev => (stored ? { ...(initialSong || {}), ...stored } : (initialSong || prev)))
+      setSong(prev => (stored ? { ...(currentInit || {}), ...stored } : (currentInit || prev)))
       setLoading(true)
     }
   }, [songId])
@@ -112,8 +117,9 @@ export function useRealtimeSong(
 
     try {
       setError(null)
+      const currentInit = initialSongRef.current
       const stored = getStoredSong(songId)
-      const cachedHasLyrics = hasLyricsContent(stored?.lyrics) || hasLyricsContent(initialSong?.lyrics)
+      const cachedHasLyrics = hasLyricsContent(stored?.lyrics) || hasLyricsContent(currentInit?.lyrics)
 
       // If we already have lyrics from persistent cache, show them at 0ms and revalidate silently in background
       if (cachedHasLyrics && isInitial) {
@@ -138,7 +144,7 @@ export function useRealtimeSong(
       const fresh = res?.data || res
       if (fresh) {
         setSong(prev => {
-          const merged = { ...(prev || {}), ...(initialSong || {}), ...fresh }
+          const merged = { ...(prev || {}), ...(initialSongRef.current || {}), ...fresh }
           persistSong(songId, merged)
           return merged
         })
@@ -150,7 +156,7 @@ export function useRealtimeSong(
       isFetchingRef.current = false
       setLoading(false)
     }
-  }, [songId, initialSong])
+  }, [songId])
 
   const refreshSong = useCallback(async () => {
     setLoading(true)

@@ -20,6 +20,7 @@ export default function BirthdayCarousel({ birthdays, themeColor }: BirthdayCaro
     if (birthdays.length <= 1 || isPaused) return
 
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
       setCurrentIndex((prev) => (prev + 1) % birthdays.length)
     }, 5000)
 

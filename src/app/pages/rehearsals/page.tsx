@@ -68,7 +68,7 @@ export default function RehearsalsPage() {
     }
 
     const auto = window.setInterval(() => {
-      if (!el) return
+      if (!el || (typeof document !== 'undefined' && document.hidden)) return
       const step = getStep()
       const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2
       if (atEnd) {

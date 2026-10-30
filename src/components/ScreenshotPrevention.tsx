@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect } from 'react'
 
@@ -153,19 +153,21 @@ export default function ScreenshotPrevention() {
       const mobileCleanup = preventMobileScreenshot()
 
       // Prevent print
-      window.addEventListener('beforeprint', (e) => {
+      const preventPrint = (e: Event) => {
         e.preventDefault()
         alert('Printing is not allowed')
         return false
-      })
+      }
+      window.addEventListener('beforeprint', preventPrint)
 
-            const clearConsole = () => {
-        if (typeof console !== 'undefined') {
+      const clearConsole = () => {
+        if (process.env.NODE_ENV === 'production' && typeof console !== 'undefined') {
           console.clear()
         }
       }
 
-            const consoleInterval = setInterval(clearConsole, 2000)
+      // Check much less frequently (30s instead of 2s) to prevent continuous JS thread waking
+      const consoleInterval = setInterval(clearConsole, 30000)
 
       // Cleanup function
       return () => {
@@ -173,6 +175,7 @@ export default function ScreenshotPrevention() {
         document.removeEventListener('keydown', preventDevTools)
         document.removeEventListener('dragstart', preventDragDrop)
         document.removeEventListener('drop', preventDragDrop)
+        window.removeEventListener('beforeprint', preventPrint)
         clearInterval(consoleInterval)
         mobileCleanup() // Clean up mobile protections
         if (style.parentNode) {

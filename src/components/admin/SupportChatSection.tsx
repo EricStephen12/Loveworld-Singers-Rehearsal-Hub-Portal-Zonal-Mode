@@ -85,7 +85,10 @@ export default function SupportChatSection() {
         const unsub = BackendAPI.realtime.subscribe('chat', 'all', () => {
             fetchThreads();
         });
-        const interval = setInterval(fetchThreads, 60000);
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.hidden) return;
+            fetchThreads();
+        }, 60000);
 
         return () => {
             active = false;
@@ -125,7 +128,10 @@ export default function SupportChatSection() {
         const unsub = BackendAPI.realtime.subscribe('messages', selectedChatId, () => {
             fetchMessages();
         });
-        const interval = setInterval(fetchMessages, 60000);
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.hidden) return;
+            fetchMessages();
+        }, 60000);
 
         return () => {
             active = false;

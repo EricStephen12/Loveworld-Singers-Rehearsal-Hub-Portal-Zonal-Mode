@@ -32,6 +32,7 @@ export default function HeroCarousel({ themeColor }: HeroCarouselProps) {
     // Auto-slide carousel every 2 seconds
     useEffect(() => {
         const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.hidden) return;
             setCurrentImageIndex((prevIndex) =>
                 prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
             )

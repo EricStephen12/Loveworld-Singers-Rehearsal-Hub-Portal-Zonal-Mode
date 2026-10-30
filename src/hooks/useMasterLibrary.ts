@@ -97,14 +97,13 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     }
 
     try {
-      const [songsRes, internalRes, programListRes]: any[] = await Promise.all([
+      const [songsRes, programListRes]: any[] = await Promise.all([
         BackendAPI.songs.getAll({ limit: 50 }),
-        BackendAPI.generic.list('praise_night_songs'),
         BackendAPI.generic.list('master_programs')
       ]);
 
       const songs: MasterSong[] = Array.isArray(songsRes) ? songsRes : (songsRes?.data || []);
-      const internal: any[] = Array.isArray(internalRes) ? internalRes : (internalRes?.data || []);
+      const internal: any[] = cachedStore?.internalSongs || [];
       const programList: MasterProgram[] = Array.isArray(programListRes) ? programListRes : (programListRes?.data || []);
 
       const statsData = {
@@ -115,7 +114,9 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
 
       setMasterSongs(songs);
       setStats(statsData);
-      setHqInternalSongs(internal);
+      if (internal.length > 0) {
+        setHqInternalSongs(internal);
+      }
       setPrograms(programList);
       setHasMoreMasterSongs(songs.length === 50);
       setHasMoreInternalSongs(false);
@@ -142,6 +143,18 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
       setLoading(false);
     }
   }, [currentZone, canManage, showToast]);
+
+  // Lazily load HQ internal songs only when the admin opens the publish modal
+  useEffect(() => {
+    if (showPublishModal && hqInternalSongs.length === 0) {
+      BackendAPI.generic.list('praise_night_songs').then((res: any) => {
+        const internal: any[] = Array.isArray(res) ? res : (res?.data || []);
+        setHqInternalSongs(internal);
+      }).catch(err => {
+        console.error('Failed to load internal praise night songs for publish:', err);
+      });
+    }
+  }, [showPublishModal, hqInternalSongs.length]);
 
   useEffect(() => {
     loadData();

@@ -6,7 +6,7 @@ import { usePraiseNightStore } from '@/stores/praiseNightStore'
 import { isHQGroup } from '@/config/zones'
 import { sanitizeImageUrl } from '@/utils/image-utils'
 import { useAuthStore } from '@/stores/authStore'
-import { readCache, writeCache, DEFAULT_TTL_MS } from '@/lib/screen-cache'
+import { readCache, writeCache, isCacheStale, DEFAULT_TTL_MS } from '@/lib/screen-cache'
 
 import { isHQAdmin } from '@/config/roles'
 import { useZoneStore } from '@/stores/zoneStore'
@@ -211,15 +211,17 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
       if (!forceRefresh) {
         const cachedSongs = readCache<PraiseNightSong[]>(cacheKey) || readCache<PraiseNightSong[]>(`praise_night_songs_${pageId}_all`);
         if (cachedSongs && cachedSongs.length > 0) {
-          // Revalidate in background silently
-          BackendAPI.songs.praiseNight({ praiseNightId: String(pageId), zoneId: targetZoneId })
-            .then((res: any) => {
-              const songs = Array.isArray(res) ? res : (res?.data || []);
-              if (songs.length > 0) {
-                writeCache(cacheKey, songs);
-              }
-            })
-            .catch(() => {});
+          // Revalidate in background silently only if cache is stale (older than 60s)
+          if (isCacheStale(cacheKey, 60000)) {
+            BackendAPI.songs.praiseNight({ praiseNightId: String(pageId), zoneId: targetZoneId })
+              .then((res: any) => {
+                const songs = Array.isArray(res) ? res : (res?.data || []);
+                if (songs.length > 0) {
+                  writeCache(cacheKey, songs);
+                }
+              })
+              .catch(() => {});
+          }
           return cachedSongs;
         }
       }

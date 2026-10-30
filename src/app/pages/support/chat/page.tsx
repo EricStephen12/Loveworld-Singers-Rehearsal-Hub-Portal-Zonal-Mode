@@ -92,8 +92,11 @@ export default function ChatSupportPage() {
     const unsub = BackendAPI.realtime.subscribe('messages', user.uid, () => {
       fetchMessages();
     });
-    // Fallback interval (60s instead of 10s)
-    const interval = setInterval(fetchMessages, 60000);
+    // Fallback interval (60s instead of 10s) with visibility guard
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      fetchMessages();
+    }, 60000);
 
     return () => {
       active = false;

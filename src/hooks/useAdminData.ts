@@ -24,13 +24,9 @@ const CACHE_DURATION = 30000
 async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
   try {
     const params = zoneId ? { zoneId } : undefined
-    const [pagesRes, songsRes]: any = await Promise.all([
-      BackendAPI.praiseNights.getAll(params).catch(() => []),
-      BackendAPI.songs.getAll(params).catch(() => [])
-    ])
+    const pagesRes: any = await BackendAPI.praiseNights.getAll(params).catch(() => [])
 
     const pages = Array.isArray(pagesRes) ? pagesRes : (pagesRes?.data || [])
-    const allZoneSongs = Array.isArray(songsRes) ? songsRes : (songsRes?.data || [])
 
     if (pages.length === 0) return []
 
@@ -43,11 +39,9 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
       pageCategory: page.pageCategory || undefined,
       bannerImage: sanitizeImageUrl(page.bannerImage, 'banner'),
       categoryOrder: page.categoryOrder || [],
-      songCount: allZoneSongs.filter((s: any) => {
-        const songPageId = s.praiseNightId || s.praisenightid || s.praisenight_id || s.pageId
-        if (!songPageId) return false
-        return songPageId.toString() === page.id.toString()
-      }).length,
+      songCount: typeof page.songCount === 'number'
+        ? page.songCount
+        : (Array.isArray(page.songs) ? page.songs.length : (page.rehearsalCount || 0)),
       countdown: {
         days: page.countdownDays || page.countdown?.days || 0,
         hours: page.countdownHours || page.countdown?.hours || 0,
@@ -121,9 +115,14 @@ export const useAdminData = create<AdminState>((set, get) => ({
     }
 
     const songs = await fetchPageSongs(pageId, currentZoneId)
-    set((state) => ({
-      songsCache: { ...state.songsCache, [pageId]: songs }
-    }))
+    set((state) => {
+      const keys = Object.keys(state.songsCache)
+      const nextCache = { ...state.songsCache, [pageId]: songs }
+      if (keys.length > 8) {
+        delete nextCache[keys[0]]
+      }
+      return { songsCache: nextCache }
+    })
     return songs
   },
 

@@ -157,16 +157,28 @@ export default function ProfilePage() {
     generateQR()
 
     // Update token every 5 seconds
-    const tokenInterval = setInterval(generateQR, 5000)
+    const tokenInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
+      generateQR()
+    }, 5000)
 
     // Update countdown every second
     const countdownInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return
       setQrTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        generateQR()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       clearInterval(tokenInterval)
       clearInterval(countdownInterval)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [user?.uid])
 

@@ -294,7 +294,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         onPlay={handlePlay}
         onPause={handlePause}
         onError={handleError}
-        preload="metadata"
+        preload="none"
       />
     </AudioContext.Provider>
   );

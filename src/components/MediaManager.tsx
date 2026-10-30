@@ -1210,7 +1210,7 @@ export default function MediaManager({
       {/* Hidden Audio Element */}
       <audio
         ref={audioRef}
-        preload="metadata"
+        preload="none"
         crossOrigin="anonymous"
         onError={(e) => {
           console.error(' Audio element error:', e);
