@@ -4,6 +4,7 @@ import React from 'react';
 import { Search, ChevronRight } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { useAuth } from '@/hooks/useAuth';
+import AdminScopeSwitcher from './AdminScopeSwitcher';
 
 interface AdminMobileHeaderProps {
   title: string;
@@ -77,6 +78,7 @@ const AdminMobileHeader = React.memo(({
               <Search className="w-5 h-5 text-slate-500" />
             </button>
           )}
+          <AdminScopeSwitcher compact />
           {rightAction}
 
           {/* User Avatar */}

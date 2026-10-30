@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useZone } from '@/hooks/useZone';
 import { isHQGroup } from '@/config/zones';
+import AdminScopeSwitcher from './AdminScopeSwitcher';
 
 interface AdminSidebarProps {
   sidebarCollapsed: boolean;
@@ -247,6 +248,13 @@ const AdminSidebar = React.memo(({
             <div className="w-10 lg:hidden" />
           </div>
         </div>
+
+        {/* Admin Scope Switcher */}
+        {!sidebarCollapsed && (
+          <div className="px-3 pt-3 pb-2 border-b border-slate-100">
+            <AdminScopeSwitcher />
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 p-3 lg:p-2 overflow-y-auto">

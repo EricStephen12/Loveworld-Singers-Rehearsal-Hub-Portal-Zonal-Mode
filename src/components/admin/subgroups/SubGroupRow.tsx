@@ -100,6 +100,22 @@ export function SubGroupRow({
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              {subGroup.status === 'active' && (
+                <a
+                  href={`/subgroup-admin?subGroupId=${subGroup.id}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('lwsrh_current_church', JSON.stringify({ id: subGroup.id, name: subGroup.name }));
+                    }
+                  }}
+                  className="h-9 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                  title="Open church admin portal"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Admin
+                </a>
+              )}
               {onManageMembers && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onManageMembers(); }}
@@ -155,6 +171,21 @@ export function SubGroupRow({
         </div>
       ) : (
         <div className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-slate-50/50 border-t border-slate-100">
+          {subGroup.status === 'active' && (
+            <a
+              href={`/subgroup-admin?subGroupId=${subGroup.id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('lwsrh_current_church', JSON.stringify({ id: subGroup.id, name: subGroup.name }));
+                }
+              }}
+              className="flex-1 h-9 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Admin
+            </a>
+          )}
           {onManageMembers && (
             <button
               onClick={(e) => { e.stopPropagation(); onManageMembers(); }}

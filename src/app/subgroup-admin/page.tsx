@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BarChart3, 
   Calendar, 
@@ -20,7 +20,7 @@ import {
   Layout
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubGroup } from '@/hooks/useSubGroup';
+import { useSubGroup, useZoneSubGroups } from '@/hooks/useSubGroup';
 import { useZone } from '@/hooks/useZone';
 
 // Sub-group admin sections
@@ -29,12 +29,15 @@ import SubGroupPagesSection from '@/components/subgroup-admin/SubGroupPagesSecti
 import SubGroupMembers from '@/components/subgroup-admin/SubGroupMembers';
 import SubGroupNotifications from '@/components/subgroup-admin/SubGroupNotifications';
 import { AdminThemeProvider } from '@/components/admin/AdminThemeProvider';
+import AdminScopeSwitcher from '@/components/admin/AdminScopeSwitcher';
 
 export default function SubGroupAdminPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, profile } = useAuth();
-  const { currentZone } = useZone();
+  const { currentZone, userRole } = useZone();
   const { isSubGroupCoordinator, coordinatedSubGroups, isLoading } = useSubGroup();
+  const { subGroups: zoneSubGroups, isLoading: zoneSubGroupsLoading } = useZoneSubGroups();
   
   const [activeSection, setActiveSection] = useState('Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,36 +46,64 @@ export default function SubGroupAdminPage() {
 
   const themeColor = currentZone?.themeColor || '#9333ea';
 
-  // Set default sub-group when loaded
-  useEffect(() => {
-    if (coordinatedSubGroups.length > 0 && !selectedSubGroup) {
-      setSelectedSubGroup(coordinatedSubGroups[0].id);
-    }
-  }, [coordinatedSubGroups, selectedSubGroup]);
+  const userRoleLower = (profile?.role || '').toLowerCase();
+  const isChurchAdmin = userRoleLower === 'church_coordinator' || userRoleLower === 'church_admin' || userRoleLower === 'subgroup_coordinator' || userRoleLower === 'subgroup_admin';
+  const isZoneAdmin = userRole === 'zone_coordinator' || userRole === 'hq_admin' || userRole === 'boss' || userRoleLower === 'zone_admin' || userRoleLower === 'zone_coordinator' || userRoleLower === 'coordinator' || Boolean(profile?.has_hq_access || profile?.hasHqAccess);
+  const canAccess = isSubGroupCoordinator || isChurchAdmin || isZoneAdmin;
 
-  // Redirect if not a sub-group coordinator
+  // Combine coordinated subgroups and zone-wide subgroups (for zone admins)
+  const availableSubGroups = useMemo(() => {
+    const map = new Map<string, any>();
+    coordinatedSubGroups.forEach(sg => map.set(sg.id, sg));
+    if (isZoneAdmin) {
+      zoneSubGroups.forEach(sg => map.set(sg.id, sg));
+    }
+    return Array.from(map.values());
+  }, [coordinatedSubGroups, zoneSubGroups, isZoneAdmin]);
+
+  // Set default sub-group when loaded, checking URL query param first
+  const urlSubGroupId = searchParams?.get('subGroupId');
   useEffect(() => {
-    if (!isLoading && !isSubGroupCoordinator) {
+    if (urlSubGroupId && availableSubGroups.some(sg => sg.id === urlSubGroupId)) {
+      setSelectedSubGroup(urlSubGroupId);
+    } else if (availableSubGroups.length > 0 && (!selectedSubGroup || !availableSubGroups.some(sg => sg.id === selectedSubGroup))) {
+      setSelectedSubGroup(availableSubGroups[0].id);
+    }
+  }, [availableSubGroups, selectedSubGroup, urlSubGroupId]);
+
+  // Sync selected church into localStorage for API headers
+  useEffect(() => {
+    if (selectedSubGroup) {
+      const matched = availableSubGroups.find(sg => sg.id === selectedSubGroup);
+      if (matched && typeof window !== 'undefined') {
+        localStorage.setItem('lwsrh_current_church', JSON.stringify({ id: matched.id, name: matched.name }));
+      }
+    }
+  }, [selectedSubGroup, availableSubGroups]);
+
+  // Redirect if user has no coordinator or admin privileges
+  useEffect(() => {
+    if (!isLoading && !zoneSubGroupsLoading && !canAccess) {
       router.push('/home');
     }
-  }, [isLoading, isSubGroupCoordinator, router]);
+  }, [isLoading, zoneSubGroupsLoading, canAccess, router]);
 
-  if (isLoading) {
+  if (isLoading || (isZoneAdmin && zoneSubGroupsLoading && availableSubGroups.length === 0)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Initialising Portal</p>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Initialising Church Portal</p>
         </div>
       </div>
     );
   }
 
-  if (!user || !isSubGroupCoordinator) {
+  if (!user || !canAccess) {
     return null;
   }
 
-  const currentSubGroup = coordinatedSubGroups.find(sg => sg.id === selectedSubGroup);
+  const currentSubGroup = availableSubGroups.find(sg => sg.id === selectedSubGroup) || availableSubGroups[0] || null;
 
   const navigation = [
     {
@@ -160,24 +191,13 @@ export default function SubGroupAdminPage() {
             </button>
           </div>
 
-          {/* Sub-Group Selector - Integrated Cleaner */}
-          {!sidebarCollapsed && coordinatedSubGroups.length > 1 && (
-            <div className="px-6 mb-4">
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                   <Layout className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
-                </div>
-                <select
-                  value={selectedSubGroup || ''}
-                  onChange={(e) => setSelectedSubGroup(e.target.value)}
-                  className="w-full pl-9 pr-8 py-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black text-slate-900 appearance-none focus:outline-none focus:border-purple-600 focus:bg-white transition-all cursor-pointer uppercase tracking-wider"
-                >
-                  {coordinatedSubGroups.map(sg => (
-                    <option key={sg.id} value={sg.id}>{sg.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none group-hover:text-slate-500 transition-colors" />
-              </div>
+          {/* Admin Scope & Church Switcher */}
+          {!sidebarCollapsed && (
+            <div className="px-4 mb-4">
+              <AdminScopeSwitcher 
+                currentChurchId={selectedSubGroup}
+                onSelectChurch={(id) => setSelectedSubGroup(id)}
+              />
             </div>
           )}
 
@@ -242,6 +262,11 @@ export default function SubGroupAdminPage() {
             </div>
             
             <div className="flex items-center gap-3">
+               <AdminScopeSwitcher 
+                 currentChurchId={selectedSubGroup}
+                 onSelectChurch={(id) => setSelectedSubGroup(id)}
+                 compact
+               />
                <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[12px] font-bold text-slate-900 leading-none">{profile?.first_name} {profile?.last_name}</span>
                   <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">Lead</span>

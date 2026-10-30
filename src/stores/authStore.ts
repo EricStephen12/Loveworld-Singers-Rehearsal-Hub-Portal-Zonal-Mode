@@ -81,6 +81,7 @@ interface AuthState {
   }>
   signUp: (data: RegisterData) => Promise<{ success: boolean; pendingApproval?: boolean; message?: string; error?: string }>
   signOut: () => Promise<void>
+  switchAccount: (targetUserId: string) => Promise<{ success: boolean; error?: string }>
   refreshProfile: () => Promise<void>
   initialize: () => void
   cleanup: () => void
@@ -376,6 +377,36 @@ export const useAuthStore = create<AuthState>()(
       }
     },
 
+    // ── Switch Linked Account ────────────────────────────────────────────────
+    switchAccount: async (targetUserId: string) => {
+      set({ loading: true })
+      try {
+        const rawRes = await BackendAPI.auth.switchAccount(targetUserId)
+        const res = rawRes?.data || rawRes
+        if (rawRes?.success && res) {
+          const { accessToken, refreshToken, user: rawUser } = res
+          const user = parseUserProfile(rawUser || rawRes.profile)
+          if (accessToken) saveTokens(accessToken, refreshToken, user?.id || user?.uid || targetUserId, user)
+          saveCachedProfile(user)
+          set({
+            user,
+            profile: user,
+            accessToken,
+            refreshToken,
+            loading: false,
+            backendOffline: false,
+          })
+          return { success: true }
+        }
+        set({ loading: false })
+        return { success: false, error: rawRes?.error || 'Failed to switch account' }
+      } catch (err: unknown) {
+        set({ loading: false })
+        const msg = err instanceof Error ? err.message : 'Failed to switch account'
+        return { success: false, error: msg }
+      }
+    },
+
     // ── Refresh Profile ───────────────────────────────────────────────────────
     refreshProfile: async () => {
       const { accessToken } = get()
@@ -454,6 +485,7 @@ export const selectAuthLoading = (s: AuthState) => s.loading
 export const selectBackendOffline = (s: AuthState) => s.backendOffline
 export const selectSignOut = (s: AuthState) => s.signOut
 export const selectRefreshProfile = (s: AuthState) => s.refreshProfile
+export const selectSwitchAccount = (s: AuthState) => s.switchAccount
 export const selectAccessToken = (s: AuthState) => s.accessToken
 
 export function useAuth() {
@@ -461,6 +493,7 @@ export function useAuth() {
   const profile = useAuthStore(selectProfile)
   const loading = useAuthStore(selectAuthLoading)
   const signOut = useAuthStore(selectSignOut)
+  const switchAccount = useAuthStore(selectSwitchAccount)
   const refreshProfile = useAuthStore(selectRefreshProfile)
   const backendOffline = useAuthStore(selectBackendOffline)
   const accessToken = useAuthStore(selectAccessToken)
@@ -472,6 +505,7 @@ export function useAuth() {
     isProfileLoading: false,
     loading,
     signOut,
+    switchAccount,
     refreshProfile,
     backendOffline,
     initialLoadComplete: !loading,

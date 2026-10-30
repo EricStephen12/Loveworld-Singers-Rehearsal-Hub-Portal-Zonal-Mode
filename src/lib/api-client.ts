@@ -166,6 +166,16 @@ function buildHeaders(extra: Record<string, string> = {}, json = true): Record<s
         }
         headers['x-scope'] = isHqZone ? 'global' : 'zone';
       }
+
+      const savedChurch = localStorage.getItem('lwsrh_current_church');
+      if (savedChurch) {
+        const parsedChurch = JSON.parse(savedChurch);
+        if (parsedChurch?.id) {
+          headers['x-church-id'] = String(parsedChurch.id);
+          headers['x-subgroup-id'] = String(parsedChurch.id);
+          headers['x-scope'] = 'church';
+        }
+      }
     } catch {}
   }
 
@@ -560,6 +570,8 @@ export const BackendAPI = {
     refresh: (refreshToken: string, userId?: string) => post('/auth/refresh', { refreshToken, userId }),
     logout: (refreshToken: string) => post('/auth/logout', { refreshToken }),
     kingsChatLogin: (data: any) => post('/auth/kingschat-login', data),
+    linkedAccounts: () => get('/auth/linked-accounts'),
+    switchAccount: (targetUserId: string) => post('/auth/switch-account', { targetUserId }),
     sendResetOtp: (data: any) => post('/auth/forgot-password/send-otp', data),
     verifyResetOtp: (data: any) => post('/auth/forgot-password/verify-otp', data),
     resetPassword: (data: any) => post('/auth/reset-password', data),
