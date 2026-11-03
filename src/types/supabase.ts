@@ -190,6 +190,9 @@ export interface PraiseNight {
   pageCategory?: string; // New field for page categories
   scope?: 'zone' | 'subgroup'; // New field for context scope
   subGroupName?: string; // New field for subgroup specificity
+  groupId?: string | null;
+  subGroupId?: string | null;
+  churchId?: string | null;
   bannerImage?: string;
   songCount?: number; // Added to cache song count for UI
   categoryOrder?: string[]; // New field for manual category sorting

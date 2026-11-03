@@ -39,28 +39,34 @@ async function fetchBackendPages(zoneId?: string, userId?: string | null, profil
     });
     const rawPages: any[] = Array.isArray(res) ? res : (res?.data || []);
 
-    const mapped: PraiseNight[] = rawPages.map((page) => ({
-      id: page.id,
-      name: page.name || page.title || page.page_title || 'Untitled Page',
-      date: page.date || new Date().toISOString(),
-      location: page.location || '',
-      category: page.category || 'ongoing',
-      pageCategory: page.pageCategory || undefined,
-      bannerImage: sanitizeImageUrl(page.bannerImage || page.bannerimage, 'banner'),
-      categoryOrder: page.categoryOrder || [],
-      scope: page.scope || 'zone',
-      scopeLabel: page.scopeLabel || '',
-      subGroupName: page.subGroupName || '',
-      countdown: {
-        days: page.countdownDays || page.countdown?.days || page.countdowndays || 0,
-        hours: page.countdownHours || page.countdown?.hours || page.countdownhours || 0,
-        minutes: page.countdownMinutes || page.countdown?.minutes || page.countdownminutes || 0,
-        seconds: page.countdownSeconds || page.countdown?.seconds || page.countdownseconds || 0
-      },
-      songs: [],
-      createdAt: page.createdAt || page.created_at,
-      updatedAt: page.updatedAt || page.updated_at
-    }))
+    const mapped: PraiseNight[] = rawPages.map((page) => {
+      const isSubGroup = Boolean(page.groupId || page.subGroupId || page.churchId || page.scope === 'subgroup');
+      return {
+        id: page.id,
+        name: page.name || page.title || page.page_title || 'Untitled Page',
+        date: page.date || new Date().toISOString(),
+        location: page.location || '',
+        category: page.category || 'ongoing',
+        pageCategory: page.pageCategory || undefined,
+        bannerImage: sanitizeImageUrl(page.bannerImage || page.bannerimage, 'banner'),
+        categoryOrder: page.categoryOrder || [],
+        scope: isSubGroup ? 'subgroup' : 'zone',
+        groupId: page.groupId || page.subGroupId || page.churchId || null,
+        subGroupId: page.subGroupId || page.groupId || null,
+        churchId: page.churchId || page.groupId || null,
+        scopeLabel: page.scopeLabel || (isSubGroup ? 'Church' : ''),
+        subGroupName: page.subGroupName || page.churchName || '',
+        countdown: {
+          days: page.countdownDays || page.countdown?.days || page.countdowndays || 0,
+          hours: page.countdownHours || page.countdown?.hours || page.countdownhours || 0,
+          minutes: page.countdownMinutes || page.countdown?.minutes || page.countdownminutes || 0,
+          seconds: page.countdownSeconds || page.countdown?.seconds || page.countdownseconds || 0
+        },
+        songs: [],
+        createdAt: page.createdAt || page.created_at,
+        updatedAt: page.updatedAt || page.updated_at
+      };
+    })
 
     // Filter out categories the user doesn't have access to
     if (profile) {

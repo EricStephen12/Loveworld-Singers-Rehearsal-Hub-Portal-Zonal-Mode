@@ -158,14 +158,12 @@ function GroupsContent() {
 
   const handleCopyText = (text?: string, label: string = 'Phone number') => {
     if (!text) {
-      alert(`No ${label.toLowerCase()} available to copy`)
       return
     }
     navigator.clipboard.writeText(text).then(() => {
-      alert(`${label} copied to clipboard!`)
+      // silent success
     }).catch(err => {
       console.error('Failed to copy:', err)
-      alert('Failed to copy to clipboard')
     })
   }
 
@@ -192,10 +190,8 @@ function GroupsContent() {
       setForwardingMessage(null)
       setShowForwardSelector(false)
       setSelectedForwardChats([])
-      alert('Message forwarded successfully!')
     } catch (err) {
       console.error('Error forwarding message:', err)
-      alert('Failed to forward message')
     } finally {
       setIsSending(false)
     }
@@ -1157,7 +1153,7 @@ function GroupsContent() {
                          <span className="text-[16px]">Copy phone number</span>
                        </button>
                        <button 
-                         onClick={() => { if(confirm('Clear chat history?')) alert('Feature coming soon!'); setShowDirectChatSettings(false); }} 
+                         onClick={() => { setShowDirectChatSettings(false); }} 
                          className="w-full px-5 py-4 flex items-center gap-4 text-[#ea0038] hover:bg-red-50/50 transition-colors text-left font-semibold"
                        >
                          <Trash2 className="w-5 h-5" />
@@ -1326,18 +1322,11 @@ function GroupsContent() {
                   {/* Actions */}
                   <div className="bg-white px-3 py-2 shadow-sm mb-10">
                     <button 
-                      onClick={() => { if(confirm('Delete contact?')) alert('Contact deleted'); setShowUserProfile(null); }} 
+                      onClick={() => { setShowUserProfile(null); }} 
                       className="w-full px-5 py-4 flex items-center gap-4 text-[#ea0038] hover:bg-red-50/50 transition-colors text-left font-semibold"
                     >
                       <Trash2 className="w-5 h-5" />
-                      <span className="text-[16px]">Delete contact</span>
-                    </button>
-                    <button 
-                      onClick={() => { if(confirm(`Block ${viewingProfileData.first_name}?`)) alert('User blocked'); setShowUserProfile(null); }} 
-                      className="w-full px-5 py-4 flex items-center gap-4 text-[#ea0038] hover:bg-red-50/50 transition-colors text-left font-semibold"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="text-[16px]">Block {viewingProfileData.first_name}</span>
+                      <span className="text-[16px]">Remove from contacts</span>
                     </button>
                   </div>
                 </Fragment>

@@ -10,7 +10,8 @@ import {
   Edit,
   Trash2,
   Music,
-  ArrowDownUp
+  ArrowDownUp,
+  Building2
 } from "lucide-react";
 import { PraiseNightSong, PraiseNight, Category } from '../../types/supabase';
 import { Toast } from '../Toast';
@@ -95,6 +96,7 @@ export default function PagesSection(props: PagesSectionProps) {
 
   // UI state
   const [pagesDisplayLimit, setPagesDisplayLimit] = useState(10);
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'zone' | 'church'>('all');
   const [showCloneModal, setShowCloneModal] = useState(false);
 
   const {
@@ -183,20 +185,25 @@ export default function PagesSection(props: PagesSectionProps) {
 
   // Computed data
   const filteredPages = useMemo(() => {
-    // Reset pagination when filter changes
     setPagesDisplayLimit(10);
 
-    if (!searchTerm) return pages;
+    let list = pages;
+    if (scopeFilter === 'zone') {
+      list = list.filter(p => p.scope !== 'subgroup' && !p.groupId && !p.churchId && !p.subGroupId);
+    } else if (scopeFilter === 'church') {
+      list = list.filter(p => p.scope === 'subgroup' || Boolean(p.groupId || p.churchId || p.subGroupId));
+    }
+
+    if (!searchTerm) return list;
 
     const query = normalizeSearchString(searchTerm);
-    if (!query) return pages;
+    if (!query) return list;
 
-    // Filter by page category name or page name
-    return pages.filter(page =>
+    return list.filter(page =>
       normalizeSearchString(page.pageCategory).includes(query) ||
       normalizeSearchString(page.name).includes(query)
     );
-  }, [pages, searchTerm]);
+  }, [pages, searchTerm, scopeFilter]);
 
   // Get page categories for filtering
   const pageCategories = useMemo(() => {
@@ -400,6 +407,12 @@ export default function PagesSection(props: PagesSectionProps) {
                       `}>
                         {page.category}
                       </span>
+                      {Boolean(page.scope === 'subgroup' || page.groupId || page.churchId || page.subGroupId) && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                          <Building2 className="w-3 h-3 text-purple-600" />
+                          {page.subGroupName || 'Church'}
+                        </span>
+                      )}
                       <span className="text-xs text-slate-500">
                         {(() => {
                           const count = page.songCount !== undefined && page.songCount !== null

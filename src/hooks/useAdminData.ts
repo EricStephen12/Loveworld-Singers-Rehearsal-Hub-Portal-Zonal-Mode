@@ -23,33 +23,42 @@ const CACHE_DURATION = 30000
 
 async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
   try {
-    const params = zoneId ? { zoneId } : undefined
+    const params: any = { includeChurch: 'true' };
+    if (zoneId) params.zoneId = zoneId;
     const pagesRes: any = await BackendAPI.praiseNights.getAll(params).catch(() => [])
 
     const pages = Array.isArray(pagesRes) ? pagesRes : (pagesRes?.data || [])
 
     if (pages.length === 0) return []
 
-    return pages.map((page: any) => ({
-      id: page.id,
-      name: page.name || page.title || 'Untitled Page',
-      date: page.date || new Date().toISOString(),
-      location: page.location || '',
-      category: page.category || 'ongoing',
-      pageCategory: page.pageCategory || undefined,
-      bannerImage: sanitizeImageUrl(page.bannerImage, 'banner'),
-      categoryOrder: page.categoryOrder || [],
-      songCount: typeof page.songCount === 'number'
-        ? page.songCount
-        : (Array.isArray(page.songs) ? page.songs.length : (page.rehearsalCount || 0)),
-      countdown: {
-        days: page.countdownDays || page.countdown?.days || 0,
-        hours: page.countdownHours || page.countdown?.hours || 0,
-        minutes: page.countdownMinutes || page.countdown?.minutes || 0,
-        seconds: page.countdownSeconds || page.countdown?.seconds || 0
-      },
-      songs: []
-    }))
+    return pages.map((page: any) => {
+      const isSubGroup = Boolean(page.groupId || page.subGroupId || page.churchId || page.scope === 'subgroup');
+      return {
+        id: page.id,
+        name: page.name || page.title || 'Untitled Page',
+        date: page.date || new Date().toISOString(),
+        location: page.location || '',
+        category: page.category || 'ongoing',
+        pageCategory: page.pageCategory || undefined,
+        scope: isSubGroup ? 'subgroup' : 'zone',
+        groupId: page.groupId || page.subGroupId || page.churchId || null,
+        subGroupId: page.subGroupId || page.groupId || null,
+        churchId: page.churchId || page.groupId || null,
+        subGroupName: page.subGroupName || page.churchName || undefined,
+        bannerImage: sanitizeImageUrl(page.bannerImage, 'banner'),
+        categoryOrder: page.categoryOrder || [],
+        songCount: typeof page.songCount === 'number'
+          ? page.songCount
+          : (Array.isArray(page.songs) ? page.songs.length : (page.rehearsalCount || 0)),
+        countdown: {
+          days: page.countdownDays || page.countdown?.days || 0,
+          hours: page.countdownHours || page.countdown?.hours || 0,
+          minutes: page.countdownMinutes || page.countdown?.minutes || 0,
+          seconds: page.countdownSeconds || page.countdown?.seconds || 0
+        },
+        songs: []
+      };
+    })
   } catch (error) {
     console.error('Admin: Error fetching data:', error)
     throw error

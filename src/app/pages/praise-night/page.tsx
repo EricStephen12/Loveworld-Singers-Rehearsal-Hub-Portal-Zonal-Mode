@@ -180,7 +180,7 @@ function PraiseNightPageContent() {
       );
     }
     return filtered
-      .filter(pn => pn.scope !== 'subgroup')
+      .filter(pn => pn.scope !== 'subgroup' && !pn.groupId && !pn.subGroupId && !pn.churchId)
       .sort((a, b) => {
         if (a.category === 'ongoing' && b.category !== 'ongoing') return -1;
         if (a.category !== 'ongoing' && b.category === 'ongoing') return 1;

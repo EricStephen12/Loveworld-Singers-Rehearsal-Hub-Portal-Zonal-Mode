@@ -289,6 +289,7 @@ export function MasterEditSongModal({
         isHQOnly: Boolean(formData.isHQOnly),
         isHqOnly: Boolean(formData.isHQOnly),
         isHidden: Boolean(formData.isHQOnly),
+        isMaster: true,
         scope: formData.isHQOnly ? 'hq' : 'global',
         status: formData.isHQOnly ? 'hq_only' : 'active',
       } as any;

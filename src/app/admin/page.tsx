@@ -54,7 +54,7 @@ import { useZoneSubGroups } from '../../hooks/useSubGroup';
 function AdminContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, profile, isLoading: authLoading } = useAuth()
+  const { user, profile, isLoading: authLoading, signOut } = useAuth()
 
   // Hydration guard - must be the first state
   const [hasMounted, setHasMounted] = React.useState(false);
@@ -503,21 +503,17 @@ function AdminContent() {
   };
 
   // But we still need handleAdminLogout for the sidebar
-  const handleAdminLogout = () => {
-    if (currentAdmin) {
+  const handleAdminLogout = async () => {
+    try {
+      await signOut();
+    } catch (e) {
+      console.error('[admin] logout error:', e);
+      // Fallback: clear tokens manually and redirect
+      localStorage.removeItem('lwsrh_access_token');
+      localStorage.removeItem('lwsrh_refresh_token');
+      localStorage.removeItem('lwsrh_user_id');
+      window.location.replace('/auth');
     }
-
-    setCurrentAdmin(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('admin_session');
-
-    addToast({
-      type: 'info',
-      message: 'You have been successfully logged out.'
-    });
-
-    // Force page reload to show login screen
-    window.location.reload();
   };
 
   // Category management functions

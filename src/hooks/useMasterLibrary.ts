@@ -98,7 +98,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
 
     try {
       const [songsRes, programListRes]: any[] = await Promise.all([
-        BackendAPI.songs.getAll({ limit: 50 }),
+        BackendAPI.songs.master({ page: 1, limit: 50 }),
         BackendAPI.generic.list('master_programs')
       ]);
 
@@ -170,7 +170,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const searchRes: any = await BackendAPI.songs.getAll({ limit: 50, search: searchTerm });
+        const searchRes: any = await BackendAPI.songs.master({ limit: 50, search: searchTerm });
         const searchResults = Array.isArray(searchRes) ? searchRes : (searchRes?.data || []);
         setMasterSongs(searchResults);
         // Reset hasMore because we are showing search results
@@ -268,8 +268,8 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     if (isLoadingMore || !hasMoreMasterSongs) return;
     setIsLoadingMore(true);
     try {
-      const lastId = masterSongs.length ? masterSongs[masterSongs.length - 1].id : undefined;
-      const res: any = await BackendAPI.songs.getAll({ limit: 50, after: lastId });
+      const nextPage = Math.floor(masterSongs.length / 50) + 1;
+      const res: any = await BackendAPI.songs.master({ page: nextPage, limit: 50 });
       const moreSongs = Array.isArray(res) ? res : (res?.data || []);
       if (moreSongs.length > 0) {
         setMasterSongs(prev => [...prev, ...moreSongs]);
@@ -281,7 +281,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, hasMoreMasterSongs, masterSongs, showToast]);
+  }, [isLoadingMore, hasMoreMasterSongs, masterSongs.length, showToast]);
 
   const loadMoreInternalSongs = useCallback(async () => {
     setIsLoadingMore(false);
@@ -515,6 +515,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     try {
       const res: any = await BackendAPI.songs.create({
         ...songData,
+        isMaster: true,
         publishedBy: user?.uid || '',
         publishedByName: profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}` : 'HQ Admin'
       });

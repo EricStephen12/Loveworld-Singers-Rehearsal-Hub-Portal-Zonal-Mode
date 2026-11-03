@@ -978,25 +978,27 @@ export const BackendAPI = {
         ? '/schedule'
         : collection === 'schedule_songs'
         ? '/songs'
+        : (collection === 'master_programs' || collection === 'master-programs')
+        ? '/praise-nights'
         : `/${collection.replace(/_/g, '-')}`;
       const params: any = { limit };
       if (field && value !== undefined) params[field] = value;
       return get(endpoint, params);
     },
     get: (collection: string, id: string) => {
-      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : `/${collection.replace(/_/g, '-')}`;
+      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : (collection === 'master_programs' || collection === 'master-programs') ? '/praise-nights' : `/${collection.replace(/_/g, '-')}`;
       return get(`${endpoint}/${id}`);
     },
     create: (collection: string, data: any) => {
-      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : `/${collection.replace(/_/g, '-')}`;
+      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : (collection === 'master_programs' || collection === 'master-programs') ? '/praise-nights' : `/${collection.replace(/_/g, '-')}`;
       return post(endpoint, data);
     },
     update: (collection: string, id: string, data: any) => {
-      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : `/${collection.replace(/_/g, '-')}`;
+      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : (collection === 'master_programs' || collection === 'master-programs') ? '/praise-nights' : `/${collection.replace(/_/g, '-')}`;
       return patch(`${endpoint}/${id}`, data);
     },
     delete: (collection: string, id: string) => {
-      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : `/${collection.replace(/_/g, '-')}`;
+      const endpoint = collection === 'schedule_categories' ? '/categories' : collection === 'schedule_programs' ? '/schedule' : (collection === 'master_programs' || collection === 'master-programs') ? '/praise-nights' : `/${collection.replace(/_/g, '-')}`;
       return del(`${endpoint}/${id}`);
     },
   },
