@@ -457,7 +457,7 @@ export default function EditSongModal({
 
   useEffect(() => {
     let isCancelled = false;
-    const songId = song?.id ? String(song.id) : null;
+    const songId = song?.id ? String(song.id) : (song ? `new-${song.title || ''}-${song.lyrics?.length || 0}` : null);
     const songChanged = songId !== lastLoadedSongIdRef.current;
     const modalJustOpened = isOpen && !lastVisibleRef.current;
 

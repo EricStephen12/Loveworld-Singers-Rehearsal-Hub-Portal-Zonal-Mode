@@ -77,7 +77,7 @@ export default function CloneFromMasterModal({
       lyrics: masterSong.lyrics || '',
       solfas: (masterSong as any).solfas || (masterSong as any).conductorGuide || masterSong.solfa || '',
       leadKeyboardist: masterSong.leadKeyboardist || '',
-      leadGuitarist: masterSong.leadGuitarist || '',
+      leadGuitarist: (masterSong as any).leadGuitarist || '',
       bassGuitarist: masterSong.bassGuitarist || '',
       drummer: masterSong.drummer || '',
       comments: (masterSong as any).comments || ((masterSong as any).notes ? [{ id: `c-${Date.now()}`, text: (masterSong as any).notes, date: new Date().toISOString(), author: 'Coordinator' }] : []),
