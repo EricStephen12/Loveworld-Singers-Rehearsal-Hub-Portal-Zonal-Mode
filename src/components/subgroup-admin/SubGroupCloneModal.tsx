@@ -40,8 +40,9 @@ export default function SubGroupCloneModal({
   const loadMasterSongs = async () => {
     setLoading(true);
     try {
-      const res: any = await BackendAPI.songs.getAll({ limit: 5000 });
-      const songs = Array.isArray(res) ? res : (res?.data || []);
+      const res: any = await BackendAPI.masterSongs.getAll().catch(() => BackendAPI.songs.master({ limit: 2000 })).catch(() => ({ data: [] }));
+      const rawSongs = Array.isArray(res) ? res : (res?.data || []);
+      const songs = rawSongs.filter((s: any) => Boolean(s.isMaster || s.is_master || s.isMinistered || s.is_ministered));
       setMasterSongs(songs);
     } catch (error) {
       console.error('Error loading master library:', error);

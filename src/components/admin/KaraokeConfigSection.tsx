@@ -42,8 +42,9 @@ export default function KaraokeConfigSection() {
         setLoading(true);
         try {
             // Load Master Library songs (HQ Published)
-            const res: any = await BackendAPI.songs.getAll({ limit: 5000 });
-            const masterSongs = Array.isArray(res) ? res : (res?.data || []);
+            const res: any = await BackendAPI.masterSongs.getAll().catch(() => BackendAPI.songs.master({ limit: 2000 })).catch(() => ({ data: [] }));
+            const rawSongs = Array.isArray(res) ? res : (res?.data || []);
+            const masterSongs = rawSongs.filter((s: any) => Boolean(s.isMaster || s.is_master || s.isMinistered || s.is_ministered));
 
             const merged: any[] = [
                 ...masterSongs.map((s: any) => ({ ...s, _source: 'Master' }))

@@ -48,10 +48,12 @@ export default function AllMinisteredSongsPage() {
       setLoading(true)
       try {
         const [songsRes, programListRes]: any[] = await Promise.all([
-          BackendAPI.songs.getAll({ limit: 10000 }),
+          BackendAPI.masterSongs.getAll().catch(() => BackendAPI.songs.master({ limit: 2000 })).catch(() => ({ data: [] })),
           BackendAPI.generic.list('master_programs')
         ])
-        const masterSongs = Array.isArray(songsRes) ? songsRes : (songsRes?.data || [])
+        const rawSongs = Array.isArray(songsRes) ? songsRes : (songsRes?.data || [])
+        // Strictly filter to only official Master / Ministered songs
+        const masterSongs = rawSongs.filter((s: any) => Boolean(s.isMaster || s.is_master || s.isMinistered || s.is_ministered))
         const programList = Array.isArray(programListRes) ? programListRes : (programListRes?.data || [])
         setSongs(masterSongs)
         setPrograms(programList)
