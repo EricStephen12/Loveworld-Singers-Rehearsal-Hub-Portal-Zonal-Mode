@@ -1190,9 +1190,14 @@ function AdminContent() {
         categories: song.categories || (song.category ? [song.category] : selectedCategory ? [selectedCategory] : []),
         praiseNightId: song.praiseNightId || selectedPage?.id || '',
         status: song.status || 'unheard',
-        lyrics: '',
-        solfas: '',
-        notation: '',
+        lyrics: song.lyrics || '',
+        solfas: song.solfas || (song as any).conductorGuide || (song as any).solfa || '',
+        notation: song.notation || (song as any).solfaNotation || '',
+        audioFile: song.audioFile || song.audioUrls?.full || '',
+        audioUrls: song.audioUrls || {},
+        comments: song.comments || ((song as any).notes ? [{ id: `c-${Date.now()}`, text: (song as any).notes, date: new Date().toISOString(), author: 'Coordinator' }] : []),
+        notes: (song as any).notes || (song as any).coordinatorComment || '',
+        coordinatorComment: (song as any).coordinatorComment || (song as any).notes || '',
       };
       setEditingSong(newSong);
       setShowSongModal(true);
