@@ -98,8 +98,8 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
 
     try {
       const [songsRes, programListRes]: any[] = await Promise.all([
-        BackendAPI.songs.master({ page: 1, limit: 50 }),
-        BackendAPI.generic.list('master_programs')
+        BackendAPI.masterSongs.getAll({ page: 1, limit: 50 }).catch(() => BackendAPI.songs.master({ page: 1, limit: 50 })).catch(() => ({ data: [] })),
+        BackendAPI.generic.list('master_programs').catch(() => ({ data: [] }))
       ]);
 
       const songs: MasterSong[] = Array.isArray(songsRes) ? songsRes : (songsRes?.data || []);
@@ -170,7 +170,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const searchRes: any = await BackendAPI.songs.master({ limit: 50, search: searchTerm });
+        const searchRes: any = await BackendAPI.masterSongs.getAll({ limit: 50, search: searchTerm }).catch(() => BackendAPI.songs.master({ limit: 50, search: searchTerm })).catch(() => ({ data: [] }));
         const searchResults = Array.isArray(searchRes) ? searchRes : (searchRes?.data || []);
         setMasterSongs(searchResults);
         // Reset hasMore because we are showing search results
@@ -269,7 +269,7 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
     setIsLoadingMore(true);
     try {
       const nextPage = Math.floor(masterSongs.length / 50) + 1;
-      const res: any = await BackendAPI.songs.master({ page: nextPage, limit: 50 });
+      const res: any = await BackendAPI.masterSongs.getAll({ page: nextPage, limit: 50 }).catch(() => BackendAPI.songs.master({ page: nextPage, limit: 50 })).catch(() => ({ data: [] }));
       const moreSongs = Array.isArray(res) ? res : (res?.data || []);
       if (moreSongs.length > 0) {
         setMasterSongs(prev => [...prev, ...moreSongs]);
