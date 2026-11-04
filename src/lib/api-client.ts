@@ -280,9 +280,25 @@ export async function apiFetch<T = any>(
   }
 
   const controller = new AbortController();
-  const timeoutMs = cleanEndpoint.includes('/upload') ? 60000 : 12000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  const signal = options.signal || controller.signal;
+  const timeoutMs = (options as any)?.timeout || (cleanEndpoint.includes('/upload') ? 120000 : 45000);
+  let timedOut = false;
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    try {
+      controller.abort();
+    } catch {}
+  }, timeoutMs);
+
+  let signal = controller.signal;
+  if (options.signal) {
+    if (typeof AbortSignal !== 'undefined' && 'any' in AbortSignal && typeof (AbortSignal as any).any === 'function') {
+      signal = (AbortSignal as any).any([options.signal, controller.signal]);
+    } else {
+      options.signal.addEventListener('abort', () => {
+        try { controller.abort(); } catch {}
+      });
+    }
+  }
 
   let response: Response;
   try {
@@ -292,6 +308,18 @@ export async function apiFetch<T = any>(
       headers,
       signal,
     });
+  } catch (fetchErr: any) {
+    if (timedOut) {
+      if (method === 'GET') {
+        const cached = apiGetCache.get(cleanEndpoint);
+        if (cached?.data) {
+          console.warn(`[apiClient] Request to ${cleanEndpoint} timed out after ${timeoutMs}ms; serving cached data.`);
+          return cached.data as T;
+        }
+      }
+      throw new Error(`Request to ${cleanEndpoint} timed out after ${timeoutMs}ms`);
+    }
+    throw fetchErr;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -850,15 +878,21 @@ export const BackendAPI = {
     allMembers: (params?: Params) => get('/subgroups/members', params),
     addMemberBulk: (data: any) => post('/subgroups/members', data),
     removeMemberBulk: (params: Params) => del('/subgroups/members', params),
-    songs: (params?: Params) => get('/subgroups/songs', params),
-    createSong: (data: any) => post('/subgroups/songs', data),
-    updateSong: (id: string, data: any) => patch(`/subgroups/songs/${id}`, data),
-    deleteSong: (id: string) => del(`/subgroups/songs/${id}`),
-    importSongs: (data: any) => post('/subgroups/songs/import', data),
-    praiseNights: (params?: Params) => get('/subgroups/praise-nights', params),
-    createPraiseNight: (data: any) => post('/subgroups/praise-nights', data),
-    updatePraiseNight: (id: string, data: any) => patch(`/subgroups/praise-nights/${id}`, data),
-    deletePraiseNight: (id: string) => del(`/subgroups/praise-nights/${id}`),
+    songs: (params?: Params) => {
+      const progId = params?.rehearsalId || params?.programId || params?.praiseNightId;
+      if (progId) {
+        return get('/songs/praise-night', { praiseNightId: progId, ...params });
+      }
+      return get('/songs', params);
+    },
+    createSong: (data: any) => post('/songs', data),
+    updateSong: (id: string, data: any) => patch(`/songs/${id}`, data),
+    deleteSong: (id: string) => del(`/songs/${id}`),
+    importSongs: (data: any) => post('/songs/import-from-ministered', data),
+    praiseNights: (params?: Params) => get('/programs', { includeChurch: 'true', ...params }),
+    createPraiseNight: (data: any) => post('/programs', data),
+    updatePraiseNight: (id: string, data: any) => patch(`/programs/${id}`, data),
+    deletePraiseNight: (id: string) => del(`/programs/${id}`),
   },
   churches: {
     getAll: (params?: Params) => get('/subgroups', params),
@@ -979,9 +1013,12 @@ export const BackendAPI = {
         : collection === 'schedule_songs'
         ? '/songs'
         : (collection === 'master_programs' || collection === 'master-programs')
-        ? '/praise-nights'
+        ? '/programs'
         : `/${collection.replace(/_/g, '-')}`;
       const params: any = { limit };
+      if (collection === 'master_programs' || collection === 'master-programs') {
+        params.category = 'ministered';
+      }
       if (field && value !== undefined) params[field] = value;
       return get(endpoint, params);
     },

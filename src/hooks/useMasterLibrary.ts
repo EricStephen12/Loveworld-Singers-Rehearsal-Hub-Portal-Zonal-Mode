@@ -98,8 +98,8 @@ export function useMasterLibrary(isHQAdmin: boolean = false) {
 
     try {
       const [songsRes, programListRes]: any[] = await Promise.all([
-        BackendAPI.masterSongs.getAll({ page: 1, limit: 50 }).catch(() => BackendAPI.songs.master({ page: 1, limit: 50 })).catch(() => ({ data: [] })),
-        BackendAPI.generic.list('master_programs').catch(() => ({ data: [] }))
+        BackendAPI.masterSongs.getAll({ page: 1, limit: 50 }).catch(() => ({ data: [] })),
+        BackendAPI.programs.getAll({ category: 'ministered' }).catch(() => ({ data: [] }))
       ]);
 
       const songs: MasterSong[] = Array.isArray(songsRes) ? songsRes : (songsRes?.data || []);

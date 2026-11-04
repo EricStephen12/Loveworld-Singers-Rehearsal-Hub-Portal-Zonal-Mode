@@ -43,6 +43,11 @@ function HomePageContent() {
   // Success celebration state
   const searchParams = useSearchParams()
   const [showCelebration, setShowCelebration] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const subscribed = searchParams?.get('subscribed')
@@ -359,8 +364,8 @@ function HomePageContent() {
                   <div className="flex items-center gap-3">
                     {/* Enhanced Profile Picture with iOS-style border */}
                     <Link href="/pages/profile" className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-0 transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0">
-                      <div className="relative w-full h-full">
-                        {profile?.avatar_url || profile?.avatar ? (
+                      <div className="relative w-full h-full" suppressHydrationWarning>
+                        {mounted && (profile?.avatar_url || profile?.avatar) && !String(profile.avatar_url || profile.avatar).includes('cloudinary') ? (
                           <img
                             src={String(profile.avatar_url || profile.avatar)}
                             alt="Profile"
