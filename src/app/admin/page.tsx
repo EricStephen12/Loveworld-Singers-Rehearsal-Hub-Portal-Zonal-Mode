@@ -259,6 +259,18 @@ function AdminContent() {
     }
   }, [selectedPage, getCurrentSongs, allPraiseNights]);
 
+  const reloadCurrentPageSongs = React.useCallback(async () => {
+    if (!selectedPage?.id) return;
+    try {
+      const songs = await getCurrentSongs(selectedPage.id, true);
+      if (Array.isArray(songs)) {
+        setAllSongs(songs);
+      }
+    } catch (err) {
+      console.warn('Background song reload failed:', err);
+    }
+  }, [selectedPage?.id, getCurrentSongs]);
+
   // Update selectedPage reference when allPraiseNights refreshes to ensure we have latest data
   useEffect(() => {
     if (selectedPage && allPraiseNights) {
@@ -1275,6 +1287,7 @@ function AdminContent() {
         throw new Error('Invalid song ID for status update');
       }
 
+      setAllSongs(prev => prev.map(s => String(s.id) === String(song.id) ? { ...s, status: newStatus } : s));
       await BackendAPI.songs.update(song.id, { status: newStatus });
 
       addToast({
@@ -1299,6 +1312,8 @@ function AdminContent() {
   const handleToggleSongActive = async (song: PraiseNightSong) => {
     try {
       const newActiveStatus = !(song as any).isActive;
+      // 1. Immediately reflect active toggle in local memory (0ms)
+      setAllSongs(prev => prev.map(s => String(s.id) === String(song.id) ? { ...s, isActive: newActiveStatus } : s));
 
       if (!song.id) {
         throw new Error('Invalid song ID for active status update');
@@ -1341,6 +1356,7 @@ function AdminContent() {
       }
     } catch (error) {
       console.error(' Error updating song active status:', error);
+      setAllSongs(prev => prev.map(s => String(s.id) === String(song.id) ? { ...s, isActive: (song as any).isActive } : s));
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update song active status'
@@ -1354,7 +1370,14 @@ function AdminContent() {
       const isEditingExistingSong = editingSong && editingSong.id;
 
       if (isEditingExistingSong) {
-        await BackendAPI.songs.update(editingSong.id!, songData);
+        const targetSongId = String(editingSong.id);
+        const updatedSnapshot = { ...editingSong, ...songData, id: targetSongId };
+        setAllSongs(prev => prev.map(s => String(s.id) === targetSongId ? { ...s, ...updatedSnapshot } : s));
+        const updateRes: any = await BackendAPI.songs.update(editingSong.id!, songData);
+        const serverSong = updateRes?.data || updateRes?.song || updateRes;
+        if (serverSong && (serverSong.id || serverSong.title)) {
+          setAllSongs(prev => prev.map(s => String(s.id) === targetSongId ? { ...s, ...serverSong } : s));
+        }
 
         addToast({
           type: 'success',
@@ -1372,7 +1395,19 @@ function AdminContent() {
           praiseNightId: selectedPage?.id || songData.praiseNightId
         };
 
-        await BackendAPI.songs.create(newSongData);
+        const createRes: any = await BackendAPI.songs.create(newSongData);
+        const createdSong: PraiseNightSong = createRes?.data || createRes?.song || createRes || {
+          ...newSongData,
+          id: `temp-${Date.now()}`
+        };
+        // 1. Immediately inject new or cloned song into allSongs so it shows right away!
+        setAllSongs(prev => {
+          const exists = prev.some(s => s.id && String(s.id) === String(createdSong.id));
+          if (exists) {
+            return prev.map(s => String(s.id) === String(createdSong.id) ? { ...s, ...createdSong } : s);
+          }
+          return [createdSong, ...prev];
+        });
 
         addToast({
           type: 'success',
@@ -1387,6 +1422,7 @@ function AdminContent() {
 
       setEditingSong(null);
       setShowSongModal(false);
+      reloadCurrentPageSongs();
 
       setTimeout(() => {
         refreshData(true);
@@ -1409,6 +1445,9 @@ function AdminContent() {
       }
 
 
+      const targetDeleteId = String(songToDelete.id);
+      // 1. Immediately remove from allSongs in memory (0ms)
+      setAllSongs(prev => prev.filter(s => String(s.id) !== targetDeleteId));
       await BackendAPI.songs.delete(songToDelete.id);
 
       addToast({
@@ -1423,9 +1462,11 @@ function AdminContent() {
       // Log admin action
       if (currentAdmin) {
         logAdminAction.deleteSong(currentAdmin, songToDelete.title);
+        reloadCurrentPageSongs();
       }
     } catch (error) {
       console.error(' Error deleting song:', error);
+      reloadCurrentPageSongs();
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to delete song'
