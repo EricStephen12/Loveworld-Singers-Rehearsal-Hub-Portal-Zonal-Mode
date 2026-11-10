@@ -3,7 +3,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 
-const KINGSCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || 'a1f444fa-ea50-47cf-ba2b-232d0b46d1f5';
+const KINGSCHAT_CLIENT_ID = process.env.KINGSCHAT_CLIENT_ID || process.env.NEXT_PUBLIC_KINGSCHAT_CLIENT_ID || 'a1f444fa-ea50-47cf-ba2b-232d0b46d1f5';
 
 function logDebug(message: string) {
   console.log(`[KINGSCHAT DEBUG] ${message}`);

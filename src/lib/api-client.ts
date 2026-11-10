@@ -3,7 +3,7 @@ export const BASE_URL = (!rawUrl || rawUrl.includes('vercel.app'))
   ? 'https://rehearsalhub-api-production-6a17.up.railway.app'
   : rawUrl.replace(/\/+$/, '').replace(/\/api$/, '');
 
-const API_KEY = (process.env.NEXT_PUBLIC_INTERNAL_API_KEY || 'lwsrh_production_secure_api_key_2026_x9z2').trim();
+const API_KEY = (process.env.NEXT_PUBLIC_INTERNAL_API_KEY || process.env.NEXT_PUBLIC_API_KEY || 'lwsrh_production_secure_api_key_2026_x9z2').trim();
 
 function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
