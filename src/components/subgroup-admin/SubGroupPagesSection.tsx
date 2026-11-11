@@ -39,6 +39,7 @@ import { normalizeSearchString } from '@/utils/string-utils';
 import SubGroupCloneModal from './SubGroupCloneModal';
 import EditSongModal from '../EditSongModal';
 import { PraiseNightSong, Category, PraiseNight } from '@/types/supabase';
+import { useLiveSongStore } from '@/stores/liveSongStore';
 
 interface SubGroupPagesSectionProps {
   subGroupId: string;
@@ -408,19 +409,86 @@ export default function SubGroupPagesSection({ subGroupId, zoneId, subGroupName 
   };
 
   const handleToggleActive = async (song: SubGroupSong) => {
+    const targetId = String(song.id || (song as any)._id || '');
+    const currentActive = Boolean(
+      (song as any).isActive === true || (song as any).is_active === true || (song as any).isLive === true || (song as any).is_live === true || (song as any).status === 'live'
+    );
+    const newActiveStatus = !currentActive;
+
+    // 1. Optimistic instant UI update across setlists and songs
+    setRehearsalSongs(prev => prev.map(s => {
+      const sId = String(s.id || (s as any)._id || '');
+      const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+      if (!isTarget) return s;
+      return {
+        ...s,
+        isActive: newActiveStatus,
+        is_active: newActiveStatus,
+        isLive: newActiveStatus,
+      } as any;
+    }));
+
+    setAllSubGroupSongs(prev => prev.map(s => {
+      const sId = String(s.id || (s as any)._id || '');
+      const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+      if (!isTarget) return s;
+      return {
+        ...s,
+        isActive: newActiveStatus,
+        is_active: newActiveStatus,
+        isLive: newActiveStatus,
+      } as any;
+    }));
+
     try {
-      const newActiveStatus = !song.isActive;
-      await BackendAPI.subgroups.updateSong(song.id, { isActive: newActiveStatus });
+      const apiSongId = song.id || (song as any)._id;
+      await BackendAPI.subgroups.updateSong(String(apiSongId), {
+        isActive: newActiveStatus,
+        is_active: newActiveStatus,
+        isLive: newActiveStatus,
+      } as any);
 
       if (newActiveStatus) {
+        useLiveSongStore.getState().handleSongUpdate({
+          id: String(apiSongId),
+          title: song.title,
+          isActive: true,
+          isLive: true,
+          status: 'live'
+        });
         const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/+$/, '');
         fetch(`${backendUrl}/api/songs/notify-active`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ songId: song.id, isActive: true })
+          body: JSON.stringify({ songId: apiSongId, isActive: true })
         }).catch(err => console.error('Failed to trigger subgroup background notification:', err));
+      } else {
+        useLiveSongStore.getState().removeSong(String(apiSongId));
       }
     } catch (error) {
+      // Revert if error
+      setRehearsalSongs(prev => prev.map(s => {
+        const sId = String(s.id || (s as any)._id || '');
+        const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+        if (!isTarget) return s;
+        return {
+          ...s,
+          isActive: currentActive,
+          is_active: currentActive,
+          isLive: currentActive,
+        } as any;
+      }));
+      setAllSubGroupSongs(prev => prev.map(s => {
+        const sId = String(s.id || (s as any)._id || '');
+        const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+        if (!isTarget) return s;
+        return {
+          ...s,
+          isActive: currentActive,
+          is_active: currentActive,
+          isLive: currentActive,
+        } as any;
+      }));
       addToast({ type: 'error', message: 'Toggle failed' });
     }
   };
@@ -709,12 +777,19 @@ function SongTable({ songs, loading, onEdit, onDelete, onToggleStatus, onToggleA
                   </td>
                   {!isLibraryMode && (
                     <td className="px-6 py-4">
-                      <button 
-                        onClick={() => onToggleActive(song)}
-                        className={`w-10 h-5 rounded-full relative transition-all ${song.isActive ? 'bg-purple-600' : 'bg-slate-200'}`}
-                      >
-                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${song.isActive ? 'left-5.5' : 'left-0.5'}`}></div>
-                      </button>
+                      {(() => {
+                        const isSongActive = Boolean(
+                          (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live
+                        );
+                        return (
+                          <button 
+                            onClick={() => onToggleActive(song)}
+                            className={`w-10 h-5 rounded-full relative transition-all ${isSongActive ? 'bg-purple-600' : 'bg-slate-200'}`}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${isSongActive ? 'left-5.5' : 'left-0.5'}`}></div>
+                          </button>
+                        );
+                      })()}
                     </td>
                   )}
                   <td className="px-6 py-4 text-right">
@@ -764,12 +839,19 @@ function SongTable({ songs, loading, onEdit, onDelete, onToggleStatus, onToggleA
                {!isLibraryMode && (
                   <div className="flex items-center gap-3">
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live</span>
-                    <button 
-                      onClick={() => onToggleActive(song)}
-                      className={`w-10 h-5.5 rounded-full relative transition-all shadow-inner ${song.isActive ? 'bg-purple-600' : 'bg-slate-200'}`}
-                    >
-                      <div className={`absolute top-0.75 w-4 h-4 rounded-full bg-white shadow-md transition-all ${song.isActive ? 'left-[1.25rem]' : 'left-0.75'}`}></div>
-                    </button>
+                    {(() => {
+                      const isSongActive = Boolean(
+                        (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live
+                      );
+                      return (
+                        <button 
+                          onClick={() => onToggleActive(song)}
+                          className={`w-10 h-5.5 rounded-full relative transition-all shadow-inner ${isSongActive ? 'bg-purple-600' : 'bg-slate-200'}`}
+                        >
+                          <div className={`absolute top-0.75 w-4 h-4 rounded-full bg-white shadow-md transition-all ${isSongActive ? 'left-[1.25rem]' : 'left-0.75'}`}></div>
+                        </button>
+                      );
+                    })()}
                   </div>
                )}
             </div>

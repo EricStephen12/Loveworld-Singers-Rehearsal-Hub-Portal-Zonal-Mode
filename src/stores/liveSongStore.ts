@@ -154,7 +154,7 @@ export const useLiveSongStore = create<LiveSongStore>((set, get) => ({
     const statusStr = update.status ? String(update.status).toLowerCase().trim() : '';
     const hasLiveDisabledFlag =
       update.isActive === false || update.is_active === false || update.isLive === false || update.live === false;
-    const isNonLiveStatus = statusStr !== '' && statusStr !== 'live';
+    const isNonLiveStatus = statusStr === 'inactive' || statusStr === 'ended' || statusStr === 'off' || statusStr === 'stopped';
 
     if (isSongExplicitlyOff(update) || hasLiveDisabledFlag || isNonLiveStatus) {
       if (existingIndex >= 0) get().removeSong(songId);

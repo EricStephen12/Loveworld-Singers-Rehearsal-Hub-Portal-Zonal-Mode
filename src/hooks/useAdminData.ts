@@ -67,11 +67,21 @@ async function fetchAdminData(zoneId?: string): Promise<PraiseNight[]> {
 
 async function fetchPageSongs(pageId: string, zoneId?: string): Promise<PraiseNightSong[]> {
   try {
-    const res: any = await BackendAPI.songs.praiseNight({ praiseNightId: pageId, zoneId })
-    return Array.isArray(res) ? res : (res?.data || [])
+    const res: any = await BackendAPI.songs.praiseNight({ praiseNightId: pageId, zoneId });
+    const list = Array.isArray(res) ? res : (res?.data || []);
+    return list.map((s: any) => {
+      const isExplicitlyOff = s.isActive === false || s.is_active === false || s.isLive === false;
+      const active = !isExplicitlyOff && Boolean(s.isActive ?? s.is_active ?? s.isLive ?? s.is_live ?? s.status === 'live');
+      return {
+        ...s,
+        isActive: active,
+        is_active: active,
+        isLive: active,
+      };
+    });
   } catch (error) {
-    console.error(`Error fetching songs for page ${pageId}:`, error)
-    return []
+    console.error(`Error fetching songs for page ${pageId}:`, error);
+    return [];
   }
 }
 

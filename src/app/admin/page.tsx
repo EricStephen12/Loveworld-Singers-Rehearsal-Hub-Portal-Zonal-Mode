@@ -20,6 +20,7 @@ import ZoneSwitcher from '@/components/ZoneSwitcher';
 import { isHQAdmin as checkIsHQAdmin } from '@/config/roles';
 import { getRoleTerminology, getFullRoleName, getZoneTheme } from '@/utils/zone-theme';
 import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
+import { useLiveSongStore } from '@/stores/liveSongStore';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminMobileNav from '../../components/admin/AdminMobileNav';
 import AdminMobileHeader from '../../components/admin/AdminMobileHeader';
@@ -243,10 +244,10 @@ function AdminContent() {
 
 
   useEffect(() => {
-    if (selectedPage) {
+    if (selectedPage?.id) {
       setLoadingSongs(true);
 
-      getCurrentSongs(selectedPage.id, true).then(songs => {
+      getCurrentSongs(selectedPage.id, false).then(songs => {
         setAllSongs(songs);
         setLoadingSongs(false);
       }).catch(error => {
@@ -257,7 +258,7 @@ function AdminContent() {
     } else {
       setAllSongs([]);
     }
-  }, [selectedPage, getCurrentSongs, allPraiseNights]);
+  }, [selectedPage?.id]);
 
   const reloadCurrentPageSongs = React.useCallback(async () => {
     if (!selectedPage?.id) return;
@@ -273,13 +274,13 @@ function AdminContent() {
 
   // Update selectedPage reference when allPraiseNights refreshes to ensure we have latest data
   useEffect(() => {
-    if (selectedPage && allPraiseNights) {
-      const updatedPage = allPraiseNights.find(p => p.id === selectedPage.id);
+    if (selectedPage?.id && allPraiseNights) {
+      const updatedPage = allPraiseNights.find(p => String(p.id) === String(selectedPage.id));
       if (updatedPage && JSON.stringify(updatedPage) !== JSON.stringify(selectedPage)) {
         setSelectedPage(updatedPage);
       }
     }
-  }, [allPraiseNights, selectedPage]);
+  }, [allPraiseNights, selectedPage?.id]);
 
 
 
@@ -1310,45 +1311,113 @@ function AdminContent() {
   };
 
   const handleToggleSongActive = async (song: PraiseNightSong) => {
-    try {
-      const newActiveStatus = !(song as any).isActive;
-      // 1. Immediately reflect active toggle in local memory (0ms)
-      setAllSongs(prev => prev.map(s => String(s.id) === String(song.id) ? { ...s, isActive: newActiveStatus } : s));
+    const targetId = String(song.id || (song as any)._id || '');
+    const isSongExplicitlyOff = (song as any).isActive === false || (song as any).is_active === false || (song as any).isLive === false;
+    const currentActive = !isSongExplicitlyOff && Boolean(
+      (song as any).isActive === true || (song as any).is_active === true || (song as any).isLive === true || (song as any).is_live === true || (song as any).status === 'live'
+    );
+    const newActiveStatus = !currentActive;
 
-      if (!song.id) {
+    try {
+      // 1. Immediately reflect active toggle in local memory (0ms instant UI)
+      setAllSongs(prev => prev.map(s => {
+        const sId = String(s.id || (s as any)._id || '');
+        const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+        if (!isTarget) return s;
+        return {
+          ...s,
+          isActive: newActiveStatus,
+          is_active: newActiveStatus,
+          isLive: newActiveStatus,
+          is_live: newActiveStatus,
+          status: (!newActiveStatus && (s.status as any) === 'live') ? 'unheard' : s.status,
+        } as any;
+      }));
+
+      // 2. Also keep useAdminData songsCache in sync so subsequent page interactions stay accurate
+      const pageId = song.praiseNightId || (song as any).praise_night_id || selectedPage?.id;
+      if (pageId) {
+        useAdminData.setState(state => {
+          const cached = state.songsCache[pageId];
+          if (!cached) return state;
+          return {
+            songsCache: {
+              ...state.songsCache,
+              [pageId]: cached.map(s => {
+                const sId = String(s.id || (s as any)._id || '');
+                const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+                if (!isTarget) return s;
+                return {
+                  ...s,
+                  isActive: newActiveStatus,
+                  is_active: newActiveStatus,
+                  isLive: newActiveStatus,
+                  is_live: newActiveStatus,
+                  status: (!newActiveStatus && (s.status as any) === 'live') ? 'unheard' : s.status,
+                } as any;
+              })
+            }
+          };
+        });
+      }
+
+      const apiSongId = song.id || (song as any)._id;
+      if (!apiSongId) {
         throw new Error('Invalid song ID for active status update');
       }
 
       console.debug(' [Admin] Toggling active status:', {
-        songId: song.id,
+        songId: apiSongId,
         songTitle: song.title,
-        currentActive: (song as any).isActive,
+        currentActive,
         newActive: newActiveStatus,
-        praiseNightId: song.praiseNightId,
+        praiseNightId: pageId,
         zoneId: currentZone?.id
       });
 
-      await BackendAPI.songs.update(song.id, {
+      // 3. Update backend database
+      const updatePayload: any = {
         isActive: newActiveStatus,
-        praiseNightId: song.praiseNightId
-      });
+        is_active: newActiveStatus,
+        isLive: newActiveStatus,
+        praiseNightId: pageId
+      };
+      if (!newActiveStatus && (song as any).status === 'live') {
+        updatePayload.status = 'unheard';
+      }
+      await BackendAPI.songs.update(String(apiSongId), updatePayload);
+
+      // 4. Update the liveSongStore immediately in client
+      if (newActiveStatus) {
+        useLiveSongStore.getState().handleSongUpdate({
+          id: String(apiSongId),
+          title: song.title,
+          leadSinger: song.leadSinger,
+          writer: song.writer,
+          conductor: song.conductor,
+          category: song.category,
+          isActive: true,
+          isLive: true,
+          status: 'live'
+        });
+      } else {
+        useLiveSongStore.getState().removeSong(String(apiSongId));
+      }
 
       addToast({
         type: 'success',
-        message: newActiveStatus ? ` ${song.title} is now ACTIVE (users see blinking border)` : `Song deactivated`
+        message: newActiveStatus ? ` ${song.title} is now ACTIVE (users see blinking border)` : ` ${song.title} deactivated`
       });
 
-      // Trigger remote push notifications for active song in background
+      // 5. Trigger remote push notifications for active song in background
       if (newActiveStatus) {
         const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim().replace(/\/+$/, '');
         fetch(`${backendUrl}/api/songs/notify-active`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ songId: song.id, isActive: true })
+          body: JSON.stringify({ songId: apiSongId, isActive: true })
         }).catch(err => console.error('Failed to trigger background notification:', err));
       }
-
-      refreshData(true);
 
       // Log admin action
       if (currentAdmin) {
@@ -1356,7 +1425,20 @@ function AdminContent() {
       }
     } catch (error) {
       console.error(' Error updating song active status:', error);
-      setAllSongs(prev => prev.map(s => String(s.id) === String(song.id) ? { ...s, isActive: (song as any).isActive } : s));
+      // Revert optimistic update
+      setAllSongs(prev => prev.map(s => {
+        const sId = String(s.id || (s as any)._id || '');
+        const isTarget = targetId ? (sId === targetId) : (s.title === song.title);
+        if (!isTarget) return s;
+        return {
+          ...s,
+          isActive: currentActive,
+          is_active: currentActive,
+          isLive: currentActive,
+          is_live: currentActive,
+          status: song.status,
+        } as any;
+      }));
       addToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to update song active status'

@@ -99,11 +99,24 @@ export default function SplashPage() {
       const lastPath = NavigationManager.getLastPath()
       const target = (lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home'
       router.replace(target)
-      return
+
+      // Reliable browser fallback if App Router soft navigation stalls
+      const fallbackTimer = setTimeout(() => {
+        if (typeof window !== 'undefined' && window.location.pathname === '/') {
+          window.location.href = target
+        }
+      }, 700)
+      return () => clearTimeout(fallbackTimer)
     }
 
     // 2. Unauthenticated Visitor (no token) - require login
     router.replace('/auth')
+    const unauthFallbackTimer = setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname === '/') {
+        window.location.href = '/auth'
+      }
+    }, 700)
+    return () => clearTimeout(unauthFallbackTimer)
   }, [router, pathname])
 
   // Big Tech optimization: Only show "Resuming..." IF there is genuinely a token and active user
@@ -115,6 +128,18 @@ export default function SplashPage() {
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 text-xs font-medium text-gray-400 animate-pulse">Resuming...</p>
+        {showFailsafe && (
+          <button
+            onClick={() => {
+              const lastPath = NavigationManager.getLastPath()
+              const target = (lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home'
+              window.location.href = target
+            }}
+            className="mt-6 px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-full shadow-lg transition-all animate-in fade-in"
+          >
+            Enter Dashboard
+          </button>
+        )}
       </div>
     );
   }

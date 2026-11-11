@@ -246,9 +246,9 @@ export default function PagesSection(props: PagesSectionProps) {
     return allSongs
       .filter(song => {
         // Match songs by page ID
-        const songPraiseNightId = song.praiseNightId;
+        const songPraiseNightId = song.praiseNightId || (song as any).praise_night_id;
         const pageId = selectedPage.id;
-        return songPraiseNightId === pageId || songPraiseNightId === pageId.toString();
+        return !songPraiseNightId || String(songPraiseNightId) === String(pageId);
       })
       .filter(song => {
         const query = normalizeSearchString(searchTerm);
@@ -697,19 +697,27 @@ export default function PagesSection(props: PagesSectionProps) {
                                 </button>
                               </td>
                               <td className="py-4 px-4">
-                                <button
-                                  onClick={() => handleToggleSongActive(song)}
-                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${(song as any).isActive
-                                    ? theme.primary
-                                    : 'bg-gray-200'
-                                    }`}
-                                  title={(song as any).isActive ? 'Active (Users see blinking border)' : 'Click to make active'}
-                                >
-                                  <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(song as any).isActive ? 'translate-x-6' : 'translate-x-1'
-                                      }`}
-                                  />
-                                </button>
+                                {(() => {
+                                  const isSongExplicitlyOff = (song as any).isActive === false || (song as any).is_active === false || (song as any).isLive === false;
+                                  const isSongActive = !isSongExplicitlyOff && Boolean(
+                                    (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live || (song as any).status === 'live'
+                                  );
+                                  return (
+                                    <button
+                                      onClick={() => handleToggleSongActive(song)}
+                                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${isSongActive
+                                        ? (theme?.primary || 'bg-purple-600')
+                                        : 'bg-gray-200'
+                                        }`}
+                                      title={isSongActive ? 'Active (Users see blinking border)' : 'Click to make active'}
+                                    >
+                                      <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSongActive ? 'translate-x-6' : 'translate-x-1'
+                                          }`}
+                                      />
+                                    </button>
+                                  );
+                                })()}
                               </td>
                               <td className="py-4 px-4 text-sm text-slate-900">{song.leadSinger}</td>
                               <td className="py-4 px-4 text-sm text-slate-900">{song.writer}</td>
@@ -818,18 +826,26 @@ export default function PagesSection(props: PagesSectionProps) {
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleSongActive(song);
-                                  }}
-                                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${(song as any).isActive
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-slate-200 text-slate-600'
-                                    }`}
-                                >
-                                  {(song as any).isActive ? '● Live' : '○ Off'}
-                                </button>
+                                {(() => {
+                                  const isSongExplicitlyOff = (song as any).isActive === false || (song as any).is_active === false || (song as any).isLive === false;
+                                  const isSongActive = !isSongExplicitlyOff && Boolean(
+                                    (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live || (song as any).status === 'live'
+                                  );
+                                  return (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleSongActive(song);
+                                      }}
+                                      className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${isSongActive
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-slate-200 text-slate-600'
+                                        }`}
+                                    >
+                                      {isSongActive ? '● Live' : '○ Off'}
+                                    </button>
+                                  );
+                                })()}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();

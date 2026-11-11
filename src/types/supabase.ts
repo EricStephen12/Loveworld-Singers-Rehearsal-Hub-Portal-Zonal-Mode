@@ -215,6 +215,9 @@ export interface PraiseNightSong {
   categories?: string[]; // New multi-category support
   praiseNightId: string; // Reference to PraiseNight ID
   isActive?: boolean; // TRUE = Song is currently being discussed (users see blinking border)
+  is_active?: boolean;
+  isLive?: boolean;
+  is_live?: boolean;
   leadSinger?: string;
   writer?: string;
   conductor?: string;
