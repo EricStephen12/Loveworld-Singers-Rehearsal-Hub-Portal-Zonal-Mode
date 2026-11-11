@@ -91,7 +91,7 @@ interface AuthState {
 
 function setSessionCookie() {
   if (typeof document === 'undefined') return
-  document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax'
+  document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=2592000; SameSite=Lax'
 }
 
 function clearSessionCookie() {
@@ -434,7 +434,8 @@ export const useAuthStore = create<AuthState>()(
       const { access, refresh } = loadTokens()
 
       if (!access) {
-        set({ loading: false })
+        clearTokens()
+        set({ user: null, profile: null, accessToken: null, refreshToken: null, loading: false })
         return
       }
 
@@ -467,10 +468,16 @@ export const useAuthStore = create<AuthState>()(
             } catch {
               clearTokens()
               set({ user: null, profile: null, accessToken: null, refreshToken: null, loading: false })
+              if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+                window.location.replace('/auth')
+              }
             }
           } else {
             clearTokens()
-            set({ loading: false })
+            set({ user: null, profile: null, accessToken: null, refreshToken: null, loading: false })
+            if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
+              window.location.replace('/auth')
+            }
           }
         })
     },

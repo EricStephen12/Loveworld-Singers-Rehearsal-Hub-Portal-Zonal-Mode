@@ -11,7 +11,6 @@ export const PUBLIC_PATHS = [
     '/splash',
     '/signup-success',
     '/success',
-    '/qr-code',
     '/support',
     '/pages/support',
     '/subscription/callback' // KingsPay callback is publicly accessible

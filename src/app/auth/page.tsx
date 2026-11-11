@@ -92,6 +92,13 @@ export default function AuthPage() {
     loadZones()
   }, [])
 
+  // If already authenticated, redirect away from auth page
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(returnUrl || '/home')
+    }
+  }, [user, authLoading, router, returnUrl])
+
   const loadZones = async () => {
     try {
       const res = await BackendAPI.zones.getAll()

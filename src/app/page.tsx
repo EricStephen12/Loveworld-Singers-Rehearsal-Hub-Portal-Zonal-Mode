@@ -85,36 +85,42 @@ export default function SplashPage() {
     if (typeof window !== 'undefined' && (window.location.hash.includes('access_token=') || window.location.search.includes('access_token='))) return
 
     const cachedUser = typeof window !== 'undefined' ? localStorage.getItem(AUTH_CACHE_KEY) : null
+    const hasToken = typeof window !== 'undefined' ? !!localStorage.getItem('lwsrh_access_token') : false
 
-    // 1. Optimistic Check (Fastest) - If we have a cached user, move them IMMEDIATELY
-    if (cachedUser === 'true') {
+    // 1. Authenticated User - send to home or last visited page
+    if (user || (cachedUser === 'true' && hasToken)) {
       const lastPath = NavigationManager.getLastPath()
-      const target = (lastPath && lastPath !== '/') ? lastPath : '/home'
+      const target = (lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home'
       router.replace(target)
       return
     }
 
-    // 2. Direct Navigation (Auth wall removed - open access)
-    if (!loading) {
-      const lastPath = NavigationManager.getLastPath()
-      const target = (lastPath && lastPath !== '/') ? lastPath : '/home'
-      router.replace(target)
+    // 2. Unauthenticated Visitor - require login
+    if (!loading && !user && !hasToken) {
+      router.replace('/auth')
+      return
     }
   }, [loading, user, router, pathname])
 
-  // Failsafe Redirect: For returning users, don't wait for complex state, just push home
+  // Failsafe Redirect: Ensure visitor is routed appropriately
   useEffect(() => {
     if (pathname !== '/') return
     const cachedUser = typeof window !== 'undefined' ? localStorage.getItem(AUTH_CACHE_KEY) : null
+    const hasToken = typeof window !== 'undefined' ? !!localStorage.getItem('lwsrh_access_token') : false
 
-    if (cachedUser === 'true') {
+    if (user || (cachedUser === 'true' && hasToken)) {
       const timer = setTimeout(() => {
         const lastPath = NavigationManager.getLastPath()
-        router.replace((lastPath && lastPath !== '/') ? lastPath : '/home')
+        router.replace((lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home')
       }, 100)
       return () => clearTimeout(timer)
+    } else if (!loading && !user && !hasToken) {
+      const timer = setTimeout(() => {
+        router.replace('/auth')
+      }, 150)
+      return () => clearTimeout(timer)
     }
-  }, [pathname, router])
+  }, [pathname, router, loading, user])
 
   // Big Tech optimization: If we know we're redirecting, show NOTHING to prevent the "old loader" flicker
   const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true';

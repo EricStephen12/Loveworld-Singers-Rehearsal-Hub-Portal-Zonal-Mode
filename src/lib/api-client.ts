@@ -110,7 +110,7 @@ export async function refreshSession(): Promise<string> {
             localStorage.setItem('lwsrh_user_id', tokenData.user.id);
           }
           if (typeof document !== 'undefined') {
-            document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=31536000; SameSite=Lax';
+            document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=2592000; SameSite=Lax';
           }
         }
         return newAccess;

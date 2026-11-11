@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { isPublicPath } from '@/config/routes';
 import { ViewportHeightFix } from '@/utils/viewport-height-fix';
 import { NavigationManager } from '@/utils/navigation';
 import { SafeAreaUtils } from '@/utils/safe-area-utils';
@@ -23,8 +24,39 @@ import { useNotificationStore } from '@/stores/notificationStore';
  * This is the ONLY place store initialization happens — never in components.
  */
 export default function AppBootstrap() {
+    const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // ── Enforce route authentication on protected pages ─────────────────────
+    useEffect(() => {
+        if (!pathname) return;
+        if (isPublicPath(pathname)) return;
+
+        const checkAuth = () => {
+            const { isInitialized, loading, user, accessToken } = useAuthStore.getState();
+            if (!isInitialized || loading) return;
+
+            const hasStoredToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('lwsrh_access_token');
+
+            if (!user && !accessToken && !hasStoredToken) {
+                const returnUrl = encodeURIComponent(pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : ''));
+                router.replace(`/auth?returnUrl=${returnUrl}`);
+            }
+        };
+
+        checkAuth();
+
+        const unsub = useAuthStore.subscribe((state) => {
+            if (state.isInitialized && !state.loading && !state.user && !state.accessToken) {
+                if (!isPublicPath(pathname)) {
+                    router.replace('/auth');
+                }
+            }
+        });
+
+        return () => unsub();
+    }, [pathname, searchParams, router]);
 
     // ── Track navigation changes ──────────────────────────────────────────────
     useEffect(() => {
