@@ -79,7 +79,7 @@ export default function SplashPage() {
     }
   }, [pathname, router])
 
-  // IMMEDIATE Redirect Effect
+  // IMMEDIATE Redirect Effect: Fast, deterministic route based on token presence
   useEffect(() => {
     if (pathname !== '/') return
     if (typeof window !== 'undefined' && (window.location.hash.includes('access_token=') || window.location.search.includes('access_token='))) return
@@ -88,63 +88,27 @@ export default function SplashPage() {
       ? (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token'))
       : false
 
-    // 1. Authenticated User - send to home or last visited page
-    if (hasToken && user) {
+    // 1. Authenticated User (has valid token) - send to home or last visited page
+    if (hasToken) {
+      if (typeof document !== 'undefined' && !document.cookie.includes('lwsrh_is_logged_in=true')) {
+        document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=2592000; SameSite=Lax'
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(AUTH_CACHE_KEY, 'true')
+      }
       const lastPath = NavigationManager.getLastPath()
       const target = (lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home'
       router.replace(target)
       return
     }
 
-    // 2. Unauthenticated Visitor (no token) - wipe any stale keys and require login
-    if (!hasToken) {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem(AUTH_CACHE_KEY)
-        localStorage.removeItem('lwsrh_user_profile')
-        localStorage.removeItem('lwsrh_user_id')
-      }
-      if (typeof document !== 'undefined') {
-        document.cookie = 'lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      }
-      router.replace('/auth')
-      return
-    }
-
-    if (!loading && !user) {
-      router.replace('/auth')
-      return
-    }
-  }, [loading, user, router, pathname])
-
-  // Failsafe Redirect: Ensure visitor is routed appropriately within 250ms
-  useEffect(() => {
-    if (pathname !== '/') return
-    const timer = setTimeout(() => {
-      const hasToken = typeof window !== 'undefined'
-        ? (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token'))
-        : false
-
-      if (hasToken && user) {
-        const lastPath = NavigationManager.getLastPath()
-        router.replace((lastPath && lastPath !== '/' && !lastPath.startsWith('/auth')) ? lastPath : '/home')
-      } else {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem(AUTH_CACHE_KEY)
-          localStorage.removeItem('lwsrh_user_profile')
-        }
-        if (typeof document !== 'undefined') {
-          document.cookie = 'lwsrh_is_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-        }
-        router.replace('/auth')
-      }
-    }, 250)
-    return () => clearTimeout(timer)
-  }, [pathname, router, user])
+    // 2. Unauthenticated Visitor (no token) - require login
+    router.replace('/auth')
+  }, [router, pathname])
 
   // Big Tech optimization: Only show "Resuming..." IF there is genuinely a token and active user
   const hasToken = typeof window !== 'undefined' ? (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token')) : false;
-  const hasAuthCache = typeof window !== 'undefined' && localStorage.getItem(AUTH_CACHE_KEY) === 'true' && hasToken;
-  const isRedirecting = (pathname === '/' && hasAuthCache);
+  const isRedirecting = (pathname === '/' && hasToken);
 
   if (isRedirecting) {
     return (

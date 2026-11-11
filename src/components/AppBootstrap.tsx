@@ -33,29 +33,18 @@ export default function AppBootstrap() {
         if (!pathname) return;
         if (isPublicPath(pathname)) return;
 
-        const checkAuth = () => {
-            const { isInitialized, loading, user, accessToken } = useAuthStore.getState();
-            if (!isInitialized || loading) return;
+        const hasToken = typeof localStorage !== 'undefined' && (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token'));
 
-            const hasStoredToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('lwsrh_access_token');
+        if (!hasToken) {
+            const returnUrl = encodeURIComponent(pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : ''));
+            router.replace(`/auth?returnUrl=${returnUrl}`);
+            return;
+        }
 
-            if (!user && !accessToken && !hasStoredToken) {
-                const returnUrl = encodeURIComponent(pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : ''));
-                router.replace(`/auth?returnUrl=${returnUrl}`);
-            }
-        };
-
-        checkAuth();
-
-        const unsub = useAuthStore.subscribe((state) => {
-            if (state.isInitialized && !state.loading && !state.user && !state.accessToken) {
-                if (!isPublicPath(pathname)) {
-                    router.replace('/auth');
-                }
-            }
-        });
-
-        return () => unsub();
+        // Ensure session cookie is active for middleware
+        if (typeof document !== 'undefined' && !document.cookie.includes('lwsrh_is_logged_in=true')) {
+            document.cookie = 'lwsrh_is_logged_in=true; path=/; max-age=2592000; SameSite=Lax';
+        }
     }, [pathname, searchParams, router]);
 
     // ── Track navigation changes ──────────────────────────────────────────────

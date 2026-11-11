@@ -51,13 +51,11 @@ function HomePageContent() {
 
   // Strict auth guard: redirect immediately if there is no authenticated account
   useEffect(() => {
-    if (!authLoading && initialLoadComplete && !user) {
-      const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('lwsrh_access_token')
-      if (!hasToken) {
-        router.replace('/auth?returnUrl=/home')
-      }
+    const hasToken = typeof localStorage !== 'undefined' && (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token'))
+    if (!hasToken) {
+      router.replace('/auth?returnUrl=/home')
     }
-  }, [authLoading, initialLoadComplete, user, router])
+  }, [router])
 
   useEffect(() => {
     const subscribed = searchParams?.get('subscribed')

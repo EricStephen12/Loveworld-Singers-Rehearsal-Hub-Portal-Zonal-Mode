@@ -96,13 +96,11 @@ export default function ProfilePage() {
 
   // Strict auth guard: redirect immediately if not logged in
   useEffect(() => {
-    if (!isLoading && !user) {
-      const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('lwsrh_access_token')
-      if (!hasToken) {
-        router.replace('/auth?returnUrl=/pages/profile')
-      }
+    const hasToken = typeof localStorage !== 'undefined' && (!!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token'))
+    if (!hasToken) {
+      router.replace('/auth?returnUrl=/pages/profile')
     }
-  }, [isLoading, user, router])
+  }, [router])
   
   // Handle tab from URL
   useEffect(() => {

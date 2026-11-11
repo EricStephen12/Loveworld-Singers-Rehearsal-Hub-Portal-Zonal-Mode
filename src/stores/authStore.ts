@@ -458,7 +458,14 @@ export const useAuthStore = create<AuthState>()(
           saveCachedProfile(profile)
           set({ user: profile, profile, loading: false, backendOffline: false })
         })
-        .catch(async () => {
+        .catch(async (err: any) => {
+          // If the backend was temporarily unreachable, preserve session and mark offline
+          const isNetworkError = err?.message?.includes('Failed to fetch') || err?.message?.includes('NetworkError') || err?.message?.includes('timeout') || err?.message?.includes('503') || err?.message?.includes('502');
+          if (isNetworkError) {
+            set({ backendOffline: true, loading: false })
+            return
+          }
+
           if (refresh) {
             try {
               const rawRes = await BackendAPI.auth.refresh(refresh)
