@@ -93,6 +93,16 @@ export default function ProfilePage() {
   const [saveProgress, setSaveProgress] = useState(0)
   const [saveStage, setSaveStage] = useState('')
   const [isClient, setIsClient] = useState(false)
+
+  // Strict auth guard: redirect immediately if not logged in
+  useEffect(() => {
+    if (!isLoading && !user) {
+      const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('lwsrh_access_token')
+      if (!hasToken) {
+        router.replace('/auth?returnUrl=/pages/profile')
+      }
+    }
+  }, [isLoading, user, router])
   
   // Handle tab from URL
   useEffect(() => {
