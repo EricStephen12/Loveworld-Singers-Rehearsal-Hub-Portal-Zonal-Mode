@@ -113,6 +113,12 @@ function saveCachedProfile(profile: UserProfile | null) {
 function loadCachedProfile(): UserProfile | null {
   if (typeof localStorage === 'undefined') return null
   try {
+    const hasToken = !!localStorage.getItem('lwsrh_access_token') || !!localStorage.getItem('lwsrh_refresh_token')
+    if (!hasToken) {
+      localStorage.removeItem('lwsrh_user_profile')
+      localStorage.removeItem('lwsrh_has_user')
+      return null
+    }
     const raw = localStorage.getItem('lwsrh_user_profile')
     return raw ? JSON.parse(raw) : null
   } catch {
@@ -136,10 +142,13 @@ function saveTokens(access: string, refresh: string, userId?: string, profile?: 
 
 function loadTokens(): { access: string | null; refresh: string | null } {
   if (typeof localStorage === 'undefined') return { access: null, refresh: null }
-  return {
-    access: localStorage.getItem('lwsrh_access_token'),
-    refresh: localStorage.getItem('lwsrh_refresh_token'),
+  const access = localStorage.getItem('lwsrh_access_token')
+  const refresh = localStorage.getItem('lwsrh_refresh_token')
+  if (!access && !refresh) {
+    clearTokens()
+    return { access: null, refresh: null }
   }
+  return { access, refresh }
 }
 
 function clearTokens() {
