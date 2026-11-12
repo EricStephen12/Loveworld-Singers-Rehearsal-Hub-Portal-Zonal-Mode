@@ -21,6 +21,7 @@ import { isHQAdmin as checkIsHQAdmin } from '@/config/roles';
 import { getRoleTerminology, getFullRoleName, getZoneTheme } from '@/utils/zone-theme';
 import { AdminThemeProvider } from '../../components/admin/AdminThemeProvider';
 import { useLiveSongStore } from '@/stores/liveSongStore';
+import { clearCache } from '@/lib/screen-cache';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminMobileNav from '../../components/admin/AdminMobileNav';
 import AdminMobileHeader from '../../components/admin/AdminMobileHeader';
@@ -177,6 +178,23 @@ function AdminContent() {
     }
   }, [currentZone, setZoneId]);
 
+  // Sync live active songs in realtime so admin toggles accurately reflect live state
+  useEffect(() => {
+    useLiveSongStore.getState().fetchActiveSongs(currentZone?.id);
+
+    const unsubLive = BackendAPI.realtime.subscribe('live_song', 'all', (update) => {
+      useLiveSongStore.getState().handleSongUpdate(update);
+    });
+    const unsubSongs = BackendAPI.realtime.subscribe('songs', 'all', (update) => {
+      useLiveSongStore.getState().handleSongUpdate(update);
+    });
+
+    return () => {
+      unsubLive();
+      unsubSongs();
+    };
+  }, [currentZone?.id]);
+
   //  Restore Admin state from URL on mount/change
   useEffect(() => {
     const sectionParam = searchParams.get('section');
@@ -242,13 +260,31 @@ function AdminContent() {
 
   const [loadingSongs, setLoadingSongs] = useState(false);
 
+  const syncSongsWithLiveStore = React.useCallback((songs: PraiseNightSong[]): PraiseNightSong[] => {
+    const activeList = useLiveSongStore.getState().activeSongs;
+    if (!activeList || activeList.length === 0) return songs;
+    const activeMap = new Map(activeList.map(s => [String(s.id || (s as any)._id), s]));
+    return songs.map(s => {
+      const sId = String(s.id || (s as any)._id || '');
+      if (activeMap.has(sId)) {
+        return {
+          ...s,
+          isActive: true,
+          is_active: true,
+          isLive: true,
+          is_live: true,
+        };
+      }
+      return s;
+    });
+  }, []);
 
   useEffect(() => {
     if (selectedPage?.id) {
       setLoadingSongs(true);
 
       getCurrentSongs(selectedPage.id, false).then(songs => {
-        setAllSongs(songs);
+        setAllSongs(syncSongsWithLiveStore(songs));
         setLoadingSongs(false);
       }).catch(error => {
         console.error('Error loading songs:', error);
@@ -258,19 +294,19 @@ function AdminContent() {
     } else {
       setAllSongs([]);
     }
-  }, [selectedPage?.id]);
+  }, [selectedPage?.id, syncSongsWithLiveStore]);
 
   const reloadCurrentPageSongs = React.useCallback(async () => {
     if (!selectedPage?.id) return;
     try {
       const songs = await getCurrentSongs(selectedPage.id, true);
       if (Array.isArray(songs)) {
-        setAllSongs(songs);
+        setAllSongs(syncSongsWithLiveStore(songs));
       }
     } catch (err) {
       console.warn('Background song reload failed:', err);
     }
-  }, [selectedPage?.id, getCurrentSongs]);
+  }, [selectedPage?.id, getCurrentSongs, syncSongsWithLiveStore]);
 
   // Update selectedPage reference when allPraiseNights refreshes to ensure we have latest data
   useEffect(() => {
@@ -1219,26 +1255,24 @@ function AdminContent() {
 
     // 2. Existing song: fetch full song details FIRST
     // The program list endpoint strips lyrics/solfas/conductor guide to save bandwidth,
-    // so we MUST load the full song first — otherwise editing would show empty fields
-    // or overwrite those fields with blanks on save.
+    // so we attempt to load the full song first, but gracefully fallback to existing data
+    // so editing is never blocked.
+    const rawSongId = song.id || (song as any)._id;
     if (openingSongId) return;
-    setOpeningSongId(String(song.id));
+    setOpeningSongId(String(rawSongId));
 
     try {
-      const res: any = await BackendAPI.songs.getById(String(song.id));
-      const full = res?.data || (res?.id ? res : null);
-      if (!full || !full.id) {
-        throw new Error('Song details could not be found');
-      }
+      const res: any = await BackendAPI.songs.getById(String(rawSongId));
+      const full = res?.data || (res?.id || (res as any)?._id ? res : (res?.song ? res.song : null));
 
-      const merged: any = { ...song, ...full };
+      const merged: any = { ...song, ...(full || {}) };
 
       // Helper matching mobile app getSongAllCategories
       const cats = new Set<string>();
       if (merged.category && typeof merged.category === 'string' && merged.category.trim()) {
         cats.add(merged.category.trim());
       }
-      if (Array.isArray(full.categories)) {
+      if (Array.isArray(full?.categories)) {
         full.categories.forEach((c: any) => { if (typeof c === 'string' && c.trim()) cats.add(c.trim()); });
       }
       if (Array.isArray(song.categories)) {
@@ -1253,23 +1287,23 @@ function AdminContent() {
       merged.category = merged.category || allCats[0] || null;
 
       // Ensure lyrics and solfas fields are populated
-      merged.lyrics = full.lyrics || song.lyrics || '';
-      merged.solfas = full.solfas || full.conductorGuide || full.solfa || song.solfas || (song as any).conductorGuide || '';
-      merged.conductorGuide = full.conductorGuide || merged.solfas || '';
-      merged.notation = full.notation || song.notation || '';
+      merged.lyrics = full?.lyrics || song.lyrics || '';
+      merged.solfas = full?.solfas || full?.conductorGuide || full?.solfa || song.solfas || (song as any).conductorGuide || '';
+      merged.conductorGuide = full?.conductorGuide || merged.solfas || '';
+      merged.notation = full?.notation || song.notation || '';
 
       // Update allSongs table state so in-memory cache has full song details
-      setAllSongs(prev => prev.map(s => (String(s.id) === String(song.id) ? { ...s, ...merged } : s)));
+      const songKey = String(rawSongId);
+      setAllSongs(prev => prev.map(s => (String(s.id || (s as any)._id) === songKey ? { ...s, ...merged } : s)));
 
-      // Open modal with the fully loaded song
+      // Open modal with the loaded song
       setEditingSong(merged);
       setShowSongModal(true);
     } catch (err: any) {
-      console.error('Could not load song details for editing:', err);
-      addToast({
-        type: 'error',
-        message: 'The full song details could not be loaded, so editing was blocked to protect the lyrics and conductor\'s guide. Please check your connection and try again.'
-      });
+      console.warn('Could not load extra song details, opening modal with available song data:', err);
+      // Fallback: open modal with current song data so the admin is NEVER blocked from editing
+      setEditingSong(song);
+      setShowSongModal(true);
     } finally {
       setOpeningSongId(null);
     }
@@ -1380,12 +1414,34 @@ function AdminContent() {
         isActive: newActiveStatus,
         is_active: newActiveStatus,
         isLive: newActiveStatus,
-        praiseNightId: pageId
+        praiseNightId: pageId,
+        zoneId: currentZone?.id || null
       };
       if (!newActiveStatus && (song as any).status === 'live') {
         updatePayload.status = 'unheard';
       }
       await BackendAPI.songs.update(String(apiSongId), updatePayload);
+
+      // Invalidate screen caches so user-facing pages revalidate immediately
+      if (pageId) {
+        clearCache(`praise_night_songs_${pageId}_all`);
+        if (currentZone?.id) {
+          clearCache(`praise_night_songs_${pageId}_${currentZone.id}`);
+        }
+      }
+
+      // Broadcast update across open tabs/windows
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('songDataUpdated', {
+          detail: {
+            id: String(apiSongId),
+            isActive: newActiveStatus,
+            is_active: newActiveStatus,
+            isLive: newActiveStatus,
+            is_live: newActiveStatus,
+          }
+        }));
+      }
 
       // 4. Update the liveSongStore immediately in client
       if (newActiveStatus) {
@@ -1448,17 +1504,81 @@ function AdminContent() {
 
   const handleSaveSong = async (songData: PraiseNightSong) => {
     try {
-      // SIMPLE: Check if we're editing (has ID) or creating (no ID)
-      const isEditingExistingSong = editingSong && editingSong.id;
+      const targetSongId = String(editingSong?.id || (editingSong as any)?._id || (songData as any)?.id || (songData as any)?._id || '');
+      const isEditingExistingSong = Boolean(editingSong && targetSongId);
+
+      const isSongInLive = useLiveSongStore.getState().activeSongs.some(
+        s => String(s.id || (s as any)._id) === targetSongId
+      );
+      const wasActive = isSongInLive || Boolean(
+        (songData as any)?.isActive ?? (songData as any)?.is_active ?? (songData as any)?.isLive ??
+        (editingSong as any)?.isActive ?? (editingSong as any)?.is_active ?? (editingSong as any)?.isLive ?? false
+      );
 
       if (isEditingExistingSong) {
-        const targetSongId = String(editingSong.id);
-        const updatedSnapshot = { ...editingSong, ...songData, id: targetSongId };
-        setAllSongs(prev => prev.map(s => String(s.id) === targetSongId ? { ...s, ...updatedSnapshot } : s));
-        const updateRes: any = await BackendAPI.songs.update(editingSong.id!, songData);
+        const updatedSnapshot = {
+          ...editingSong,
+          ...songData,
+          id: targetSongId,
+          isActive: wasActive,
+          is_active: wasActive,
+          isLive: wasActive,
+          is_live: wasActive,
+        };
+        setAllSongs(prev => prev.map(s => String(s.id || (s as any)._id) === targetSongId ? { ...s, ...updatedSnapshot } : s));
+        const updateRes: any = await BackendAPI.songs.update(targetSongId, {
+          ...songData,
+          isActive: wasActive,
+          is_active: wasActive,
+          isLive: wasActive,
+        });
         const serverSong = updateRes?.data || updateRes?.song || updateRes;
+        const mergedFinal: PraiseNightSong = {
+          ...updatedSnapshot,
+          ...(serverSong && typeof serverSong === 'object' ? serverSong : {}),
+          id: targetSongId,
+          isActive: wasActive,
+          is_active: wasActive,
+          isLive: wasActive,
+          is_live: wasActive,
+        };
         if (serverSong && (serverSong.id || serverSong.title)) {
-          setAllSongs(prev => prev.map(s => String(s.id) === targetSongId ? { ...s, ...serverSong } : s));
+          setAllSongs(prev => prev.map(s => String(s.id || (s as any)._id) === targetSongId ? { ...s, ...mergedFinal } : s));
+        }
+
+        // If song is active, ensure liveSongStore keeps it active with new title/details
+        if (wasActive) {
+          useLiveSongStore.getState().handleSongUpdate({
+            ...mergedFinal,
+            id: targetSongId,
+            isActive: true,
+            isLive: true,
+            status: 'live'
+          });
+        }
+
+        // 1. Keep persistent song cache updated for 0ms lyrics in user-facing view
+        try {
+          localStorage.setItem(`song_cache_${targetSongId}`, JSON.stringify(mergedFinal));
+          localStorage.setItem(`lwsrh_screen_cache_song_${targetSongId}`, JSON.stringify({
+            data: mergedFinal,
+            timestamp: Date.now(),
+            version: 'v1'
+          }));
+        } catch {}
+
+        // 2. Clear praise night songs screen cache so user-facing view revalidates fresh data immediately
+        const pageId = String(songData.praiseNightId || selectedPage?.id || '');
+        if (pageId) {
+          clearCache(`praise_night_songs_${pageId}_all`);
+          if (currentZone?.id) {
+            clearCache(`praise_night_songs_${pageId}_${currentZone.id}`);
+          }
+        }
+
+        // 3. Dispatch global songDataUpdated event for instant live reflection across components & tabs
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('songDataUpdated', { detail: mergedFinal }));
         }
 
         addToast({
@@ -1482,14 +1602,29 @@ function AdminContent() {
           ...newSongData,
           id: `temp-${Date.now()}`
         };
-        // 1. Immediately inject new or cloned song into allSongs so it shows right away!
+        const createdId = String(createdSong.id || (createdSong as any)._id || `temp-${Date.now()}`);
+        const fullCreated = { ...createdSong, id: createdId };
+
+        // Immediately inject new or cloned song into allSongs so it shows right away!
         setAllSongs(prev => {
-          const exists = prev.some(s => s.id && String(s.id) === String(createdSong.id));
+          const exists = prev.some(s => String(s.id || (s as any)._id) === createdId);
           if (exists) {
-            return prev.map(s => String(s.id) === String(createdSong.id) ? { ...s, ...createdSong } : s);
+            return prev.map(s => String(s.id || (s as any)._id) === createdId ? { ...s, ...fullCreated } : s);
           }
-          return [createdSong, ...prev];
+          return [fullCreated, ...prev];
         });
+
+        const pageId = String(newSongData.praiseNightId || selectedPage?.id || '');
+        if (pageId) {
+          clearCache(`praise_night_songs_${pageId}_all`);
+          if (currentZone?.id) {
+            clearCache(`praise_night_songs_${pageId}_${currentZone.id}`);
+          }
+        }
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('songDataUpdated', { detail: fullCreated }));
+        }
 
         addToast({
           type: 'success',

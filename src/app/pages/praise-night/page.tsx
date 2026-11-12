@@ -23,7 +23,7 @@ import { PraiseNightCategoryBar } from "@/components/praise-night/PraiseNightCat
 import { PraiseNightActiveWidget } from "@/components/praise-night/PraiseNightActiveWidget";
 import { PraiseNightSearchResults } from "@/components/praise-night/PraiseNightSearchResults";
 import { useRealtimeData, getBestCachedPages, getEffectiveZoneId } from "@/hooks/useRealtimeData";
-import { readCache } from "@/lib/screen-cache";
+import { readCache, writeCache } from "@/lib/screen-cache";
 import { useRealtimeSong } from "@/hooks/useRealtimeSong";
 import { usePraiseNightSongsData } from "@/hooks/usePraiseNightSongsData";
 import { useLiveSongStore } from "@/stores/liveSongStore";
@@ -532,9 +532,12 @@ function PraiseNightPageContent() {
       setSongsLoading(true);
     }
 
-    getCurrentSongs(currentPraiseNight.id, false).then(songs => {
+    // Always revalidate in background so edits reflect immediately on user-facing side
+    getCurrentSongs(currentPraiseNight.id, true).then(songs => {
       if (songs && songs.length > 0) {
         setAllSongs(songs);
+        writeCache(cacheKey, songs);
+        writeCache(`praise_night_songs_${currentPraiseNight.id}_all`, songs);
         // Pre-cache songs into localStorage so tapping any song opens lyrics in 0ms!
         songs.forEach(s => {
           if (s && s.id && (s.lyrics || s.audioFile || s.audioUrls)) {
@@ -561,10 +564,21 @@ function PraiseNightPageContent() {
     const unsubSongs = BackendAPI.realtime.subscribe('songs', 'all', (update) => {
       useLiveSongStore.getState().handleSongUpdate(update);
       const data = (update as any)?.data || update;
-      if (data && data.id) {
+      if (data && (data.id || (data as any)._id)) {
+        const targetId = String(data.id || (data as any)._id);
+        setAllSongs(prev => {
+          if (!prev || prev.length === 0) return prev;
+          const idx = prev.findIndex(s => String(s.id || (s as any)._id) === targetId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...data };
+            return next;
+          }
+          return prev;
+        });
         setAllArchiveSongs(prev => {
           if (!prev || prev.length === 0) return prev;
-          const idx = prev.findIndex(s => String(s.id) === String(data.id));
+          const idx = prev.findIndex(s => String(s.id || (s as any)._id) === targetId);
           let updated: PraiseNightSong[];
           if (idx >= 0) {
             updated = [...prev];
@@ -581,9 +595,28 @@ function PraiseNightPageContent() {
       }
     });
 
+    const handleSongDataUpdated = (e: any) => {
+      const data = e.detail;
+      if (data && (data.id || data._id)) {
+        const targetId = String(data.id || data._id);
+        setAllSongs(prev => {
+          if (!prev || prev.length === 0) return prev;
+          const idx = prev.findIndex(s => String(s.id || (s as any)._id) === targetId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...data };
+            return next;
+          }
+          return prev;
+        });
+      }
+    };
+    window.addEventListener('songDataUpdated', handleSongDataUpdated as EventListener);
+
     return () => {
       unsubLive();
       unsubSongs();
+      window.removeEventListener('songDataUpdated', handleSongDataUpdated as EventListener);
     };
   }, [currentZone?.id]);
 
@@ -601,10 +634,12 @@ function PraiseNightPageContent() {
 
   const finalSongData = useMemo(() => {
     if (!allSongs || allSongs.length === 0) return [];
-    if (!activeLiveSongs || activeLiveSongs.length === 0) return allSongs;
-    const liveMap = new Map(activeLiveSongs.map((ls) => [String(ls.id), ls]));
+    const liveMap = new Map(activeLiveSongs.map((ls) => [String(ls.id || (ls as any)._id), ls]));
+    const hasLiveStoreLoaded = useLiveSongStore.getState().hasInitialFetched;
+
     return allSongs.map((s) => {
-      const liveSong = liveMap.get(String(s.id));
+      const songId = String(s.id || (s as any)._id || '');
+      const liveSong = liveMap.get(songId);
       if (liveSong) {
         return {
           ...s,
@@ -612,6 +647,15 @@ function PraiseNightPageContent() {
           isActive: true,
           isLive: true,
           status: s.status,
+        };
+      }
+      if (hasLiveStoreLoaded) {
+        return {
+          ...s,
+          isActive: false,
+          isLive: false,
+          is_active: false,
+          is_live: false,
         };
       }
       return s;

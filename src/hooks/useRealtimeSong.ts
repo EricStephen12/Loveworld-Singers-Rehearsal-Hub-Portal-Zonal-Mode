@@ -99,16 +99,33 @@ export function useRealtimeSong(
     const currentInit = initialSongRef.current
     const stored = getStoredSong(songId)
     if (stored && hasLyricsContent(stored.lyrics)) {
-      setSong(prev => ({ ...(prev || {}), ...(currentInit || {}), ...stored }))
+      setSong(prev => ({ ...(prev || {}), ...stored, ...(currentInit || {}) }))
       setLoading(false)
     } else if (currentInit && hasLyricsContent(currentInit.lyrics)) {
       setSong(currentInit)
       setLoading(false)
       persistSong(songId, currentInit)
     } else {
-      setSong(prev => (stored ? { ...(currentInit || {}), ...stored } : (currentInit || prev)))
+      setSong(prev => (stored ? { ...stored, ...(currentInit || {}) } : (currentInit || prev)))
       setLoading(true)
     }
+  }, [songId])
+
+  // Listen for instant local updates dispatched from admin or other tabs
+  useEffect(() => {
+    if (!songId) return
+    const handleSongDataUpdated = (e: any) => {
+      const updated = e.detail
+      if (updated && String(updated.id || updated._id) === String(songId)) {
+        setSong(prev => {
+          const merged = { ...(prev || {}), ...updated }
+          persistSong(songId, merged)
+          return merged
+        })
+      }
+    }
+    window.addEventListener('songDataUpdated', handleSongDataUpdated as EventListener)
+    return () => window.removeEventListener('songDataUpdated', handleSongDataUpdated as EventListener)
   }, [songId])
 
   const fetchSong = useCallback(async (isInitial = false) => {

@@ -639,9 +639,12 @@ export default function EditSongModal({
   }, [song, isOpen, praiseNightCategories]);
 
   const handleUpdate = async () => {
-    if (!songTitle.trim()) return;
+    if (!songTitle.trim()) {
+      window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Please enter a valid song title', type: 'warning' } }));
+      return;
+    }
     const selectedPraiseNight = praiseNightCategories.find(pn => pn.name === songPraiseNight || String(pn.id) === String(song?.praiseNightId));
-    const effectivePraiseNightId = selectedPraiseNight?.id || song?.praiseNightId || (praiseNightCategories.length > 0 ? praiseNightCategories[0].id : undefined);
+    const effectivePraiseNightId = selectedPraiseNight?.id || song?.praiseNightId || (song as any)?.praise_night_id || (praiseNightCategories.length > 0 ? praiseNightCategories[0].id : undefined);
     if (!effectivePraiseNightId) {
       window.dispatchEvent(new CustomEvent('showToast', { detail: { message: 'Please select a valid Praise Night', type: 'warning' } }));
       return;
@@ -654,6 +657,10 @@ export default function EditSongModal({
       audioUrl: coordinatorAudioUrl,
       date: new Date().toISOString()
     }] : [];
+
+    const wasActive = Boolean(
+      (song as any)?.isActive ?? (song as any)?.is_active ?? (song as any)?.isLive ?? false
+    );
 
     const songData: PraiseNightSong = {
       title: songTitle.trim(),
@@ -687,16 +694,18 @@ export default function EditSongModal({
       customParts: customParts,
       imageUrl: songImageUrl,
       availableParts: Object.keys(audioUrls).filter(k => audioUrls[k] && !k.startsWith('_')),
-      history: historyEntries.length > 0 ? historyEntries : (song?.history || [])
+      history: historyEntries.length > 0 ? historyEntries : (song?.history || []),
+      isActive: wasActive,
+      is_active: wasActive,
+      isLive: wasActive,
+      is_live: wasActive,
     };
 
     let updatedSong = song ? { ...song, ...songData } : songData;
+    const resolvedId = song ? (song.id || (song as any)._id) : undefined;
 
-    if (song && song.id) {
-      const hasChanges = songTitle !== originalValues.title || songCategory !== originalValues.category || songKey !== originalValues.key || songTempo !== originalValues.tempo || songLyrics !== originalValues.lyrics || songSolfas !== originalValues.solfas || songNotation !== originalValues.notation || finalAudioFile !== originalValues.audioFile || songLeadSinger !== originalValues.leadSinger || songWriter !== originalValues.writer || songConductor !== originalValues.conductor || songLeadKeyboardist !== originalValues.leadKeyboardist || songLeadGuitarist !== originalValues.leadGuitarist || songDrummer !== originalValues.drummer;
-
-      // Automatic history disabled by user request
-      onUpdate({ ...updatedSong, id: song.id } as PraiseNightSong);
+    if (song && resolvedId) {
+      onUpdate({ ...updatedSong, id: resolvedId } as PraiseNightSong);
     } else {
       onUpdate(updatedSong as PraiseNightSong);
     }

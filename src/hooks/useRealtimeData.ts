@@ -246,7 +246,17 @@ export function useRealtimeData(zoneId?: string, userId?: string | null) {
         return mapped;
       }
       const res: any = await BackendAPI.songs.praiseNight({ praiseNightId: String(pageId), zoneId: targetZoneId });
-      const songs = Array.isArray(res) ? res : (res?.data || []);
+      const rawList = Array.isArray(res) ? res : (res?.data || []);
+      const songs = rawList.map((s: any) => {
+        const isExplicitlyOff = s.isActive === false || s.is_active === false || s.isLive === false;
+        const active = !isExplicitlyOff && Boolean(s.isActive ?? s.is_active ?? s.isLive ?? s.is_live ?? s.status === 'live');
+        return {
+          ...s,
+          isActive: active,
+          is_active: active,
+          isLive: active,
+        };
+      });
       if (songs.length > 0) {
         writeCache(cacheKey, songs);
       }

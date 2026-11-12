@@ -19,6 +19,7 @@ import { useAdminTheme } from './AdminThemeProvider';
 import CustomLoader from '@/components/CustomLoader';
 import { normalizeSearchString } from '@/utils/string-utils';
 import CloneFromMasterModal from './CloneFromMasterModal';
+import { useLiveSongStore } from '@/stores/liveSongStore';
 
 interface PagesSectionProps {
   allPraiseNights: PraiseNight[] | null;
@@ -162,6 +163,9 @@ export default function PagesSection(props: PagesSectionProps) {
     addToast,
     setShowPageCategoryOrderModal
   } = props;
+
+  const activeLiveSongs = useLiveSongStore((s) => s.activeSongs);
+  const liveMap = useMemo(() => new Map(activeLiveSongs.map((ls) => [String(ls.id || (ls as any)._id), ls])), [activeLiveSongs]);
 
   // Computed data
   const pages = useMemo(() => {
@@ -698,10 +702,12 @@ export default function PagesSection(props: PagesSectionProps) {
                               </td>
                               <td className="py-4 px-4">
                                 {(() => {
+                                  const songId = String(song.id || (song as any)._id || '');
+                                  const isSongInLiveStore = liveMap.has(songId);
                                   const isSongExplicitlyOff = (song as any).isActive === false || (song as any).is_active === false || (song as any).isLive === false;
-                                  const isSongActive = !isSongExplicitlyOff && Boolean(
+                                  const isSongActive = isSongInLiveStore || (!isSongExplicitlyOff && Boolean(
                                     (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live || (song as any).status === 'live'
-                                  );
+                                  ));
                                   return (
                                     <button
                                       onClick={() => handleToggleSongActive(song)}
@@ -827,10 +833,12 @@ export default function PagesSection(props: PagesSectionProps) {
                               </div>
                               <div className="flex items-center gap-1">
                                 {(() => {
+                                  const songId = String(song.id || (song as any)._id || '');
+                                  const isSongInLiveStore = liveMap.has(songId);
                                   const isSongExplicitlyOff = (song as any).isActive === false || (song as any).is_active === false || (song as any).isLive === false;
-                                  const isSongActive = !isSongExplicitlyOff && Boolean(
+                                  const isSongActive = isSongInLiveStore || (!isSongExplicitlyOff && Boolean(
                                     (song as any).isActive || (song as any).is_active || (song as any).isLive || (song as any).is_live || (song as any).status === 'live'
-                                  );
+                                  ));
                                   return (
                                     <button
                                       onClick={(e) => {
